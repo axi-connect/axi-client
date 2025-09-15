@@ -9,6 +9,9 @@ export type ColumnDef<T extends DataRow = DataRow> = {
   sortable?: boolean
   // cell recibe { row.original } para alinearse al patrón de shadcn
   cell?: (ctx: { row: { original: T } }) => React.ReactNode
+  // responsive hints
+  minWidth?: number
+  alwaysVisible?: boolean
 }
 
 export type DataTableMessages = {
@@ -21,3 +24,10 @@ export type DataTableMessages = {
   no?: string
   fieldLabelFallback?: string
 }
+
+export type DataTableResponsive<T extends DataRow = DataRow> = {
+  minColumnWidth?: number
+  primary?: Array<keyof T & string>
+}
+
+export type RowContextMenuRenderer<T extends DataRow = DataRow> = (ctx: { row: T }) => React.ReactNode

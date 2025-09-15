@@ -132,6 +132,8 @@ export function AppSidebar() {
 
   const launchDate = new Date(2025, 10, 1, 0, 0, 0)
   const { days, hours, minutes } = useCountdown(launchDate)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   function TimeBox({ value, label }: { value: string; label: string }) {
     return (
@@ -177,11 +179,11 @@ export function AppSidebar() {
             Lanzamiento Axi Connect <span aria-hidden>🚀</span>
           </div>
           <div className="flex items-center gap-2">
-            <TimeBox value={days.toString()} label="días" />
+            <TimeBox value={mounted ? days.toString() : "--"} label="días" />
             <span className="text-foreground/50">:</span>
-            <TimeBox value={pad2(hours)} label="horas" />
+            <TimeBox value={mounted ? pad2(hours) : "--"} label="horas" />
             <span className="text-foreground/50">:</span>
-            <TimeBox value={pad2(minutes)} label="min" />
+            <TimeBox value={mounted ? pad2(minutes) : "--"} label="min" />
           </div>
         </div>
       </div>

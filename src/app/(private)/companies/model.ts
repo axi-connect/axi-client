@@ -56,3 +56,25 @@ export interface ApiResponse<T> {
   data: T;
   statusCode: number;
 }
+
+// Create company DTO (payload expected by the endpoint)
+export type CompanyScheduleItem = { day: string; time_range: string }
+
+export interface CreateCompanyDTO {
+  nit: string
+  city: string
+  address: string
+  industry: string
+  name: string
+  activity_description: string
+  company_schedule: CompanyScheduleItem[]
+}
+
+export type UpdateCompanyDTO = Partial<{
+  name: string
+  city: string
+  address: string
+  industry: string
+  activity_description: string
+  company_schedule: CompanyScheduleItem[]
+}>

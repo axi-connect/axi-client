@@ -1,20 +1,28 @@
 "use client"
 
-import { SearchBar } from "./SearchBar";
-import { TableView } from "./TableView";
-import { useCallback, useMemo } from "react";
-import BasicPagination from "@/components/ui/pagination";
-import type { ColumnDef, DataRow, DataTableMessages } from "./types";
-import { useControlled, useDebouncedCallback, useSearchableFields } from "./hooks";
+import type { ReactElement, Ref } from "react"
+import { SearchBar } from "./components/SearchBar"
+import { TableView } from "./components/TableView"
+import BasicPagination from "@/components/ui/pagination"
+import { useControlled, useDebouncedCallback, useSearchableFields } from "./utils/hooks"
+import type { ColumnDef, DataRow, DataTableMessages, RowContextMenuRenderer } from "./types"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react"
 
 export type { ColumnDef, DataRow } from "./types"
+
+export type DataTableRef = {
+  getCurrentPage: () => number
+  goToPage: (page: number) => void
+}
 
 type DataTableProps<T extends DataRow = DataRow> = {
   // data
   data: T[]
   columns: ColumnDef<T>[]
+  // row context menu
+  rowContextMenu?: RowContextMenuRenderer<T>
   // grouped meta
-  pagination?: { page: number; pageSize: number; total?: number }
+  pagination?: { page?: number; pageSize: number; total?: number }
   sorting?: { by: keyof T & string; dir?: "asc" | "desc" }
   search?: { field?: keyof T & string; value?: string }
   // handlers
@@ -30,20 +38,21 @@ type DataTableProps<T extends DataRow = DataRow> = {
   preferredSearchFields?: Array<keyof T & string>
 }
 
-export function DataTable<T extends DataRow = DataRow>({
+export const DataTable = forwardRef(function DataTableInner<T extends DataRow = DataRow>({
   data,
   columns,
-  pagination,
   sorting,
   search,
+  messages,
+  pagination,
   onPageChange,
   onSortChange,
   onSearchChange,
+  rowContextMenu,
+  preferredSearchFields,
   searchDebounceMs = 350,
   searchTrigger = "debounced",
-  messages,
-  preferredSearchFields,
-}: DataTableProps<T>) {
+}: DataTableProps<T>, ref: React.Ref<DataTableRef>) {
 
   const msgs: DataTableMessages = {
     searchPlaceholder: (label) => `Buscar por ${label}...`,
@@ -57,7 +66,13 @@ export function DataTable<T extends DataRow = DataRow>({
     ...messages,
   }
 
-  const page = pagination?.page ?? 1
+  const [internalPage, setInternalPage] = useState<number>(pagination?.page ?? 1)
+  
+  useEffect(() => {
+    if (typeof pagination?.page === "number") setInternalPage(pagination.page)
+  }, [pagination?.page])
+
+  const page = internalPage
   const pageSize = pagination?.pageSize ?? 10
   const totalCount = typeof pagination?.total === "number" ? pagination!.total! : data.length
   const start = (page - 1) * pageSize
@@ -106,6 +121,17 @@ export function DataTable<T extends DataRow = DataRow>({
     }
   }, [debouncedEmit, emitSearch, localField, searchTrigger, setLocalQuery])
 
+  // expose imperative API
+  useImperativeHandle(ref, () => ({
+    getCurrentPage: () => page,
+    goToPage: (p: number) => {
+      const safe = Math.max(1, p)
+      if (safe === page) return
+      setInternalPage(safe)
+      onPageChange?.(safe)
+    },
+  }), [onPageChange, page])
+
   return (
     <>
       <div className="mb-3">
@@ -132,15 +158,26 @@ export function DataTable<T extends DataRow = DataRow>({
         sortDir={sorting?.dir ?? "asc"}
         columns={safeColumns as ColumnDef<T>[]}
         sortBy={sorting?.by as keyof T & string}
+        rowContextMenu={rowContextMenu as RowContextMenuRenderer<T> | undefined}
       />
 
       {onPageChange && (
         <div className="mt-2">
-          <BasicPagination totalPages={Math.max(1, Math.ceil(totalCount / pageSize))} initialPage={page} onPageChange={onPageChange} />
+          <BasicPagination
+            totalPages={Math.max(1, Math.ceil(totalCount / pageSize))}
+            page={page}
+            onPageChange={(p) => {
+              if (p === page) return
+              setInternalPage(p)
+              onPageChange?.(p)
+            }}
+          />
         </div>
       )}
     </>
   )
-}
+}) as <T extends DataRow = DataRow>(
+  props: DataTableProps<T> & { ref?: Ref<DataTableRef> }
+) => ReactElement
 
 export default DataTable

@@ -1,4 +1,4 @@
-import type { Primitive } from "./types"
+import type { Primitive } from "../types"
 
 export function formatCell(value: Primitive, yes = "Sí", no = "No"): React.ReactNode {
   if (value === null || value === undefined) return "—"

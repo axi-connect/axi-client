@@ -30,6 +30,46 @@ export class HttpClient {
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     return (await res.json()) as T;
   }
+
+  async post<T>(path: string, body?: unknown, options: HttpRequestOptions = {}): Promise<T> {
+    const url = this.baseUrl + path;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: options.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    return (await res.json()) as T;
+  }
+
+  async put<T>(path: string, body?: unknown, options: HttpRequestOptions = {}): Promise<T> {
+    const url = this.baseUrl + path;
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: options.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    return (await res.json()) as T;
+  }
+  
+  async delete<T>(path: string, options: HttpRequestOptions = {}): Promise<T> {
+    const url = this.baseUrl + path;
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      signal: options.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    // Some DELETE endpoints may return 204 No Content
+    const text = await res.text();
+    return (text ? JSON.parse(text) : ({} as T)) as T;
+  }
 }
 
 export const http = new HttpClient();

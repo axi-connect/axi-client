@@ -6,8 +6,8 @@
   --background: #ffffff;
   --foreground: #171717;
   --axi-brand: #E65759; /* brand primary */
-  --axi-brand-2: #e02f2f; /* brand secondary */
   --axi-muted: #f4f4f5; /* muted surface */ 
+  --axi-brand-2: #e02f2f; /* brand secondary */
   /* Removed sidebar-specific tokens in favor of global tokens */
 }
 
@@ -31,6 +31,8 @@
 
   /* Accent tuned for better contrast in light theme */
   --color-accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  /* Example alternative: */
+  /* --color-accent: color-mix(in srgb, #4D03B0 14%, var(--background)); */
   --color-accent-foreground: var(--foreground);
 
   --color-input: color-mix(in srgb, var(--foreground) 14%, var(--background));
@@ -48,13 +50,13 @@
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
-  --axi-brand: #fb7185; /* lightened brand for dark */
+  --axi-brand: #fb7185;
   --axi-brand-2: #df4f4f;
   --axi-muted: #18181b;
   /* Removed dark sidebar-specific tokens */
   /* Accent tuned for better contrast in dark theme */
-  --color-accent: color-mix(in srgb, var(--axi-brand) 24%, var(--background));
-  --color-accent-foreground: #0b0b0b;
+  --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --color-accent-foreground: #0a0a0a;
 }
 
 body {
@@ -89,3 +91,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 /* Softer borders for table components */
 [data-slot="table-header"] tr { border-color: color-mix(in srgb, var(--color-border) 50%, transparent); }
 [data-slot="table-row"] { border-color: color-mix(in srgb, var(--color-border) 50%, transparent); }
+
+/* Glass effect card */
+.glass {
+  background-color: color-mix(in srgb, var(--color-background) 60%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  /* subtle inner/outer borders for better legibility */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+}
