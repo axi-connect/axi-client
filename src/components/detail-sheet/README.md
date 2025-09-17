@@ -47,7 +47,7 @@ export interface DetailSheetProps<Id extends string | number = string | number> 
 ```tsx
 'use client'
 import { useState } from 'react'
-import { DetailSheet } from '@/components/DetailSheet'
+import { DetailSheet } from '@/components/detail-sheet'
 
 export function Example() {
   const [open, setOpen] = useState(false)
@@ -91,7 +91,7 @@ Si no se pasan `title` o `subtitle`, el componente incluye títulos/descripcione
 ```tsx
 'use client'
 import { useState } from 'react'
-import { DetailSheet } from '@/components/DetailSheet'
+import { DetailSheet } from '@/components/detail-sheet'
 
 export function Example() {
   const [open, setOpen] = useState(false)
