@@ -50,13 +50,6 @@ export interface ApiCompaniesPayload {
   total: number;
 }
 
-export interface ApiResponse<T> {
-  successful: boolean;
-  message: string;
-  data: T;
-  statusCode: number;
-}
-
 // Create company DTO (payload expected by the endpoint)
 export type CompanyScheduleItem = { day: string; time_range: string }
 

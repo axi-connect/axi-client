@@ -1,5 +1,6 @@
 import { http, Params } from "@/services/http";
-import type { ApiCompaniesPayload, ApiResponse, ListCompaniesParams, CreateCompanyDTO, CompanyDTO, UpdateCompanyDTO } from "./model";
+import type { ApiResponse } from "@/shared/api";
+import type { ApiCompaniesPayload, ListCompaniesParams, CreateCompanyDTO, CompanyDTO, UpdateCompanyDTO } from "./model";
 
 export async function listCompanies(params: ListCompaniesParams): Promise<ApiResponse<ApiCompaniesPayload>> {
   return http.get<ApiResponse<ApiCompaniesPayload>>("/identities/companies", params as Params);

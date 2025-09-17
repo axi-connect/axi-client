@@ -1,0 +1,17 @@
+/* DetailSheet component styles (tokens use project CSS variables) */
+.axi-detail-sheet {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.axi-detail-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-foreground) 20%, transparent);
+}
+
+.axi-detail-sheet__backdrop {
+  background: rgba(0,0,0,0.45);
+}

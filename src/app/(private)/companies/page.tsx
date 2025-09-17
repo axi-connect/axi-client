@@ -5,11 +5,12 @@ import { CompanyForm } from "./form";
 import type { CompanyRow } from "./model";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { buildListParams } from "@/shared/query";
 import { useEffect, useRef, useState } from "react";
+import { CompanyContextMenuItems } from "./table/table.actions";
 import { DataTable, type DataTableRef } from "@/components/ui/data-table";
 import { companyColumns, companyData, fetchCompanies } from "./table/table.config";
 import { FloatingAlert, type FloatingAlertConfig } from "@/components/ui/floating-alert";
-import { CompanyContextMenuItems } from "./table/table.actions";
 
 export default function CompaniesPage() {
   const pageSize = 3;
@@ -22,25 +23,6 @@ export default function CompaniesPage() {
   const [sortBy, setSortBy] = useState<keyof CompanyRow | undefined>();
   const [searchField, setSearchField] = useState<keyof CompanyRow>("name");
 
-  // helpers
-  function buildListParams(
-    p: number,
-    by: keyof CompanyRow | undefined,
-    dir: "asc" | "desc",
-    field: keyof CompanyRow,
-    value: string
-  ) {
-    const params: Record<string, unknown> = {
-      limit: pageSize,
-      offset: (p - 1) * pageSize,
-      sortBy: by,
-      sortDir: dir,
-      view: "summary",
-    }
-    if (value && field) params[field] = value
-    return params
-  }
-
   async function load(
     p?: number,
     by = sortBy,
@@ -50,7 +32,15 @@ export default function CompaniesPage() {
   ) {
     const current = p ?? tableRef.current?.getCurrentPage() ?? 1
     try {
-      const params = buildListParams(current, by, dir, field, value)
+      const params = buildListParams<keyof CompanyRow & string>({
+        page: current,
+        pageSize,
+        sortBy: by as string | undefined,
+        sortDir: dir,
+        searchField: field as keyof CompanyRow & string,
+        searchValue: value,
+        extra: { view: "summary" },
+      })
       const { rows, total: totalFromServer } = await fetchCompanies(params);
       setRows(rows);
       setTotal(totalFromServer);
@@ -101,9 +91,9 @@ export default function CompaniesPage() {
 
   // const [progress, setProgress] = useState((step / steps.length) * 100);
   const [alertOpen, setAlertOpen] = useState(false);
+  const [formDefaults, setFormDefaults] = useState<any | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
-  const [formMode, setFormMode] = useState<"create" | "edit">("create")
-  const [formDefaults, setFormDefaults] = useState<any | null>(null)
 
   const onModalSubmitClick = () => {
     const form = document.getElementById("company-form") as HTMLFormElement | null
