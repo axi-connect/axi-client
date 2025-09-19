@@ -7,9 +7,9 @@ import type { ColumnDef } from "@/components/ui/data-table/types";
 import type { ApiRbacOverviewSummaryPayload, GetRbacOverviewParams, RbacOverviewRow, RbacRoleSummaryDTO } from "../../model";
 
 export const rbacOverviewColumns: ColumnDef[] = [
-  { accessorKey: "name", header: "Rol", sortable: true, alwaysVisible: true },
+  { accessorKey: "name", header: "Rol", sortable: true, alwaysVisible: true, cell: ({ row }) => <span className="capitalize">{row.original.name}</span> },
   { accessorKey: "code", header: "Código", sortable: true, alwaysVisible: true },
-  { accessorKey: "status", header: "Estado", sortable: true },
+  { accessorKey: "status", header: "Estado", cell: ({ row }) => <StatusBadge status={(row.original as any).status as string} /> },
   { accessorKey: "hierarchy_level", header: "Jerarquía", sortable: true, cell: ({ row }) => <HierarchyBadge level={(row.original as any).hierarchy_level as number} /> },
   { id: "actions", minWidth: 100, cell: ({ row }) => <RbacRowActions row={row.original as any} /> },
 ]
@@ -39,5 +39,9 @@ function HierarchyBadge({ level }: { level: number }) {
     3: { label: "Administrador", className: "bg-purple-50 text-purple-700 border border-purple-200" },
   }
   const item = map[level] || { label: String(level), className: "bg-secondary text-foreground/80" }
-  return <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full ${item.className}`}>{item.label}</span>
+  return <span className={`inline-block px-2 py-0.5 rounded-full ${item.className}`}>{item.label}</span>
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return <span className={`capitalize inline-block px-2 py-0.5 rounded-full ${status === "active" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>{status}</span>
 }

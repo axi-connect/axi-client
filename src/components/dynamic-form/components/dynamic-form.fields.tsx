@@ -45,15 +45,16 @@ export function DynamicInputField<TValues extends FieldValues>({ config }: { con
   const {
     name,
     label,
-    description,
-    placeholder,
-    inputKind = "text",
-    inputProps,
-    className: fieldClass,
-    containerClassName,
     colSpan,
     isVisible,
+    inputProps,
     isDisabled,
+    placeholder,
+    description,
+    autoComplete,
+    containerClassName,
+    inputKind = "text",
+    className: fieldClass,
   } = config
 
   const visible = isVisible ? !!isVisible(values) : true
@@ -79,7 +80,7 @@ export function DynamicInputField<TValues extends FieldValues>({ config }: { con
             field,
             placeholder,
             disabled,
-            inputProps: { id: safeId, ...(inputProps as any) },
+            inputProps: { id: safeId, autoComplete, ...(inputProps) },
             invalid: !!fieldState.error,
           })}
         </DynamicFormFieldWrapper>
@@ -102,7 +103,6 @@ export function DynamicCustomField<TValues extends FieldValues>({ config }: { co
       control={control}
       name={name as FieldPath<TValues>}
       render={({ formState }) => (
-        
         <DynamicFormFieldWrapper
           label={label}
           description={description}

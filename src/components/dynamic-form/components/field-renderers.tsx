@@ -52,16 +52,16 @@ export const components: Record<string, (args: RenderArgs) => React.ReactNode> =
 export function renderByInputKind(inputKind: string, args: RenderArgs): React.ReactNode {
   const renderer = components[inputKind]
   if (renderer) return renderer(args)
+
   return (
     <Input
       {...(args.field as any)}
       type={inputKind as any}
-      placeholder={args.placeholder}
       disabled={args.disabled}
       aria-invalid={args.invalid}
+      placeholder={args.placeholder}
+      autoComplete={args.inputProps?.autoComplete}
       {...(args.inputProps as any)}
     />
   )
 }
-
-

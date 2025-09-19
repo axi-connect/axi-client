@@ -54,7 +54,7 @@ export default function DetailSheet<Id extends string | number = string | number
     title,
     subtitle,
     side = "auto",
-    responsiveBreakpoint = 1024,
+    responsiveBreakpoint = 768,
     size = 420,
     closeOnOverlayClick = true,
     closeOnEsc = true,

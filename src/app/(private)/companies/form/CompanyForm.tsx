@@ -1,25 +1,9 @@
 "use client"
 
-import { createCompany, updateCompany } from "../service"
+import { parseHttpError } from "@/shared/api"
 import { DynamicForm } from "@/components/dynamic-form"
+import { createCompany, updateCompany } from "../service"
 import { buildCompanyFormFields, companyFormSchema, defaultCompanyFormValues, toCreateCompanyDTO, type CompanyFormValues } from "./form.config"
-
-function parseHttpError(error: unknown): { status?: number; message?: string } {
-  const fallback = { status: undefined, message: "Ocurrió un error inesperado" }
-  if (typeof error === "object" && error && "message" in error) {
-    const raw = String((error as any).message)
-    const match = raw.match(/^HTTP\s+(\d+)/)
-    const status = match ? Number(match[1]) : undefined
-    const payloadStr = raw.includes(":") ? raw.split(":").slice(1).join(":").trim() : ""
-    try {
-      const payload = payloadStr ? JSON.parse(payloadStr) : undefined
-      return { status, message: payload?.message || payload?.error || raw }
-    } catch {
-      return { status, message: raw }
-    }
-  }
-  return fallback
-}
 
 export type CompanyFormHost = {
   closeModal?: () => void

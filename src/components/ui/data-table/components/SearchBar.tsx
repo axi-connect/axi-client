@@ -38,10 +38,11 @@ export function SearchBar({ fields, field, value, trigger, messages, onFieldChan
         }}
       >
         <Input
-          placeholder={placeholder}
           value={value}
-          onChange={(e) => onValueChange(e.target.value)}
+          name="search"
           className="flex-1"
+          placeholder={placeholder}
+          onChange={(e) => onValueChange(e.target.value)}
           aria-label={placeholder}
         />
         {Boolean(value) && (

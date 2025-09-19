@@ -4,7 +4,7 @@ import * as React from "react"
 export type SheetAutoSide = "left" | "right" | "bottom"
 
 export function useResponsiveSide(options?: { side?: "auto" | "left" | "right" | "bottom"; breakpoint?: number }) {
-  const { side = "auto", breakpoint = 1024 } = options ?? {}
+  const { side = "auto", breakpoint = 768 } = options ?? {}
   const [resolved, setResolved] = React.useState<SheetAutoSide>("bottom")
   const [mounted, setMounted] = React.useState(false)
 

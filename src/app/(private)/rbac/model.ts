@@ -83,3 +83,33 @@ export type RbacOverviewRow = {
   status: string
   hierarchy_level: number
 }
+
+// Module summary (for permissions picker)
+export type RbacModuleSummaryDTO = {
+  id: number
+  name: string
+  code: string
+  path: string
+  is_public: boolean
+}
+
+export interface ApiRbacModulesSummaryPayload {
+  modules: RbacModuleSummaryDTO[]
+  total: number
+}
+
+// Create Role DTO
+export type CreateRolePermissionItem = {
+  module_id: number
+  permission: RbacPermission[]
+}
+
+export interface CreateRoleDTO {
+  status: "active" | "inactive"
+  hierarchy_level: 0 | 1 | 2 | 3
+  name: string
+  description?: string
+  permissions: CreateRolePermissionItem[]
+}
+
+export type UpdateRoleDTO = Partial<CreateRoleDTO>

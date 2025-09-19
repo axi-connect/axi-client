@@ -1,7 +1,11 @@
 "use client"
 
-import { useSearchParams } from "next/navigation";
+import { RoleForm } from "./form";
+import { Plus } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
 import { buildListParams } from "@/shared/query";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { RbacContextMenuItems } from "./table/table.actions";
@@ -9,6 +13,7 @@ import { RoleDetailSheet } from "./components/RoleDetailSheet";
 import type { DataTableRef } from "@/components/ui/data-table";
 import type { RbacOverviewRow, RbacOverviewView } from "../model";
 import { rbacOverviewColumns, fetchRbacOverview } from "./table/table.config";
+import { FloatingAlert, type FloatingAlertConfig } from "@/components/ui/floating-alert";
 
 export default function RbacOverviewPage() {
   const pageSize = 10
@@ -16,12 +21,17 @@ export default function RbacOverviewPage() {
   const tableRef = useRef<DataTableRef>(null)
   const viewParam = (searchParams.get("view") as RbacOverviewView) || "summary"
 
-  const [rows, setRows] = useState<RbacOverviewRow[]>([])
-  const [searchValue, setSearchValue] = useState<string>("")
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
-  const [total, setTotal] = useState<number | undefined>(undefined)
-  const [sortBy, setSortBy] = useState<keyof RbacOverviewRow | undefined>()
-  const [searchField, setSearchField] = useState<keyof RbacOverviewRow>("name")
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [rows, setRows] = useState<RbacOverviewRow[]>([]);
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [total, setTotal] = useState<number | undefined>(undefined);
+  const [formDefaults, setFormDefaults] = useState<any | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [sortBy, setSortBy] = useState<keyof RbacOverviewRow | undefined>();
+  const [searchField, setSearchField] = useState<keyof RbacOverviewRow>("name");
+  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
   const [summary, setSummary] = useState<{ roles_count: number; modules_count: number; users_count: number } | null>(null)
 
   // no local builders — use shared helper inline in load
@@ -56,7 +66,52 @@ export default function RbacOverviewPage() {
     tableRef.current?.goToPage(1)
   }
 
+  const onModalSubmitClick = () => {
+    const form = document.getElementById("rbac-role-form") as HTMLFormElement | null;
+    form?.requestSubmit();
+  }
+
+  const setAlert = (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => {
+    setAlertConfig(cfg)
+    setAlertOpen(true)
+  }
+
   useEffect(() => { load(1); tableRef.current?.goToPage(1) }, [viewParam])
+
+  useEffect(() => {
+    const onEditOpen = (e: Event) => {
+      const { defaults } = (e as CustomEvent).detail as { defaults: any }
+      setFormMode("edit")
+      setFormDefaults(defaults)
+      setModalOpen(true)
+    }
+    const onDeleteSuccess = async (e: Event) => {
+      const detail = (e as CustomEvent).detail as { id: string | number; message?: string }
+      setAlert({ variant: "success", title: detail?.message || "Rol eliminado correctamente" })
+      const current = tableRef.current?.getCurrentPage() ?? 1
+      await load(current)
+    }
+    const onDeleteError = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { message?: string }
+      setAlert({ variant: "destructive", title: detail?.message || "No se pudo eliminar el rol" })
+    }
+    const onError = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { message?: string; status?: number }
+      setAlert({ variant: "destructive", title: detail?.message || "Ocurrió un error" })
+    }
+    
+    window.addEventListener("rbac:edit:open", onEditOpen)
+    window.addEventListener("rbac:delete:success", onDeleteSuccess)
+    window.addEventListener("rbac:delete:error", onDeleteError)
+    window.addEventListener("rbac:error", onError)
+    
+    return () => {
+      window.removeEventListener("rbac:edit:open", onEditOpen)
+      window.removeEventListener("rbac:delete:success", onDeleteSuccess)
+      window.removeEventListener("rbac:delete:error", onDeleteError)
+      window.removeEventListener("rbac:error", onError)
+    }
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -67,6 +122,10 @@ export default function RbacOverviewPage() {
         <p className="text-sm text-muted-foreground">
           Visión general de roles, módulos y permisos.
         </p>
+        <Button style={{ borderRadius: "9999px" }} variant="default" onClick={() => { setFormMode("create"); setFormDefaults(null); setModalOpen(true); }}>
+          <Plus className="h-4 w-4" />
+          Crear rol
+        </Button>
       </div>
 
       {summary && (
@@ -87,6 +146,8 @@ export default function RbacOverviewPage() {
             <RbacContextMenuItems
               row={row}
               onViewClick={() => window.dispatchEvent(new CustomEvent("rbac:view:open", { detail: { defaults: row } }))}
+              onEditClick={() => window.dispatchEvent(new CustomEvent("rbac:edit:open", { detail: { defaults: row } }))}
+              onDeleteClick={() => window.dispatchEvent(new CustomEvent("rbac:delete:open", { detail: { row } }))}
               kind="context"
             />
           )}
@@ -98,7 +159,42 @@ export default function RbacOverviewPage() {
           sorting={{ by: sortBy as any, dir: sortDir }}
         />
       </div>
+
       <RoleDetailSheet />
+
+      <Modal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        config={{
+          title: formMode === "edit" ? "Editar rol" : "Crear rol",
+          description: formMode === "edit" ? "Actualiza la información del rol" : "Define permisos y jerarquía para el nuevo rol",
+          actions: [
+            { label: "Cancelar", variant: "outline", asClose: true, id: "rbac-cancel" },
+            { label: formMode === "edit" ? "Guardar cambios" : "Guardar", variant: "default", asClose: false, onClick: onModalSubmitClick, id: "rbac-save" },
+          ],
+        }}
+      >
+        <RoleForm 
+          host={{
+            setAlert,
+            defaultValues: formDefaults ?? undefined,
+            refresh: () => load(tableRef.current?.getCurrentPage()),
+            closeModal: () => setModalOpen(false),
+          }}
+          onSuccess={() => { setModalOpen(false); load(1) }} 
+        />
+      </Modal>
+
+      <FloatingAlert
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        config={{
+          variant: alertConfig?.variant ?? "default",
+          title: alertConfig?.title ?? "",
+          description: alertConfig?.description,
+          durationMs: 4000,
+        }}
+      />
     </div>
   )
 }

@@ -40,6 +40,7 @@ export type BaseFieldConfig<TValues extends FieldValues> = {
   description?: React.ReactNode
   placeholder?: string
   className?: string
+  autoComplete?: string
   containerClassName?: string
   htmlFor?: string
   /**

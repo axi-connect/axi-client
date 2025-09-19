@@ -1,12 +1,60 @@
 "use client"
 
 import { useState } from "react"
+import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import type { DataRow } from "@/components/ui/data-table/types"
-import { Copy, Eye, MoreHorizontal } from "lucide-react"
+import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
+import { getRbacOverviewRoleDetail, deleteRbacRole } from "../../service"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function RbacRowActions({ row }: { row: DataRow }) {
+  const [submitting, setSubmitting] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const onDeleteClick = () => setConfirmOpen(true)
+  const onViewClick = () => window.dispatchEvent(new CustomEvent("rbac:view:open", { detail: { defaults: row } }))
+  
+  const onEditClick = async () => {
+    try {
+      document.body.style.cursor = "wait";
+      const id = (row as any).id as number
+      const { data } = await getRbacOverviewRoleDetail(id)
+      const role = data.roles?.[0]
+      const defaults = role ? {
+        id: role.id,
+        name: role.name,
+        description: role.description ?? "",
+        status: (role as any).state ?? (role as any).status ?? "active",
+        hierarchy_level: (role as any).hierarchy_level ?? 0,
+        permissions: role.modules ? role.modules.map((rm: any) => ({ module_id: rm.id, permission: rm.permissions })) : [],
+      } : { id: (row as any).id }
+      window.dispatchEvent(new CustomEvent("rbac:edit:open", { detail: { defaults } }))
+      document.body.style.cursor = "default";
+    } catch {
+      document.body.style.cursor = "default";
+      window.dispatchEvent(new CustomEvent("rbac:error", { detail: { message: "No se pudo cargar el detalle del rol" } }))
+    }
+  }
+
+  const handleConfirmDelete = async () => {
+    if (submitting) return
+    try {
+      setSubmitting(true)
+      const id = (row as any).id as number
+      const res = await deleteRbacRole(id)
+      if (res.successful) {
+        window.dispatchEvent(new CustomEvent("rbac:delete:success", { detail: { id, message: res.message } }))
+        setConfirmOpen(false)
+      } else {
+        window.dispatchEvent(new CustomEvent("rbac:delete:error", { detail: { id, message: res.message } }))
+      }
+    } catch {
+      window.dispatchEvent(new CustomEvent("rbac:error", { detail: { message: "No se pudo eliminar el rol" } }))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -17,19 +65,36 @@ export function RbacRowActions({ row }: { row: DataRow }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <RbacContextMenuItems
-            row={row}
-            onViewClick={() => window.dispatchEvent(new CustomEvent("rbac:view:open", { detail: { defaults: row } }))}
-          />
+          <RbacContextMenuItems row={row} onViewClick={onViewClick} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Modal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        config={{
+          title: "Eliminar rol",
+          description: `¿Seguro que deseas eliminar el rol “${String((row as any).name ?? "")}”? Esta acción es permanente.`,
+          actions: [
+            { label: "Cancelar", variant: "outline", asClose: true, id: "rbac-delete-cancel" },
+            { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "rbac-delete-confirm" },
+          ],
+          className: "sm:max-w-md",
+        }}
+      >
+        <div className="text-sm text-muted-foreground">
+          Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados a este rol.
+        </div>
+      </Modal>
     </div>
   )
 }
 
-export function RbacContextMenuItems({ row, onViewClick, kind = "dropdown" }: {
+export function RbacContextMenuItems({ row, onViewClick, onEditClick, onDeleteClick, kind = "dropdown" }: {
   row: DataRow
   onViewClick: () => void
+  onEditClick: () => void
+  onDeleteClick: () => void
   kind?: "dropdown" | "context"
 }) {
   const Label = kind === "dropdown" ? DropdownMenuLabel : (props: any) => <div className={props.className}>{props.children}</div>
@@ -53,6 +118,14 @@ export function RbacContextMenuItems({ row, onViewClick, kind = "dropdown" }: {
       <Item className="flex items-center gap-2" onClick={onViewClick}>
         <Eye className="h-4 w-4" />
         <span>Ver detalles</span>
+      </Item>
+      <Item className="flex items-center gap-2" onClick={onEditClick}>
+        <Pencil className="h-4 w-4" />
+        <span>Editar</span>
+      </Item>
+      <Item className="flex items-center gap-2 text-red-500" onClick={onDeleteClick}>
+        <Trash className="h-4 w-4" />
+        <span>Eliminar</span>
       </Item>
     </>
   )
