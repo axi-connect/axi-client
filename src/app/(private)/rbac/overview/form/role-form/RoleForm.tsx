@@ -1,11 +1,11 @@
 "use client"
 
+import { useMemo } from "react"
 import { parseHttpError } from "@/shared/api"
-import { useEffect, useMemo, useState } from "react"
-import type { RbacModuleSummaryDTO } from "../../model"
 import { DynamicForm } from "@/components/dynamic-form"
-import { listRbacModulesSummary, createRbacRole, updateRbacRole } from "../../service"
+import { createRbacRole, updateRbacRole } from "@/app/(private)/rbac/service"
 import { roleFormSchema, buildRoleFormFields, defaultRoleFormValues, toCreateRoleDTO, type RoleFormValues } from "./form.config"
+import { useOverview } from "../overview.context"
 
 export type RoleFormHost = {
   closeModal?: () => void
@@ -15,12 +15,7 @@ export type RoleFormHost = {
 }
 
 export function RoleForm({ host, onSuccess }: { host?: RoleFormHost; onSuccess?: () => void }) {
-  const [modules, setModules] = useState<RbacModuleSummaryDTO[]>([])
-
-  useEffect(() => {
-    listRbacModulesSummary().then(({ data }) => setModules(data.modules)).catch(() => setModules([]))
-  }, [])
-
+  const { modules } = useOverview()
   const fields = useMemo(() => buildRoleFormFields(modules), [modules])
 
   async function handleSubmit(values: RoleFormValues) {

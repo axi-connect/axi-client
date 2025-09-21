@@ -113,3 +113,12 @@ export interface CreateRoleDTO {
 }
 
 export type UpdateRoleDTO = Partial<CreateRoleDTO>
+
+// Create Module DTO
+export interface CreateModuleDTO {
+  name: string
+  path: string
+  is_public?: boolean
+  parent_id?: number
+  icon?: string
+}

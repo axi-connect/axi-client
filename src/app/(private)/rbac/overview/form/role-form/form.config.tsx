@@ -3,7 +3,7 @@
 import { z } from "zod"
 import type { FieldConfig } from "@/components/dynamic-form"
 import { createCustomField, createInputField } from "@/components/dynamic-form"
-import type { CreateRoleDTO, RbacModuleSummaryDTO, RbacPermission } from "../../model"
+import type { CreateRoleDTO, RbacModuleSummaryDTO, RbacPermission } from "@/app/(private)/rbac/model"
 
 export const roleFormSchema = z.object({
   name: z.string().min(1, "Requerido"),

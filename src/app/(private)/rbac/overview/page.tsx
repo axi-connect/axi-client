@@ -1,7 +1,6 @@
 "use client"
 
-import { RoleForm } from "./form";
-import { Plus } from "lucide-react";
+import { RoleForm, ModuleForm } from "./form";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { buildListParams } from "@/shared/query";
@@ -9,10 +8,14 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { RbacContextMenuItems } from "./table/table.actions";
+import { Plus, Users2, LayoutDashboard } from "lucide-react";
 import { RoleDetailSheet } from "./components/RoleDetailSheet";
 import type { DataTableRef } from "@/components/ui/data-table";
 import type { RbacOverviewRow, RbacOverviewView } from "../model";
+import { OverviewProvider, useOverview } from "./form/overview.context";
+import { modalHeaderTitles, modalHeaderDescriptions } from "./modal-texts";
 import { rbacOverviewColumns, fetchRbacOverview } from "./table/table.config";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FloatingAlert, type FloatingAlertConfig } from "@/components/ui/floating-alert";
 
 export default function RbacOverviewPage() {
@@ -28,6 +31,7 @@ export default function RbacOverviewPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [total, setTotal] = useState<number | undefined>(undefined);
   const [formDefaults, setFormDefaults] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<"role" | "module">("role");
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [sortBy, setSortBy] = useState<keyof RbacOverviewRow | undefined>();
   const [searchField, setSearchField] = useState<keyof RbacOverviewRow>("name");
@@ -67,8 +71,9 @@ export default function RbacOverviewPage() {
   }
 
   const onModalSubmitClick = () => {
-    const form = document.getElementById("rbac-role-form") as HTMLFormElement | null;
-    form?.requestSubmit();
+    const formId = activeTab === "role" ? "rbac-role-form" : "rbac-module-form"
+    const form = document.getElementById(formId) as HTMLFormElement | null
+    form?.requestSubmit()
   }
 
   const setAlert = (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => {
@@ -83,6 +88,7 @@ export default function RbacOverviewPage() {
       const { defaults } = (e as CustomEvent).detail as { defaults: any }
       setFormMode("edit")
       setFormDefaults(defaults)
+      setActiveTab("role")
       setModalOpen(true)
     }
     const onDeleteSuccess = async (e: Event) => {
@@ -114,7 +120,9 @@ export default function RbacOverviewPage() {
   }, [])
 
   return (
+    <OverviewProvider>
     <div className="space-y-4">
+      <ModulesRefreshOnModalOpen open={modalOpen} />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">RBAC Overview</h1>
@@ -166,23 +174,51 @@ export default function RbacOverviewPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         config={{
-          title: formMode === "edit" ? "Editar rol" : "Crear rol",
-          description: formMode === "edit" ? "Actualiza la información del rol" : "Define permisos y jerarquía para el nuevo rol",
+          title: modalHeaderTitles[activeTab][formMode],
+          description: modalHeaderDescriptions[activeTab][formMode],
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true, id: "rbac-cancel" },
             { label: formMode === "edit" ? "Guardar cambios" : "Guardar", variant: "default", asClose: false, onClick: onModalSubmitClick, id: "rbac-save" },
           ],
         }}
       >
-        <RoleForm 
-          host={{
-            setAlert,
-            defaultValues: formDefaults ?? undefined,
-            refresh: () => load(tableRef.current?.getCurrentPage()),
-            closeModal: () => setModalOpen(false),
-          }}
-          onSuccess={() => { setModalOpen(false); load(1) }} 
-        />
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <div className="flex justify-center items-center">
+            <TabsList>
+              <TabsTrigger value="role">
+                <Users2 className="h-4 w-4" />
+                Rol
+              </TabsTrigger>
+              <TabsTrigger value="module">
+                <LayoutDashboard className="h-4 w-4" />
+                Módulo
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="role">
+            <RoleForm 
+              host={{
+                setAlert,
+                defaultValues: formDefaults ?? undefined,
+                refresh: () => load(tableRef.current?.getCurrentPage()),
+                closeModal: () => setModalOpen(false),
+              }}
+              onSuccess={() => { setModalOpen(false); load(1) }} 
+            />
+          </TabsContent>
+
+          <TabsContent value="module">
+            <ModuleForm
+              host={{
+                setAlert,
+                refresh: () => load(tableRef.current?.getCurrentPage()),
+                closeModal: () => setModalOpen(false),
+              }}
+              onSuccess={() => { setModalOpen(false); load(1) }}
+            />
+          </TabsContent>
+        </Tabs>
       </Modal>
 
       <FloatingAlert
@@ -196,7 +232,14 @@ export default function RbacOverviewPage() {
         }}
       />
     </div>
+    </OverviewProvider>
   )
+}
+
+function ModulesRefreshOnModalOpen({ open }: { open: boolean }) {
+  const { refreshModules } = useOverview()
+  useEffect(() => { if (open) refreshModules() }, [open, refreshModules])
+  return null
 }
 
 function KpiCard({ label, value }: { label: string; value: number }) {

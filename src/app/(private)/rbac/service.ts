@@ -1,6 +1,6 @@
 import { http, Params } from "@/services/http";
 import type { ApiResponse } from "@/shared/api";
-import type { ApiRbacOverviewPayload, ApiRbacOverviewSummaryPayload, ApiRbacModulesSummaryPayload, CreateRoleDTO, UpdateRoleDTO, GetRbacOverviewParams } from "./model";
+import type { ApiRbacOverviewPayload, ApiRbacOverviewSummaryPayload, ApiRbacModulesSummaryPayload, CreateRoleDTO, UpdateRoleDTO, CreateModuleDTO, GetRbacOverviewParams } from "./model";
 
 export async function getRbacOverview(params: GetRbacOverviewParams): Promise<ApiResponse<ApiRbacOverviewSummaryPayload>> {
   return http.get<ApiResponse<ApiRbacOverviewSummaryPayload>>("/rbac/overview", params as Params);
@@ -24,4 +24,8 @@ export async function updateRbacRole(id: number | string, payload: UpdateRoleDTO
 
 export async function deleteRbacRole(id: number | string): Promise<ApiResponse<{}>> {
   return http.delete<ApiResponse<{}>>(`/rbac/role/${id}`)
+}
+
+export async function createRbacModule(payload: CreateModuleDTO): Promise<ApiResponse<{}>> {
+  return http.post<ApiResponse<{}>>("/rbac/module", payload)
 }
