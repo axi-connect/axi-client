@@ -33,10 +33,12 @@ export class HttpClient {
 
   async post<T>(path: string, body?: unknown, options: HttpRequestOptions = {}): Promise<T> {
     const url = this.baseUrl + path;
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+    const headers = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      headers,
+      body: isFormData ? (body as any) : body !== undefined ? JSON.stringify(body) : undefined,
       signal: options.signal,
       cache: "no-store",
     });
@@ -46,10 +48,12 @@ export class HttpClient {
 
   async put<T>(path: string, body?: unknown, options: HttpRequestOptions = {}): Promise<T> {
     const url = this.baseUrl + path;
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+    const headers = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
     const res = await fetch(url, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      headers,
+      body: isFormData ? (body as any) : body !== undefined ? JSON.stringify(body) : undefined,
       signal: options.signal,
       cache: "no-store",
     });

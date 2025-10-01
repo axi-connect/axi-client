@@ -1,31 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { parseHttpError } from "@/shared/api"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { deleteCompany, getCompanyById } from "../service"
+import { deleteUser, getUserById } from "../service"
 import type { DataRow } from "@/components/ui/data-table/types"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-function parseHttpError(error: unknown): { status?: number; message?: string } {
-  const fallback = { status: undefined, message: "Ocurrió un error inesperado" }
-  if (typeof error === "object" && error && "message" in error) {
-    const raw = String((error as any).message)
-    const match = raw.match(/^HTTP\s+(\d+)/)
-    const status = match ? Number(match[1]) : undefined
-    const payloadStr = raw.includes(":") ? raw.split(":").slice(1).join(":").trim() : ""
-    try {
-      const payload = payloadStr ? JSON.parse(payloadStr) : undefined
-      return { status, message: payload?.message || payload?.error || raw }
-    } catch {
-      return { status, message: raw }
-    }
-  }
-  return fallback
-}
-
-export function CompanyRowActions({ company }: { company: DataRow }) {
+export function UserRowActions({ user }: { user: DataRow }) {
   const [submitting, setSubmitting] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -34,27 +18,27 @@ export function CompanyRowActions({ company }: { company: DataRow }) {
   const onEditClick = async () => {
     try {
       document.body.style.cursor = "wait";
-      const id = company.id as string | number
-      const res = await getCompanyById(id)
+      const id = user.id as string | number
+      const res = await getUserById(id)
       const payload = res.data
       document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("companies:edit:open", { detail: { defaults: payload } }))
+      window.dispatchEvent(new CustomEvent("users:edit:open", { detail: { defaults: payload } }))
     } catch (err) {
       document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("companies:error", { detail: { message: "No se pudo cargar el detalle de la empresa" } }))
+      window.dispatchEvent(new CustomEvent("users:error", { detail: { message: "No se pudo cargar el detalle del usuario" } }))
     }
   }
 
   const onViewClick = async () => {
     try {
-      const id = company.id as string | number
-      const res = await getCompanyById(id)
+      const id = user.id as string | number
+      const res = await getUserById(id)
       const payload = res.data
       document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("companies:view:open", { detail: { defaults: payload } }))
+      window.dispatchEvent(new CustomEvent("users:view:open", { detail: { defaults: payload } }))
     } catch (err) {
       document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("companies:error", { detail: { message: "No se pudo cargar el detalle de la empresa" } }))
+      window.dispatchEvent(new CustomEvent("users:error", { detail: { message: "No se pudo cargar el detalle del usuario" } }))
     }
   }
 
@@ -62,17 +46,17 @@ export function CompanyRowActions({ company }: { company: DataRow }) {
     if (submitting) return
     try {
       setSubmitting(true)
-      const id = company.id as string | number
-      const res = await deleteCompany(id)
+      const id = user.id as string | number
+      const res = await deleteUser(id)
       if (res.successful) {
-        window.dispatchEvent(new CustomEvent("companies:delete:success", { detail: { id, message: res.message } }))
+        window.dispatchEvent(new CustomEvent("users:delete:success", { detail: { id, message: res.message } }))
         setConfirmOpen(false)
       } else {
-        window.dispatchEvent(new CustomEvent("companies:delete:error", { detail: { id, message: res.message } }))
+        window.dispatchEvent(new CustomEvent("users:delete:error", { detail: { id, message: res.message } }))
       }
     } catch (err) {
       const { status, message } = parseHttpError(err)
-      window.dispatchEvent(new CustomEvent("companies:delete:error", { detail: { id: (company as any).id, status, message } }))
+      window.dispatchEvent(new CustomEvent("users:delete:error", { detail: { id: (user as any).id, status, message } }))
     } finally {
       setSubmitting(false)
     }
@@ -88,8 +72,8 @@ export function CompanyRowActions({ company }: { company: DataRow }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <CompanyContextMenuItems
-            company={company}
+          <UserContextMenuItems
+            user={user}
             onDeleteClick={onDeleteClick}
             onEditClick={onEditClick}
             onViewClick={onViewClick}
@@ -102,25 +86,25 @@ export function CompanyRowActions({ company }: { company: DataRow }) {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         config={{
-          title: "Eliminar empresa",
-          description: `¿Seguro que deseas eliminar la empresa “${String(company.name ?? "")}”? Esta acción es permanente.`,
+          title: "Eliminar usuario",
+          description: `¿Seguro que deseas eliminar al usuario “${String(user.name ?? user.email ?? "")}”? Esta acción es permanente.`,
           actions: [
-            { label: "Cancelar", variant: "outline", asClose: true, id: "company-delete-cancel" },
-            { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "company-delete-confirm" },
+            { label: "Cancelar", variant: "outline", asClose: true, id: "user-delete-cancel" },
+            { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "user-delete-confirm" },
           ],
           className: "sm:max-w-md",
         }}
       >
         <div className="text-sm text-muted-foreground">
-          Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados a esta empresa.
+          Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados a este usuario.
         </div>
       </Modal>
     </div>
   )
 }
 
-export function CompanyContextMenuItems({ company, onDeleteClick, onEditClick, onViewClick, kind = "dropdown" }: {
-  company: DataRow
+export function UserContextMenuItems({ user, onDeleteClick, onEditClick, onViewClick, kind = "dropdown" }: {
+  user: DataRow
   onDeleteClick: () => void
   onEditClick: () => void
   onViewClick: () => void
@@ -139,14 +123,14 @@ export function CompanyContextMenuItems({ company, onDeleteClick, onEditClick, o
   return (
     <>
       <Label>Acciones</Label>
-      <Item className="flex items-center gap-2" onClick={() => navigator.clipboard.writeText(JSON.stringify(company))}>
+      <Item className="flex items-center gap-2" onClick={() => navigator.clipboard.writeText(JSON.stringify(user))}>
         <Copy className="h-4 w-4" />
         Copiar Objeto
       </Item>
       <Separator />
       <Item className="flex items-center gap-2" onClick={onViewClick}>
         <Eye className="h-4 w-4" />
-        <span>Ver empresa</span>
+        <span>Ver usuario</span>
       </Item>
       <Item className="flex items-center gap-2" onClick={onEditClick}>
         <Pencil className="h-4 w-4" />

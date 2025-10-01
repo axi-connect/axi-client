@@ -13,24 +13,32 @@ type RenderArgs = {
 }
 
 function InputFile(
-  props: Omit<React.ComponentProps<typeof Input>, "onChange"> & { onChange: (file: File | null) => void }
+  props: Omit<React.ComponentProps<typeof Input>, "onChange"> & { onChange: (file: File | null) => void; name?: string }
 ) {
-  const { onChange, ...rest } = props
+  const { onChange, name, ...rest } = props
   return (
     <Input
       {...rest}
       type="file"
       onChange={(e) => {
         const files = (e.target as HTMLInputElement).files
-        onChange(files && files.length ? files[0] : null)
+        const file = files && files.length ? files[0] : null
+        onChange(file)
+        try {
+          const objectUrl = file ? URL.createObjectURL(file) : undefined
+          const detail = { name, file, objectUrl }
+          window.dispatchEvent(new CustomEvent("dynamic-form:file:change", { detail }))
+        } catch {}
       }}
     />
   )
 }
 
 export const components: Record<string, (args: RenderArgs) => React.ReactNode> = {
-  file: ({ placeholder, disabled, field, invalid }) => (
+  file: ({ placeholder, disabled, field, invalid, inputProps }) => (
     <InputFile
+      id={inputProps?.id}
+      name={String(field.name)}
       placeholder={placeholder}
       disabled={disabled}
       aria-invalid={invalid}
@@ -55,13 +63,13 @@ export function renderByInputKind(inputKind: string, args: RenderArgs): React.Re
 
   return (
     <Input
-      {...(args.field as any)}
-      type={inputKind as any}
+      {...(args.field)}
+      type={inputKind}
       disabled={args.disabled}
       aria-invalid={args.invalid}
       placeholder={args.placeholder}
       autoComplete={args.inputProps?.autoComplete}
-      {...(args.inputProps as any)}
+      {...(args.inputProps)}
     />
   )
 }

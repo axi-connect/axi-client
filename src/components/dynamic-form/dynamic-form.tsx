@@ -13,19 +13,21 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
   const {
     id,
     schema,
-    defaultValues,
     fields,
-    onSubmit,
-    mode = "onSubmit",
-    columns = { base: 1, md: 2 },
-    gap = 4,
-    className,
-    renderFieldsWrapper,
     actions,
+    gap = 4,
+    onSubmit,
+    className,
+    defaultValues,
+    mode = "onSubmit",
+    renderFieldsWrapper,
+    columns = { base: 1, md: 2 },
   } = props
 
+  const resolver = useMemo(() => createZodResolver(schema), [schema])
+
   const form = useForm<TValues>({
-    resolver: createZodResolver(schema),
+    resolver: resolver,
     defaultValues: defaultValues as DefaultValues<TValues>,
     mode,
   })
@@ -38,6 +40,23 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
       await onSubmit(data)
     },
     [onSubmit]
+  )
+
+  const onInvalid = useCallback(
+    async (errors: Record<string, unknown>) => {
+      const values = form.getValues() as TValues
+      const disabledKeys = fields
+        .filter((f) => f.isDisabled?.(values as TValues))
+        .map((f) => String(f.name))
+      if (disabledKeys.length) {
+        form.clearErrors(disabledKeys as any)
+      }
+      const hasOtherErrors = Object.keys(errors || {}).some((k) => !disabledKeys.includes(k))
+      if (!hasOtherErrors) {
+        await onValid(values)
+      }
+    },
+    [fields, form, onValid]
   )
 
   const gridClasses = useMemo(() => {
@@ -100,7 +119,7 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
     <RHFFormProvider {...form}>
       <form
         id={id}
-        onSubmit={handleSubmit(onValid)}
+        onSubmit={handleSubmit(onValid, onInvalid)}
         onReset={(e) => {
           e.preventDefault()
           form.reset()
