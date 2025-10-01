@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { parseHttpError } from "@/shared/api"
-import { DynamicForm } from "@/components/dynamic-form"
+import { DynamicForm } from "@/components/features/dynamic-form"
 import { createRbacRole, updateRbacRole } from "@/app/(private)/rbac/service"
 import { roleFormSchema, buildRoleFormFields, defaultRoleFormValues, toCreateRoleDTO, type RoleFormValues } from "./form.config"
 import { useOverview } from "../overview.context"

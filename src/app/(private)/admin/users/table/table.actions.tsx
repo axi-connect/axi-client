@@ -5,7 +5,7 @@ import { parseHttpError } from "@/shared/api"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { deleteUser, getUserById } from "../service"
-import type { DataRow } from "@/components/ui/data-table/types"
+import type { DataRow } from "@/components/features/data-table/types"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 

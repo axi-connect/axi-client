@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { buildListParams } from "@/shared/query";
 import { useEffect, useRef, useState } from "react";
 import { CompanyContextMenuItems } from "./table/table.actions";
-import { DataTable, type DataTableRef } from "@/components/ui/data-table";
+import { DataTable, type DataTableRef } from "@/components/features/data-table";
 import { companyColumns, companyData, fetchCompanies } from "./table/table.config";
 import { FloatingAlert, type FloatingAlertConfig } from "@/components/ui/floating-alert";
 

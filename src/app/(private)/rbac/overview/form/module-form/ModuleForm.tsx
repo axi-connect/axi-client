@@ -2,7 +2,7 @@
 
 import { parseHttpError } from "@/shared/api"
 import { useOverview } from "../overview.context"
-import { DynamicForm } from "@/components/dynamic-form"
+import { DynamicForm } from "@/components/features/dynamic-form"
 import { createRbacModule } from "@/app/(private)/rbac/service"
 import { buildModuleFormFields, defaultModuleFormValues, moduleFormSchema, type ModuleFormValues } from "./form.config"
 

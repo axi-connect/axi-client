@@ -33,7 +33,7 @@ src/components/dynamic-form/
 ## API
 ### Componente principal
 ```tsx
-import { DynamicForm } from "@/components/dynamic-form"
+import { DynamicForm } from "@/components/features/dynamic-form"
 ```
 
 Props (`DynamicFormProps<TValues>`):
@@ -73,7 +73,7 @@ type FieldConfig<TValues> = InputFieldConfig<TValues> | CustomFieldConfig<TValue
 
 ### Builders
 ```ts
-import { createField, createInputField, createCustomField } from "@/components/dynamic-form"
+import { createField, createInputField, createCustomField } from "@/components/features/dynamic-form"
 ```
 - `createInputField(name, options)`
 - `createCustomField(name, render, options)`
@@ -81,7 +81,7 @@ import { createField, createInputField, createCustomField } from "@/components/d
 
 ## Ejemplo Básico
 ```tsx
-import { DynamicForm, createInputField, createCustomField } from "@/components/dynamic-form"
+import { DynamicForm, createInputField, createCustomField } from "@/components/features/dynamic-form"
 import { z } from "zod"
 
 type Values = {
@@ -141,7 +141,7 @@ export default function Ejemplo() {
 
 ## Helpers Disponibles
 ```ts
-import { columnsToClasses, GAP_CLASS_BY_LEVEL, GRID_COLS_CLASS_BY_COUNT, createZodResolver } from "@/components/dynamic-form"
+import { columnsToClasses, GAP_CLASS_BY_LEVEL, GRID_COLS_CLASS_BY_COUNT, createZodResolver } from "@/components/features/dynamic-form"
 ```
 
 ## Notas de Performance

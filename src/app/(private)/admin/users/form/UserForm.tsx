@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { parseHttpError } from "@/shared/api"
-import { DynamicForm } from "@/components/dynamic-form"
+import { DynamicForm } from "@/components/features/dynamic-form"
 import { createUser, updateUser, listCompanyOptions, listRoleOptions } from "../service"
 import { buildUserFormFields, defaultUserFormValues, toCreateUserDTO, userFormSchema, type UserFormValues } from "./form.config"
 

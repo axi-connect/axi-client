@@ -2,8 +2,8 @@
 
 import { z } from "zod"
 import { useOverview } from "../overview.context"
-import type { FieldConfig } from "@/components/dynamic-form"
-import { createCustomField, createInputField } from "@/components/dynamic-form"
+import type { FieldConfig } from "@/components/features/dynamic-form"
+import { createCustomField, createInputField } from "@/components/features/dynamic-form"
 
 export const moduleFormSchema = z.object({
   name: z.string().min(3, "Mínimo 3 caracteres"),

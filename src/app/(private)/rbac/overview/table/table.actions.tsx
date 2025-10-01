@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import type { DataRow } from "@/components/ui/data-table/types"
+import type { DataRow } from "@/components/features/data-table/types"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
 import { getRbacOverviewRoleDetail, deleteRbacRole } from "../../service"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"

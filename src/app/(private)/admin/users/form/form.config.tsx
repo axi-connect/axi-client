@@ -3,8 +3,8 @@
 import { z } from "zod"
 import type { SelectOption } from "../model"
 import type { CreateUserDTO } from "../model"
-import type { FieldConfig } from "@/components/dynamic-form"
-import { createCustomField, createInputField } from "@/components/dynamic-form"
+import type { FieldConfig } from "@/components/features/dynamic-form"
+import { createCustomField, createInputField } from "@/components/features/dynamic-form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export const userFormSchema = z.object({

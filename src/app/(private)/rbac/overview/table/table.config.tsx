@@ -3,7 +3,7 @@
 import { getRbacOverview } from "../../service";
 import type { ApiResponse } from "@/shared/api";
 import { RbacRowActions } from "./table.actions";
-import type { ColumnDef } from "@/components/ui/data-table/types";
+import type { ColumnDef } from "@/components/features/data-table/types";
 import type { ApiRbacOverviewSummaryPayload, GetRbacOverviewParams, RbacOverviewRow, RbacRoleSummaryDTO } from "../../model";
 
 export const rbacOverviewColumns: ColumnDef[] = [

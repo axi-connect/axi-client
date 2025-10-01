@@ -3,9 +3,9 @@
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { FieldConfig } from "@/components/dynamic-form";
+import type { FieldConfig } from "@/components/features/dynamic-form";
 import type { CreateCompanyDTO, CompanyScheduleItem } from "../model";
-import { createCustomField, createInputField } from "@/components/dynamic-form";
+import { createCustomField, createInputField } from "@/components/features/dynamic-form";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const scheduleItemSchema = z

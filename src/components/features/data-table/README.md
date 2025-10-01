@@ -32,7 +32,7 @@ src/components/ui/data-table/
 ## Inicio rápido
 
 ```tsx
-import DataTable, { type ColumnDef } from "@/components/ui/data-table"
+import DataTable, { type ColumnDef } from "@/components/features/data-table"
 
 // 1) Define tu tipo de fila
 interface CompanyRow {

@@ -3,7 +3,7 @@
 import {useState} from "react";
 import { motion } from "framer-motion";
 import { HomeIcon } from "@heroicons/react/24/outline";
-import OverlayDialog from "@/components/overlay-dialog";
+import OverlayDialog from "@/components/features/dialogs/overlay-dialog";
 
 export default function DashboardPage() {
   const [open, setOpen] = useState(false);

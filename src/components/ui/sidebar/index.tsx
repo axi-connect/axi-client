@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import { useSession } from '@/shared/auth/auth.hooks'
 import { ChevronDown, BookOpen, HelpCircle, FolderOpen, LayoutDashboard, Users, Lock, Building } from "lucide-react"
 
 import {
@@ -130,10 +131,15 @@ export function AppSidebar() {
     return { days, hours, minutes }
   }
 
-  const launchDate = new Date(2025, 10, 1, 0, 0, 0)
-  const { days, hours, minutes } = useCountdown(launchDate)
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  const launchDate = new Date(2025, 10, 1, 0, 0, 0)
+  const { user, isAuthenticated, status } = useSession()
+  const { days, hours, minutes } = useCountdown(launchDate)
+
+  useEffect(() => { 
+    console.log(user, isAuthenticated, status)
+    setMounted(true) 
+  }, [])
 
   function TimeBox({ value, label }: { value: string; label: string }) {
     return (
@@ -192,8 +198,8 @@ export function AppSidebar() {
         <div className="flex items-center gap-3 rounded-md p-2 hover:bg-accent">
           <div className="size-8 rounded-full bg-foreground/20" />
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium">shadcn</div>
-            <div className="truncate text-xs text-foreground/70">m@example.com</div>
+            <div className="truncate text-sm font-medium">{user?.name}</div>
+            <div className="truncate text-xs text-foreground/70">{user?.email}</div>
           </div>
         </div>
       </SidebarFooter>

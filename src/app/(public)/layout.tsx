@@ -1,5 +1,5 @@
-import SiteHeader from "@/components/site/site-header";
-import FooterGlow from "@/components/site/site-footer";
+import SiteHeader from "@/components/layout/site/site-header";
+import FooterGlow from "@/components/layout/site/site-footer";
 
 export default function PublicLayout({
   children,

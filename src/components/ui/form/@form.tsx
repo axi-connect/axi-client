@@ -1,3 +1,3 @@
-export * from "@/components/dynamic-form"
+export * from "@/components/features/dynamic-form"
 
 
