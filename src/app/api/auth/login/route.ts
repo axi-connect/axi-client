@@ -18,14 +18,14 @@ export async function POST(req: NextRequest) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60, // 1h
+      maxAge: 15 * 60, // 15m
     })
     cookieStore.set("refreshToken", refreshToken, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30d
+      maxAge: 60 * 60 * 24 * 7, // 7d
     })
 
     return NextResponse.json({ success: true })

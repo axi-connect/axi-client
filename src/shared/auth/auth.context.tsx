@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-    if (!res.ok) throw new Error("No se pudo iniciar sesión")
+    if (!res.ok) throw new Error("Credenciales inválidas")
     await hydrate()
   }, [hydrate])
 

@@ -1,11 +1,12 @@
 "use client"
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { useSession } from '@/shared/auth/auth.hooks'
-import { ChevronDown, BookOpen, HelpCircle, FolderOpen, LayoutDashboard, Users, Lock, Building } from "lucide-react"
+import { ChevronDown, BookOpen, HelpCircle, FolderOpen, LayoutDashboard, Users, Lock, Building, LogOut, User } from "lucide-react"
 
 import {
   Sidebar,
@@ -22,7 +23,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-} from "@/components/ui/sidebar/core"
+} from "@/components/layout/sidebar/core"
 
 // Types for configurable navigation
 export type SidebarNavItem = {
@@ -60,6 +61,12 @@ const sections: SidebarSection[] = [
     items: [
       { title: "Guías y API", url: "#", icon: BookOpen },
       { title: "Ayuda", url: "#", icon: HelpCircle },
+    ],
+  },
+  {
+    label: "Perfil",
+    items: [
+      { title: "Cerrar sesión", url: "/auth/logout", icon: LogOut },
     ],
   },
 ]
@@ -192,8 +199,25 @@ export function AppSidebar() {
       </div>
 
       <SidebarFooter className="px-3 py-2">
+
+
         <div className="flex items-center gap-3 rounded-md p-2 hover:bg-accent">
-          <div className="size-8 rounded-full bg-foreground/20" />
+          <div className="flex items-center justify-start">
+            {user?.avatar ? (
+              <Image
+                src={user.avatar}
+                alt={user?.name ? `Avatar de ${user?.name}` : "Avatar"}
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded-full object-cover bg-muted"
+                onError={() => { /* si falla, mostramos fallback */ }}
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                {user?.name?.charAt(0)?.toUpperCase() || "A"}
+              </div>
+            )}
+          </div>
           <div className="min-w-0">
             <div className="truncate text-sm font-medium">{user?.name}</div>
             <div className="truncate text-xs text-foreground/70">{user?.email}</div>

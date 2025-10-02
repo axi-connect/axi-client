@@ -1,10 +1,33 @@
-export type UserRole = "admin" | "manager" | "user" | string
+export interface UserRoleEntity {
+  id: number
+  name: string
+  description?: string
+  code?: string
+  hierarchy_level?: number
+  state?: string
+}
+
+export interface CompanyEntity {
+  id: number
+  name: string
+  activity_description?: string
+  nit?: string
+  address?: string
+  city?: string
+  industry?: string
+  isotype?: string | null
+}
 
 export interface AuthUser {
-  id: number | string
+  id: number
   name: string
   email: string
-  role?: UserRole
+  phone?: string
+  avatar?: string
+  role_id?: number
+  company_id?: number
+  role?: UserRoleEntity
+  company?: CompanyEntity
 }
 
 export interface Tokens {

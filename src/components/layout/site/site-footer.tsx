@@ -34,7 +34,7 @@ export default function FooterGlow() {
       <div className="glass relative mx-auto flex max-w-6xl flex-col items-center gap-8 rounded-2xl px-6 py-10 md:flex-row md:items-start md:justify-between md:gap-12">
         <div className="flex flex-col items-center md:items-start">
           <Link href="/" className="mb-4 flex items-center gap-2">
-            <Image src="/brand/isotype.png" alt="Axi Connect" width={36} height={36} />
+            <Image src="https://res.cloudinary.com/dpfnxj52w/image/upload/v1759421795/isotipo_we1obn.png" alt="Axi Connect" width={36} height={36} />
             <span className="text-brand-gradient bg-clip-text text-xl font-semibold tracking-tight text-transparent font-heading">
               Axi Connect
             </span>

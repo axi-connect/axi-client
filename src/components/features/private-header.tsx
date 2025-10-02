@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { SidebarTrigger } from "@/components/ui/sidebar/core"
+import { SidebarTrigger } from "@/components/layout/sidebar/core"
 import { ChevronRight } from "lucide-react"
 
 const LABELS: Record<string, string> = {
