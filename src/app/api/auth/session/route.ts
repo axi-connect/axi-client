@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { http } from "@/services/http"
+import { NextResponse } from "next/server"
 import type { ApiResponse } from "@/shared/api"
 import type { AuthUser } from "@/shared/auth/auth.types"
 
@@ -17,7 +17,7 @@ export async function GET() {
 
   try {
     const me = await http.get<MeResponse>("/auth/me", undefined, { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} })
-    return NextResponse.json({ isAuthenticated: true, user: me.data.user })
+    return NextResponse.json({ isAuthenticated: true, user: me.data })
   } catch {
     // Try refresh once
     if (!refreshToken) return NextResponse.json({ isAuthenticated: false })
@@ -34,5 +34,3 @@ export async function GET() {
     }
   }
 }
-
-

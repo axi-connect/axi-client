@@ -136,10 +136,7 @@ export function AppSidebar() {
   const { user, isAuthenticated, status } = useSession()
   const { days, hours, minutes } = useCountdown(launchDate)
 
-  useEffect(() => { 
-    console.log(user, isAuthenticated, status)
-    setMounted(true) 
-  }, [])
+  useEffect(() => {setMounted(true)}, [])
 
   function TimeBox({ value, label }: { value: string; label: string }) {
     return (
