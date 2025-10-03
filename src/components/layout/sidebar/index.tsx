@@ -1,120 +1,39 @@
 "use client"
 
-import Link from "next/link";
 import Image from "next/image";
+import * as Icons from "lucide-react"
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
+import Loader from "@/components/layout/loader"
+import NavItemNode from './components/nav-item';
 import { useSession } from '@/shared/auth/auth.hooks'
-import { ChevronDown, BookOpen, HelpCircle, FolderOpen, LayoutDashboard, Users, Lock, Building, LogOut, User } from "lucide-react"
+import { SidebarSection, SidebarSectionDTO, SidebarItemDTO } from "./types";
 
 import {
   Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
+  SidebarGroup,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from "@/components/layout/sidebar/core"
 
-// Types for configurable navigation
-export type SidebarNavItem = {
-  title: string
-  url?: string
-  icon?: LucideIcon
-  children?: SidebarNavItem[]
+function iconFromString(name?: string): Icons.LucideIcon | undefined {
+  if (!name) return undefined
+  const Icon = (Icons as unknown as Record<string, Icons.LucideIcon>)[name]
+  return Icon
 }
 
-export type SidebarSection = {
-  label: string
-  items: SidebarNavItem[]
-}
-
-// Configurable structure: groups, items and nested children
-const sections: SidebarSection[] = [
-  {
-    label: "Platform",
-    items: [
-      {
-        title: "Administración",
-        icon: FolderOpen,
-        children: [
-          { title: "Roles", url: "/roles", icon: Lock },
-          { title: "Empresas", url: "/companies", icon: Building },
-          { title: "Usuarios", url: "/users", icon: Users },
-        ],
-      },
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Modelos", url: "#", icon: Users },
-    ],
-  },
-  {
-    label: "Recursos",
-    items: [
-      { title: "Guías y API", url: "#", icon: BookOpen },
-      { title: "Ayuda", url: "#", icon: HelpCircle },
-    ],
-  },
-  {
-    label: "Perfil",
-    items: [
-      { title: "Cerrar sesión", url: "/auth/logout", icon: LogOut },
-    ],
-  },
-]
-
-function NavItemNode({ item }: { item: SidebarNavItem }) {
-  const pathname = usePathname()
-  const isDirectActive = !!(item.url && pathname === item.url)
-  const hasChildren = !!(item.children && item.children.length)
-  const hasActiveChild = hasChildren && item.children!.some((c) => c.url && c.url === pathname)
-  const [open, setOpen] = useState<boolean>(() => hasActiveChild)
-  return (
-    <SidebarMenuItem>
-      {hasChildren ? (
-        <>
-          <SidebarMenuButton
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            className={open ? "data-[state=open]:bg-accent" : undefined}
-          >
-            {item.icon ? <item.icon /> : null}
-            <span>{item.title}</span>
-            <ChevronDown className={`ml-auto transition-transform ${open ? "rotate-180" : "rotate-0"}`} />
-          </SidebarMenuButton>
-          {open && (
-            <SidebarMenuSub>
-              {item.children!.map((child) => (
-                <SidebarMenuSubItem key={child.title}>
-                  <SidebarMenuSubButton asChild isActive={pathname === (child.url || "")}>
-                    <Link href={child.url || "#"}>
-                      {child.icon ? <child.icon /> : null}
-                      <span>{child.title}</span>
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          )}
-        </>
-      ) : (
-        <SidebarMenuButton asChild isActive={isDirectActive}>
-          <Link href={item.url || "#"}>
-            {item.icon ? <item.icon /> : null}
-            <span>{item.title}</span>
-          </Link>
-        </SidebarMenuButton>
-      )}
-    </SidebarMenuItem>
-  )
+function mapDtoToSections(dto: SidebarSectionDTO[]): SidebarSection[] {
+  const mapItem = (it: SidebarItemDTO): any => ({
+    title: it.title,
+    url: it.url?.startsWith("/") ? it.url : it.url ? `/${it.url}` : undefined,
+    icon: iconFromString(it.icon),
+    children: it.children?.map(mapItem) || [],
+  })
+  return dto.map((s) => ({ label: s.label, items: s.items.map(mapItem) }))
 }
 
 export function AppSidebar() {
@@ -141,9 +60,32 @@ export function AppSidebar() {
   const [mounted, setMounted] = useState(false)
   const launchDate = new Date(2025, 10, 1, 0, 0, 0)
   const { user, isAuthenticated, status } = useSession()
+  const [loaderSidebar, setLoaderSidebar] = useState(true)
   const { days, hours, minutes } = useCountdown(launchDate)
+  const [sections, setSections] = useState<SidebarSection[] | null>(null)
 
   useEffect(() => {setMounted(true)}, [])
+
+  useEffect(() => {
+    if(status != "authenticated") return
+    let ignore = false
+    async function loadSidebar() {
+      try {
+        setLoaderSidebar(true)
+        const res = await fetch("/api/auth/sidebar", { cache: "no-store" })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!ignore) setSections(mapDtoToSections(data))
+      } catch (error) {
+        console.error("Error loading sidebar", error)
+        // ignore errors to avoid breaking layout
+      } finally {
+        setLoaderSidebar(false)
+      }
+    }
+    loadSidebar()
+    return () => { ignore = true }
+  }, [status])
 
   function TimeBox({ value, label }: { value: string; label: string }) {
     return (
@@ -162,45 +104,47 @@ export function AppSidebar() {
         <div className="flex items-center gap-2">
           <div className="size-8 rounded-md bg-brand-gradient" />
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">Axi Connect</span>
+            <span className="text-sm font-medium">{user?.company?.name}</span>
             <span className="text-xs text-foreground/70">Enterprise</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        {sections.map((section) => (
-          <SidebarGroup key={section.label}>
-            <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {section.items.map((it) => (
-                  <NavItemNode key={it.title} item={it} />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
-      </SidebarContent>
+      { loaderSidebar 
+        ? <Loader />
+        : (<SidebarContent>
+          {(sections || []).map((section) => (
+            <SidebarGroup key={section.label}>
+              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {section.items.map((it) => (
+                    <NavItemNode key={it.title} item={it} />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
 
-      <div className="px-3 pb-2">
-        <div className="rounded-lg border border-border bg-background p-3">
-          <div className="mb-2 text-xs font-medium text-foreground/80">
-            Lanzamiento Axi Connect <span aria-hidden>🚀</span>
+          {/* Lanzamiento Axi Connect */}
+          <div className="px-3 pb-2">
+            <div className="rounded-lg border border-border bg-background p-3">
+              <div className="mb-2 text-xs font-medium text-foreground/80">
+                Lanzamiento Axi Connect <span aria-hidden>🚀</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TimeBox value={mounted ? days.toString() : "--"} label="días" />
+                <span className="text-foreground/50">:</span>
+                <TimeBox value={mounted ? pad2(hours) : "--"} label="horas" />
+                <span className="text-foreground/50">:</span>
+                <TimeBox value={mounted ? pad2(minutes) : "--"} label="min" />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <TimeBox value={mounted ? days.toString() : "--"} label="días" />
-            <span className="text-foreground/50">:</span>
-            <TimeBox value={mounted ? pad2(hours) : "--"} label="horas" />
-            <span className="text-foreground/50">:</span>
-            <TimeBox value={mounted ? pad2(minutes) : "--"} label="min" />
-          </div>
-        </div>
-      </div>
+        </SidebarContent>)
+      }
 
       <SidebarFooter className="px-3 py-2">
-
-
         <div className="flex items-center gap-3 rounded-md p-2 hover:bg-accent">
           <div className="flex items-center justify-start">
             {user?.avatar ? (
