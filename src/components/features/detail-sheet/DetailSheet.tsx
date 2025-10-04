@@ -11,25 +11,25 @@ import "./styles.css"
 export type DetailSheetSize = "xs" | "sm" | "md" | "lg" | "xl" | number
 
 export interface DetailSheetProps<Id extends string | number = string | number> {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   id?: Id
-  title?: React.ReactNode
-  subtitle?: React.ReactNode
-  side?: "auto" | "left" | "right" | "bottom"
-  responsiveBreakpoint?: number
-  size?: DetailSheetSize
-  closeOnOverlayClick?: boolean
-  closeOnEsc?: boolean
-  disableScrollLock?: boolean
-  portalTarget?: Element | string | null
-  initialFocusRef?: React.RefObject<HTMLElement>
+  open: boolean
   className?: string
+  closeOnEsc?: boolean
+  size?: DetailSheetSize
+  title?: React.ReactNode
+  skeleton?: React.ReactNode
   children?: React.ReactNode
+  subtitle?: React.ReactNode
+  disableScrollLock?: boolean
+  closeOnOverlayClick?: boolean
+  responsiveBreakpoint?: number
   renderHeader?: () => React.ReactNode
   renderFooter?: () => React.ReactNode
+  onOpenChange: (open: boolean) => void
   fetchDetail?: (id: Id) => Promise<any>
-  skeleton?: React.ReactNode
+  portalTarget?: Element | string | null
+  side?: "auto" | "left" | "right" | "bottom"
+  initialFocusRef?: React.RefObject<HTMLElement>
 }
 
 const WIDTH_MAP: Record<Exclude<DetailSheetSize, number>, number> = {
@@ -73,11 +73,15 @@ export default function DetailSheet<Id extends string | number = string | number
   const { side: resolvedSide, mounted } = useResponsiveSide({ side, breakpoint: responsiveBreakpoint })
   useBodyScrollLock(open, { disabled: disableScrollLock })
 
-  const [loading, setLoading] = React.useState(false)
   const requestRef = React.useRef(0)
+  const [ready, setReady] = React.useState(false)
+  const [loading, setLoading] = React.useState(false)
 
   React.useEffect(() => {
     if (!open) return
+    let timeout: NodeJS.Timeout
+    timeout = setTimeout(() => setReady(true), 50)
+    
     if (!fetchDetail || id === undefined || id === null) return
     let cancelled = false
     const current = ++requestRef.current
@@ -92,6 +96,7 @@ export default function DetailSheet<Id extends string | number = string | number
       })
     return () => {
       cancelled = true
+      clearTimeout(timeout)
     }
   }, [open, id, fetchDetail])
 
@@ -139,12 +144,13 @@ export default function DetailSheet<Id extends string | number = string | number
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal container={resolvedContainer}>
+      <Dialog.Portal container={resolvedContainer} forceMount>
         <AnimatePresence>
-          {open && (
+          {open && ready && (
             <React.Fragment>
-              <Dialog.Overlay asChild>
+              <Dialog.Overlay asChild forceMount>
                 <motion.div
+                  key="axi-detail-sheet__overlay"
                   className="axi-detail-sheet__backdrop fixed inset-0 z-[59]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -154,6 +160,7 @@ export default function DetailSheet<Id extends string | number = string | number
               </Dialog.Overlay>
 
               <Dialog.Content
+                forceMount
                 onEscapeKeyDown={(e) => {
                   if (!closeOnEsc) e.preventDefault()
                 }}
@@ -169,6 +176,7 @@ export default function DetailSheet<Id extends string | number = string | number
                 asChild
               >
                 <motion.div
+                  key="axi-detail-sheet__content"
                   ref={containerRef}
                   role="dialog"
                   aria-modal="true"

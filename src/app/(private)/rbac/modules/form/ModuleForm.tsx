@@ -1,36 +1,33 @@
 "use client"
 
 import { parseHttpError } from "@/shared/api"
-import { useOverview } from "../overview.context"
-import { DynamicForm } from "@/components/features/dynamic-form"
+import { useOverview } from "../../context/overview.context"
 import { createRbacModule } from "@/app/(private)/rbac/service"
+import { DynamicForm } from "@/components/features/dynamic-form"
+import { useAlert } from "@/components/providers/alert-provider"
 import { buildModuleFormFields, defaultModuleFormValues, moduleFormSchema, type ModuleFormValues } from "./form.config"
 
 export type ModuleFormHost = {
-  closeModal?: () => void
-  refresh?: () => Promise<void> | void
   defaultValues?: Partial<ModuleFormValues>
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void
 }
 
 export function ModuleForm({ host, onSuccess }: { host?: ModuleFormHost; onSuccess?: () => void }) {
-  const { refreshModules } = useOverview()
+  const { showAlert } = useAlert()
+  const { refreshOverview } = useOverview()
 
   async function handleSubmit(values: ModuleFormValues) {
     try {
       const res = await createRbacModule(values)
       if (res.successful) {
-        await refreshModules()
-        host?.setAlert?.({ variant: "success", title: res.message || "Módulo creado correctamente" })
-        await host?.refresh?.()
-        host?.closeModal?.()
+        // await refreshOverview()
+        showAlert({ tone: "success", title: res.message || "Módulo creado correctamente", autoCloseMs: 3000 })
         onSuccess?.()
       } else {
-        host?.setAlert?.({ variant: "destructive", title: res.message || "No se pudo crear el módulo" })
+        showAlert({ tone: "error", title: res.message || "No se pudo crear el módulo" })
       }
     } catch (err) {
       const { status, message } = parseHttpError(err)
-      host?.setAlert?.({ variant: "destructive", title: message || "No se pudo crear el módulo", description: status ? `Código: ${status}` : undefined })
+      showAlert({ tone: "error", title: message || "No se pudo crear el módulo", description: status ? `Código: ${status}` : undefined })
     }
   }
 

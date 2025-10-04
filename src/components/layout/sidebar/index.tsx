@@ -104,45 +104,49 @@ export function AppSidebar() {
         <div className="flex items-center gap-2">
           <div className="size-8 rounded-md bg-brand-gradient" />
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">{user?.company?.name}</span>
+            <span className="text-sm font-medium">{user?.company?.name ?? "Cargando..."}</span>
             <span className="text-xs text-foreground/70">Enterprise</span>
           </div>
         </div>
       </SidebarHeader>
 
-      { loaderSidebar 
-        ? <Loader />
-        : (<SidebarContent>
-          {(sections || []).map((section) => (
-            <SidebarGroup key={section.label}>
-              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {section.items.map((it) => (
-                    <NavItemNode key={it.title} item={it} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
-
-          {/* Lanzamiento Axi Connect */}
-          <div className="px-3 pb-2">
-            <div className="rounded-lg border border-border bg-background p-3">
-              <div className="mb-2 text-xs font-medium text-foreground/80">
-                Lanzamiento Axi Connect <span aria-hidden>🚀</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TimeBox value={mounted ? days.toString() : "--"} label="días" />
-                <span className="text-foreground/50">:</span>
-                <TimeBox value={mounted ? pad2(hours) : "--"} label="horas" />
-                <span className="text-foreground/50">:</span>
-                <TimeBox value={mounted ? pad2(minutes) : "--"} label="min" />
+      <SidebarContent>
+        {
+          loaderSidebar ? <Loader /> :
+          (
+            <div>
+              {(sections || []).map((section) => (
+                <SidebarGroup key={section.label}>
+                  <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {section.items.map((it) => (
+                        <NavItemNode key={it.title} item={it} />
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              ))}
+  
+              {/* Lanzamiento Axi Connect */}
+              <div className="mt-4 px-3 pb-2">
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="mb-2 text-xs font-medium text-foreground/80">
+                    Lanzamiento Axi Connect <span aria-hidden>🚀</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TimeBox value={mounted ? days.toString() : "--"} label="días" />
+                    <span className="text-foreground/50">:</span>
+                    <TimeBox value={mounted ? pad2(hours) : "--"} label="horas" />
+                    <span className="text-foreground/50">:</span>
+                    <TimeBox value={mounted ? pad2(minutes) : "--"} label="min" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </SidebarContent>)
-      }
+          )
+        }
+      </SidebarContent>
 
       <SidebarFooter className="px-3 py-2">
         <div className="flex items-center gap-3 rounded-md p-2 hover:bg-accent">
@@ -163,8 +167,8 @@ export function AppSidebar() {
             )}
           </div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium">{user?.name}</div>
-            <div className="truncate text-xs text-foreground/70">{user?.email}</div>
+            <div className="truncate text-sm font-medium">{user?.name ?? "Iniciando sesión..."}</div>
+            <div className="truncate text-xs text-foreground/70">{user?.email ?? "Extrayendo información..."}</div>
           </div>
         </div>
       </SidebarFooter>

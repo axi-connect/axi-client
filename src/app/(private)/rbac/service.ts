@@ -29,3 +29,7 @@ export async function deleteRbacRole(id: number | string): Promise<ApiResponse<{
 export async function createRbacModule(payload: CreateModuleDTO): Promise<ApiResponse<{}>> {
   return http.post<ApiResponse<{}>>("/rbac/module", payload)
 }
+
+export async function listRbacModules(params: Params): Promise<ApiResponse<ApiRbacModulesSummaryPayload>> {
+  return http.get<ApiResponse<ApiRbacModulesSummaryPayload>>("/rbac/module", params)
+}

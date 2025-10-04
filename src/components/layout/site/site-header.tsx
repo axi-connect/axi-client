@@ -96,8 +96,8 @@ export default function Header1() {
                 >   
                     <Link prefetch={false} href="/" className="flex items-center space-x-2">
                         <Image src="https://res.cloudinary.com/dpfnxj52w/image/upload/v1759421795/isotipo_we1obn.png" alt="Axi Connect isotype" width={32} height={32} priority style={{ width: 'auto', height: 'auto' }} />
-                        <span className="text-brand-gradient bg-clip-text text-xl font-bold text-transparent font-heading">
-                            Axi Connect
+                        <span className="text-brand-gradient bg-clip-text text-2xl font-bold text-transparent font-heading">
+                            axi connect
                         </span>
                     </Link>
                 </motion.div>
@@ -118,7 +118,7 @@ export default function Header1() {
                             >
                                 <span>{item.name}</span>
                                 {item.hasDropdown && (
-                                <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                                    <ChevronDown className="h-4 w-4 transition-transform duration-200" />
                                 )}
                             </Link>
 
@@ -158,13 +158,15 @@ export default function Header1() {
                 </nav>
 
                 <div className="hidden items-center space-x-4 lg:flex">
-                    <Link prefetch={false}              href="/login"
+                    <Link 
+                        prefetch={false}              
+                        href="/auth/login"
                         className="text-foreground font-medium transition-colors duration-200 hover:text-brand"
                     >
                         Iniciar sesión
                     </Link>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Link prefetch={false}                href="/signup"
+                        <Link prefetch={false}                href="/dashboard"
                         className="inline-flex items-center space-x-2 rounded-full bg-brand-gradient px-6 py-2.5 font-medium text-white transition-all duration-200 hover:shadow-lg"
                         >
                         <span>Comenzar</span>
