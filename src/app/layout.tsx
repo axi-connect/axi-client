@@ -5,6 +5,7 @@ import { Poppins } from "next/font/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/shared/auth/auth.context";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { AlertProvider } from "@/components/providers/alert-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,8 +52,10 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
-            {children}
-            {modal}
+            <AlertProvider>
+              {children}
+              {modal}
+            </AlertProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

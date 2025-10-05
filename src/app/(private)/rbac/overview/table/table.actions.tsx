@@ -9,9 +9,9 @@ import { getRbacOverviewRoleDetail, deleteRbacRole } from "../../service"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function RbacRowActions({ row }: { row: DataRow }) {
+  const onDeleteClick = () => setConfirmOpen(true)
   const [submitting, setSubmitting] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const onDeleteClick = () => setConfirmOpen(true)
   const onViewClick = () => window.dispatchEvent(new CustomEvent("rbac:view:open", { detail: { defaults: row } }))
   
   const onEditClick = async () => {
@@ -28,8 +28,8 @@ export function RbacRowActions({ row }: { row: DataRow }) {
         hierarchy_level: (role as any).hierarchy_level ?? 0,
         permissions: role.modules ? role.modules.map((rm: any) => ({ module_id: rm.id, permission: rm.permissions })) : [],
       } : { id: (row as any).id }
-      window.dispatchEvent(new CustomEvent("rbac:edit:open", { detail: { defaults } }))
       document.body.style.cursor = "default";
+      window.dispatchEvent(new CustomEvent("rbac:edit:open", { detail: { defaults } }))
     } catch {
       document.body.style.cursor = "default";
       window.dispatchEvent(new CustomEvent("rbac:error", { detail: { message: "No se pudo cargar el detalle del rol" } }))

@@ -1,7 +1,7 @@
 "use client"
 
 import { z } from "zod"
-import { useOverview } from "../overview.context"
+import { useOverview } from "../../context/overview.context"
 import type { FieldConfig } from "@/components/features/dynamic-form"
 import { createCustomField, createInputField } from "@/components/features/dynamic-form"
 
@@ -27,7 +27,7 @@ export function buildModuleFormFields(): ReadonlyArray<FieldConfig<ModuleFormVal
   return [
     createInputField<ModuleFormValues>("name", { label: "Nombre", placeholder: "Empresas", colSpan: { base: 1, md: 2 }, autoComplete: "off" }),
     createInputField<ModuleFormValues>("path", { label: "Ruta", placeholder: "companies" }),
-    createInputField<ModuleFormValues>("icon", { label: "Ícono", placeholder: "fa-icon" }),
+    createInputField<ModuleFormValues>("icon", { label: "Ícono", placeholder: "LucideIcon" }),
     createCustomField<ModuleFormValues>("is_public", ({ value, setValue }) => (
       <div className="flex gap-2">
         {[

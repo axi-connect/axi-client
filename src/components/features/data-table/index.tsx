@@ -77,6 +77,7 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
   const totalCount = typeof pagination?.total === "number" ? pagination!.total! : data.length
   const start = (page - 1) * pageSize
   const clientSlice = data.slice(start, start + pageSize)
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const rowsToRender = typeof pagination?.total === "number" ? data : clientSlice
   const [localQuery, setLocalQuery] = useControlled<string>(search?.value ?? "", "")
   const safeColumns = useMemo(() => columns.filter((c) => c.accessorKey || c.cell), [columns])
@@ -161,19 +162,22 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
         rowContextMenu={rowContextMenu as RowContextMenuRenderer<T> | undefined}
       />
 
-      {onPageChange && (
-        <div className="mt-2">
-          <BasicPagination
-            totalPages={Math.max(1, Math.ceil(totalCount / pageSize))}
-            page={page}
-            onPageChange={(p) => {
-              if (p === page) return
-              setInternalPage(p)
-              onPageChange?.(p)
-            }}
-          />
-        </div>
-      )}
+      <div className="flex justify-between items-center">
+        <span className="text-muted-foreground mt-4 text-sm">{msgs?.caption?.(page, totalPages, totalCount)}</span>
+        {onPageChange && (
+          <div className="mt-2">
+            <BasicPagination
+              totalPages={Math.max(1, Math.ceil(totalCount / pageSize))}
+              page={page}
+              onPageChange={(p) => {
+                if (p === page) return
+                setInternalPage(p)
+                onPageChange?.(p)
+              }}
+            />
+          </div>
+        )}
+      </div>
     </>
   )
 }) as <T extends DataRow = DataRow>(

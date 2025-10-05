@@ -21,15 +21,15 @@ type TableViewProps<T extends DataRow> = {
 }
 
 export function TableView<T extends DataRow>({ data, columns, page, pageSize, totalCount, sortBy, sortDir = "asc", onSortChange, messages, rowContextMenu }: TableViewProps<T>) {
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  // const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
   const containerRef = useRef<HTMLDivElement>(null)
   const { visibleColumns, collapsedColumns } = useResponsiveColumns<T>(columns, containerRef, { minColumnWidth: 150 })
   return (
     <div ref={containerRef} className="relative w-full">
       <Table>
-        <TableCaption aria-live="polite">
-          {messages.caption ? messages.caption(page, totalPages, totalCount) : `Página ${page} de ${totalPages} — ${totalCount} registros`}
-        </TableCaption>
+        {/* <TableCaption aria-live="polite">
+          {messages?.caption?.(page, totalPages, totalCount)}
+        </TableCaption> */}
 
         <TableHeader className="bg-muted">
           <TableRow>
@@ -65,7 +65,7 @@ export function TableView<T extends DataRow>({ data, columns, page, pageSize, to
           {data.length === 0 ? (
             <TableRow>
               <TableCell colSpan={Math.max(1, columns.length)} className="text-center text-muted-foreground">
-                {messages.empty ?? "Sin resultados"}
+                {messages?.empty}
               </TableCell>
             </TableRow>
           ) : (
