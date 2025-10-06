@@ -8,15 +8,8 @@ import { refreshToken } from "@/shared/auth/auth.handlers"
 type MeResponse = ApiResponse<{ user: AuthUser }>
 
 export async function GET(req: Request) {
-  const accessToken = (await cookies()).get("accessToken")?.value
-  const _refreshToken = (await cookies()).get("refreshToken")?.value
-
-  if (!accessToken && !_refreshToken) {
-    return NextResponse.json({ isAuthenticated: false })
-  }
-
   try {
-    const me = await http.get<MeResponse>("/auth/me", undefined, { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} })
+    const me = await http.get<MeResponse>("/auth/me", undefined, { authenticate: true })
     return NextResponse.json({ isAuthenticated: true, user: me.data })
   } catch {
     // Try refresh once
@@ -28,7 +21,7 @@ export async function GET(req: Request) {
       const newAccess = cookieStore.get("accessToken")?.value
       if (!newAccess) return NextResponse.json({ isAuthenticated: false })
       
-      const me = await http.get<MeResponse>("/auth/me", undefined, { headers: { Authorization: `Bearer ${newAccess}` } })
+      const me = await http.get<MeResponse>("/auth/me", undefined, { authenticate: true })
       return NextResponse.json({ isAuthenticated: true, user: me.data })
     } catch (error) {
       return NextResponse.json({ isAuthenticated: false })

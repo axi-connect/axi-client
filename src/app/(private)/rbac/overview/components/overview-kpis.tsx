@@ -3,14 +3,14 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { RbacOverviewSummary } from "../../model";
-import { Users2, LayoutDashboard, ShieldUser, Plus, ArrowRight } from "lucide-react";
+import { CircleUserRound, LayoutDashboard, ShieldUser, Plus, ArrowRight } from "lucide-react";
 
 export function OverviewKpis({ summary }: { summary: RbacOverviewSummary }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <KpiCard label="Roles" value={summary.roles_count} icon={<ShieldUser />} />
       <KpiCard label="Módulos" value={summary.modules_count} icon={<LayoutDashboard />} />
-      <KpiCard label="Usuarios" value={summary.users_count} icon={<Users2 />} disabled />
+      <KpiCard label="Usuarios" value={summary.users_count} icon={<CircleUserRound />} disabled />
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { OverviewKpis } from "./components/overview-kpis";
 import { useOverview } from "../context/overview.context";
 import { DataTable } from "@/components/features/data-table";
 import { RbacContextMenuItems } from "./table/table.actions";
-import { RoleDetailSheet } from "./components/RoleDetailSheet";
+import { RoleDetailSheet } from "./components/role-detail-sheet";
 import { useAlert } from "@/components/providers/alert-provider";
 import type { RbacOverviewRow, RbacOverviewView } from "../model";
 import type { DataTableRef } from "@/components/features/data-table";

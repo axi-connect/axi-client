@@ -3,6 +3,7 @@ import { API_BASE_URL } from "@/config/env";
 export type HttpRequestOptions = {
   signal?: AbortSignal;
   headers?: Record<string, string>;
+  authenticate?: boolean; // when true, attach Authorization: Bearer <accessToken> from cookies
 };
 
 export type Params = Record<string, string | number | boolean | undefined>;
@@ -15,15 +16,19 @@ export class HttpClient {
   }
 
   async get<T>(path: string, params?: Params, options: HttpRequestOptions = {}): Promise<T> {
-    const url = new URL(this.baseUrl + path);
+    const isBrowser = typeof window !== "undefined";
+    const url = isBrowser && options.authenticate
+      ? new URL((isBrowser ? "" : this.baseUrl) + "/api/proxy" + path, isBrowser ? window.location.origin : undefined)
+      : new URL(this.baseUrl + path);
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
       });
     }
+    const authHeaders = isBrowser && options.authenticate ? {} : await this.buildAuthHeader(options);
     const res = await fetch(url.toString(), {
       method: "GET",
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      headers: { "Content-Type": "application/json", ...(options.headers || {}), ...authHeaders },
       signal: options.signal,
       cache: "no-store",
     });
@@ -32,9 +37,12 @@ export class HttpClient {
   }
 
   async post<T>(path: string, body?: unknown, options: HttpRequestOptions = {}): Promise<T> {
-    const url = this.baseUrl + path;
+    const isBrowser = typeof window !== "undefined";
+    const url = (isBrowser && options.authenticate ? "/api/proxy" + path : this.baseUrl + path);
     const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-    const headers = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
+    const baseHeaders = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
+    const authHeaders = isBrowser && options.authenticate ? {} : await this.buildAuthHeader(options);
+    const headers = { ...baseHeaders, ...authHeaders };
     const res = await fetch(url, {
       method: "POST",
       headers,
@@ -47,9 +55,12 @@ export class HttpClient {
   }
 
   async put<T>(path: string, body?: unknown, options: HttpRequestOptions = {}): Promise<T> {
-    const url = this.baseUrl + path;
+    const isBrowser = typeof window !== "undefined";
+    const url = (isBrowser && options.authenticate ? "/api/proxy" + path : this.baseUrl + path);
     const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-    const headers = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
+    const baseHeaders = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
+    const authHeaders = isBrowser && options.authenticate ? {} : await this.buildAuthHeader(options);
+    const headers = { ...baseHeaders, ...authHeaders };
     const res = await fetch(url, {
       method: "PUT",
       headers,
@@ -62,10 +73,12 @@ export class HttpClient {
   }
   
   async delete<T>(path: string, options: HttpRequestOptions = {}): Promise<T> {
-    const url = this.baseUrl + path;
+    const isBrowser = typeof window !== "undefined";
+    const url = (isBrowser && options.authenticate ? "/api/proxy" + path : this.baseUrl + path);
+    const authHeaders = isBrowser && options.authenticate ? {} : await this.buildAuthHeader(options);
     const res = await fetch(url, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      headers: { "Content-Type": "application/json", ...(options.headers || {}), ...authHeaders },
       signal: options.signal,
       cache: "no-store",
     });
@@ -73,6 +86,25 @@ export class HttpClient {
     // Some DELETE endpoints may return 204 No Content
     const text = await res.text();
     return (text ? JSON.parse(text) : ({} as T)) as T;
+  }
+
+  private async buildAuthHeader(options: HttpRequestOptions): Promise<Record<string, string>> {
+    if (!options.authenticate) return {};
+    // If header already provided, respect it
+    const providedAuth = options.headers?.Authorization || options.headers?.authorization;
+    if (providedAuth) return { Authorization: providedAuth } as Record<string, string>;
+
+    // Try server-side via next/headers
+    if (typeof window === "undefined") {
+      try {
+        const mod = await import("next/headers");
+        const token = (await mod.cookies()).get("accessToken")?.value;
+        if (token) return { Authorization: `Bearer ${token}` };
+      } catch {
+        // noop
+      }
+    }
+    return {};
   }
 }
 
