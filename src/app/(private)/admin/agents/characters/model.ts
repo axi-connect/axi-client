@@ -15,12 +15,14 @@ export interface ListCharactersParams {
 
 export interface CharacterStyleDTO {
   font: string;
+  background: string;
   primary_color: string;
   secondary_color: string;
   chat_bubble_shape: string;
 }
 
 export interface CharacterVoiceDTO {
+  url: string;
   tone: string;
   speed: number;
   gender: string;
@@ -45,3 +47,13 @@ export interface ApiCharactersPayload {
   characters: CharacterDTO[];
   total: number;
 }
+
+// Create DTO
+export interface CreateCharacterDTO {
+  avatar_url?: string;
+  style?: CharacterStyleDTO | Record<string, unknown> | null;
+  voice?: CharacterVoiceDTO | Record<string, unknown> | null;
+  resources?: CharacterResourcesDTO | Record<string, unknown> | null;
+}
+
+export type UpdateCharacterDTO = Partial<CreateCharacterDTO>
