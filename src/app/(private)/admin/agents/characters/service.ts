@@ -13,3 +13,7 @@ export async function createCharacter(payload: CreateCharacterDTO): Promise<ApiR
 export async function updateCharacter(id: number | string, payload: UpdateCharacterDTO): Promise<ApiResponse<CharacterDTO>> {
   return http.put<ApiResponse<CharacterDTO>>(`/parameters/character/${id}`, payload, { authenticate: true });
 }
+
+export async function deleteCharacter(id: number | string): Promise<ApiResponse<{}>> {
+  return http.delete<ApiResponse<{}>>(`/parameters/character/${id}`, { authenticate: true });
+}
