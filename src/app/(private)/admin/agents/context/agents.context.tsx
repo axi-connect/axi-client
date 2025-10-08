@@ -1,7 +1,7 @@
 "use client";
 
-import { AgentDTO } from "../model";
-import { listAgents } from "../services";
+import { AgentSummaryDTO } from "../model";
+import { listAgentSummary } from "../services";
 import { listCharacters } from "../characters/service";
 import { TreeNode } from "@/components/features/tree-view";
 import { IntentionDTO, ListIntentionParams } from "../intentions/model";
@@ -11,8 +11,8 @@ import { listIntention, listIntentionOverview } from "../intentions/service";
 
 type AgentsContextValue = {
     loading: boolean;
-    agents: AgentDTO[];
     error: string | null;
+    agents: AgentSummaryDTO[];
     characters: CharacterDTO[];
     charactersQuery: Required<Pick<ListCharactersParams, "limit" | "offset" | "sortBy" | "sortDir">> & Pick<ListCharactersParams, "avatar_url">;
     hasNextCharactersPage: boolean;
@@ -37,7 +37,7 @@ const AgentsContext = createContext<AgentsContextValue | undefined>(undefined);
 
 export function AgentsProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(false);
-    const [agents, setAgents] = useState<AgentDTO[]>([]);
+    const [agents, setAgents] = useState<AgentSummaryDTO[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [intentionsOverview, setIntentionsOverview] = useState<TreeNode[]>([]);
     // const [intentions, setIntentions] = useState<IntentionDTO[]>([]);
@@ -68,7 +68,7 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
     const fetchAgents = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await listAgents({view: "summary"});
+            const { data } = await listAgentSummary();
             setAgents(data.agents);
         } catch (error) {
             setError(error as string);

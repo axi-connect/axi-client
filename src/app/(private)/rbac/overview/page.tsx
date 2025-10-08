@@ -7,12 +7,12 @@ import { useEffect, useRef, useState } from "react";
 import { OverviewKpis } from "./components/overview-kpis";
 import { useOverview } from "../context/overview.context";
 import { DataTable } from "@/components/features/data-table";
-import { RbacContextMenuItems } from "./table/table.actions";
+import { RbacContextMenuItems } from "./components/table/table.actions";
 import { RoleDetailSheet } from "./components/role-detail-sheet";
 import { useAlert } from "@/components/providers/alert-provider";
 import type { RbacOverviewRow, RbacOverviewView } from "../model";
 import type { DataTableRef } from "@/components/features/data-table";
-import { rbacOverviewColumns, fetchRbacOverview } from "./table/table.config";
+import { rbacOverviewColumns, fetchRbacOverview } from "./components/table/table.config";
 
 export default function RbacOverviewPage() {
   const pageSize = 10

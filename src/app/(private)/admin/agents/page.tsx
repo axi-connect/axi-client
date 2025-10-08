@@ -1,11 +1,11 @@
 "use client";
 
 import { AgentRow } from "./model";
-import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CharacterDTO } from "./characters/model";
+import { FolderKanban, Plus } from "lucide-react";
 import { useAgents } from "./context/agents.context";
 // import TreeViewIntentions from "./intentions/tree-view";
 import { DataTable } from "@/components/features/data-table";
@@ -27,6 +27,10 @@ export default function AgentsPage() {
         router.push("/admin/agents/characters/create");
     }
 
+    const handleCreateAgent = () => {
+        router.push("/admin/agents/create");
+    }
+
     const handleCharacterClick = (character: CharacterDTO) => {
         setSelectedCharacter(character);
         router.push(`/admin/agents/characters/update/${character.id}`);
@@ -42,16 +46,18 @@ export default function AgentsPage() {
     useEffect(() => {
         fetchAgents();
         fetchCharacters();
-        fetchIntentionsOverview();
+        // fetchIntentionsOverview();
     }, []);
 
     useEffect(() => {
         setAgentRows(agents.map((agent) => ({
             id: String(agent.id),
-            name: String(agent.name ?? ""),
-            phone: String(agent.phone ?? ""),
-            company_name: String(agent.company_name ?? ""),
+            name: String(agent.name),
+            phone: String(agent.phone),
             alive: Boolean(agent.alive),
+            company_name: String(agent.company.name),
+            avatar: String(agent.character.avatar_url),
+            avatar_background: String(agent.character.style?.background),
         })));
     }, [agents]);
 
@@ -59,7 +65,7 @@ export default function AgentsPage() {
         <div>
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold">Character Gallery</h1>
+                    <h2 className="text-2xl font-bold">Galería de Personajes</h2>
                     <p className="text-sm text-muted-foreground">
                         Aquí puedes crear y gestionar los personajes de los agentes.
                     </p>
@@ -70,7 +76,7 @@ export default function AgentsPage() {
                     style={{ borderRadius: "9999px" }}
                 >
                     <Plus className="h-4 w-4" />
-                    Create Character
+                    Crear Personaje
                 </Button>
             </div>
 
@@ -91,11 +97,38 @@ export default function AgentsPage() {
                 </svg>
             </div>
 
-            <div className="mt-20 relative z-10">
+            {/* <div className="mt-20 relative z-10"> */}
                 {/* <TreeViewIntentions /> */}
-            </div>
+            {/* </div> */}
 
-            <div className="mt-24 relative z-10">
+            <div className="mt-12 relative z-10">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h1 className="text-2xl font-bold">Agentes</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Aquí puedes crear y gestionar los agentes.
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button 
+                            variant="outline"
+                            onClick={handleCreateAgent}
+                            style={{ borderRadius: "9999px" }}
+                        >
+                            <FolderKanban className="h-4 w-4" />
+                            Intentions
+                        </Button>
+                        <Button 
+                            variant="default"
+                            onClick={handleCreateAgent}
+                            style={{ borderRadius: "9999px" }}
+                        >
+                            <Plus className="h-4 w-4" />
+                            Crear Agente
+                        </Button>
+                    </div>
+                </div>
+
                 <DataTable<AgentRow>
                     data={agentRows}
                     columns={agentColumns}

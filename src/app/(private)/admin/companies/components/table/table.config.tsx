@@ -1,10 +1,10 @@
 "use client"
 
-import { listCompanies } from "../service";
+import { listCompanies } from "../../service";
 import type { ApiResponse } from "@/shared/api";
 import { CompanyRowActions } from "./table.actions";
 import type { ColumnDef, DataRow } from "@/components/features/data-table/types";
-import type { CompanyRow, CompanyDTO, ApiCompaniesPayload, ListCompaniesParams } from "../model";
+import type { CompanyRow, CompanyDTO, ApiCompaniesPayload, ListCompaniesParams } from "../../model";
 
 export const companyColumns: ColumnDef[] = [
   { accessorKey: "name", header: "Empresa", sortable: true, alwaysVisible: true},

@@ -1,10 +1,10 @@
 "use client"
 
-import { getRbacOverview } from "../../service";
+import { getRbacOverview } from "../../../service";
 import type { ApiResponse } from "@/shared/api";
 import { RbacRowActions } from "./table.actions";
 import type { ColumnDef } from "@/components/features/data-table/types";
-import type { ApiRbacOverviewSummaryPayload, GetRbacOverviewParams, RbacOverviewRow, RbacRoleSummaryDTO } from "../../model";
+import type { ApiRbacOverviewSummaryPayload, GetRbacOverviewParams, RbacOverviewRow, RbacRoleSummaryDTO } from "../../../model";
 
 export const rbacOverviewColumns: ColumnDef[] = [
   { accessorKey: "name", header: "Rol", sortable: true, alwaysVisible: true, cell: ({ row }) => <span className="capitalize">{row.original.name}</span> },

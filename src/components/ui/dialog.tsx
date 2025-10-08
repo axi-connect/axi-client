@@ -73,7 +73,7 @@ function DialogContent({
           <motion.div
             data-slot="dialog-content"
             className={cn(
-              "bg-background fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-foreground/20 p-8 shadow-lg sm:max-w-lg max-h-[calc(100vh-3rem)] overflow-y-auto overscroll-contain touch-pan-y",
+              "bg-background fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-foreground/20 p-8 shadow-lg sm:max-w-lg max-h-[calc(100vh-3rem)] overflow-y-auto overscroll-contain touch-pan-y sidebar-scroll",
               className
             )}
             onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => e.stopPropagation()}

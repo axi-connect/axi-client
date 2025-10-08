@@ -1,4 +1,5 @@
 // Agents module models
+import { CharacterDTO } from "./characters/model";
 
 export type AgentsSortDir = "asc" | "desc";
 export type AgentsView = "summary" | "detail";
@@ -70,21 +71,22 @@ export interface AgentIntentionDTO {
   ai_requirement?: AiRequirementDTO;
 }
 
-export interface AgentDTO {
-  id: number | string;
-  name: string;
-  phone: string;
-  alive: boolean;
-  company_id: number;
-  client_id: string; // UUID
-  // summary view may omit nested objects
-  company?: CompanyMiniDTO;
-  agentIntention?: AgentIntentionDTO[];
-  [key: string]: unknown;
+export interface AgentSummaryDTO{
+  id: number;
+  name:string;
+  phone:string;
+  alive:boolean;
+  company:CompanyMiniDTO;
+  character: CharacterDTO;
 }
 
-export interface ApiAgentsPayload {
-  agents: AgentDTO[];
+export interface AgentDetailDTO extends AgentSummaryDTO{
+  client_id:string;
+  character:CharacterDTO;
+  agentIntention: AgentIntentionDTO[];
+}
+export interface ApiAgentSummaryPayload {
+  agents: AgentSummaryDTO[];
   total: number;
 }
 
@@ -93,6 +95,29 @@ export type AgentRow = {
   id: string;
   name: string;
   phone: string;
-  company_name?: string;
   alive: boolean;
+  avatar: string;
+  company_name?: string;
+  avatar_background: string;
+}
+
+// Create Agent DTOs
+export type AgentChannel = "whatsapp" | "telegram" | string
+export type AgentStatus = "available" | "busy" | "offline" | string
+
+export type CreateAgentIntentionItem = {
+  intention_id: number
+  requirements: AgentIntentionRequirementsDTO | Record<string, unknown>
+  ai_requirement_id?: number
+}
+
+export interface CreateAgentDTO {
+  name: string
+  phone: string
+  skills?: string[]
+  company_id: number
+  status?: AgentStatus
+  channel: AgentChannel
+  character_id?: number
+  intentions?: CreateAgentIntentionItem[]
 }

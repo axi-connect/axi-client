@@ -1,15 +1,15 @@
 "use client"
 
 import { Plus } from "lucide-react";
-import { CompanyForm } from "./form";
+import { CompanyForm } from "./components/form";
 import type { CompanyRow } from "./model";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { buildListParams } from "@/shared/query";
 import { useEffect, useRef, useState } from "react";
-import { CompanyContextMenuItems } from "./table/table.actions";
+import { CompanyContextMenuItems } from "./components/table/table.actions";
 import { DataTable, type DataTableRef } from "@/components/features/data-table";
-import { companyColumns, companyData, fetchCompanies } from "./table/table.config";
+import { companyColumns, companyData, fetchCompanies } from "./components/table/table.config";
 import { FloatingAlert, type FloatingAlertConfig } from "@/components/ui/floating-alert";
 
 export default function CompaniesPage() {
