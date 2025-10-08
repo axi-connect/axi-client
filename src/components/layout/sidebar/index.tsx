@@ -110,7 +110,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
         
-      <SidebarContent>
+      <SidebarContent className="sidebar-scroll">
         {
           loaderSidebar ? <Loader /> :
           <>

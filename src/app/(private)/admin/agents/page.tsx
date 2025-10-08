@@ -1,16 +1,20 @@
 "use client";
 
+import { AgentRow } from "./model";
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CharacterDTO } from "./characters/model";
 import { useAgents } from "./context/agents.context";
-import TreeViewIntentions from "./intentions/tree-view";
+// import TreeViewIntentions from "./intentions/tree-view";
+import { DataTable } from "@/components/features/data-table";
+import { agentColumns } from "./components/table/table.config";
 import CharacterGallery from "./characters/character-gallery";
 
 export default function AgentsPage() {
     const router = useRouter();
+    const [agentRows, setAgentRows] = useState<AgentRow[]>([]);
 
     const { 
         loading, error,
@@ -36,9 +40,20 @@ export default function AgentsPage() {
     const onDeleteCharacter = (character: CharacterDTO) => fetchCharacters();
 
     useEffect(() => {
+        fetchAgents();
         fetchCharacters();
         fetchIntentionsOverview();
     }, []);
+
+    useEffect(() => {
+        setAgentRows(agents.map((agent) => ({
+            id: String(agent.id),
+            name: String(agent.name ?? ""),
+            phone: String(agent.phone ?? ""),
+            company_name: String(agent.company_name ?? ""),
+            alive: Boolean(agent.alive),
+        })));
+    }, [agents]);
 
     return (
         <div>
@@ -77,7 +92,14 @@ export default function AgentsPage() {
             </div>
 
             <div className="mt-20 relative z-10">
-                <TreeViewIntentions />
+                {/* <TreeViewIntentions /> */}
+            </div>
+
+            <div className="mt-24 relative z-10">
+                <DataTable<AgentRow>
+                    data={agentRows}
+                    columns={agentColumns}
+                />
             </div>
         </div>
     )

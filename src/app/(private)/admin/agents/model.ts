@@ -87,3 +87,12 @@ export interface ApiAgentsPayload {
   agents: AgentDTO[];
   total: number;
 }
+
+// Row shape used by the shared DataTable component
+export type AgentRow = {
+  id: string;
+  name: string;
+  phone: string;
+  company_name?: string;
+  alive: boolean;
+}
