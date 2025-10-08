@@ -59,13 +59,14 @@
   --color-accent-foreground: #0a0a0a;
 }
 
+html, body { overflow: hidden; scroll-behavior: smooth; }
+
 body {
-  background: var(--background);
+  overflow-y: auto;
   color: var(--foreground);
+  background: var(--background);
   font-family: var(--font-poppins), Helvetica, sans-serif;
 }
-
-html, body { overflow-x: hidden; }
 
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-nexa), var(--font-poppins), sans-serif !important;

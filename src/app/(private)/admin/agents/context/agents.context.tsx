@@ -2,9 +2,12 @@
 
 import { AgentDTO } from "../model";
 import { listAgents } from "../services";
-import { CharacterDTO, ListCharactersParams } from "../characters/model";
 import { listCharacters } from "../characters/service";
+import { TreeNode } from "@/components/features/tree-view";
+import { IntentionDTO, ListIntentionParams } from "../intentions/model";
 import { createContext, useCallback, useContext, useState } from "react";
+import { CharacterDTO, ListCharactersParams } from "../characters/model";
+import { listIntention, listIntentionOverview } from "../intentions/service";
 
 type AgentsContextValue = {
     loading: boolean;
@@ -23,6 +26,11 @@ type AgentsContextValue = {
     setCharactersLimit: (limit: number) => Promise<void>;
     setCharactersSort: (sortBy: ListCharactersParams["sortBy"], sortDir: ListCharactersParams["sortDir"]) => Promise<void>;
     setSelectedCharacter: (character: CharacterDTO | null) => void;
+    intentionsOverview: TreeNode[];
+    fetchIntentionsOverview: () => Promise<void>;
+    // intentions: IntentionDTO[];
+    // intentionsQuery: Required<Pick<ListIntentionParams, "limit" | "offset" | "sortBy" | "sortDir">> & Pick<ListIntentionParams, "type" | "priority" | "code" | "flow_name" | "description" | "ai_instructions">;
+    // fetchIntentions: (params?: Partial<ListIntentionParams>) => Promise<void>;
 }
 
 const AgentsContext = createContext<AgentsContextValue | undefined>(undefined);
@@ -31,6 +39,21 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(false);
     const [agents, setAgents] = useState<AgentDTO[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [intentionsOverview, setIntentionsOverview] = useState<TreeNode[]>([]);
+    // const [intentions, setIntentions] = useState<IntentionDTO[]>([]);
+    // const [intentionsTotal, setIntentionsTotal] = useState<number>(0);
+    // const [intentionsQuery, setIntentionsQuery] = useState<Required<Pick<ListIntentionParams, "limit" | "offset" | "sortBy" | "sortDir">> & Pick<ListIntentionParams, "type" | "priority" | "code" | "flow_name" | "description" | "ai_instructions">>({
+    //     limit: 6,
+    //     offset: 0,
+    //     sortBy: "id",
+    //     sortDir: "desc",
+    //     type: undefined,
+    //     priority: undefined,
+    //     code: undefined,
+    //     flow_name: undefined,
+    //     description: undefined,
+    //     ai_instructions: undefined,
+    // });
     const [characters, setCharacters] = useState<CharacterDTO[]>([]);
     const [charactersTotal, setCharactersTotal] = useState<number>(0);
     const [charactersQuery, setCharactersQuery] = useState<Required<Pick<ListCharactersParams, "limit" | "offset" | "sortBy" | "sortDir">> & Pick<ListCharactersParams, "avatar_url">>({
@@ -84,6 +107,51 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
         }
     }, [charactersQuery]);
 
+    const fetchIntentionsOverview = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data } = await listIntentionOverview();
+            setIntentionsOverview(data);
+        } catch (error) {
+            setError(error as string);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // const fetchIntentions = useCallback(async (params?: Partial<ListIntentionParams>) => {
+    //     setLoading(true);
+    //     try {
+    //         const nextQuery = {
+    //             ...intentionsQuery,
+    //             ...params,
+    //         } as ListIntentionParams;
+    //         const { data } = await listIntention({
+    //             type: nextQuery.type,
+    //             priority: nextQuery.priority,
+    //             code: nextQuery.code,
+    //             flow_name: nextQuery.flow_name,
+    //             description: nextQuery.description,
+    //             ai_instructions: nextQuery.ai_instructions,
+    //             limit: nextQuery.limit,
+    //             offset: nextQuery.offset,
+    //             sortBy: nextQuery.sortBy,
+    //             sortDir: nextQuery.sortDir,
+    //             view: "summary",
+    //         });
+    //         setIntentions(data.intentions);
+    //         setIntentionsTotal(data.total ?? 0);
+    //         setIntentionsQuery(q => ({
+    //             ...q,
+    //             ...params,
+    //         }));
+    //     } catch (error) {
+    //         setError(error as string);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [intentionsQuery]);
+
     const hasNextCharactersPage = charactersQuery.offset + charactersQuery.limit < charactersTotal;
     const hasPrevCharactersPage = charactersQuery.offset > 0;
 
@@ -126,7 +194,12 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
             setCharactersLimit,
             setCharactersSort,
             selectedCharacter,
-            setSelectedCharacter
+            setSelectedCharacter,
+            intentionsOverview,
+            fetchIntentionsOverview,
+            // intentions,
+            // intentionsQuery,
+            // fetchIntentions,
         }}>
             {children}
         </AgentsContext.Provider>

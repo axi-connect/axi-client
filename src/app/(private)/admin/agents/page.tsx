@@ -1,16 +1,23 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CharacterDTO } from "./characters/model";
 import { useAgents } from "./context/agents.context";
+import TreeViewIntentions from "./intentions/tree-view";
 import CharacterGallery from "./characters/character-gallery";
 
 export default function AgentsPage() {
     const router = useRouter();
-    const { agents, characters, loading, error, fetchAgents, fetchCharacters, setSelectedCharacter, nextCharactersPage, prevCharactersPage, hasNextCharactersPage, hasPrevCharactersPage } = useAgents();
+
+    const { 
+        loading, error,
+        agents, fetchAgents,
+        characters, fetchCharacters, setSelectedCharacter, nextCharactersPage, prevCharactersPage, hasNextCharactersPage, hasPrevCharactersPage,
+        fetchIntentionsOverview,
+    } = useAgents();
 
     const handleCreateCharacter = () => {
         router.push("/admin/agents/characters/create");
@@ -26,12 +33,11 @@ export default function AgentsPage() {
         router.push(`/admin/agents/characters/update/${character.id}`);
     }
 
-    const onDeleteCharacter = (character: CharacterDTO) => {
-        fetchCharacters();
-    }
+    const onDeleteCharacter = (character: CharacterDTO) => fetchCharacters();
 
     useEffect(() => {
         fetchCharacters();
+        fetchIntentionsOverview();
     }, []);
 
     return (
@@ -53,7 +59,6 @@ export default function AgentsPage() {
                 </Button>
             </div>
 
-
             <CharacterGallery 
                 characters={characters}
                 onEdit={onEditCharacter}
@@ -64,6 +69,16 @@ export default function AgentsPage() {
                 hasPrev={hasPrevCharactersPage}
                 hasNext={hasNextCharactersPage}
             />
+
+            <div className="absolute left-0 w-full h-[200px] text-background">
+                <svg viewBox="0 0 944 595" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0.5 0C0.5 0 251.015 62.2189 473 56.5C686.056 51.0111 944.5 0 944.5 0V474H0.5V0Z" fill="currentColor"/>
+                </svg>
+            </div>
+
+            <div className="mt-20 relative z-10">
+                <TreeViewIntentions />
+            </div>
         </div>
     )
 }
