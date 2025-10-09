@@ -2,12 +2,17 @@ import { AgentForm } from "./form"
 import { useRouter } from "next/navigation"
 import { Modal } from "@/components/ui/modal"
 
-export default function ModalFormAgents() {
+export default function ModalFormAgents({ refresh }: { refresh: () => void }) {
   const router = useRouter()
 
   const onModalSubmitClick = () => {
     const form = document.getElementById("agent-form") as HTMLFormElement | null
     form?.requestSubmit()
+  }
+
+  const handleSuccess = () => {
+    refresh()
+    router.back()
   }
 
   return (
@@ -23,12 +28,7 @@ export default function ModalFormAgents() {
         ],
       }}
     >
-      <AgentForm
-        host={{
-          refresh: () => {},
-          closeModal: () => router.back(),
-        }}
-      />
+      <AgentForm host={{ onSuccess: handleSuccess }} />
     </Modal>
   )
 }

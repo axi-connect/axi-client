@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Form as RHFFormProvider } from "@/components/ui/form"
 import { DefaultValues, useForm, type FieldValues } from "react-hook-form"
@@ -58,6 +58,16 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
     },
     [fields, form, onValid]
   )
+
+  // Reset form values when defaultValues change (e.g., async loaded detail)
+  const lastDefaultsRef = useRef(defaultValues)
+  useEffect(() => {
+    if (defaultValues && lastDefaultsRef.current !== defaultValues) {
+      form.reset(defaultValues as DefaultValues<TValues>)
+      lastDefaultsRef.current = defaultValues
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultValues])
 
   const gridClasses = useMemo(() => {
     const gapClass = GAP_CLASS_BY_LEVEL[gap] ?? GAP_CLASS_BY_LEVEL[4]

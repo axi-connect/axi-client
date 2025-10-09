@@ -1,6 +1,7 @@
 import { http, Params } from "@/services/http";
 import type { ApiResponse } from "@/shared/api";
-import type { ApiUsersPayload, CreateUserDTO, ListUsersParams, UpdateUserDTO, UserDTO, SelectOption } from "./model";
+import type { SelectOption } from "@/shared/query";
+import type { ApiUsersPayload, CreateUserDTO, ListUsersParams, UpdateUserDTO, UserDTO } from "./model";
 
 export async function listUsers(params: ListUsersParams): Promise<ApiResponse<ApiUsersPayload>> {
   return http.get<ApiResponse<ApiUsersPayload>>("/identities/users", params as Params);
@@ -43,18 +44,10 @@ export async function deleteUser(id: number | string): Promise<ApiResponse<{}>> 
 }
 
 // Options (summary views)
-export async function listCompanyOptions(params: { name?: string; limit?: number; offset?: number } = {}): Promise<Array<SelectOption>> {
-  const res = await http.get<ApiResponse<{ companies: Array<{ id: number; name: string }>; total: number }>>(
-    "/identities/companies",
-    { view: "summary", limit: params.limit ?? 50, offset: params.offset ?? 0, name: params.name }
-  );
-  return (res.data?.companies ?? []).map(c => ({ id: Number(c.id), name: String(c.name ?? "") }))
-}
-
 export async function listRoleOptions(params: { name?: string; limit?: number; offset?: number } = {}): Promise<Array<SelectOption>> {
   const res = await http.get<ApiResponse<{ roles: Array<{ id: number; name: string }>; total: number }>>(
     "/rbac/role",
     { view: "summary", limit: params.limit ?? 50, offset: params.offset ?? 0, name: params.name }
   );
-  return (res.data?.roles ?? []).map(r => ({ id: Number(r.id), name: String(r.name ?? "") }))
+  return (res.data?.roles ?? []).map(r => ({ id: Number(r.id), label: String(r.name ?? "") }))
 }

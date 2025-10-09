@@ -1,7 +1,7 @@
 "use client";
 
 import { AgentSummaryDTO } from "../model";
-import { listAgentSummary } from "../services";
+import { listAgentSummary } from "../service";
 import { listCharacters } from "../characters/service";
 import { TreeNode } from "@/components/features/tree-view";
 import { IntentionDTO, ListIntentionParams } from "../intentions/model";

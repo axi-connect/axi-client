@@ -31,6 +31,11 @@ export default function AgentsPage() {
         router.push("/admin/agents/create");
     }
 
+    const handleEditAgent = (agent:Event) => {
+        // setSelectedAgent(agent);
+        router.push(`/admin/agents/update/${(agent as CustomEvent).detail.defaults.id}`);
+    }
+
     const handleCharacterClick = (character: CharacterDTO) => {
         setSelectedCharacter(character);
         router.push(`/admin/agents/characters/update/${character.id}`);
@@ -47,6 +52,11 @@ export default function AgentsPage() {
         fetchAgents();
         fetchCharacters();
         // fetchIntentionsOverview();
+
+        window.addEventListener("agents:edit:open", handleEditAgent);
+        return () => {
+            window.removeEventListener("agents:edit:open", handleEditAgent);
+        }
     }, []);
 
     useEffect(() => {

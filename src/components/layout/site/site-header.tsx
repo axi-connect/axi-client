@@ -97,7 +97,7 @@ export default function Header1() {
                     <Link prefetch={false} href="/" className="flex items-center space-x-2">
                         <Image src="https://res.cloudinary.com/dpfnxj52w/image/upload/v1759421795/isotipo_we1obn.png" alt="Axi Connect isotype" width={32} height={32} priority style={{ width: 'auto', height: 'auto' }} />
                         <span className="text-brand-gradient bg-clip-text text-xl font-bold text-transparent font-heading">
-                            Axi Connect
+                            axi connect
                         </span>
                     </Link>
                 </motion.div>

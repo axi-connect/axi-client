@@ -1,8 +1,8 @@
 "use client"
 
 import { z } from "zod"
-import type { SelectOption } from "../../model"
 import type { CreateUserDTO } from "../../model"
+import type { SelectOption } from "@/shared/query"
 import type { FieldConfig } from "@/components/features/dynamic-form"
 import { createCustomField, createInputField } from "@/components/features/dynamic-form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -47,7 +47,7 @@ export function buildUserFormFields(opts?: { companies?: SelectOption[]; roles?:
             </SelectTrigger>
             <SelectContent>
               {companies.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={String(c.id)}>{c.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -64,7 +64,7 @@ export function buildUserFormFields(opts?: { companies?: SelectOption[]; roles?:
             </SelectTrigger>
             <SelectContent>
               {roles.map((r) => (
-                <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>
+                <SelectItem key={r.id} value={String(r.id)}>{r.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>

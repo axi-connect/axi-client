@@ -1,6 +1,7 @@
 /**
  * Utilities to build standardized list/query params for server requests.
 */
+export type SelectOption = { id: number; label: string };
 
 export type SortDirection = "asc" | "desc";
 
@@ -43,3 +44,4 @@ export function buildListParams<TSearchField extends string = string>(opts: Buil
 
   return params as ListQueryBase<TSearchField>
 }
+

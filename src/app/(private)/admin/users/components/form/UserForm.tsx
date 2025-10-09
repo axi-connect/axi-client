@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { parseHttpError } from "@/shared/api"
+import { listCompanyOptions } from "../../../companies/service"
 import { DynamicForm } from "@/components/features/dynamic-form"
-import { createUser, updateUser, listCompanyOptions, listRoleOptions } from "../../service"
+import { createUser, updateUser, listRoleOptions } from "../../service"
 import { buildUserFormFields, defaultUserFormValues, toCreateUserDTO, userFormSchema, type UserFormValues } from "./form.config"
 
 export type UserFormHost = {

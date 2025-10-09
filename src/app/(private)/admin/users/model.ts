@@ -77,8 +77,6 @@ export interface ApiUsersPayload {
   total: number;
 }
 
-export type SelectOption = { id: number; name: string };
-
 export interface CreateUserDTO {
   name: string;
   email: string;

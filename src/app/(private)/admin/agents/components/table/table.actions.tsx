@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Copy, Eye, MoreHorizontal } from "lucide-react"
+import { Copy, Eye, MoreHorizontal, Pencil } from "lucide-react"
 import type { DataRow } from "@/components/features/data-table/types"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -23,6 +23,10 @@ export function AgentRowActions({ row }: { row: DataRow }) {
     window.dispatchEvent(new CustomEvent("agents:view:open", { detail: { defaults: row } }))
   }
 
+  const onEdit = () => {
+    window.dispatchEvent(new CustomEvent("agents:edit:open", { detail: { defaults: row } }))
+  }
+
   return (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -34,13 +38,18 @@ export function AgentRowActions({ row }: { row: DataRow }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-          <DropdownMenuItem className="flex items-center gap-2" onClick={onView}>
-            <Eye className="h-4 w-4" />
-            Ver agente
-          </DropdownMenuItem>
           <DropdownMenuItem className="flex items-center gap-2" onClick={onCopy}>
             <Copy className="h-4 w-4" />
             {copying ? "Copiando..." : "Copiar objeto"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="flex items-center gap-2" onClick={onEdit}>
+            <Pencil className="h-4 w-4" />
+            Editar agente
+          </DropdownMenuItem>
+          <DropdownMenuItem className="flex items-center gap-2" onClick={onView}>
+            <Eye className="h-4 w-4" />
+            Ver agente
           </DropdownMenuItem>
           <DropdownMenuSeparator />
         </DropdownMenuContent>
