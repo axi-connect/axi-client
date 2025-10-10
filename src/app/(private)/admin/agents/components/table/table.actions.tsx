@@ -2,31 +2,13 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Copy, Eye, MoreHorizontal, Pencil } from "lucide-react"
+import { useAgentStore } from "../../store/agent.store"
+import { useAlert } from "@/components/providers/alert-provider"
 import type { DataRow } from "@/components/features/data-table/types"
+import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function AgentRowActions({ row }: { row: DataRow }) {
-  const [copying, setCopying] = useState(false)
-
-  const onCopy = async () => {
-    try {
-      setCopying(true)
-      await navigator.clipboard.writeText(JSON.stringify(row))
-      window.dispatchEvent(new CustomEvent("agents:copy", { detail: { id: row.id } }))
-    } finally {
-      setCopying(false)
-    }
-  }
-
-  const onView = () => {
-    window.dispatchEvent(new CustomEvent("agents:view:open", { detail: { defaults: row } }))
-  }
-
-  const onEdit = () => {
-    window.dispatchEvent(new CustomEvent("agents:edit:open", { detail: { defaults: row } }))
-  }
-
   return (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -37,23 +19,37 @@ export function AgentRowActions({ row }: { row: DataRow }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-          <DropdownMenuItem className="flex items-center gap-2" onClick={onCopy}>
-            <Copy className="h-4 w-4" />
-            {copying ? "Copiando..." : "Copiar objeto"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="flex items-center gap-2" onClick={onEdit}>
-            <Pencil className="h-4 w-4" />
-            Editar agente
-          </DropdownMenuItem>
-          <DropdownMenuItem className="flex items-center gap-2" onClick={onView}>
-            <Eye className="h-4 w-4" />
-            Ver agente
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <AgentContextMenuItems row={row} />
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+  )
+}
+
+export function AgentContextMenuItems({ row }: { row: DataRow }) {
+  const { actions } = useAgentStore()
+
+  return (
+    <>
+      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onCopy(row)}>
+        <Copy className="h-4 w-4" />
+        Copiar objeto
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onEdit(row)}>
+        <Pencil className="h-4 w-4" />
+        Editar
+      </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onView(row)}>
+        <Eye className="h-4 w-4" />
+        Ver detalles
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onDelete(row)}>
+        <Trash className="h-4 w-4 text-red-500" />
+        Eliminar agente
+      </DropdownMenuItem>
+    </>
   )
 }

@@ -17,3 +17,7 @@ export async function getAgentById(id: number | string): Promise<ApiResponse<Age
 export async function updateAgent(id: number | string, payload: Partial<CreateAgentDTO>): Promise<ApiResponse<any>> {
   return http.put<ApiResponse<any>>(`/identities/agents/${id}`, payload, { authenticate: true });
 }
+
+export async function deleteAgent(id: number | string): Promise<ApiResponse<any>> {
+  return http.delete<ApiResponse<any>>(`/identities/agents/${id}`, { authenticate: true });
+}

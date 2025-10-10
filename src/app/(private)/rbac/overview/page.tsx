@@ -76,10 +76,6 @@ export default function RbacOverviewPage() {
       const current = tableRef.current?.getCurrentPage() ?? 1
       await load(current)
     }
-    const onDeleteError = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { message?: string }
-      showAlert({ tone: "error", title: detail?.message || "No se pudo eliminar el rol" })
-    }
     const onError = (e: Event) => {
       const detail = (e as CustomEvent).detail as { message?: string; status?: number }
       showAlert({ tone: "error", title: detail?.message || "Ocurrió un error" })
@@ -89,14 +85,14 @@ export default function RbacOverviewPage() {
 
     window.addEventListener("rbac:edit:open", onEditOpen)
     window.addEventListener("rbac:delete:success", onDeleteSuccess)
-    window.addEventListener("rbac:delete:error", onDeleteError)
+    window.addEventListener("rbac:delete:error", onError)
     window.addEventListener("rbac:error", onError)
 
     window.addEventListener("rbac:overview:refresh", onOverviewRefresh)
     return () => {
       window.removeEventListener("rbac:edit:open", onEditOpen)
       window.removeEventListener("rbac:delete:success", onDeleteSuccess)
-      window.removeEventListener("rbac:delete:error", onDeleteError)
+      window.removeEventListener("rbac:delete:error", onError)
       window.removeEventListener("rbac:error", onError)
     }
   }, [])

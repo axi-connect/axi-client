@@ -1,19 +1,25 @@
 "use client";
 
 import { AgentRow } from "./model";
-import { useRouter } from "next/navigation";
+import { deleteAgent } from "./service";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { parseHttpError } from "@/shared/api";
 import { Button } from "@/components/ui/button";
 import { CharacterDTO } from "./characters/model";
 import { FolderKanban, Plus } from "lucide-react";
+import { useAgentStore } from "./store/agent.store";
 import { useAgents } from "./context/agents.context";
 // import TreeViewIntentions from "./intentions/tree-view";
 import { DataTable } from "@/components/features/data-table";
-import { agentColumns } from "./components/table/table.config";
 import CharacterGallery from "./characters/character-gallery";
+import { agentColumns } from "./components/table/table.config";
+import { useAlert } from "@/components/providers/alert-provider";
+import { AgentContextMenuItems, AgentRowActions } from "./components/table/table.actions";
 
 export default function AgentsPage() {
     const router = useRouter();
+    const { showAlert, showModal, closeModal } = useAlert();
     const [agentRows, setAgentRows] = useState<AgentRow[]>([]);
 
     const { 
@@ -23,27 +29,50 @@ export default function AgentsPage() {
         fetchIntentionsOverview,
     } = useAgents();
 
-    const handleCreateCharacter = () => {
+    const onCreateCharacter = () => {
         router.push("/admin/agents/characters/create");
     }
 
-    const handleCreateAgent = () => {
+    const onCreateAgent = () => {
         router.push("/admin/agents/create");
     }
 
-    const handleEditAgent = (agent:Event) => {
+    const onEditAgent = (agent: AgentRow) => {
         // setSelectedAgent(agent);
-        router.push(`/admin/agents/update/${(agent as CustomEvent).detail.defaults.id}`);
+        router.push(`/admin/agents/update/${agent.id}`);
     }
 
-    const handleCharacterClick = (character: CharacterDTO) => {
-        setSelectedCharacter(character);
-        router.push(`/admin/agents/characters/update/${character.id}`);
-    }
-    
     const onEditCharacter = (character: CharacterDTO) => {
         setSelectedCharacter(character);
         router.push(`/admin/agents/characters/update/${character.id}`);
+    }
+
+    const onDeleteAgent = async (row: AgentRow) => {
+        // submitting ? "Eliminando..." : 
+        showModal({
+            title: "Eliminar agente",
+            description: `¿Seguro que deseas eliminar el agente “${String((row as any).name ?? "")}”?`,
+            actions: [
+                { label: "Cancelar", variant: "outline", asClose: true, id: "agents-delete-cancel" },
+                { label: "Eliminar", variant: "destructive", asClose: false, onClick: () => handleDeleteAgent(row), id: "agents-delete-confirm" },
+            ],
+            className: "sm:max-w-md",
+        })
+    }
+
+    const handleDeleteAgent = async (agent: AgentRow) => {
+        try{
+            const res = await deleteAgent(agent.id);
+            if (res.successful) {
+                fetchAgents();
+                showAlert({ tone: "success", title: res.message || "Agente eliminado correctamente", open: true });
+            }
+        } catch (error) {
+            const { message, status } = parseHttpError(error);
+            showAlert({ tone: "error", title: message || "No se pudo eliminar el agente", description: status ? `Código: ${status}` : undefined });
+        } finally {
+            closeModal();
+        }
     }
 
     const onDeleteCharacter = (character: CharacterDTO) => fetchCharacters();
@@ -53,10 +82,20 @@ export default function AgentsPage() {
         fetchCharacters();
         // fetchIntentionsOverview();
 
-        window.addEventListener("agents:edit:open", handleEditAgent);
-        return () => {
-            window.removeEventListener("agents:edit:open", handleEditAgent);
-        }
+        useAgentStore.setState({
+            actions: {
+                onCopy: (row) => {
+                    try {
+                      if (typeof navigator !== "undefined" && navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(row))
+                    } catch (error) {
+                      console.error(error)
+                    }
+                },
+                onView: ()=>{},
+                onEdit: onEditAgent,
+                onDelete: onDeleteAgent,
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -82,7 +121,7 @@ export default function AgentsPage() {
                 </div>
                 <Button 
                     variant="default"
-                    onClick={handleCreateCharacter}
+                    onClick={onCreateCharacter}
                     style={{ borderRadius: "9999px" }}
                 >
                     <Plus className="h-4 w-4" />
@@ -92,9 +131,9 @@ export default function AgentsPage() {
 
             <CharacterGallery 
                 characters={characters}
+                onDetail={()=> {}} // TODO: Implement
                 onEdit={onEditCharacter}
                 onDelete={onDeleteCharacter}
-                onDetail={handleCharacterClick} 
                 onPrevPage={prevCharactersPage}
                 onNextPage={nextCharactersPage}
                 hasPrev={hasPrevCharactersPage}
@@ -107,6 +146,7 @@ export default function AgentsPage() {
                 </svg>
             </div>
 
+            {/* TODO: Implement */}
             {/* <div className="mt-20 relative z-10"> */}
                 {/* <TreeViewIntentions /> */}
             {/* </div> */}
@@ -122,7 +162,7 @@ export default function AgentsPage() {
                     <div className="flex gap-2">
                         <Button 
                             variant="outline"
-                            onClick={handleCreateAgent}
+                            onClick={onCreateAgent}
                             style={{ borderRadius: "9999px" }}
                         >
                             <FolderKanban className="h-4 w-4" />
@@ -130,7 +170,7 @@ export default function AgentsPage() {
                         </Button>
                         <Button 
                             variant="default"
-                            onClick={handleCreateAgent}
+                            onClick={onCreateAgent}
                             style={{ borderRadius: "9999px" }}
                         >
                             <Plus className="h-4 w-4" />
@@ -142,6 +182,9 @@ export default function AgentsPage() {
                 <DataTable<AgentRow>
                     data={agentRows}
                     columns={agentColumns}
+                    rowContextMenu={({ row }) => (
+                        <AgentContextMenuItems row={row} />
+                    )}
                 />
             </div>
         </div>
