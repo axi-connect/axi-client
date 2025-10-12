@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { Modal } from "@/components/ui/modal"
-import { getAgentById } from "../../../service"
-import { AgentForm } from "../../../components/form"
 import { useParams, useRouter } from "next/navigation"
-import { useAgents } from "../../../context/agents.context"
+import { AgentForm } from "@/modules/agents/ui/forms/AgentForm"
+import { useAgent } from "@/modules/agents/infrastructure/agent.context"
+import { getAgentById } from "@/modules/agents/infrastructure/agent-service.adapter"
 
 export default function AgentsInterceptUpdate() {
     const params = useParams<{ id: string }>()
     const id = params?.id
     const router = useRouter()
-    const { fetchAgents } = useAgents()
+    const { fetchAgents } = useAgent()
     const [defaults, setDefaults] = useState<any | null>(null)
 
     const onModalSubmitClick = () => {

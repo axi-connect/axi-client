@@ -1,13 +1,13 @@
 "use client"
 
-import { useAgents } from "../../context/agents.context"
-import ModalFormAgents from "../../components/modal-form-agents"
+import { useAgent } from "@/modules/agents/infrastructure/agent.context"
+import ModalFormAgent from "@/modules/agents/ui/components/ModalFormAgent"
 
 export default function AgentsInterceptCreate() {
-  const { fetchAgents } = useAgents()
+  const { fetchAgents } = useAgent()
   const refresh = () => fetchAgents()
   
   return (
-    <ModalFormAgents refresh={refresh} />
+    <ModalFormAgent refresh={refresh} />
   )
 }

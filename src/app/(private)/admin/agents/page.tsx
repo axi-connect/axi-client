@@ -1,22 +1,22 @@
 "use client";
 
-import { AgentRow } from "./model";
-import { deleteAgent } from "./service";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { parseHttpError } from "@/shared/api";
 import { Button } from "@/components/ui/button";
-import { CharacterDTO } from "./characters/model";
 import { FolderKanban, Plus } from "lucide-react";
-import { useAgentStore } from "./store/agent.store";
-import { useAgents } from "./context/agents.context";
+import { AgentRow } from "@/modules/agents/domain/agent";
 // import TreeViewIntentions from "./intentions/tree-view";
 import { DataTable } from "@/components/features/data-table";
-import CharacterGallery from "./characters/character-gallery";
-import { agentColumns } from "./components/table/table.config";
-import AgentDetailSheet from "./components/agent-detail-sheet";
+import { CharacterDTO } from "@/modules/agents/domain/character";
 import { useAlert } from "@/components/providers/alert-provider";
-import { AgentContextMenuItems, AgentRowActions } from "./components/table/table.actions";
+import { useAgent } from "@/modules/agents/infrastructure/agent.context";
+import { useAgentStore } from "@/modules/agents/infrastructure/agent.store";
+import { agentColumns } from "@/modules/agents/ui/tables/config/agent.config";
+import CharacterGallery from "@/modules/agents/ui/components/CharacterGallery";
+import AgentDetailSheet from "@/modules/agents/ui/components/AgentDetailSheet";
+import { deleteAgent } from "@/modules/agents/infrastructure/agent-service.adapter";
+import { AgentContextMenuItems, AgentRowActions } from "@/modules/agents/ui/tables/agent.actions";
 
 export default function AgentsPage() {
     const pageSize = 10;
@@ -34,7 +34,7 @@ export default function AgentsPage() {
         agents, fetchAgents,
         characters, fetchCharacters, setSelectedCharacter, nextCharactersPage, prevCharactersPage, hasNextCharactersPage, hasPrevCharactersPage,
         fetchIntentionsOverview,
-    } = useAgents();
+    } = useAgent();
 
     const onCreateCharacter = () => {
         router.push("/admin/agents/characters/create");

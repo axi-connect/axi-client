@@ -3,12 +3,12 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Modal } from "@/components/ui/modal"
-import { CharacterForm } from "@/app/(private)/admin/agents/characters/form/CharacterForm"
-import { useAgents } from "../../../context/agents.context"
+import { CharacterForm } from "@/modules/agents/ui/forms/CharacterForm"
+import { useAgent } from "@/modules/agents/infrastructure/agent.context"
 
 export default function AgentsInterceptCharactersCreate() {
   const router = useRouter()
-  const {  fetchCharacters } = useAgents()
+  const {  fetchCharacters } = useAgent()
 
   const onModalSubmitClick = () => {
     const form = document.getElementById("character-form") as HTMLFormElement | null
