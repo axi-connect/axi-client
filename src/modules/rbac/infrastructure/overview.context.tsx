@@ -1,8 +1,8 @@
 "use client"
 
-import { listRbacModulesSummary } from "../service"
-import type { RbacModuleSummaryDTO, RbacRoleDTO } from "../model"
+import type { RbacModuleSummaryDTO, RbacRoleDTO } from "@/modules/rbac/domain/overview"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { listRbacModulesSummary } from "@/modules/rbac/infrastructure/overview-service.adapter"
 
 type OverviewContextValue = {
   loadingModules: boolean

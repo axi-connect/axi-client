@@ -1,44 +1,38 @@
 "use client"
 
 import { useState } from "react"
-import { parseHttpError } from "@/shared/api"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { deleteUser, getUserById } from "../../service"
 import type { DataRow } from "@/components/features/data-table/types"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
+import { getRbacOverviewRoleDetail, deleteRbacRole } from "@/modules/rbac/infrastructure/overview-service.adapter"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-export function UserRowActions({ user }: { user: DataRow }) {
+export function RbacRowActions({ row }: { row: DataRow }) {
+  const onDeleteClick = () => setConfirmOpen(true)
   const [submitting, setSubmitting] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
-
-  const onDeleteClick = () => setConfirmOpen(true)
-
+  const onViewClick = () => window.dispatchEvent(new CustomEvent("rbac:view:open", { detail: { defaults: row } }))
+  
   const onEditClick = async () => {
     try {
       document.body.style.cursor = "wait";
-      const id = user.id as string | number
-      const res = await getUserById(id)
-      const payload = res.data
+      const id = (row as any).id as number
+      const { data } = await getRbacOverviewRoleDetail(id)
+      const role = data.roles?.[0]
+      const defaults = role ? {
+        id: role.id,
+        name: role.name,
+        description: role.description ?? "",
+        status: (role as any).state ?? (role as any).status ?? "active",
+        hierarchy_level: (role as any).hierarchy_level ?? 0,
+        permissions: role.modules ? role.modules.map((rm: any) => ({ module_id: rm.id, permission: rm.permissions })) : [],
+      } : { id: (row as any).id }
       document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("users:edit:open", { detail: { defaults: payload } }))
-    } catch (err) {
+      window.dispatchEvent(new CustomEvent("rbac:edit:open", { detail: { defaults } }))
+    } catch {
       document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("users:error", { detail: { message: "No se pudo cargar el detalle del usuario" } }))
-    }
-  }
-
-  const onViewClick = async () => {
-    try {
-      const id = user.id as string | number
-      const res = await getUserById(id)
-      const payload = res.data
-      document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("users:view:open", { detail: { defaults: payload } }))
-    } catch (err) {
-      document.body.style.cursor = "default";
-      window.dispatchEvent(new CustomEvent("users:error", { detail: { message: "No se pudo cargar el detalle del usuario" } }))
+      window.dispatchEvent(new CustomEvent("rbac:error", { detail: { message: "No se pudo cargar el detalle del rol" } }))
     }
   }
 
@@ -46,17 +40,16 @@ export function UserRowActions({ user }: { user: DataRow }) {
     if (submitting) return
     try {
       setSubmitting(true)
-      const id = user.id as string | number
-      const res = await deleteUser(id)
+      const id = (row as any).id as number
+      const res = await deleteRbacRole(id)
       if (res.successful) {
-        window.dispatchEvent(new CustomEvent("users:delete:success", { detail: { id, message: res.message } }))
+        window.dispatchEvent(new CustomEvent("rbac:delete:success", { detail: { id, message: res.message } }))
         setConfirmOpen(false)
       } else {
-        window.dispatchEvent(new CustomEvent("users:delete:error", { detail: { id, message: res.message } }))
+        window.dispatchEvent(new CustomEvent("rbac:delete:error", { detail: { id, message: res.message } }))
       }
-    } catch (err) {
-      const { status, message } = parseHttpError(err)
-      window.dispatchEvent(new CustomEvent("users:delete:error", { detail: { id: (user as any).id, status, message } }))
+    } catch {
+      window.dispatchEvent(new CustomEvent("rbac:error", { detail: { message: "No se pudo eliminar el rol" } }))
     } finally {
       setSubmitting(false)
     }
@@ -72,13 +65,7 @@ export function UserRowActions({ user }: { user: DataRow }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <UserContextMenuItems
-            user={user}
-            onDeleteClick={onDeleteClick}
-            onEditClick={onEditClick}
-            onViewClick={onViewClick}
-            kind="dropdown"
-          />
+          <RbacContextMenuItems row={row} onViewClick={onViewClick} onEditClick={onEditClick} onDeleteClick={onDeleteClick} />
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -86,28 +73,28 @@ export function UserRowActions({ user }: { user: DataRow }) {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         config={{
-          title: "Eliminar usuario",
-          description: `¿Seguro que deseas eliminar al usuario “${String(user.name ?? user.email ?? "")}”? Esta acción es permanente.`,
+          title: "Eliminar rol",
+          description: `¿Seguro que deseas eliminar el rol “${String((row as any).name ?? "")}”? Esta acción es permanente.`,
           actions: [
-            { label: "Cancelar", variant: "outline", asClose: true, id: "user-delete-cancel" },
-            { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "user-delete-confirm" },
+            { label: "Cancelar", variant: "outline", asClose: true, id: "rbac-delete-cancel" },
+            { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "rbac-delete-confirm" },
           ],
           className: "sm:max-w-md",
         }}
       >
         <div className="text-sm text-muted-foreground">
-          Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados a este usuario.
+          Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados a este rol.
         </div>
       </Modal>
     </div>
   )
 }
 
-export function UserContextMenuItems({ user, onDeleteClick, onEditClick, onViewClick, kind = "dropdown" }: {
-  user: DataRow
-  onDeleteClick: () => void
-  onEditClick: () => void
+export function RbacContextMenuItems({ row, onViewClick, onEditClick, onDeleteClick, kind = "dropdown" }: {
+  row: DataRow
   onViewClick: () => void
+  onEditClick: () => void
+  onDeleteClick: () => void
   kind?: "dropdown" | "context"
 }) {
   const Label = kind === "dropdown" ? DropdownMenuLabel : (props: any) => <div className={props.className}>{props.children}</div>
@@ -123,14 +110,14 @@ export function UserContextMenuItems({ user, onDeleteClick, onEditClick, onViewC
   return (
     <>
       <Label>Acciones</Label>
-      <Item className="flex items-center gap-2" onClick={() => navigator.clipboard.writeText(JSON.stringify(user))}>
+      <Item className="flex items-center gap-2" onClick={() => navigator.clipboard.writeText(JSON.stringify(row))}>
         <Copy className="h-4 w-4" />
         Copiar Objeto
       </Item>
       <Separator />
       <Item className="flex items-center gap-2" onClick={onViewClick}>
         <Eye className="h-4 w-4" />
-        <span>Ver usuario</span>
+        <span>Ver detalles</span>
       </Item>
       <Item className="flex items-center gap-2" onClick={onEditClick}>
         <Pencil className="h-4 w-4" />

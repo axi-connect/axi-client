@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import type { RbacOverviewSummary } from "../../model";
+import type { RbacOverviewSummary } from "@/modules/rbac/domain/overview";
 import { CircleUserRound, LayoutDashboard, ShieldUser, Plus, ArrowRight } from "lucide-react";
 
 export function OverviewKpis({ summary }: { summary: RbacOverviewSummary }) {

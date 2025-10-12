@@ -1,7 +1,7 @@
 import { http, Params } from "@/services/http";
 import type { ApiResponse } from "@/shared/api";
 import type { SelectOption } from "@/shared/query";
-import type { ApiUsersPayload, CreateUserDTO, ListUsersParams, UpdateUserDTO, UserDTO } from "./model";
+import type { ApiUsersPayload, CreateUserDTO, ListUsersParams, UpdateUserDTO, UserDTO } from "@/modules/users/domain/user";
 
 export async function listUsers(params: ListUsersParams): Promise<ApiResponse<ApiUsersPayload>> {
   return http.get<ApiResponse<ApiUsersPayload>>("/identities/users", params as Params);

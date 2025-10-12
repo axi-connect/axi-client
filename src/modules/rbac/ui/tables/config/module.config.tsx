@@ -1,10 +1,10 @@
 "use client"
 
 import type { ApiResponse } from "@/shared/api"
-import { listRbacModules } from "../../service"
-import { ModuleRowActions } from "./table.actions"
+import { ModuleRowActions } from "../module.actions"
 import type { ColumnDef } from "@/components/features/data-table/types"
-import type { ApiRbacModulesSummaryPayload, RbacModuleSummaryDTO } from "../../model"
+import { listRbacModules } from "../../../infrastructure/overview-service.adapter"
+import type { ApiRbacModulesSummaryPayload, RbacModuleSummaryDTO } from "@/modules/rbac/domain/overview"
 
 export type ModuleRow = {
   id: number

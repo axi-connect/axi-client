@@ -1,7 +1,7 @@
 "use client"
 
 import { z } from "zod"
-import { useOverview } from "../../context/overview.context"
+import { useOverview } from "../../../../../modules/rbac/infrastructure/overview.context"
 import type { FieldConfig } from "@/components/features/dynamic-form"
 import { createCustomField, createInputField } from "@/components/features/dynamic-form"
 

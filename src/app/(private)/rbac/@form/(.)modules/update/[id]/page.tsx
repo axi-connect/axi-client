@@ -1,11 +1,11 @@
 "use client"
 
+import { Modal } from "@/components/ui/modal"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Modal } from "@/components/ui/modal"
-import { ModuleForm } from "../../../../modules/form/ModuleForm"
-import { useOverview } from "../../../../context/overview.context"
-import { getRbacOverview, getRbacOverviewRoleDetail } from "../../../../service"
+import { ModuleForm } from "../../../../../../../modules/rbac/ui/forms/ModuleForm"
+import { useOverview } from "../../../../../../../modules/rbac/infrastructure/overview.context"
+import { getRbacOverview, getRbacOverviewRoleDetail } from "@/modules/rbac/infrastructure/overview-service.adapter"
 
 export default function RbacInterceptModulesUpdate() {
   const router = useRouter()

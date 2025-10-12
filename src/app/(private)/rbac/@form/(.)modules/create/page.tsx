@@ -3,8 +3,8 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Modal } from "@/components/ui/modal"
-import { useOverview } from "../../../context/overview.context"
-import { ModuleForm } from "../../../modules/form/ModuleForm"
+import { ModuleForm } from "@/modules/rbac/ui/forms/ModuleForm"
+import { useOverview } from "@/modules/rbac/infrastructure/overview.context"
 
 export default function RbacInterceptModulesCreate() {
   const router = useRouter()

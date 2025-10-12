@@ -4,9 +4,9 @@ import { useMemo } from "react"
 import { parseHttpError } from "@/shared/api"
 import { DynamicForm } from "@/components/features/dynamic-form"
 import { useAlert } from "@/components/providers/alert-provider"
-import { useOverview } from "../../../context/overview.context"
-import { createRbacRole, updateRbacRole } from "@/app/(private)/rbac/service"
-import { roleFormSchema, buildRoleFormFields, defaultRoleFormValues, toCreateRoleDTO, type RoleFormValues } from "./form.config"
+import { useOverview } from "../../infrastructure/overview.context"
+import { createRbacRole, updateRbacRole } from "../../infrastructure/overview-service.adapter"
+import { roleFormSchema, buildRoleFormFields, defaultRoleFormValues, toCreateRoleDTO, type RoleFormValues } from "./config/role.config"
 
 export type RoleFormHost = {
   defaultValues?: Partial<RoleFormValues>

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { Modal } from "@/components/ui/modal"
 import { useParams, useRouter } from "next/navigation"
-import { useOverview } from "../../../../context/overview.context"
-import { RoleForm } from "../../../../overview/form/role-form/RoleForm"
+import { useOverview } from "../../../../../../../modules/rbac/infrastructure/overview.context"
+import { RoleForm } from "../../../../../../../modules/rbac/ui/forms/RoleForm"
 
 export default function RbacInterceptRolesUpdate() {
   const router = useRouter()

@@ -1,8 +1,8 @@
 "use client"
 
 import { z } from "zod"
-import type { CreateUserDTO } from "../../model"
 import type { SelectOption } from "@/shared/query"
+import type { CreateUserDTO } from "@/modules/users/domain/user"
 import type { FieldConfig } from "@/components/features/dynamic-form"
 import { createCustomField, createInputField } from "@/components/features/dynamic-form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"

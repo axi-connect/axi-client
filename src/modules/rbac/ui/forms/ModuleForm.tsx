@@ -1,11 +1,11 @@
 "use client"
 
 import { parseHttpError } from "@/shared/api"
-import { useOverview } from "../../context/overview.context"
 import { DynamicForm } from "@/components/features/dynamic-form"
-import { createRbacModule } from "@/app/(private)/rbac/service"
 import { useAlert } from "@/components/providers/alert-provider"
-import { buildModuleFormFields, defaultModuleFormValues, moduleFormSchema, type ModuleFormValues } from "./form.config"
+import { useOverview } from "../../infrastructure/overview.context"
+import { createRbacModule } from "../../infrastructure/overview-service.adapter"
+import { buildModuleFormFields, defaultModuleFormValues, moduleFormSchema, type ModuleFormValues } from "./config/module.config"
 
 export type ModuleFormHost = {
   defaultValues?: Partial<ModuleFormValues>

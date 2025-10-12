@@ -4,15 +4,15 @@ import { useRouter } from "next/navigation";
 import { buildListParams } from "@/shared/query";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { OverviewKpis } from "./components/overview-kpis";
-import { useOverview } from "../context/overview.context";
 import { DataTable } from "@/components/features/data-table";
-import { RoleDetailSheet } from "./components/role-detail-sheet";
 import { useAlert } from "@/components/providers/alert-provider";
-import type { RbacOverviewRow, RbacOverviewView } from "../model";
 import type { DataTableRef } from "@/components/features/data-table";
-import { RbacContextMenuItems } from "./components/table/table.actions";
-import { rbacOverviewColumns, fetchRbacOverview } from "./components/table/table.config";
+import { OverviewKpis } from "../../../../modules/rbac/ui/components/OverviewKpis";
+import { useOverview } from "../../../../modules/rbac/infrastructure/overview.context";
+import type { RbacOverviewRow, RbacOverviewView } from "@/modules/rbac/domain/overview";
+import { RoleDetailSheet } from "../../../../modules/rbac/ui/components/RoleDetailSheet";
+import { RbacContextMenuItems } from "../../../../modules/rbac/ui/tables/overview.actions";
+import { rbacOverviewColumns, fetchRbacOverview } from "../../../../modules/rbac/ui/tables/config/overview.config";
 
 export default function RbacOverviewPage() {
   const pageSize = 10

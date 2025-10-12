@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { parseHttpError } from "@/shared/api"
-import { listCompanyOptions } from "../../../companies/service"
 import { DynamicForm } from "@/components/features/dynamic-form"
-import { createUser, updateUser, listRoleOptions } from "../../service"
-import { buildUserFormFields, defaultUserFormValues, toCreateUserDTO, userFormSchema, type UserFormValues } from "./form.config"
+import { listCompanyOptions } from "@/modules/companies/infrastructure/company-service.adapter"
+import { createUser, updateUser, listRoleOptions } from "@/modules/users/infrastructure/user-service.adapter"
+import { buildUserFormFields, defaultUserFormValues, toCreateUserDTO, userFormSchema, type UserFormValues } from "@/modules/users/ui/form/user.config"
 
 export type UserFormHost = {
   closeModal?: () => void
@@ -40,8 +40,8 @@ export function UserForm({ host }: { host?: UserFormHost }) {
         if (!cancelled) {
           cachedCompanies = c
           cachedRoles = r
-          setCompanies(c)
-          setRoles(r)
+          setCompanies(c as any)
+          setRoles(r as any)
         }
       } catch (err) {
         console.error(err)
@@ -88,8 +88,8 @@ export function UserForm({ host }: { host?: UserFormHost }) {
       onSubmit={handleSubmit}
       schema={userFormSchema}
       columns={{ sm: 1, md: 2 }}
-      fields={buildUserFormFields({ companies, roles, formMode: host?.formMode })}
       defaultValues={{ ...defaultUserFormValues, ...(host?.defaultValues ?? {}) }}
+      fields={buildUserFormFields({ companies: companies as any, roles: roles as any, formMode: host?.formMode })}
     />
   )
 }

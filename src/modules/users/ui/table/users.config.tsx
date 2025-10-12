@@ -1,10 +1,10 @@
 "use client"
 
-import { listUsers } from "../../service";
 import type { ApiResponse } from "@/shared/api";
-import { UserRowActions } from "./table.actions";
+import { UserRowActions } from "@/modules/users/ui/table/users.actions";
+import { listUsers } from "@/modules/users/infrastructure/user-service.adapter";
 import type { ColumnDef, DataRow } from "@/components/features/data-table/types";
-import type { ApiUsersPayload, ListUsersParams, UserDTO, UserRow } from "../../model";
+import type { ApiUsersPayload, ListUsersParams, UserDTO, UserRow } from "@/modules/users/domain/user";
 
 export const userColumns: ColumnDef[] = [
   {

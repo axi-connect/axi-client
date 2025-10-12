@@ -1,6 +1,6 @@
 import { http, Params } from "@/services/http";
 import type { ApiResponse } from "@/shared/api";
-import type { ApiRbacOverviewPayload, ApiRbacOverviewSummaryPayload, ApiRbacModulesSummaryPayload, CreateRoleDTO, UpdateRoleDTO, CreateModuleDTO, GetRbacOverviewParams } from "./model";
+import type { ApiRbacOverviewPayload, ApiRbacOverviewSummaryPayload, ApiRbacModulesSummaryPayload, CreateRoleDTO, UpdateRoleDTO, CreateModuleDTO, GetRbacOverviewParams } from "@/modules/rbac/domain/overview";
 
 export async function getRbacOverview(params: GetRbacOverviewParams): Promise<ApiResponse<ApiRbacOverviewSummaryPayload>> {
   return http.get<ApiResponse<ApiRbacOverviewSummaryPayload>>("/rbac/overview", params as Params);

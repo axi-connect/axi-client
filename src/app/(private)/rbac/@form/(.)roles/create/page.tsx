@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { Modal } from "@/components/ui/modal"
-import { RoleForm } from "../../../overview/form/role-form/RoleForm"
+import { RoleForm } from "../../../../../../modules/rbac/ui/forms/RoleForm"
 
 export default function RbacInterceptRolesCreate() {
   const router = useRouter()
