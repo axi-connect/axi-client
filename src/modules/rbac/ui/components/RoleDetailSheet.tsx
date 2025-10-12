@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { DetailSheet } from "@/components/features/detail-sheet"
+import { DetailSheet } from "@/shared/components/features/detail-sheet"
 import type { RbacOverviewRow, RbacRoleDTO } from "@/modules/rbac/domain/overview"
 import { getRbacOverviewRoleDetail } from "@/modules/rbac/infrastructure/overview-service.adapter"
 

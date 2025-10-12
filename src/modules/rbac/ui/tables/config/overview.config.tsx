@@ -1,8 +1,8 @@
 "use client"
 
-import type { ApiResponse } from "@/shared/api";
 import { RbacRowActions } from "../overview.actions";
-import type { ColumnDef } from "@/components/features/data-table/types";
+import type { ApiResponse } from "@/core/services/api";
+import type { ColumnDef } from "@/shared/components/features/data-table/types";
 import { getRbacOverview } from "@/modules/rbac/infrastructure/overview-service.adapter";
 import type { ApiRbacOverviewSummaryPayload, GetRbacOverviewParams, RbacOverviewRow, RbacRoleSummaryDTO } from "@/modules/rbac/domain/overview";
 

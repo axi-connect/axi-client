@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Modal } from "@/components/ui/modal"
+import { Modal } from "@/shared/components/ui/modal"
 import { useParams, useRouter } from "next/navigation"
 import { useOverview } from "../../../../../../../modules/rbac/infrastructure/overview.context"
 import { RoleForm } from "../../../../../../../modules/rbac/ui/forms/RoleForm"

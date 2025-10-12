@@ -3,7 +3,6 @@
 // import {useState, useEffect} from "react";
 // import { motion } from "framer-motion";
 import { HomeIcon } from "@heroicons/react/24/outline";
-// import OverlayDialog from "@/components/features/dialogs/overlay-dialog";
 
 export default async function DashboardPage() {
   // const [open, setOpen] = useState(false);
@@ -37,29 +36,6 @@ export default async function DashboardPage() {
           Ver overlay de ejemplo
         </button>
       </div>
-
-      {/* <OverlayDialog
-        open={false}
-        onOpenChange={() => {}}
-        title="Demo Overlay"
-        description="Ejemplo rápido del componente de overlay inspirado en Next.js."
-        size="md"
-        notch="both"
-        actions={
-          <button
-            className="rounded-md px-3 py-1.5 hover:bg-foreground/10"
-            // onClick={() => setOpen(false)}
-          >
-            Cerrar
-          </button>
-        }
-      >
-        <div className="space-y-3 text-sm leading-relaxed">
-          <p>
-            Este es un ejemplo del componente reutilizable <code>OverlayDialog</code>.
-          </p>
-        </div>
-      </OverlayDialog> */}
     </div>
   );
 }

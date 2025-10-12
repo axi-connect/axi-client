@@ -1,8 +1,8 @@
 "use client"
 
 import { z } from "zod"
-import type { FieldConfig } from "@/components/features/dynamic-form"
-import { createCustomField, createInputField } from "@/components/features/dynamic-form"
+import type { FieldConfig } from "@/shared/components/features/dynamic-form"
+import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
 import type { CreateRoleDTO, RbacModuleSummaryDTO, RbacPermission } from "@/modules/rbac/domain/overview"
 
 export const roleFormSchema = z.object({

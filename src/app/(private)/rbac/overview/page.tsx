@@ -1,20 +1,28 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { buildListParams } from "@/shared/query";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { DataTable } from "@/components/features/data-table";
-import { useAlert } from "@/components/providers/alert-provider";
-import type { DataTableRef } from "@/components/features/data-table";
-import { OverviewKpis } from "../../../../modules/rbac/ui/components/OverviewKpis";
-import { useOverview } from "../../../../modules/rbac/infrastructure/overview.context";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { buildListParams } from "@/shared/api/query";
+import { useAlert } from "@/core/providers/alert-provider";
+import { DataTable } from "@/shared/components/features/data-table";
+import { OverviewKpis } from "@/modules/rbac/ui/components/OverviewKpis";
+import type { DataTableRef } from "@/shared/components/features/data-table";
+import { useOverview } from "@/modules/rbac/infrastructure/overview.context";
+import { RoleDetailSheet } from "@/modules/rbac/ui/components/RoleDetailSheet";
+import { RbacContextMenuItems } from "@/modules/rbac/ui/tables/overview.actions";
 import type { RbacOverviewRow, RbacOverviewView } from "@/modules/rbac/domain/overview";
-import { RoleDetailSheet } from "../../../../modules/rbac/ui/components/RoleDetailSheet";
-import { RbacContextMenuItems } from "../../../../modules/rbac/ui/tables/overview.actions";
-import { rbacOverviewColumns, fetchRbacOverview } from "../../../../modules/rbac/ui/tables/config/overview.config";
+import { rbacOverviewColumns, fetchRbacOverview } from "@/modules/rbac/ui/tables/config/overview.config";
 
 export default function RbacOverviewPage() {
+  return (
+    <Suspense fallback={null}>
+      <RbacOverviewContent />
+    </Suspense>
+  )
+}
+
+function RbacOverviewContent() {
   const pageSize = 10
   const searchParams = useSearchParams()
   const tableRef = useRef<DataTableRef>(null)
@@ -83,10 +91,10 @@ export default function RbacOverviewPage() {
     
     const onOverviewRefresh = (e: Event) => load(1)
 
-    window.addEventListener("rbac:edit:open", onEditOpen)
-    window.addEventListener("rbac:delete:success", onDeleteSuccess)
-    window.addEventListener("rbac:delete:error", onError)
     window.addEventListener("rbac:error", onError)
+    window.addEventListener("rbac:edit:open", onEditOpen)
+    window.addEventListener("rbac:delete:error", onError)
+    window.addEventListener("rbac:delete:success", onDeleteSuccess)
 
     window.addEventListener("rbac:overview:refresh", onOverviewRefresh)
     return () => {

@@ -1,8 +1,8 @@
 "use client"
 
-import type { ApiResponse } from "@/shared/api";
-import type { ColumnDef, DataRow } from "@/components/features/data-table/types";
+import type { ApiResponse } from "@/core/services/api";
 import { CompanyRowActions } from "@/modules/companies/ui/table/company.actions";
+import type { ColumnDef, DataRow } from "@/shared/components/features/data-table/types";
 import { listCompanies } from "@/modules/companies/infrastructure/company-service.adapter";
 import type { CompanyRow, CompanyDTO, ApiCompaniesPayload, ListCompaniesParams } from "@/modules/companies/domain/company";
 

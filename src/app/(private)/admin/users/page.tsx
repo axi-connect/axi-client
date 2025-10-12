@@ -1,16 +1,16 @@
 "use client"
 
 import { Plus } from "lucide-react";
-import { Modal } from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
-import { buildListParams } from "@/shared/query";
+import { Modal } from "@/shared/components/ui/modal";
+import { Button } from "@/shared/components/ui/button";
+import { buildListParams } from "@/shared/api/query";
 import { useEffect, useRef, useState } from "react";
 import type { UserRow } from "@/modules/users/domain/user";
 import { UserForm } from "@/modules/users/ui/form/UserForm";
 import { AvatarPreview } from "@/modules/users/ui/components/AvatarPreview";
 import { UserContextMenuItems } from "@/modules/users/ui/table/users.actions";
-import { DataTable, type DataTableRef } from "@/components/features/data-table";
-import { FloatingAlert, type FloatingAlertConfig } from "@/components/ui/floating-alert";
+import { DataTable, type DataTableRef } from "@/shared/components/features/data-table";
+import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
 import { fetchUsers, userColumns, usersData } from "@/modules/users/ui/table/users.config";
 
 export default function UsersPage() {

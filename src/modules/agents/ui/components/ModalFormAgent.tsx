@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation"
-import { Modal } from "@/components/ui/modal"
+import { Modal } from "@/shared/components/ui/modal"
 import { AgentForm } from "@/modules/agents/ui/forms/AgentForm"
 
 export default function ModalFormAgent({ refresh }: { refresh: () => void }) {

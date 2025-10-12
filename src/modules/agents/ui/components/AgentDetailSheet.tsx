@@ -1,10 +1,10 @@
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn } from "@/core/lib/utils";
 import { MessagesSquare } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/components/ui/badge";
 import { useCallback, useEffect, useState } from "react";
 import { AgentDetailDTO } from "@/modules/agents/domain/agent";
-import { DetailSheet } from "@/components/features/detail-sheet";
+import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import { getAgentById } from "@/modules/agents/infrastructure/agent-service.adapter";
 
 export default function AgentDetailSheet() {

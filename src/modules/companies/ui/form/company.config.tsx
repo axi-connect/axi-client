@@ -1,12 +1,12 @@
 "use client"
 
 import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import type { FieldConfig } from "@/components/features/dynamic-form";
-import { createCustomField, createInputField } from "@/components/features/dynamic-form";
+import { Input } from "@/shared/components/ui/input";
+import { Button } from "@/shared/components/ui/button";
+import type { FieldConfig } from "@/shared/components/features/dynamic-form";
+import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form";
 import type { CreateCompanyDTO, CompanyScheduleItem } from "@/modules/companies/domain/company";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 
 export const scheduleItemSchema = z
   .object({

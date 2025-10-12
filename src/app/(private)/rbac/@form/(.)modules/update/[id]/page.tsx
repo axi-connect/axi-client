@@ -1,6 +1,6 @@
 "use client"
 
-import { Modal } from "@/components/ui/modal"
+import { Modal } from "@/shared/components/ui/modal"
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ModuleForm } from "../../../../../../../modules/rbac/ui/forms/ModuleForm"

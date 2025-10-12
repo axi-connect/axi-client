@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { parseHttpError } from "@/shared/api"
-import { Modal } from "@/components/ui/modal"
-import { Button } from "@/components/ui/button"
-import type { DataRow } from "@/components/features/data-table/types"
+import { Modal } from "@/shared/components/ui/modal"
+import { Button } from "@/shared/components/ui/button"
+import { parseHttpError } from "@/core/services/api"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
+import type { DataRow } from "@/shared/components/features/data-table/types"
 import { deleteUser, getUserById } from "@/modules/users/infrastructure/user-service.adapter"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
 
 export function UserRowActions({ user }: { user: DataRow }) {
   const [submitting, setSubmitting] = useState(false)

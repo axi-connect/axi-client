@@ -1,5 +1,5 @@
-import { http, Params } from "@/services/http";
-import type { ApiResponse } from "@/shared/api";
+import { http, Params } from "@/core/services/http";
+import type { ApiResponse } from "@/core/services/api";
 import type { AgentDetailDTO, ApiAgentSummaryPayload, CreateAgentDTO, ListAgentsParams } from "@/modules/agents/domain/agent";
 
 export async function listAgentSummary(params?: ListAgentsParams): Promise<ApiResponse<ApiAgentSummaryPayload>> {

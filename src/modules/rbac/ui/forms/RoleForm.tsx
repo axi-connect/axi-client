@@ -1,10 +1,10 @@
 "use client"
 
 import { useMemo } from "react"
-import { parseHttpError } from "@/shared/api"
-import { DynamicForm } from "@/components/features/dynamic-form"
-import { useAlert } from "@/components/providers/alert-provider"
+import { parseHttpError } from "@/core/services/api"
+import { useAlert } from "@/core/providers/alert-provider"
 import { useOverview } from "../../infrastructure/overview.context"
+import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { createRbacRole, updateRbacRole } from "../../infrastructure/overview-service.adapter"
 import { roleFormSchema, buildRoleFormFields, defaultRoleFormValues, toCreateRoleDTO, type RoleFormValues } from "./config/role.config"
 

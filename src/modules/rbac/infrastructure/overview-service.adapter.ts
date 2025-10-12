@@ -1,5 +1,5 @@
-import { http, Params } from "@/services/http";
-import type { ApiResponse } from "@/shared/api";
+import { http, Params } from "@/core/services/http";
+import type { ApiResponse } from "@/core/services/api";
 import type { ApiRbacOverviewPayload, ApiRbacOverviewSummaryPayload, ApiRbacModulesSummaryPayload, CreateRoleDTO, UpdateRoleDTO, CreateModuleDTO, GetRbacOverviewParams } from "@/modules/rbac/domain/overview";
 
 export async function getRbacOverview(params: GetRbacOverviewParams): Promise<ApiResponse<ApiRbacOverviewSummaryPayload>> {

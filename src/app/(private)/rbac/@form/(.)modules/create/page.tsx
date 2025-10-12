@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Modal } from "@/components/ui/modal"
+import { Modal } from "@/shared/components/ui/modal"
 import { ModuleForm } from "@/modules/rbac/ui/forms/ModuleForm"
 import { useOverview } from "@/modules/rbac/infrastructure/overview.context"
 

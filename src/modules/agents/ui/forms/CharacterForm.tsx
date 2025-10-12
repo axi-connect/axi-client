@@ -1,8 +1,8 @@
 "use client"
 
-import { parseHttpError } from "@/shared/api"
-import { useAlert } from "@/components/providers/alert-provider"
-import { DynamicForm } from "@/components/features/dynamic-form"
+import { parseHttpError } from "@/core/services/api"
+import { useAlert } from "@/core/providers/alert-provider"
+import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { createCharacter, updateCharacter } from "@/modules/agents/infrastructure/character-service.adapter"
 import { buildCharacterFormFields, characterFormSchema, defaultCharacterFormValues, type CharacterFormValues } from "@/modules/agents/ui/forms/config/character.config"
 

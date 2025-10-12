@@ -1,5 +1,5 @@
-import { http } from "@/services/http"
-import type { ApiResponse } from "../api"
+import { http } from "@/core/services/http"
+import type { ApiResponse } from "../../core/services/api"
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
 
 type RefreshResponse = ApiResponse<{ accessToken: string; refreshToken: string }>

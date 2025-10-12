@@ -1,11 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { buildListParams } from "@/shared/query"
+import { buildListParams } from "@/shared/api/query"
 import { useEffect, useRef, useState } from "react"
-import { DetailSheet } from "@/components/features/detail-sheet"
-import { DataTable, type DataTableRef } from "@/components/features/data-table"
-import { moduleColumns, fetchModules, type ModuleRow } from "../../modules/table/table.config"
+import { DetailSheet } from "@/shared/components/features/detail-sheet"
+import { DataTable, type DataTableRef } from "@/shared/components/features/data-table"
+import { moduleColumns, fetchModules, type ModuleRow } from "@/modules/rbac/ui/tables/config/module.config"
 
 export default function RbacInterceptModulesPage() {
   const pageSize = 10

@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import type { DataRow } from "@/components/features/data-table/types"
+import { Button } from "@/shared/components/ui/button"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import type { DataRow } from "@/shared/components/features/data-table/types"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
 
 export function ModuleRowActions({ row }: { row: DataRow }) {
   return (

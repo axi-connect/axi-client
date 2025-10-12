@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { http } from "@/services/http"
+import { http } from "@/core/services/http"
 
 export async function POST() {
   try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { TreeNode } from "@/components/features/tree-view";
+import { TreeNode } from "@/shared/components/features/tree-view";
 import { createContext, useCallback, useContext, useState } from "react";
 import { AgentSummaryDTO, ListAgentsParams } from "@/modules/agents/domain/agent";
 import { IntentionDTO, ListIntentionParams } from "@/modules/agents/domain/intentions";

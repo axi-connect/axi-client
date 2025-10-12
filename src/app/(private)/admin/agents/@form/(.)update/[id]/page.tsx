@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Modal } from "@/components/ui/modal"
+import { Modal } from "@/shared/components/ui/modal"
 import { useParams, useRouter } from "next/navigation"
 import { AgentForm } from "@/modules/agents/ui/forms/AgentForm"
 import { useAgent } from "@/modules/agents/infrastructure/agent.context"

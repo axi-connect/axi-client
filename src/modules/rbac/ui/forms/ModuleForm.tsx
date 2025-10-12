@@ -1,9 +1,9 @@
 "use client"
 
-import { parseHttpError } from "@/shared/api"
-import { DynamicForm } from "@/components/features/dynamic-form"
-import { useAlert } from "@/components/providers/alert-provider"
+import { parseHttpError } from "@/core/services/api"
+import { useAlert } from "@/core/providers/alert-provider"
 import { useOverview } from "../../infrastructure/overview.context"
+import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { createRbacModule } from "../../infrastructure/overview-service.adapter"
 import { buildModuleFormFields, defaultModuleFormValues, moduleFormSchema, type ModuleFormValues } from "./config/module.config"
 

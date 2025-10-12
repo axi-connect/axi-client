@@ -2,13 +2,13 @@
 
 import { useForm } from "react-hook-form"
 import { Eye, EyeOff } from "lucide-react"
-import { Input } from '@/components/ui/input';
+import { Input } from '@/shared/components/ui/input';
 import { useState, useTransition } from "react"
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { loginSchema, type LoginFormValues } from "./schema"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form"
 import { useAuth } from "@/shared/auth/auth.hooks"
 
 export default function LoginForm() {

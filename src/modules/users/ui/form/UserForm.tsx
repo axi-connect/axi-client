@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { parseHttpError } from "@/shared/api"
-import { DynamicForm } from "@/components/features/dynamic-form"
+import { parseHttpError } from "@/core/services/api"
+import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { listCompanyOptions } from "@/modules/companies/infrastructure/company-service.adapter"
 import { createUser, updateUser, listRoleOptions } from "@/modules/users/infrastructure/user-service.adapter"
 import { buildUserFormFields, defaultUserFormValues, toCreateUserDTO, userFormSchema, type UserFormValues } from "@/modules/users/ui/form/user.config"

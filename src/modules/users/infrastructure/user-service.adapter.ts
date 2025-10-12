@@ -1,6 +1,6 @@
-import { http, Params } from "@/services/http";
-import type { ApiResponse } from "@/shared/api";
-import type { SelectOption } from "@/shared/query";
+import { http, Params } from "@/core/services/http";
+import type { ApiResponse } from "@/core/services/api";
+import type { SelectOption } from "@/shared/api/query";
 import type { ApiUsersPayload, CreateUserDTO, ListUsersParams, UpdateUserDTO, UserDTO } from "@/modules/users/domain/user";
 
 export async function listUsers(params: ListUsersParams): Promise<ApiResponse<ApiUsersPayload>> {

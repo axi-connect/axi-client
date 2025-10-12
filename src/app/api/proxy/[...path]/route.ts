@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { API_BASE_URL } from "@/config/env";
 import type { NextRequest } from "next/server";
+import { API_BASE_URL } from "@/core/config/env";
 import { refreshToken as refreshWithHelper } from "@/shared/auth/auth.handlers";
 
 export const runtime = "nodejs";

@@ -1,7 +1,7 @@
 "use client"
 
-import { parseHttpError } from "@/shared/api"
-import { DynamicForm } from "@/components/features/dynamic-form"
+import { parseHttpError } from "@/core/services/api"
+import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { createCompany, updateCompany } from "@/modules/companies/infrastructure/company-service.adapter"
 import { buildCompanyFormFields, companyFormSchema, defaultCompanyFormValues, toCreateCompanyDTO, type CompanyFormValues } from "@/modules/companies/ui/form/company.config"
 

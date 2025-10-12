@@ -1,18 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
-import { http } from "@/services/http"
+import { useForm } from "react-hook-form"
+import { Suspense, useState } from "react"
+import { http } from "@/core/services/http"
 import { useSearchParams } from "next/navigation"
+import { Input } from "@/shared/components/ui/input"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Button } from "@/shared/components/ui/button"
+import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form"
 
 const schema = z.object({ password: z.string().min(6, "Mínimo 6 caracteres") })
 
 export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
+  )
+}
+
+function ResetPasswordContent() {
   const sp = useSearchParams()
   const token = sp.get("token") || ""
   const [message, setMessage] = useState<string | null>(null)

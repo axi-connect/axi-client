@@ -1,5 +1,6 @@
 import LoginForm from "./form"
 import Image from 'next/image';
+import { Suspense } from 'react';
 
 const logo = "https://res.cloudinary.com/dpfnxj52w/image/upload/v1759341727/icon-app-v1.0_ehhycl.png"
 
@@ -14,7 +15,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <LoginForm />
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
 
       <div className="text-center">
         <a href="/auth/forgot-password" className="hover:text-rose-600">¿Olvidaste tu contraseña?</a>

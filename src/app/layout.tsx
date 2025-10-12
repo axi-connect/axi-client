@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Poppins } from "next/font/google";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/shared/auth/auth.context";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import { AlertProvider } from "@/components/providers/alert-provider";
+import { AuthProvider } from "@/core/providers/auth-provider";
+import { ThemeProvider } from "@/core/providers/theme-provider";
+import { AlertProvider } from "@/core/providers/alert-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

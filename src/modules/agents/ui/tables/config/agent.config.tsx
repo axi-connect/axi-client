@@ -1,10 +1,10 @@
 "use client"
 
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn } from "@/core/lib/utils";
 import type { AgentRow  } from "@/modules/agents/domain/agent";
 import { AgentRowActions } from "@/modules/agents/ui/tables/agent.actions";
-import type { ColumnDef, DataRow } from "@/components/features/data-table/types";
+import type { ColumnDef, DataRow } from "@/shared/components/features/data-table/types";
 
 export const agentColumns: ColumnDef<AgentRow>[] = [
   { accessorKey: "avatar", header: "Avatar", sortable: true, alwaysVisible: true, minWidth: 80, cell: ({ row } ) => (

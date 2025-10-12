@@ -1,7 +1,7 @@
 import { cookies } from "next/headers"
-import { http } from "@/services/http"
+import { http } from "@/core/services/http"
 import { NextResponse } from "next/server"
-import type { ApiResponse } from "@/shared/api"
+import type { ApiResponse } from "@/core/services/api"
 import type { AuthUser } from "@/shared/auth/auth.types"
 import { refreshToken } from "@/shared/auth/auth.handlers"
 

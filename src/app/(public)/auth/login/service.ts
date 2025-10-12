@@ -1,5 +1,5 @@
-import { http } from "@/services/http"
-import type { ApiResponse } from "@/shared/api"
+import { http } from "@/core/services/http"
+import type { ApiResponse } from "@/core/services/api"
 import type { AuthUser, Tokens } from "@/shared/auth/auth.types"
 
 type LoginBackendResponse = ApiResponse<{ user: AuthUser; tokens: Tokens }>

@@ -1,11 +1,11 @@
 "use client"
 
 import { z } from "zod"
-import type { SelectOption } from "@/shared/query"
+import type { SelectOption } from "@/shared/api/query"
 import type { CreateUserDTO } from "@/modules/users/domain/user"
-import type { FieldConfig } from "@/components/features/dynamic-form"
-import { createCustomField, createInputField } from "@/components/features/dynamic-form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { FieldConfig } from "@/shared/components/features/dynamic-form"
+import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 
 export const userFormSchema = z.object({
   email: z.email("Correo inválido").trim(),

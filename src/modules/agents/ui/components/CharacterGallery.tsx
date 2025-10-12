@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn } from "@/core/lib/utils";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Modal from "@/components/ui/modal";
+import Modal from "@/shared/components/ui/modal";
 import { CharacterDTO, CharacterGalleryProps } from "@/modules/agents/domain/character";
 import { deleteCharacter } from "@/modules/agents/infrastructure/character-service.adapter";
 import { AudioLines, ChevronLeft, ChevronRight, Pencil, Play, Trash2 } from "lucide-react";

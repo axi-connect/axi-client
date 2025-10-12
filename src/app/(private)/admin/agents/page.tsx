@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { parseHttpError } from "@/shared/api";
-import { Button } from "@/components/ui/button";
 import { FolderKanban, Plus } from "lucide-react";
+import { parseHttpError } from "@/core/services/api";
+import { Button } from "@/shared/components/ui/button";
 import { AgentRow } from "@/modules/agents/domain/agent";
 // import TreeViewIntentions from "./intentions/tree-view";
-import { DataTable } from "@/components/features/data-table";
+import { useAlert } from "@/core/providers/alert-provider";
 import { CharacterDTO } from "@/modules/agents/domain/character";
-import { useAlert } from "@/components/providers/alert-provider";
+import { DataTable } from "@/shared/components/features/data-table";
 import { useAgent } from "@/modules/agents/infrastructure/agent.context";
 import { useAgentStore } from "@/modules/agents/infrastructure/agent.store";
 import { agentColumns } from "@/modules/agents/ui/tables/config/agent.config";

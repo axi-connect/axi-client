@@ -2,15 +2,15 @@
 
 import { z } from "zod"
 import Image from "next/image"
-import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { SelectOption } from "@/shared/query"
-import { Button } from "@/components/ui/button"
-import type { FieldConfig } from "@/components/features/dynamic-form"
+import { cn } from "@/core/lib/utils"
+import { Input } from "@/shared/components/ui/input"
+import { Button } from "@/shared/components/ui/button"
+import { SelectOption } from "@/shared/api/query"
 import type { CharacterStyleDTO } from "@/modules/agents/domain/character"
-import { MultiSelect, type MultiSelectOption } from "@/components/features/multi-select"
-import { createCustomField, createInputField } from "@/components/features/dynamic-form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { FieldConfig } from "@/shared/components/features/dynamic-form"
+import { MultiSelect, type MultiSelectOption } from "@/shared/components/features/multi-select"
+import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { Plus, AtSign, MessageCircleMore, Phone, Mail, MessageSquareMore, Send, BrainCircuit, Presentation, ServerOff, CircleCheck, ServerCrash, CircleX, ServerCog, MessageCircle, Handshake, Lightbulb, Settings, Headphones, TrendingUp, ShieldCheck, Workflow, Smile, Trash} from "lucide-react"
 
 const channels = [

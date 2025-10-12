@@ -4,10 +4,10 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
-import { http } from "@/services/http"
+import { Button } from "@/shared/components/ui/button"
+import { Input } from "@/shared/components/ui/input"
+import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form"
+import { http } from "@/core/services/http"
 
 const schema = z.object({ email: z.string().email("Correo inválido") })
 

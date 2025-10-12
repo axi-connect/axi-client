@@ -1,6 +1,6 @@
-import { AppSidebar } from "@/components/layout/sidebar";
-import { PrivateHeader } from "@/components/features/private-header";
-import { SidebarProvider, SidebarInset } from "@/components/layout/sidebar/core"
+import { AppSidebar } from "@/shared/components/layout/sidebar";
+import { PrivateHeader } from "@/shared/components/layout/private-header";
+import { SidebarProvider, SidebarInset } from "@/shared/components/layout/sidebar/core"
 
 export default function PrivateLayout({
   children,

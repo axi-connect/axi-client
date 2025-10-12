@@ -1,8 +1,8 @@
 "use client"
 
 import { z } from "zod"
-import type { FieldConfig } from "@/components/features/dynamic-form"
-import { createInputField, createCustomField } from "@/components/features/dynamic-form"
+import type { FieldConfig } from "@/shared/components/features/dynamic-form"
+import { createInputField, createCustomField } from "@/shared/components/features/dynamic-form"
 
 export const characterFormSchema = z.object({
   avatar_url: z.string().url("Debe ser una URL válida").optional().or(z.literal("")).transform(v => (v === "" ? undefined : v)),

@@ -1,5 +1,5 @@
-import { http, Params } from "@/services/http";
-import type { ApiResponse } from "@/shared/api";
+import { http, Params } from "@/core/services/http";
+import type { ApiResponse } from "@/core/services/api";
 import type { ApiCharactersPayload, ListCharactersParams, CharacterDTO, CreateCharacterDTO, UpdateCharacterDTO } from "@/modules/agents/domain/character";
 
 export async function listCharacters(params: ListCharactersParams): Promise<ApiResponse<ApiCharactersPayload>> {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import type { RbacOverviewSummary } from "@/modules/rbac/domain/overview";
 import { CircleUserRound, LayoutDashboard, ShieldUser, Plus, ArrowRight } from "lucide-react";
 

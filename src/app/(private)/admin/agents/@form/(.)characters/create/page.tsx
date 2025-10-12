@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Modal } from "@/components/ui/modal"
+import { Modal } from "@/shared/components/ui/modal"
 import { CharacterForm } from "@/modules/agents/ui/forms/CharacterForm"
 import { useAgent } from "@/modules/agents/infrastructure/agent.context"
 
