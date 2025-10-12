@@ -82,6 +82,8 @@ export interface AgentSummaryDTO{
 
 export interface AgentDetailDTO extends AgentSummaryDTO{
   client_id:string;
+  skills: string[];
+  channel: AgentChannel;
   character:CharacterDTO;
   agentIntention: AgentIntentionDTO[];
 }
@@ -102,8 +104,8 @@ export type AgentRow = {
 }
 
 // Create Agent DTOs
-export type AgentChannel = "whatsapp" | "telegram" | string
 export type AgentStatus = "available" | "busy" | "offline" | string
+export type AgentChannel = "whatsapp" | "instagram" | "email" | "call" | string
 
 export type CreateAgentIntentionItem = {
   intention_id: number

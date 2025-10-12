@@ -116,6 +116,12 @@ export default function RbacOverviewPage() {
           ref={tableRef}
           searchTrigger="submit"
           columns={rbacOverviewColumns}
+          pagination={{ pageSize, total }}
+          onPageChange={(p) => { load(p) }}
+          onSortChange={handleSortChange as any}
+          onSearchChange={handleSearchChange as any}
+          sorting={{ by: sortBy as any, dir: sortDir }}
+          search={{ field: searchField as any, value: searchValue }}
           rowContextMenu={({ row }) => (
             <RbacContextMenuItems
               row={row}
@@ -125,12 +131,6 @@ export default function RbacOverviewPage() {
               kind="context"
             />
           )}
-          onSortChange={handleSortChange as any}
-          onPageChange={(p) => { load(p) }}
-          onSearchChange={handleSearchChange as any}
-          pagination={{ pageSize, total }}
-          search={{ field: searchField as any, value: searchValue }}
-          sorting={{ by: sortBy as any, dir: sortDir }}
         />
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { AgentSummaryDTO } from "../model";
+import { AgentSummaryDTO, ListAgentsParams } from "../model";
 import { listAgentSummary } from "../service";
 import { listCharacters } from "../characters/service";
 import { TreeNode } from "@/components/features/tree-view";
@@ -65,10 +65,11 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
     });
     const [selectedCharacter, setSelectedCharacter] = useState<CharacterDTO | null>(null);
 
-    const fetchAgents = useCallback(async () => {
+    const fetchAgents = useCallback(async (params?: Partial<ListAgentsParams>) => {
         setLoading(true);
         try {
-            const { data } = await listAgentSummary();
+            const { data } = await listAgentSummary({
+                ...params});
             setAgents(data.agents);
         } catch (error) {
             setError(error as string);

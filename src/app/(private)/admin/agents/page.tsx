@@ -14,13 +14,20 @@ import { useAgents } from "./context/agents.context";
 import { DataTable } from "@/components/features/data-table";
 import CharacterGallery from "./characters/character-gallery";
 import { agentColumns } from "./components/table/table.config";
+import AgentDetailSheet from "./components/agent-detail-sheet";
 import { useAlert } from "@/components/providers/alert-provider";
 import { AgentContextMenuItems, AgentRowActions } from "./components/table/table.actions";
 
 export default function AgentsPage() {
+    const pageSize = 10;
     const router = useRouter();
     const { showAlert, showModal, closeModal } = useAlert();
     const [agentRows, setAgentRows] = useState<AgentRow[]>([]);
+    const [searchValue, setSearchValue] = useState<string>("");
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+    const [total, setTotal] = useState<number | undefined>(undefined);
+    const [sortBy, setSortBy] = useState<keyof AgentRow | undefined>();
+    const [searchField, setSearchField] = useState<keyof AgentRow>("name");
 
     const { 
         loading, error,
@@ -77,6 +84,11 @@ export default function AgentsPage() {
 
     const onDeleteCharacter = (character: CharacterDTO) => fetchCharacters();
 
+    const onViewAgent = (agent: AgentRow) => {
+        console.log(agent)
+        window.dispatchEvent(new CustomEvent("agent:view:open", { detail: { id: agent.id } }));
+    }
+
     useEffect(() => {
         fetchAgents();
         fetchCharacters();
@@ -91,7 +103,7 @@ export default function AgentsPage() {
                       console.error(error)
                     }
                 },
-                onView: ()=>{},
+                onView: onViewAgent,
                 onEdit: onEditAgent,
                 onDelete: onDeleteAgent,
             }
@@ -182,10 +194,18 @@ export default function AgentsPage() {
                 <DataTable<AgentRow>
                     data={agentRows}
                     columns={agentColumns}
+                    pagination={{ pageSize, total }}
+                    // onPageChange={(p) => { load(p) }}
+                    // onSortChange={handleSortChange as any}
+                    // onSearchChange={handleSearchChange as any}
+                    sorting={{ by: sortBy as any, dir: sortDir }}
+                    search={{ field: searchField as any, value: searchValue }}
                     rowContextMenu={({ row }) => (
                         <AgentContextMenuItems row={row} />
                     )}
                 />
+
+                <AgentDetailSheet />
             </div>
         </div>
     )
