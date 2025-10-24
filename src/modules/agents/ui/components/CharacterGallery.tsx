@@ -73,7 +73,7 @@ export default function CharacterGallery( { characters, onDetail, onEdit, onDele
                                 >
                                     <Image
                                         loading="lazy"
-                                        width={120} height={120}
+                                        width={1080} height={1080}
                                         src={character.avatar_url}
                                         alt={character.id.toString()}
                                         className="absolute rounded-lg bottom-0 z-10"

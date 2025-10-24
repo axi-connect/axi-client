@@ -1,12 +1,14 @@
 "use client"
 
 import Image from "next/image"
-import NavItemNode from './components/nav-item'
 import * as Icons from "lucide-react"
+import { cn } from "@/core/lib/utils"
 import { useEffect, useState } from "react"
+import NavItemNode from './components/nav-item'
 import { useSession } from '@/shared/auth/auth.hooks'
 import Loader from "@/shared/components/layout/loader"
-import { SidebarSection, SidebarSectionDTO, SidebarItemDTO } from "./types"
+import { useSidebar } from "@/shared/components/layout/sidebar/core"
+import { SidebarSection, SidebarSectionDTO, SidebarItemDTO, SidebarNavItem } from "./types"
 
 import {
   Sidebar,
@@ -27,7 +29,7 @@ function iconFromString(name?: string): Icons.LucideIcon | undefined {
 }
 
 function mapDtoToSections(dto: SidebarSectionDTO[]): SidebarSection[] {
-  const mapItem = (it: SidebarItemDTO): any => ({
+  const mapItem = (it: SidebarItemDTO): SidebarNavItem => ({
     title: it.title,
     url: it.url?.startsWith("/") ? it.url : it.url ? `/${it.url}` : undefined,
     icon: iconFromString(it.icon),
@@ -37,29 +39,10 @@ function mapDtoToSections(dto: SidebarSectionDTO[]): SidebarSection[] {
 }
 
 export function AppSidebar() {
-  function pad2(n: number) {
-    return n.toString().padStart(2, "0")
-  }
-
-  function useCountdown(target: Date) {
-    const [now, setNow] = useState<Date>(new Date())
-    useEffect(() => {
-      const id = setInterval(() => setNow(new Date()), 1000)
-      return () => clearInterval(id)
-    }, [])
-    const diff = Math.max(0, target.getTime() - now.getTime())
-    const dayMs = 24 * 60 * 60 * 1000
-    const hourMs = 60 * 60 * 1000
-    const minMs = 60 * 1000
-    const days = Math.floor(diff / dayMs)
-    const hours = Math.floor((diff % dayMs) / hourMs)
-    const minutes = Math.floor((diff % hourMs) / minMs)
-    return { days, hours, minutes }
-  }
-
+  const { state } = useSidebar()
+  const { user, status } = useSession()
   const [mounted, setMounted] = useState(false)
   const launchDate = new Date(2025, 10, 1, 0, 0, 0)
-  const { user, isAuthenticated, status } = useSession()
   const [loaderSidebar, setLoaderSidebar] = useState(true)
   const { days, hours, minutes } = useCountdown(launchDate)
   const [sections, setSections] = useState<SidebarSection[] | null>(null)
@@ -87,6 +70,26 @@ export function AppSidebar() {
     return () => { ignore = true }
   }, [status])
 
+  function pad2(n: number) {
+    return n.toString().padStart(2, "0")
+  }
+
+  function useCountdown(target: Date) {
+    const [now, setNow] = useState<Date>(new Date())
+    useEffect(() => {
+      const id = setInterval(() => setNow(new Date()), 1000)
+      return () => clearInterval(id)
+    }, [])
+    const diff = Math.max(0, target.getTime() - now.getTime())
+    const dayMs = 24 * 60 * 60 * 1000
+    const hourMs = 60 * 60 * 1000
+    const minMs = 60 * 1000
+    const days = Math.floor(diff / dayMs)
+    const hours = Math.floor((diff % dayMs) / hourMs)
+    const minutes = Math.floor((diff % hourMs) / minMs)
+    return { days, hours, minutes }
+  }
+
   function TimeBox({ value, label }: { value: string; label: string }) {
     return (
       <div className="flex flex-col items-center">
@@ -99,9 +102,9 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-2">
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2", state === "collapsed" && "hidden")}>
           <div className="size-8 rounded-md bg-brand-gradient" />
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-medium">{user?.company?.name ?? "Cargando..."}</span>
@@ -128,7 +131,7 @@ export function AppSidebar() {
             ))}
 
             {/* Lanzamiento Axi Connect */}
-            <div className="mt-4 px-3 pb-2">
+            <div className={cn("mt-4 px-3 pb-2", state === "collapsed" && "hidden")}>
               <div className="rounded-lg border border-border bg-background p-3">
                 <div className="mb-2 text-xs font-medium text-foreground/80">
                   Lanzamiento Axi Connect <span aria-hidden>🚀</span>
