@@ -3,7 +3,7 @@
 import { useRouter, useParams } from "next/navigation"
 import { useEffect } from "react"
 import ChannelDetailSheet from "@/modules/channels/ui/components/ChannelDetailSheet"
-import { useChannels } from "@/modules/channels/infrastructure/channels.context"
+import { useChannels } from "@/modules/channels/infrastructure/store/channels.context"
 
 export default function ChannelsInterceptDetailView() {
   const router = useRouter()

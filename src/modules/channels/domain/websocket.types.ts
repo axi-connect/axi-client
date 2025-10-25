@@ -20,16 +20,17 @@ export type ChannelEvents = {
 
   // Server -> Client
   'channel.joined': (data: { channelId: string; status: 'active' | 'inactive' }) => void
-  'channel.status_response': (data: { channelId: string; status: 'active' | 'inactive'; lastActivity?: string }) => void
-  'channel.status.updated': (data: { channelId: string; status: 'active' | 'inactive' }) => void
-  'channel.auth.required': (data: { channelId: string; provider: string }) => void
+  'channel.started': (data: { channelId: string; status: 'ready' | 'not_ready'; lastActivity?: string }) => void
+  'channel.authenticated': (data: { channelId: string; status: 'authenticated' | 'unauthenticated' }) => void
+  'channel.status_response': (data: { channelId: string; status: {isActive: boolean; lastActivity?: string, isAuthenticated: boolean, isConnected: boolean }}) => void
+  // 'channel.status.updated': (data: { channelId: string; status: 'active' | 'inactive' }) => void
   'channel.disconnected': (data: { channelId: string; reason: string }) => void
-  'channel.auth_failure': (data: { channelId: string; error: string }) => void
-  'channel.disconnect_error': (data: { channelId: string; error: string }) => void
-  'channel.auth_failure_error': (data: { channelId: string; error: string }) => void
-  'channel.session_cleaned': (data: { channelId: string }) => void
-  'channel.started': (data: { channelId: string }) => void
-  'channel.stopped': (data: { channelId: string }) => void
+  // 'channel.auth_failure': (data: { channelId: string; error: string }) => void
+  // 'channel.disconnect_error': (data: { channelId: string; error: string }) => void
+  // 'channel.auth_failure_error': (data: { channelId: string; error: string }) => void
+  // 'channel.session_cleaned': (data: { channelId: string }) => void
+  // 'channel.started': (data: { channelId: string }) => void
+  // 'channel.stopped': (data: { channelId: string }) => void
 }
 
 // Message namespace events
@@ -90,4 +91,4 @@ export type SocketOptions = {
 }
 
 // Namespace types
-export type Namespace = '/auth' | '/channel' | '/message' | '/system'
+export type Namespace = 'auth' | 'channel' | 'message' | 'system'

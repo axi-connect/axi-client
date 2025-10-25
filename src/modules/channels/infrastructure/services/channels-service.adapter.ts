@@ -33,3 +33,14 @@ export type UpdateChannelDTO = Partial<Omit<CreateChannelDTO, "company_id">> & {
 export async function updateChannel(id: string, payload: UpdateChannelDTO): Promise<ApiResponse<Channel>> {
   return http.put<ApiResponse<Channel>>(`/channels/${id}`, payload)
 }
+
+export type QRCodeResponse = {
+  qrCode: string
+  qrCodeUrl: string
+  sessionId: string
+  expiresAt: string
+}
+
+export async function getChannelQR(id: string): Promise<ApiResponse<QRCodeResponse>> {
+  return http.get<ApiResponse<QRCodeResponse>>(`/channels/${id}/qr`, undefined, { authenticate: true })
+}

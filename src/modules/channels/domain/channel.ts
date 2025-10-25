@@ -1,9 +1,22 @@
 import type { ChannelProvider, ChannelType } from "./enums"
 
+export type ChannelWsStatus = 
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "authenticated"
+  | "ready"
+export interface ChannelWsState {
+  hasJoined: boolean
+  status: ChannelWsStatus
+  metadata?: Record<string, unknown>
+}
+
 export type Channel = {
   id: string
   name: string
   type: ChannelType
+  state?: ChannelWsState
   provider: ChannelProvider
   is_active: boolean
   provider_account: string

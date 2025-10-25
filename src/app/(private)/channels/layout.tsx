@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 import { SidebarProvider } from "@/shared/components/layout/sidebar/core"
 import ChannelSidebar from "@/modules/channels/ui/sidebar/ChannelSidebar"
-import { ChannelsProvider } from "@/modules/channels/infrastructure/channels.context"
+import { ChannelsProvider } from "@/modules/channels/infrastructure/store/channels.context"
 
 export default function ChannelsLayout({ children, form }: { children: ReactNode, form: ReactNode }) {
   return (

@@ -2,7 +2,7 @@
 
 import { Socket } from 'socket.io-client'
 import { useEffect, useCallback, useRef } from 'react'
-import { WebSocketService } from '../services/websocket.service'
+import { WebSocketService } from '../../../../core/websocket/websocket.service'
 import type { SystemEvents, ChannelsWebSocketEvents } from '../../domain/websocket.types'
 
 /**

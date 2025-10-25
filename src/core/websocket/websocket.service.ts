@@ -2,7 +2,8 @@
 
 import { io, Socket } from 'socket.io-client'
 import { WS_BASE_URL } from '@/core/config/env'
-import type { Namespace, ChannelsWebSocketEvents } from '../../domain/websocket.types'
+import { WebSocketEventBus } from './websocket-event-bus'
+import type { Namespace, ChannelsWebSocketEvents } from '../../modules/channels/domain/websocket.types'
 
 /**
  * WebSocket service for Channels module
@@ -27,10 +28,10 @@ export class WebSocketService {
    * Create a new socket connection
   */
   private static async createSocket(namespace: Namespace): Promise<Socket<ChannelsWebSocketEvents>> {
-    console.log(`🔌 Connecting to: ${WS_BASE_URL}${namespace}`)
+    console.log(`🔌 Connecting to: ${WS_BASE_URL}/${namespace}`)
 
     const auth = await this.getAuthToken()
-    const socket = io(`${WS_BASE_URL}${namespace}`, {
+    const socket = io(`${WS_BASE_URL}/${namespace}`, {
       auth,
       // autoConnect: false,
       reconnection: true,
@@ -41,14 +42,17 @@ export class WebSocketService {
 
     // Basic connection event handlers
     socket.on('connect', () => {
+      WebSocketEventBus.emit(`${namespace}-ws-connected`, { id: socket.id })
       console.log(`🔌 Connected to ${namespace} (ID: ${socket.id})`)
     })
 
     socket.on('disconnect', (reason) => {
+      WebSocketEventBus.emit(`${namespace}-ws-disconnected`, { id: socket.id, reason })
       console.log(`🔌 Disconnected from ${namespace}: ${reason}`)
     })
 
     socket.on('connect_error', (error: Error) => {
+      WebSocketEventBus.emit(`${namespace}-ws-connect-error`, { id: socket.id, error: error.message })
       console.error(`❌ Connection error for ${namespace}:`, error.message)
     })
 
@@ -61,9 +65,7 @@ export class WebSocketService {
   private static getAuthToken = async (): Promise<{ token: string } | undefined> => {
     try {
       // Get token from API endpoint that can access HttpOnly cookies
-      const response = await fetch('/api/auth/token', {
-        credentials: 'include'
-      })
+      const response = await fetch('/api/auth/token', {credentials: 'include'})
 
       if (response.ok) {
         const data = await response.json()

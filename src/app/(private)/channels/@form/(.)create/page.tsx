@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { Modal } from "@/shared/components/ui/modal"
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm"
-import { useChannels } from "@/modules/channels/infrastructure/channels.context"
+import { useChannels } from "@/modules/channels/infrastructure/store/channels.context"
 
 export default function ChannelsInterceptCreate() {
   const router = useRouter()

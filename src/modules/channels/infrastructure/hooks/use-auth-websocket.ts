@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { Socket } from 'socket.io-client'
-import { WebSocketService } from '../services/websocket.service'
+import { WebSocketService } from '../../../../core/websocket/websocket.service'
 import type { AuthEvents, ChannelsWebSocketEvents } from '../../domain/websocket.types'
 
 /**
