@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Modal from "@/shared/components/ui/modal"
 import { useRouter } from "next/navigation"
+import Modal from "@/shared/components/ui/modal"
 import { useAuth } from "@/shared/auth/auth.hooks"
 
 export default function LogoutConfirmModal() {

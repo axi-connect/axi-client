@@ -1,5 +1,6 @@
 "use client"
 
+import { isPublicPath } from "@/core/config/routes"
 import type { AuthUser, LoginPayload, SessionResponse } from "../../shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
@@ -8,16 +9,26 @@ type AuthStatus = "loading" | "authenticated" | "unauthenticated"
 type AuthContextValue = {
   status: AuthStatus
   user: AuthUser | null
-  login: (payload: LoginPayload) => Promise<void>
   logout: () => Promise<void>
   refresh: () => Promise<void>
+  login: (payload: LoginPayload) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>("loading")
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [status, setStatus] = useState<AuthStatus>("loading")
+
+  const redirectToLogin = useCallback(() => {
+    const { pathname, search } = window.location;
+    if (isPublicPath(pathname)) return;
+
+    setUser(null)
+    setStatus("unauthenticated")
+    if (pathname === "/auth/login") return
+    window.location.href = "/auth/login?next=" + encodeURIComponent(pathname + "?" + search);
+  }, [])
 
   const hydrate = useCallback(async () => {
     try {
@@ -26,15 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (json.isAuthenticated && json.user) {
         setUser(json.user)
         setStatus("authenticated")
-      } else {
-        setUser(null)
-        setStatus("unauthenticated")
-      }
+      } else redirectToLogin()
     } catch {
-      setUser(null)
-      setStatus("unauthenticated")
+      redirectToLogin()
     }
-  }, [])
+  }, [redirectToLogin])
 
   useEffect(() => {
     hydrate()

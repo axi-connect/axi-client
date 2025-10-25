@@ -1,10 +1,5 @@
+import { isPublicPath } from "@/core/config/routes"
 import { NextResponse, type NextRequest } from "next/server"
-
-const PUBLIC_PATHS = ["/", "/marketplace", "/auth", "/api", "/_next", "/favicon.ico", "/assets", "/fonts", "/images"]
-
-function isPublicPath(pathname: string) {
-  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
-}
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl

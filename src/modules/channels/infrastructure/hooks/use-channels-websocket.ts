@@ -5,17 +5,20 @@ import { useEffect, useCallback, useRef, useState } from 'react'
 import { WebSocketService } from '@/core/websocket/websocket.service'
 import { WebSocketEventBus } from '@/core/websocket/websocket-event-bus'
 import type { ChannelEvents, ChannelsWebSocketEvents } from '../../domain/websocket.types'
+import { useSession } from '@/shared/auth/auth.hooks'
 
 /**
  * Hook for channel-specific WebSocket operations
  * Handles channel join/leave and status monitoring
 */
 export function useChannelsWebSocket() {
+  const { isAuthenticated } = useSession()
   const [isConnected, setIsConnected] = useState(false)
   const channelSocketRef = useRef<Socket<ChannelsWebSocketEvents> | null>(null)
 
   // Initialize socket connection
   useEffect(() => {
+    if (!isAuthenticated) return
     const handler = () => setIsConnected(true)
     WebSocketService.connect('channel').then(socket => {
       channelSocketRef.current = socket
@@ -29,7 +32,7 @@ export function useChannelsWebSocket() {
         WebSocketEventBus.off('channel-ws-connected', handler)
       }
     }
-  }, [])
+  }, [isAuthenticated])
 
   // Join a channel
   const joinChannel = useCallback((channelId: string) => {

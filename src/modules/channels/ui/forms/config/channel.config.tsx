@@ -1,10 +1,10 @@
 "use client"
 
 import { z } from "zod"
+import { useSession } from "@/shared/auth/auth.hooks"
 import type { FieldConfig } from "@/shared/components/features/dynamic-form"
 import type { ChannelProvider, ChannelType } from "@/modules/channels/domain/enums"
 import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
-import { useSession } from "@/shared/auth/auth.hooks"
 
 export const channelFormSchema = z.object({
   company_id: z.coerce.number().int().positive("Requerido"),

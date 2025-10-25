@@ -2,21 +2,21 @@
 
 import { useForm } from "react-hook-form"
 import { Eye, EyeOff } from "lucide-react"
-import { Input } from '@/shared/components/ui/input';
 import { useState, useTransition } from "react"
-import { Button } from '@/shared/components/ui/button';
+import { useAuth } from "@/shared/auth/auth.hooks"
+import { Input } from '@/shared/components/ui/input'
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Button } from '@/shared/components/ui/button'
 import { loginSchema, type LoginFormValues } from "./schema"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form"
-import { useAuth } from "@/shared/auth/auth.hooks"
 
 export default function LoginForm() {
   const router = useRouter()
   const { login } = useAuth()
   const search = useSearchParams()
-  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
   const form = useForm<LoginFormValues>({
@@ -32,8 +32,8 @@ export default function LoginForm() {
         await login(values)
         const next = search.get("next") || "/dashboard"
         router.replace(next)
-      } catch (e: any) {
-        setError(e?.message || "No se pudo iniciar sesión")
+      } catch (e: unknown) {
+        setError((e as Error).message || "No se pudo iniciar sesión")
       }
     })
   }
