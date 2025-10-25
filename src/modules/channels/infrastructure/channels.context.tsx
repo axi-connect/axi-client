@@ -2,8 +2,10 @@
 
 import type { ApiResponse } from "@/core/services/api"
 import type { ChannelType } from "@/modules/channels/domain/enums"
+// useMessagesWebSocket
+import { useChannelsWebSocket } from "./hooks"
 import { createContext, useCallback, useContext, useMemo, useState } from "react"
-import { listChannels } from "@/modules/channels/infrastructure/channels-service.adapter"
+import { listChannels } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import type { Channel, ChannelsListResponse, ListChannelsParams } from "@/modules/channels/domain/channel"
 
 export type ChannelsCounts = {
@@ -19,10 +21,20 @@ export type ChannelsCounts = {
 
 type ChannelsContextValue = {
   loading: boolean
-  error: string | null
   channels: Channel[]
+  error: string | null
   counts: ChannelsCounts
   fetchChannels: (params?: ListChannelsParams) => Promise<void>
+  // WebSocket functions
+  joinChannel: (channelId: string) => void
+  leaveChannel: (channelId: string) => void
+  getChannelStatus: (channelId: string) => void
+  // sendMessage: (channelId: string, message: string, recipient?: string) => void
+  // WebSocket connection status
+  wsConnected: {
+    channels: boolean
+    // messages: boolean
+  }
 }
 
 const ChannelsContext = createContext<ChannelsContextValue | undefined>(undefined)
@@ -41,6 +53,10 @@ export function ChannelsProvider({ children }: { children: React.ReactNode }) {
     starred: 0,
     byType: {},
   })
+
+  // WebSocket hooks
+  const { joinChannel: wsJoinChannel, leaveChannel: wsLeaveChannel, getChannelStatus, isConnected: channelsWsConnected } = useChannelsWebSocket()
+  // const { sendMessage: wsSendMessage, isConnected: messagesWsConnected } = useMessagesWebSocket()
 
   const fetchChannels = useCallback(async (params?: ListChannelsParams) => {
     setLoading(true)
@@ -62,7 +78,35 @@ export function ChannelsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const value = useMemo<ChannelsContextValue>(() => ({ loading, error, channels, counts, fetchChannels }), [loading, error, channels, counts, fetchChannels])
+  const value = useMemo<ChannelsContextValue>(() => ({
+    loading,
+    error,
+    channels,
+    counts,
+    fetchChannels,
+    // WebSocket functions
+    joinChannel: wsJoinChannel,
+    leaveChannel: wsLeaveChannel,
+    getChannelStatus,
+    // sendMessage: wsSendMessage,
+    // WebSocket connection status
+    wsConnected: {
+      channels: channelsWsConnected,
+      // messages: messagesWsConnected,
+    },
+  }), [
+    loading,
+    error,
+    channels,
+    counts,
+    fetchChannels,
+    wsJoinChannel,
+    wsLeaveChannel,
+    getChannelStatus,
+    // wsSendMessage,
+    channelsWsConnected,
+    // messagesWsConnected,
+  ])
 
   return <ChannelsContext.Provider value={value}>{children}</ChannelsContext.Provider>
 }

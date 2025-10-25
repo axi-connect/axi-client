@@ -11,8 +11,8 @@ export async function createCompany(payload: CreateCompanyDTO): Promise<ApiRespo
   return http.post<ApiResponse<CompanyDTO>>("/identities/companies", payload);
 }
 
-export async function deleteCompany(id: number | string): Promise<ApiResponse<{}>> {
-  return http.delete<ApiResponse<{}>>(`/identities/companies/${id}`);
+export async function deleteCompany(id: number | string): Promise<ApiResponse<object>> {
+  return http.delete<ApiResponse<object>>(`/identities/companies/${id}`);
 }
 
 export async function updateCompany(id: number | string, payload: UpdateCompanyDTO): Promise<ApiResponse<CompanyDTO>> {

@@ -4,7 +4,7 @@ import { useCallback } from "react"
 import { parseHttpError } from "@/core/services/api"
 import { useAlert } from "@/core/providers/alert-provider"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
-import { createChannel, updateChannel } from "@/modules/channels/infrastructure/channels-service.adapter"
+import { createChannel, updateChannel } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import { buildChannelFormFields, channelFormSchema, useDefaultChannelFormValues, type ChannelFormValues } from "./config/channel.config"
 
 export type ChannelFormHost = {

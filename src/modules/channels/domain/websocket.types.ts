@@ -1,0 +1,93 @@
+// WebSocket types for Channels module
+
+export type SocketId = string
+
+// Auth namespace events
+export type AuthEvents = {
+  // Server -> Client
+  authenticated: (data: { userId: string; companyId: number }) => void
+  auth_error: (data: { message: string; code: string }) => void
+
+  // Client -> Server (not used in types, just for reference)
+  // authenticate: (token: string) => void
+}
+
+// Channel namespace events
+export type ChannelEvents = {
+  // Client -> Server
+  // 'channel.join': (data: { channelId: string }) => void
+  // 'channel.status': (data: { channelId: string }) => void
+
+  // Server -> Client
+  'channel.joined': (data: { channelId: string; status: 'active' | 'inactive' }) => void
+  'channel.status_response': (data: { channelId: string; status: 'active' | 'inactive'; lastActivity?: string }) => void
+  'channel.status.updated': (data: { channelId: string; status: 'active' | 'inactive' }) => void
+  'channel.auth.required': (data: { channelId: string; provider: string }) => void
+  'channel.disconnected': (data: { channelId: string; reason: string }) => void
+  'channel.auth_failure': (data: { channelId: string; error: string }) => void
+  'channel.disconnect_error': (data: { channelId: string; error: string }) => void
+  'channel.auth_failure_error': (data: { channelId: string; error: string }) => void
+  'channel.session_cleaned': (data: { channelId: string }) => void
+  'channel.started': (data: { channelId: string }) => void
+  'channel.stopped': (data: { channelId: string }) => void
+}
+
+// Message namespace events
+export type MessageEvents = {
+  // Client -> Server
+  // 'send_message': (data: { channelId: string; message: string; recipient?: string }) => void
+
+  // Server -> Client
+  'message_sent': (data: { messageId: string; channelId: string; status: 'sent' | 'delivered' | 'failed' }) => void
+  'message_received': (data: MessagePayload) => void
+}
+
+export type MessagePayload = {
+  id: string
+  channelId: string
+  from: string
+  to?: string
+  message: string
+  timestamp: string
+  direction: 'incoming' | 'outgoing'
+  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
+  metadata?: Record<string, unknown>
+}
+
+// System namespace events
+export type SystemEvents = {
+  // Client -> Server
+  // 'health_check': () => void
+  // 'ping': (data: { timestamp: number }) => void
+
+  // Server -> Client
+  'health_response': (data: { status: 'healthy' | 'unhealthy'; timestamp: number }) => void
+  'pong': (data: { timestamp: number }) => void
+}
+
+// Client emitted events (not typed in server responses)
+export type ClientEvents = {
+    'health_check': () => void
+    'ping': (data: { timestamp: number }) => void
+    'channel.join': (data: { channelId: string }) => void
+    'channel.status': (data: { channelId: string }) => void
+    'channel.leave': (data: { channelId: string }) => void
+    'send_message': (data: { channelId: string; message: string; recipient?: string }) => void
+}
+
+// Combined events type (server -> client + client -> server)
+export type ChannelsWebSocketEvents = AuthEvents & ChannelEvents & MessageEvents & SystemEvents & ClientEvents
+
+// Socket.IO connection options
+export type SocketOptions = {
+  auth?: {
+    token: string
+  }
+  autoConnect?: boolean
+  reconnection?: boolean
+  reconnectionAttempts?: number
+  reconnectionDelay?: number
+}
+
+// Namespace types
+export type Namespace = '/auth' | '/channel' | '/message' | '/system'

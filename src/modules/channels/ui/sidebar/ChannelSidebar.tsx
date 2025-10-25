@@ -52,9 +52,9 @@ export function ChannelSidebar() {
     fetchChannels()
   }, [fetchChannels])
 
-  useEffect(() => {
-    console.log("counts", channels)
-  }, [channels])
+  // useEffect(() => {
+  //   console.log("counts", channels)
+  // }, [channels])
 
   return (
     <Sidebar variant="inset" side="left" collapsible="none" className="relative rounded-l-2xl bg-gradient-to-br from-muted/50 to-muted">

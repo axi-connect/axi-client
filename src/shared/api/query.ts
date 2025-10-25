@@ -39,7 +39,7 @@ export function buildListParams<TSearchField extends string = string>(opts: Buil
   }
 
   if (searchValue && searchField) {
-    (params as any)[searchField] = searchValue
+    (params as Record<string, string | number | boolean | undefined>)[searchField] = searchValue
   }
 
   return params as ListQueryBase<TSearchField>
