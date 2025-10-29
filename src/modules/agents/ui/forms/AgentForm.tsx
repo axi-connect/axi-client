@@ -5,7 +5,7 @@ import { SelectOption } from "@/shared/api/query"
 import { parseHttpError } from "@/core/services/api"
 import { useAlert } from "@/core/providers/alert-provider"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
-import type { CharacterStyleDTO } from "@/modules/agents/domain/character"
+import type { CharacterOption } from "@/modules/agents/domain/character"
 import type { AgentFormValues } from "@/modules/agents/ui/forms/config/agent.config"
 import { listIntention } from "@/modules/agents/infrastructure/intention-service.adapter"
 import { listCharacters } from "@/modules/agents/infrastructure/character-service.adapter"
@@ -19,7 +19,6 @@ export type AgentFormHost = {
 }
 
 const cache = new Map<string, Array<SelectOption>>()
-type CharacterOption = SelectOption & { avatar: string, style?: CharacterStyleDTO }
 
 export function AgentForm({ host }: { host: AgentFormHost }) {
   const { showAlert } = useAlert()

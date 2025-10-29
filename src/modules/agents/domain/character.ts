@@ -1,5 +1,7 @@
 // Agents > Characters module models
 
+import { SelectOption } from "@/shared/api/query";
+
 export type CharactersSortDir = "asc" | "desc";
 export type CharactersView = "summary" | "detail";
 export type CharactersSortBy = "id" | "avatar_url";
@@ -68,3 +70,5 @@ export interface CreateCharacterDTO {
 }
 
 export type UpdateCharacterDTO = Partial<CreateCharacterDTO>
+
+export type CharacterOption = SelectOption & { avatar: string, style?: CharacterStyleDTO }

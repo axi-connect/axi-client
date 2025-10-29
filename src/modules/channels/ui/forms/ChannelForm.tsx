@@ -1,9 +1,12 @@
 "use client"
 
-import { useCallback } from "react"
+import { SelectOption } from "@/shared/api/query"
 import { parseHttpError } from "@/core/services/api"
+import { useCallback, useEffect, useState } from "react"
 import { useAlert } from "@/core/providers/alert-provider"
+import { AgentOption } from "@/modules/agents/domain/agent"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
+import { listAgentSummary } from "@/modules/agents/infrastructure/agent-service.adapter"
 import { createChannel, updateChannel } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import { buildChannelFormFields, channelFormSchema, useDefaultChannelFormValues, type ChannelFormValues } from "./config/channel.config"
 
@@ -12,8 +15,28 @@ export type ChannelFormHost = {
   defaultValues?: Partial<ChannelFormValues>
 }
 
+const cache = new Map<string, Array<SelectOption>>()
+
 export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuccess?: () => void }) {
   const { showAlert } = useAlert()
+  const [agents, setAgents] = useState<Array<AgentOption>>(cache.get("agents") as Array<AgentOption> ?? [])
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (cache.has("agents")) return
+        const res = await listAgentSummary({ limit: 100, offset: 0, sortBy: "id", sortDir: "desc", view: "summary" })
+        if (!cancelled) {
+          cache.set("agents", (res.data?.agents ?? []).map(a => ({ id: Number(a.id), label: a.name, avatar: a.character.avatar_url, style: a.character.style })))
+          setAgents(cache.get("agents") as Array<AgentOption> ?? [])
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const handleSubmit = useCallback(async (values: ChannelFormValues) => {
     try {
@@ -36,11 +59,11 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
     <DynamicForm<ChannelFormValues>
       gap={4}
       id="channels-form"
-      schema={channelFormSchema}
-      fields={buildChannelFormFields()}
-      columns={{ base: 1, md: 2 }}
-      defaultValues={{ ...useDefaultChannelFormValues(), ...(host?.defaultValues ?? {}) }}
       onSubmit={handleSubmit}
+      schema={channelFormSchema}
+      columns={{ base: 1, md: 2 }}
+      fields={buildChannelFormFields(agents)}
+      defaultValues={{ ...useDefaultChannelFormValues(), ...(host?.defaultValues ?? {}) }}
     />
   )
 }

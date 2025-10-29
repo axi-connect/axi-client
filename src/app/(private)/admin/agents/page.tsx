@@ -58,7 +58,7 @@ export default function AgentsPage() {
         // submitting ? "Eliminando..." : 
         showModal({
             title: "Eliminar agente",
-            description: `¿Seguro que deseas eliminar el agente “${String((row as any).name ?? "")}”?`,
+            description: `¿Seguro que deseas eliminar el agente “${String(row.name ?? "")}”?`,
             actions: [
                 { label: "Cancelar", variant: "outline", asClose: true, id: "agents-delete-cancel" },
                 { label: "Eliminar", variant: "destructive", asClose: false, onClick: () => handleDeleteAgent(row), id: "agents-delete-confirm" },
@@ -198,8 +198,8 @@ export default function AgentsPage() {
                     // onPageChange={(p) => { load(p) }}
                     // onSortChange={handleSortChange as any}
                     // onSearchChange={handleSearchChange as any}
-                    sorting={{ by: sortBy as any, dir: sortDir }}
-                    search={{ field: searchField as any, value: searchValue }}
+                    sorting={{ by: sortBy ?? "name", dir: sortDir }}
+                    search={{ field: searchField ?? "name", value: searchValue }}
                     rowContextMenu={({ row }) => (
                         <AgentContextMenuItems row={row} />
                     )}

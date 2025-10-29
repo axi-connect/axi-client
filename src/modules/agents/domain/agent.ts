@@ -1,5 +1,6 @@
 // Agents module models
-import { CharacterDTO } from "@/modules/agents/domain/character";
+import { SelectOption } from "@/shared/api/query";
+import type { CharacterDTO, CharacterStyleDTO } from "@/modules/agents/domain/character";
 
 export type AgentsSortDir = "asc" | "desc";
 export type AgentsView = "summary" | "detail";
@@ -21,7 +22,6 @@ export interface CompanyMiniDTO {
   id: number | string;
   name: string;
 }
-
 export interface AgentIntentionRequirementsDTO {
   require_db: boolean;
   require_sheet: boolean;
@@ -124,3 +124,5 @@ export interface CreateAgentDTO {
   character_id?: number
   intentions?: CreateAgentIntentionItem[]
 }
+
+export type AgentOption = SelectOption & { avatar: string, style?: CharacterStyleDTO }

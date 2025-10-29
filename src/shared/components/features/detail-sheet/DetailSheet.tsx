@@ -1,35 +1,36 @@
 "use client"
 
+import "./styles.css"
 import * as React from "react"
 import { cn } from "@/core/lib/utils"
 import * as Dialog from "@radix-ui/react-dialog"
 import { useBodyScrollLock } from "./hooks/useBodyScrollLock"
 import { useResponsiveSide } from "./hooks/useResponsiveSide"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import "./styles.css"
 
 export type DetailSheetSize = "xs" | "sm" | "md" | "lg" | "xl" | number
 
 export interface DetailSheetProps<Id extends string | number = string | number> {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   id?: Id
-  title?: React.ReactNode
-  subtitle?: React.ReactNode
-  side?: "auto" | "left" | "right" | "bottom"
-  responsiveBreakpoint?: number
-  size?: DetailSheetSize
-  closeOnOverlayClick?: boolean
-  closeOnEsc?: boolean
-  disableScrollLock?: boolean
-  portalTarget?: Element | string | null
-  initialFocusRef?: React.RefObject<HTMLElement>
+  open: boolean
+  zIndex?: number
   className?: string
+  closeOnEsc?: boolean
+  size?: DetailSheetSize
+  title?: React.ReactNode
   children?: React.ReactNode
+  subtitle?: React.ReactNode
+  skeleton?: React.ReactNode
+  disableScrollLock?: boolean
+  responsiveBreakpoint?: number
+  closeOnOverlayClick?: boolean
   renderHeader?: () => React.ReactNode
   renderFooter?: () => React.ReactNode
-  fetchDetail?: (id: Id) => Promise<any>
-  skeleton?: React.ReactNode
+  onOpenChange: (open: boolean) => void
+  portalTarget?: Element | string | null
+  side?: "auto" | "left" | "right" | "bottom"
+  fetchDetail?: (id: Id) => Promise<unknown>
+  initialFocusRef?: React.RefObject<HTMLElement>
 }
 
 const WIDTH_MAP: Record<Exclude<DetailSheetSize, number>, number> = {
@@ -48,39 +49,39 @@ function resolvePortalTarget(target: DetailSheetProps["portalTarget"]) {
 
 export default function DetailSheet<Id extends string | number = string | number>(props: DetailSheetProps<Id>) {
   const {
-    open,
-    onOpenChange,
     id,
+    open,
     title,
     subtitle,
-    side = "auto",
-    responsiveBreakpoint = 768,
-    size = 420,
-    closeOnOverlayClick = true,
-    closeOnEsc = true,
-    disableScrollLock = false,
-    portalTarget = null,
-    initialFocusRef,
-    className,
     children,
+    skeleton,
+    className,
+    size = 420,
+    zIndex = 60,
+    fetchDetail,
+    onOpenChange,
     renderHeader,
     renderFooter,
-    fetchDetail,
-    skeleton,
+    side = "auto",
+    initialFocusRef,
+    closeOnEsc = true,
+    portalTarget = null,
+    disableScrollLock = false,
+    closeOnOverlayClick = true,
+    responsiveBreakpoint = 768,
   } = props
 
   const prefersReducedMotion = useReducedMotion()
   const { side: resolvedSide, mounted } = useResponsiveSide({ side, breakpoint: responsiveBreakpoint })
   useBodyScrollLock(open, { disabled: disableScrollLock })
 
+  const requestRef = React.useRef(0)
   const [ready, setReady] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
-  const requestRef = React.useRef(0)
 
   React.useEffect(() => {
     if (!open) return
-    let timeout: NodeJS.Timeout
-    timeout = setTimeout(() => setReady(true), 50)
+    const timeout: NodeJS.Timeout = setTimeout(() => setReady(true), 50)
     if (!fetchDetail || id === undefined || id === null) return
     let cancelled = false
     const current = ++requestRef.current
@@ -110,7 +111,7 @@ export default function DetailSheet<Id extends string | number = string | number
       : resolvedSide === "right"
       ? "inset-y-0 right-0 h-full"
       : "inset-x-0 bottom-0",
-    "fixed z-[60] flex flex-col border-border",
+    `fixed z-[${zIndex}] flex flex-col border-border`,
     resolvedSide === "left" ? "border-r" : resolvedSide === "right" ? "border-l" : "rounded-t-xl border-t",
     className,
   )
@@ -128,7 +129,7 @@ export default function DetailSheet<Id extends string | number = string | number
 
   const containerRef = React.useRef<HTMLDivElement | null>(null)
 
-  const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: any) => {
+  const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: { offset?: { y: number }, velocity?: { y: number } }) => {
     if (resolvedSide !== "bottom") return
     const dragOffsetY = info.offset?.y ?? 0
     const velocityY = info.velocity?.y ?? 0
@@ -149,7 +150,7 @@ export default function DetailSheet<Id extends string | number = string | number
             <React.Fragment>
               <Dialog.Overlay asChild forceMount>
                 <motion.div
-                  className="axi-detail-sheet__backdrop fixed inset-0 z-[59]"
+                  className={`axi-detail-sheet__backdrop fixed inset-0 z-[${zIndex - 1}]`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -174,20 +175,20 @@ export default function DetailSheet<Id extends string | number = string | number
                 forceMount
               >
                 <motion.div
-                  ref={containerRef}
-                  role="dialog"
-                  aria-modal="true"
-                  className={containerClass}
-                  style={resolvedSide === "left" || resolvedSide === "right" ? desktopStyle : { height: mobileHeight }}
-                  initial="hidden"
-                  animate="visible"
                   exit="exit"
-                  variants={motionVariants}
-                  transition={transition}
-                  drag={resolvedSide === "bottom" ? "y" : false}
-                  dragConstraints={{ top: 0, bottom: 0 }}
+                  role="dialog"
+                  initial="hidden"
+                  aria-modal="true"
+                  animate="visible"
                   dragElastic={0.08}
+                  ref={containerRef}
                   onDragEnd={onDragEnd}
+                  transition={transition}
+                  variants={motionVariants}
+                  className={containerClass}
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  drag={resolvedSide === "bottom" ? "y" : false}
+                  style={resolvedSide === "left" || resolvedSide === "right" ? desktopStyle : { height: mobileHeight }}
                 >
                   {/* Handle visual for mobile */}
                   {resolvedSide === "bottom" ? (

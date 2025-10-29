@@ -60,7 +60,7 @@ export type InputFieldConfig<TValues extends FieldValues> = BaseFieldConfig<TVal
     | Omit<React.ComponentProps<"input">, "name" | "onChange" | "value" | "defaultValue">
     | Omit<React.ComponentProps<"textarea">, "name" | "onChange" | "value" | "defaultValue">
   ) & {
-    as?: React.ComponentType<any>
+    as?: React.ComponentType<unknown>
   }
 }
 

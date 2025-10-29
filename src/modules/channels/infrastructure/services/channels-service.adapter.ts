@@ -44,3 +44,7 @@ export type QRCodeResponse = {
 export async function getChannelQR(id: string): Promise<ApiResponse<QRCodeResponse>> {
   return http.get<ApiResponse<QRCodeResponse>>(`/channels/${id}/qr`, undefined, { authenticate: true })
 }
+
+export async function deleteChannel(id: string): Promise<ApiResponse<void>> {
+  return http.delete<ApiResponse<void>>(`/channels/${id}`, { authenticate: true })
+}

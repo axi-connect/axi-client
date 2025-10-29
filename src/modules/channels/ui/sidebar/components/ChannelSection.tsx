@@ -1,5 +1,6 @@
 "use client"
 
+import { cn } from "@/core/lib/utils"
 import { useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { AiOutlineMail } from 'react-icons/ai'
@@ -9,6 +10,7 @@ import { Button } from "@/shared/components/ui/button"
 import { ChannelWsStatus } from "../../../domain/channel"
 import { FaWhatsapp, FaInstagram, FaFacebookMessenger } from 'react-icons/fa'
 import { useChannels } from "@/modules/channels/infrastructure/store/channels.context"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
 import { Radio, CircleFadingPlus, QrCode, CircleCheckBig, RefreshCw, Rocket, Loader } from "lucide-react"
 import { getChannelQR, type QRCodeResponse } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import {
@@ -21,8 +23,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from "@/shared/components/layout/sidebar/core"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
-import { cn } from "@/core/lib/utils"
 
 interface ChannelSectionProps {
   onQrGenerated?: (qrCode: QRCodeResponse) => void

@@ -3,23 +3,24 @@
 import { z } from "zod"
 import Image from "next/image"
 import { cn } from "@/core/lib/utils"
+import { SelectOption } from "@/shared/api/query"
 import { Input } from "@/shared/components/ui/input"
 import { Button } from "@/shared/components/ui/button"
-import { SelectOption } from "@/shared/api/query"
-import type { CharacterStyleDTO } from "@/modules/agents/domain/character"
+import type { ChannelType } from "@/modules/channels/domain/enums"
+import type { CharacterOption } from "@/modules/agents/domain/character"
 import type { FieldConfig } from "@/shared/components/features/dynamic-form"
 import { MultiSelect, type MultiSelectOption } from "@/shared/components/features/multi-select"
 import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select"
 import { Plus, AtSign, MessageCircleMore, Phone, Mail, MessageSquareMore, Send, BrainCircuit, Presentation, ServerOff, CircleCheck, ServerCrash, CircleX, ServerCog, MessageCircle, Handshake, Lightbulb, Settings, Headphones, TrendingUp, ShieldCheck, Workflow, Smile, Trash} from "lucide-react"
 
-const channels = [
-  { id: "email", label: "Email", icon: <Mail /> },
-  { id: "telegram", label: "Telegram", icon: <Send /> },
-  { id: "call", label: "Teléfono", icon: <Phone /> },
-  { id: "instagram", label: "Instagram", icon: <AtSign /> },
-  { id: "whatsapp", label: "WhatsApp", icon: <MessageCircleMore /> },
-  { id: "messenger", label: "Messenger", icon: <MessageSquareMore /> },
+const channels: Array<{ id: ChannelType; label: string , icon: React.ReactNode}> = [
+  { id: "EMAIL", label: "Email", icon: <Mail /> },
+  { id: "CALL", label: "Llamada", icon: <Phone />},
+  { id: "TELEGRAM", label: "Telegram", icon: <Send /> },
+  { id: "INSTAGRAM", label: "Instagram", icon: <AtSign /> },
+  { id: "WHATSAPP", label: "WhatsApp", icon: <MessageCircleMore /> },
+  { id: "MESSENGER", label: "Messenger", icon: <MessageSquareMore /> },
 ]
 
 const statuses = [
@@ -87,7 +88,7 @@ export const defaultAgentFormValues: AgentFormValues = {
   phone: "",
   skills: [],
   intentions: [],
-  channel: "whatsapp",
+  channel: "WHATSAPP",
   status: "available",
   character_id: undefined as unknown as number,
 }
@@ -95,7 +96,7 @@ export const defaultAgentFormValues: AgentFormValues = {
 export function buildAgentFormFields(opts?: {
   companies?: Array<SelectOption>
   intentions?: Array<SelectOption>
-  characters?: Array<SelectOption & { avatar: string, style?: CharacterStyleDTO }>
+  characters?: Array<CharacterOption>
 }): ReadonlyArray<FieldConfig<AgentFormValues>> {
   const defaultCountryCode = "+57"
   const companies = opts?.companies ?? []
@@ -117,7 +118,7 @@ export function buildAgentFormFields(opts?: {
     ),
     createCustomField<AgentFormValues>("channel", 
       ({ value, setValue }) => (
-        <Select name="channel" value={String(value ?? "")} onValueChange={(v: string) => setValue("channel", v as any)}>
+        <Select name="channel" value={String(value ?? "")} onValueChange={(v: string) => setValue("channel", v)}>
           <SelectTrigger id="df-channel">
             <SelectValue placeholder="Selecciona canal" />
           </SelectTrigger>
@@ -126,7 +127,7 @@ export function buildAgentFormFields(opts?: {
               <SelectItem 
                 key={c.id}
                 value={String(c.id)}
-                disabled={c.id !== "whatsapp"}
+                disabled={c.id !== "WHATSAPP"}
               >
                 {c.icon && <span className="mr-2">{c.icon}</span>}
                 {c.label}
@@ -139,7 +140,7 @@ export function buildAgentFormFields(opts?: {
     ),
     createCustomField<AgentFormValues>("company_id",
       ({ value, setValue }) => (
-        <Select name="company_id" value={String(value ?? "")} onValueChange={(v: string) => setValue("company_id", Number(v) as any)}>
+        <Select name="company_id" value={String(value ?? "")} onValueChange={(v: string) => setValue("company_id", Number(v))}>
           <SelectTrigger id="df-company_id">
             <SelectValue placeholder="Selecciona empresa" />
           </SelectTrigger>
@@ -154,7 +155,7 @@ export function buildAgentFormFields(opts?: {
     ),
     createCustomField<AgentFormValues>("status", 
       (({ value, setValue }) => (
-        <Select name="status" value={String(value ?? "")} onValueChange={(v: string) => setValue("status", v as any)}>
+        <Select name="status" value={String(value ?? "")} onValueChange={(v: string) => setValue("status", v)}>
           <SelectTrigger id="df-status">
             <SelectValue placeholder="Selecciona estado" />
           </SelectTrigger>
@@ -169,7 +170,7 @@ export function buildAgentFormFields(opts?: {
     ),
     createCustomField<AgentFormValues>("character_id",
       ({ value, setValue }) => (
-        <Select name="character_id" value={String(value ?? "")} onValueChange={(v: string) => setValue("character_id", Number(v) as any)}>
+        <Select name="character_id" value={String(value ?? "")} onValueChange={(v: string) => setValue("character_id", Number(v))}>
           <SelectTrigger id="df-character_id">
             <SelectValue placeholder="Selecciona personaje" />
           </SelectTrigger>
@@ -197,7 +198,7 @@ export function buildAgentFormFields(opts?: {
           placeholder="Agrega Skills"
           defaultValue={value as string[]}
           className="border-foreground/10"
-          onValueChange={(v: string[]) => setValue("skills", v as any)} 
+          onValueChange={(v: string[]) => setValue("skills", v)} 
         />
       ),
       { label: "Habilidades", colSpan: { base: 1, md: 2 } }
@@ -205,14 +206,14 @@ export function buildAgentFormFields(opts?: {
     createCustomField<AgentFormValues>("intentions",
       ({ value, setValue }) => {
         const items = Array.isArray(value) ? value : []
-        const remove = (idx: number) => setValue("intentions", items.filter((_, i) => i !== idx) as any)
-        const add = () => setValue("intentions", [...items, { intention_id: undefined as unknown as number, requirements: { require_db: false, require_sheet: false, require_catalog: false, require_reminder: false, require_schedule: false } }] as any)
-        const update = (idx: number, key: string, v: any) => setValue("intentions", items.map((x, i) => (i === idx ? { ...x, [key]: v } : x)) as any)
+        const remove = (idx: number) => setValue("intentions", items.filter((_, i) => i !== idx) as unknown as Array<AgentFormValues["intentions"][number]>)
+        const add = () => setValue("intentions", [...items, { intention_id: undefined as unknown as number, requirements: { require_db: false, require_sheet: false, require_catalog: false, require_reminder: false, require_schedule: false } }])
+        const update = (idx: number, key: string, v: unknown) => setValue("intentions", items.map((x, i) => (i === idx ? { ...x, [key]: v } : x)) as unknown as Array<AgentFormValues["intentions"][number]>)
         return (
           <div className="space-y-3">
             {items.map((it, i) => (
               <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-2 border border-foreground/10 rounded-md p-3">
-                <Select name="intention_id" value={String(it.intention_id ?? "")} onValueChange={(v: string) => update(i, "intention_id", Number(v) as any)}>
+                <Select name="intention_id" value={String(it.intention_id ?? "")} onValueChange={(v: string) => update(i, "intention_id", Number(v))}>
                   <SelectTrigger id="df-intention_id">
                     <SelectValue placeholder="Selecciona intención" />
                   </SelectTrigger>
@@ -222,7 +223,7 @@ export function buildAgentFormFields(opts?: {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select name="ai_requirement_id" value={String(it.ai_requirement_id ?? "")} onValueChange={(v: string) => update(i, "ai_requirement_id", Number(v) as any)}>
+                <Select name="ai_requirement_id" value={String(it.ai_requirement_id ?? "")} onValueChange={(v: string) => update(i, "ai_requirement_id", Number(v))}>
                   <SelectTrigger id="df-ai_requirement_id">
                     <SelectValue placeholder="Selecciona AI Requirement" />
                   </SelectTrigger>
@@ -235,7 +236,7 @@ export function buildAgentFormFields(opts?: {
                 <div className="flex flex-wrap gap-2 justify-center w-full col-span-2">
                   {(["require_db","require_sheet","require_catalog","require_reminder","require_schedule"] as const).map((k) => (
                     <label key={k} className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox" name={`df-requirements-${i}-${k}`} id={`df-requirements-${i}-${k}`} checked={Boolean((it.requirements as any)?.[k])} onChange={(e) => update(i, "requirements", { ...(it.requirements as any), [k]: e.target.checked })} />
+                      <input type="checkbox" name={`df-requirements-${i}-${k}`} id={`df-requirements-${i}-${k}`} checked={Boolean((it.requirements)?.[k])} onChange={(e) => update(i, "requirements", { ...(it.requirements), [k]: e.target.checked })} />
                       <span>{k.replace("require_", "")}</span>
                     </label>
                   ))}
