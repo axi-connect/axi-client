@@ -4,11 +4,11 @@ import { cn } from "@/core/lib/utils"
 import { PackageOpen, Plus } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
-import { type Channel } from "../../../../domain/channel"
 import { IconChannel } from "./utils/channel-section.utils"
-import { ChannelWsStatus } from "../../../../domain/channel"
+import { type Channel } from "@/modules/channels/domain/channel"
 import { ChannelStatusIcon } from "./utils/channel-section.utils"
 import { channelStatusColor } from "./utils/channel-section.utils"
+import { ChannelWsStatus } from "@/modules/channels/domain/channel"
 import { ChannelItemProps, ChannelsListProps } from "./types/channel-section.types"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
 import {
@@ -46,7 +46,7 @@ const ChannelsEmptyState = ({ onNavigate }: { onNavigate: (path: string) => void
       size="sm"
       variant="ghost" 
       className="w-full mt-2 text-muted-foreground"
-      onClick={() => onNavigate("/channels/create")}
+      onClick={() => onNavigate("/workspace/channels/create")}
     >
       <Plus className="size-4" />
       <span>Crear canal</span>
@@ -88,7 +88,7 @@ const ChannelItem = ({ channel, onQrCodeClick, onNavigate }: ChannelItemProps) =
     <SidebarMenuItem>
       <SidebarMenuButton 
         className="group"
-        onClick={() => onNavigate(`/channels/${channel.id}`)}
+        onClick={() => onNavigate(`/workspace/channels/${channel.id}`)}
         aria-label={`Abrir canal ${channel.name}, estado: ${status}`}
       >
         <IconChannel channel={channel.type} />

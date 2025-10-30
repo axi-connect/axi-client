@@ -6,7 +6,7 @@ import { InboxSection, ChannelSection, QRCodeSection } from "./components"
 import { type QRCodeResponse } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import { Sidebar, SidebarContent, SidebarHeader, SidebarSeparator } from "@/shared/components/layout/sidebar/core"
 
-export function ChannelSidebar() {
+export default function WorkspaceSidebar() {
   // Local QR state for the sidebar
   const [qrLoading, setQrLoading] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
@@ -76,5 +76,3 @@ export function ChannelSidebar() {
     </Sidebar>
   )
 }
-
-export default ChannelSidebar

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import { cva } from "class-variance-authority"
 import { AnimatePresence, motion } from "framer-motion"
 import {
   AlertCircle,
@@ -14,7 +14,7 @@ import { cn } from "@/core/lib/utils"
 import { Button } from "@/shared/components/ui/button"
 
 const container = cva(
-  "absolute fixed top-4 left-0 right-0 mx-auto z-50 h-fit w-2xl rounded-2xl border p-4 pr-10 shadow-sm glass backdrop-blur-md",
+  "absolute fixed top-4 left-0 right-0 mx-auto z-[9999] h-fit w-2xl rounded-2xl border p-4 pr-10 shadow-sm glass backdrop-blur-md",
   {
     variants: {
       tone: {

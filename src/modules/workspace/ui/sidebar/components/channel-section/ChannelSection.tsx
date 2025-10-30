@@ -70,7 +70,7 @@ export default function ChannelSection({ onQrGenerated, onQrError }: ChannelSect
               size="sm"
               variant="ghost"
               title="Agregar canal nuevo"
-              onClick={() => handleNavigate("/channels/create")}
+              onClick={() => handleNavigate("/workspace/channels/create")}
             >
               <CircleFadingPlus />
             </Button>
