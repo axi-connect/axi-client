@@ -10,12 +10,12 @@ import { AgentRow } from "@/modules/agents/domain/agent";
 import { useAlert } from "@/core/providers/alert-provider";
 import { CharacterDTO } from "@/modules/agents/domain/character";
 import { DataTable } from "@/shared/components/features/data-table";
-import { useAgent } from "@/modules/agents/infrastructure/agent.context";
-import { useAgentStore } from "@/modules/agents/infrastructure/agent.store";
+import { useAgent } from "@/modules/agents/infrastructure/store/agent.context";
+import { useAgentStore } from "@/modules/agents/infrastructure/store/agent.store";
 import { agentColumns } from "@/modules/agents/ui/tables/config/agent.config";
 import CharacterGallery from "@/modules/agents/ui/components/CharacterGallery";
 import AgentDetailSheet from "@/modules/agents/ui/components/AgentDetailSheet";
-import { deleteAgent } from "@/modules/agents/infrastructure/agent-service.adapter";
+import { deleteAgent } from "@/modules/agents/infrastructure/services/agent-service.adapter";
 import { AgentContextMenuItems, AgentRowActions } from "@/modules/agents/ui/tables/agent.actions";
 
 export default function AgentsPage() {

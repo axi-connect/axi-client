@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { Modal } from "@/shared/components/ui/modal"
 import { useParams, useRouter } from "next/navigation"
 import { AgentForm } from "@/modules/agents/ui/forms/AgentForm"
-import { useAgent } from "@/modules/agents/infrastructure/agent.context"
-import { getAgentById } from "@/modules/agents/infrastructure/agent-service.adapter"
+import { useAgent } from "@/modules/agents/infrastructure/store/agent.context"
+import { getAgentById } from "@/modules/agents/infrastructure/services/agent-service.adapter"
 
 export default function AgentsInterceptUpdate() {
     const params = useParams<{ id: string }>()

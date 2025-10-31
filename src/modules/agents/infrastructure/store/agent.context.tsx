@@ -5,9 +5,9 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { AgentSummaryDTO, ListAgentsParams } from "@/modules/agents/domain/agent";
 import { IntentionDTO, ListIntentionParams } from "@/modules/agents/domain/intentions";
 import { CharacterDTO, ListCharactersParams } from "@/modules/agents/domain/character";
-import { listAgentSummary } from "@/modules/agents/infrastructure/agent-service.adapter";
-import { listCharacters } from "@/modules/agents/infrastructure/character-service.adapter";
-import { listIntention, listIntentionOverview } from "@/modules/agents/infrastructure/intention-service.adapter";
+import { listAgentSummary } from "@/modules/agents/infrastructure/services/agent-service.adapter";
+import { listCharacters } from "@/modules/agents/infrastructure/services/character-service.adapter";
+import { listIntention, listIntentionOverview } from "@/modules/agents/infrastructure/services/intention-service.adapter";
 
 type AgentContextValue = {
     loading: boolean;

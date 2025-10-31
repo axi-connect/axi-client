@@ -5,7 +5,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useCallback, useEffect, useState } from "react";
 import { AgentDetailDTO } from "@/modules/agents/domain/agent";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
-import { getAgentById } from "@/modules/agents/infrastructure/agent-service.adapter";
+import { getAgentById } from "@/modules/agents/infrastructure/services/agent-service.adapter";
 
 export default function AgentDetailSheet() {
     const [open, setOpen] = useState(false)

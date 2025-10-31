@@ -2,7 +2,7 @@
 
 import { Button } from "@/shared/components/ui/button"
 import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
-import { useAgentStore } from "@/modules/agents/infrastructure/agent.store"
+import { useAgentStore } from "@/modules/agents/infrastructure/store/agent.store"
 import type { DataRow } from "@/shared/components/features/data-table/types"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
 

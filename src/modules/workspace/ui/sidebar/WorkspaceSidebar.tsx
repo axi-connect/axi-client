@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { WebSocketEventBus } from "@/core/websocket/websocket-event-bus"
 import { InboxSection, ChannelSection, QRCodeSection } from "./components"
+import { Sidebar, SidebarContent, SidebarSeparator } from "@/shared/components/layout/sidebar/core"
 import { type QRCodeResponse } from "@/modules/channels/infrastructure/services/channels-service.adapter"
-import { Sidebar, SidebarContent, SidebarHeader, SidebarSeparator } from "@/shared/components/layout/sidebar/core"
 
 export default function WorkspaceSidebar() {
   // Local QR state for the sidebar
@@ -51,10 +51,10 @@ export default function WorkspaceSidebar() {
   }, [])
 
   return (
-    <Sidebar variant="inset" side="left" collapsible="none" className="relative rounded-l-2xl bg-gradient-to-br from-muted/50 to-muted">
-      <SidebarHeader className="px-3 py-2">
+    <Sidebar variant="inset" side="left" collapsible="none" className="relative rounded-l-2xl bg-gradient-to-br from-muted/50 to-muted border-r border-border">
+      {/* <SidebarHeader className="px-3 py-2">
         <div className="text-sm font-medium">Channels</div>
-      </SidebarHeader>
+      </SidebarHeader> */}
 
       <SidebarContent>
         <InboxSection />

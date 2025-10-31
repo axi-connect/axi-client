@@ -92,7 +92,7 @@ const ChannelItem = ({ channel, onQrCodeClick, onNavigate }: ChannelItemProps) =
         aria-label={`Abrir canal ${channel.name}, estado: ${status}`}
       >
         <IconChannel channel={channel.type} />
-        <span className="capitalize flex-1">{channel.name.toLowerCase()}</span>
+        <span className="capitalize flex-1 line-clamp-1">{channel.name.toLowerCase()}</span>
         
         <ChannelStatusBadge status={status} />
       </SidebarMenuButton>

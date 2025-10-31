@@ -3,7 +3,7 @@
 import { parseHttpError } from "@/core/services/api"
 import { useAlert } from "@/core/providers/alert-provider"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
-import { createCharacter, updateCharacter } from "@/modules/agents/infrastructure/character-service.adapter"
+import { createCharacter, updateCharacter } from "@/modules/agents/infrastructure/services/character-service.adapter"
 import { buildCharacterFormFields, characterFormSchema, defaultCharacterFormValues, type CharacterFormValues } from "@/modules/agents/ui/forms/config/character.config"
 
 export type CharacterFormHost = { defaultValues?: Partial<CharacterFormValues> }

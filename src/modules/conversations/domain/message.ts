@@ -1,4 +1,4 @@
-import type { MessageDirection, MessageStatus } from "./enums"
+import type { MessageDirection, MessageStatus } from "@/modules/channels/domain/enums"
 
 export type Message = {
   id: string

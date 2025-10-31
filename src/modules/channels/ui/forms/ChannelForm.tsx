@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useAlert } from "@/core/providers/alert-provider"
 import { AgentOption } from "@/modules/agents/domain/agent"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
-import { listAgentSummary } from "@/modules/agents/infrastructure/agent-service.adapter"
+import { listAgentSummary } from "@/modules/agents/infrastructure/services/agent-service.adapter"
 import { createChannel, updateChannel } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import { buildChannelFormFields, channelFormSchema, useDefaultChannelFormValues, type ChannelFormValues } from "./config/channel.config"
 

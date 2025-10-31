@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Modal from "@/shared/components/ui/modal";
 import { CharacterDTO, CharacterGalleryProps } from "@/modules/agents/domain/character";
-import { deleteCharacter } from "@/modules/agents/infrastructure/character-service.adapter";
+import { deleteCharacter } from "@/modules/agents/infrastructure/services/character-service.adapter";
 import { AudioLines, ChevronLeft, ChevronRight, Pencil, Play, Trash2 } from "lucide-react";
 
 export default function CharacterGallery( { characters, onDetail, onEdit, onDelete, onPrevPage, onNextPage, hasPrev = false, hasNext = false }: CharacterGalleryProps ) {

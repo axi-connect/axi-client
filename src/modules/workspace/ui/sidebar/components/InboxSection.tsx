@@ -1,7 +1,7 @@
 "use client"
 
 import { InboxIcon } from "lucide-react"
-import { useChannelsStore } from "@/modules/channels/infrastructure/store/channels.store"
+import { useRouter, usePathname } from "next/navigation"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,7 +13,8 @@ import {
 } from "@/shared/components/layout/sidebar/core"
 
 export function InboxSection() {
-  const { selectedView, setView } = useChannelsStore()
+  const router = useRouter()
+  const pathname = usePathname()
 
   return (
     <SidebarGroup>
@@ -22,8 +23,8 @@ export function InboxSection() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              isActive={selectedView === "inbox"}
-              onClick={() => setView("inbox")}
+              isActive={pathname === "/workspace/inbox"}
+              onClick={() => router.push("/workspace/inbox")}
             >
               <InboxIcon />
               <span>Inbox</span>

@@ -1,4 +1,4 @@
-import { useAgent } from "@/modules/agents/infrastructure/agent.context";
+import { useAgent } from "@/modules/agents/infrastructure/store/agent.context";
 import { type TreeNode, TreeView } from "@/shared/components/features/tree-view";
 
 export default function IntentionsTreeView() {

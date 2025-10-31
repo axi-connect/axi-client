@@ -1,6 +1,7 @@
-import { http } from "@/core/services/http"
+import { http, Params } from "@/core/services/http"
 import type { ApiResponse } from "@/core/services/api"
-import type { Conversation } from "@/modules/channels/domain/conversation"
+import type { Conversation } from "@/modules/conversations/domain/conversation"
+import type { ConversationSearchCriteria } from "@/modules/conversations/domain/conversation"
 
 export async function createConversation(payload: {
   company_id: number
@@ -17,7 +18,11 @@ export async function getConversation(id: string): Promise<ApiResponse<Conversat
   return http.get<ApiResponse<Conversation>>(`/channels/conversations/${id}`)
 }
 
-export async function updateConversation(id: string, payload: Partial<Pick<Conversation, "status" | "assigned_agent_id">> & { participant_meta?: Record<string, unknown> }): Promise<ApiResponse<Conversation>> {
+export async function getConversations(params: ConversationSearchCriteria): Promise<ApiResponse<Conversation[]>> {
+  return http.get<ApiResponse<Conversation[]>>("/channels/conversations", params as Params, { authenticate: true })
+}
+
+export async function updateConversation(id: string, payload: Partial<Pick<Conversation, "status" | "assigned_agent">> & { participant_meta?: Record<string, unknown> }): Promise<ApiResponse<Conversation>> {
   return http.put<ApiResponse<Conversation>>(`/channels/conversations/${id}`, payload)
 }
 

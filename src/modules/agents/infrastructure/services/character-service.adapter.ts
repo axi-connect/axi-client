@@ -14,6 +14,6 @@ export async function updateCharacter(id: number | string, payload: UpdateCharac
   return http.put<ApiResponse<CharacterDTO>>(`/parameters/character/${id}`, payload, { authenticate: true });
 }
 
-export async function deleteCharacter(id: number | string): Promise<ApiResponse<{}>> {
-  return http.delete<ApiResponse<{}>>(`/parameters/character/${id}`, { authenticate: true });
+export async function deleteCharacter(id: number | string): Promise<ApiResponse<object>> {
+  return http.delete<ApiResponse<object>>(`/parameters/character/${id}`, { authenticate: true });
 }
