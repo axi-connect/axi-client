@@ -1,6 +1,6 @@
 import { http } from "@/core/services/http"
 import type { ApiResponse } from "@/core/services/api"
-import type { Message } from "@/modules/channels/domain/message"
+import type { Message } from "@/modules/conversations/domain/message"
 import type { MessageStatus } from "@/modules/channels/domain/enums"
 
 export async function sendMessage(payload: {
@@ -25,5 +25,5 @@ export async function updateMessageStatus(id: string, status: MessageStatus): Pr
 }
 
 export async function getMessagesByConversation(conversationId: string): Promise<ApiResponse<Message[]>> {
-  return http.get<ApiResponse<Message[]>>(`/channels/conversations/${conversationId}/messages`)
+  return http.get<ApiResponse<Message[]>>(`/channels/messages/conversations/${conversationId}`, undefined, { authenticate: true })
 }

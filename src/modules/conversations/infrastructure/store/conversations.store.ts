@@ -8,6 +8,8 @@ type ConversationStore = {
   error: Error | null
   conversations: ConversationDto[]
   fetchConversations: () => Promise<void>
+  selectedConversation: ConversationDto | null
+  setSelectedConversation: (conversation: ConversationDto) => void
   updateLastMessage: (conversationId: string, message: Partial<Message>) => void
 }
 
@@ -15,6 +17,8 @@ export const useConversationStore = create<ConversationStore>((set) => ({
     error: null,
     loading: true,
     conversations: [],
+    selectedConversation: null,
+    setSelectedConversation: (conversation: ConversationDto) => set({ selectedConversation: conversation }),
     fetchConversations: async () => {
         set({ loading: true })
         try {
@@ -40,6 +44,8 @@ export const useConversationStore = create<ConversationStore>((set) => ({
                     } as ConversationDto
                 }
                 return conversation
+            }).sort((a, b) => {
+                return new Date(b.last_message?.created_at || 0).getTime() - new Date(a.last_message?.created_at || 0).getTime()
             })
         }))
     }

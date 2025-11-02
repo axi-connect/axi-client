@@ -22,7 +22,7 @@ export function InboxItemSkeleton() {
     )
 }
 
-export default function InboxItem({ data }: { data: ConversationDto}) {
+export default function InboxItem({ data, onClick }: { data: ConversationDto, onClick: () => void}) {
     const { contact, last_message } = data;
 
     const formattedTime = new Date(last_message?.created_at ?? "").toLocaleTimeString("es-CO", {
@@ -33,7 +33,7 @@ export default function InboxItem({ data }: { data: ConversationDto}) {
     });
 
     return (
-        <div className="flex gap-3 w-full p-2 hover:bg-accent rounded-md cursor-pointer">
+        <div onClick={onClick} className="flex gap-3 w-full p-2 hover:bg-accent rounded-md cursor-pointer">
             <div className="relative size-16 self-center">
                 <Image
                     width={1080}
