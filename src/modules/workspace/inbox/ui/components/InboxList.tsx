@@ -1,28 +1,21 @@
 "use client"
 
 import Image from "next/image";
+import { useEffect } from "react";
 import { icons } from "@/core/lib/icons";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/shared/auth/auth.hooks";
 import InboxItem, { InboxItemSkeleton } from "./InboxItem";
-import { Conversation } from "@/modules/conversations/domain/conversation";
-import { getConversations } from "@/modules/conversations/infrastructure/services/conversations-service.adapter";
+import { useConversationStore } from "@/modules/conversations/infrastructure/store/conversations.store";
 
 export default function InboxList() {
-  const [loading, setLoading] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-
-  useEffect(() => {
-    setLoading(true);
-    getConversations({}).then((response) => {
-      setConversations(response.data);
-    }).finally(() => {
-      setLoading(false);
-    });
-  }, []);
+  const {} = useAuth()
+  const {conversations, loading, fetchConversations} = useConversationStore()
 
   useEffect(() => {
     console.log(conversations);
   }, [conversations]);
+
+  useEffect(() => void fetchConversations(), [fetchConversations]);
 
   if (loading) {
     return (

@@ -1,23 +1,24 @@
-import type { ParticipantType } from "@/modules/channels/domain/enums"
+import type { ContactType } from "@/modules/channels/domain/enums"
+export interface Contact {
+  id: string;
+  name: string;
+  number: string;
+  company_id: number;
+  type: ContactType;
+  profile_pic_url: string;
+  meta: Record<string, unknown> | null;
+}
 
-export type Conversation = {
+export interface ConversationDto {
   id: string
   status: string
+  contact: Contact
   company_id: number
   channel_id: string
-  external_id: string
   updated_at: string
   created_at: string
-  participant: {
-    id: string
-    type: ParticipantType
-    meta: {
-      name: string
-      avatar: string
-      [key: string]: unknown
-    }
-  }
-  last_message: {
+  external_id: string
+  last_message?: {
     id: string
     message: string
     created_at: string
@@ -39,9 +40,9 @@ export type ConversationSearchCriteria = {
   company_id?: number;
   channel_id?: string;
   external_id?: string;
-  participant_id?: string;
+  contact_id?: string;
   sortDir?: 'asc' | 'desc';
   assigned_agent_id?: number;
-  participant_type?: ParticipantType;
+  contact_type?: ContactType;
   sortBy?: 'created_at' | 'updated_at' | 'last_message_at';
 }

@@ -1,4 +1,5 @@
 // WebSocket types for Channels module
+import { Message } from "@/modules/conversations/domain/message"
 
 export type SocketId = string
 
@@ -19,6 +20,7 @@ export type ChannelEvents = {
   // 'channel.status': (data: { channelId: string }) => void
 
   // Server -> Client
+  'message.received': (data: {channelId: string, timestamp: string, data: Message }) => void
   'channel.joined': (data: { channelId: string; status: 'active' | 'inactive' }) => void
   'channel.started': (data: { channelId: string; status: 'ready' | 'not_ready'; lastActivity?: string }) => void
   'channel.authenticated': (data: { channelId: string; status: 'authenticated' | 'unauthenticated' }) => void
@@ -40,19 +42,7 @@ export type MessageEvents = {
 
   // Server -> Client
   'message_sent': (data: { messageId: string; channelId: string; status: 'sent' | 'delivered' | 'failed' }) => void
-  'message_received': (data: MessagePayload) => void
-}
-
-export type MessagePayload = {
-  id: string
-  channelId: string
-  from: string
-  to?: string
-  message: string
-  timestamp: string
-  direction: 'incoming' | 'outgoing'
-  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
-  metadata?: Record<string, unknown>
+  'message_received': (data: Message) => void
 }
 
 // System namespace events

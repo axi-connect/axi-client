@@ -2,8 +2,8 @@ import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
 // import { ChevronRightIcon } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
-import { Conversation } from "@/modules/conversations/domain/conversation";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { ConversationDto } from "@/modules/conversations/domain/conversation";
 
 export function InboxItemSkeleton() {
     return (
@@ -22,10 +22,10 @@ export function InboxItemSkeleton() {
     )
 }
 
-export default function InboxItem({ data }: { data: Conversation}) {
-    const { participant, last_message } = data;
+export default function InboxItem({ data }: { data: ConversationDto}) {
+    const { contact, last_message } = data;
 
-    const formattedTime = new Date(last_message.created_at).toLocaleTimeString("es-CO", {
+    const formattedTime = new Date(last_message?.created_at ?? "").toLocaleTimeString("es-CO", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
@@ -38,8 +38,8 @@ export default function InboxItem({ data }: { data: Conversation}) {
                 <Image
                     width={1080}
                     height={1080}
-                    alt={participant.meta.name}
-                    src={participant.meta.avatar}
+                    alt={contact.name}
+                    src={contact.profile_pic_url}
                     className="rounded-xl size-12 object-cover outline-background outline-2"
                 />
                 {
@@ -56,12 +56,12 @@ export default function InboxItem({ data }: { data: Conversation}) {
             </div>
             <div className="w-full">
                 <div className="flex">
-                    <h1 className="text-sm font-bold">{participant.meta.name}</h1>
+                    <h1 className="text-sm font-bold">{contact.name}</h1>
                     <time className="ml-auto text-xs text-muted-foreground">{formattedTime}</time>
                 </div>
                 <div className="flex">
-                    <p className="text-sm text-muted-foreground line-clamp-1">{last_message.message}</p>
-                    <Badge variant="secondary" className="font-mono">01</Badge>
+                    <p className="text-sm text-muted-foreground line-clamp-1">{last_message?.message ?? ""}</p>
+                    <Badge variant="secondary" className="ml-auto font-mono">01</Badge>
                 </div>
                 <div className="flex mt-1">
                     <Badge 
@@ -69,7 +69,7 @@ export default function InboxItem({ data }: { data: Conversation}) {
                         className="bg-blue-500 text-white"
                     >
                         <BadgeCheck/>
-                        Nuevo {participant.type}
+                        Nuevo {contact.type}
                     </Badge>
                 </div>
             </div>

@@ -1,12 +1,13 @@
 "use client"
 
+import { useEffect } from "react"
 import ChannelsList from "./ChannelList"
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/shared/components/ui/button"
 import { Radio, CircleFadingPlus, RefreshCw} from "lucide-react"
 import { ChannelSectionProps } from "./types/channel-section.types"
-import { useChannels } from "@/modules/channels/infrastructure/store/channels.context"
+import { useWebSocket } from "@/modules/channels/infrastructure/store/websocket.context"
+import { useChannelStore } from "@/modules/channels/infrastructure/store/channels.store"
 import { getChannelQR } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import {
   SidebarGroup,
@@ -17,8 +18,8 @@ import {
 
 export default function ChannelSection({ onQrGenerated, onQrError }: ChannelSectionProps) {
   const router = useRouter()
-  const [error, setError] = useState<Error | null>(null)
-  const { fetchChannels, channels, loading, isConnected, joinChannel, setChannelState } = useChannels()
+  const { joinChannel, isConnected } = useWebSocket()
+  const { fetchChannels, channels, loading, setChannelState, error } = useChannelStore()
 
   const handleFetchQrCode = async (channelId: string) => {
     console.log("🔐 fetching qr code for channel:", channelId)
