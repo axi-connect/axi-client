@@ -64,8 +64,6 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             message: data.message,
             created_at: new Date(timestamp)
           })
-          // TODO: Implementar logica
-          // setChannelState(channelId, { status: "connected", hasJoined: true })
         }
       })
 

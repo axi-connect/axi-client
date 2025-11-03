@@ -33,7 +33,7 @@ export default function InboxItem({ data, onClick }: { data: ConversationDto, on
     });
 
     return (
-        <div onClick={onClick} className="flex gap-3 w-full p-2 hover:bg-accent rounded-md cursor-pointer">
+        <div onClick={onClick} className="flex gap-3 w-full py-2 px-4 hover:bg-accent rounded-md cursor-pointer">
             <div className="relative size-16 self-center">
                 <Image
                     width={1080}

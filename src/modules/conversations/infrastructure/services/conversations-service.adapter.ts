@@ -15,7 +15,7 @@ export async function createConversation(payload: {
 }
 
 export async function getConversation(id: string): Promise<ApiResponse<ConversationDto>> {
-  return http.get<ApiResponse<ConversationDto>>(`/channels/conversations/${id}`)
+  return http.get<ApiResponse<ConversationDto>>(`/channels/conversations/${id}`, undefined, { authenticate: true })
 }
 
 export async function getConversations(params: ConversationSearchCriteria): Promise<ApiResponse<ConversationDto[]>> {

@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation"
 import { Modal } from "@/shared/components/ui/modal"
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm"
-import { useChannels } from "@/modules/channels/infrastructure/store/channels.context"
+import { useChannelStore } from "@/modules/channels/infrastructure/store/channels.store"
 
 export default function ChannelsInterceptCreate() {
   const router = useRouter()
-  const { fetchChannels } = useChannels()
+  const { fetchChannels } = useChannelStore()
 
   const onModalSubmitClick = () => {
     const form = document.getElementById("channels-form") as HTMLFormElement | null

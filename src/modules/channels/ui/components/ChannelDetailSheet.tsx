@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button"
 import { useAlert } from "@/core/providers/alert-provider"
 import type { Channel } from "@/modules/channels/domain/channel"
 import { DetailSheet } from "@/shared/components/features/detail-sheet"
-import { useChannels } from "../../infrastructure/store/channels.context"
+import { useChannelStore } from "../../infrastructure/store/channels.store"
 import { deleteChannel } from "../../infrastructure/services/channels-service.adapter"
 
 /**
@@ -25,7 +25,7 @@ import { deleteChannel } from "../../infrastructure/services/channels-service.ad
 export function ChannelDetailSheet() {
     const router = useRouter()
     const [open, setOpen] = useState(false)
-    const { fetchChannels } = useChannels()
+    const { fetchChannels } = useChannelStore()
     const { showModal, closeModal, showAlert } = useAlert()
     const [channel, setChannel] = useState<Channel | null>(null)
 

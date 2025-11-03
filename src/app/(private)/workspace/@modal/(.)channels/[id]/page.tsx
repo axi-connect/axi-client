@@ -1,14 +1,14 @@
 "use client"
 
-import { useRouter, useParams } from "next/navigation"
 import { useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import ChannelDetailSheet from "@/modules/channels/ui/components/ChannelDetailSheet"
-import { useChannels } from "@/modules/channels/infrastructure/store/channels.context"
+import { useChannelStore } from "@/modules/channels/infrastructure/store/channels.store"
 
 export default function ChannelsInterceptDetailView() {
   const router = useRouter()
   const params = useParams()
-  const { channels } = useChannels()
+  const { channels } = useChannelStore()
   const channelId = params.id as string
 
   useEffect(() => {

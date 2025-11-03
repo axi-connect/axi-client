@@ -39,7 +39,7 @@ export default function MessageBubble({ message, direction, timestamp }: Message
                         'rounded-2xl px-4 py-2 shadow-sm',
                         isUser
                             ? 'bg-primary text-primary-foreground rounded-tr-none'
-                            : 'border-border bg-card text-card-foreground rounded-tl-none border',
+                            : 'border-border bg-background text-foreground rounded-tl-none border',
                         )}
                     >
                         <p className="whitespace-pre-wrap text-sm">{message}</p>
