@@ -3,13 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function FooterGlow() {
+export default function SiteFooter() {
   return (
     <footer className="relative z-10 mt-8 w-full overflow-hidden pt-16 pb-8">
       <style jsx global>{`
         .glass {
           backdrop-filter: blur(3px) saturate(180%);
-          background: radial-gradient(circle, color-mix(in oklab, white 60%, transparent) 0%, color-mix(in oklab, var(--axi-brand) 20%, transparent) 60%, transparent 100%);
+          background: radial-gradient(circle, color-mix(in oklab, var(--background) 60%, var(--background)) 0%, color-mix(in oklab, var(--axi-brand) 20%, var(--background)) 60%, var(--background) 100%);
           border: 1px solid color-mix(in oklab, var(--axi-brand) 25%, transparent);
           justify-content: center;
           align-items: center;
@@ -19,7 +19,7 @@ export default function FooterGlow() {
         .glass:where(.dark, .dark *) {
           display: flex;
           backdrop-filter: blur(2px) !important;
-          background: radial-gradient(circle, #ffffff1a 0%, color-mix(in oklab, var(--axi-brand-2) 20%, transparent) 60%, #00000040 100%) !important;
+          background: radial-gradient(circle, #ffffff1a 0%, color-mix(in oklab, var(--axi-brand-2) 20%, var(--background)) 60%, #00000040 100%) !important;
           border: 1px solid #ffffff0d !important;
           border-radius: 16px !important;
           justify-content: center !important;
@@ -35,8 +35,8 @@ export default function FooterGlow() {
         <div className="flex flex-col items-center md:items-start">
           <Link href="/" className="mb-4 flex items-center gap-2">
             <Image src="https://res.cloudinary.com/dpfnxj52w/image/upload/v1759421795/isotipo_we1obn.png" alt="Axi Connect" width={36} height={36} />
-            <span className="text-brand-gradient bg-clip-text text-xl font-semibold tracking-tight text-transparent font-heading">
-              Axi Connect
+            <span className="text-brand-gradient bg-clip-text text-2xl font-semibold tracking-tight text-transparent font-heading">
+              axi connect
             </span>
           </Link>
           <p className="text-foreground mb-6 max-w-sm text-center text-sm md:text-left">

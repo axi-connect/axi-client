@@ -3,10 +3,10 @@
 import React from 'react';
 import { SparklesCore } from '@/shared/components/ui/sparkles';
 
-export default function SiteSectionLogoCloud() {
+export default function SiteLogoCloud() {
   return (
-    <section className="relative h-screen bg-background">
-      <div className="mx-auto mt-32 max-w-2xl">
+    <section className="relative">
+      <div className="mx-auto mt-16 max-w-2xl">
         <div className="text-center text-3xl text-foreground">
           <span className="text-brand">Con la confianza de los expertos.</span>
           <br />
@@ -38,7 +38,7 @@ export default function SiteSectionLogoCloud() {
         </div>
       </div>
 
-      <div className="relative -mt-32 h-96 w-screen overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom_center,var(--axi-brand-2),transparent_70%)] before:opacity-40 after:absolute after:top-1/2 after:-left-1/2 after:aspect-[1/0.7] after:w-[200%] after:rounded-[100%] after:border-t after:[border-color:var(--axi-brand)] dark:after:[border-color:var(--axi-brand-2)] after:bg-background">
+      <div className="relative -mt-32 h-96 overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom_center,var(--axi-brand-2),transparent_70%)] before:opacity-40 after:absolute after:top-1/2 after:-left-1/2 after:aspect-[1/0.7] after:w-[200%] after:rounded-[100%] after:border-t after:[border-color:var(--axi-brand)] dark:after:[border-color:var(--axi-brand-2)] after:bg-background">
         <SparklesCore
           id="tsparticles"
           background="transparent"
