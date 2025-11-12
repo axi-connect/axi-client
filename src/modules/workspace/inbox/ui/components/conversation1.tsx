@@ -75,20 +75,19 @@ export default function Conversation1({ messages }: { messages: Message[] }) {
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            classNameContainer="flex-1"
             placeholder="Type your message..."
-            className="flex-1"
+            onChange={(e) => setInput(e.target.value)}
           />
           <Button
-            type="submit"
             size="icon"
-            className="bg-primary hover:bg-primary/90"
+            type="submit"
           >
             <Send className="h-4 w-4" />
           </Button>
-          <Button type="button" size="icon" variant="outline">
+          {/* <Button type="button" size="icon" variant="outline">
             <Mic className="h-4 w-4" />
-          </Button>
+          </Button> */}
         </form>
       </div>
     </div>

@@ -1,10 +1,8 @@
-import * as React from "react"
-
 import { cn } from "@/core/lib/utils"
 
-function Input({ className, type, prefix, ...props }: React.ComponentProps<"input"> & { prefix?: string }) {
+function Input({ classNameContainer = "w-full", className, type, prefix, ...props }: React.ComponentProps<"input"> & { classNameContainer?: string, className?: string, prefix?: string }) {
   return (
-    <div className="relative">
+    <div className={cn("relative", classNameContainer)}>
       {prefix && <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">{prefix}</span>}
       <input
         type={type}
