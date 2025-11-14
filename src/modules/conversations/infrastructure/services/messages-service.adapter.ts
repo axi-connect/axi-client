@@ -17,7 +17,7 @@ export async function sendMessage(payload: {
 }
 
 export async function getMessage(id: string): Promise<ApiResponse<Message>> {
-  return http.get<ApiResponse<Message>>(`/channels/messages/${id}`)
+  return http.get<ApiResponse<Message>>(`/channels/messages/${id}`, undefined, { authenticate: true })
 }
 
 export async function updateMessageStatus(id: string, status: MessageStatus): Promise<ApiResponse<Message>> {

@@ -22,11 +22,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const redirectToLogin = useCallback(() => {
     const { pathname, search } = window.location;
-    if (isPublicPath(pathname)) return;
 
     setUser(null)
     setStatus("unauthenticated")
-    if (pathname === "/auth/login") return
+    if (isPublicPath(pathname)) return;
     window.location.href = "/auth/login?next=" + encodeURIComponent(pathname + "?" + search);
   }, [])
 

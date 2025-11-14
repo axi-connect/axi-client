@@ -1,15 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { Send, Mic } from 'lucide-react';
+import { Send } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import MessageBubble from './MessageBubble';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAutoScroll } from '@/core/hooks/use-auto-scroll';
 import { Message } from '@/modules/conversations/domain/message';
 
 export default function Conversation1({ messages }: { messages: Message[] }) {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  const messageCount = messages.length
+  const { containerRef, bottomRef } = useAutoScroll<HTMLDivElement>({
+    deps: [messageCount],
+    thresholdPx: 120,
+    stickOnMount: true,
+    behavior: 'smooth',
+  })
+
+  const spring = useMemo(() => ({
+    type: 'spring',
+    stiffness: 380,
+    damping: 30,
+    mass: 0.8,
+  }), [])
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,13 +42,13 @@ export default function Conversation1({ messages }: { messages: Message[] }) {
     setInput('');
     setIsTyping(true);
     setTimeout(() => {
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        content:
-          "Thanks for your message! I'm here to help with any other questions you might have about our services or features.",
-        sender: 'ai',
-        timestamp: new Date().toISOString(),
-      };
+      // const aiMessage = {
+      //   id: (Date.now() + 1).toString(),
+      //   content:
+      //     "Thanks for your message! I'm here to help with any other questions you might have about our services or features.",
+      //   sender: 'ai',
+      //   timestamp: new Date().toISOString(),
+      // };
 
       // setMessages((prev) => [...prev, aiMessage]);
       setIsTyping(false);
@@ -40,15 +57,27 @@ export default function Conversation1({ messages }: { messages: Message[] }) {
 
   return (
     <div className="flex h-[calc(100vh-132px)] flex-col">
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            message={message.message}
-            direction={message.direction}
-            timestamp={new Date(message.created_at)}
-          />
-        ))}
+      <div ref={containerRef} className="flex-1 space-y-4 overflow-y-auto p-4 sidebar-scroll">
+        <AnimatePresence initial={false}>
+          {messages.map((message) => (
+            <motion.div
+              layout
+              key={message.id}
+              transition={spring}
+              exit={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <MessageBubble
+                message={message.message}
+                direction={message.direction}
+                timestamp={new Date(message.created_at)}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        <div ref={bottomRef} />
 
         {isTyping && (
           <div className="text-muted-foreground flex items-center space-x-2 text-sm">

@@ -20,7 +20,9 @@ export type ChannelEvents = {
   // 'channel.status': (data: { channelId: string }) => void
 
   // Server -> Client
+  'agent.assigned': (data: { channelId: string, data: { conversation_id: string, agent_id: string }, timestamp: string }) => void
   'message.received': (data: {channelId: string, timestamp: string, data: Message }) => void
+  'message.sent': (data: {channelId: string, timestamp: string, data: Message }) => void
   'channel.joined': (data: { channelId: string; status: 'active' | 'inactive' }) => void
   'channel.started': (data: { channelId: string; status: 'ready' | 'not_ready'; lastActivity?: string }) => void
   'channel.authenticated': (data: { channelId: string; status: 'authenticated' | 'unauthenticated' }) => void
@@ -31,8 +33,6 @@ export type ChannelEvents = {
   // 'channel.disconnect_error': (data: { channelId: string; error: string }) => void
   // 'channel.auth_failure_error': (data: { channelId: string; error: string }) => void
   // 'channel.session_cleaned': (data: { channelId: string }) => void
-  // 'channel.started': (data: { channelId: string }) => void
-  // 'channel.stopped': (data: { channelId: string }) => void
 }
 
 // Message namespace events

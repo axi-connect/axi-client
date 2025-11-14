@@ -4,28 +4,15 @@ import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { icons } from "@/core/lib/icons";
 import Conversation1 from "./conversation1"
-import { useEffect, useState } from "react";
-import { Message } from "@/modules/conversations/domain/message";
+import { useEffect } from "react";
 import { useConversationStore } from "@/modules/conversations/infrastructure/store/conversations.store"
-import { getMessagesByConversation } from "@/modules/conversations/infrastructure/services/messages-service.adapter";
 
 export default function ConversationPanel() {
-    const [loading, setLoading] = useState(false);
-    const { selectedConversation } = useConversationStore()
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [conversationId, setConversationId] = useState<string | undefined>(selectedConversation?.id);
+    const { selectedConversation, loadingMessages: loading, fetchMessages, messages } = useConversationStore()
 
     useEffect(() => {
-        if (selectedConversation && selectedConversation.id !== conversationId) {
-            setLoading(true);
-            getMessagesByConversation(selectedConversation.id).then((res) => {
-                setMessages(res.data);
-                setConversationId(selectedConversation.id);
-            }).finally(() => {
-                setLoading(false);
-            });
-        }
-    }, [selectedConversation, conversationId]);
+        if (selectedConversation) fetchMessages(selectedConversation.id);
+    }, [selectedConversation, fetchMessages]);
 
     if (!selectedConversation) {
         return (
