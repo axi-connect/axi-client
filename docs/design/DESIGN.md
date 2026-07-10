@@ -48,17 +48,15 @@ El isotipo es una **"α" (alfa) tricolor** construida con tres cintas entrelazad
 
 ```
 public/brand/
-├── isotype.svg            # isotipo vectorial (fuente de verdad; el .png es derivado)
-├── isotype.png            # raster para contextos que no aceptan SVG
-├── logo-horizontal.svg    # isotipo + wordmark "Axi Connect" (light)
-├── logo-horizontal-dark.svg
-├── logo-mono-white.svg    # monocromo para fondos de color/foto
-└── og-image.png           # 1200×630 para social/link previews
-public/
-├── favicon.ico  icon.svg  apple-touch-icon.png   # derivados del isotipo
+├── isologo-axi-connect.svg   # isotipo vectorial — FUENTE DE VERDAD del artwork
+├── isotype.png               # raster para contextos que no aceptan SVG
+├── logo-horizontal.png       # isotipo + wordmark (texto oscuro, fondos claros)
+└── logo-horizontal-dark.png  # variante para fondos oscuros
+src/app/                       # convenciones de Next (se auto-conectan al <head>)
+├── favicon.ico  icon.svg  apple-icon.png  opengraph-image.png
 ```
 
-*Estado actual: existen `isotype.png` y `isologo-axi-connect.svg` (isotipo vectorial — fuente de verdad del `BrandMark` inline en `shared/components/ui/brand-mark.tsx`); el resto es deuda de assets (ver plan de implementación). Los SVG default de Next ya fueron eliminados.*
+*Todos los derivados (favicon, apple-icon, og-image 1200×630, logos horizontales) se generan desde `isologo-axi-connect.svg` — si el artwork cambia, se regeneran. El `BrandMark` inline (`shared/components/ui/brand-mark.tsx`) replica el mismo SVG para render instantáneo y animación por cinta. **Pendiente del diseñador:** wordmark vectorial con texto trazado (los logos horizontales son PNG porque Nexa no puede incrustarse como paths sin el archivo fuente) y `logo-mono-white.svg` para fondos de color.*
 
 ### 2.4 Nombre de la marca
 

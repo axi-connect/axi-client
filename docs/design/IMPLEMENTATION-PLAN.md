@@ -106,11 +106,11 @@
 
 **Objetivo:** inventario DESIGN §2.3 completo.
 
-- [ ] Obtener/vectorizar `isotype.svg` (fuente de verdad) — **requiere el archivo fuente del diseñador**; si no existe, vectorizar el PNG.
-- [ ] Generar `favicon.ico`, `icon.svg`, `apple-touch-icon.png` desde el isotipo y declararlos vía metadata de Next (`app/icon.svg` o `metadata.icons`).
-- [ ] Crear `logo-horizontal.svg` (+ variante dark) y `og-image.png` (1200×630); añadir `openGraph` a `metadata` en `app/layout.tsx`.
-- [ ] Eliminar los SVG default de Next: `file.svg`, `globe.svg`, `window.svg`, `vercel.svg`.
-- [ ] Revisar animaciones Lottie de `public/animations/` sobre ambos temas; descartar las que no se usen (`loader.funny`, `loader.bat.ball`…).
+- [x] Isotipo vectorial: `public/brand/isologo-axi-connect.svg` (fuente de verdad) + `BrandMark` inline sincronizado.
+- [x] `favicon.ico` (16/32/48, reemplaza el default de Next), `src/app/icon.svg` y `src/app/apple-icon.png` (180×180, fondo blanco) — generados desde el SVG con Chrome headless + Pillow; conectados por convención de archivos de App Router (verificado: `<link rel="icon">` y `apple-touch-icon` en el head).
+- [x] `src/app/opengraph-image.png` (1200×630: isotipo + wordmark Nexa + gradiente tri) y `public/brand/logo-horizontal(.png/-dark.png)`; `metadata` con `metadataBase`, título con template, descripción de marca y `openGraph` (verificado: tags `og:*` completos). *Los logos horizontales son PNG — el wordmark vectorial con texto trazado queda pendiente del archivo fuente del diseñador.*
+- [x] SVG default de Next eliminados (`file/globe/window/vercel.svg`).
+- [x] Lotties revisadas: el loader migró a `BrandLoader` (isotipo + `brand-pulse` CSS) y `public/animations/` quedó eliminado por completo.
 
 ## Fase 9 — QA de cierre
 
