@@ -9,16 +9,22 @@ import {
   type ReactNode,
 } from "react"
 import { usePathname } from "next/navigation"
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { useReducedMotion } from "framer-motion"
+import { cn } from "@/core/lib/utils"
 import { BrandMark } from "@/shared/components/ui/brand-mark"
-import { splash as splashMotion, spring } from "@/core/styles/motion"
 
 /**
- * Splash de transición post-login: overlay de marca a pantalla completa que
- * cubre la navegación login → app. El isotipo entra, pulsa mientras la app
- * carga y, cuando la vista destino señala que está lista (`markReady`), sale
- * escalando hacia la cámara ("atraviesa la pantalla"). Vive en el root layout
- * para sobrevivir al swap de layouts (public → private).
+ * Splash de transición hacia la app: overlay de marca a pantalla completa que
+ * cubre la navegación (login → app, o CTA del home con sesión activa). El
+ * isotipo entra, pulsa mientras la app carga y, cuando la vista destino
+ * señala que está lista (`markReady`), "se entra por el ojo de la α": el
+ * fondo se retira, el logo escala con origen en su agujero central hasta que
+ * este supera el viewport (la app se ve a través de él) y desvanece al final.
+ * Vive en el root layout para sobrevivir al swap de layouts public → private.
+ *
+ * Las animaciones son CSS puras (`splash-in` / `splash-exit` en globals.css):
+ * transform/opacity corren en el compositor y el zoom no se congela aunque la
+ * hidratación de la página destino bloquee el hilo principal.
  *
  * Con `prefers-reduced-motion` el zoom se sustituye por un crossfade.
  */
@@ -26,7 +32,7 @@ import { splash as splashMotion, spring } from "@/core/styles/motion"
 type SplashPhase = "idle" | "covering" | "leaving"
 
 type SplashContextType = {
-  /** Muestra el overlay. Llamar tras un login exitoso, antes de navegar. */
+  /** Muestra el overlay. Llamar justo antes de navegar hacia la app. */
   start: () => void
   /** La vista destino está montada: dispara la salida animada del overlay. */
   markReady: () => void
@@ -38,6 +44,15 @@ const SplashContext = createContext<SplashContextType | null>(null)
 const SAFETY_TIMEOUT_MS = 8000
 /** Visibilidad mínima del overlay: evita que la entrada del logo se corte. */
 const MIN_COVER_MS = 700
+/** Duración del crossfade de salida con reduced-motion. */
+const REDUCED_EXIT_MS = 320
+
+/**
+ * Centro del ojo de la α en el viewBox del isotipo (500×500): el anillo coral
+ * interior está centrado en ~(222.8, 249.7). Escalar desde ahí produce la
+ * ilusión de entrar por el agujero.
+ */
+const EYE_TRANSFORM_ORIGIN = "44.57% 49.95%"
 
 export function SplashProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -48,6 +63,8 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   phaseRef.current = phase
   const pathnameRef = useRef(pathname)
   pathnameRef.current = pathname
+  const reducedRef = useRef(prefersReducedMotion)
+  reducedRef.current = prefersReducedMotion
 
   const coveredAtRef = useRef(0)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
@@ -67,6 +84,11 @@ export function SplashProvider({ children }: { children: ReactNode }) {
       return
     }
     setPhase("leaving")
+    // Con reduced-motion la salida es un crossfade por transición CSS: no hay
+    // animationend de `splash-exit`, así que el cierre va por temporizador.
+    if (reducedRef.current) {
+      timersRef.current.push(setTimeout(() => setPhase("idle"), REDUCED_EXIT_MS + 50))
+    }
   }, [])
 
   const start = useCallback(() => {
@@ -89,57 +111,46 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   return (
     <SplashContext.Provider value={{ start, markReady }}>
       {children}
-      <AnimatePresence>
-        {phase !== "idle" && (
-          <motion.div
-            key="login-splash"
-            role="status"
-            aria-label="Ingresando a Axi Connect"
-            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background"
-            style={{ perspective: 1200 }}
-            initial={{ opacity: 0 }}
-            animate={{
-              // El fondo se desvanece mientras el logo aún vuela hacia la
-              // cámara: la app se revela detrás y se completa la ilusión.
-              opacity: leaving ? 0 : 1,
-              transition: leaving
-                ? { delay: 0.35, ...splashMotion.reveal }
-                : splashMotion.reveal,
-            }}
-            exit={{ opacity: 0, transition: splashMotion.reveal }}
+      {phase !== "idle" && (
+        <div
+          role="status"
+          aria-label="Ingresando a Axi Connect"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+        >
+          {/* Fondo + glow, SEPARADOS del logo: al salir se retiran primero
+              para que la app quede visible detrás del isotipo mientras crece. */}
+          <div
+            aria-hidden="true"
+            className={cn(
+              "absolute inset-0 flex items-center justify-center bg-background",
+              "animate-fade-in transition-opacity duration-300 ease-out",
+              leaving && "opacity-0",
+            )}
           >
-            {/* Glow tricolor de marca detrás del isotipo */}
-            <span
-              aria-hidden="true"
-              className="absolute size-64 rounded-full bg-brand-gradient-tri opacity-15 blur-3xl"
-            />
-            <motion.div
-              className="will-change-transform"
-              style={{ transformStyle: "preserve-3d" }}
-              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.85 }}
-              animate={
-                leaving
-                  ? prefersReducedMotion
-                    ? { opacity: 0, transition: splashMotion.reveal }
-                    : {
-                        scale: 18,
-                        opacity: 0,
-                        filter: "blur(10px)",
-                        transition: splashMotion.exit,
-                      }
-                  : { opacity: 1, scale: 1, transition: spring.soft }
+            <span className="size-64 rounded-full bg-brand-gradient-tri opacity-15 blur-3xl" />
+          </div>
+
+          <div
+            className={cn(
+              leaving
+                ? prefersReducedMotion
+                  ? "opacity-0 transition-opacity duration-300 ease-out"
+                  : "animate-splash-exit"
+                : "animate-splash-in",
+            )}
+            style={{ transformOrigin: EYE_TRANSFORM_ORIGIN }}
+            onAnimationEnd={(event) => {
+              if (event.animationName === "splash-exit" && phaseRef.current === "leaving") {
+                setPhase("idle")
               }
-              onAnimationComplete={() => {
-                if (phaseRef.current === "leaving") setPhase("idle")
-              }}
-            >
-              <span className={phase === "covering" ? "block animate-brand-pulse" : "block"}>
-                <BrandMark className="size-28 md:size-36" />
-              </span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            }}
+          >
+            <span className={phase === "covering" ? "block animate-brand-pulse" : "block"}>
+              <BrandMark className="size-28 md:size-36" />
+            </span>
+          </div>
+        </div>
+      )}
     </SplashContext.Provider>
   )
 }
@@ -152,8 +163,8 @@ export function useSplash(): SplashContextType {
 
 /**
  * Variante tolerante: fuera del provider devuelve no-ops. La usan piezas
- * compartidas (login, layout privado) que también renderizan en contextos
- * sin splash (tests, storybook).
+ * compartidas (login, header público, layout privado) que también renderizan
+ * en contextos sin splash (tests, storybook).
  */
 export function useSplashOptional(): SplashContextType {
   const ctx = useContext(SplashContext)

@@ -105,7 +105,7 @@ export default function DetailSheet<Id extends string | number = string | number
   const mobileHeight = "min(85vh, 760px)"
 
   const containerClass = cn(
-    "axi-detail-sheet bg-background text-foreground",
+    "axi-detail-sheet glass-overlay bg-background text-foreground",
     resolvedSide === "left"
       ? "inset-y-0 left-0 h-full"
       : resolvedSide === "right"

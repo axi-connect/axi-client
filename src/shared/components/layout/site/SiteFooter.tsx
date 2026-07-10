@@ -6,24 +6,18 @@ import Link from 'next/link';
 export default function SiteFooter() {
   return (
     <footer className="relative z-10 mt-8 w-full overflow-hidden pt-16 pb-8">
+      {/* Estilo propio del footer — NUNCA redefinir la clase global .glass del design system */}
       <style jsx global>{`
-        .glass {
+        .footer-glass {
           backdrop-filter: blur(3px) saturate(180%);
-          background: radial-gradient(circle, color-mix(in oklab, var(--background) 60%, var(--background)) 0%, color-mix(in oklab, var(--axi-brand) 20%, var(--background)) 60%, var(--background) 100%);
+          background: radial-gradient(circle, var(--background) 0%, color-mix(in oklab, var(--axi-brand) 20%, var(--background)) 60%, var(--background) 100%);
           border: 1px solid color-mix(in oklab, var(--axi-brand) 25%, transparent);
-          justify-content: center;
-          align-items: center;
-          transition: all .3s;
-          display: flex;
+          transition: all 0.3s;
         }
-        .glass:where(.dark, .dark *) {
-          display: flex;
-          backdrop-filter: blur(2px) !important;
-          background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 10%, transparent) 0%, color-mix(in oklab, var(--axi-brand-2) 20%, var(--background)) 60%, color-mix(in srgb, var(--background) 25%, transparent) 100%) !important;
-          border: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent) !important;
-          border-radius: 16px !important;
-          justify-content: center !important;
-          align-items: center !important;
+        .footer-glass:where(.dark, .dark *) {
+          backdrop-filter: blur(2px);
+          background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 10%, transparent) 0%, color-mix(in oklab, var(--axi-brand-2) 20%, var(--background)) 60%, color-mix(in srgb, var(--background) 25%, transparent) 100%);
+          border: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent);
         }
       `}</style>
       <div className="pointer-events-none absolute top-0 left-1/2 z-0 h-full w-full -translate-x-1/2 select-none">
@@ -31,7 +25,7 @@ export default function SiteFooter() {
         {/* <div className="absolute right-1/4 -bottom-24 h-80 w-80 rounded-full bg-brand-2/20 blur-3xl"></div> */}
       </div>
 
-      <div className="glass relative mx-auto flex max-w-6xl flex-col items-center gap-8 rounded-2xl px-6 py-10 md:flex-row md:items-start md:justify-between md:gap-12">
+      <div className="footer-glass relative mx-auto flex max-w-6xl flex-col items-center gap-8 rounded-2xl px-6 py-10 md:flex-row md:items-start md:justify-between md:gap-12">
         <div className="flex flex-col items-center md:items-start">
           <Link href="/" className="mb-4 flex items-center gap-2">
             <Image src="https://res.cloudinary.com/dpfnxj52w/image/upload/v1759421795/isotipo_we1obn.png" alt="Axi Connect" width={36} height={36} />

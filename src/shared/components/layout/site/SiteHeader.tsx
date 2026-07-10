@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '@/core/providers/auth-provider';
+import { useSplashOptional } from '@/core/providers/splash-provider';
 import { ThemeToggle } from '@/shared/components/layout/theme-toggle';
 
 interface NavItem {
@@ -75,6 +76,7 @@ const buttonText: Record<"loading" | "authenticated" | "unauthenticated", { text
 
 export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef: React.RefObject<HTMLDivElement | null> }) {
     const {status, user} = useAuthContext()
+    const splash = useSplashOptional()
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -90,9 +92,12 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
     const headerVariants = {
         animate: { y: 0, opacity: 1 },
         initial: { y: -100, opacity: 0 },
+        // Debe incluir y/opacity: si se llega aquí directo desde `initial`
+        // (scroll inmediato al cargar), framer-motion congelaría el header
+        // invisible al no tener objetivo para esas propiedades.
         scrolled: {
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            y: 0,
+            opacity: 1,
         },
     };
 
@@ -112,7 +117,7 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
             variants={headerVariants}
             animate={isScrolled ? 'scrolled' : 'animate'}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="fixed top-0 right-0 left-0 z-50 transition-all duration-300"
+            className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${isScrolled ? 'glass' : ''}`}
             style={{
                 // backdropFilter: isScrolled ? 'blur(20px)' : 'none',
                 // backgroundColor: isScrolled
@@ -160,7 +165,7 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                                     <AnimatePresence>
                                     {activeDropdown === item.name && (
                                         <motion.div
-                                        className="border-border bg-background/95 absolute top-full left-0 mt-2 w-64 overflow-hidden rounded-xl border shadow-xl backdrop-blur-lg"
+                                        className="glass absolute top-full left-0 mt-2 w-64 overflow-hidden rounded-xl"
                                         variants={dropdownVariants}
                                         initial="hidden"
                                         animate="visible"
@@ -201,10 +206,14 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                             {buttonText[status].text}
                         </Link>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Link 
-                                prefetch={false}                
+                            <Link
+                                prefetch={false}
                                 href="/workspace/inbox"
                                 className="inline-flex items-center space-x-2 rounded-full bg-brand-gradient px-6 py-2.5 font-medium text-white transition-all duration-200 hover:shadow-lg"
+                                // Con sesión activa, entrar a la app repite la
+                                // transición de marca del login (splash 3D);
+                                // sin sesión el middleware manda a /auth/login.
+                                onClick={() => { if (status === 'authenticated') splash.start() }}
                             >
                                 <span>{status === 'authenticated' ? user?.name : 'Comenzar'}</span>
                                 <ArrowRight className="h-4 w-4" />
@@ -236,7 +245,7 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                                 onClick={() => setIsMobileMenuOpen(false)}
                             />
                             <motion.div
-                                className="border-border bg-background fixed top-16 right-4 z-50 w-80 overflow-hidden rounded-2xl border shadow-2xl lg:hidden"
+                                className="glass-overlay fixed top-16 right-4 z-50 w-80 overflow-hidden rounded-2xl lg:hidden"
                                 variants={mobileMenuVariants}
                                 initial="closed"
                                 animate="open"

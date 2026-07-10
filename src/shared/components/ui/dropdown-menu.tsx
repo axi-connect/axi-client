@@ -127,7 +127,7 @@ export function DropdownMenuContent({ className, align = "end", children }: { cl
       role="menu"
       ref={contentRef}
       className={cn(
-        "bg-background text-foreground border-border absolute z-50 mt-2 min-w-40 rounded-md border shadow-lg flex flex-col p-1",
+        "glass bg-background text-foreground border-border absolute z-50 mt-2 min-w-40 rounded-lg border flex flex-col p-1",
         align === "end" ? "right-0" : "left-0",
         className
       )}

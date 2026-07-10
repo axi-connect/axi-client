@@ -34,14 +34,18 @@ export const durations = {
 } as const
 
 /**
- * Coreografía del splash post-login ("el logo atraviesa la pantalla").
- * Salida: escala hacia la cámara con curva que acelera al final.
+ * Coreografía del splash post-login ("se entra por el ojo de la α").
+ * NOTA: las fases del splash están implementadas como animaciones CSS en
+ * `globals.css` (`splash-in`, `splash-exit`, `brand-pulse`) y NO con
+ * framer-motion: transform/opacity en CSS corren en el compositor, así el
+ * zoom no se congela mientras la página destino hidrata. Estos valores
+ * documentan la coreografía y deben mantenerse en sincronía con el CSS.
  */
 export const splash = {
-  /** Entrada del logo en el overlay. */
-  enter: spring.soft,
-  /** Salida "a través de la pantalla": acelera hacia el observador. */
-  exit: { duration: 0.9, ease: [0.7, 0, 0.84, 0] as const },
+  /** Entrada del logo (`splash-in`): 0.45s cubic-bezier(0.16, 1, 0.3, 1). */
+  enter: { duration: 0.45, ease: [0.16, 1, 0.3, 1] as const },
+  /** Salida (`splash-exit`): escala 1→80 con origen en el ojo de la α. */
+  exit: { duration: 1.1, ease: [0.55, 0, 0.85, 0.15] as const },
   /** Fade del fondo del overlay al revelar la app. */
-  reveal: { duration: 0.45, ease: "easeInOut" },
+  reveal: { duration: 0.3, ease: "easeOut" },
 } as const

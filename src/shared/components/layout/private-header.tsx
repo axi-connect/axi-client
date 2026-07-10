@@ -22,7 +22,7 @@ export function PrivateHeader() {
 	})
 
 	return (
-		<div className="flex items-center gap-3 px-4 py-2">
+		<div className="glass sticky top-0 z-40 flex items-center gap-3 px-4 py-2">
 			<SidebarTrigger />
 			<nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
 				<ol className="flex items-center gap-2">

@@ -76,18 +76,21 @@
 
 **Objetivo:** lenguaje iOS de radios sin tocar componente por componente.
 
-- [ ] Mapear los tokens `--radius-*` en `@theme` para que `rounded-md/lg/xl` de los primitivos existentes adopten 12/16/20px automáticamente.
-- [ ] Ajustar manualmente los primitivos que no siguen el patrón: `dialog.tsx` → `rounded-xl` + `shadow-overlay`; badges → pill; revisar `button.tsx`/`input.tsx` tras el re-mapeo.
-- [ ] Revisión visual de tablas, formularios, sheets y modales en ambas densidades.
+- [x] Mapear los tokens `--radius-*` en `@theme` para que `rounded-md/lg/xl` de los primitivos existentes adopten 12/16/20px automáticamente. *(Hecho en Fase 1.)*
+- [x] Ajustes por componente: `dialog.tsx` → `rounded-xl`; `badge.tsx` → pill (`rounded-full`); `popover`/`dropdown-menu`/`command` → `rounded-lg`; `button`/`input` correctos tras el re-mapeo (12px).
+- [x] Revisión visual en navegador (landing + workspace/inbox con sesión real, light y dark).
+- [x] *Extra:* añadidos los tokens de superficie `--color-card(-foreground)` y `--color-popover(-foreground)` que los primitivos shadcn consumían sin que existieran (las utilidades `bg-card`/`bg-popover` no se generaban).
 
 ## Fase 6 — Rollout de glass (D8)
 
 **Objetivo:** material flotante según DESIGN-SYSTEM §5.2.
 
-- [ ] Aplicar `.glass` a `PrivateHeader` y `SiteHeader` (sticky) y al `AppSidebar`.
-- [ ] Aplicar `.glass-overlay` a `Modal`/`Dialog`, `DetailSheet`, `Popover`, `DropdownMenu`, `Command` y `FloatingAlert`.
-- [ ] Confirmar que superficies de contenido (DataTable, forms, inbox) permanecen sólidas.
-- [ ] Medir: sin jank de scroll por `backdrop-filter` (probar en el inbox con lista larga); si lo hay, reducir blur o limitar glass al header.
+- [x] `.glass` aplicado a `PrivateHeader` (ahora sticky), `SiteHeader` (al hacer scroll, junto con sus dropdowns) y al contenedor `sidebar-inner` del `AppSidebar`.
+- [x] `.glass-overlay` aplicado a `Dialog` (cubre `Modal`), `Sheet`, `DetailSheet` y menú móvil del `SiteHeader`; `Popover` y `DropdownMenu` con `.glass`; `FloatingAlert` y `Tooltip` ya lo tenían.
+- [x] Superficies de contenido (DataTable, forms, paneles del inbox) permanecen sólidas — verificado en workspace/inbox con sesión real.
+- [x] **Bug crítico encontrado y corregido:** `SiteFooter` redefinía `.glass` globalmente vía `<style jsx global>` (gradiente radial de marca + `display:flex` + `!important`), secuestrando la clase del design system en toda la app → renombrada a `.footer-glass`. **Regla: jamás redefinir clases del design system desde styled-jsx global.**
+- [x] Fix adicional en `SiteHeader`: la variante `scrolled` de framer-motion no definía `y/opacity` — al scrollear antes de terminar la animación de entrada, el header quedaba congelado invisible. El backdrop/sombra inline se retiró (ahora lo aporta `.glass` por CSS).
+- [ ] Pendiente de observación: jank de scroll por `backdrop-filter` en listas largas del inbox (no observado en la verificación; re-evaluar con más datos).
 
 ## Fase 7 — Motion (D11)
 
