@@ -22,7 +22,7 @@
 | D4 | Hex hardcodeados en componentes | `SiteHero.tsx` (`#e60a64` — ni siquiera es el coral de marca), `3dglobe.tsx` (`#9b87f5`, `#0a0613`…), `particles.tsx`, `SiteFooter.tsx`, `sparkles.tsx` |
 | D5 | `core/styles/gradients.ts` usa 14 colores Tailwind aleatorios sin relación con la marca | `gradients.ts` |
 | D6 | Sin tokens de radio ni de sombra; primitivos con radios pequeños (6–8px) lejos del lenguaje iOS acordado | `button.tsx`, `input.tsx`, `dialog.tsx`… |
-| D7 | `--font-sans` = Poppins y headings fuerzan Nexa con `!important` global; Geist cargada pero sin uso; 4 familias cargadas a la vez | `globals.css`, `layout.tsx` |
+| D7 | Headings fuerzan Nexa con `!important` global; Geist Sans cargada sin uso (solo se usa Geist Mono). *(Poppins como cuerpo es decisión de marca confirmada — se queda.)* | `globals.css`, `layout.tsx` |
 | D8 | `.glass` rudimentario (sin borde, sin fallback `@supports`, sin variante overlay) y casi sin uso | `globals.css:97` |
 | D9 | Utilidades manuales duplicadas que Tailwind v4 ya genera (`.bg-background`, `.text-foreground`, `.border-border`) | `globals.css:85-91` |
 | D10 | Assets de marca mínimos: solo `isotype.png`; sin favicon de marca, sin logo SVG, sin og-image; SVG default de Next aún en `public/` | `public/` |
@@ -64,11 +64,10 @@
 
 ## Fase 4 — Tipografía (D7)
 
-**Objetivo:** Geist como sans de UI, Nexa solo display, Poppins retirada.
+**Objetivo:** sistematizar el stack confirmado — **Nexa (headings) + Poppins (cuerpo, se queda por decisión de marca) + Geist Mono** — y limpiar deuda menor.
 
-- [ ] `globals.css`: `--font-sans: var(--font-geist-sans)`; crear utilidad `.font-display` (Nexa) y eliminar el bloque `h1..h6 { font-family: nexa !important }`.
-- [ ] Aplicar `.font-display` explícitamente donde corresponde (hero landing, momentos de marca).
-- [ ] Retirar Poppins de `layout.tsx` (dejar de cargarla) una vez que ninguna vista dependa de ella; menos fuentes = mejor LCP.
+- [ ] `globals.css`: quitar el `!important` del bloque `h1..h6` (regla normal; los overrides puntuales vuelven a ser posibles).
+- [ ] `layout.tsx`: dejar de cargar **Geist Sans** (no se usa; Geist Mono se mantiene). Menos fuentes = mejor LCP.
 - [ ] Revisar títulos del panel privado con la escala DESIGN-SYSTEM §3.2 (H1 `text-3xl tracking-tight font-semibold`, etc.).
 - [ ] Añadir `tabular-nums` en celdas numéricas de `DataTable` y métricas.
 

@@ -113,10 +113,9 @@ Escala de grises cálido-neutra (base zinc), definida por tokens semánticos (ve
 
 | Familia | Rol | Pesos | Dónde |
 |---|---|---|---|
-| **Nexa** (local) | Display de marca | 200, 700 | Titulares hero de landing, splash de onboarding, momentos de marca. Solo tamaños grandes (≥ 30px) — sus pesos extremos no funcionan en UI densa |
-| **Geist Sans** (Google) | UI: headings y cuerpo | variable | Todo el panel privado y el cuerpo de la landing. Estética cercana a SF Pro (referente Apple) |
+| **Nexa** (local) | Display de marca y headings | 200, 700 | Titulares (h1–h6), hero de landing, momentos de marca |
+| **Poppins** (Google) | **Cuerpo / UI** | 300–700 | Todo el texto: panel privado, landing, formularios, tablas. **Es la voz tipográfica de la marca — no se reemplaza** |
 | **Geist Mono** | Monoespaciada | variable | Código, IDs, tokens, datos técnicos |
-| ~~Poppins~~ | *(en retirada)* | — | No usar en código nuevo; se migra a Geist |
 
 **Principios tipográficos:**
 

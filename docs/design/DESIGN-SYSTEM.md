@@ -89,17 +89,17 @@ Orden fijo para series de gráficos: `brand` → `violet` → `amber` → `info`
 
 | Variable CSS | Familia | Rol |
 |---|---|---|
-| `--font-display` | Nexa (local, 200/700) | Display de marca, solo ≥ 30px (landing hero, onboarding) |
-| `--font-sans` | Geist Sans | **Default de toda la UI**: headings y cuerpo del panel privado |
+| `--font-headings` | Nexa (local, 200/700) | Headings (h1–h6) y display de marca |
+| `--font-sans` / `--font-body` | **Poppins** | **Default de toda la UI y el cuerpo** — decisión de marca confirmada, no se reemplaza |
 | `--font-mono` | Geist Mono | Código, IDs, datos técnicos |
 
-*Estado actual: `--font-sans` apunta a Poppins y los headings fuerzan Nexa con `!important` global — ambas cosas son deuda (ver plan §fase 4). Objetivo: Geist como sans por defecto, Nexa opt-in vía `.font-display`, sin `!important`.*
+*Deuda menor pendiente (Fase 4): quitar el `!important` del selector global `h1..h6` en favor de una regla normal, y dejar de cargar Geist Sans (solo se usa la Mono).*
 
 ### 3.2 Escala tipográfica
 
 | Rol | Clase | Tamaño/line-height | Peso | Uso |
 |---|---|---|---|---|
-| Display | `text-5xl tracking-tight font-display` | 48/1.05 | Nexa 700 | Hero landing |
+| Display | `text-5xl tracking-tight font-heading` | 48/1.05 | Nexa 700 | Hero landing |
 | H1 | `text-3xl tracking-tight` | 30/1.2 | semibold | Título de página |
 | H2 | `text-xl tracking-tight` | 20/1.3 | semibold | Sección |
 | H3 | `text-base` | 16/1.4 | semibold | Sub-sección, título de card |
@@ -277,7 +277,7 @@ Reglas:
 - [ ] ¿Se ve correcto en light **y** dark?
 - [ ] ¿Radios según §4.1 (controles 12px, flotantes 16–20px, pills)?
 - [ ] ¿Glass solo si es superficie flotante (§5.2)?
-- [ ] ¿Tipografía de la escala §3.2, Geist en UI, Nexa solo display?
+- [ ] ¿Tipografía de la escala §3.2 — Poppins en cuerpo/UI, Nexa en headings?
 - [ ] ¿Estados cargando/vacío/error cubiertos?
 - [ ] ¿Focus visible, contraste AA, `aria-label` en icon-buttons?
 - [ ] ¿Animaciones con presets §6 y `prefers-reduced-motion`?

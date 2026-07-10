@@ -213,7 +213,24 @@ export const Particles: React.FC<ParticlesProps> = ({
     };
   };
 
-  const rgb = colorToRgb(color);
+  // El color se resuelve en un ref (no en render): cuando el tema cambia,
+  // next-themes aplica la clase `.dark` DESPUÉS del render, así que resolver
+  // el var() en render leería los valores del tema anterior (partículas
+  // invisibles). El MutationObserver re-resuelve al cambiar la clase de <html>.
+  const rgbRef = useRef<number[]>([128, 128, 128]);
+
+  useEffect(() => {
+    const updateColor = () => {
+      rgbRef.current = colorToRgb(color);
+    };
+    updateColor();
+    const observer = new MutationObserver(updateColor);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => observer.disconnect();
+  }, [color]);
 
   const drawCircle = (circle: Circle, update = false) => {
     if (context.current) {
@@ -221,7 +238,7 @@ export const Particles: React.FC<ParticlesProps> = ({
       context.current.translate(translateX, translateY);
       context.current.beginPath();
       context.current.arc(x, y, size, 0, 2 * Math.PI);
-      context.current.fillStyle = `rgba(${rgb.join(', ')}, ${alpha})`;
+      context.current.fillStyle = `rgba(${rgbRef.current.join(', ')}, ${alpha})`;
       context.current.fill();
       context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
 
