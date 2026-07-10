@@ -4,11 +4,9 @@ import { useEffect } from "react"
 import ChannelsList from "./ChannelList"
 import { useRouter } from "next/navigation"
 import { Button } from "@/shared/components/ui/button"
-import { Radio, CircleFadingPlus, RefreshCw} from "lucide-react"
-import { ChannelSectionProps } from "./types/channel-section.types"
-import { useWebSocket } from "@/modules/channels/infrastructure/store/websocket.context"
-import { useChannelStore } from "@/modules/channels/infrastructure/store/channels.store"
-import { getChannelQR } from "@/modules/channels/infrastructure/services/channels-service.adapter"
+import { Radio, CircleFadingPlus, RefreshCw } from "lucide-react"
+import type { ChannelDTO } from "@/modules/channels/domain/channel"
+import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
 import {
   SidebarGroup,
   SidebarMenu,
@@ -16,49 +14,22 @@ import {
   SidebarGroupContent,
 } from "@/shared/components/layout/sidebar/core"
 
-export default function ChannelSection({ onQrGenerated, onQrError }: ChannelSectionProps) {
+/**
+ * Sección de canales del sidebar del workspace. El estado de conexión llega
+ * en vivo por el namespace WS `/channels` (conectado en el layout); aquí solo
+ * se lista, se abre el detalle y se lanza el pairing.
+ */
+export default function ChannelSection() {
   const router = useRouter()
-  const { joinChannel, isConnected } = useWebSocket()
-  const { fetchChannels, channels, loading, setChannelState, error } = useChannelStore()
-
-  const handleFetchQrCode = async (channelId: string) => {
-    console.log("🔐 fetching qr code for channel:", channelId)
-
-    try {
-      setChannelState(channelId, { status: "connecting" })
-      const response = await getChannelQR(channelId)
-      if (response.successful && response.data) {
-        onQrGenerated?.(response.data)
-        console.log("✅ QR code fetched successfully")
-      } else {
-        const errorMessage = response.message || "Error al obtener el código QR"
-        onQrError?.(errorMessage)
-        console.error("❌ QR fetch failed:", errorMessage)
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error desconocido"
-      onQrError?.(errorMessage)
-      console.error("❌ QR fetch error:", errorMessage)
-    }
-  }
-
-  const handleNavigate = (path: string) => {
-    router.push(path)
-  }
+  const { fetchChannels, channels, loading } = useChannelStore()
 
   useEffect(() => {
-    console.log("🔐 WebSocket connected:", isConnected)
-    if (!isConnected) return
+    void fetchChannels()
+  }, [fetchChannels])
 
-    channels.forEach((channel) => {
-      if (!channel.state?.status) {
-        console.log("🔐 Joining channel:", channel.id)
-        joinChannel(channel.id)
-      }
-    })
-  }, [isConnected, channels, joinChannel])
-
-  useEffect(() => void fetchChannels() , [fetchChannels])
+  const openDetail = (channel: ChannelDTO) => {
+    window.dispatchEvent(new CustomEvent("channels:detail:open", { detail: { id: channel.id } }))
+  }
 
   return (
     <SidebarGroup className="gap-2">
@@ -71,16 +42,11 @@ export default function ChannelSection({ onQrGenerated, onQrError }: ChannelSect
               size="sm"
               variant="ghost"
               title="Agregar canal nuevo"
-              onClick={() => handleNavigate("/workspace/channels/create")}
+              onClick={() => router.push("/workspace/channels/create")}
             >
               <CircleFadingPlus />
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              title="Refrescar canales"
-              onClick={() => fetchChannels()}
-            >
+            <Button size="sm" variant="ghost" title="Refrescar canales" onClick={() => void fetchChannels()}>
               <RefreshCw />
             </Button>
           </div>
@@ -90,11 +56,10 @@ export default function ChannelSection({ onQrGenerated, onQrError }: ChannelSect
       <SidebarGroupContent>
         <SidebarMenu>
           <ChannelsList
-            error={error} 
             loading={loading}
             channels={channels}
-            onNavigate={handleNavigate}
-            onQrCodeClick={handleFetchQrCode}
+            onOpenDetail={openDetail}
+            onCreate={() => router.push("/workspace/channels/create")}
           />
         </SidebarMenu>
       </SidebarGroupContent>

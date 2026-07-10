@@ -1,15 +1,17 @@
-
+"use client"
 
 import { cn } from "@/core/lib/utils"
-import { PackageOpen, Plus } from "lucide-react"
+import { PackageOpen, Plus, QrCode, Loader } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
-import { IconChannel } from "./utils/channel-section.utils"
-import { type Channel } from "@/modules/channels/domain/channel"
-import { ChannelStatusIcon } from "./utils/channel-section.utils"
-import { channelStatusColor } from "./utils/channel-section.utils"
-import { ChannelWsStatus } from "@/modules/channels/domain/channel"
-import { ChannelItemProps, ChannelsListProps } from "./types/channel-section.types"
+import { FaWhatsapp, FaInstagram, FaFacebookMessenger } from "react-icons/fa"
+import { startWwebSession } from "@/modules/channels/infrastructure/services/channels-service.adapter"
+import {
+  CHANNEL_STATUS_LABELS,
+  type ChannelDTO,
+  type ChannelKind,
+  type ChannelStatus,
+} from "@/modules/channels/domain/channel"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
 import {
   SidebarMenuAction,
@@ -18,118 +20,109 @@ import {
   SidebarMenuSkeleton,
 } from "@/shared/components/layout/sidebar/core"
 
-// ==========================================
-// COMPONENTES AUXILIARES (SoD)
-// ==========================================
+const STATUS_COLORS: Record<ChannelStatus, string> = {
+  pending_setup: "bg-zinc-400",
+  connecting: "bg-amber-500 animate-pulse",
+  connected: "bg-green-500",
+  disconnected: "bg-zinc-400",
+  error: "bg-red-500",
+}
 
-/**
- * Componente para mostrar el estado de carga
-*/
+const KIND_ICONS: Record<ChannelKind, React.ComponentType<{ size?: number }>> = {
+  whatsapp_cloud: FaWhatsapp,
+  whatsapp_web: FaWhatsapp,
+  instagram_dm: FaInstagram,
+  facebook_messenger: FaFacebookMessenger,
+}
+
 const ChannelsLoadingState = () => (
   <div className="flex flex-col gap-2 w-full" role="status" aria-label="Cargando canales">
     {Array.from({ length: 3 }).map((_, index) => (
       <SidebarMenuSkeleton key={index} showIcon={true} />
     ))}
   </div>
-);
-  
-/**
- * Componente para mostrar estado vacío
-*/
-const ChannelsEmptyState = ({ onNavigate }: { onNavigate: (path: string) => void }) => (
+)
+
+const ChannelsEmptyState = ({ onCreate }: { onCreate: () => void }) => (
   <div>
     <div className="flex flex-col items-center justify-center gap-2">
       <PackageOpen className="size-7 text-brand-2 opacity-50" />
       <span className="text-muted-foreground">No hay canales disponibles</span>
     </div>
-    <Button 
-      size="sm"
-      variant="ghost" 
-      className="w-full mt-2 text-muted-foreground"
-      onClick={() => onNavigate("/workspace/channels/create")}
-    >
+    <Button size="sm" variant="ghost" className="w-full mt-2 text-muted-foreground" onClick={onCreate}>
       <Plus className="size-4" />
       <span>Crear canal</span>
     </Button>
   </div>
-);
+)
 
-/**
- * Badge con tooltip para el estado del canal
-*/
-const ChannelStatusBadge = ({ status }: { status: ChannelWsStatus }) => (
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <span 
-        className={cn(
-          channelStatusColor(status),
-          'size-2 rounded-full transition-colors',
-          'ring-2 ring-background'
-        )}
-        aria-hidden="true"
-      />
-    </TooltipTrigger>
-    <TooltipContent side="right">
-      <Badge variant="outline" className="text-xs capitalize">
-        {status}
-      </Badge>
-    </TooltipContent>
-  </Tooltip>
-);
-
-/**
- * Componente individual de canal
- * Responsabilidad única: renderizar un canal
-*/
-const ChannelItem = ({ channel, onQrCodeClick, onNavigate }: ChannelItemProps) => {
-  const status = channel.state?.status ?? 'disconnected';
+function ChannelItem({
+  channel,
+  onOpenDetail,
+}: {
+  channel: ChannelDTO
+  onOpenDetail: (channel: ChannelDTO) => void
+}) {
+  const Icon = KIND_ICONS[channel.kind]
+  const canPair =
+    channel.kind === "whatsapp_web" &&
+    (channel.status === "disconnected" || channel.status === "pending_setup" || channel.status === "error")
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton 
+      <SidebarMenuButton
         className="group"
-        onClick={() => onNavigate(`/workspace/channels/${channel.id}`)}
-        aria-label={`Abrir canal ${channel.name}, estado: ${status}`}
+        onClick={() => onOpenDetail(channel)}
+        aria-label={`Abrir canal ${channel.name}, estado: ${CHANNEL_STATUS_LABELS[channel.status]}`}
       >
-        <IconChannel channel={channel.type} />
+        <Icon size={20} />
         <span className="capitalize flex-1 line-clamp-1">{channel.name.toLowerCase()}</span>
-        
-        <ChannelStatusBadge status={status} />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={cn(STATUS_COLORS[channel.status], "size-2 rounded-full transition-colors ring-2 ring-background")}
+              aria-hidden="true"
+            />
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <Badge variant="outline" className="text-xs">{CHANNEL_STATUS_LABELS[channel.status]}</Badge>
+          </TooltipContent>
+        </Tooltip>
       </SidebarMenuButton>
 
-      <SidebarMenuAction>
-        <ChannelStatusIcon
-          status={status}
-          channelId={channel.id}
-          onQrCodeClick={onQrCodeClick}
-        />
-      </SidebarMenuAction>
+      {channel.kind === "whatsapp_web" && (
+        <SidebarMenuAction
+          aria-label={canPair ? "Vincular con código QR" : "Estado de conexión"}
+          onClick={(e) => {
+            e.stopPropagation()
+            if (canPair) {
+              // 202: el QR llega por WS channel.qr_code y lo pinta QRCodeSection.
+              void startWwebSession(channel.id)
+            }
+          }}
+        >
+          {channel.status === "connecting" ? <Loader className="animate-spin" /> : <QrCode className={cn(canPair && "cursor-pointer hover:text-brand")} />}
+        </SidebarMenuAction>
+      )}
     </SidebarMenuItem>
-  );
-};
+  )
+}
 
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
-/**
- * Lista de canales con manejo completo de estados
- * 
- * Estados manejados:
- * - loading: Muestra skeletons
- * - error: Muestra mensaje de error
- * - empty: Muestra estado vacío
- * - success: Renderiza la lista
-*/
-export default function ChannelsList({ channels, loading, error, onQrCodeClick, onNavigate }: ChannelsListProps) {
-  // Pattern: Early returns para manejo de estados
-  // Ventaja: Código más plano, fácil de seguir y mantener
-  
+export default function ChannelsList({
+  channels,
+  loading,
+  onCreate,
+  onOpenDetail,
+}: {
+  channels: ChannelDTO[]
+  loading: boolean
+  onCreate: () => void
+  onOpenDetail: (channel: ChannelDTO) => void
+}) {
   if (loading) return <ChannelsLoadingState />
-  // if (error) return <ChannelsErrorState error={error} />
-  if (channels.length === 0) return <ChannelsEmptyState onNavigate={onNavigate} />
+  if (channels.length === 0) return <ChannelsEmptyState onCreate={onCreate} />
 
-  // Estado exitoso: renderizar lista
-  return channels.map((channel: Channel) => (
-    <ChannelItem key={channel.id} channel={channel} onQrCodeClick={onQrCodeClick} onNavigate={onNavigate} />
+  return channels.map((channel) => (
+    <ChannelItem key={channel.id} channel={channel} onOpenDetail={onOpenDetail} />
   ))
-};
+}

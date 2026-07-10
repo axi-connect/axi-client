@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { SidebarTrigger } from "@/shared/components/layout/sidebar/core"
+import { ThemeToggle } from "@/shared/components/layout/theme-toggle"
 import { ChevronRight } from "lucide-react"
 
 const LABELS: Record<string, string> = {
@@ -40,6 +41,7 @@ export function PrivateHeader() {
 					))}
 				</ol>
 			</nav>
+			<ThemeToggle className="ml-auto" />
 		</div>
 	)
 }

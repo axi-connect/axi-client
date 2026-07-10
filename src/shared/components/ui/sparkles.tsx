@@ -101,7 +101,7 @@ export function SparklesCore({ id, background = 'transparent', particleDensity =
     let rafId = 0;
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-      for (let p of particles) {
+      for (const p of particles) {
         p.x += p.vx; p.y += p.vy; p.a += p.da;
         if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
         if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;

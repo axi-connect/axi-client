@@ -2,62 +2,119 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   CAPA 1 — PRIMITIVOS DE MARCA
+   Único lugar del proyecto donde existen valores hex. Re-branding = editar
+   SOLO esta capa. Ver docs/design/DESIGN-SYSTEM.md §1–2.
+   ============================================================================ */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --axi-brand: #E65759; /* brand primary */
-  --axi-muted: #f4f4f5; /* muted surface */ 
-  --axi-brand-2: #e02f2f; /* brand secondary */
-  /* Removed sidebar-specific tokens in favor of global tokens */
+
+  /* Paleta madre (isotipo tricolor) */
+  --axi-brand: #e65759;   /* coral — color de acción */
+  --axi-brand-2: #e02f2f; /* coral profundo — extremo del gradiente */
+  --axi-violet: #7c3aed;  /* acento IA / dataviz */
+  --axi-amber: #f0a431;   /* acento energía / dataviz */
+  --axi-muted: #f4f4f5;   /* superficie atenuada */
+
+  /* Funcionales */
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626; /* peligro — nunca el coral de marca */
+  --axi-info: #2563eb;
+
+  /* Texto sobre superficies de color (primario y estados) */
+  --axi-on-color: #ffffff;
 }
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  --axi-brand: #fb7185;
+  --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa;
+  --axi-amber: #fbbf24;
+  --axi-muted: #18181b;
+
+  --axi-success: #4ade80;
+  --axi-warning: #fbbf24;
+  --axi-destructive: #f87171;
+  --axi-info: #60a5fa;
+
+  /* En dark los colores de estado son claros: el texto encima va oscuro */
+  --axi-on-color: #0a0a0a;
+
+  /* Acento con más presencia para contraste en dark */
+  --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --color-accent-foreground: var(--foreground);
+}
+
+/* ============================================================================
+   CAPA 2 — TOKENS SEMÁNTICOS (derivan de la capa 1; sin hex nuevos)
+   Tailwind v4 genera las utilidades (bg-primary, text-brand, rounded-lg,
+   shadow-float…) a partir de estos tokens.
+   ============================================================================ */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Core semantic tokens used by UI components */
+
   --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-border-soft: color-mix(in srgb, var(--color-border) 50%, transparent);
   --color-ring: var(--axi-brand);
 
   --color-primary: var(--axi-brand);
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground: var(--axi-on-color);
 
   --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
   --color-secondary-foreground: var(--foreground);
 
   --color-brand: var(--axi-brand);
   --color-brand-2: var(--axi-brand-2);
+  --color-accent-violet: var(--axi-violet);
+  --color-accent-amber: var(--axi-amber);
+
   --color-muted: var(--axi-muted);
   --color-muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
 
-  /* Accent tuned for better contrast in light theme */
   --color-accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
-  /* Example alternative: */
-  /* --color-accent: color-mix(in srgb, #4D03B0 14%, var(--background)); */
   --color-accent-foreground: var(--foreground);
 
   --color-input: color-mix(in srgb, var(--foreground) 14%, var(--background));
 
-  --color-destructive: var(--axi-brand-2);
-  --color-destructive-foreground: #ffffff;
+  --color-destructive: var(--axi-destructive);
+  --color-destructive-foreground: var(--axi-on-color);
+
+  --color-success: var(--axi-success);
+  --color-success-foreground: var(--axi-on-color);
+  --color-warning: var(--axi-warning);
+  --color-warning-foreground: var(--axi-on-color);
+  --color-info: var(--axi-info);
+  --color-info-foreground: var(--axi-on-color);
+
+  /* Radios — lenguaje iOS (DESIGN-SYSTEM §4.1) */
+  --radius-sm: 8px;   /* elementos pequeños internos */
+  --radius-md: 12px;  /* controles: botones, inputs, selects */
+  --radius-lg: 16px;  /* cards, popovers, dropdowns */
+  --radius-xl: 20px;  /* modales, sheets, flotantes grandes */
+
+  /* Elevación (DESIGN-SYSTEM §4.3) */
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+
+  /* Tipografía (migración a Geist en Fase 4 del plan) */
   --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
   --font-headings: var(--font-nexa);
   --font-body: var(--font-poppins);
-  /* Removed color-sidebar* mappings */
 }
 
-/* Dark theme via next-themes (class strategy) */
-.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --axi-brand: #fb7185;
-  --axi-brand-2: #df4f4f;
-  --axi-muted: #18181b;
-  /* Removed dark sidebar-specific tokens */
-  /* Accent tuned for better contrast in dark theme */
-  --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
-  --color-accent-foreground: #0a0a0a;
-}
+/* ============================================================================
+   CAPA 3 — BASE Y UTILIDADES DE MARCA
+   ============================================================================ */
 
 html, body { overflow: hidden; scroll-behavior: smooth; }
 
@@ -72,37 +129,85 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-nexa), var(--font-poppins), sans-serif !important;
 }
 
-/* Axi Connect theme utilities */
+/* -------- Utilidades de marca -------- */
+
 .text-brand { color: var(--axi-brand); }
 .text-brand-2 { color: var(--axi-brand-2); }
 .bg-brand { background-color: var(--axi-brand); }
 .bg-brand-2 { background-color: var(--axi-brand-2); }
-.bg-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); }
-.text-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hover\:text-brand:hover { color: var(--axi-brand); }
 .hover\:bg-brand:hover { background-color: var(--axi-brand); }
 
-/* Map utility-like classes to our semantic tokens (plain CSS classes) */
-.border-border { border-color: var(--color-border); }
-.border-border-soft { border-color: color-mix(in srgb, var(--color-border) 50%, transparent); }
-.outline-ring\/50 { outline-color: color-mix(in srgb, var(--color-ring) 50%, transparent); }
-.bg-background { background-color: var(--color-background); }
-.text-foreground { color: var(--color-foreground); }
+/* Gradiente corto (CTAs) */
+.bg-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); }
+/* Gradiente tricolor del isotipo (momentos hero de marca) */
+.bg-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); }
+.text-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.text-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-/* Softer borders for table components */
+/* -------- Glass: material de superficies flotantes (DESIGN-SYSTEM §5) -------- */
+
+/* Flotantes ligeros: header, sidebar, popovers, dropdowns, tooltips, alerts */
+.glass {
+  background-color: color-mix(in srgb, var(--color-background) 65%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  box-shadow: var(--shadow-float);
+}
+
+/* Overlays: modales y sheets — más opaco para legibilidad */
+.glass-overlay {
+  background-color: color-mix(in srgb, var(--color-background) 80%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(20px);
+  backdrop-filter: saturate(160%) blur(20px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  box-shadow: var(--shadow-overlay);
+}
+
+/* Fallback: sin backdrop-filter el fondo translúcido no es legible */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-overlay { background-color: var(--color-background); }
+}
+
+/* -------- Ajustes de componentes -------- */
+
+/* Bordes suaves para tablas */
 [data-slot="table-header"] tr { border-color: color-mix(in srgb, var(--color-border) 50%, transparent); }
 [data-slot="table-row"] { border-color: color-mix(in srgb, var(--color-border) 50%, transparent); }
 
-/* Glass effect card */
-.glass {
-  background-color: color-mix(in srgb, var(--color-background) 60%, transparent);
-  -webkit-backdrop-filter: saturate(160%) blur(14px);
-  backdrop-filter: saturate(160%) blur(14px);
-  /* subtle inner/outer borders for better legibility */
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
+/* -------- Animaciones de marca (BrandLoader / splash) -------- */
+
+/* Pulso sutil del isotipo: solo transform + opacity (compositor). */
+@keyframes brand-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.94); opacity: 0.82; }
 }
 
-/* -------- SIDEBAR SCROLLBAR -------- */
+.animate-brand-pulse {
+  animation: brand-pulse 1.6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Aparición diferida: evita el flicker de indicadores en cargas instantáneas
+   (p.ej. spinner de navegación del sidebar). Invisible los primeros 150ms. */
+@keyframes delayed-fade-in {
+  to { opacity: 1; }
+}
+
+.animate-delayed-fade-in {
+  opacity: 0;
+  animation: delayed-fade-in 0.2s ease-out 0.15s forwards;
+}
+
+/* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
+   `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja intensidad. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-brand-pulse { animation: none; }
+  html, body { scroll-behavior: auto; }
+}
+
+/* -------- Scrollbar de marca (sidebar) -------- */
 
 /* WebKit (Chrome, Edge, Safari) */
 .sidebar-scroll::-webkit-scrollbar {
@@ -115,9 +220,3 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   border-radius: 9999px;
   background-clip: content-box;
 }
-
-/* Firefox */
-/* .sidebar-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.24) transparent;
-} */

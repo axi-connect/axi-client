@@ -1,9 +1,6 @@
-export type MessageDirection = "incoming" | "outgoing"
-
-export type ChannelProvider = "META" | "TWILIO" | "CUSTOM" | "DEFAULT"
-
-export type MessageStatus = "PENDING" | "SENT" | "DELIVERED" | "READ" | "FAILED" | "RECEIVED"
-
-export type ContactType = "agent" | "lead" | "client" | "prospect" | "customer" | "system"
-
-export type ChannelType = "CALL" | "EMAIL" | "WHATSAPP" | "TELEGRAM" | "INSTAGRAM" | "MESSENGER"
+/**
+ * Re-export de enums del canal para consumidores que solo necesitan los
+ * literales (evita importar todo el domain).
+ */
+export type { ChannelKind, ChannelStatus } from "./channel";
+export { CHANNEL_KIND_LABELS, CHANNEL_STATUS_LABELS } from "./channel";

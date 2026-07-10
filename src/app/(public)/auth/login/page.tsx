@@ -18,10 +18,6 @@ export default function LoginPage() {
       <Suspense fallback={null}>
         <LoginForm />
       </Suspense>
-
-      <div className="text-center">
-        <a href="/auth/forgot-password" className="hover:text-rose-600">¿Olvidaste tu contraseña?</a>
-      </div>
     </div>
   )
 }

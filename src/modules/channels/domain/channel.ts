@@ -1,47 +1,40 @@
-import type { ChannelProvider, ChannelType } from "./enums"
+import type { Schemas } from "@/core/api/types";
 
-export type ChannelWsStatus = 
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "authenticated"
-  | "ready"
-export interface ChannelWsState {
-  hasJoined: boolean
-  status: ChannelWsStatus
-  metadata?: Record<string, unknown>
-}
+/**
+ * Contratos del slice channels — canales de mensajería del tenant
+ * (`/channels` + subrecurso `/channels/:id/whatsapp-web/*`).
+ * Las credenciales jamás salen por API: solo `credentials_configured`
+ * y `token_last4`.
+ */
+export type ChannelDTO = Schemas["ChannelDto"];
+export type CreateChannelDTO = Schemas["CreateChannelDto"];
+export type UpdateChannelDTO = Schemas["UpdateChannelDto"];
+export type UpdateChannelCredentialsDTO = Schemas["UpdateChannelCredentialsDto"];
+export type WwebPairingStateDTO = Schemas["WwebPairingStateDto"];
 
-export type Channel = {
-  id: string
-  name: string
-  type: ChannelType
-  state?: ChannelWsState
-  provider: ChannelProvider
-  is_active: boolean
-  provider_account: string
-  default_agent_id: number | null
-  company_id: number
-  config?: Record<string, unknown> | null
-  created_at: string
-  updated_at: string
-  deleted_at?: string | null
-}
+export type ChannelKind = ChannelDTO["kind"];
+export type ChannelStatus = ChannelDTO["status"];
 
-export type ListChannelsParams = {
-  name?: string
-  type?: ChannelType
-  provider?: ChannelProvider
-  is_active?: boolean
-  limit?: number
-  offset?: number
-  sortBy?: "created_at" | "updated_at" | "name"
-  sortDir?: "asc" | "desc"
-}
+export const CHANNEL_KIND_LABELS: Record<ChannelKind, string> = {
+  whatsapp_cloud: "WhatsApp Cloud API",
+  whatsapp_web: "WhatsApp Web (QR)",
+  instagram_dm: "Instagram DM",
+  facebook_messenger: "Facebook Messenger",
+};
 
-export type ChannelsListResponse = {
-  channels: Channel[]
-  total: number
-  limit: number
-  offset: number
-}
+export const CHANNEL_STATUS_LABELS: Record<ChannelStatus, string> = {
+  pending_setup: "Pendiente de configurar",
+  connecting: "Conectando…",
+  connected: "Conectado",
+  disconnected: "Desconectado",
+  error: "Error",
+};
+
+/** Estado efímero de pairing de WhatsApp Web (por WS o polling del snapshot). */
+export type WwebPairingState = {
+  status: ChannelStatus;
+  qr: string | null;
+  qr_image: string | null;
+  pairing_code: string | null;
+  phone_number: string | null;
+};

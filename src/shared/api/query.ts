@@ -1,47 +1,39 @@
 /**
- * Utilities to build standardized list/query params for server requests.
-*/
-export type SelectOption = { id: number; label: string };
+ * Utilidades para construir query params de listados contra el backend.
+ *
+ * El backend pagina por offset con `page` / `page_size` (default 25, máx 100)
+ * y no soporta ordenamiento server-side; el orden es responsabilidad de la UI.
+ * La búsqueda es por parámetro específico del recurso (p.ej. `q` en contacts).
+ */
+export type SelectOption = { id: string | number; label: string };
 
-export type SortDirection = "asc" | "desc";
-
-export type ListQueryBase<TSearchField extends string = string> = (
-  Record<string, string | number | boolean | undefined>
-) & {
-  limit?: number
-  offset?: number
-  sortBy?: string
-  sortDir?: SortDirection
-} & Partial<Record<TSearchField, string>>
+export type ListQuery = Record<string, string | number | boolean | undefined> & {
+  page?: number;
+  page_size?: number;
+};
 
 export type BuildListParamsOptions<TSearchField extends string> = {
-  page: number
-  pageSize: number
-  sortBy?: string
-  sortDir?: SortDirection
-  searchField?: TSearchField
-  searchValue?: string
-  extra?: Record<string, unknown>
-}
+  page: number;
+  pageSize: number;
+  searchField?: TSearchField;
+  searchValue?: string;
+  /** Filtros específicos del recurso (`status`, `mode`, `channel_id`, …). */
+  extra?: Record<string, unknown>;
+};
 
-/**
- * Builds list params with pagination, sorting and optional search.
- * Keeps unknown extras to allow module-specific params like `view`.
-*/
-export function buildListParams<TSearchField extends string = string>(opts: BuildListParamsOptions<TSearchField>): ListQueryBase<TSearchField> {
-  const { page, pageSize, sortBy, sortDir, searchField, searchValue, extra } = opts
-  const params: Record<string, string | number | boolean | undefined> = {
-    limit: pageSize,
-    offset: Math.max(0, (page - 1) * pageSize),
-    sortBy,
-    sortDir,
-    ...(extra || {}),
-  }
+export function buildListParams<TSearchField extends string = string>(
+  opts: BuildListParamsOptions<TSearchField>,
+): ListQuery {
+  const { page, pageSize, searchField, searchValue, extra } = opts;
+  const params: ListQuery = {
+    page: Math.max(1, page),
+    page_size: pageSize,
+    ...(extra as ListQuery | undefined),
+  };
 
   if (searchValue && searchField) {
-    (params as Record<string, string | number | boolean | undefined>)[searchField] = searchValue
+    params[searchField] = searchValue;
   }
 
-  return params as ListQueryBase<TSearchField>
+  return params;
 }
-

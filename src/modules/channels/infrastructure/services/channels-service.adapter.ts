@@ -1,50 +1,65 @@
-import { http, type Params } from "@/core/services/http"
-import type { ApiResponse } from "@/core/services/api"
-import type { Channel, ChannelsListResponse, ListChannelsParams } from "@/modules/channels/domain/channel"
+import { http } from "@/core/services/http";
+import type { Schemas } from "@/core/api/types";
+import type {
+  ChannelDTO,
+  CreateChannelDTO,
+  UpdateChannelDTO,
+  WwebPairingStateDTO,
+} from "@/modules/channels/domain/channel";
 
-export async function listChannels(params: ListChannelsParams = {}): Promise<ApiResponse<ChannelsListResponse>> {
-  return http.get<ApiResponse<ChannelsListResponse>>("/channels", params as Params, {authenticate: true})
+/** Adapter HTTP del slice channels → `/channels`. */
+export function listChannels(): Promise<Schemas["ChannelListDto"]> {
+  return http.get<Schemas["ChannelListDto"]>("/channels");
 }
 
-export async function getChannel(id: string): Promise<ApiResponse<Channel>> {
-  return http.get<ApiResponse<Channel>>(`/channels/${id}`)
+export function getChannelById(id: string): Promise<ChannelDTO> {
+  return http.get<ChannelDTO>(`/channels/${id}`);
 }
 
-export type CreateChannelDTO = {
-  company_id: number
-  provider: import("@/modules/channels/domain/enums").ChannelProvider
-  type: import("@/modules/channels/domain/enums").ChannelType
-  name: string
-  provider_account: string
-  credentials?: Record<string, unknown>
-  config?: Record<string, unknown>
-  default_agent_id?: number
-  expires_at?: Date
+export function createChannel(dto: CreateChannelDTO): Promise<ChannelDTO> {
+  return http.post<ChannelDTO>("/channels", dto);
 }
 
-export async function createChannel(payload: CreateChannelDTO): Promise<ApiResponse<Channel>> {
-  return http.post<ApiResponse<Channel>>("/channels", payload, { authenticate: true })
+/** PATCH de `name` y/o `default_ai_agent_id` (vincula el agente IA al canal). */
+export function updateChannel(id: string, dto: UpdateChannelDTO): Promise<ChannelDTO> {
+  return http.patch<ChannelDTO>(`/channels/${id}`, dto);
 }
 
-export type UpdateChannelDTO = Partial<Omit<CreateChannelDTO, "company_id">> & {
-  is_active?: boolean
+/** Rota el access token de un canal whatsapp_cloud. */
+export function updateChannelCredentials(id: string, accessToken: string): Promise<ChannelDTO> {
+  return http.put<ChannelDTO>(`/channels/${id}/credentials`, { access_token: accessToken });
 }
 
-export async function updateChannel(id: string, payload: UpdateChannelDTO): Promise<ApiResponse<Channel>> {
-  return http.put<ApiResponse<Channel>>(`/channels/${id}`, payload)
+export function deleteChannel(id: string): Promise<void> {
+  return http.delete(`/channels/${id}`);
 }
 
-export type QRCodeResponse = {
-  qrCode: string
-  qrCodeUrl: string
-  sessionId: string
-  expiresAt: string
+// ---------------------------------------------------------------------------
+// Subrecurso WhatsApp Web — TODO asíncrono (202): el estado final llega por
+// WS `/channels` (channel.qr_code / channel.status_changed / session_failed).
+// ---------------------------------------------------------------------------
+
+/** Inicia (o retoma) la sesión del worker → 202 { status: "connecting" }. */
+export function startWwebSession(id: string): Promise<{ status: string }> {
+  return http.post<{ status: string }>(`/channels/${id}/whatsapp-web/session`);
 }
 
-export async function getChannelQR(id: string): Promise<ApiResponse<QRCodeResponse>> {
-  return http.get<ApiResponse<QRCodeResponse>>(`/channels/${id}/qr`, undefined, { authenticate: true })
+/** Detiene el socket conservando la sesión (202). */
+export function stopWwebSession(id: string): Promise<void> {
+  return http.delete(`/channels/${id}/whatsapp-web/session`);
 }
 
-export async function deleteChannel(id: string): Promise<ApiResponse<void>> {
-  return http.delete<ApiResponse<void>>(`/channels/${id}`, { authenticate: true })
+/** Snapshot del pairing para polling (~2 s) como fallback del WS. */
+export function getWwebPairingState(id: string): Promise<WwebPairingStateDTO> {
+  return http.get<WwebPairingStateDTO>(`/channels/${id}/whatsapp-web/qr`);
+}
+
+/** Pide código de 8 dígitos (phone E.164 sin `+`) → 202. */
+export function requestWwebPairingCode(id: string, phoneNumber: string): Promise<void> {
+  return http.post<void>(`/channels/${id}/whatsapp-web/pairing-code`, { phone_number: phoneNumber });
+}
+
+/** Desvincula el dispositivo y borra la sesión (202). */
+export function logoutWweb(id: string): Promise<void> {
+  return http.post<void>(`/channels/${id}/whatsapp-web/logout`);
 }

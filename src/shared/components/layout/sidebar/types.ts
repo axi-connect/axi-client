@@ -1,26 +1,18 @@
 import type { LucideIcon } from "lucide-react";
+import type { Schemas } from "@/core/api/types";
 
+/**
+ * Ítem del árbol de navegación que emite `GET /me/navigation` (vía
+ * `/api/auth/sidebar`), ya filtrado por permisos en el backend.
+ */
+export type NavigationItemDTO = Schemas["NavigationDto"]["data"][number];
+export type NavigationChildDTO = NavigationItemDTO["children"][number];
+
+/** Forma que consume la UI del sidebar (icono resuelto, path de frontend). */
 export type SidebarNavItem = {
-    title: string
-    url?: string
-    icon?: LucideIcon
-    children?: SidebarNavItem[]
-}
-  
-export type SidebarSection = {
-label: string
-items: SidebarNavItem[]
-}
-
-// DTOs desde backend (icon como string)
-export type SidebarItemDTO = {
-  title: string
-  url?: string
-  icon?: string
-  children?: SidebarItemDTO[]
-}
-
-export type SidebarSectionDTO = {
-  label: string
-  items: SidebarItemDTO[]
-}
+  id: string;
+  title: string;
+  url?: string;
+  icon?: LucideIcon;
+  children?: SidebarNavItem[];
+};

@@ -48,9 +48,9 @@ export function columnsToClasses(columns?:
     ["md", "md:"],
     ["lg", "lg:"],
     ["xl", "xl:"],
-  ] as any
+  ] as const
   for (const [size, prefix] of sizes) {
-    const value = (columns as any)[size]
+    const value = (columns as Record<string, number | undefined>)[size]
     if (typeof value === "number") {
       const c = clampInt(value, 1, 12)
       const base = GRID_COLS_CLASS_BY_COUNT[c]
@@ -91,9 +91,9 @@ export function colSpanToClasses(colSpan?:
     ["md", "md:"],
     ["lg", "lg:"],
     ["xl", "xl:"],
-  ] as any
+  ] as const
   for (const [size, prefix] of sizes) {
-    const value = (colSpan as any)[size]
+    const value = (colSpan as Record<string, number | undefined>)[size]
     if (typeof value === "number") {
       const c = clampInt(value, 1, 12)
       const base = COL_SPAN_CLASS_BY_COUNT[c]

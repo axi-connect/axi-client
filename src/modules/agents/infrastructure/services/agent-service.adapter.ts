@@ -1,23 +1,34 @@
-import { http, Params } from "@/core/services/http";
-import type { ApiResponse } from "@/core/services/api";
-import type { AgentDetailDTO, ApiAgentSummaryPayload, CreateAgentDTO, ListAgentsParams } from "@/modules/agents/domain/agent";
+import { http } from "@/core/services/http";
+import type { Schemas } from "@/core/api/types";
+import type {
+  AiAgentDTO,
+  CreateAiAgentDTO,
+  SetAgentIntentionsDTO,
+  UpdateAiAgentDTO,
+} from "@/modules/agents/domain/agent";
 
-export async function listAgentSummary(params?: ListAgentsParams): Promise<ApiResponse<ApiAgentSummaryPayload>> {
-  return http.get<ApiResponse<ApiAgentSummaryPayload>>("/identities/agents", {...params as Params, view: "summary"}, { authenticate: true });
+/** Adapter HTTP del slice agents → `/ai-agents`. */
+export function listAgents(): Promise<Schemas["AiAgentListDto"]> {
+  return http.get<Schemas["AiAgentListDto"]>("/ai-agents");
 }
 
-export async function createAgent(payload: CreateAgentDTO): Promise<ApiResponse<AgentDetailDTO>> {
-  return http.post<ApiResponse<AgentDetailDTO>>("/identities/agents", payload, { authenticate: true });
+export function getAgentById(id: string): Promise<AiAgentDTO> {
+  return http.get<AiAgentDTO>(`/ai-agents/${id}`);
 }
 
-export async function getAgentById(id: number | string): Promise<ApiResponse<AgentDetailDTO>> {
-  return http.get<ApiResponse<AgentDetailDTO>>(`/identities/agents/${id}`, {}, { authenticate: true });
+export function createAgent(dto: CreateAiAgentDTO): Promise<AiAgentDTO> {
+  return http.post<AiAgentDTO>("/ai-agents", dto);
 }
 
-export async function updateAgent(id: number | string, payload: Partial<CreateAgentDTO>): Promise<ApiResponse<AgentDetailDTO>> {
-  return http.put<ApiResponse<AgentDetailDTO>>(`/identities/agents/${id}`, payload, { authenticate: true });
+export function updateAgent(id: string, dto: UpdateAiAgentDTO): Promise<AiAgentDTO> {
+  return http.patch<AiAgentDTO>(`/ai-agents/${id}`, dto);
 }
 
-export async function deleteAgent(id: number | string): Promise<ApiResponse<AgentDetailDTO>> {
-  return http.delete<ApiResponse<AgentDetailDTO>>(`/identities/agents/${id}`, { authenticate: true });
+export function deleteAgent(id: string): Promise<void> {
+  return http.delete(`/ai-agents/${id}`);
+}
+
+/** Reemplaza el set completo de intenciones asignadas (con requirements). */
+export function setAgentIntentions(id: string, dto: SetAgentIntentionsDTO): Promise<AiAgentDTO> {
+  return http.put<AiAgentDTO>(`/ai-agents/${id}/intentions`, dto);
 }

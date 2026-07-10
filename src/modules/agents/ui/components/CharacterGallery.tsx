@@ -1,149 +1,176 @@
 "use client";
 
 import Image from "next/image";
-import { cn } from "@/core/lib/utils";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Modal from "@/shared/components/ui/modal";
-import { CharacterDTO, CharacterGalleryProps } from "@/modules/agents/domain/character";
+import { cn } from "@/core/lib/utils";
+import { Modal } from "@/shared/components/ui/modal";
+import { Badge } from "@/shared/components/ui/badge";
+import { errorMessage } from "@/core/lib/error-messages";
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { characterStyle, type CharacterDTO } from "@/modules/agents/domain/character";
 import { deleteCharacter } from "@/modules/agents/infrastructure/services/character-service.adapter";
-import { AudioLines, ChevronLeft, ChevronRight, Pencil, Play, Trash2 } from "lucide-react";
 
-export default function CharacterGallery( { characters, onDetail, onEdit, onDelete, onPrevPage, onNextPage, hasPrev = false, hasNext = false }: CharacterGalleryProps ) {
-    const [submitting, setSubmitting] = useState(false);
-    const [modalConfirmOpen, setModalConfirmOpen] = useState(false);
-    const [character, setCharacter] = useState<CharacterDTO | null>(null);
+/**
+ * Galería de characters con tarjetas flip. Los characters `is_system` son
+ * plantillas de la plataforma: sin editar/eliminar. Paginación en cliente.
+ */
+export default function CharacterGallery({
+  characters,
+  onEdit,
+  onDeleted,
+  onError,
+  pageSize = 6,
+}: {
+  characters: CharacterDTO[]
+  onEdit?: (character: CharacterDTO) => void
+  onDeleted?: () => void
+  onError?: (message: string) => void
+  pageSize?: number
+}) {
+  const [page, setPage] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirming, setConfirming] = useState<CharacterDTO | null>(null);
 
-    const handlePlay = (id: string) => {
-        const audio = document.getElementById(id) as HTMLAudioElement;
-        audio.play();
+  const totalPages = Math.max(1, Math.ceil(characters.length / pageSize));
+  const visible = characters.slice(page * pageSize, (page + 1) * pageSize);
+  const hasPrev = page > 0;
+  const hasNext = page < totalPages - 1;
+
+  const handleConfirmDelete = async () => {
+    if (!confirming || submitting) return;
+    setSubmitting(true);
+    try {
+      await deleteCharacter(confirming.id);
+      setConfirming(null);
+      onDeleted?.();
+    } catch (err) {
+      // `ai/character_in_use` y `ai/template_immutable` llegan tipados.
+      onError?.(errorMessage(err, "No se pudo eliminar el character"));
+    } finally {
+      setSubmitting(false);
     }
+  };
 
-    const handleDelete = (character: CharacterDTO) => {
-        setCharacter(character);
-        setModalConfirmOpen(true);
-    }
+  return (
+    <div className="flex items-center justify-center mt-4">
+      <button
+        className="cursor-pointer p-2 rounded-full bg-background border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
+        onClick={() => setPage((p) => Math.max(0, p - 1))}
+        disabled={!hasPrev}
+        aria-label="Personajes anteriores"
+      >
+        <ChevronLeft className="size-6" />
+      </button>
 
-    const handleConfirmDelete = async () => {
-        setSubmitting(true);
-        if(!character?.id) return;
-        const res = await deleteCharacter(character?.id);
-        if (res.successful) {
-            setModalConfirmOpen(false);
-            onDelete?.(character);
-        }
-        setSubmitting(false);
-    }
-
-    return (
-        <div className="flex items-center justify-center mt-4">
-            <button
-                className={cn("cursor-pointer p-2 rounded-full bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md")}
-                onClick={onPrevPage}
-                disabled={!hasPrev}
-                aria-disabled={!hasPrev}
+      <div className="flex gap-4 justify-center items-end w-full flex-wrap">
+        {visible.map((character, index) => {
+          const style = characterStyle(character);
+          return (
+            <motion.div
+              initial={{ opacity: 0, x: 120 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "backInOut", delay: index * 0.08 }}
+              key={character.id}
+              className="group relative h-[120px] w-[120px] [perspective:1200px]"
             >
-                <ChevronLeft className="size-8" />
-            </button>
-            <div className="flex gap-4 justify-center items-end w-full">
-                {
-                    characters.map((character, index) => (
-                        <motion.div
-                            initial={{ opacity: 0, x: 200 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 1, ease: "backInOut", delay: index * 0.1 }}
-                            key={character.id}
-                            className="group relative h-[120px] w-[120px] [perspective:1200px]"
-                        >
-                            <div className={cn(
-                                "relative h-full w-full",
-                                "[transform-style:preserve-3d]",
-                                "transition-transform duration-500",
-                                "group-hover:[transform:rotateY(180deg)]"
-                            )}>
-                                {/* Front */}
-                                <div
-                                    className={cn(
-                                        "absolute inset-0 h-full w-full",
-                                        "[backface-visibility:hidden]",
-                                        "rounded-lg",
-                                        "group-hover:pointer-events-none",
-                                    )}
-                                    // onClick={() => (onDetail)(character)}
-                                >
-                                    <Image
-                                        loading="lazy"
-                                        width={1080} height={1080}
-                                        src={character.avatar_url}
-                                        alt={character.id.toString()}
-                                        className="absolute rounded-lg bottom-0 z-10"
-                                    />
-                                    <div className={cn("absolute border-4 border-white rounded-lg h-[100px] w-full bottom-0 z-0", character.style?.background)} />
-                                </div>
-
-                                {/* Back */}
-                                <div
-                                    className={cn(
-                                        "absolute inset-0 h-full w-full",
-                                        "[transform:rotateY(180deg)] [backface-visibility:hidden]",
-                                        "rounded-lg",
-                                        "border-4 border-white",
-                                        "pointer-events-none group-hover:pointer-events-auto",
-                                        character.style?.background
-                                    )}
-                                >
-                                    <div className="absolute inset-0 bg-white/85 backdrop-blur-sm dark:bg-zinc-900/80 pointer-events-none" />
-
-                                    <div className="relative z-10 flex flex-col h-full w-full items-center justify-center gap-2 px-2">
-                                        <AudioLines className="size-6" />
-                                        <span className="text-sm font-medium">{character.voice?.gender === "female" ? "Femenino" : "Masculino"}</span>
-                                        <div className="flex items-center">
-                                            {/* Play example audio character */}
-                                            <button onClick={() => handlePlay(`audio-${character.id}`)} className="p-2 rounded-full cursor-pointer hover:scale-105 hover:z-10 -mr-1 bg-white border">
-                                                <audio id={`audio-${character.id}`} key={character.id} src={character.voice?.url} />
-                                                <Play className="size-4" />
-                                            </button>
-                                            {/* Edit properties character */}
-                                            <button onClick={() => onEdit?.(character)} className="p-2 rounded-full cursor-pointer hover:scale-105 hover:z-10 -mr-1 bg-white border">
-                                                <Pencil className="size-4" />
-                                            </button>
-                                            {/* Delete character */}
-                                            <button onClick={() => handleDelete(character)} className="p-2 rounded-full cursor-pointer hover:scale-105 hover:z-10 -mr-1 bg-brand-gradient border">
-                                                <Trash2 className="size-4 text-white" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))
-                }
-            </div>
-            <button
-                className={cn("cursor-pointer p-2 rounded-full bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md")}
-                onClick={onNextPage}
-                disabled={!hasNext}
-                aria-disabled={!hasNext}
-            >
-                <ChevronRight className="size-8" />
-            </button>
-
-            <Modal
-                open={modalConfirmOpen}
-                onOpenChange={setModalConfirmOpen}
-                config={{
-                    title: "Eliminar personaje",
-                    description: `¿Seguro que deseas eliminar a este personaje? Esta acción es permanente.`,
-                    actions: [
-                        { label: "Cancelar", variant: "outline", asClose: true, id: "character-delete-cancel" },
-                        { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "character-delete-confirm" },
-                    ],
-                }}
-            >
-                <div className="text-sm text-muted-foreground">
-                    Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados a este personaje.
+              <div
+                className={cn(
+                  "relative h-full w-full",
+                  "[transform-style:preserve-3d] transition-transform duration-500",
+                  "group-hover:[transform:rotateY(180deg)]",
+                )}
+              >
+                {/* Frente */}
+                <div className="absolute inset-0 h-full w-full [backface-visibility:hidden] rounded-lg group-hover:pointer-events-none">
+                  {character.avatar_url ? (
+                    <Image
+                      loading="lazy"
+                      width={1080}
+                      height={1080}
+                      src={character.avatar_url}
+                      alt={character.name}
+                      className="absolute rounded-lg bottom-0 z-10"
+                    />
+                  ) : (
+                    <div className="absolute inset-x-0 bottom-0 z-10 flex h-[100px] items-center justify-center text-3xl font-bold text-foreground/60">
+                      {character.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className={cn("absolute border-4 border-background rounded-lg h-[100px] w-full bottom-0 z-0 bg-muted", style.background)} />
                 </div>
-            </Modal>
+
+                {/* Reverso */}
+                <div
+                  className={cn(
+                    "absolute inset-0 h-full w-full",
+                    "[transform:rotateY(180deg)] [backface-visibility:hidden]",
+                    "rounded-lg border-4 border-background bg-muted",
+                    "pointer-events-none group-hover:pointer-events-auto",
+                    style.background,
+                  )}
+                >
+                  <div className="absolute inset-0 bg-background/85 backdrop-blur-sm rounded-md pointer-events-none" />
+                  <div className="relative z-10 flex flex-col h-full w-full items-center justify-center gap-2 px-2">
+                    <span className="max-w-full truncate text-sm font-medium">{character.name}</span>
+                    {character.is_system ? (
+                      <Badge variant="outline">Plantilla</Badge>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => onEdit?.(character)}
+                          className="p-2 rounded-full cursor-pointer hover:scale-105 bg-background border border-border"
+                          aria-label={`Editar ${character.name}`}
+                        >
+                          <Pencil className="size-4" />
+                        </button>
+                        <button
+                          onClick={() => setConfirming(character)}
+                          className="p-2 rounded-full cursor-pointer hover:scale-105 bg-brand-gradient border border-border"
+                          aria-label={`Eliminar ${character.name}`}
+                        >
+                          <Trash2 className="size-4 text-white" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+        {characters.length === 0 && (
+          <p className="py-8 text-sm text-muted-foreground">
+            Aún no hay characters. Crea el primero para darle personalidad a tus agentes.
+          </p>
+        )}
+      </div>
+
+      <button
+        className="cursor-pointer p-2 rounded-full bg-background border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 shadow-md"
+        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+        disabled={!hasNext}
+        aria-label="Personajes siguientes"
+      >
+        <ChevronRight className="size-6" />
+      </button>
+
+      <Modal
+        open={confirming !== null}
+        onOpenChange={(open) => { if (!open) setConfirming(null) }}
+        config={{
+          title: "Eliminar character",
+          description: `¿Seguro que deseas eliminar a “${confirming?.name ?? ""}”? Esta acción es permanente.`,
+          actions: [
+            { label: "Cancelar", variant: "outline", asClose: true, id: "character-delete-cancel" },
+            { label: submitting ? "Eliminando..." : "Eliminar", variant: "destructive", asClose: false, onClick: handleConfirmDelete, id: "character-delete-confirm" },
+          ],
+        }}
+      >
+        <div className="text-sm text-muted-foreground">
+          Si el character está en uso por un agente, el backend rechazará la eliminación.
         </div>
-    );
+      </Modal>
+    </div>
+  );
 }

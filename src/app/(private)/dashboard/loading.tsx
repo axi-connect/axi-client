@@ -1,17 +1,14 @@
-"use client"
+import { BrandLoader } from "@/shared/components/ui/brand-loader"
 
-import Lottie from "lottie-react";
-import animationData from "../../../../public/animations/loader.funny.json"
-
-export default function Loading() {
+/**
+ * Carga de ruta del dashboard. El dashboard aún no tiene estructura estable,
+ * así que usa el loader de marca; cuando la tenga, migrar a un skeleton
+ * estructural (ver docs/design/LOADING.md).
+ */
+export default function DashboardLoading() {
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-100px)]">
-        <Lottie 
-            loop={true} 
-            autoplay={true} 
-            className="w-full h-full"
-            animationData={animationData} 
-        />
+    <div className="flex h-[calc(100vh-100px)] items-center justify-center">
+      <BrandLoader size="lg" />
     </div>
   )
 }

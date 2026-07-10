@@ -1,14 +1,38 @@
 "use client"
 
 import { isPublicPath } from "@/core/config/routes"
-import type { AuthUser, LoginPayload, SessionResponse } from "../../shared/auth/auth.types"
+import type { AuthUser, LoginPayload, SessionResponse } from "@/shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
 
+/**
+ * Error tipado de login propagado desde el BFF (`/api/auth/login`), que a su
+ * vez conserva el `code` RFC 7807 del backend. La UI discrimina por `code`
+ * (p.ej. `auth/ambiguous_company` → pedir NIT, 429 → cuenta regresiva).
+ */
+export class LoginError extends Error {
+  readonly code: string
+  readonly status: number
+  readonly retryAfterSeconds?: number
+
+  constructor(args: { code: string; status: number; message: string; retryAfterSeconds?: number }) {
+    super(args.message)
+    this.name = "LoginError"
+    this.code = args.code
+    this.status = args.status
+    this.retryAfterSeconds = args.retryAfterSeconds
+  }
+}
+
 type AuthContextValue = {
   status: AuthStatus
   user: AuthUser | null
+  /**
+   * Gateo de UI por permiso `resource:action` (con soporte de wildcard
+   * `resource:*` y `*:*`). Es UX, no seguridad: el backend valida siempre.
+   */
+  hasPermission: (permission: string) => boolean
   logout: () => Promise<void>
   refresh: () => Promise<void>
   login: (payload: LoginPayload) => Promise<void>
@@ -16,17 +40,24 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+function permissionMatches(granted: string, required: string): boolean {
+  if (granted === required || granted === "*:*" || granted === "*") return true
+  const [grantedResource, grantedAction] = granted.split(":")
+  const [requiredResource] = required.split(":")
+  return grantedResource === requiredResource && grantedAction === "*"
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [status, setStatus] = useState<AuthStatus>("loading")
 
   const redirectToLogin = useCallback(() => {
-    const { pathname, search } = window.location;
+    const { pathname, search } = window.location
 
     setUser(null)
     setStatus("unauthenticated")
-    if (isPublicPath(pathname)) return;
-    window.location.href = "/auth/login?next=" + encodeURIComponent(pathname + "?" + search);
+    if (isPublicPath(pathname)) return
+    window.location.href = "/auth/login?next=" + encodeURIComponent(pathname + search)
   }, [])
 
   const hydrate = useCallback(async () => {
@@ -43,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [redirectToLogin])
 
   useEffect(() => {
-    hydrate()
+    void hydrate()
   }, [hydrate])
 
   const login = useCallback(async (payload: LoginPayload) => {
@@ -52,7 +83,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-    if (!res.ok) throw new Error("Credenciales inválidas")
+    if (!res.ok) {
+      const retryAfter = res.headers.get("Retry-After")
+      let body: { code?: string; message?: string } = {}
+      try {
+        body = await res.json()
+      } catch {
+        // Respuesta sin cuerpo JSON → error genérico.
+      }
+      throw new LoginError({
+        code: body.code ?? `http/${res.status}`,
+        status: res.status,
+        message: body.message ?? "No se pudo iniciar sesión",
+        retryAfterSeconds: retryAfter ? Number(retryAfter) : undefined,
+      })
+    }
     await hydrate()
   }, [hydrate])
 
@@ -67,7 +112,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus("unauthenticated")
   }, [])
 
-  const value = useMemo<AuthContextValue>(() => ({ status, user, login, refresh, logout }), [status, user, login, refresh, logout])
+  const hasPermission = useCallback(
+    (permission: string) => {
+      if (!user) return false
+      return user.permissions.some((granted) => permissionMatches(granted, permission))
+    },
+    [user],
+  )
+
+  const value = useMemo<AuthContextValue>(
+    () => ({ status, user, hasPermission, login, refresh, logout }),
+    [status, user, hasPermission, login, refresh, logout],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

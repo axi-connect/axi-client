@@ -1,12 +1,19 @@
 "use client"
 
 import { Button } from "@/shared/components/ui/button"
-import { Copy, Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
-import { useAgentStore } from "@/modules/agents/infrastructure/store/agent.store"
-import type { DataRow } from "@/shared/components/features/data-table/types"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu"
+import { Eye, MoreHorizontal, Pencil, Trash } from "lucide-react"
+import type { AgentRow } from "@/modules/agents/domain/agent"
+import { useAgentStore } from "@/modules/agents/infrastructure/stores/agent.store"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu"
 
-export function AgentRowActions({ row }: { row: DataRow }) {
+export function AgentRowActions({ row }: { row: AgentRow }) {
   return (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -24,28 +31,24 @@ export function AgentRowActions({ row }: { row: DataRow }) {
   )
 }
 
-export function AgentContextMenuItems({ row }: { row: DataRow }) {
+export function AgentContextMenuItems({ row }: { row: AgentRow }) {
   const { actions } = useAgentStore()
 
   return (
     <>
       <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onCopy(row)}>
-        <Copy className="h-4 w-4" />
-        Copiar objeto
-      </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onEdit(row)}>
-        <Pencil className="h-4 w-4" />
-        Editar
-      </DropdownMenuItem>
       <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onView(row)}>
         <Eye className="h-4 w-4" />
         Ver detalles
       </DropdownMenuItem>
+      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onEdit(row)}>
+        <Pencil className="h-4 w-4" />
+        Editar
+      </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem className="flex items-center gap-2" onClick={() => actions.onDelete(row)}>
-        <Trash className="h-4 w-4 text-red-500" />
+      <DropdownMenuItem className="flex items-center gap-2 text-destructive" onClick={() => actions.onDelete(row)}>
+        <Trash className="h-4 w-4" />
         Eliminar agente
       </DropdownMenuItem>
     </>

@@ -359,7 +359,7 @@ export function TreeView<T>({
           <DialogHeader>
             <DialogTitle>Eliminar elemento</DialogTitle>
             <DialogDescription>
-              ¿Seguro que deseas eliminar "{targetNode?.label}"? Esta acción no se puede deshacer.
+              ¿Seguro que deseas eliminar “{targetNode?.label}”? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

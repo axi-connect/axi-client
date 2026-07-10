@@ -1,34 +1,58 @@
 "use client"
 
-import Image from "next/image";
-import { cn } from "@/core/lib/utils";
-import type { AgentRow  } from "@/modules/agents/domain/agent";
+import { Badge } from "@/shared/components/ui/badge";
 import { AgentRowActions } from "@/modules/agents/ui/tables/agent.actions";
-import type { ColumnDef, DataRow } from "@/shared/components/features/data-table/types";
+import type { ColumnDef } from "@/shared/components/features/data-table/types";
+import {
+  AGENT_STATUS_LABELS,
+  AI_PROVIDER_LABELS,
+  type AgentRow,
+  type AgentStatus,
+} from "@/modules/agents/domain/agent";
+
+const STATUS_VARIANTS: Record<AgentStatus, "default" | "secondary" | "outline"> = {
+  active: "default",
+  paused: "secondary",
+  draft: "outline",
+};
 
 export const agentColumns: ColumnDef<AgentRow>[] = [
-  { accessorKey: "avatar", header: "Avatar", sortable: true, alwaysVisible: true, minWidth: 80, cell: ({ row } ) => (
-    <Image 
-      width={32}
-      height={32}
-      alt={row.original.name} 
-      src={row.original.avatar}
-      className={cn("rounded-full object-cover", row.original.avatar_background)}
-    />
-  ) },
-  { accessorKey: "name", header: "Nombre", sortable: true, alwaysVisible: true, minWidth: 200 },
-  { accessorKey: "phone", header: "Teléfono", sortable: true, minWidth: 180 },
-  { accessorKey: "company_name", header: "Empresa", sortable: true, minWidth: 200 },
-  { accessorKey: "alive", header: "Disponible", sortable: true, minWidth: 120, cell: ({ row }) => (
-    <span className={`inline-flex items-center gap-2 ${row.original.alive ? "text-green-700" : "text-red-700"}`}>
-      <span className={`h-2 w-2 rounded-full ${row.original.alive ? "bg-green-500" : "bg-red-500"}`} />
-      {row.original.alive ? "Sí" : "No"}
-    </span>
-  ) },
+  { accessorKey: "name", header: "Nombre", sortable: true, alwaysVisible: true, minWidth: 180 },
+  {
+    accessorKey: "status",
+    header: "Estado",
+    sortable: true,
+    minWidth: 110,
+    cell: ({ row }) => (
+      <Badge variant={STATUS_VARIANTS[row.original.status]}>
+        {AGENT_STATUS_LABELS[row.original.status]}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "provider",
+    header: "Proveedor",
+    sortable: true,
+    minWidth: 150,
+    cell: ({ row }) => AI_PROVIDER_LABELS[row.original.provider],
+  },
+  {
+    accessorKey: "model",
+    header: "Modelo",
+    sortable: true,
+    minWidth: 160,
+    cell: ({ row }) => <span className="font-mono text-xs">{row.original.model}</span>,
+  },
+  {
+    accessorKey: "intentions_count",
+    header: "Intenciones",
+    minWidth: 100,
+    cell: ({ row }) => row.original.intentions_count,
+  },
   {
     id: "actions",
-    minWidth: 100,
+    minWidth: 80,
     alwaysVisible: true,
-    cell: ({ row }) => <AgentRowActions row={row.original as DataRow} />,
+    cell: ({ row }) => <AgentRowActions row={row.original} />,
   },
 ];

@@ -1,13 +1,14 @@
-import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
-import { refreshToken } from "@/shared/auth/auth.handlers"
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { refreshSession } from "@/shared/auth/auth.handlers";
 
+/**
+ * POST /api/auth/refresh — rota el par de tokens (single-flight en el BFF).
+ * Si el backend detecta reuso o el refresh es inválido, la sesión queda
+ * limpia y el cliente debe re-loguear.
+ */
 export async function POST() {
-  try {
-    const cookieStore = await cookies()
-    const [success, status] = await refreshToken(cookieStore)
-    return NextResponse.json(success, status )
-  } catch(error) {
-    return NextResponse.json({ success: false }, { status: 401 })
-  }
+  const result = await refreshSession(await cookies());
+  if (result.ok) return NextResponse.json({ success: true });
+  return NextResponse.json({ success: false, code: result.code }, { status: result.status });
 }

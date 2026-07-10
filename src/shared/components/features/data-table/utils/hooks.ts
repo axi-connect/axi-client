@@ -33,7 +33,7 @@ export function useSearchableFields<T extends DataRow>(columns: ColumnDef<T>[], 
   }, [columns, preferred])
 }
 
-export function useDebouncedCallback<T extends any[]>(fn: (...args: T) => void, delayMs: number, enabled: boolean) {
+export function useDebouncedCallback<T extends unknown[]>(fn: (...args: T) => void, delayMs: number, enabled: boolean) {
   const ref = useRef<number | null>(null)
   const callback = useCallback((...args: T) => {
     if (!enabled) {

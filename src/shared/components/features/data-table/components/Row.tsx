@@ -28,7 +28,7 @@ function DataTableRowInner<T extends DataRow>({ row, visibleColumns, collapsedCo
 
   const visibleCells = useMemo(() => visibleColumns.map((col, idx) => (
     <TableCell key={(col.accessorKey ?? col.id ?? idx) as string} className="first:pl-3 last:pr-3">
-      {col.cell ? col.cell({ row: { original: row } }) : formatCell(col.accessorKey ? (row[col.accessorKey] as any) : undefined)}
+      {col.cell ? col.cell({ row: { original: row } }) : formatCell(col.accessorKey ? (row[col.accessorKey] as Parameters<typeof formatCell>[0]) : undefined)}
     </TableCell>
   )), [row, visibleColumns])
 

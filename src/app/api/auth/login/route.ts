@@ -1,35 +1,49 @@
-import { cookies } from "next/headers"
-import { http } from "@/core/services/http"
-import type { ApiResponse } from "@/core/services/api"
-import { NextRequest, NextResponse } from "next/server"
-import type { AuthUser, LoginPayload, Tokens } from "@/shared/auth/auth.types"
+import { cookies } from "next/headers";
+import { NextResponse, type NextRequest } from "next/server";
+import { http } from "@/core/services/http";
+import { isHttpError } from "@/core/api/problem";
+import { setSessionCookies } from "@/shared/auth/auth.handlers";
+import type { AuthTokens, LoginPayload } from "@/shared/auth/auth.types";
 
-type LoginResponse = ApiResponse<{ user: AuthUser; tokens: Tokens }>
-
+/**
+ * POST /api/auth/login — autentica contra el backend y persiste la sesión
+ * en cookies HttpOnly. Propaga los errores RFC 7807 (`code`) para que la UI
+ * distinga credenciales inválidas, `auth/ambiguous_company` (pedir NIT) y
+ * rate-limit (429 + Retry-After).
+ */
 export async function POST(req: NextRequest) {
+  let payload: LoginPayload;
   try {
-    const payload = (await req.json()) as LoginPayload
-    const backend = await http.post<LoginResponse>("/auth/login", payload)
-    const { accessToken, refreshToken } = backend.data.tokens
+    payload = (await req.json()) as LoginPayload;
+  } catch {
+    return NextResponse.json(
+      { code: "validation/failed", message: "Cuerpo de petición inválido" },
+      { status: 400 },
+    );
+  }
 
-    const cookieStore = await cookies()
-    cookieStore.set("accessToken", accessToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 15 * 60, // 15m
-    })
-    cookieStore.set("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7d
-    })
-
-    return NextResponse.json({ success: true })
+  try {
+    const tokens = await http.post<AuthTokens>("/auth/login", payload, { authenticate: false });
+    setSessionCookies(await cookies(), tokens);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, message: "Credenciales inválidas" }, { status: 401 })
+    if (isHttpError(error)) {
+      const headers = new Headers();
+      if (error.retryAfterSeconds !== undefined) {
+        headers.set("Retry-After", String(error.retryAfterSeconds));
+      }
+      return NextResponse.json(
+        {
+          code: error.code,
+          message: error.message,
+          errors: error.validationIssues,
+        },
+        { status: error.status, headers },
+      );
+    }
+    return NextResponse.json(
+      { code: "client/network", message: "No fue posible contactar al servidor" },
+      { status: 503 },
+    );
   }
 }

@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/shared/components/layout/sidebar";
+import { AppReadySignal } from "@/core/providers/app-ready-signal";
 import { PrivateHeader } from "@/shared/components/layout/private-header";
 import { SidebarProvider, SidebarInset } from "@/shared/components/layout/sidebar/core"
 
@@ -9,6 +10,8 @@ export default function PrivateLayout({
 }>) {
   return (
     <SidebarProvider>
+      {/* Notifica al splash post-login que la app ya está montada */}
+      <AppReadySignal />
       <AppSidebar />
       <main className="flex-1">
         <PrivateHeader />

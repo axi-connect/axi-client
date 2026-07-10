@@ -1,9 +1,22 @@
 import * as React from "react"
 import DetailSheet from "../DetailSheet"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 
+/**
+ * El DetailSheet difiere su contenido con un timeout de 50 ms (`ready`)
+ * para coordinar la animación de entrada: los asserts deben esperar
+ * a que el overlay/contenido exista.
+ */
 function Wrapper({ children }: { children: React.ReactNode }) {
   return <div id="__test-root">{children}</div>
+}
+
+async function findBackdrop(): Promise<HTMLElement> {
+  return waitFor(() => {
+    const el = document.querySelector(".axi-detail-sheet__backdrop") as HTMLElement | null
+    if (!el) throw new Error("backdrop aún no montado")
+    return el
+  })
 }
 
 describe("DetailSheet", () => {
@@ -15,29 +28,38 @@ describe("DetailSheet", () => {
       </Wrapper>
     )
 
-    const backdrop = document.querySelector(".axi-detail-sheet__backdrop") as HTMLElement
-    expect(backdrop).toBeInTheDocument()
+    const backdrop = await findBackdrop()
+    // Radix cierra vía pointerdown fuera del contenido (DismissableLayer).
+    fireEvent.pointerDown(backdrop)
+    fireEvent.pointerUp(backdrop)
     fireEvent.click(backdrop)
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
   })
 
-  it("cierra con tecla ESC si habilitado", async () => {
+  it("NO cierra al hacer click en el backdrop si closeOnOverlayClick=false", async () => {
     const onOpenChange = jest.fn()
     render(
       <Wrapper>
-        <DetailSheet open={true} onOpenChange={onOpenChange} title="Test" />
+        <DetailSheet open={true} onOpenChange={onOpenChange} title="Test" closeOnOverlayClick={false} />
       </Wrapper>
     )
-    fireEvent.keyDown(window, { key: "Escape" })
-    // Radix gestionará el cierre y propagará change
-    // En JSDOM no anima, pero onOpenChange debería ser llamado con false
-    // Aunque Radix no cierra automáticamente sin Root controlado, nuestro handler recibe el evento
-    expect(onOpenChange).toHaveBeenCalled()
+
+    const backdrop = await findBackdrop()
+    fireEvent.pointerDown(backdrop)
+    fireEvent.pointerUp(backdrop)
+    fireEvent.click(backdrop)
+    // Pequeña espera: el cierre (si ocurriera) es asíncrono.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(onOpenChange).not.toHaveBeenCalled()
   })
 
-  it("muestra skeleton cuando fetchDetail está pendiente", async () => {
+  it("muestra skeleton mientras fetchDetail está pendiente", async () => {
     const onOpenChange = jest.fn()
-    const fetchDetail = jest.fn(async () => new Promise((r) => setTimeout(r, 100)))
+    let resolveFetch: (value: unknown) => void = () => {}
+    const fetchDetail = jest.fn(
+      () => new Promise((resolve) => { resolveFetch = resolve }),
+    )
+
     render(
       <Wrapper>
         <DetailSheet
@@ -53,7 +75,10 @@ describe("DetailSheet", () => {
       </Wrapper>
     )
 
-    // Durante la promesa pendiente debería estar el skeleton
-    expect(screen.getByTestId("skeleton")).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId("skeleton")).toBeInTheDocument())
+
+    // Al resolver el fetch, el contenido reemplaza al skeleton.
+    resolveFetch({})
+    await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument())
   })
 })

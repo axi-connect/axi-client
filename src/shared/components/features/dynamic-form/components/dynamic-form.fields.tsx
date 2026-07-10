@@ -64,7 +64,7 @@ export function DynamicInputField<TValues extends FieldValues>({ config }: { con
   const safeId = `df-${String(name).replace(/[^a-zA-Z0-9_-]/g, '-')}`
 
   return (
-    <FormField<TValues, any>
+    <FormField<TValues, FieldPath<TValues>>
       control={control}
       name={name as FieldPath<TValues>}
       render={({ field, fieldState }) => (
@@ -99,7 +99,7 @@ export function DynamicCustomField<TValues extends FieldValues>({ config }: { co
   const safeId = `df-${String(name).replace(/[^a-zA-Z0-9_-]/g, '-')}`
 
   return (
-    <FormField<TValues, any>
+    <FormField<TValues, FieldPath<TValues>>
       control={control}
       name={name as FieldPath<TValues>}
       render={({ formState }) => (
@@ -114,22 +114,22 @@ export function DynamicCustomField<TValues extends FieldValues>({ config }: { co
             {render({
               name,
               control,
-              value: (values as any)?.[name as any],
-              setValue: setValue as any,
+              value: (values as Record<string, unknown>)?.[String(name)],
+              setValue: setValue as (name: string, value: unknown) => void,
               getError: (relativePath?: string) => {
                 const fullPath = relativePath ? `${String(name)}.${relativePath}` : String(name)
-                const getByPath = (obj: any, path: string) =>
-                  path.split('.').reduce((acc: any, part: string) => (acc == null ? acc : acc[part]), obj)
-                const node = getByPath(formState.errors as any, fullPath)
+                const getByPath = (obj: unknown, path: string): unknown =>
+                  path.split('.').reduce<unknown>((acc, part) => (acc == null ? acc : (acc as Record<string, unknown>)[part]), obj)
+                const node = getByPath(formState.errors, fullPath)
                 if (!node) return undefined
-                if (typeof node === 'object' && 'message' in node) return String((node as any).message ?? '')
+                if (typeof node === 'object' && 'message' in node) return String((node as { message?: unknown }).message ?? '')
                 return typeof node === 'string' ? node : undefined
               },
               hasError: (relativePath?: string) => {
                 const fullPath = relativePath ? `${String(name)}.${relativePath}` : String(name)
-                const getByPath = (obj: any, path: string) =>
-                  path.split('.').reduce((acc: any, part: string) => (acc == null ? acc : acc[part]), obj)
-                return Boolean(getByPath(formState.errors as any, fullPath))
+                const getByPath = (obj: unknown, path: string): unknown =>
+                  path.split('.').reduce<unknown>((acc, part) => (acc == null ? acc : (acc as Record<string, unknown>)[part]), obj)
+                return Boolean(getByPath(formState.errors, fullPath))
               },
             })}
           </div>

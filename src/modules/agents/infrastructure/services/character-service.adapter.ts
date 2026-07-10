@@ -1,19 +1,24 @@
-import { http, Params } from "@/core/services/http";
-import type { ApiResponse } from "@/core/services/api";
-import type { ApiCharactersPayload, ListCharactersParams, CharacterDTO, CreateCharacterDTO, UpdateCharacterDTO } from "@/modules/agents/domain/character";
+import { http } from "@/core/services/http";
+import type { Schemas } from "@/core/api/types";
+import type {
+  CharacterDTO,
+  CreateCharacterDTO,
+  UpdateCharacterDTO,
+} from "@/modules/agents/domain/character";
 
-export async function listCharacters(params: ListCharactersParams): Promise<ApiResponse<ApiCharactersPayload>> {
-  return http.get<ApiResponse<ApiCharactersPayload>>("/parameters/character", params as Params, { authenticate: true });
+/** Adapter HTTP → `/ai-characters` (incluye plantillas system, inmutables). */
+export function listCharacters(): Promise<Schemas["CharacterListDto"]> {
+  return http.get<Schemas["CharacterListDto"]>("/ai-characters");
 }
 
-export async function createCharacter(payload: CreateCharacterDTO): Promise<ApiResponse<CharacterDTO>> {
-  return http.post<ApiResponse<CharacterDTO>>("/parameters/character", payload, { authenticate: true });
+export function createCharacter(dto: CreateCharacterDTO): Promise<CharacterDTO> {
+  return http.post<CharacterDTO>("/ai-characters", dto);
 }
 
-export async function updateCharacter(id: number | string, payload: UpdateCharacterDTO): Promise<ApiResponse<CharacterDTO>> {
-  return http.put<ApiResponse<CharacterDTO>>(`/parameters/character/${id}`, payload, { authenticate: true });
+export function updateCharacter(id: string, dto: UpdateCharacterDTO): Promise<CharacterDTO> {
+  return http.patch<CharacterDTO>(`/ai-characters/${id}`, dto);
 }
 
-export async function deleteCharacter(id: number | string): Promise<ApiResponse<object>> {
-  return http.delete<ApiResponse<object>>(`/parameters/character/${id}`, { authenticate: true });
+export function deleteCharacter(id: string): Promise<void> {
+  return http.delete(`/ai-characters/${id}`);
 }

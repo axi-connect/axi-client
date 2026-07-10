@@ -91,7 +91,7 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
 
   const searchableFields = useSearchableFields<T>(
     safeColumns,
-    (preferredSearchFields as Array<keyof T & string>) ?? (["name", "nit", "city", "industry"] as any)
+    (preferredSearchFields as Array<keyof T & string>) ?? (["name", "nit", "city", "industry"] as Array<keyof T & string>)
   )
 
   const [localField, setLocalField] = useControlled<keyof T & string>(

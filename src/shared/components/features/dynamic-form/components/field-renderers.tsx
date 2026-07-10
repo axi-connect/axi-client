@@ -4,11 +4,16 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import type { ControllerRenderProps } from "react-hook-form";
 
+// Props de input arbitrarias definidas por la config del campo; el tipo real
+// depende del inputKind (input/textarea), por eso se modela como registro laxo.
+type FieldInputProps = Record<string, unknown> & { id?: string; rows?: number; autoComplete?: string }
+
 type RenderArgs = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RHF exige covarianza del TValues concreto del form
   field: ControllerRenderProps<any, string>
   placeholder?: string
   disabled?: boolean
-  inputProps?: any
+  inputProps?: FieldInputProps
   invalid?: boolean
 }
 
@@ -47,12 +52,12 @@ export const components: Record<string, (args: RenderArgs) => React.ReactNode> =
   ),
   textarea: ({ field, placeholder, disabled, inputProps, invalid }) => (
     <Textarea
-      {...(field as any)}
-      rows={(inputProps as any)?.rows ?? 3}
+      {...field}
+      rows={inputProps?.rows ?? 3}
       placeholder={placeholder}
       disabled={disabled}
       aria-invalid={invalid}
-      {...(inputProps as any)}
+      {...inputProps}
     />
   ),
 }

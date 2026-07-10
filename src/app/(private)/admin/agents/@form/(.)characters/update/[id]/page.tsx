@@ -1,44 +1,46 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Modal } from "@/shared/components/ui/modal"
+import { useAlert } from "@/core/providers/alert-provider"
 import { CharacterForm } from "@/modules/agents/ui/forms/CharacterForm"
-import { useAgent } from "@/modules/agents/infrastructure/store/agent.context"
+import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context"
 
 export default function AgentsInterceptCharactersUpdate() {
   const router = useRouter()
-  const [defaults, setDefaults] = useState<any | null>(null)
+  const { showAlert } = useAlert()
   const { selectedCharacter, fetchCharacters } = useAgent()
-
-  const onModalSubmitClick = () => {
-    const form = document.getElementById("character-form") as HTMLFormElement | null
-    form?.requestSubmit()
-  }
-
-  const handleSuccess = () => {
-    router.back()
-    fetchCharacters()
-  }
-
-  useEffect(() => {
-    if (selectedCharacter) setDefaults(selectedCharacter)
-  }, [selectedCharacter])
 
   return (
     <Modal
       open={true}
       onOpenChange={(open) => { if (!open) router.back() }}
       config={{
-        title: "Actualizar personaje",
-        description: "Edita la apariencia y voz del personaje del agente",
+        title: "Actualizar character",
+        description: selectedCharacter ? `Edita “${selectedCharacter.name}”` : "Edita el character",
         actions: [
           { label: "Cancelar", variant: "outline", asClose: true, id: "character-cancel" },
-          { label: "Guardar", variant: "default", asClose: false, onClick: onModalSubmitClick, id: "character-save" },
+          {
+            label: "Guardar",
+            variant: "default",
+            asClose: false,
+            id: "character-save",
+            onClick: () => (document.getElementById("character-form") as HTMLFormElement | null)?.requestSubmit(),
+          },
         ],
       }}
     >
-      <CharacterForm host={{ defaultValues: defaults ?? undefined }} onSuccess={handleSuccess} />
+      <CharacterForm
+        key={selectedCharacter?.id ?? "none"}
+        host={{
+          character: selectedCharacter,
+          setAlert: (cfg) => showAlert({ tone: cfg.variant === "destructive" ? "error" : "success", title: cfg.title, open: true }),
+          onSuccess: () => {
+            void fetchCharacters()
+            router.back()
+          },
+        }}
+      />
     </Modal>
   )
 }

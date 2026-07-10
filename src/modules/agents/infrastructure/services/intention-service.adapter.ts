@@ -1,12 +1,24 @@
-import { http, Params } from "@/core/services/http";
-import type { ApiResponse } from "@/core/services/api";
-import type { TreeNode } from "@/shared/components/features/tree-view";
-import type { ListIntentionParams, ApiIntentionPayload } from "@/modules/agents/domain/intentions";
+import { http } from "@/core/services/http";
+import type { Schemas } from "@/core/api/types";
+import type {
+  CreateIntentionDTO,
+  IntentionDTO,
+  UpdateIntentionDTO,
+} from "@/modules/agents/domain/intentions";
 
-export async function listIntention(params: ListIntentionParams): Promise<ApiResponse<ApiIntentionPayload>> {
-  return http.get<ApiResponse<ApiIntentionPayload>>("/parameters/intention", params as Params, { authenticate: true });
+/** Adapter HTTP → `/ai-intentions` (incluye plantillas system, inmutables). */
+export function listIntentions(): Promise<Schemas["IntentionListDto"]> {
+  return http.get<Schemas["IntentionListDto"]>("/ai-intentions");
 }
 
-export async function listIntentionOverview(): Promise<ApiResponse<TreeNode[]>> {
-  return http.get<ApiResponse<TreeNode[]>>("/parameters/intention/overview", {}, { authenticate: true });
+export function createIntention(dto: CreateIntentionDTO): Promise<IntentionDTO> {
+  return http.post<IntentionDTO>("/ai-intentions", dto);
+}
+
+export function updateIntention(id: string, dto: UpdateIntentionDTO): Promise<IntentionDTO> {
+  return http.patch<IntentionDTO>(`/ai-intentions/${id}`, dto);
+}
+
+export function deleteIntention(id: string): Promise<void> {
+  return http.delete(`/ai-intentions/${id}`);
 }

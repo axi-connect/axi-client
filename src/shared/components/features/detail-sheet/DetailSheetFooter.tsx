@@ -3,7 +3,7 @@
 import React from "react"
 import { cn } from "@/core/lib/utils"
 
-export interface DetailSheetFooterProps extends React.ComponentProps<"div"> {}
+export type DetailSheetFooterProps = React.ComponentProps<"div">
 
 export function DetailSheetFooter({ className, ...rest }: DetailSheetFooterProps) {
   return (

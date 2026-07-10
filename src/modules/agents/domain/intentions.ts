@@ -1,34 +1,27 @@
-export type IntentionSortDir = "asc" | "desc";
-export type IntentionView = "summary" | "detail";
-export type IntentionPriority = "low" | "medium" | "high" | "urgent";
-export type IntentionSortBy = "id" | "code" | "flow_name" | "type" | "priority";
-export type IntentionType = "sales" | "support" | "technical" | "onboarding" | "follow_up";
+import type { Schemas } from "@/core/api/types";
 
-export interface ListIntentionParams {
-  type?: IntentionType;
-  priority?: IntentionPriority;
-  code?: string;
-  flow_name?: string;
-  description?: string;
-  ai_instructions?: string;
-  limit?: number; // default 20 (handled server-side)
-  offset?: number; // default 0 (handled server-side)
-  sortBy?: IntentionSortBy;
-  sortDir?: IntentionSortDir;
-  view?: IntentionView; // default "summary" (handled server-side)
-}
+/**
+ * Intenciones (`/ai-intentions`): clasifican los mensajes entrantes y
+ * determinan qué instrucciones/tools carga el agente. Las `is_system`
+ * son plantillas inmutables.
+ */
+export type IntentionDTO = Schemas["IntentionDto"];
+export type CreateIntentionDTO = Schemas["CreateIntentionDto"];
+export type UpdateIntentionDTO = Schemas["UpdateIntentionDto"];
 
-export interface IntentionDTO {
-  id: number;
-  code: string;
-  flow_name: string;
-  description: string;
-  ai_instructions: string;
-  priority: IntentionPriority;
-  type: IntentionType;
-}
+export type IntentionType = IntentionDTO["type"];
+export type IntentionPriority = IntentionDTO["priority"];
 
-export interface ApiIntentionPayload {
-  intentions: IntentionDTO[];
-  total: number;
-}
+export const INTENTION_TYPE_LABELS: Record<IntentionType, string> = {
+  sales: "Ventas",
+  support: "Soporte",
+  technical: "Técnico",
+  onboarding: "Onboarding",
+  follow_up: "Seguimiento",
+};
+
+export const INTENTION_PRIORITY_LABELS: Record<IntentionPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+};

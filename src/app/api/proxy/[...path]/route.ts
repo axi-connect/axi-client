@@ -1,90 +1,114 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { API_BASE_URL } from "@/core/config/env";
-import { refreshToken as refreshWithHelper } from "@/shared/auth/auth.handlers";
+import { NextResponse, type NextRequest } from "next/server";
+import { API_BASE_URL, API_PREFIX } from "@/core/config/env";
+import {
+  getAccessTokenExpiry,
+  refreshSession,
+} from "@/shared/auth/auth.handlers";
+import { COOKIE_NAMES } from "@/shared/auth/auth.types";
 
 export const runtime = "nodejs";
 
-function buildTargetUrl(path: string, search: string) {
-  const base = API_BASE_URL.replace(/\/$/, "");
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${cleanPath}${search || ""}`;
+/**
+ * Proxy autenticado genérico del BFF: `/api/proxy/<path>` → `<backend>/api/v1/<path>`.
+ *
+ * - Inyecta `Authorization: Bearer` desde la cookie HttpOnly (el browser nunca ve el token).
+ * - Refresh proactivo si el access expira en ≤60s, y retry-once reactivo ante un 401
+ *   del backend (token revocado por `token_version`, denylist, etc.).
+ * - Devuelve status y body del backend verbatim, preservando `content-type`
+ *   (incluido `application/problem+json`) y `Retry-After`.
+ */
+
+/** Margen de expiración que dispara el refresh proactivo. */
+const PROACTIVE_REFRESH_MS = 60_000;
+
+/** Headers del request que SÍ se reenvían al backend. */
+const FORWARDED_REQUEST_HEADERS = ["content-type", "accept", "accept-language"] as const;
+
+/** Headers del backend que NO deben propagarse (hop-by-hop / seguridad). */
+const BLOCKED_RESPONSE_HEADERS = new Set([
+  "content-encoding",
+  "content-length",
+  "transfer-encoding",
+  "connection",
+  "keep-alive",
+  "set-cookie",
+]);
+
+function buildTargetUrl(req: NextRequest): string {
+  const path = req.nextUrl.pathname.replace(/^\/api\/proxy/, "");
+  return `${API_BASE_URL.replace(/\/$/, "")}${API_PREFIX}${path}${req.nextUrl.search}`;
 }
 
-async function proxy(req: NextRequest) {
+function buildForwardHeaders(req: NextRequest, token: string | null): Headers {
+  const headers = new Headers();
+  for (const name of FORWARDED_REQUEST_HEADERS) {
+    const value = req.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  if (token) headers.set("authorization", `Bearer ${token}`);
+  return headers;
+}
+
+function buildResponse(backendRes: Response, body: ArrayBuffer): NextResponse {
+  const headers = new Headers();
+  backendRes.headers.forEach((value, name) => {
+    if (!BLOCKED_RESPONSE_HEADERS.has(name.toLowerCase())) headers.set(name, value);
+  });
+  return new NextResponse(backendRes.status === 204 ? null : body, {
+    status: backendRes.status,
+    headers,
+  });
+}
+
+async function proxy(req: NextRequest): Promise<NextResponse> {
+  const store = await cookies();
+  const targetUrl = buildTargetUrl(req);
+  // El body solo puede leerse una vez: se retiene para el posible reintento.
+  const requestBody = ["GET", "HEAD"].includes(req.method) ? undefined : await req.arrayBuffer();
+
+  let token = store.get(COOKIE_NAMES.accessToken)?.value ?? null;
+
+  // Refresh proactivo: token ausente o por expirar.
+  const expiresAt = token ? getAccessTokenExpiry(token) : null;
+  if (!token || expiresAt === null || expiresAt - Date.now() <= PROACTIVE_REFRESH_MS) {
+    const refreshed = await refreshSession(store);
+    if (refreshed.ok) {
+      token = refreshed.tokens.access_token;
+    } else if (!token) {
+      return NextResponse.json(
+        { code: refreshed.code, message: "Sesión no válida" },
+        { status: 401 },
+      );
+    }
+  }
+
+  const doFetch = (bearer: string | null) =>
+    fetch(targetUrl, {
+      method: req.method,
+      headers: buildForwardHeaders(req, bearer),
+      body: requestBody,
+      cache: "no-store",
+    });
+
   try {
-    const store = await cookies();
-    const segments = req.nextUrl.pathname.replace(/^\/api\/proxy/, "");
-    const targetUrl = buildTargetUrl(segments, req.nextUrl.search);
+    let backendRes = await doFetch(token);
 
-    let token = store.get("accessToken")?.value;
-    const headers = new Headers(req.headers);
-    headers.set("host", new URL(API_BASE_URL).host);
-    headers.set("origin", new URL(API_BASE_URL).origin);
-    if (token) headers.set("authorization", `Bearer ${token}`);
-
-    // Proactive refresh if token about to expire (within 60s)
-    const exp = token ? getJwtExp(token) : null;
-
-    const now = Math.floor(Date.now() / 1000);
-    console.log("refreshing token about to expire", (exp && exp - now <= 60) || exp === null);
-    if ((exp && exp - now <= 60) || exp === null) {
-      const [ok] = await refreshWithHelper(store);
-      if (ok) {
-        token = store.get("accessToken")?.value;
-        if (token) headers.set("authorization", `Bearer ${token}`);
+    // Retry-once reactivo: el access pudo ser revocado (token_version, denylist).
+    if (backendRes.status === 401) {
+      const refreshed = await refreshSession(store);
+      if (refreshed.ok) {
+        backendRes = await doFetch(refreshed.tokens.access_token);
       }
     }
 
-    // === Request al backend ===
-    const init: RequestInit = {
-      method: req.method,
-      headers,
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : await req.text(),
-      cache: "no-store",
-    };
-
-    const res = await fetch(targetUrl, init);
-    const body = await res.text();
-    return new NextResponse(body, { status: res.status, headers: res.headers });
-  } catch (error) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-}
-
-function getJwtExp(token: string): number | undefined {
-  try {
-    const parts = token.split(".");
-    if (parts.length < 2) return undefined;
-    const payloadStr = base64UrlDecode(parts[1]);
-    const payload = JSON.parse(payloadStr);
-    const exp = typeof payload?.exp === "number" ? payload.exp : undefined;
-    const expDate = new Date(exp * 1000);
-
-    console.log("access token expires at: ", expDate.toLocaleTimeString());
-    const now = Date.now();
-    const diffMs = exp * 1000 - now;
-    const diffMin = Math.floor(diffMs / 1000 / 60);
-
-    console.log("minutes left", diffMin)
-
-    return exp;
+    return buildResponse(backendRes, await backendRes.arrayBuffer());
   } catch {
-    return undefined;
+    return NextResponse.json(
+      { code: "client/network", message: "No fue posible contactar al backend" },
+      { status: 502 },
+    );
   }
-}
-
-function base64UrlDecode(input: string): string {
-  const b64 = input.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = b64.length % 4 === 2 ? "==" : b64.length % 4 === 3 ? "=" : "";
-  const data = b64 + pad;
-  if (typeof atob !== "undefined") {
-    return decodeURIComponent(Array.prototype.map.call(atob(data), (c: string) => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    }).join(''));
-  }
-  return Buffer.from(data, 'base64').toString('utf8');
 }
 
 export { proxy as GET, proxy as POST, proxy as PUT, proxy as PATCH, proxy as DELETE };

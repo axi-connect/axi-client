@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/core/providers/auth-provider";
 import { ThemeProvider } from "@/core/providers/theme-provider";
 import { AlertProvider } from "@/core/providers/alert-provider";
+import { SplashProvider } from "@/core/providers/splash-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,8 @@ export default function RootLayout({
   modal,
 }: Readonly<{
   children: React.ReactNode;
-  modal?: React.ReactNode;
+  // Slot paralelo @modal: siempre presente (default.tsx devuelve null).
+  modal: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -53,8 +55,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <AlertProvider>
-              {children}
-              {modal}
+              <SplashProvider>
+                {children}
+                {modal}
+              </SplashProvider>
             </AlertProvider>
           </AuthProvider>
         </ThemeProvider>

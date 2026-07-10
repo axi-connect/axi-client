@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '@/core/providers/auth-provider';
+import { ThemeToggle } from '@/shared/components/layout/theme-toggle';
 
 interface NavItem {
   name: string;
@@ -191,7 +192,8 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                     </nav>
 
                     <div className="hidden items-center space-x-4 lg:flex">
-                        <Link 
+                        <ThemeToggle />
+                        <Link
                             prefetch={false}              
                             href={buttonText[status].href}
                             className="text-foreground font-medium transition-colors duration-200 hover:text-brand"
@@ -258,6 +260,9 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                                         className="border-border space-y-3 border-t pt-6"
                                         variants={mobileItemVariants}
                                     >
+                                        <div className="flex justify-center pb-2">
+                                            <ThemeToggle />
+                                        </div>
                                         <Link prefetch={false}                    href="/login"
                                             className="text-foreground hover:text-brand block w-full rounded-lg py-3 text-center font-medium transition-colors duration-200"
                                             onClick={() => setIsMobileMenuOpen(false)}

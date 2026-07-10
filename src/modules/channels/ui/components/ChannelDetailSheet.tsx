@@ -1,195 +1,214 @@
 "use client"
 
-import { Trash2 } from "lucide-react"
+import Image from "next/image"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { Trash2, Power, PowerOff, Unlink, RefreshCw } from "lucide-react"
+import { cn } from "@/core/lib/utils"
 import { Badge } from "@/shared/components/ui/badge"
-import { parseHttpError } from "@/core/services/api"
 import { Button } from "@/shared/components/ui/button"
 import { useAlert } from "@/core/providers/alert-provider"
-import type { Channel } from "@/modules/channels/domain/channel"
+import { errorMessage } from "@/core/lib/error-messages"
 import { DetailSheet } from "@/shared/components/features/detail-sheet"
-import { useChannelStore } from "../../infrastructure/store/channels.store"
-import { deleteChannel } from "../../infrastructure/services/channels-service.adapter"
+import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
+import {
+  CHANNEL_KIND_LABELS,
+  CHANNEL_STATUS_LABELS,
+  type ChannelDTO,
+  type ChannelStatus,
+} from "@/modules/channels/domain/channel"
+import {
+  deleteChannel,
+  getChannelById,
+  logoutWweb,
+  startWwebSession,
+  stopWwebSession,
+} from "@/modules/channels/infrastructure/services/channels-service.adapter"
 
 /**
- * ChannelDetailSheet
- *
- * Listens to the custom event "channels:detail:open" with payload { defaults: Channel }
- * and renders a responsive DetailSheet with channel detail view.
- *
- * Optimizations:
- * - Uses DetailSheet's fetchDetail for deferred loading with built-in skeleton handling
- * - Minimal state (channel + fetched detail)
-*/
-export function ChannelDetailSheet() {
-    const router = useRouter()
-    const [open, setOpen] = useState(false)
-    const { fetchChannels } = useChannelStore()
-    const { showModal, closeModal, showAlert } = useAlert()
-    const [channel, setChannel] = useState<Channel | null>(null)
-
-    useEffect(() => {
-        const onOpen = (e: Event) => {
-            const detail = (e as CustomEvent).detail as { defaults: Channel }
-            setChannel(detail.defaults)
-            console.log(channel)
-            setOpen(true)
-        }
-        window.addEventListener("channels:detail:open", onOpen)
-        return () => window.removeEventListener("channels:detail:open", onOpen)
-    }, [channel])
-
-    const getStatusBadge = (isActive: boolean) => (
-        <Badge variant={isActive ? "default" : "secondary"} className="text-xs">
-        {isActive ? "Activo" : "Inactivo"}
-        </Badge>
-    )
-
-    const getTypeLabel = (type: string) => {
-        const labels: Record<string, string> = {
-        WHATSAPP: "WhatsApp",
-        EMAIL: "Email",
-        TELEGRAM: "Telegram",
-        INSTAGRAM: "Instagram",
-        MESSENGER: "Messenger",
-        CALL: "Llamada",
-        }
-        return labels[type] || type
-    }
-
-    const getProviderLabel = (provider: string) => {
-        const labels: Record<string, string> = {
-        META: "Meta",
-        TWILIO: "Twilio",
-        CUSTOM: "Custom",
-        DEFAULT: "Default",
-        }
-        return labels[provider] || provider
-    }
-
-    const handleClose = () => {
-        setOpen(false)
-        setChannel(null)
-        router.back()
-    }
-
-    const onOpenChange = (open: boolean) => {
-        setOpen(open)
-        if (!open) handleClose()
-    }
-
-    const onDeleteChannel = () => {
-        handleClose()
-        showModal({
-            title: "Eliminar canal",
-            description: `¿Seguro que deseas eliminar el canal “${channel?.name}”?`,
-            actions: [
-                { label: "Cancelar", variant: "outline", asClose: true, id: "channels-delete-cancel" },
-                { label: "Eliminar", variant: "destructive", asClose: false, onClick: () => handleDeleteChannel(), id: "channels-delete-confirm" },
-            ],
-            className: "sm:max-w-md z-[70]",
-        })
-    }
-
-    const handleDeleteChannel = async () => {
-        try{
-            if (!channel?.id) throw new Error("ID de canal no encontrado")
-            const res = await deleteChannel(channel.id)
-            if (res.successful) {
-                fetchChannels()
-                showAlert({ tone: "success", title: res.message || "Canal eliminado correctamente", open: true })
-            }
-        } catch (error) {
-            const { message, status } = parseHttpError(error)
-            showAlert({ tone: "error", title: message || "No se pudo eliminar el canal", description: status ? `Código: ${status}` : undefined })
-        }
-        finally {
-            closeModal()
-        }
-    }
-
-    return (
-        <DetailSheet
-            open={open}
-            zIndex={49}
-            id={channel?.id}
-            title="Detalle del Canal"
-            onOpenChange={onOpenChange}
-            subtitle={channel ? `${channel.name} • ${getTypeLabel(channel.type)}` : undefined}
-            skeleton={<div className="animate-pulse space-y-4"><div className="h-4 bg-secondary rounded"></div><div className="h-4 bg-secondary rounded w-3/4"></div><div className="h-8 bg-secondary rounded"></div></div>}
-        >
-        {channel && (
-            <div className="space-y-6">
-            <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">{channel.name}</h3>
-                {getStatusBadge(channel.is_active)}
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <span className="text-muted-foreground">Tipo:</span>
-                    <div className="font-medium">{getTypeLabel(channel.type)}</div>
-                </div>
-                <div>
-                    <span className="text-muted-foreground">Proveedor:</span>
-                    <div className="font-medium">{getProviderLabel(channel.provider)}</div>
-                </div>
-                <div className="col-span-2">
-                    <span className="text-muted-foreground">Cuenta:</span>
-                    <div className="font-medium font-mono text-xs bg-muted px-2 py-1 rounded">
-                    {channel.provider_account}
-                    </div>
-                </div>
-                </div>
-            </section>
-
-            {/* ELIMINAR CANAL */}
-            <Button variant="destructive" onClick={() => onDeleteChannel()}>
-                <Trash2 className="size-4" />
-                Eliminar Canal
-            </Button>
-
-            <section className="space-y-3">
-                <h4 className="text-sm font-medium text-muted-foreground">Información Técnica</h4>
-                <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">ID:</span>
-                    <span className="font-mono text-xs">{channel.id}</span>
-                </div>
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Empresa:</span>
-                    <span>{channel.company_id}</span>
-                </div>
-                {channel.default_agent_id && (
-                    <div className="flex justify-between">
-                    <span className="text-muted-foreground">Agente por defecto:</span>
-                    <span>{channel.default_agent_id}</span>
-                    </div>
-                )}
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Creado:</span>
-                    <span className="text-xs">{new Date(channel.created_at).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Actualizado:</span>
-                    <span className="text-xs">{new Date(channel.updated_at).toLocaleDateString()}</span>
-                </div>
-                </div>
-            </section>
-
-            {channel.config && Object.keys(channel.config).length > 0 && (
-                <section className="space-y-3">
-                <h4 className="text-sm font-medium text-muted-foreground">Configuración</h4>
-                <pre className="text-xs bg-muted p-3 rounded-md overflow-auto">
-                    {JSON.stringify(channel.config, null, 2)}
-                </pre>
-                </section>
-            )}
-            </div>
-        )}
-        </DetailSheet>
-    )
+ * Detalle de canal (panel lateral). Se abre con el CustomEvent
+ * `channels:detail:open` (detail: { id }). El estado de conexión se pinta
+ * en vivo desde el store (eventos WS `/channels`); las acciones de sesión
+ * wweb son 202 → la confirmación llega por WS.
+ */
+const STATUS_DOT: Record<ChannelStatus, string> = {
+  pending_setup: "bg-zinc-400",
+  connecting: "bg-amber-500 animate-pulse",
+  connected: "bg-green-500",
+  disconnected: "bg-zinc-400",
+  error: "bg-red-500",
 }
 
-export default ChannelDetailSheet
+export function ChannelDetailSheet() {
+  const [open, setOpen] = useState(false)
+  const [id, setId] = useState<string | undefined>(undefined)
+  const [detail, setDetail] = useState<ChannelDTO | null>(null)
+  const [busy, setBusy] = useState(false)
+  const { showModal, closeModal, showAlert } = useAlert()
+  const { channels, pairingByChannel, fetchChannels } = useChannelStore()
+
+  // El estado en vivo del store manda sobre el snapshot del fetch.
+  const live = channels.find((c) => c.id === id)
+  const channel = live ?? detail
+  const pairing = id ? pairingByChannel[id] : undefined
+
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const { id: channelId } = (e as CustomEvent<{ id: string }>).detail
+      setId(channelId)
+      setOpen(true)
+    }
+    window.addEventListener("channels:detail:open", onOpen)
+    return () => window.removeEventListener("channels:detail:open", onOpen)
+  }, [])
+
+  const runAction = async (action: () => Promise<unknown>, pendingMessage: string) => {
+    if (!id || busy) return
+    setBusy(true)
+    try {
+      await action()
+      showAlert({ tone: "success", title: pendingMessage, open: true, autoCloseMs: 3500 })
+    } catch (err) {
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo completar la acción"), open: true })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const confirmDelete = () => {
+    if (!channel) return
+    showModal({
+      title: "Eliminar canal",
+      description: `¿Seguro que deseas eliminar “${channel.name}”? Las conversaciones asociadas dejarán de recibir mensajes.`,
+      actions: [
+        { label: "Cancelar", variant: "outline", asClose: true, id: "channel-delete-cancel" },
+        {
+          label: "Eliminar",
+          variant: "destructive",
+          asClose: false,
+          id: "channel-delete-confirm",
+          onClick: async () => {
+            try {
+              await deleteChannel(channel.id)
+              closeModal()
+              setOpen(false)
+              await fetchChannels()
+              showAlert({ tone: "success", title: "Canal eliminado", open: true, autoCloseMs: 3500 })
+            } catch (err) {
+              showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el canal"), open: true })
+            }
+          },
+        },
+      ],
+      className: "sm:max-w-md",
+    })
+  }
+
+  return (
+    <DetailSheet
+      id={id}
+      open={open}
+      onOpenChange={setOpen}
+      title="Detalle del canal"
+      fetchDetail={async (channelId: string) => {
+        const data = await getChannelById(channelId)
+        setDetail(data)
+        return data
+      }}
+      skeleton={<div className="animate-pulse h-40 bg-secondary rounded-lg" />}
+    >
+      {channel && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className={cn("h-3 w-3 rounded-full", STATUS_DOT[channel.status])} aria-hidden />
+            <h1 className="text-xl font-bold">{channel.name}</h1>
+            <Badge variant="secondary" className="ml-auto">{CHANNEL_STATUS_LABELS[channel.status]}</Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 text-sm">
+            <div>
+              <div className="text-xs text-muted-foreground">Tipo</div>
+              <div>{CHANNEL_KIND_LABELS[channel.kind]}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Teléfono</div>
+              <div>{channel.display_phone_number ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Nombre verificado</div>
+              <div>{channel.verified_name ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Credenciales</div>
+              <div>
+                {channel.credentials_configured
+                  ? `Configuradas${channel.token_last4 ? ` (…${channel.token_last4})` : ""}`
+                  : "Sin configurar"}
+              </div>
+            </div>
+          </div>
+
+          {/* Pairing en vivo (wweb) */}
+          {channel.kind === "whatsapp_web" && pairing?.qr_image && channel.status !== "connected" && (
+            <div className="flex flex-col items-center gap-2 rounded-lg border border-border p-4">
+              <p className="text-sm font-medium">Escanea con WhatsApp</p>
+              <Image src={pairing.qr_image} alt="Código QR de vinculación" width={200} height={200} unoptimized />
+              {pairing.pairing_code && (
+                <p className="text-sm text-muted-foreground">
+                  O ingresa el código: <span className="font-mono font-semibold">{pairing.pairing_code}</span>
+                </p>
+              )}
+            </div>
+          )}
+
+          {channel.kind === "whatsapp_web" && (
+            <div className="flex flex-wrap gap-2">
+              {(channel.status === "disconnected" || channel.status === "pending_setup" || channel.status === "error") && (
+                <Button
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => void runAction(() => startWwebSession(channel.id), "Iniciando sesión… el QR llegará en unos segundos")}
+                >
+                  <Power className="h-4 w-4" /> Conectar
+                </Button>
+              )}
+              {channel.status === "connecting" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => void runAction(() => startWwebSession(channel.id), "Reintentando conexión…")}
+                >
+                  <RefreshCw className="h-4 w-4" /> Reintentar
+                </Button>
+              )}
+              {channel.status === "connected" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => void runAction(() => stopWwebSession(channel.id), "Deteniendo sesión (se conserva la vinculación)…")}
+                >
+                  <PowerOff className="h-4 w-4" /> Detener
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => void runAction(() => logoutWweb(channel.id), "Desvinculando dispositivo…")}
+              >
+                <Unlink className="h-4 w-4" /> Desvincular
+              </Button>
+            </div>
+          )}
+
+          <div className="border-t border-border pt-3">
+            <Button size="sm" variant="destructive" onClick={confirmDelete}>
+              <Trash2 className="h-4 w-4" /> Eliminar canal
+            </Button>
+          </div>
+        </div>
+      )}
+    </DetailSheet>
+  )
+}

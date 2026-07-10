@@ -2,7 +2,7 @@
 
 import type { z } from "zod"
 import { Button } from "@/shared/components/ui/button"
-import type { FieldPath, FieldValues, UseFormProps, Control } from "react-hook-form"
+import type { FieldPath, FieldValues, UseFormProps, UseFormReturn, Control } from "react-hook-form"
 
 export type FormFieldName<TValues extends FieldValues> = FieldPath<TValues>
 
@@ -100,7 +100,8 @@ export type DynamicFormProps<TValues extends FieldValues> = {
   schema: z.ZodType<TValues>
   defaultValues?: Partial<TValues>
   fields: ReadonlyArray<FieldConfig<TValues>>
-  onSubmit?: (values: TValues) => void | Promise<void>
+  /** El segundo argumento expone el form RHF (p.ej. para `setError` con errores del backend). */
+  onSubmit?: (values: TValues, form: UseFormReturn<TValues>) => void | Promise<void>
   mode?: UseFormProps<TValues>["mode"]
   columns?: GridColumns
   gap?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8

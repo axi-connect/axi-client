@@ -1,120 +1,124 @@
-import { buildListParams, SortDirection } from "./query";
-import type { ApiResponse } from "../../core/services/api";
+"use client";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { buildListParams, type ListQuery } from "./query";
+import { HttpError, isHttpError } from "@/core/api/problem";
+import type { OffsetMeta } from "@/core/api/types";
 
-type Fetcher<TData, TParams extends Record<string, unknown>> = (params: TParams) => Promise<ApiResponse<TData>>;
-
-export type UsePaginatedListOptions<TData, TItem, TSearchField extends string, TParams extends Record<string, unknown>> = {
-  fetcher: Fetcher<TData, TParams>;
-  getItems: (data: TData) => TItem[];
-  getTotal: (data: TData) => number;
-  pageSize?: number;
-  sortBy?: string;
-  sortDir?: SortDirection;
-  searchField?: TSearchField;
-  extraParams?: Partial<TParams>;
+/**
+ * Hook de listado server-side sobre el contrato del backend:
+ * `{ data: T[], meta: { total, page, page_size } }` con query `page`/`page_size`.
+ *
+ * También acepta colecciones no paginadas (`{ data }` o `{ data, meta: { total } }`):
+ * en ese caso `total` cae a `data.length` y la paginación queda inerte.
+ * Reutilizar SIEMPRE para tablas en lugar de reimplementar estado de listado.
+ */
+export type ListResult<TItem> = {
+  data: TItem[];
+  meta?: Partial<OffsetMeta>;
 };
 
-export function usePaginatedList<
-  TData,
-  TItem,
-  TSearchField extends string = string,
-  TParams extends Record<string, unknown> = Record<string, unknown>
->(options: UsePaginatedListOptions<TData, TItem, TSearchField, TParams>) {
-  const { fetcher, getItems, getTotal, pageSize = 20, sortBy, sortDir, searchField, extraParams } = options;
+export type UsePaginatedListOptions<TItem, TSearchField extends string = string> = {
+  fetcher: (params: ListQuery) => Promise<ListResult<TItem>>;
+  pageSize?: number;
+  searchField?: TSearchField;
+  /** Filtros específicos del recurso; cambiarlos reinicia a la página 1. */
+  extraParams?: Record<string, unknown>;
+};
+
+export function usePaginatedList<TItem, TSearchField extends string = string>(
+  options: UsePaginatedListOptions<TItem, TSearchField>,
+) {
+  const { fetcher, pageSize = 25, searchField, extraParams } = options;
 
   const [items, setItems] = useState<TItem[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<HttpError | null>(null);
 
   const [page, setPage] = useState<number>(1);
-  const [pageSizeState, setPageSize] = useState<number>(pageSize);
-  const [sortByState, setSortBy] = useState<string | undefined>(sortBy);
-  const [sortDirState, setSortDir] = useState<SortDirection | undefined>(sortDir);
+  const [pageSizeState, setPageSizeState] = useState<number>(pageSize);
   const [searchValue, setSearchValue] = useState<string | undefined>(undefined);
 
-  const params = useMemo(() => {
-    return buildListParams({
-      page,
-      pageSize: pageSizeState,
-      sortBy: sortByState,
-      sortDir: sortDirState,
-      searchField: searchField as TSearchField | undefined,
-      searchValue,
-      extra: extraParams as Record<string, unknown>,
-    }) as unknown as TParams;
-  }, [page, pageSizeState, sortByState, sortDirState, searchField, searchValue, extraParams]);
+  const params = useMemo(
+    () =>
+      buildListParams({
+        page,
+        pageSize: pageSizeState,
+        searchField,
+        searchValue,
+        extra: extraParams,
+      }),
+    [page, pageSizeState, searchField, searchValue, extraParams],
+  );
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetcher(params);
-      setItems(getItems(response.data));
-      setTotal(getTotal(response.data));
+      const result = await fetcher(params);
+      setItems(result.data);
+      setTotal(result.meta?.total ?? result.data.length);
     } catch (err) {
-      setError((err as Error)?.message || "Error fetching list");
+      setError(
+        isHttpError(err)
+          ? err
+          : new HttpError({
+              status: 0,
+              code: "client/network",
+              message: err instanceof Error ? err.message : "Error de red",
+            }),
+      );
     } finally {
       setLoading(false);
     }
-  }, [fetcher, getItems, getTotal, params]);
+  }, [fetcher, params]);
 
   useEffect(() => {
-    // Auto refresh when query state changes
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const canPrev = page > 1;
   const canNext = page * pageSizeState < total;
 
   const nextPage = useCallback(() => {
-    if (canNext) setPage(prev => prev + 1);
-  }, [canNext]);
+    setPage((prev) => (prev * pageSizeState < total ? prev + 1 : prev));
+  }, [pageSizeState, total]);
 
   const prevPage = useCallback(() => {
-    if (canPrev) setPage(prev => Math.max(1, prev - 1));
-  }, [canPrev]);
-
-  const setSort = useCallback((by?: string, dir?: SortDirection) => {
-    setSortBy(by);
-    setSortDir(dir);
-    setPage(1);
+    setPage((prev) => Math.max(1, prev - 1));
   }, []);
 
   const setSearch = useCallback((value?: string) => {
-    setSearchValue(value);
+    setSearchValue(value || undefined);
     setPage(1);
   }, []);
 
-  const setPageSizeSafe = useCallback((size: number) => {
-    setPageSize(size);
+  const setPageSize = useCallback((size: number) => {
+    setPageSizeState(size);
     setPage(1);
   }, []);
 
   return {
-    // data
+    // datos
     items,
     total,
     loading,
     error,
-    // query state
+    // estado de query
     page,
     pageSize: pageSizeState,
-    sortBy: sortByState,
-    sortDir: sortDirState,
     searchValue,
-    // controls
+    // controles
     canNext,
     canPrev,
     nextPage,
     prevPage,
     setPage,
-    setPageSize: setPageSizeSafe,
-    setSort,
+    setPageSize,
     setSearch,
     refresh,
-    // raw params (if needed by consumers)
+    // params crudos por si el consumidor los necesita
     params,
   } as const;
 }

@@ -1,56 +1,37 @@
-export interface UserRoleEntity {
-  id: number
-  name: string
-  description?: string
-  code?: string
-  hierarchy_level?: number
-  state?: string
-}
+import type { Schemas } from "@/core/api/types";
 
-export interface CompanyEntity {
-  id: number
-  name: string
-  activity_description?: string
-  nit?: string
-  address?: string
-  city?: string
-  industry?: string
-  isotype?: string | null
-}
+/**
+ * Tipos de autenticación — derivados del contrato OpenAPI del backend.
+ * El perfil de sesión es `MeDto` (incluye `role` y `permissions[]`).
+ */
+export type AuthUser = Schemas["MeDto"];
 
-export interface AuthUser {
-  id: number
-  name: string
-  email: string
-  phone?: string
-  avatar?: string
-  role_id?: number
-  company_id?: number
-  role?: UserRoleEntity
-  company?: CompanyEntity
-}
+/** Respuesta de login y refresh: `{ access_token, token_type, expires_in, refresh_token }`. */
+export type AuthTokens = Schemas["AuthTokensDto"];
 
-export interface Tokens {
-  accessToken: string
-  refreshToken: string
-}
+/** `company_nit` solo es necesario si el email existe en varios tenants (409 auth/ambiguous_company). */
+export type LoginPayload = {
+  email: string;
+  password: string;
+  company_nit?: string;
+};
 
-export interface LoginPayload {
-  email: string
-  password: string
-}
+export type SessionResponse = {
+  isAuthenticated: boolean;
+  user?: AuthUser;
+};
 
-export interface ResetPasswordPayload {
-  token: string
-  password: string
-}
-
-export interface SessionResponse {
-  isAuthenticated: boolean
-  user?: AuthUser
-}
+/** Contrato de `GET /api/auth/token` (solo para el handshake de WebSocket). */
+export type WsTokenResponse = {
+  token: string;
+  /** Epoch en milisegundos en que expira el access token. */
+  expires_at: number;
+};
 
 export const COOKIE_NAMES = {
   accessToken: "accessToken",
   refreshToken: "refreshToken",
-} as const
+} as const;
+
+/** Vida del refresh token en el backend (JWT_REFRESH_TTL_DAYS = 14). */
+export const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;

@@ -1,48 +1,130 @@
 "use client"
 
-import { parseHttpError } from "@/core/services/api"
-import { useAlert } from "@/core/providers/alert-provider"
-import { DynamicForm } from "@/shared/components/features/dynamic-form"
-import { createCharacter, updateCharacter } from "@/modules/agents/infrastructure/services/character-service.adapter"
-import { buildCharacterFormFields, characterFormSchema, defaultCharacterFormValues, type CharacterFormValues } from "@/modules/agents/ui/forms/config/character.config"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Input } from "@/shared/components/ui/input"
+import { applyServerValidation, errorMessage } from "@/core/lib/error-messages"
+import { characterStyle, type CharacterDTO } from "@/modules/agents/domain/character"
+import {
+  createCharacter,
+  updateCharacter,
+} from "@/modules/agents/infrastructure/services/character-service.adapter"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/shared/components/ui/form"
 
-export type CharacterFormHost = { defaultValues?: Partial<CharacterFormValues> }
+/**
+ * Formulario de character (`POST/PATCH /ai-characters`). El `style` del
+ * backend es JSON libre; la UI gestiona `style.background` (clase Tailwind
+ * usada por la galería y el selector del agente).
+ */
+const characterFormSchema = z.object({
+  name: z.string().trim().min(1, "Nombre requerido"),
+  avatar_url: z.url("URL inválida").optional().or(z.literal("")),
+  background: z.string().trim().optional().or(z.literal("")),
+})
 
-export function CharacterForm({ host, onSuccess }: { host?: CharacterFormHost; onSuccess?: () => void }) {
-  const { showAlert } = useAlert()
+type CharacterFormValues = z.infer<typeof characterFormSchema>
 
-  async function handleSubmit(values: CharacterFormValues) {
+export type CharacterFormHost = {
+  character?: CharacterDTO | null
+  onSuccess?: () => void
+  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string }) => void
+}
+
+export function CharacterForm({ host }: { host?: CharacterFormHost }) {
+  const isEdit = Boolean(host?.character)
+  const [submitting, setSubmitting] = useState(false)
+
+  const form = useForm<CharacterFormValues>({
+    resolver: zodResolver(characterFormSchema),
+    defaultValues: {
+      name: host?.character?.name ?? "",
+      avatar_url: host?.character?.avatar_url ?? "",
+      background: host?.character ? String(characterStyle(host.character).background ?? "") : "",
+    },
+  })
+
+  const handleSubmit = async (values: CharacterFormValues) => {
+    if (submitting) return
+    setSubmitting(true)
     try {
-      const id = (host?.defaultValues as any)?.id
-      const payload = {
-        avatar_url: values.avatar_url || undefined,
-        style: values.style as any,
-        voice: values.voice as any,
-        resources: values.resources as any,
+      const dto = {
+        name: values.name,
+        ...(values.avatar_url ? { avatar_url: values.avatar_url } : {}),
+        ...(values.background
+          ? { style: { ...(host?.character?.style ?? {}), background: values.background } }
+          : {}),
       }
-      const res = id ? await updateCharacter(id, payload) : await createCharacter(payload)
-      if (res.successful) {
-        showAlert({ tone: "success", title: res.message || (id ? "Personaje actualizado" : "Personaje creado correctamente"), open: true, autoCloseMs: 4000 })
-        onSuccess?.()
+      if (isEdit && host?.character) {
+        await updateCharacter(host.character.id, dto)
+        host?.setAlert?.({ variant: "success", title: "Character actualizado correctamente" })
       } else {
-        showAlert({ tone: "error", title: res.message || (id ? "No se pudo actualizar el personaje" : "No se pudo crear el personaje"), open: true })
+        await createCharacter(dto)
+        host?.setAlert?.({ variant: "success", title: "Character creado correctamente" })
       }
+      host?.onSuccess?.()
     } catch (err) {
-      const { status, message } = parseHttpError(err)
-      const id = (host?.defaultValues as any)?.id
-      showAlert({ tone: "error", title: message || (id ? "No se pudo actualizar el personaje" : "No se pudo crear el personaje"), description: status ? `Código: ${status}` : undefined, open: true })
+      if (applyServerValidation(err, form)) return
+      host?.setAlert?.({
+        variant: "destructive",
+        title: errorMessage(err, isEdit ? "No se pudo actualizar el character" : "No se pudo crear el character"),
+      })
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <DynamicForm<CharacterFormValues>
-      gap={4}
-      id="character-form"
-      schema={characterFormSchema}
-      fields={buildCharacterFormFields()}
-      columns={{ base: 1, md: 2 }}
-      defaultValues={{ ...defaultCharacterFormValues, ...(host?.defaultValues ?? {}) }}
-      onSubmit={handleSubmit}
-    />
+    <Form {...form}>
+      <form id="character-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          name="name"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nombre</FormLabel>
+              <FormControl>
+                <Input placeholder="Aria" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="avatar_url"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Avatar (URL)</FormLabel>
+              <FormControl>
+                <Input placeholder="https://…/avatar.png" {...field} value={field.value ?? ""} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="background"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fondo (clase Tailwind)</FormLabel>
+              <FormControl>
+                <Input placeholder="bg-rose-200" {...field} value={field.value ?? ""} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
   )
 }

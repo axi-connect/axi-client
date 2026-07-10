@@ -1,30 +1,30 @@
-import { cookies } from "next/headers"
-import { http } from "@/core/services/http"
-import { NextResponse } from "next/server"
-import type { ApiResponse } from "@/core/services/api"
-import type { AuthUser } from "@/shared/auth/auth.types"
-import { refreshToken } from "@/shared/auth/auth.handlers"
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { http } from "@/core/services/http";
+import { refreshSession } from "@/shared/auth/auth.handlers";
+import type { AuthUser, SessionResponse } from "@/shared/auth/auth.types";
 
-type MeResponse = ApiResponse<{ user: AuthUser }>
-
-export async function GET(req: Request) {
+/**
+ * GET /api/auth/session — hidratación de sesión del cliente.
+ * Llama `GET /auth/me`; si el access expiró intenta UN refresh y reintenta.
+ * Devuelve `{ isAuthenticated, user? }` con el MeDto completo
+ * (incluye `role` y `permissions[]` para gatear la UI).
+ */
+export async function GET() {
   try {
-    const me = await http.get<MeResponse>("/auth/me", undefined, { authenticate: true })
-    return NextResponse.json({ isAuthenticated: true, user: me.data })
+    const user = await http.get<AuthUser>("/auth/me");
+    return NextResponse.json<SessionResponse>({ isAuthenticated: true, user });
   } catch {
-    // Try refresh once
-    try {
-      const cookieStore = await cookies()
-      const [success] = await refreshToken(cookieStore)
-      if (!success) return NextResponse.json({ isAuthenticated: false })
+    const result = await refreshSession(await cookies());
+    if (!result.ok) return NextResponse.json<SessionResponse>({ isAuthenticated: false });
 
-      const newAccess = cookieStore.get("accessToken")?.value
-      if (!newAccess) return NextResponse.json({ isAuthenticated: false })
-      
-      const me = await http.get<MeResponse>("/auth/me", undefined, { authenticate: true })
-      return NextResponse.json({ isAuthenticated: true, user: me.data })
-    } catch (error) {
-      return NextResponse.json({ isAuthenticated: false })
+    try {
+      const user = await http.get<AuthUser>("/auth/me", undefined, {
+        headers: { Authorization: `Bearer ${result.tokens.access_token}` },
+      });
+      return NextResponse.json<SessionResponse>({ isAuthenticated: true, user });
+    } catch {
+      return NextResponse.json<SessionResponse>({ isAuthenticated: false });
     }
   }
 }

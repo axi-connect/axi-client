@@ -37,9 +37,9 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
   const onValid = useCallback(
     async (data: TValues) => {
       if (!onSubmit) return
-      await onSubmit(data)
+      await onSubmit(data, form)
     },
-    [onSubmit]
+    [onSubmit, form]
   )
 
   const onInvalid = useCallback(
@@ -49,7 +49,7 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
         .filter((f) => f.isDisabled?.(values as TValues))
         .map((f) => String(f.name))
       if (disabledKeys.length) {
-        form.clearErrors(disabledKeys as any)
+        form.clearErrors(disabledKeys as Parameters<typeof form.clearErrors>[0])
       }
       const hasOtherErrors = Object.keys(errors || {}).some((k) => !disabledKeys.includes(k))
       if (!hasOtherErrors) {
