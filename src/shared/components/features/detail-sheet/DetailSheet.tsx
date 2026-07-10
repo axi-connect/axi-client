@@ -7,6 +7,7 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { useBodyScrollLock } from "./hooks/useBodyScrollLock"
 import { useResponsiveSide } from "./hooks/useResponsiveSide"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { spring } from "@/core/styles/motion"
 
 export type DetailSheetSize = "xs" | "sm" | "md" | "lg" | "xl" | number
 
@@ -123,9 +124,7 @@ export default function DetailSheet<Id extends string | number = string | number
       ? { hidden: { x: "100%" }, visible: { x: 0 }, exit: { x: "100%" } }
       : { hidden: { y: "100%" }, visible: { y: 0 }, exit: { y: "100%" } }
 
-  const transition = prefersReducedMotion
-    ? { duration: 0 }
-    : { type: "spring", stiffness: 340, damping: 34 }
+  const transition = prefersReducedMotion ? { duration: 0 } : spring.soft
 
   const containerRef = React.useRef<HTMLDivElement | null>(null)
 

@@ -96,10 +96,11 @@
 
 **Objetivo:** presets únicos, micro-interacciones consistentes.
 
-- [ ] Crear `core/styles/motion.ts` con los presets DESIGN-SYSTEM §6 (`spring.soft`, `spring.snappy`, `fade.fast`, `press`).
-- [ ] Migrar `DetailSheet`/modales a los presets (hoy tienen valores propios).
-- [ ] Añadir `active:scale-[0.97]` + transición a `button.tsx` (variante cva base).
-- [ ] Verificar `prefers-reduced-motion` en todos los puntos animados.
+- [x] `core/styles/motion.ts` con los presets DESIGN-SYSTEM §6 (`spring.soft/snappy`, `fade.fast/slow`, `press`, `durations`, coreografía del splash). *(Creado durante el desarrollo del splash.)*
+- [x] Migradas las transiciones ad-hoc a presets: `DetailSheet` (→ `spring.soft`), `StatusAlert`/notice (→ `spring.snappy`), `FloatingAlert` (→ `spring.soft`), `RowCollapse` (→ `fade.fast`), `SiteHeader` (entrada → `fade.slow`, logo hover → `spring.snappy`, dropdown → `fade.fast`), `BasicPagination` (→ `durations.hover`).
+- [x] `motion-safe:active:scale-[0.97]` en la base cva de `button.tsx` (press físico; no aplica con reduced-motion).
+- [x] `prefers-reduced-motion` sistémico: nuevo `MotionProvider` (`MotionConfig reducedMotion="user"`) en el root layout — desactiva transform/layout en TODOS los `motion.*` automáticamente; en CSS se añadió el guard para las entradas/salidas de Radix (`.animate-in/.animate-out`), sumado a los guards existentes del splash.
+- [x] *Extra:* tonos `info` y `neutral` de `StatusAlert` migrados a tokens (se habían escapado del barrido de la Fase 3: usaban `sky-*`, `white`, `neutral-900`).
 
 ## Fase 8 — Assets de marca (D10)
 

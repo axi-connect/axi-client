@@ -196,13 +196,14 @@ Presets centralizados en **`src/core/styles/motion.ts`** — nunca duraciones/cu
 | `fade.slow` | `300ms ease-in-out` | Overlays de pantalla completa |
 | `press` | `scale: 0.97`, 100ms | Botones e ítems interactivos |
 | `hover` | transición 150–200ms | Color/fondo/sombra en hover |
-| `splash.*` | entrada spring / salida `0.9s [0.7,0,0.84,0]` | Splash post-login (el logo "atraviesa la pantalla") |
+| `splash.*` | entrada `0.45s` / salida `1.1s [0.55,0,0.85,0.15]`, escala 1→80 | Splash de entrada a la app ("se entra por el ojo de la α") — valores documentales; la implementación real es CSS |
 
-Animaciones CSS de marca (en `globals.css`): `.animate-brand-pulse` (pulso del isotipo en el `BrandLoader`; se desactiva con reduced-motion) y `.animate-delayed-fade-in` (aparición diferida ~150ms para indicadores de navegación, evita flicker).
+Animaciones CSS de marca (en `globals.css`): `.animate-brand-pulse` (pulso del isotipo en el `BrandLoader`; se desactiva con reduced-motion), `.animate-delayed-fade-in` (aparición diferida ~150ms para indicadores de navegación, evita flicker) y las fases del splash (`splash-in` / `splash-exit` / `fade-in`).
 
 Reglas:
 - Toda animación no esencial se desactiva con `prefers-reduced-motion` (`useReducedMotion` de framer-motion o la media query CSS ya presente en `globals.css`).
 - Animar solo `transform` y `opacity` (compositor); nunca `width`/`height`/`top` en listas grandes.
+- **Animaciones que deben sobrevivir a cargas pesadas** (splash, loaders de transición) van en **CSS, no en framer-motion**: framer anima por rAF en el hilo principal y se congela si la página destino está hidratando; el CSS corre en el compositor (caso real: LOADING.md §6.3).
 - Nada parpadea ni se mueve en loop en el workspace.
 
 ---

@@ -99,18 +99,21 @@ Reutilizar este patrón para cualquier link de navegación con destino potencial
 
 ---
 
-## 6. Splash post-login ("el logo atraviesa la pantalla")
+## 6. Splash de entrada a la app ("se entra por el ojo de la α")
 
 `SplashProvider` (`src/core/providers/splash-provider.tsx`), montado en el root layout (por eso sobrevive al swap de layout público → privado). Único loader de pantalla completa por encima de los layouts.
 
+**Puntos de entrada actuales:** el login (`LoginForm`, tras `await login()`) y el CTA del header público (`SiteHeader`, el botón con el nombre del usuario cuando hay sesión activa). Ambos llaman `useSplashOptional().start()` justo antes de navegar.
+
 **Flujo:**
 
-1. `LoginForm` → login exitoso → `useSplash().start()` → `router.replace(next)`. El overlay cubre todo (`z-[100]`, fondo sólido + glow tricolor).
-2. Fases: *entrada* (logo `scale 0.85→1`, `spring.soft`) → *espera* (pulso `brand-pulse` mientras la app carga) → *salida* (logo `scale 1→18` + blur, curva `[0.7,0,0.84,0]` de `splash.exit`; el fondo se desvanece con delay para revelar la app detrás).
-3. `AppReadySignal` (montado en `(private)/layout.tsx`) llama `markReady()` al montar → dispara la salida. Visibilidad mínima 700 ms (la entrada no se corta); timeout de seguridad 8 s (si nadie señala ready, se autodescarta; si la ruta sigue en `/auth/*`, cierra sin animación).
-4. **Reduced-motion**: sin zoom — solo crossfade (`useReducedMotion`).
+1. `start()` → el overlay cubre todo (`z-[100]`; fondo sólido + glow tricolor separados del logo) → se navega (`router.replace` o `Link`).
+2. Fases (animaciones **CSS** en `globals.css`): *entrada* (`splash-in`: `scale 0.85→1` + fade, 0.45 s) → *espera* (pulso `brand-pulse` mientras la app carga) → *salida* (`splash-exit`, 1.1 s): el fondo se retira primero (transición de opacidad, 0.3 s) y el logo escala `1→80` con `transform-origin` en el **ojo de la α** (`44.57% 49.95%` del viewBox) — la app queda visible a través del agujero mientras crece; la opacidad del logo se sostiene el 82% del recorrido y solo el tramo final desvanece.
+3. **Por qué CSS y no framer-motion:** `transform`/`opacity` en CSS corren en el compositor, así el zoom no se congela aunque la hidratación de la página destino bloquee el hilo principal (framer anima por rAF en el main thread y ahí el efecto se perdía). Si se ajusta la coreografía, mantener sincronizados `globals.css` y los valores documentales de `core/styles/motion.ts`.
+4. `AppReadySignal` (montado en `(private)/layout.tsx`) llama `markReady()` al montar → dispara la salida. Visibilidad mínima 700 ms (la entrada no se corta); timeout de seguridad 8 s (si nadie señala ready, se autodescarta; si la ruta sigue en `/auth/*`, cierra sin animación).
+5. **Reduced-motion**: sin zoom — la entrada cae a `fade-in` (media query CSS) y la salida a un crossfade de 300 ms (rama JS del provider).
 
-**API:** `useSplash()` lanza si no hay provider; `useSplashOptional()` devuelve no-ops fuera del provider (tests, piezas compartidas). No usar el splash para cargas que no sean la transición de autenticación.
+**API:** `useSplash()` lanza si no hay provider; `useSplashOptional()` devuelve no-ops fuera del provider (tests, piezas compartidas). Usarlo solo para transiciones *hacia* la app (login, CTA de entrada); nunca como loader genérico de datos.
 
 ---
 

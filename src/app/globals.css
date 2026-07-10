@@ -248,6 +248,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 @media (prefers-reduced-motion: reduce) {
   .animate-brand-pulse { animation: none; }
   .animate-splash-in { animation-name: fade-in; }
+  /* Entradas/salidas de Radix (popover, dropdown, sheet): sin animación,
+     los elementos aparecen/desaparecen al instante. */
+  .animate-in, .animate-out { animation: none; }
   html, body { scroll-behavior: auto; }
 }
 

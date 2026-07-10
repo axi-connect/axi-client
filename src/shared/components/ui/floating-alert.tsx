@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
+import { spring } from "@/core/styles/motion";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 
 export type FloatingAlertConfig = {
@@ -63,7 +64,7 @@ export function FloatingAlert({ open, onOpenChange, config }: FloatingAlertProps
           animate={{ opacity: 1, top: top }}
           initial={{ opacity: 0, top: -100 }}
           key={config.id ?? "floating-alert"}
-          transition={{ type: "spring", stiffness: 300, damping: 26, mass: 0.6 }}
+          transition={spring.soft}
           style={{ position: "fixed", top, right, zIndex: 9999 }}
         >
           <Alert variant={variant} className={cn("glass shadow-lg w-[min(92vw,28rem)] pr-9", className)}>

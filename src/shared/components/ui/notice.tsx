@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cva } from "class-variance-authority"
 import { AnimatePresence, motion } from "framer-motion"
+import { spring } from "@/core/styles/motion"
 import {
   AlertCircle,
   CheckCircle2,
@@ -19,7 +20,7 @@ const container = cva(
     variants: {
       tone: {
         neutral:
-          "bg-white/70 dark:bg-neutral-900/40 border-black/10 dark:border-white/10",
+          "bg-background/70 border-border-soft",
         success:
           "bg-success/8 border-success/25 dark:bg-success/10 dark:border-success/30",
         warning:
@@ -27,7 +28,7 @@ const container = cva(
         error:
           "bg-destructive/8 border-destructive/25 dark:bg-destructive/10 dark:border-destructive/30",
         info:
-          "bg-sky-50/70 dark:bg-sky-500/10 border-sky-200/60 dark:border-sky-400/30",
+          "bg-info/8 border-info/25 dark:bg-info/10 dark:border-info/30",
       },
       elevated: { true: "shadow-lg", false: "shadow-none" },
     },
@@ -124,7 +125,7 @@ export function StatusAlert(props: StatusAlertProps) {
           initial={{ opacity: 0, y: -8, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 380, damping: 28, mass: 0.7 }}
+          transition={spring.snappy}
         >
           <span
             aria-hidden
@@ -133,7 +134,7 @@ export function StatusAlert(props: StatusAlertProps) {
               tone === "error" && "bg-destructive/10 text-destructive dark:bg-destructive/15",
               tone === "warning" && "bg-warning/10 text-warning dark:bg-warning/15",
               tone === "success" && "bg-success/10 text-success dark:bg-success/15",
-              tone === "info" && "bg-sky-100/80 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300",
+              tone === "info" && "bg-info/10 text-info dark:bg-info/15",
               tone === "neutral" && "bg-muted text-muted-foreground",
             )}
           >

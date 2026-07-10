@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { spring, fade } from '@/core/styles/motion';
 import { Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
 import { useAuthContext } from '@/core/providers/auth-provider';
 import { useSplashOptional } from '@/core/providers/splash-provider';
@@ -116,7 +117,7 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
             initial="initial"
             variants={headerVariants}
             animate={isScrolled ? 'scrolled' : 'animate'}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={fade.slow}
             className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${isScrolled ? 'glass' : ''}`}
             style={{
                 // backdropFilter: isScrolled ? 'blur(20px)' : 'none',
@@ -131,7 +132,7 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                     <motion.div
                         className="flex items-center space-x-2"
                         whileHover={{ scale: 1.05 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                        transition={spring.snappy}
                     >   
                         <Link prefetch={false} href="/" className="flex items-center space-x-2">
                             <Image src="https://res.cloudinary.com/dpfnxj52w/image/upload/v1759421795/isotipo_we1obn.png" alt="Axi Connect isotype" width={32} height={32} priority style={{ width: 'auto', height: 'auto' }} />
@@ -170,7 +171,7 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
                                         initial="hidden"
                                         animate="visible"
                                         exit="hidden"
-                                        transition={{ duration: 0.2 }}
+                                        transition={fade.fast}
                                         >
                                         {item.dropdownItems?.map((dropdownItem) => (
                                             <Link prefetch={false}                            key={dropdownItem.name}

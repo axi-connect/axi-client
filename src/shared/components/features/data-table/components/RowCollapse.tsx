@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import type { ColumnDef, DataRow } from "../types"
 import { motion, AnimatePresence } from "framer-motion"
+import { fade } from "@/core/styles/motion"
 import { TableCell, TableRow } from "@/shared/components/ui/table"
 
 type RowCollapseProps<T extends DataRow> = {
@@ -40,7 +41,7 @@ function RowCollapseInner<T extends DataRow>({ row, collapsedColumns }: RowColla
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
+                transition={fade.fast}
                 className="overflow-hidden"
               >
                 <div className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-2">

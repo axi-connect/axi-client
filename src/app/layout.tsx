@@ -7,6 +7,7 @@ import { AuthProvider } from "@/core/providers/auth-provider";
 import { ThemeProvider } from "@/core/providers/theme-provider";
 import { AlertProvider } from "@/core/providers/alert-provider";
 import { SplashProvider } from "@/core/providers/splash-provider";
+import { MotionProvider } from "@/core/providers/motion-provider";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -48,6 +49,7 @@ export default function RootLayout({
         className={`${geistMono.variable} ${nexa.variable} ${poppins.variable} antialiased`}
       >
         <ThemeProvider>
+          <MotionProvider>
           <AuthProvider>
             <AlertProvider>
               <SplashProvider>
@@ -56,6 +58,7 @@ export default function RootLayout({
               </SplashProvider>
             </AlertProvider>
           </AuthProvider>
+          </MotionProvider>
         </ThemeProvider>
       </body>
     </html>

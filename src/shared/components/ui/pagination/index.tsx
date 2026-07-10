@@ -13,6 +13,7 @@ import {
   PaginationPrevious,
 } from '@/shared/components/ui/pagination/core'
 import { motion } from 'framer-motion'
+import { durations } from '@/core/styles/motion'
 
 export type BasicPaginationProps = {
   totalPages: number
@@ -102,7 +103,7 @@ function BasicPagination({
     initial: { opacity: 0, y: 5 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -5 },
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    hover: { scale: 1.05, transition: { duration: durations.hover } },
   }), [])
 
   const linkClass = variant === 'rounded' ? 'rounded-full' : variant === 'outline' ? 'border' : undefined
