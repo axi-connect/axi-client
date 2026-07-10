@@ -76,7 +76,7 @@ export default function CompanySettingsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Mi empresa</h1>
+          <h1 className="text-3xl tracking-tight font-semibold">Mi empresa</h1>
           <p className="text-sm text-muted-foreground">
             Datos de la empresa y horario de atención (la IA los usa como contexto).
           </p>

@@ -94,7 +94,7 @@ export default function UsersPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Usuarios</h1>
+          <h1 className="text-3xl tracking-tight font-semibold">Usuarios</h1>
           <p className="text-sm text-muted-foreground">
             Crea y gestiona los usuarios de tu empresa y sus roles.
           </p>

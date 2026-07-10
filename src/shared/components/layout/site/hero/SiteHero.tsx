@@ -5,16 +5,11 @@ import Image from 'next/image';
 import { cn } from '@/core/lib/utils';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
-import { Bricolage_Grotesque } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Spotlight } from '@/shared/components/layout/site/components/spotlight';
 import { FaWhatsapp, FaInstagram, FaFacebookMessenger } from 'react-icons/fa';
 import { Particles } from '@/shared/components/layout/site/components/particles';
 import { ArrowRight, Sparkles, ChartNoAxesCombined, Wallet } from 'lucide-react';
-
-const brico = Bricolage_Grotesque({
-  subsets: ['latin'],
-});
 
 // Sample users for the waitlist display
 const channelsIcons: React.ReactNode[] = [
@@ -80,10 +75,7 @@ export default function SiteHero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className={cn(
-            'from-foreground via-foreground/80 to-foreground/40 mb-4 cursor-crosshair bg-gradient-to-b bg-clip-text text-3xl font-bold text-transparent sm:text-7xl',
-            brico.className,
-          )}
+          className="from-foreground via-foreground/80 to-foreground/40 mb-4 cursor-crosshair bg-gradient-to-b bg-clip-text text-3xl font-bold text-transparent sm:text-7xl"
         >
           Habla menos {' '}
           <span className="bg-primary from-foreground to-primary via-brand bg-clip-text text-transparent dark:bg-gradient-to-b">

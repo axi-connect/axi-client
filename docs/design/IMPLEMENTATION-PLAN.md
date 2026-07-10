@@ -66,10 +66,11 @@
 
 **Objetivo:** sistematizar el stack confirmado — **Nexa (headings) + Poppins (cuerpo, se queda por decisión de marca) + Geist Mono** — y limpiar deuda menor.
 
-- [ ] `globals.css`: quitar el `!important` del bloque `h1..h6` (regla normal; los overrides puntuales vuelven a ser posibles).
-- [ ] `layout.tsx`: dejar de cargar **Geist Sans** (no se usa; Geist Mono se mantiene). Menos fuentes = mejor LCP.
-- [ ] Revisar títulos del panel privado con la escala DESIGN-SYSTEM §3.2 (H1 `text-3xl tracking-tight font-semibold`, etc.).
-- [ ] Añadir `tabular-nums` en celdas numéricas de `DataTable` y métricas.
+- [x] `globals.css`: quitado el `!important` del bloque `h1..h6`. *Al quitarlo afloró que el H1 del hero cargaba y aplicaba **Bricolage Grotesque** (residuo del template, antes anulada por el `!important`) — se eliminó esa fuente de `SiteHero`; el hero queda en Nexa.*
+- [x] `layout.tsx`: Geist Sans ya no se carga (Geist Mono se mantiene). Familias activas: Nexa + Poppins + Geist Mono.
+- [x] Títulos de página del panel privado normalizados a la escala H1 (`text-3xl tracking-tight font-semibold`): dashboard, settings (company/roles/users), agentes y workspace.
+- [x] `tabular-nums` añadido a `TableCell` (aplica a todas las tablas; solo afecta dígitos).
+- [x] Verificación en runtime (navegador): h1/h2 computan Nexa, body computa Poppins, familias cargadas = 3. `tsc --noEmit` y lint limpios.
 
 ## Fase 5 — Forma y radios (D6)
 

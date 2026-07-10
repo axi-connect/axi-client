@@ -125,8 +125,10 @@ body {
   font-family: var(--font-poppins), Helvetica, sans-serif;
 }
 
+/* Headings en Nexa por defecto; sin !important para permitir opt-outs
+   puntuales con utilidades (font-mono, font-sans). */
 h1, h2, h3, h4, h5, h6, .font-heading {
-  font-family: var(--font-nexa), var(--font-poppins), sans-serif !important;
+  font-family: var(--font-nexa), var(--font-poppins), sans-serif;
 }
 
 /* -------- Utilidades de marca -------- */

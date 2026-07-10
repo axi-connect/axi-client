@@ -115,7 +115,7 @@ export default function AgentsPage() {
       <div className="mt-12 relative z-10">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-2xl font-bold">Agentes</h1>
+            <h1 className="text-3xl tracking-tight font-semibold">Agentes</h1>
             <p className="text-sm text-muted-foreground">
               Configura los agentes IA que atienden tus canales.
             </p>

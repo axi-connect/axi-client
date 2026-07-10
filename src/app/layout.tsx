@@ -2,16 +2,11 @@ import "./globals.css";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Poppins } from "next/font/google";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/core/providers/auth-provider";
 import { ThemeProvider } from "@/core/providers/theme-provider";
 import { AlertProvider } from "@/core/providers/alert-provider";
 import { SplashProvider } from "@/core/providers/splash-provider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -50,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${nexa.variable} ${poppins.variable} antialiased`}
+        className={`${geistMono.variable} ${nexa.variable} ${poppins.variable} antialiased`}
       >
         <ThemeProvider>
           <AuthProvider>
