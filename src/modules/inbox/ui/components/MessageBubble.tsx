@@ -18,7 +18,7 @@ function StatusIcon({ message }: { message: UiMessage }) {
     return <Clock className="size-3.5 opacity-60" aria-label="Enviando" />
   }
   if (message.status === "read" || message.status === "delivered") {
-    return <CheckCheck className={cn("size-3.5", message.status === "read" ? "text-blue-400" : "opacity-60")} aria-label={message.status === "read" ? "Leído" : "Entregado"} />
+    return <CheckCheck className={cn("size-3.5", message.status === "read" ? "text-info" : "opacity-60")} aria-label={message.status === "read" ? "Leído" : "Entregado"} />
   }
   return <Check className="size-3.5 opacity-60" aria-label="Enviado" />
 }

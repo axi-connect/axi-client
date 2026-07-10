@@ -120,9 +120,9 @@ function NodeRow<T>({
           className={cn(
             "ml-2 text-white rounded-full border px-1.5 py-0.5 text-xs select-none",
             {
-              low: "bg-gradient-to-r from-emerald-500 to-emerald-600",
-              medium: "bg-gradient-to-r from-amber-500 to-amber-600",
-              high: "bg-gradient-to-r from-red-500 to-red-600",
+              low: "bg-gradient-to-r from-success to-success/80",
+              medium: "bg-gradient-to-r from-warning to-warning/80",
+              high: "bg-gradient-to-r from-destructive to-destructive/80",
             }[node.meta?.priority || "low"]
           )}
         >
@@ -248,7 +248,7 @@ export function TreeView<T>({
           <DropdownMenuItem onClick={() => { setTargetNode(n); setInputValue(n.label); setEditOpen(true) }}>Editar</DropdownMenuItem>
         )}
         {onDelete && (
-          <DropdownMenuItem className="text-red-600" onClick={() => requestDelete(n)}>
+          <DropdownMenuItem className="text-destructive" onClick={() => requestDelete(n)}>
             Eliminar
           </DropdownMenuItem>
         )}

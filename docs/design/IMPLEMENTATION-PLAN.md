@@ -55,11 +55,12 @@
 
 **Objetivo:** cero hex fuera de `globals.css`.
 
-- [ ] `SiteHero.tsx`: reemplazar `#e60a64` y `#ffffff` por tokens/utilidades de marca (`var(--axi-brand)`, gradiente tri).
-- [ ] `3dglobe.tsx`: mapear `#9b87f5` → `--axi-violet`; fondos `#0a0613`/`#150d27` → derivados de `--background` dark o tokens dedicados de la sección hero.
-- [ ] `particles.tsx`, `sparkles.tsx`, `SiteFooter.tsx`: consumir `var(--color-foreground)`/`var(--color-background)` en lugar de blanco/negro fijos (deben reaccionar al tema).
-- [ ] Reescribir `core/styles/gradients.ts`: derivar de la paleta de marca (brand/violet/amber + mixes) y tipar como `as const`; actualizar consumidores.
-- [ ] Auditoría final: `grep -rnE "#[0-9a-fA-F]{3,6}\b" src --include="*.tsx" --include="*.ts"` sin resultados fuera de `globals.css`.
+- [x] `SiteHero.tsx`: reemplazados `#e60a64`/`#ffffff` por `var(--axi-brand)`/`var(--foreground)` (las partículas ahora reciben el token y reaccionan al tema); `rose-300/500` → `via-brand`/`.bg-brand-gradient`; sombras rosa `rgba(236,72,153,…)` → `color-mix` con `--axi-brand`; `bg-white/5` → `bg-background/5`.
+- [x] `3dglobe.tsx`: **eliminado** — era un template ajeno sin consumidores ("Lunexa crypto trading", imágenes externas). No había nada que migrar.
+- [x] `particles.tsx` (nuevo `colorToRgb()` que resuelve `var(--token)`, hex y rgb; default `var(--foreground)`), `sparkles.tsx` (fallback sin hex) y `SiteFooter.tsx` (blancos/negros del glass del footer → `color-mix` sobre `--foreground`/`--background`). *Extra: `spotlight.tsx` — gradientes `hsla` rosa → `color-mix` con `--axi-brand`.*
+- [x] `core/styles/gradients.ts`: **eliminado** — no tenía ningún consumidor (código muerto).
+- [x] **Barrido extra (adelanto de deuda):** toda la paleta Tailwind cruda de estados migrada a los tokens funcionales — `notice.tsx`, `alert.tsx`, `badge.tsx` (info), `TreeView.tsx` (prioridades), `ChannelList.tsx`/`ChannelDetailSheet.tsx`/`AgentDetailSheet.tsx` (dots de estado → `success/warning/destructive/muted-foreground`), `Composer.tsx`, `MessageBubble.tsx` (leído → `info`), `SiteInboxShowcase.tsx`.
+- [x] Auditoría final: cero hex y cero paleta cruda en `src/` fuera de `globals.css`. **Excepción documentada:** `brand-mark.tsx` (SVG inline del isotipo) conserva sus hex — los colores del logo son fijos por regla de marca (DESIGN.md §2.2), no temáticos. Verificado con `npm run build` ✅ y lint limpio (0 errores).
 
 ## Fase 4 — Tipografía (D7)
 

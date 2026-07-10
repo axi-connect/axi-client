@@ -21,11 +21,11 @@ const container = cva(
         neutral:
           "bg-white/70 dark:bg-neutral-900/40 border-black/10 dark:border-white/10",
         success:
-          "bg-emerald-50/70 dark:bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-400/30",
+          "bg-success/8 border-success/25 dark:bg-success/10 dark:border-success/30",
         warning:
-          "bg-amber-50/70 dark:bg-amber-500/10 border-amber-200/60 dark:border-amber-400/30",
+          "bg-warning/8 border-warning/25 dark:bg-warning/10 dark:border-warning/30",
         error:
-          "bg-rose-50/70 dark:bg-rose-500/10 border-rose-200/60 dark:border-rose-400/30",
+          "bg-destructive/8 border-destructive/25 dark:bg-destructive/10 dark:border-destructive/30",
         info:
           "bg-sky-50/70 dark:bg-sky-500/10 border-sky-200/60 dark:border-sky-400/30",
       },
@@ -36,11 +36,11 @@ const container = cva(
 )
 
 const titleStyles = cva(
-  "text-base font-semibold tracking-tight text-slate-800 dark:text-slate-100",
+  "text-base font-semibold tracking-tight text-foreground",
   { variants: { compact: { true: "", false: "mb-1" } }, defaultVariants: { compact: false } }
 )
 
-const descStyles = "text-slate-600/90 dark:text-slate-300/80 text-sm leading-relaxed"
+const descStyles = "text-muted-foreground text-sm leading-relaxed"
 
 type Tone = "neutral" | "success" | "warning" | "error" | "info"
 
@@ -130,11 +130,11 @@ export function StatusAlert(props: StatusAlertProps) {
             aria-hidden
             className={cn(
               "grid place-items-center size-10 rounded-full shadow-sm",
-              tone === "error" && "bg-rose-100/80 text-rose-600 dark:bg-rose-400/15 dark:text-rose-300",
-              tone === "warning" && "bg-amber-100/80 text-amber-600 dark:bg-amber-400/15 dark:text-amber-300",
-              tone === "success" && "bg-emerald-100/80 text-emerald-600 dark:bg-emerald-400/15 dark:text-emerald-300",
+              tone === "error" && "bg-destructive/10 text-destructive dark:bg-destructive/15",
+              tone === "warning" && "bg-warning/10 text-warning dark:bg-warning/15",
+              tone === "success" && "bg-success/10 text-success dark:bg-success/15",
               tone === "info" && "bg-sky-100/80 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300",
-              tone === "neutral" && "bg-slate-100/80 text-slate-600 dark:bg-slate-400/15 dark:text-slate-300",
+              tone === "neutral" && "bg-muted text-muted-foreground",
             )}
           >
             <Icon className="size-5" />
@@ -166,7 +166,7 @@ export function StatusAlert(props: StatusAlertProps) {
               type="button"
               aria-label="Dismiss"
               onClick={() => setOpen(false)}
-              className="absolute right-2 top-2 rounded-md p-1.5 text-slate-500 hover:bg-black/5 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 dark:text-slate-400 dark:hover:bg-white/5"
+              className="absolute right-2 top-2 rounded-md p-1.5 text-muted-foreground hover:bg-foreground/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
             >
               <XIcon className="size-4" />
             </button>

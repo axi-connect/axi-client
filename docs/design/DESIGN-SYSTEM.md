@@ -24,7 +24,7 @@ Capa 3 — CONSUMO                                   ← clases utilitarias en c
 ```
 
 **Reglas:**
-- Un componente **jamás** escribe un hex, un `rgb()` ni un color Tailwind de paleta cruda (`bg-red-500`, `from-pink-400`). Consume capa 3.
+- Un componente **jamás** escribe un hex, un `rgb()` ni un color Tailwind de paleta cruda (`bg-red-500`, `from-pink-400`). Consume capa 3. **Única excepción:** los SVG del logo (`brand-mark.tsx`, assets de `public/brand/`) conservan sus colores literales — las cintas del isotipo no se recolorean por tema (DESIGN.md §2.2).
 - Un token semántico nuevo se deriva de un primitivo con `color-mix()`; no se inventan valores.
 - No duplicar utilidades que Tailwind v4 ya genera desde `@theme` (las clases manuales `.bg-background`, `.text-foreground`, `.border-border` de la versión actual de `globals.css` son deuda: Tailwind v4 ya las emite desde los tokens `--color-*`).
 

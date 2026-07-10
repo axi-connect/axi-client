@@ -109,7 +109,7 @@ export function Composer({
         </Button>
       </div>
       {!socketConnected && canWrite && (
-        <p className="mt-1 text-[10px] text-amber-600">
+        <p className="mt-1 text-[10px] text-warning">
           Sin tiempo real: los envíos van por HTTP y se confirman al reconectar.
         </p>
       )}

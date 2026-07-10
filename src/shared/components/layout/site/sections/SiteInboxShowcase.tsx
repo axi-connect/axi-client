@@ -103,7 +103,7 @@ export default function SiteInboxShowcase() {
               <div className="animate-in fade-in slide-in-from-left-4 absolute -top-6 -right-6 rotate-6 transform rounded-lg bg-white p-3 shadow-lg dark:bg-neutral-900">
                 <div className="flex items-center gap-2">
                   <svg
-                    className="h-5 w-5 text-green-500"
+                    className="h-5 w-5 text-success"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"

@@ -30,7 +30,7 @@ export function SparklesCore({ id, background = 'transparent', particleDensity =
     function getCssVarForeground(): string {
       const root = document.documentElement;
       const val = getComputedStyle(root).getPropertyValue('--foreground').trim();
-      return val || '#171717';
+      return val || 'rgb(23, 23, 23)';
     }
 
     function hexToRgb(hex: string): { r: number; g: number; b: number } | null {

@@ -54,21 +54,41 @@ function MousePosition(): MousePosition {
   return mousePosition;
 }
 
-function hexToRgb(hex: string): number[] {
-  hex = hex.replace('#', '');
+/** Resuelve un color a componentes RGB. Acepta hex, rgb()/rgba() o un
+ *  `var(--token)` del tema (se lee el valor computado en :root). */
+function colorToRgb(input: string): number[] {
+  let value = input.trim();
 
-  if (hex.length === 3) {
-    hex = hex
-      .split('')
-      .map((char) => char + char)
-      .join('');
+  if (value.startsWith('var(')) {
+    const name = value.slice(4, -1).trim();
+    value =
+      typeof window === 'undefined'
+        ? ''
+        : getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
-  const hexInt = parseInt(hex, 16);
-  const red = (hexInt >> 16) & 255;
-  const green = (hexInt >> 8) & 255;
-  const blue = hexInt & 255;
-  return [red, green, blue];
+  if (value.startsWith('#')) {
+    let hex = value.slice(1);
+    if (hex.length === 3) {
+      hex = hex
+        .split('')
+        .map((char) => char + char)
+        .join('');
+    }
+    const hexInt = parseInt(hex, 16);
+    return [(hexInt >> 16) & 255, (hexInt >> 8) & 255, hexInt & 255];
+  }
+
+  const rgbMatch = value.match(/rgba?\(([^)]+)\)/);
+  if (rgbMatch) {
+    return rgbMatch[1]
+      .split(',')
+      .slice(0, 3)
+      .map((n) => parseInt(n, 10));
+  }
+
+  // Fallback neutro (gris medio) si el token aún no resuelve
+  return [128, 128, 128];
 }
 
 export const Particles: React.FC<ParticlesProps> = ({
@@ -78,7 +98,7 @@ export const Particles: React.FC<ParticlesProps> = ({
   ease = 50,
   size = 0.4,
   refresh = false,
-  color = '#ffffff',
+  color = 'var(--foreground)',
   vx = 0,
   vy = 0,
   ...props
@@ -193,7 +213,7 @@ export const Particles: React.FC<ParticlesProps> = ({
     };
   };
 
-  const rgb = hexToRgb(color);
+  const rgb = colorToRgb(color);
 
   const drawCircle = (circle: Circle, update = false) => {
     if (context.current) {

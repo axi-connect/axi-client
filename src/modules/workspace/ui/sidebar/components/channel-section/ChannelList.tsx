@@ -21,11 +21,11 @@ import {
 } from "@/shared/components/layout/sidebar/core"
 
 const STATUS_COLORS: Record<ChannelStatus, string> = {
-  pending_setup: "bg-zinc-400",
-  connecting: "bg-amber-500 animate-pulse",
-  connected: "bg-green-500",
-  disconnected: "bg-zinc-400",
-  error: "bg-red-500",
+  pending_setup: "bg-muted-foreground",
+  connecting: "bg-warning animate-pulse",
+  connected: "bg-success",
+  disconnected: "bg-muted-foreground",
+  error: "bg-destructive",
 }
 
 const KIND_ICONS: Record<ChannelKind, React.ComponentType<{ size?: number }>> = {

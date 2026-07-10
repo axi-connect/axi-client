@@ -4,7 +4,7 @@ import type React from 'react';
 import Image from 'next/image';
 import { cn } from '@/core/lib/utils';
 import { useTheme } from 'next-themes';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bricolage_Grotesque } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Spotlight } from '@/shared/components/layout/site/components/spotlight';
@@ -26,14 +26,12 @@ const channelsIcons: React.ReactNode[] = [
 export default function SiteHero() {
   const { resolvedTheme } = useTheme();
   const [email, setEmail] = useState('');
-  const [color, setColor] = useState('#ffffff');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    setColor(resolvedTheme === 'dark' ? '#ffffff' : '#e60a64');
-  }, [resolvedTheme]);
+  // Partículas: neutras en dark, coral de marca en light (Particles resuelve el var()).
+  const particlesColor = resolvedTheme === 'dark' ? 'var(--foreground)' : 'var(--axi-brand)';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +52,7 @@ export default function SiteHero() {
       <Particles
         refresh
         ease={80}
-        color={color}
+        color={particlesColor}
         quantity={100}
         className="absolute inset-0 z-0"
       />
@@ -88,7 +86,7 @@ export default function SiteHero() {
           )}
         >
           Habla menos {' '}
-          <span className="bg-primary from-foreground to-primary via-rose-300 bg-clip-text text-transparent dark:bg-gradient-to-b">
+          <span className="bg-primary from-foreground to-primary via-brand bg-clip-text text-transparent dark:bg-gradient-to-b">
             Logra más
           </span>
         </motion.h1>
@@ -120,7 +118,7 @@ export default function SiteHero() {
                   initial={{ scale: 0, x: -10 }}
                   animate={{ scale: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 1 }}
-                  className="border-background from-primary size-10 rounded-full border-2 bg-gradient-to-r to-rose-500 flex items-center justify-center"
+                  className="border-background size-10 rounded-full border-2 bg-brand-gradient flex items-center justify-center"
                 >
                   {icon}
                 </motion.div>
@@ -168,7 +166,7 @@ export default function SiteHero() {
                     initial={{ opacity: 0, y: 10 }}
                     placeholder="Ingresa tu correo electrónico"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    className="border-primary/20 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-primary/30 w-full rounded-xl border bg-white/5 px-6 py-4 backdrop-blur-md transition-all focus:ring-2 focus:outline-none"
+                    className="border-primary/20 text-foreground placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-primary/30 w-full rounded-xl border bg-background/5 px-6 py-4 backdrop-blur-md transition-all focus:ring-2 focus:outline-none"
                   />
                   {error && (
                     <motion.p
@@ -183,7 +181,7 @@ export default function SiteHero() {
                 <button
                   type="submit"
                   disabled={isSubmitting || submitted}
-                  className="group focus:ring-primary/50 relative overflow-hidden rounded-xl bg-gradient-to-b bg-brand-gradient px-8 py-4 font-semibold text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset] transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] focus:ring-2 focus:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="group focus:ring-primary/50 relative overflow-hidden rounded-xl bg-gradient-to-b bg-brand-gradient px-8 py-4 font-semibold text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset] transition-all duration-300 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--axi-brand)_40%,transparent)] focus:ring-2 focus:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     {isSubmitting ? 'Uniendo...' : 'Comenzar ahora'}
@@ -200,7 +198,7 @@ export default function SiteHero() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.6 }}
                 className={cn(
-                  'border-primary/20 from-primary/10 to-primary/10 text-primary flex-1 cursor-pointer rounded-xl border bg-gradient-to-r via-transparent px-6 py-4 font-medium backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] active:brightness-125',
+                  'border-primary/20 from-primary/10 to-primary/10 text-primary flex-1 cursor-pointer rounded-xl border bg-gradient-to-r via-transparent px-6 py-4 font-medium backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_color-mix(in_srgb,var(--axi-brand)_30%,transparent)] active:brightness-125',
                 )}
               >
                 <span className="flex items-center justify-center gap-2">

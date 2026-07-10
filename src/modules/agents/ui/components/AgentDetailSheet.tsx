@@ -68,7 +68,7 @@ export default function AgentDetailSheet() {
             <span
               className={cn(
                 "h-3 w-3 rounded-full",
-                detail.status === "active" ? "bg-green-500" : detail.status === "paused" ? "bg-amber-500" : "bg-zinc-400",
+                detail.status === "active" ? "bg-success" : detail.status === "paused" ? "bg-warning" : "bg-muted-foreground",
               )}
               aria-hidden
             />

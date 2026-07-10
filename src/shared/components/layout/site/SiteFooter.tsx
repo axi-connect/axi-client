@@ -19,8 +19,8 @@ export default function SiteFooter() {
         .glass:where(.dark, .dark *) {
           display: flex;
           backdrop-filter: blur(2px) !important;
-          background: radial-gradient(circle, #ffffff1a 0%, color-mix(in oklab, var(--axi-brand-2) 20%, var(--background)) 60%, #00000040 100%) !important;
-          border: 1px solid #ffffff0d !important;
+          background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 10%, transparent) 0%, color-mix(in oklab, var(--axi-brand-2) 20%, var(--background)) 60%, color-mix(in srgb, var(--background) 25%, transparent) 100%) !important;
+          border: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent) !important;
           border-radius: 16px !important;
           justify-content: center !important;
           align-items: center !important;
