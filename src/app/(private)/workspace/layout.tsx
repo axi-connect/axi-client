@@ -15,11 +15,18 @@ export default function WorkspacesLayout({ children, modal }: { children: ReactN
   useChannelsRealtime()
 
   return (
-    <div className="flex w-[calc(100%+3rem)] -m-6">
-      <SidebarProvider className="w-max">
+    // Vista de aplicación full-bleed acotada al viewport: 52px = altura del
+    // PrivateHeader (mismo valor que asume el shell privado). Con la altura
+    // topada aquí, el ÚNICO scroll de cada área es el interno (timeline,
+    // lista, canales) — sin scroll de página.
+    <div className="flex w-full h-[calc(100svh-52px)] min-h-0 overflow-hidden">
+      {/* min-h-0 neutraliza el min-h-svh base del SidebarProvider anidado
+          (causa del desborde de ~52px): la columna de canales queda topada
+          y su SidebarContent scrollea internamente. */}
+      <SidebarProvider className="w-max h-full min-h-0">
         <WorkspaceSidebar />
       </SidebarProvider>
-      <div className="overflow-hidden w-full">
+      <div className="overflow-hidden w-full h-full min-h-0">
         {children}
         {modal}
       </div>

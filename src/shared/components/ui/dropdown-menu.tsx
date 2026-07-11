@@ -55,7 +55,7 @@ export function DropdownMenuTrigger({ asChild = false, children }: { asChild?: b
   return asChild ? cloneElement(children, triggerProps) : <button {...triggerProps}>{children}</button>
 }
 
-export function DropdownMenuContent({ className, align = "end", children }: { className?: string; align?: "start" | "end"; children: React.ReactNode }) {
+export function DropdownMenuContent({ className, align = "end", side = "bottom", children }: { className?: string; align?: "start" | "end"; side?: "top" | "bottom"; children: React.ReactNode }) {
   const ctx = useContext(DropdownContext)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -127,7 +127,9 @@ export function DropdownMenuContent({ className, align = "end", children }: { cl
       role="menu"
       ref={contentRef}
       className={cn(
-        "glass bg-background text-foreground border-border absolute z-50 mt-2 min-w-40 rounded-lg border flex flex-col p-1",
+        "glass bg-background text-foreground border-border absolute z-50 min-w-40 rounded-lg border flex flex-col p-1",
+        // `top` para triggers pegados al borde inferior (footer del sidebar)
+        side === "top" ? "bottom-full mb-2" : "mt-2",
         align === "end" ? "right-0" : "left-0",
         className
       )}

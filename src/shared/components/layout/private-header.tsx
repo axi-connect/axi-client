@@ -13,7 +13,13 @@ const LABELS: Record<string, string> = {
 	"roles": "Roles",
 }
 
-export function PrivateHeader() {
+type PrivateHeaderProps = {
+	/** Acciones de la derecha (p.ej. la campana de notificaciones). Se inyectan
+	    desde la capa app: shared no puede importar de modules (arquitectura §3.3). */
+	actions?: React.ReactNode
+}
+
+export function PrivateHeader({ actions }: PrivateHeaderProps) {
 	const pathname = usePathname()
 	const parts = pathname.split("/").filter(Boolean)
 	const crumbs = parts.map((seg, idx) => {
@@ -22,7 +28,11 @@ export function PrivateHeader() {
 	})
 
 	return (
-		<div className="glass sticky top-0 z-40 flex items-center gap-3 px-4 py-2">
+		// El glass ocupa todo el ancho; el contenido del header se centra con el
+		// mismo max-w + gutters que el contenido de página para que el
+		// breadcrumb quede alineado con las vistas del grupo (content).
+		<div className="glass sticky top-0 z-40 py-2">
+			<div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">
 			<SidebarTrigger />
 			<nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
 				<ol className="flex items-center gap-2">
@@ -41,7 +51,11 @@ export function PrivateHeader() {
 					))}
 				</ol>
 			</nav>
-			<ThemeToggle className="ml-auto" />
+			<div className="ml-auto flex items-center gap-1">
+				{actions}
+				<ThemeToggle />
+			</div>
+			</div>
 		</div>
 	)
 }

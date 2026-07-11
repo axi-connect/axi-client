@@ -54,9 +54,45 @@ export function useInboxSocket() {
     }
   })
 
-  useSocketEvent(socket, "conversation.message_sent", (payload) => {
-    store.getState().confirmMessage(payload.conversation_id, payload.message_id)
-    store.getState().bumpConversation(payload.conversation_id)
+  // F9.1: mensaje outbound recién PERSISTIDO (reply de IA, quick action,
+  // system, otro operador) — llega con la vista completa: se pinta en vivo
+  // sin round-trip. El dedupe por id de appendMessage evita duplicar el
+  // optimista propio (ya reconciliado con el id real).
+  useSocketEvent(socket, "conversation.message_created", (payload) => {
+    const state = store.getState()
+    state.bumpConversation(payload.conversation_id)
+    if (state.selectedId === payload.conversation_id) {
+      state.appendMessage(payload.conversation_id, payload.message as UiMessage)
+    }
+  })
+
+  useSocketEvent(socket, "conversation.message_sent", async (payload) => {
+    const state = store.getState()
+    state.confirmMessage(payload.conversation_id, payload.message_id)
+    state.bumpConversation(payload.conversation_id)
+    // Robustez: si el created se perdió (reconexión), el mensaje no está en
+    // el timeline abierto → mismo refetch dirigido que message_received.
+    if (state.selectedId === payload.conversation_id) {
+      const known = state.messagesById[payload.conversation_id]?.items.some(
+        (m) => m.id === payload.message_id,
+      )
+      if (!known) {
+        try {
+          const res = await getConversationMessages(payload.conversation_id, { limit: 5 })
+          const sent = res.data.find((m) => m.id === payload.message_id)
+          if (sent) state.appendMessage(payload.conversation_id, sent as UiMessage)
+        } catch {
+          // El próximo fetch completo lo trae.
+        }
+      }
+    }
+  })
+
+  // F9.1: el envío falló en el proveedor → la burbuja pasa a failed en vivo
+  useSocketEvent(socket, "conversation.message_status", (payload) => {
+    if (payload.status === "failed") {
+      store.getState().markMessageFailed(payload.conversation_id, payload.message_id)
+    }
   })
 
   useSocketEvent(socket, "conversation.typing", (payload) => {

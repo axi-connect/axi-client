@@ -84,20 +84,25 @@ export function SchedulesEditor({
             />
             <span className="w-24 text-sm font-medium">{WEEKDAY_LABELS[day.weekday]}</span>
             {day.enabled ? (
-              <div className="flex items-center gap-2">
+              /* flex-1 + min-w: los inputs de hora crecen según el formato del
+                 locale (p.ej. "08:00 a. m." + icono de reloj); un ancho fijo
+                 corto recorta el valor. max-w acota en pantallas anchas. */
+              <div className="flex flex-1 items-center gap-2">
                 <Input
                   type="time"
                   value={day.opens_at}
+                  classNameContainer=""
                   onChange={(e) => updateDay(day.weekday, { opens_at: e.target.value })}
-                  className="w-28"
+                  className="min-w-32 max-w-44 flex-1 tabular-nums"
                   aria-label="Hora de apertura"
                 />
                 <span className="text-sm text-muted-foreground">a</span>
                 <Input
                   type="time"
                   value={day.closes_at}
+                  classNameContainer=""
                   onChange={(e) => updateDay(day.weekday, { closes_at: e.target.value })}
-                  className="w-28"
+                  className="min-w-32 max-w-44 flex-1 tabular-nums"
                   aria-label="Hora de cierre"
                 />
               </div>

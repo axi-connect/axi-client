@@ -8,6 +8,7 @@ import type {
   InboxCounts,
   Message,
   SendMessageDTO,
+  UploadResultDTO,
 } from "@/modules/inbox/domain/inbox";
 
 /**
@@ -58,6 +59,23 @@ export function getAttachmentUrl(
   attachmentId: string,
 ): Promise<{ url: string; expires_in_seconds: number }> {
   return http.get(`/conversations/${conversationId}/messages/${messageId}/attachments/${attachmentId}/url`);
+}
+
+/**
+ * Sube media pendiente de envío (F9): el flujo es upload → send_message con
+ * `type=media` + `upload_id`. `voiceNote` transcodifica a nota de voz en el
+ * backend (ogg/opus). Sin porcentaje de progreso en v1 (fetch no lo expone);
+ * la UI muestra barra indeterminada por estado.
+ */
+export function uploadConversationFile(
+  conversationId: string,
+  file: File | Blob,
+  options: { filename: string; voiceNote?: boolean },
+): Promise<UploadResultDTO> {
+  const form = new FormData();
+  form.append("file", file, options.filename);
+  if (options.voiceNote) form.append("voice_note", "true");
+  return http.post<UploadResultDTO>(`/conversations/${conversationId}/uploads`, form);
 }
 
 // --- Fallbacks REST de acciones (el camino primario es el WS) ---

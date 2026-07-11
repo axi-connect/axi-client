@@ -41,6 +41,7 @@ export interface DetailSheetProps<Id extends string | number = string | number> 
 - Breakpoint por defecto: 768 px
 - Desktop ancho por defecto: 420 px
 - Mobile altura por defecto: `min(85vh, 760px)`
+- **Contrato de `fetchDetail`:** se invoca solo cuando cambian `open` o `id` — nunca por cambio de identidad de la función (se guarda en un ref). Es seguro pasar lambdas inline; aun así, si la función hace `setState` en el padre, conviene memoizarla con `useCallback` por higiene de renders.
 
 ## Uso básico
 

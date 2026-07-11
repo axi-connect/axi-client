@@ -47,18 +47,31 @@ export type MessageReceivedEvent = {
   content_type: Schemas["EnqueuedMessageDto"]["content_type"];
 };
 
+/**
+ * F9.1: mensaje OUTBOUND persistido (queued) con la vista COMPLETA — el inbox
+ * pinta en vivo replies de IA, quick actions, system y otros operadores sin
+ * round-trip. `message_sent` sigue siendo la confirmación de envío real.
+ */
+export type MessageCreatedEvent = {
+  conversation_id: string;
+  company_id: string;
+  message: Schemas["ConversationMessagesDto"]["data"][number];
+};
+
 export type MessageSentEvent = {
   conversation_id: string;
   message_id: string;
   company_id: string;
+  content_type: Schemas["EnqueuedMessageDto"]["content_type"];
 };
 
-/** Reservado: declarado en el gateway del backend pero AÚN NO se emite. */
+/** F9.1: hoy el backend lo emite solo con `failed` (markFailed del outbound). */
 export type MessageStatusEvent = {
   conversation_id: string;
   message_id: string;
   company_id: string;
   status: Schemas["EnqueuedMessageDto"]["status"];
+  error_code?: string;
 };
 
 export type TypingEvent = {
@@ -149,6 +162,7 @@ export type ChannelSessionFailedEvent = {
 export type InboxServerEvents = {
   "conversation.created": (payload: ConversationCreatedEvent) => void;
   "conversation.message_received": (payload: MessageReceivedEvent) => void;
+  "conversation.message_created": (payload: MessageCreatedEvent) => void;
   "conversation.message_sent": (payload: MessageSentEvent) => void;
   "conversation.message_status": (payload: MessageStatusEvent) => void;
   "conversation.typing": (payload: TypingEvent) => void;

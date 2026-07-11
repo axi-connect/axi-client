@@ -80,15 +80,22 @@ export default function DetailSheet<Id extends string | number = string | number
   const [ready, setReady] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
 
+  // Contrato de carga: se re-fetchea SOLO cuando cambian `open` o `id`, nunca
+  // por identidad de `fetchDetail`. El ref permite pasar lambdas inline sin
+  // provocar bucles de refetch (cada render del padre crea una función nueva;
+  // con `fetchDetail` en las deps eso disparaba fetch → setState → render → ∞).
+  const fetchDetailRef = React.useRef(fetchDetail)
+  fetchDetailRef.current = fetchDetail
+
   React.useEffect(() => {
     if (!open) return
     const timeout: NodeJS.Timeout = setTimeout(() => setReady(true), 50)
-    if (!fetchDetail || id === undefined || id === null) return
+    if (!fetchDetailRef.current || id === undefined || id === null) return
     let cancelled = false
     const current = ++requestRef.current
     setLoading(true)
-    
-    fetchDetail(id)
+
+    fetchDetailRef.current(id)
       .catch(() => {})
       .finally(() => {
         if (cancelled) return
@@ -99,7 +106,7 @@ export default function DetailSheet<Id extends string | number = string | number
       cancelled = true
       clearTimeout(timeout)
     }
-  }, [open, id, fetchDetail])
+  }, [open, id])
 
   const widthPx = typeof size === "number" ? size : WIDTH_MAP[size]
   const desktopStyle: React.CSSProperties = { width: `${widthPx}px` }

@@ -59,10 +59,20 @@ type InboxStore = {
   fetchMessages: (conversationId: string) => Promise<void>
   fetchOlderMessages: (conversationId: string) => Promise<void>
 
-  // Mensajería optimista
-  sendOptimistic: (conversationId: string, body: string) => string
+  // Mensajería optimista (F9: media con previews locales y payload de retry)
+  sendOptimistic: (
+    conversationId: string,
+    input: {
+      content_type: Message["content_type"]
+      body: string | null
+      local_previews?: UiMessage["local_previews"]
+      local_payload?: UiMessage["local_payload"]
+    },
+  ) => string
   reconcileSent: (conversationId: string, localId: string, real: Message | UiMessage) => void
   markSendFailed: (conversationId: string, localId: string) => void
+  /** F9.1: fallo reportado por el backend (message_status) — por id REAL. */
+  markMessageFailed: (conversationId: string, messageId: string) => void
   appendMessage: (conversationId: string, message: UiMessage) => void
   confirmMessage: (conversationId: string, messageId: string) => void
 
@@ -180,7 +190,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     }
   },
 
-  sendOptimistic: (conversationId, body) => {
+  sendOptimistic: (conversationId, input) => {
     const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const optimistic: UiMessage = {
       id: localId,
@@ -188,8 +198,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
       direction: "outbound",
       sender_type: "user",
       sender_user_id: null,
-      content_type: "text",
-      body,
+      content_type: input.content_type,
+      body: input.body,
       payload: null,
       provider_message_id: null,
       status: "queued",
@@ -198,6 +208,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
       attachments: [],
       created_at: new Date().toISOString(),
       delivery: "pending",
+      local_previews: input.local_previews,
+      local_payload: input.local_payload,
     }
     get().appendMessage(conversationId, optimistic)
 
@@ -215,6 +227,20 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     set((state) => {
       const current = state.messagesById[conversationId]
       if (!current) return state
+      // F9.1: si el evento message_created llegó ANTES del ack, el mensaje
+      // real ya está en el timeline → se elimina el optimista (no duplicar)
+      const realId = (real as UiMessage).id
+      if (current.items.some((m) => m.id === realId && m.local_id !== localId)) {
+        return {
+          messagesById: {
+            ...state.messagesById,
+            [conversationId]: {
+              ...current,
+              items: current.items.filter((m) => m.local_id !== localId),
+            },
+          },
+        }
+      }
       return {
         messagesById: {
           ...state.messagesById,
@@ -222,7 +248,17 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
             ...current,
             items: current.items.map((m) =>
               m.local_id === localId
-                ? { ...(real as UiMessage), attachments: (real as UiMessage).attachments ?? [], local_id: localId, delivery: "pending" }
+                ? {
+                    ...(real as UiMessage),
+                    attachments: (real as UiMessage).attachments ?? [],
+                    local_id: localId,
+                    delivery: "pending",
+                    // Media (F9): el preview local y el payload de retry
+                    // sobreviven a la reconciliación (evita el flash mientras
+                    // el attachment real resuelve su URL firmada)
+                    local_previews: m.local_previews,
+                    local_payload: m.local_payload,
+                  }
                 : m,
             ),
           },
@@ -242,6 +278,24 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
             ...current,
             items: current.items.map((m) =>
               m.local_id === localId ? { ...m, status: "failed", delivery: "failed" } : m,
+            ),
+          },
+        },
+      }
+    })
+  },
+
+  markMessageFailed: (conversationId, messageId) => {
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      if (!current) return state
+      return {
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) =>
+              m.id === messageId ? { ...m, status: "failed", delivery: "failed" } : m,
             ),
           },
         },

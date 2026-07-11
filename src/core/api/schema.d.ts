@@ -548,6 +548,358 @@ export interface paths {
         patch: operations["AiIntentionsController_update_v1"];
         trace?: never;
     };
+    "/api/v1/catalogs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CatalogsController_list_v1"];
+        put?: never;
+        post: operations["CatalogsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalogs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CatalogsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["CatalogsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CatalogsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/catalog/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CatalogCategoriesController_list_v1"];
+        put?: never;
+        post: operations["CatalogCategoriesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CatalogCategoriesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CatalogCategoriesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/catalog/product-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductTypesController_list_v1"];
+        put?: never;
+        post: operations["ProductTypesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/product-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductTypesController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ProductTypesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ProductTypesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/catalog/product-types/{id}/attributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProductTypesController_setAttributes_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductsController_list_v1"];
+        put?: never;
+        post: operations["ProductsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ProductsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ProductsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}/attribute-values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProductsController_setAttributeValues_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductsController_createVariant_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/variants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ProductsController_removeVariant_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ProductsController_updateVariant_v1"];
+        trace?: never;
+    };
+    "/api/v1/catalog/variants/{id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ProductsController_adjustStock_v1"];
+        trace?: never;
+    };
+    "/api/v1/scheduling/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AvailabilityController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppointmentsController_list_v1"];
+        put?: never;
+        post: operations["AppointmentsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/appointments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppointmentsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AppointmentsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/scheduling/appointments/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppointmentsController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-actions/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QuickActionsController_uploadAsset_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-actions/assets/{asset_id}/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QuickActionsController_assetUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-actions/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["QuickActionsController_deleteAsset_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QuickActionsController_list_v1"];
+        put?: never;
+        post: operations["QuickActionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quick-actions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QuickActionsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["QuickActionsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QuickActionsController_update_v1"];
+        trace?: never;
+    };
     "/api/v1/channels": {
         parameters: {
             query?: never;
@@ -756,6 +1108,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/{id}/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConversationsController_upload_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{id}/messages/{message_id}/attachments/{attachment_id}/url": {
         parameters: {
             query?: never;
@@ -898,6 +1266,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RemindersController_list_v1"];
+        put?: never;
+        post: operations["RemindersController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduling/reminders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RemindersController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["RemindersController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["RemindersController_update_v1"];
         trace?: never;
     };
     "/api/v1/notifications": {
@@ -1457,7 +1857,9 @@ export interface components {
                     /** Format: uuid */
                     intention_id: string;
                     requirements: {
-                        [key: string]: unknown;
+                        require_catalog?: boolean;
+                        require_schedule?: boolean;
+                        require_resources?: boolean;
                     } | null;
                     code: string;
                     /** @enum {string} */
@@ -1493,7 +1895,9 @@ export interface components {
                 /** Format: uuid */
                 intention_id: string;
                 requirements: {
-                    [key: string]: unknown;
+                    require_catalog?: boolean;
+                    require_schedule?: boolean;
+                    require_resources?: boolean;
                 } | null;
                 code: string;
                 /** @enum {string} */
@@ -1550,7 +1954,9 @@ export interface components {
                 /** Format: uuid */
                 intention_id: string;
                 requirements?: {
-                    [key: string]: unknown;
+                    require_catalog?: boolean;
+                    require_schedule?: boolean;
+                    require_resources?: boolean;
                 };
             }[];
         };
@@ -1675,6 +2081,581 @@ export interface components {
             type?: "sales" | "support" | "technical" | "onboarding" | "follow_up";
             /** @enum {string} */
             priority?: "low" | "medium" | "high";
+        };
+        CatalogListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                code: string;
+                description: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CatalogDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            code: string;
+            description: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateCatalogDto: {
+            name: string;
+            code: string;
+            description?: string;
+        };
+        UpdateCatalogDto: {
+            name?: string;
+            code?: string;
+            description?: string | null;
+        };
+        CategoryListDto__schema0: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parent_id: string | null;
+            name: string;
+            description: string | null;
+            position: number;
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            children: components["schemas"]["CategoryListDto__schema0"][];
+        };
+        CategoryListDto: {
+            data: ({
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                parent_id: string | null;
+                name: string;
+                description: string | null;
+                position: number;
+                is_active: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            } | components["schemas"]["CategoryListDto__schema0"])[];
+        };
+        CreateCategoryDto: {
+            name: string;
+            /** Format: uuid */
+            parent_id?: string;
+            description?: string;
+            position?: number;
+        };
+        CategoryDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parent_id: string | null;
+            name: string;
+            description: string | null;
+            position: number;
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateCategoryDto: {
+            name?: string;
+            /** Format: uuid */
+            parent_id?: string | null;
+            description?: string | null;
+            position?: number;
+            is_active?: boolean;
+        };
+        ProductTypeListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                attributes: {
+                    /** Format: uuid */
+                    id: string;
+                    code: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "text" | "number" | "boolean" | "select";
+                    /** @enum {string} */
+                    scope: "product" | "variant";
+                    is_required: boolean;
+                    options: unknown;
+                    unit: string | null;
+                    position: number;
+                }[];
+            }[];
+        };
+        ProductTypeDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            attributes: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                label: string;
+                /** @enum {string} */
+                type: "text" | "number" | "boolean" | "select";
+                /** @enum {string} */
+                scope: "product" | "variant";
+                is_required: boolean;
+                options: unknown;
+                unit: string | null;
+                position: number;
+            }[];
+        };
+        CreateProductTypeDto: {
+            name: string;
+            description?: string;
+        };
+        UpdateProductTypeDto: {
+            name?: string;
+            description?: string | null;
+        };
+        SetProductTypeAttributesDto: {
+            attributes: {
+                code: string;
+                label: string;
+                /** @enum {string} */
+                type: "text" | "number" | "boolean" | "select";
+                /**
+                 * @default product
+                 * @enum {string}
+                 */
+                scope: "product" | "variant";
+                /** @default false */
+                is_required: boolean;
+                options?: string[];
+                unit?: string;
+            }[];
+        };
+        ProductsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                catalog_id: string;
+                /** Format: uuid */
+                category_id: string | null;
+                /** Format: uuid */
+                product_type_id: string | null;
+                /** @enum {string} */
+                kind: "product" | "service";
+                name: string;
+                description: string | null;
+                price_cents: number;
+                currency: string;
+                image_url: string | null;
+                is_active: boolean;
+                duration_minutes: number | null;
+                buffer_minutes: number | null;
+                requires_booking: boolean;
+                metadata: {
+                    [key: string]: unknown;
+                } | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                attribute_values: {
+                    code: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "text" | "number" | "boolean" | "select";
+                    value: (string | number | boolean) | null;
+                }[];
+                variants: {
+                    /** Format: uuid */
+                    id: string;
+                    sku: string;
+                    name: string | null;
+                    attributes: {
+                        [key: string]: unknown;
+                    };
+                    price_cents: number;
+                    is_default: boolean;
+                    is_active: boolean;
+                    position: number;
+                    stock: {
+                        on_hand: number;
+                        out_of_stock_threshold: number;
+                        available: boolean;
+                    } | null;
+                }[];
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ProductDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            catalog_id: string;
+            /** Format: uuid */
+            category_id: string | null;
+            /** Format: uuid */
+            product_type_id: string | null;
+            /** @enum {string} */
+            kind: "product" | "service";
+            name: string;
+            description: string | null;
+            price_cents: number;
+            currency: string;
+            image_url: string | null;
+            is_active: boolean;
+            duration_minutes: number | null;
+            buffer_minutes: number | null;
+            requires_booking: boolean;
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            attribute_values: {
+                code: string;
+                label: string;
+                /** @enum {string} */
+                type: "text" | "number" | "boolean" | "select";
+                value: (string | number | boolean) | null;
+            }[];
+            variants: {
+                /** Format: uuid */
+                id: string;
+                sku: string;
+                name: string | null;
+                attributes: {
+                    [key: string]: unknown;
+                };
+                price_cents: number;
+                is_default: boolean;
+                is_active: boolean;
+                position: number;
+                stock: {
+                    on_hand: number;
+                    out_of_stock_threshold: number;
+                    available: boolean;
+                } | null;
+            }[];
+        };
+        CreateProductDto: {
+            /** Format: uuid */
+            catalog_id: string;
+            /** Format: uuid */
+            category_id?: string;
+            /** Format: uuid */
+            product_type_id?: string;
+            /**
+             * @default product
+             * @enum {string}
+             */
+            kind: "product" | "service";
+            name: string;
+            description?: string;
+            price_cents: number;
+            currency?: string;
+            /** Format: uri */
+            image_url?: string;
+            duration_minutes?: number;
+            buffer_minutes?: number;
+            requires_booking?: boolean;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            default_sku?: string;
+            variants?: {
+                sku: string;
+                name?: string;
+                attributes?: {
+                    [key: string]: string | number | boolean;
+                };
+                price_cents?: number;
+                initial_stock?: number;
+            }[];
+        };
+        UpdateProductDto: {
+            /** Format: uuid */
+            category_id?: string | null;
+            /** Format: uuid */
+            product_type_id?: string | null;
+            /** @enum {string} */
+            kind?: "product" | "service";
+            name?: string;
+            description?: string | null;
+            price_cents?: number;
+            currency?: string;
+            /** Format: uri */
+            image_url?: string | null;
+            is_active?: boolean;
+            duration_minutes?: number | null;
+            buffer_minutes?: number | null;
+            requires_booking?: boolean;
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        SetAttributeValuesDto: {
+            values: {
+                [key: string]: string | number | boolean;
+            };
+        };
+        UpsertVariantDto: {
+            sku: string;
+            name?: string;
+            attributes?: {
+                [key: string]: string | number | boolean;
+            };
+            price_cents?: number | null;
+            is_default?: boolean;
+            is_active?: boolean;
+            position?: number;
+        };
+        UpdateVariantDto: {
+            sku?: string;
+            name?: string;
+            attributes?: {
+                [key: string]: string | number | boolean;
+            };
+            price_cents?: number | null;
+            is_default?: boolean;
+            is_active?: boolean;
+            position?: number;
+        };
+        AdjustStockDto: {
+            /** @enum {string} */
+            op: "set" | "increment";
+            quantity: number;
+            out_of_stock_threshold?: number;
+        };
+        StockDto: {
+            on_hand: number;
+            out_of_stock_threshold: number;
+        };
+        AvailabilityDto: {
+            timezone: string;
+            duration_minutes: number;
+            slots: {
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string;
+                remaining_capacity: number;
+            }[];
+        };
+        AppointmentsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                product_id: string | null;
+                /** Format: uuid */
+                assigned_user_id: string | null;
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string;
+                /** @enum {string} */
+                status: "scheduled" | "confirmed" | "completed" | "cancelled" | "no_show";
+                notes: string | null;
+                /** @enum {string} */
+                created_by_type: "user" | "ai_agent";
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: date-time */
+                cancelled_at: string | null;
+                cancellation_reason: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        AppointmentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            product_id: string | null;
+            /** Format: uuid */
+            assigned_user_id: string | null;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            /** @enum {string} */
+            status: "scheduled" | "confirmed" | "completed" | "cancelled" | "no_show";
+            notes: string | null;
+            /** @enum {string} */
+            created_by_type: "user" | "ai_agent";
+            /** Format: uuid */
+            conversation_id: string | null;
+            /** Format: date-time */
+            cancelled_at: string | null;
+            cancellation_reason: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateAppointmentDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: uuid */
+            product_id?: string;
+            duration_minutes?: number;
+            notes?: string;
+        };
+        UpdateAppointmentDto: {
+            /** Format: date-time */
+            starts_at?: string;
+            duration_minutes?: number;
+            /** @enum {string} */
+            status?: "scheduled" | "confirmed" | "completed" | "no_show";
+            /** Format: uuid */
+            assigned_user_id?: string | null;
+            notes?: string | null;
+        };
+        CancelAppointmentDto: {
+            reason?: string;
+        };
+        QuickActionAssetDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            media_kind: "image" | "video" | "audio" | "document";
+            filename: string;
+            mime_type: string;
+            size_bytes: number;
+            position: number | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        QuickActionAssetUrlDto: {
+            /** Format: uri */
+            url: string;
+            expires_in_seconds: number;
+        };
+        QuickActionsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string;
+                /** @enum {string} */
+                type: "media_resource" | "canned_response" | "whatsapp_template";
+                body: string | null;
+                template_name: string | null;
+                template_language: string | null;
+                template_components: unknown;
+                enabled: boolean;
+                ai_enabled: boolean;
+                assets: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    media_kind: "image" | "video" | "audio" | "document";
+                    filename: string;
+                    mime_type: string;
+                    size_bytes: number;
+                    position: number | null;
+                    /** Format: date-time */
+                    created_at: string;
+                }[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QuickActionDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string;
+            /** @enum {string} */
+            type: "media_resource" | "canned_response" | "whatsapp_template";
+            body: string | null;
+            template_name: string | null;
+            template_language: string | null;
+            template_components: unknown;
+            enabled: boolean;
+            ai_enabled: boolean;
+            assets: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                media_kind: "image" | "video" | "audio" | "document";
+                filename: string;
+                mime_type: string;
+                size_bytes: number;
+                position: number | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateQuickActionDto: {
+            name: string;
+            description: string;
+            /** @enum {string} */
+            type: "media_resource" | "canned_response" | "whatsapp_template";
+            body?: string;
+            template_name?: string;
+            template_language?: string;
+            template_components?: unknown[];
+            enabled?: boolean;
+            ai_enabled?: boolean;
+            asset_ids?: string[];
+        };
+        UpdateQuickActionDto: {
+            name?: string;
+            description?: string;
+            body?: string | null;
+            template_name?: string | null;
+            template_language?: string | null;
+            template_components?: unknown[] | null;
+            enabled?: boolean;
+            ai_enabled?: boolean;
+            asset_ids?: string[];
         };
         CreateChannelDto: {
             name: string;
@@ -1967,11 +2948,16 @@ export interface components {
         };
         SendMessageDto: {
             /** @enum {string} */
-            type: "text" | "template";
+            type: "text" | "template" | "media" | "quick_action";
             body?: string;
             name?: string;
             language?: string;
             components?: unknown[];
+            /** Format: uuid */
+            upload_id?: string;
+            caption?: string;
+            /** Format: uuid */
+            quick_action_id?: string;
         };
         EnqueuedMessageDto: {
             /** Format: uuid */
@@ -1991,6 +2977,26 @@ export interface components {
             /** Format: date-time */
             status_updated_at: string | null;
             error: unknown;
+            /** @default [] */
+            attachments: {
+                /** Format: uuid */
+                id: string;
+                filename: string;
+                mime_type: string;
+                size_bytes: number;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+        };
+        ConversationUploadDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            media_kind: "image" | "video" | "audio" | "document";
+            filename: string;
+            mime_type: string;
+            size_bytes: number;
+            voice_note: boolean;
             /** Format: date-time */
             created_at: string;
         };
@@ -2076,6 +3082,71 @@ export interface components {
         CloseConversationDto: {
             resolved?: boolean;
             reason?: string;
+        };
+        RemindersListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                contact_id: string | null;
+                /** Format: uuid */
+                appointment_id: string | null;
+                /** Format: uuid */
+                channel_id: string;
+                message: string;
+                schedule_rrule: string | null;
+                timezone: string;
+                /** Format: date-time */
+                next_run_at: string | null;
+                /** Format: date-time */
+                last_run_at: string | null;
+                is_active: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        ReminderDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            contact_id: string | null;
+            /** Format: uuid */
+            appointment_id: string | null;
+            /** Format: uuid */
+            channel_id: string;
+            message: string;
+            schedule_rrule: string | null;
+            timezone: string;
+            /** Format: date-time */
+            next_run_at: string | null;
+            /** Format: date-time */
+            last_run_at: string | null;
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateReminderDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            channel_id: string;
+            message: string;
+            schedule_rrule?: string;
+            timezone: string;
+            /** Format: date-time */
+            next_run_at?: string;
+        };
+        UpdateReminderDto: {
+            message?: string;
+            schedule_rrule?: string | null;
+            timezone?: string;
+            /** Format: date-time */
+            next_run_at?: string | null;
+            is_active?: boolean;
         };
         NotificationsListDto: {
             data: {
@@ -3352,6 +4423,886 @@ export interface operations {
             };
         };
     };
+    CatalogsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogListDto"];
+                };
+            };
+        };
+    };
+    CatalogsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCatalogDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDto"];
+                };
+            };
+        };
+    };
+    CatalogsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDto"];
+                };
+            };
+        };
+    };
+    CatalogsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CatalogsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCatalogDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDto"];
+                };
+            };
+        };
+    };
+    CatalogCategoriesController_list_v1: {
+        parameters: {
+            query?: {
+                tree?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListDto"];
+                };
+            };
+        };
+    };
+    CatalogCategoriesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCategoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryDto"];
+                };
+            };
+        };
+    };
+    CatalogCategoriesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CatalogCategoriesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryDto"];
+                };
+            };
+        };
+    };
+    ProductTypesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductTypeListDto"];
+                };
+            };
+        };
+    };
+    ProductTypesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProductTypeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductTypeDto"];
+                };
+            };
+        };
+    };
+    ProductTypesController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductTypeDto"];
+                };
+            };
+        };
+    };
+    ProductTypesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProductTypesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductTypeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductTypeDto"];
+                };
+            };
+        };
+    };
+    ProductTypesController_setAttributes_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProductTypeAttributesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductTypeDto"];
+                };
+            };
+        };
+    };
+    ProductsController_list_v1: {
+        parameters: {
+            query?: {
+                q?: string;
+                catalog_id?: string;
+                category_id?: string;
+                kind?: "product" | "service";
+                is_active?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductsListDto"];
+                };
+            };
+        };
+    };
+    ProductsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProductDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProductsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductsController_setAttributeValues_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAttributeValuesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductsController_createVariant_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertVariantDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductsController_removeVariant_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProductsController_updateVariant_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVariantDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProductsController_adjustStock_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustStockDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockDto"];
+                };
+            };
+        };
+    };
+    AvailabilityController_list_v1: {
+        parameters: {
+            query: {
+                date_from: string;
+                date_to?: string;
+                product_id?: string;
+                duration_minutes?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvailabilityDto"];
+                };
+            };
+        };
+    };
+    AppointmentsController_list_v1: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                status?: "scheduled" | "confirmed" | "completed" | "cancelled" | "no_show";
+                contact_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentsListDto"];
+                };
+            };
+        };
+    };
+    AppointmentsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAppointmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentDto"];
+                };
+            };
+        };
+    };
+    AppointmentsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentDto"];
+                };
+            };
+        };
+    };
+    AppointmentsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAppointmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentDto"];
+                };
+            };
+        };
+    };
+    AppointmentsController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelAppointmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentDto"];
+                };
+            };
+        };
+    };
+    QuickActionsController_uploadAsset_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickActionAssetDto"];
+                };
+            };
+        };
+    };
+    QuickActionsController_assetUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickActionAssetUrlDto"];
+                };
+            };
+        };
+    };
+    QuickActionsController_deleteAsset_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuickActionsController_list_v1: {
+        parameters: {
+            query?: {
+                type?: "media_resource" | "canned_response" | "whatsapp_template";
+                enabled?: string;
+                search?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickActionsListDto"];
+                };
+            };
+        };
+    };
+    QuickActionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQuickActionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickActionDto"];
+                };
+            };
+        };
+    };
+    QuickActionsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickActionDto"];
+                };
+            };
+        };
+    };
+    QuickActionsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuickActionsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQuickActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickActionDto"];
+                };
+            };
+        };
+    };
     ChannelsController_list_v1: {
         parameters: {
             query?: never;
@@ -3771,6 +5722,36 @@ export interface operations {
             };
         };
     };
+    ConversationsController_upload_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    /** @default false */
+                    voice_note?: boolean;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationUploadDto"];
+                };
+            };
+        };
+    };
     ConversationsController_attachmentUrl_v1: {
         parameters: {
             query?: never;
@@ -3972,6 +5953,116 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    RemindersController_list_v1: {
+        parameters: {
+            query?: {
+                is_active?: "true" | "false";
+                contact_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemindersListDto"];
+                };
+            };
+        };
+    };
+    RemindersController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReminderDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderDto"];
+                };
+            };
+        };
+    };
+    RemindersController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderDto"];
+                };
+            };
+        };
+    };
+    RemindersController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RemindersController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReminderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderDto"];
+                };
             };
         };
     };

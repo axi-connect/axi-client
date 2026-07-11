@@ -81,4 +81,44 @@ describe("DetailSheet", () => {
     resolveFetch({})
     await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument())
   })
+
+  it("NO re-fetchea cuando cambia la identidad de fetchDetail (solo open/id)", async () => {
+    // Regresión: pasar lambdas inline como fetchDetail (identidad nueva en
+    // cada render del padre) provocaba un bucle infinito de refetch.
+    const onOpenChange = jest.fn()
+    const calls: string[] = []
+    const makeFetch = (tag: string) =>
+      jest.fn(async () => { calls.push(tag) })
+
+    const { rerender } = render(
+      <Wrapper>
+        <DetailSheet open={true} onOpenChange={onOpenChange} id={1} title="Test" fetchDetail={makeFetch("a")}>
+          <div data-testid="content" />
+        </DetailSheet>
+      </Wrapper>
+    )
+
+    await waitFor(() => expect(calls).toEqual(["a"]))
+
+    // Re-render con una función DISTINTA pero mismo open/id → sin refetch.
+    rerender(
+      <Wrapper>
+        <DetailSheet open={true} onOpenChange={onOpenChange} id={1} title="Test" fetchDetail={makeFetch("b")}>
+          <div data-testid="content" />
+        </DetailSheet>
+      </Wrapper>
+    )
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(calls).toEqual(["a"])
+
+    // Cambiar el id SÍ re-fetchea, usando la función más reciente.
+    rerender(
+      <Wrapper>
+        <DetailSheet open={true} onOpenChange={onOpenChange} id={2} title="Test" fetchDetail={makeFetch("c")}>
+          <div data-testid="content" />
+        </DetailSheet>
+      </Wrapper>
+    )
+    await waitFor(() => expect(calls).toEqual(["a", "c"]))
+  })
 })

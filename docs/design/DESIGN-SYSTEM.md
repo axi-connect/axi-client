@@ -127,7 +127,7 @@ Orden fijo para series de gráficos: `brand` → `violet` → `amber` → `info`
 
 *Estado actual: los primitivos shadcn usan `rounded-md` (6px) y `rounded-lg` (8px) por defecto — se re-mapean estos tokens en `@theme` para que las clases existentes adopten los radios de marca sin tocar cada componente.*
 
-### 4.2 Espaciado
+### 4.2 Espaciado y ancho de contenido
 
 Escala Tailwind estándar (base 4px). Convenciones:
 
@@ -135,6 +135,8 @@ Escala Tailwind estándar (base 4px). Convenciones:
 - Gap entre secciones de página: `space-y-6`.
 - Formularios: `gap-4` entre campos; grid `{base:1, md:2}` (default de `DynamicForm`).
 - Altura de controles: `h-9` (36px) default, `h-8` compacto en tablas, `h-10` en landing/CTAs.
+
+**Ancho de contenido (panel privado):** las **superficies** (fondo degradado del panel, header glass) ocupan siempre el **100%** del ancho disponible; el **contenido** se centra con `mx-auto max-w-7xl` + gutters `p-4 md:p-6`. Ese centrado lo aporta el layout del route group `(content)` (`src/app/(private)/(content)/layout.tsx`) y el wrapper interno del `PrivateHeader` — **las páginas no añaden padding de página propio** (los skeletons de `features/loading/` tampoco). Las vistas de aplicación (`workspace/inbox`) viven fuera del grupo `(content)` y son **full-bleed**: aprovechan todo el ancho sobre la superficie.
 
 ### 4.3 Elevación (sombras)
 
@@ -238,6 +240,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Panel de detalle | `DetailSheet` (`fetchDetail`) |
 | Confirmación / alerta | `useAlert()` (`showModal` / `showAlert`) |
 | Selección múltiple | `MultiSelect` |
+| Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
 

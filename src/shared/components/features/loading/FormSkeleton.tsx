@@ -19,7 +19,9 @@ export function FormSkeleton({ fields = 6, showHeader = true, className }: FormS
       role="status"
       aria-label="Cargando formulario"
       aria-busy="true"
-      className={cn("space-y-6 p-6", className)}
+      // Sin padding propio: lo aporta el layout (content), igual que a la
+      // página real — así el skeleton coincide 1:1 y no hay salto al montar.
+      className={cn("space-y-6", className)}
     >
       {showHeader && (
         <div className="space-y-2">

@@ -13,7 +13,7 @@ export default function LogoutConfirmModal() {
   async function handleConfirm() {
     await logout()
     setOpen(false)
-    router.replace("/auth/login")
+    router.replace("/")
   }
 
   function handleCancel() {
@@ -33,7 +33,7 @@ export default function LogoutConfirmModal() {
         ],
       }}
     >
-      <p className="text-sm text-foreground/70">Se cerrará tu sesión actual y volverás al inicio de sesión.</p>
+      <p className="text-sm text-foreground/70">Se cerrará tu sesión actual y volverás al inicio.</p>
     </Modal>
   )
 }

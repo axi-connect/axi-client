@@ -10,7 +10,7 @@ import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-
 import { MODE_LABELS, STATUS_LABELS } from "@/modules/inbox/domain/inbox"
 import { MessageBubble } from "./MessageBubble"
 import { HandoffActions } from "./HandoffActions"
-import { Composer } from "./Composer"
+import { Composer } from "./composer/Composer"
 
 /**
  * Panel de conversación: header con contacto + acciones de handoff,
@@ -106,14 +106,19 @@ export function ConversationPanel({
             void fetchOlderMessages(selected.id)
           }
         }}
-        className="flex-1 space-y-2 overflow-y-auto p-4"
+        className="sidebar-scroll flex-1 space-y-2 overflow-y-auto p-4"
         aria-live="polite"
       >
         {messagesState?.next_cursor && (
           <p className="text-center text-xs text-muted-foreground">Desplázate arriba para cargar más…</p>
         )}
         {messages.map((message) => (
-          <MessageBubble key={message.local_id ?? message.id} message={message} onRetry={retry} />
+          <MessageBubble
+            key={message.local_id ?? message.id}
+            message={message}
+            conversationId={selected.id}
+            onRetry={retry}
+          />
         ))}
         {typingUsers.length > 0 && (
           <div className="flex justify-start">

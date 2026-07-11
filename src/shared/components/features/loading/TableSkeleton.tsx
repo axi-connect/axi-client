@@ -22,7 +22,9 @@ export function TableSkeleton({ rows = 8, showHeader = true, className }: TableS
       role="status"
       aria-label="Cargando listado"
       aria-busy="true"
-      className={cn("space-y-6 p-6", className)}
+      // Sin padding propio: lo aporta el layout (content), igual que a la
+      // página real — así el skeleton coincide 1:1 y no hay salto al montar.
+      className={cn("space-y-6", className)}
     >
       {showHeader && (
         <div className="space-y-2">

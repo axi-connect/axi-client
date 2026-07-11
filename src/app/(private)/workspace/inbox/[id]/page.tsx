@@ -8,7 +8,7 @@ export default async function WorkspaceInboxConversationPage({
 }) {
   const { id } = await params
   return (
-    <div className="h-[calc(100vh-4rem)]">
+    <div className="h-full">
       <InboxView initialConversationId={id} />
     </div>
   )

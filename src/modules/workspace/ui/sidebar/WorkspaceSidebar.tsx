@@ -11,7 +11,8 @@ export default function WorkspaceSidebar() {
       collapsible="none"
       className="relative rounded-l-2xl bg-gradient-to-br from-muted/50 to-muted border-r border-border"
     >
-      <SidebarContent>
+      {/* sidebar-scroll: scrollbar de marca cuando la lista de canales excede el alto */}
+      <SidebarContent className="sidebar-scroll">
         <InboxSection />
         <SidebarSeparator />
         <ChannelSection />

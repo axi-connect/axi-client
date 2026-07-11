@@ -48,7 +48,7 @@ afterEach(() => {
 
 describe("inbox.store — mensajería optimista", () => {
   it("sendOptimistic inserta un mensaje pending con local_id", () => {
-    const localId = useInboxStore.getState().sendOptimistic(CID, "hola mundo")
+    const localId = useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola mundo" })
     const items = useInboxStore.getState().messagesById[CID].items
 
     expect(items).toHaveLength(1)
@@ -59,7 +59,7 @@ describe("inbox.store — mensajería optimista", () => {
   })
 
   it("reconcileSent reemplaza el optimista por el mensaje real del ack", () => {
-    const localId = useInboxStore.getState().sendOptimistic(CID, "hola")
+    const localId = useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola" })
     const real = makeMessage({ id: "real-1", direction: "outbound", sender_type: "user", status: "queued", body: "hola" })
 
     useInboxStore.getState().reconcileSent(CID, localId, real)
@@ -72,7 +72,7 @@ describe("inbox.store — mensajería optimista", () => {
   })
 
   it("confirmMessage marca sent/confirmed al llegar conversation.message_sent", () => {
-    const localId = useInboxStore.getState().sendOptimistic(CID, "hola")
+    const localId = useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola" })
     useInboxStore.getState().reconcileSent(CID, localId, makeMessage({ id: "real-1", direction: "outbound", status: "queued" }))
 
     useInboxStore.getState().confirmMessage(CID, "real-1")
@@ -83,7 +83,7 @@ describe("inbox.store — mensajería optimista", () => {
   })
 
   it("marca failed si no hay confirmación en 15s", () => {
-    useInboxStore.getState().sendOptimistic(CID, "hola")
+    useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola" })
     jest.advanceTimersByTime(15_001)
 
     const [message] = useInboxStore.getState().messagesById[CID].items
@@ -97,6 +97,59 @@ describe("inbox.store — mensajería optimista", () => {
     useInboxStore.getState().appendMessage(CID, incoming)
 
     expect(useInboxStore.getState().messagesById[CID].items).toHaveLength(1)
+  })
+
+  it("F9.1: message_created llegó antes del ack → reconcileSent elimina el optimista (sin duplicado)", () => {
+    const localId = useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola" })
+    // El evento realtime insertó el mensaje REAL antes de que llegara el ack
+    const real = makeMessage({ id: "real-9", direction: "outbound", sender_type: "user", status: "queued", body: "hola" })
+    useInboxStore.getState().appendMessage(CID, real)
+    expect(useInboxStore.getState().messagesById[CID].items).toHaveLength(2)
+
+    useInboxStore.getState().reconcileSent(CID, localId, real)
+
+    const items = useInboxStore.getState().messagesById[CID].items
+    expect(items).toHaveLength(1)
+    expect(items[0].id).toBe("real-9")
+  })
+
+  it("F9.1: markMessageFailed marca failed por id real (evento message_status)", () => {
+    const real = makeMessage({ id: "real-10", direction: "outbound", status: "queued" })
+    useInboxStore.getState().appendMessage(CID, real)
+
+    useInboxStore.getState().markMessageFailed(CID, "real-10")
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.status).toBe("failed")
+    expect(message.delivery).toBe("failed")
+  })
+
+  it("media optimista (F9): reconcileSent preserva previews locales y payload de retry", () => {
+    const preview = { object_url: "blob:x", mime_type: "image/png", filename: "foto.png", size_bytes: 10 }
+    const payload = { type: "media" as const, upload_id: "up-1", caption: "mira" }
+    const localId = useInboxStore.getState().sendOptimistic(CID, {
+      content_type: "image",
+      body: "mira",
+      local_previews: [preview],
+      local_payload: payload,
+    })
+
+    // El 202/ack del backend trae el attachment real pero SIN previews locales
+    const real = makeMessage({
+      id: "real-media-1",
+      direction: "outbound",
+      content_type: "image",
+      status: "queued",
+      body: "mira",
+      attachments: [{ id: "a1", filename: "foto.png", mime_type: "image/png", size_bytes: 10 }],
+    })
+    useInboxStore.getState().reconcileSent(CID, localId, real)
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.id).toBe("real-media-1")
+    expect(message.local_previews).toEqual([preview]) // sin flash del thumbnail
+    expect(message.local_payload).toEqual(payload) // retry sin re-subir
+    expect(message.attachments).toHaveLength(1)
   })
 })
 

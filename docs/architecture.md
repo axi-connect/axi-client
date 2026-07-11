@@ -73,7 +73,7 @@ axi-client/
 │   │   ├── globals.css               # tokens de tema + utilidades de marca (§11)
 │   │   ├── @modal/                   # slot paralelo raíz (p.ej. logout interceptado)
 │   │   ├── (public)/                 # grupo público: landing, marketplace, auth
-│   │   ├── (private)/                # grupo privado: dashboard, admin/*, rbac/*, workspace/*
+│   │   ├── (private)/                # grupo privado: (content)/{dashboard,admin,settings} + workspace/*
 │   │   └── api/                      # BFF: auth/* + proxy/[...path] (§7)
 │   ├── core/                         # transversal; NUNCA lógica de negocio de un slice
 │   │   ├── config/                   # env.ts (vars públicas), routes.ts (rutas públicas)
@@ -86,6 +86,7 @@ axi-client/
 │   │   └── styles/                   # helpers de estilo (gradients)
 │   ├── modules/                      # vertical slices (§3.2)
 │   │   ├── companies/  agents/  users/  rbac/
+│   │   ├── catalog/                             # catálogo de productos (docs/modules/catalog.md)
 │   │   ├── channels/  conversations/           # tiempo real
 │   │   └── workspace/                           # capa de composición (inbox)
 │   └── shared/                       # design system + utilidades reutilizables
@@ -187,7 +188,7 @@ Estas reglas son la política del proyecto; el objetivo es hacerlas cumplir con 
 
 - **`components/ui/`** — primitivos shadcn/ui + Radix (§11).
 - **`components/features/`** — componentes complejos reutilizables (§12).
-- **`components/layout/`** — `sidebar/` (sistema completo + `AppSidebar` que lee `/api/auth/sidebar`, con `SidebarNavSkeleton` mientras carga), `site/` (landing), `private-header.tsx`.
+- **`components/layout/`** — `sidebar/` (sistema completo + `AppSidebar` que lee `/api/auth/sidebar`, con `SidebarNavSkeleton` mientras carga; recibe la identidad del tenant vía prop `identity` inyectada desde la capa app — mismo patrón que `PrivateHeader actions` —, y el footer expone el menú de cuenta con "Cerrar sesión" → modal interceptado `/auth/logout`), `site/` (landing), `private-header.tsx`.
 - **`api/`** — `buildListParams()` (construye `{ limit, offset, sortBy, sortDir, [searchField], ...extra }`) y `usePaginatedList()` (hook de listado paginado sobre un `fetcher` que devuelve `ApiResponse<T>`). **Reutilizar siempre** para listados en tablas.
 - **`auth/`** — `auth.types.ts` (`AuthUser`, `Tokens`, `LoginPayload`, `SessionResponse`, `COOKIE_NAMES`), `auth.hooks.ts` (`useAuth`, `useSession`) y `auth.handlers.ts` (`refreshToken()` server-side).
 
@@ -236,7 +237,7 @@ Tres grupos de ruta bajo `src/app/`, más la capa BFF (`api/`) y slots paralelos
 
 **Grupos de ruta** (`(...)` no afectan la URL, solo el layout):
 - **`(public)`** — shell de marketing (`SiteHeader`/`SiteFooter`). Páginas: `/` (landing), `/marketplace`, `/auth/{login,logout,forgot-password,reset-password}`.
-- **`(private)`** — shell autenticado (`SidebarProvider` + `AppSidebar` + `PrivateHeader`). Segmentos: `/dashboard`, `/admin/{companies,users,agents}`, `/rbac/overview`, `/workspace/{inbox,inbox/[id]}`.
+- **`(private)`** — shell autenticado (`SidebarProvider` + `AppSidebar` + `PrivateHeader` + superficie full-width). Dentro, el sub-grupo **`(content)`** centra el contenido (`mx-auto max-w-7xl p-4 md:p-6`, DESIGN-SYSTEM §4.2) para `/dashboard`, `/admin/agents` y `/settings/{company,users,roles}`; `/workspace/{inbox,inbox/[id]}` queda fuera del grupo y es full-bleed.
 
 **Rutas paralelas** (slots como props del layout):
 - `@modal` — en la raíz (logout interceptado) y en `workspace` (crear/ver canal).
@@ -337,7 +338,7 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 
 **Setup shadcn/ui** (`components.json`): estilo **new-york**, `rsc: true`, `tsx: true`, Tailwind con `cssVariables` y `baseColor: zinc` (sin `tailwind.config` — v4), iconos **lucide**. Alias: `ui → @/shared/components/ui`, `utils → @/core/lib/utils`, `lib → @/core/lib`, `hooks → @/core/hooks`.
 
-**Primitivos** (`shared/components/ui/`): `alert`, `badge`, `button` (+`button-group`), `command`, `context-menu`, `dialog`, `dropdown-menu`, `floating-alert`, `form`, `input`, `label`, `modal`, `notice` (`StatusAlert`), `pagination` (`BasicPagination`), `popover`, `progress`, `select`, `separator`, `sheet`, `skeleton`, `sparkles`, `table`, `tabs`, `textarea`, `tooltip`. Variantes con **cva**.
+**Primitivos** (`shared/components/ui/`): `alert`, `avatar` (imagen con fallback de inicial), `badge`, `brand-loader`/`brand-mark`, `button` (+`button-group`), `command`, `context-menu`, `dialog`, `dropdown-menu`, `floating-alert`, `form`, `input`, `label`, `modal`, `notice` (`StatusAlert`), `pagination` (`BasicPagination`), `popover`, `progress`, `select`, `separator`, `sheet`, `skeleton`, `sparkles`, `table`, `tabs`, `textarea`, `tooltip`. Variantes con **cva**.
 
 **Theming** (`src/app/globals.css`, Tailwind v4 `@theme inline`):
 - Tokens de marca (`:root`): `--axi-brand: #E65759`, `--axi-brand-2: #e02f2f`, `--axi-muted: #f4f4f5`. Dark (`.dark`): `--axi-brand: #fb7185`, `--axi-brand-2: #df4f4f`, `--axi-muted: #18181b`.

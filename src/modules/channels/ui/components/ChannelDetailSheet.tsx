@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Trash2, Power, PowerOff, Unlink, RefreshCw } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { Badge } from "@/shared/components/ui/badge"
@@ -44,7 +44,11 @@ export function ChannelDetailSheet() {
   const [detail, setDetail] = useState<ChannelDTO | null>(null)
   const [busy, setBusy] = useState(false)
   const { showModal, closeModal, showAlert } = useAlert()
-  const { channels, pairingByChannel, fetchChannels } = useChannelStore()
+  // Selectores estables: los `set` frecuentes del WS (QR/status) solo
+  // re-renderizan si cambia lo que el sheet consume, no todo el store.
+  const channels = useChannelStore((s) => s.channels)
+  const pairingByChannel = useChannelStore((s) => s.pairingByChannel)
+  const fetchChannels = useChannelStore((s) => s.fetchChannels)
 
   // El estado en vivo del store manda sobre el snapshot del fetch.
   const live = channels.find((c) => c.id === id)
@@ -59,6 +63,15 @@ export function ChannelDetailSheet() {
     }
     window.addEventListener("channels:detail:open", onOpen)
     return () => window.removeEventListener("channels:detail:open", onOpen)
+  }, [])
+
+  // Identidad estable: DetailSheet re-fetchea solo por open/id, y esta función
+  // no debe recrearse en cada render (getChannelById es import de módulo y
+  // setDetail es un setter de useState; ambos estables → deps vacías).
+  const fetchDetail = useCallback(async (channelId: string) => {
+    const data = await getChannelById(channelId)
+    setDetail(data)
+    return data
   }, [])
 
   const runAction = async (action: () => Promise<unknown>, pendingMessage: string) => {
@@ -109,11 +122,7 @@ export function ChannelDetailSheet() {
       open={open}
       onOpenChange={setOpen}
       title="Detalle del canal"
-      fetchDetail={async (channelId: string) => {
-        const data = await getChannelById(channelId)
-        setDetail(data)
-        return data
-      }}
+      fetchDetail={fetchDetail}
       skeleton={<div className="animate-pulse h-40 bg-secondary rounded-lg" />}
     >
       {channel && (

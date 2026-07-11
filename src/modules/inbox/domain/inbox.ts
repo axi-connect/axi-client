@@ -15,6 +15,73 @@ export type SendMessageDTO = Schemas["SendMessageDto"];
 export type ConversationStatus = ConversationDTO["status"];
 export type ConversationMode = ConversationDTO["mode"];
 export type MessageStatus = Message["status"];
+export type MessageContentType = Message["content_type"];
+export type MessageAttachment = Message["attachments"][number];
+
+/** Tipos de contenido que se renderizan como media (F9). */
+export type MediaContentKind = "image" | "audio" | "video" | "document" | "sticker" | "location";
+
+export const MEDIA_CONTENT_TYPES: ReadonlySet<MessageContentType> = new Set<MessageContentType>([
+  "image",
+  "audio",
+  "video",
+  "document",
+  "sticker",
+  "location",
+]);
+
+export function isMediaContentType(type: MessageContentType): type is MediaContentKind {
+  return MEDIA_CONTENT_TYPES.has(type);
+}
+
+export const MEDIA_PREVIEW_LABELS: Record<MediaContentKind, string> = {
+  image: "Foto",
+  audio: "Nota de voz",
+  video: "Video",
+  document: "Documento",
+  sticker: "Sticker",
+  location: "Ubicación",
+};
+
+/**
+ * `last_message_preview` del backend: el body/caption, o el token `[audio]`,
+ * `[image]`… cuando la media no tiene texto. Traduce el token a etiqueta ES;
+ * la UI le antepone el icono del tipo (patrón WhatsApp).
+ */
+export function parsePreview(preview: string | null): {
+  kind: MediaContentKind | null;
+  text: string;
+} {
+  if (!preview) return { kind: null, text: "…" };
+  const match = /^\[(image|audio|video|document|sticker|location)\]$/.exec(preview.trim());
+  if (match) {
+    const kind = match[1] as MediaContentKind;
+    return { kind, text: MEDIA_PREVIEW_LABELS[kind] };
+  }
+  return { kind: null, text: preview };
+}
+
+/** Shape del payload persistido por el backend para location (ingesta F4). */
+export interface LocationPayload {
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+}
+
+export function extractLocationPayload(payload: unknown): LocationPayload | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const location = (payload as { location?: unknown }).location;
+  if (typeof location !== "object" || location === null) return null;
+  const { latitude, longitude, name, address } = location as Record<string, unknown>;
+  if (typeof latitude !== "number" || typeof longitude !== "number") return null;
+  return {
+    latitude,
+    longitude,
+    name: typeof name === "string" ? name : undefined,
+    address: typeof address === "string" ? address : undefined,
+  };
+}
 
 /** Tabs de la bandeja: espejo de los contadores de `GET /inbox/counts`. */
 export type InboxTab = "queued" | "mine" | "ai" | "all_open";
@@ -47,7 +114,85 @@ export type UiMessage = Message & {
   /** Solo mensajes optimistas: id temporal local hasta reconciliar. */
   local_id?: string;
   delivery?: "pending" | "confirmed" | "failed";
+  /** F9: previews locales (object URLs) del optimista antes del attachment real. */
+  local_previews?: {
+    object_url: string;
+    mime_type: string;
+    filename: string;
+    size_bytes: number;
+  }[];
+  /** F9: DTO original del envío — retry de media sin re-subir el archivo. */
+  local_payload?: SendMessageDTO;
 };
+
+// ---------------------------------------------------------------- envío F9
+
+export type UploadResultDTO = Schemas["ConversationUploadDto"];
+export type OutboundMediaKind = UploadResultDTO["media_kind"];
+
+/** Adjunto del composer: File local + su ciclo de subida (use-upload-queue). */
+export interface ComposerAttachment {
+  local_id: string;
+  file_name: string;
+  mime_type: string;
+  size_bytes: number;
+  /** URL.createObjectURL del File — preview local y burbuja optimista. */
+  object_url: string;
+  kind: OutboundMediaKind;
+  status: "pending" | "uploading" | "uploaded" | "error";
+  upload_id?: string;
+  voice_note?: boolean;
+}
+
+/** Entrada única del envío (Composer → use-send-message). */
+export type SendInput =
+  | { kind: "text"; body: string }
+  | {
+      kind: "media";
+      upload_id: string;
+      caption?: string;
+      preview: NonNullable<UiMessage["local_previews"]>[number];
+      media_kind: OutboundMediaKind;
+      voice_note?: boolean;
+    };
+
+/** Espejo de los límites del backend (media_kinds.ts): validación temprana. */
+const MB = 1024 * 1024;
+
+export const MAX_UPLOAD_BYTES: Record<OutboundMediaKind, number> = {
+  image: 5 * MB,
+  video: 16 * MB,
+  audio: 16 * MB,
+  document: 26 * MB,
+};
+
+export const ACCEPTED_MIME_BY_KIND: Record<OutboundMediaKind, string[]> = {
+  image: ["image/jpeg", "image/png", "image/webp"],
+  video: ["video/mp4", "video/3gpp"],
+  audio: ["audio/aac", "audio/mp4", "audio/mpeg", "audio/amr", "audio/ogg"],
+  document: [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "text/csv",
+  ],
+};
+
+/** `accept` del input file del composer (todos los kinds enviables). */
+export const COMPOSER_ACCEPT = Object.values(ACCEPTED_MIME_BY_KIND).flat().join(",");
+
+export function mediaKindForMime(mime: string): OutboundMediaKind | null {
+  const base = (mime.split(";")[0] ?? mime).trim().toLowerCase();
+  for (const kind of Object.keys(ACCEPTED_MIME_BY_KIND) as OutboundMediaKind[]) {
+    if (ACCEPTED_MIME_BY_KIND[kind].includes(base)) return kind;
+  }
+  return null;
+}
 
 /** Filtros que la UI traduce a query params de `GET /inbox/conversations`. */
 export function tabToQuery(tab: InboxTab): Record<string, string> {

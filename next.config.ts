@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "pps.whatsapp.net" }, // avatares de WhatsApp
       { protocol: "https", hostname: "res.cloudinary.com" }, // assets de marca
+      // Storage de media del chat (MinIO en dev; ajustar host S3/CDN en prod).
+      // Las burbujas usan <img> nativa (URL firmada rotativa), pero otros usos
+      // de next/image sobre el storage necesitan el pattern.
+      { protocol: "http", hostname: "localhost", port: "9000" },
     ],
   },
 };

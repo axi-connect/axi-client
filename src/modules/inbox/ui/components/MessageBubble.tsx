@@ -2,12 +2,15 @@
 
 import { cn } from "@/core/lib/utils"
 import { AlertCircle, Bot, Check, CheckCheck, Clock, RotateCw, User } from "lucide-react"
-import type { UiMessage } from "@/modules/inbox/domain/inbox"
+import { isMediaContentType, type UiMessage } from "@/modules/inbox/domain/inbox"
+import { MediaAttachment } from "./media"
 
 /**
  * Burbuja de mensaje. Estados de entrega: pending (reloj) → sent (check) →
  * delivered/read (doble check) → failed (alerta + retry). El backend aún no
  * emite `conversation.message_status`, así que delivered/read son best-effort.
+ * Media (F9): imagen/video/sticker van edge-to-edge (p-1); audio/documento/
+ * ubicación con padding normal; sticker sin fondo de burbuja (patrón WhatsApp).
  */
 function StatusIcon({ message }: { message: UiMessage }) {
   if (message.direction !== "outbound") return null
@@ -23,10 +26,22 @@ function StatusIcon({ message }: { message: UiMessage }) {
   return <Check className="size-3.5 opacity-60" aria-label="Enviado" />
 }
 
-export function MessageBubble({ message, onRetry }: { message: UiMessage; onRetry?: (message: UiMessage) => void }) {
+export function MessageBubble({
+  message,
+  conversationId,
+  onRetry,
+}: {
+  message: UiMessage
+  conversationId: string
+  onRetry?: (message: UiMessage) => void
+}) {
   const outbound = message.direction === "outbound"
   const system = message.sender_type === "system" || message.content_type === "system"
   const failed = message.delivery === "failed" || message.status === "failed"
+  const media = isMediaContentType(message.content_type)
+  const sticker = message.content_type === "sticker"
+  // Imagen/video/sticker: media al borde de la burbuja; el texto va con padding propio
+  const edgeToEdge = sticker || message.content_type === "image" || message.content_type === "video"
 
   if (system) {
     return (
@@ -36,24 +51,47 @@ export function MessageBubble({ message, onRetry }: { message: UiMessage; onRetr
     )
   }
 
+  const footerTone = sticker
+    ? "text-muted-foreground"
+    : outbound
+      ? "text-white/70"
+      : "text-muted-foreground"
+
   return (
     <div className={cn("flex", outbound ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[75%] rounded-2xl px-3 py-2 text-sm",
-          outbound
-            ? "rounded-br-sm bg-brand text-white"
-            : "rounded-bl-sm bg-muted text-foreground",
+          "max-w-[75%] rounded-2xl text-sm",
+          sticker
+            ? "bg-transparent"
+            : outbound
+              ? "rounded-br-sm bg-brand text-white"
+              : "rounded-bl-sm bg-muted text-foreground",
+          media && edgeToEdge && !sticker ? "p-1" : sticker ? "p-0" : "px-3 py-2",
           failed && "opacity-70 ring-1 ring-destructive",
         )}
       >
-        {message.content_type !== "text" && (
-          <div className={cn("mb-1 text-[10px] uppercase tracking-wide", outbound ? "text-white/70" : "text-muted-foreground")}>
-            {message.content_type}
-          </div>
+        {media ? (
+          <MediaAttachment message={message} conversationId={conversationId} outbound={outbound} />
+        ) : (
+          message.content_type !== "text" && (
+            <div className={cn("mb-1 text-[10px] uppercase tracking-wide", outbound ? "text-white/70" : "text-muted-foreground")}>
+              {message.content_type}
+            </div>
+          )
         )}
-        <p className="whitespace-pre-wrap break-words">{message.body ?? "(sin contenido)"}</p>
-        <div className={cn("mt-1 flex items-center justify-end gap-1 text-[10px]", outbound ? "text-white/70" : "text-muted-foreground")}>
+        {(!media || (message.body && message.body.length > 0)) && (
+          <p className={cn("whitespace-pre-wrap break-words", media && edgeToEdge && "px-2 pt-1")}>
+            {media ? message.body : (message.body ?? "(sin contenido)")}
+          </p>
+        )}
+        <div
+          className={cn(
+            "mt-1 flex items-center justify-end gap-1 text-[10px]",
+            footerTone,
+            media && edgeToEdge && !sticker && "px-2 pb-1",
+          )}
+        >
           {message.sender_type === "ai_agent" && <Bot className="size-3" aria-label="Enviado por IA" />}
           {message.sender_type === "user" && <User className="size-3" aria-label="Enviado por operador" />}
           <span>{new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>

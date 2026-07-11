@@ -2,16 +2,37 @@
 
 import { useEffect } from "react"
 import { cn } from "@/core/lib/utils"
-import { Inbox as InboxIcon } from "lucide-react"
+import {
+  Camera,
+  FileText,
+  Film,
+  Inbox as InboxIcon,
+  MapPin,
+  Mic,
+  Sticker,
+  type LucideIcon,
+} from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import {
   INBOX_TAB_LABELS,
   MODE_LABELS,
+  parsePreview,
   type InboxConversation,
   type InboxTab,
+  type MediaContentKind,
 } from "@/modules/inbox/domain/inbox"
+
+/** Icono por tipo de media en el preview (W6 del plan, patrón WhatsApp). */
+const PREVIEW_ICONS: Record<MediaContentKind, LucideIcon> = {
+  image: Camera,
+  audio: Mic,
+  video: Film,
+  document: FileText,
+  sticker: Sticker,
+  location: MapPin,
+}
 
 /**
  * Lista de conversaciones operables con tabs (queued/mine/ai/all_open) y
@@ -36,6 +57,8 @@ function InboxItem({ conversation, active, onSelect }: {
   const time = conversation.last_message_at
     ? new Date(conversation.last_message_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : ""
+  const preview = parsePreview(conversation.last_message_preview)
+  const PreviewIcon = preview.kind ? PREVIEW_ICONS[preview.kind] : null
 
   return (
     <button
@@ -51,8 +74,9 @@ function InboxItem({ conversation, active, onSelect }: {
         <span className="shrink-0 text-[10px] text-muted-foreground">{time}</span>
       </div>
       <div className="mt-0.5 flex items-center gap-2">
-        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-          {conversation.last_message_preview ?? "…"}
+        <span className="flex min-w-0 flex-1 items-center gap-1 truncate text-xs text-muted-foreground">
+          {PreviewIcon && <PreviewIcon className="size-3 shrink-0" aria-hidden />}
+          <span className="truncate">{preview.text}</span>
         </span>
         <Badge
           variant={conversation.mode === "human_queued" ? "destructive" : conversation.mode === "human_active" ? "default" : "secondary"}
@@ -106,7 +130,7 @@ export function InboxList() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-1 overflow-y-auto p-2">
+      <div className="sidebar-scroll flex-1 space-y-1 overflow-y-auto p-2">
         {loadingList && conversations.length === 0 ? (
           Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
         ) : conversations.length === 0 ? (

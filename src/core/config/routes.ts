@@ -13,6 +13,7 @@ export function isPublicPath(pathname: string) {
 export const NAV_PATH_ALIASES: Record<string, string> = {
   "/inbox": "/workspace/inbox",
   "/ai-agents": "/admin/agents",
+  "/catalog": "/catalog/products",
 };
 
 /**
