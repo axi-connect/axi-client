@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { cn } from "@/core/lib/utils"
 import { SidebarTrigger } from "@/shared/components/layout/sidebar/core"
 import { ThemeToggle } from "@/shared/components/layout/theme-toggle"
 import { ChevronRight } from "lucide-react"
@@ -34,21 +35,26 @@ export function PrivateHeader({ actions }: PrivateHeaderProps) {
 		<div className="glass sticky top-0 z-40 py-2">
 			<div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">
 			<SidebarTrigger />
-			<nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+			{/* En móvil (<sm) solo se muestra la página actual (último crumb); el
+			    rastro completo aparece desde sm para no desbordar el header. */}
+			<nav aria-label="Breadcrumb" className="min-w-0 text-sm text-muted-foreground">
 				<ol className="flex items-center gap-2">
-					<li>
+					<li className="hidden sm:block">
 						<Link prefetch={false} href="/dashboard" className="hover:text-foreground transition-colors">Inicio</Link>
 					</li>
-					{crumbs.map((c, i) => (
-						<li key={c.href} className="flex items-center gap-2">
-							<ChevronRight className="h-4 w-4" />
-							{i < crumbs.length - 1 ? (
-								<Link prefetch={false} href={c.href} className="hover:text-foreground transition-colors">{c.label}</Link>
-							) : (
-								<span className="text-foreground">{c.label}</span>
-							)}
-						</li>
-					))}
+					{crumbs.map((c, i) => {
+						const isLast = i === crumbs.length - 1
+						return (
+							<li key={c.href} className={cn("items-center gap-2", isLast ? "flex" : "hidden sm:flex")}>
+								<ChevronRight className={cn("h-4 w-4", isLast && "hidden sm:block")} />
+								{isLast ? (
+									<span className="truncate text-foreground">{c.label}</span>
+								) : (
+									<Link prefetch={false} href={c.href} className="hover:text-foreground transition-colors">{c.label}</Link>
+								)}
+							</li>
+						)
+					})}
 				</ol>
 			</nav>
 			<div className="ml-auto flex items-center gap-1">

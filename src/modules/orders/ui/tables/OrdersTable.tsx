@@ -167,7 +167,7 @@ export function OrdersTable({ onOpenOrder }: { onOpenOrder: (orderId: string) =>
           value={statusFilter}
           onValueChange={(value) => setStatusFilter(value as OrderStatus | "all")}
         >
-          <SelectTrigger className="w-44" aria-label="Filtrar por estado">
+          <SelectTrigger className="w-full sm:w-44" aria-label="Filtrar por estado">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -183,7 +183,7 @@ export function OrdersTable({ onOpenOrder }: { onOpenOrder: (orderId: string) =>
           value={originFilter}
           onValueChange={(value) => setOriginFilter(value as "all" | "user" | "ai_agent")}
         >
-          <SelectTrigger className="w-36" aria-label="Filtrar por origen">
+          <SelectTrigger className="w-full sm:w-36" aria-label="Filtrar por origen">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -196,14 +196,14 @@ export function OrdersTable({ onOpenOrder }: { onOpenOrder: (orderId: string) =>
         <Input
           type="date"
           aria-label="Desde"
-          className="w-36"
+          className="w-full sm:w-36"
           value={fromDate}
           onChange={(e) => setFromDate(e.target.value)}
         />
         <Input
           type="date"
           aria-label="Hasta"
-          className="w-36"
+          className="w-full sm:w-36"
           value={toDate}
           onChange={(e) => setToDate(e.target.value)}
         />

@@ -50,7 +50,7 @@ export function ProductFilters({
         value={value.catalog_id ?? ALL}
         onValueChange={(v: string) => onChange({ ...value, catalog_id: v === ALL ? undefined : v })}
       >
-        <SelectTrigger className="h-9 w-40" aria-label="Filtrar por catálogo">
+        <SelectTrigger className="h-9 w-full sm:w-40" aria-label="Filtrar por catálogo">
           <SelectValue placeholder="Catálogo" />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ export function ProductFilters({
         value={value.category_id ?? ALL}
         onValueChange={(v: string) => onChange({ ...value, category_id: v === ALL ? undefined : v })}
       >
-        <SelectTrigger className="h-9 w-44" aria-label="Filtrar por categoría">
+        <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Filtrar por categoría">
           <SelectValue placeholder="Categoría" />
         </SelectTrigger>
         <SelectContent>
@@ -86,7 +86,7 @@ export function ProductFilters({
           onChange({ ...value, kind: v === ALL ? undefined : (v as ProductKind) })
         }
       >
-        <SelectTrigger className="h-9 w-32" aria-label="Filtrar por tipo">
+        <SelectTrigger className="h-9 w-full sm:w-32" aria-label="Filtrar por tipo">
           <SelectValue placeholder="Tipo" />
         </SelectTrigger>
         <SelectContent>
@@ -102,7 +102,7 @@ export function ProductFilters({
           onChange({ ...value, is_active: v === ALL ? undefined : v === "active" })
         }
       >
-        <SelectTrigger className="h-9 w-32" aria-label="Filtrar por estado">
+        <SelectTrigger className="h-9 w-full sm:w-32" aria-label="Filtrar por estado">
           <SelectValue placeholder="Estado" />
         </SelectTrigger>
         <SelectContent>

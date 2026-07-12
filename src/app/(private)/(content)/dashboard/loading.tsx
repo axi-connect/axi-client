@@ -1,14 +1,9 @@
-import { BrandLoader } from "@/shared/components/ui/brand-loader"
+import { DashboardSkeleton } from "@/modules/dashboard/ui/DashboardSkeleton"
 
 /**
- * Carga de ruta del dashboard. El dashboard aún no tiene estructura estable,
- * así que usa el loader de marca; cuando la tenga, migrar a un skeleton
- * estructural (ver docs/design/LOADING.md).
+ * Carga de ruta del dashboard: skeleton estructural (banner + tiles + grid de
+ * cards) para que el render final no salte (LOADING.md §1).
  */
 export default function DashboardLoading() {
-  return (
-    <div className="flex h-[calc(100vh-100px)] items-center justify-center">
-      <BrandLoader size="lg" />
-    </div>
-  )
+  return <DashboardSkeleton />
 }

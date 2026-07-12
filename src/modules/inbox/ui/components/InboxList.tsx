@@ -9,10 +9,12 @@ import {
   Inbox as InboxIcon,
   MapPin,
   Mic,
+  PanelLeft,
   Sticker,
   type LucideIcon,
 } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
+import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import {
@@ -94,7 +96,7 @@ function InboxItem({ conversation, active, onSelect }: {
   )
 }
 
-export function InboxList() {
+export function InboxList({ className }: { className?: string }) {
   const { tab, setTab, conversations, loadingList, counts, selectedId, select, fetchConversations, fetchCounts } =
     useInboxStore()
 
@@ -105,9 +107,26 @@ export function InboxList() {
   }, [])
 
   return (
-    <div className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-background/60">
+    <div
+      className={cn(
+        "flex h-full w-full flex-col border-r border-border bg-background/60 md:w-72 md:shrink-0",
+        className,
+      )}
+    >
       <div className="border-b border-border p-3">
-        <h2 className="text-sm font-semibold">Inbox</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Inbox</h2>
+          {/* En <lg el sidebar de canales vive en un drawer: este botón lo abre. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-9 lg:hidden"
+            aria-label="Abrir panel de canales"
+            onClick={() => window.dispatchEvent(new CustomEvent("workspace:channels-drawer:open"))}
+          >
+            <PanelLeft className="size-4" />
+          </Button>
+        </div>
         <div className="mt-2 flex gap-1" role="tablist" aria-label="Filtros del inbox">
           {(Object.keys(INBOX_TAB_LABELS) as InboxTab[]).map((tabOption) => {
             const count = tabCount(tabOption, counts)

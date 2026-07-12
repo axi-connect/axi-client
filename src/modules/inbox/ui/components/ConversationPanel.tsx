@@ -2,8 +2,10 @@
 
 import Image from "next/image"
 import { useEffect, useRef } from "react"
-import { MessageSquareDashed } from "lucide-react"
+import { ArrowLeft, MessageSquareDashed } from "lucide-react"
+import { cn } from "@/core/lib/utils"
 import { Badge } from "@/shared/components/ui/badge"
+import { Button } from "@/shared/components/ui/button"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send-message"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
@@ -19,11 +21,13 @@ import { Composer } from "./composer/Composer"
 export function ConversationPanel({
   commands,
   socketConnected,
+  className,
 }: {
   commands: InboxCommands
   socketConnected: boolean
+  className?: string
 }) {
-  const { selected, selectedId, messagesById, typingByConversation, fetchOlderMessages } = useInboxStore()
+  const { selected, selectedId, messagesById, typingByConversation, fetchOlderMessages, select } = useInboxStore()
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
 
@@ -50,7 +54,12 @@ export function ConversationPanel({
 
   if (!selected) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+      <div
+        className={cn(
+          "h-full flex-1 flex-col items-center justify-center gap-3 text-muted-foreground",
+          className,
+        )}
+      >
         <MessageSquareDashed className="size-12 opacity-30" />
         <p className="text-sm">Selecciona una conversación para empezar</p>
       </div>
@@ -60,10 +69,20 @@ export function ConversationPanel({
   const contactName = selected.contact.full_name || selected.contact.phone || "Sin nombre"
 
   return (
-    <div className="flex h-full flex-1 flex-col overflow-hidden">
+    <div className={cn("h-full flex-1 flex-col overflow-hidden", className)}>
       {/* Header */}
       <div className="border-b border-border bg-background/60 px-4 py-3">
         <div className="flex items-center gap-3">
+          {/* Volver a la lista en móvil (maestro-detalle); en md+ la lista ya es visible. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 md:hidden"
+            aria-label="Volver a la lista"
+            onClick={() => void select(null)}
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
           {selected.contact.avatar_url ? (
             <Image
               src={selected.contact.avatar_url}
