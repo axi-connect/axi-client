@@ -132,6 +132,42 @@ export type NotificationCreatedEvent = {
   created_at: string;
 };
 
+// ---------------------------------------------------------------------------
+// Pedidos (F11) — payload resumen SIN items/payments: al recibir un evento,
+// el panel re-consulta GET /orders/:id si necesita el detalle.
+// ---------------------------------------------------------------------------
+
+export type OrderStatus = Schemas["OrderDto"]["status"];
+
+export type OrderRealtimeSummary = {
+  company_id: string;
+  order_id: string;
+  order_number: number | null;
+  /** null en pedidos manuales sin conversación */
+  conversation_id: string | null;
+  contact_id: string;
+  status: OrderStatus;
+  total_cents: number;
+  currency: string;
+  created_by_type: "user" | "ai_agent";
+};
+
+/** El pedido sale de draft (lo tomó la IA o lo creó el operador). */
+export type OrderCreatedEvent = OrderRealtimeSummary;
+
+/** confirm / cancel / fulfill / verify / reject de pago. */
+export type OrderStatusChangedEvent = OrderRealtimeSummary & {
+  previous_status: OrderStatus;
+  notification_key?: "confirmed" | "paid" | "fulfilled" | "cancelled" | "payment_rejected";
+  notify_customer?: boolean;
+};
+
+/** Comprobante/reporte de pago (IA o manual). */
+export type OrderPaymentReportedEvent = OrderRealtimeSummary & { payment_id: string };
+
+/** Edición de items/notas/descuento en draft|pending. */
+export type OrderUpdatedEvent = OrderRealtimeSummary;
+
 export type ChannelQrCodeEvent = {
   channel_id: string;
   company_id: string;
@@ -174,6 +210,10 @@ export type InboxServerEvents = {
   "conversation.status_changed": (payload: ConversationHandoffEvent) => void;
   "conversation.sla_breached": (payload: SlaBreachedEvent) => void;
   "firewall.blocked": (payload: FirewallBlockedEvent) => void;
+  "order.created": (payload: OrderCreatedEvent) => void;
+  "order.status_changed": (payload: OrderStatusChangedEvent) => void;
+  "order.payment_reported": (payload: OrderPaymentReportedEvent) => void;
+  "order.updated": (payload: OrderUpdatedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "notification.created": (payload: NotificationCreatedEvent) => void;

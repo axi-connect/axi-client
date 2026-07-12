@@ -62,6 +62,19 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "catalog/service_fields_required": "Un servicio requiere duración en minutos",
   "catalog/stock_not_applicable": "Los servicios no manejan inventario",
   "catalog/last_variant_protected": "No puedes eliminar la última variante activa del producto",
+  // Pedidos (F11)
+  "orders/not_found": "El pedido ya no existe",
+  "orders/variant_not_found": "Algún producto del pedido ya no está disponible",
+  "orders/empty_order": "El pedido no tiene productos",
+  "orders/insufficient_stock": "No hay stock suficiente para confirmar el pedido",
+  "orders/invalid_transition": "El pedido ya cambió de estado. Actualiza e inténtalo de nuevo",
+  "orders/active_order_exists": "La conversación ya tiene un pedido activo",
+  "orders/currency_mismatch": "Los productos del pedido mezclan monedas distintas",
+  "orders/not_editable": "El pedido ya no se puede editar",
+  "orders/payment_not_found": "El pago ya no existe",
+  "orders/payment_already_verified": "El pago ya fue verificado o rechazado",
+  "orders/no_payment_evidence": "El pago no tiene comprobante adjunto",
+  "orders/no_payable_order": "El pedido no admite pagos en su estado actual",
   "client/network": "No fue posible contactar al servidor",
 };
 

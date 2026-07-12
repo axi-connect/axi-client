@@ -356,6 +356,22 @@ export interface paths {
         patch: operations["PlatformPricingController_update_v1"];
         trace?: never;
     };
+    "/api/v1/usage/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsageController_conversationUsage_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/usage/summary": {
         parameters: {
             query?: never;
@@ -546,6 +562,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["AiIntentionsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/ai/sales-playbook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SalesPlaybookController_get_v1"];
+        put: operations["SalesPlaybookController_upsert_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/catalogs": {
@@ -900,6 +932,486 @@ export interface paths {
         patch: operations["QuickActionsController_update_v1"];
         trace?: never;
     };
+    "/api/v1/orders/notification-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrderNotificationSettingsController_get_v1"];
+        put: operations["OrderNotificationSettingsController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrdersController_list_v1"];
+        put?: never;
+        post: operations["OrdersController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrdersController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/top-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrdersController_topProducts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrdersController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["OrdersController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrdersController_events_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments/{payment_id}/attachment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrdersController_paymentAttachment_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OrdersController_confirm_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OrdersController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/fulfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OrdersController_fulfill_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OrdersController_registerPayment_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/payments/{payment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["OrdersController_verifyPayment_v1"];
+        trace?: never;
+    };
+    "/api/v1/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PaymentMethodsController_list_v1"];
+        put?: never;
+        post: operations["PaymentMethodsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PaymentMethodsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["PaymentMethodsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/forms/{flow}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_byFlow_v1"];
+        put: operations["FormsController_upsert_v1"];
+        post?: never;
+        delete: operations["FormsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConversationsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConversationsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConversationsController_messages_v1"];
+        put?: never;
+        post: operations["ConversationsController_send_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{id}/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConversationsController_upload_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{id}/messages/{message_id}/attachments/{attachment_id}/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConversationsController_attachmentUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InboxController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InboxController_counts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InboxController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InboxController_events_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations/{id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InboxController_claim_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations/{id}/takeover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InboxController_takeover_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations/{id}/return-to-ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InboxController_returnToAi_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InboxController_close_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/conversations/{id}/mark-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InboxController_markRead_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/channels": {
         parameters: {
             query?: never;
@@ -1044,6 +1556,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contacts/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactsController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts/{id}": {
         parameters: {
             query?: never;
@@ -1058,214 +1586,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["ContactsController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/conversations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ConversationsController_list_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ConversationsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/{id}/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ConversationsController_messages_v1"];
-        put?: never;
-        post: operations["ConversationsController_send_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/{id}/uploads": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["ConversationsController_upload_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/conversations/{id}/messages/{message_id}/attachments/{attachment_id}/url": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ConversationsController_attachmentUrl_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["InboxController_list_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/counts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["InboxController_counts_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations/{id}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["InboxController_events_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations/{id}/claim": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["InboxController_claim_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations/{id}/takeover": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["InboxController_takeover_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations/{id}/return-to-ai": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["InboxController_returnToAi_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations/{id}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["InboxController_close_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/inbox/conversations/{id}/mark-read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["InboxController_markRead_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/scheduling/reminders": {
@@ -1749,6 +2069,14 @@ export interface components {
             /** Format: date-time */
             effective_to?: string | null;
         };
+        ConversationUsageDto: {
+            /** Format: uuid */
+            conversation_id: string;
+            ai_requests: number;
+            tokens_input: number;
+            tokens_output: number;
+            cost_usd: number;
+        };
         UsageSummaryDto: {
             /** @enum {string} */
             period: "day" | "billing_cycle";
@@ -1860,6 +2188,8 @@ export interface components {
                         require_catalog?: boolean;
                         require_schedule?: boolean;
                         require_resources?: boolean;
+                        require_orders?: boolean;
+                        require_payments?: boolean;
                     } | null;
                     code: string;
                     /** @enum {string} */
@@ -1898,6 +2228,8 @@ export interface components {
                     require_catalog?: boolean;
                     require_schedule?: boolean;
                     require_resources?: boolean;
+                    require_orders?: boolean;
+                    require_payments?: boolean;
                 } | null;
                 code: string;
                 /** @enum {string} */
@@ -1957,6 +2289,8 @@ export interface components {
                     require_catalog?: boolean;
                     require_schedule?: boolean;
                     require_resources?: boolean;
+                    require_orders?: boolean;
+                    require_payments?: boolean;
                 };
             }[];
         };
@@ -2082,6 +2416,41 @@ export interface components {
             /** @enum {string} */
             priority?: "low" | "medium" | "high";
         };
+        SalesPlaybookDto: {
+            /** Format: uuid */
+            id: string;
+            value_proposition: string | null;
+            tone: string | null;
+            techniques: unknown;
+            discount_rules: unknown;
+            faqs: unknown;
+            extra_instructions: string | null;
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpsertSalesPlaybookDto: {
+            value_proposition?: string | null;
+            tone?: string | null;
+            techniques?: {
+                upsell?: boolean;
+                cross_sell?: boolean;
+                urgency?: boolean;
+                objection_handling?: boolean;
+            };
+            discount_rules?: {
+                max_percent?: number;
+                notes?: string;
+            } | null;
+            faqs?: {
+                question: string;
+                answer: string;
+            }[];
+            extra_instructions?: string | null;
+            is_active?: boolean;
+        };
         CatalogListDto: {
             data: {
                 /** Format: uuid */
@@ -2132,7 +2501,7 @@ export interface components {
             children: components["schemas"]["CategoryListDto__schema0"][];
         };
         CategoryListDto: {
-            data: ({
+            data: (components["schemas"]["CategoryListDto__schema0"] | {
                 /** Format: uuid */
                 id: string;
                 /** Format: uuid */
@@ -2145,7 +2514,7 @@ export interface components {
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
-            } | components["schemas"]["CategoryListDto__schema0"])[];
+            })[];
         };
         CreateCategoryDto: {
             name: string;
@@ -2657,113 +3026,103 @@ export interface components {
             ai_enabled?: boolean;
             asset_ids?: string[];
         };
-        CreateChannelDto: {
-            name: string;
-            /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web";
-            provider_account_id?: string;
-            waba_id?: string;
-            access_token?: string;
+        OrderNotificationSettingsDto: {
+            templates: {
+                confirmed: {
+                    enabled: boolean;
+                    body: string;
+                };
+                paid: {
+                    enabled: boolean;
+                    body: string;
+                };
+                fulfilled: {
+                    enabled: boolean;
+                    body: string;
+                };
+                cancelled: {
+                    enabled: boolean;
+                    body: string;
+                };
+                payment_rejected: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
         };
-        ChannelDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-            provider_account_id: string;
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            display_phone_number: string | null;
-            verified_name: string | null;
-            waba_id: string | null;
-            default_ai_agent_id: string | null;
-            credentials_configured: boolean;
-            token_last4: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        ChannelListDto: {
+        OrdersListDto: {
             data: {
                 /** Format: uuid */
                 id: string;
-                name: string;
+                order_number: number | null;
                 /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-                provider_account_id: string;
+                status: "draft" | "pending" | "confirmed" | "payment_reported" | "paid" | "fulfilled" | "cancelled";
+                /** Format: uuid */
+                contact_id: string;
+                contact: {
+                    /** Format: uuid */
+                    id: string;
+                    full_name: string | null;
+                };
+                /** Format: uuid */
+                conversation_id: string | null;
+                subtotal_cents: number;
+                discount_cents: number;
+                total_cents: number;
+                currency: string;
+                intake_data: unknown;
+                notes: string | null;
                 /** @enum {string} */
-                status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-                display_phone_number: string | null;
-                verified_name: string | null;
-                waba_id: string | null;
-                default_ai_agent_id: string | null;
-                credentials_configured: boolean;
-                token_last4: string | null;
+                created_by_type: "user" | "ai_agent";
+                /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: date-time */
+                confirmed_at: string | null;
+                /** Format: date-time */
+                paid_at: string | null;
+                /** Format: date-time */
+                fulfilled_at: string | null;
+                /** Format: date-time */
+                cancelled_at: string | null;
+                cancellation_reason: string | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
-            }[];
-        };
-        UpdateChannelDto: {
-            name?: string;
-            /** Format: uuid */
-            default_ai_agent_id?: string | null;
-        };
-        UpdateChannelCredentialsDto: {
-            access_token: string;
-        };
-        WwebPairingStateDto: {
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            qr: string | null;
-            qr_image: string | null;
-            pairing_code: string | null;
-            phone_number: string | null;
-        };
-        WwebPairingCodeRequestDto: {
-            phone_number: string;
-        };
-        ContactsListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                full_name: string | null;
-                first_name: string | null;
-                last_name: string | null;
-                email: string | null;
-                phone: string | null;
-                /** @enum {string|null} */
-                document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
-                document_number: string | null;
-                /** Format: date-time */
-                birthdate: string | null;
-                address: string | null;
-                city: string | null;
-                avatar_url: string | null;
-                /** @enum {string} */
-                lifecycle_stage: "prospect" | "lead" | "customer" | "other";
-                /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
-                custom_fields: {
-                    [key: string]: unknown;
-                };
-                channel_identities: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    variant_id: string;
+                    sku: string;
+                    product_name: string;
+                    variant_label: string | null;
+                    quantity: number;
+                    unit_price_cents: number;
+                    total_cents: number;
+                    currency: string;
+                }[];
+                payments: {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-                    external_id: string;
-                    display_name: string | null;
+                    status: "reported" | "verified" | "rejected";
+                    method_label: string | null;
+                    /** Format: uuid */
+                    payment_method_id: string | null;
+                    amount_cents: number | null;
+                    currency: string;
+                    reference: string | null;
+                    attachment_id: string | null;
+                    mime_type: string | null;
+                    /** @enum {string} */
+                    reported_by_type: "user" | "ai_agent";
                     /** Format: date-time */
-                    last_seen_at: string | null;
+                    verified_at: string | null;
+                    notes: string | null;
+                    /** Format: date-time */
+                    created_at: string;
                 }[];
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
             }[];
             meta: {
                 total: number;
@@ -2771,63 +3130,309 @@ export interface components {
                 page_size: number;
             };
         };
-        ContactDto: {
+        OrderStatsDto: {
+            counts_by_status: {
+                draft: number;
+                pending: number;
+                confirmed: number;
+                payment_reported: number;
+                paid: number;
+                fulfilled: number;
+                cancelled: number;
+            };
+            kpis: {
+                /** @enum {string} */
+                period: "today" | "7d" | "30d";
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+                orders_today: number;
+                sales_cents: number;
+                average_ticket_cents: number;
+                paid_orders: number;
+                pending_verification: number;
+                currency: string;
+            };
+        };
+        TopProductsDto: {
+            /** @enum {string} */
+            period: "today" | "7d" | "30d";
+            items: {
+                /** Format: uuid */
+                variant_id: string;
+                product_name: string;
+                sku: string;
+                units: number;
+                revenue_cents: number;
+            }[];
+        };
+        OrderDto: {
             /** Format: uuid */
             id: string;
-            full_name: string | null;
-            first_name: string | null;
-            last_name: string | null;
-            email: string | null;
-            phone: string | null;
-            /** @enum {string|null} */
-            document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
-            document_number: string | null;
-            /** Format: date-time */
-            birthdate: string | null;
-            address: string | null;
-            city: string | null;
-            avatar_url: string | null;
+            order_number: number | null;
             /** @enum {string} */
-            lifecycle_stage: "prospect" | "lead" | "customer" | "other";
-            /** @enum {string} */
-            source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
-            custom_fields: {
-                [key: string]: unknown;
+            status: "draft" | "pending" | "confirmed" | "payment_reported" | "paid" | "fulfilled" | "cancelled";
+            /** Format: uuid */
+            contact_id: string;
+            contact: {
+                /** Format: uuid */
+                id: string;
+                full_name: string | null;
             };
-            channel_identities: {
+            /** Format: uuid */
+            conversation_id: string | null;
+            subtotal_cents: number;
+            discount_cents: number;
+            total_cents: number;
+            currency: string;
+            intake_data: unknown;
+            notes: string | null;
+            /** @enum {string} */
+            created_by_type: "user" | "ai_agent";
+            /** Format: uuid */
+            created_by_user_id: string | null;
+            /** Format: date-time */
+            confirmed_at: string | null;
+            /** Format: date-time */
+            paid_at: string | null;
+            /** Format: date-time */
+            fulfilled_at: string | null;
+            /** Format: date-time */
+            cancelled_at: string | null;
+            cancellation_reason: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                variant_id: string;
+                sku: string;
+                product_name: string;
+                variant_label: string | null;
+                quantity: number;
+                unit_price_cents: number;
+                total_cents: number;
+                currency: string;
+            }[];
+            payments: {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-                external_id: string;
-                display_name: string | null;
+                status: "reported" | "verified" | "rejected";
+                method_label: string | null;
+                /** Format: uuid */
+                payment_method_id: string | null;
+                amount_cents: number | null;
+                currency: string;
+                reference: string | null;
+                attachment_id: string | null;
+                mime_type: string | null;
+                /** @enum {string} */
+                reported_by_type: "user" | "ai_agent";
                 /** Format: date-time */
-                last_seen_at: string | null;
+                verified_at: string | null;
+                notes: string | null;
+                /** Format: date-time */
+                created_at: string;
             }[];
+        };
+        OrderEventsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped";
+                /** @enum {string} */
+                actor_type: "user" | "ai_agent" | "system";
+                /** Format: uuid */
+                actor_user_id: string | null;
+                actor_name: string | null;
+                payload: unknown;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        PaymentAttachmentUrlDto: {
+            url: string;
+            expires_in_seconds: number;
+        };
+        CreateOrderDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            conversation_id?: string;
+            items: {
+                /** Format: uuid */
+                variant_id: string;
+                quantity: number;
+            }[];
+            /**
+             * @default pending
+             * @enum {string}
+             */
+            status: "draft" | "pending";
+            notes?: string;
+            discount_cents?: number;
+            intake_data?: {
+                [key: string]: unknown;
+            };
+        };
+        UpdateOrderDto: {
+            items?: {
+                /** Format: uuid */
+                variant_id: string;
+                quantity: number;
+            }[];
+            notes?: string | null;
+            discount_cents?: number;
+            intake_data?: {
+                [key: string]: unknown;
+            };
+        };
+        TransitionOptionsDto: {
+            /** @default true */
+            notify_customer: boolean;
+        };
+        CancelOrderDto: {
+            reason?: string;
+            /** @default true */
+            notify_customer: boolean;
+        };
+        RegisterPaymentDto: {
+            /** Format: uuid */
+            payment_method_id?: string;
+            amount_cents?: number;
+            reference?: string;
+            notes?: string;
+        };
+        VerifyPaymentDto: {
+            /** @enum {string} */
+            action: "verify" | "reject";
+            notes?: string;
+            /** @default true */
+            notify_customer: boolean;
+        };
+        PaymentMethodsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "nequi" | "daviplata" | "bancolombia" | "cash" | "pos" | "payment_link" | "other";
+                label: string;
+                account_holder: string | null;
+                account_number: string | null;
+                instructions: string | null;
+                is_active: boolean;
+                visible_to_ai: boolean;
+                position: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+            };
+        };
+        CreatePaymentMethodDto: {
+            /** @enum {string} */
+            kind: "nequi" | "daviplata" | "bancolombia" | "cash" | "pos" | "payment_link" | "other";
+            label: string;
+            account_holder?: string;
+            account_number?: string;
+            instructions?: string;
+            is_active?: boolean;
+            visible_to_ai?: boolean;
+            position?: number;
+        };
+        PaymentMethodDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "nequi" | "daviplata" | "bancolombia" | "cash" | "pos" | "payment_link" | "other";
+            label: string;
+            account_holder: string | null;
+            account_number: string | null;
+            instructions: string | null;
+            is_active: boolean;
+            visible_to_ai: boolean;
+            position: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
             updated_at: string;
         };
-        UpdateContactDto: {
-            full_name?: string | null;
-            first_name?: string | null;
-            last_name?: string | null;
-            /** Format: email */
-            email?: string | null;
-            phone?: string | null;
-            /** @enum {string|null} */
-            document_type?: "cc" | "ce" | "ti" | "pp" | "nit" | null;
-            document_number?: string | null;
-            /** Format: date */
-            birthdate?: string | null;
-            address?: string | null;
-            city?: string | null;
+        UpdatePaymentMethodDto: {
             /** @enum {string} */
-            lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
-            custom_fields?: {
-                [key: string]: (string | number | boolean) | null;
-            };
+            kind?: "nequi" | "daviplata" | "bancolombia" | "cash" | "pos" | "payment_link" | "other";
+            label?: string;
+            account_holder?: string | null;
+            account_number?: string | null;
+            instructions?: string | null;
+            is_active?: boolean;
+            visible_to_ai?: boolean;
+            position?: number;
+        };
+        FormsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                flow: "contact_registration" | "order_intake" | "appointment_booking";
+                fields: {
+                    code: string;
+                    label: string;
+                    /** @enum {string} */
+                    type: "text" | "number" | "select" | "date" | "boolean" | "phone" | "email";
+                    required: boolean;
+                    options?: string[];
+                    ai_prompt?: string;
+                    position: number;
+                }[];
+                is_active: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        FormDefinitionDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            flow: "contact_registration" | "order_intake" | "appointment_booking";
+            fields: {
+                code: string;
+                label: string;
+                /** @enum {string} */
+                type: "text" | "number" | "select" | "date" | "boolean" | "phone" | "email";
+                required: boolean;
+                options?: string[];
+                ai_prompt?: string;
+                position: number;
+            }[];
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpsertFormDto: {
+            fields: {
+                code: string;
+                label: string;
+                /** @enum {string} */
+                type: "text" | "number" | "select" | "date" | "boolean" | "phone" | "email";
+                required: boolean;
+                options?: string[];
+                ai_prompt?: string;
+                position: number;
+            }[];
+            is_active?: boolean;
         };
         ConversationsListDto: {
             data: {
@@ -3058,6 +3663,26 @@ export interface components {
             all_open: number;
             unread_total: number;
         };
+        ConversationStatsDto: {
+            /** @enum {string} */
+            period: "today" | "7d" | "30d";
+            /** Format: date-time */
+            period_start: string;
+            /** Format: date-time */
+            period_end: string;
+            new_count: number;
+            resolved_count: number;
+            open_now: number;
+            queued_now: number;
+            ai_resolved_pct: number;
+            human_resolved_pct: number;
+            series: {
+                /** Format: date-time */
+                bucket: string;
+                new: number;
+                resolved: number;
+            }[];
+        };
         ConversationEventsDto: {
             data: {
                 /** Format: uuid */
@@ -3082,6 +3707,198 @@ export interface components {
         CloseConversationDto: {
             resolved?: boolean;
             reason?: string;
+        };
+        CreateChannelDto: {
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web";
+            provider_account_id?: string;
+            waba_id?: string;
+            access_token?: string;
+        };
+        ChannelDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+            provider_account_id: string;
+            /** @enum {string} */
+            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+            display_phone_number: string | null;
+            verified_name: string | null;
+            waba_id: string | null;
+            default_ai_agent_id: string | null;
+            credentials_configured: boolean;
+            token_last4: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ChannelListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                provider_account_id: string;
+                /** @enum {string} */
+                status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+                display_phone_number: string | null;
+                verified_name: string | null;
+                waba_id: string | null;
+                default_ai_agent_id: string | null;
+                credentials_configured: boolean;
+                token_last4: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        UpdateChannelDto: {
+            name?: string;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
+        };
+        UpdateChannelCredentialsDto: {
+            access_token: string;
+        };
+        WwebPairingStateDto: {
+            /** @enum {string} */
+            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+            qr: string | null;
+            qr_image: string | null;
+            pairing_code: string | null;
+            phone_number: string | null;
+        };
+        WwebPairingCodeRequestDto: {
+            phone_number: string;
+        };
+        ContactsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                full_name: string | null;
+                first_name: string | null;
+                last_name: string | null;
+                email: string | null;
+                phone: string | null;
+                /** @enum {string|null} */
+                document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
+                document_number: string | null;
+                /** Format: date-time */
+                birthdate: string | null;
+                address: string | null;
+                city: string | null;
+                avatar_url: string | null;
+                /** @enum {string} */
+                lifecycle_stage: "prospect" | "lead" | "customer" | "other";
+                /** @enum {string} */
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                custom_fields: {
+                    [key: string]: unknown;
+                };
+                channel_identities: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    external_id: string;
+                    display_name: string | null;
+                    /** Format: date-time */
+                    last_seen_at: string | null;
+                }[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ContactStatsDto: {
+            /** @enum {string} */
+            period: "today" | "7d" | "30d";
+            /** Format: date-time */
+            period_start: string;
+            /** Format: date-time */
+            period_end: string;
+            new_count: number;
+            by_stage: {
+                prospect: number;
+                lead: number;
+                customer: number;
+                other: number;
+            };
+            series: {
+                /** Format: date-time */
+                bucket: string;
+                count: number;
+            }[];
+        };
+        ContactDto: {
+            /** Format: uuid */
+            id: string;
+            full_name: string | null;
+            first_name: string | null;
+            last_name: string | null;
+            email: string | null;
+            phone: string | null;
+            /** @enum {string|null} */
+            document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
+            document_number: string | null;
+            /** Format: date-time */
+            birthdate: string | null;
+            address: string | null;
+            city: string | null;
+            avatar_url: string | null;
+            /** @enum {string} */
+            lifecycle_stage: "prospect" | "lead" | "customer" | "other";
+            /** @enum {string} */
+            source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+            custom_fields: {
+                [key: string]: unknown;
+            };
+            channel_identities: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                external_id: string;
+                display_name: string | null;
+                /** Format: date-time */
+                last_seen_at: string | null;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateContactDto: {
+            full_name?: string | null;
+            first_name?: string | null;
+            last_name?: string | null;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            /** @enum {string|null} */
+            document_type?: "cc" | "ce" | "ti" | "pp" | "nit" | null;
+            document_number?: string | null;
+            /** Format: date */
+            birthdate?: string | null;
+            address?: string | null;
+            city?: string | null;
+            /** @enum {string} */
+            lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+            custom_fields?: {
+                [key: string]: (string | number | boolean) | null;
+            };
         };
         RemindersListDto: {
             data: {
@@ -4009,6 +4826,27 @@ export interface operations {
             };
         };
     };
+    UsageController_conversationUsage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationUsageDto"];
+                };
+            };
+        };
+    };
     UsageController_summary_v1: {
         parameters: {
             query?: {
@@ -4419,6 +5257,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IntentionDto"];
+                };
+            };
+        };
+    };
+    SalesPlaybookController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesPlaybookDto"];
+                };
+            };
+        };
+    };
+    SalesPlaybookController_upsert_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertSalesPlaybookDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesPlaybookDto"];
                 };
             };
         };
@@ -5303,6 +6183,881 @@ export interface operations {
             };
         };
     };
+    OrderNotificationSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderNotificationSettingsDto"];
+                };
+            };
+        };
+    };
+    OrderNotificationSettingsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderNotificationSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderNotificationSettingsDto"];
+                };
+            };
+        };
+    };
+    OrdersController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "draft" | "pending" | "confirmed" | "payment_reported" | "paid" | "fulfilled" | "cancelled";
+                contact_id?: string;
+                conversation_id?: string;
+                created_by_type?: "user" | "ai_agent";
+                created_from?: string;
+                created_to?: string;
+                search?: string;
+                sort_by?: "created_at" | "updated_at" | "order_number" | "total_cents";
+                sort_dir?: "asc" | "desc";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrdersListDto"];
+                };
+            };
+        };
+    };
+    OrdersController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_stats_v1: {
+        parameters: {
+            query?: {
+                period?: "today" | "7d" | "30d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderStatsDto"];
+                };
+            };
+        };
+    };
+    OrdersController_topProducts_v1: {
+        parameters: {
+            query?: {
+                period?: "today" | "7d" | "30d";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TopProductsDto"];
+                };
+            };
+        };
+    };
+    OrdersController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_events_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderEventsDto"];
+                };
+            };
+        };
+    };
+    OrdersController_paymentAttachment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentAttachmentUrlDto"];
+                };
+            };
+        };
+    };
+    OrdersController_confirm_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransitionOptionsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelOrderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_fulfill_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransitionOptionsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_registerPayment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPaymentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    OrdersController_verifyPayment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyPaymentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    PaymentMethodsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodsListDto"];
+                };
+            };
+        };
+    };
+    PaymentMethodsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePaymentMethodDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodDto"];
+                };
+            };
+        };
+    };
+    PaymentMethodsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentMethodsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePaymentMethodDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMethodDto"];
+                };
+            };
+        };
+    };
+    FormsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormsListDto"];
+                };
+            };
+        };
+    };
+    FormsController_byFlow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flow: "contact_registration" | "order_intake" | "appointment_booking";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDefinitionDto"];
+                };
+            };
+        };
+    };
+    FormsController_upsert_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flow: "contact_registration" | "order_intake" | "appointment_booking";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertFormDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDefinitionDto"];
+                };
+            };
+        };
+    };
+    FormsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flow: "contact_registration" | "order_intake" | "appointment_booking";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConversationsController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "open" | "snoozed" | "resolved" | "closed";
+                mode?: "ai_active" | "human_queued" | "human_active";
+                channel_id?: string;
+                contact_id?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationsListDto"];
+                };
+            };
+        };
+    };
+    ConversationsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDto"];
+                };
+            };
+        };
+    };
+    ConversationsController_messages_v1: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationMessagesDto"];
+                };
+            };
+        };
+    };
+    ConversationsController_send_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessageDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnqueuedMessageDto"];
+                };
+            };
+        };
+    };
+    ConversationsController_upload_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    /** @default false */
+                    voice_note?: boolean;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationUploadDto"];
+                };
+            };
+        };
+    };
+    ConversationsController_attachmentUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                message_id: string;
+                attachment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentUrlDto"];
+                };
+            };
+        };
+    };
+    InboxController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "open" | "snoozed" | "resolved" | "closed";
+                mode?: "ai_active" | "human_queued" | "human_active";
+                assigned?: "me" | "unassigned";
+                channel_id?: string;
+                priority?: "low" | "normal" | "high" | "urgent";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxListDto"];
+                };
+            };
+        };
+    };
+    InboxController_counts_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxCountsDto"];
+                };
+            };
+        };
+    };
+    InboxController_stats_v1: {
+        parameters: {
+            query?: {
+                period?: "today" | "7d" | "30d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationStatsDto"];
+                };
+            };
+        };
+    };
+    InboxController_events_v1: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationEventsDto"];
+                };
+            };
+        };
+    };
+    InboxController_claim_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDto"];
+                };
+            };
+        };
+    };
+    InboxController_takeover_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDto"];
+                };
+            };
+        };
+    };
+    InboxController_returnToAi_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnToAiDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDto"];
+                };
+            };
+        };
+    };
+    InboxController_close_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseConversationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDto"];
+                };
+            };
+        };
+    };
+    InboxController_markRead_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ChannelsController_list_v1: {
         parameters: {
             query?: never;
@@ -5580,6 +7335,27 @@ export interface operations {
             };
         };
     };
+    ContactsController_stats_v1: {
+        parameters: {
+            query?: {
+                period?: "today" | "7d" | "30d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactStatsDto"];
+                };
+            };
+        };
+    };
     ContactsController_byId_v1: {
         parameters: {
             query?: never;
@@ -5623,336 +7399,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ContactDto"];
                 };
-            };
-        };
-    };
-    ConversationsController_list_v1: {
-        parameters: {
-            query?: {
-                status?: "open" | "snoozed" | "resolved" | "closed";
-                mode?: "ai_active" | "human_queued" | "human_active";
-                channel_id?: string;
-                contact_id?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationsListDto"];
-                };
-            };
-        };
-    };
-    ConversationsController_byId_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationDto"];
-                };
-            };
-        };
-    };
-    ConversationsController_messages_v1: {
-        parameters: {
-            query?: {
-                cursor?: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationMessagesDto"];
-                };
-            };
-        };
-    };
-    ConversationsController_send_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendMessageDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EnqueuedMessageDto"];
-                };
-            };
-        };
-    };
-    ConversationsController_upload_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** Format: binary */
-                    file: string;
-                    /** @default false */
-                    voice_note?: boolean;
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationUploadDto"];
-                };
-            };
-        };
-    };
-    ConversationsController_attachmentUrl_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                message_id: string;
-                attachment_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttachmentUrlDto"];
-                };
-            };
-        };
-    };
-    InboxController_list_v1: {
-        parameters: {
-            query?: {
-                status?: "open" | "snoozed" | "resolved" | "closed";
-                mode?: "ai_active" | "human_queued" | "human_active";
-                assigned?: "me" | "unassigned";
-                channel_id?: string;
-                priority?: "low" | "normal" | "high" | "urgent";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboxListDto"];
-                };
-            };
-        };
-    };
-    InboxController_counts_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboxCountsDto"];
-                };
-            };
-        };
-    };
-    InboxController_events_v1: {
-        parameters: {
-            query?: {
-                cursor?: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationEventsDto"];
-                };
-            };
-        };
-    };
-    InboxController_claim_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationDto"];
-                };
-            };
-        };
-    };
-    InboxController_takeover_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationDto"];
-                };
-            };
-        };
-    };
-    InboxController_returnToAi_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReturnToAiDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationDto"];
-                };
-            };
-        };
-    };
-    InboxController_close_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CloseConversationDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationDto"];
-                };
-            };
-        };
-    };
-    InboxController_markRead_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

@@ -1,15 +1,20 @@
 import {
+  BadgeDollarSign,
   Bot,
   Building2,
+  Calendar,
   Circle,
   Contact,
   Gauge,
   Home,
   Inbox,
+  Package,
   Plug,
   ScrollText,
   Shield,
+  ShoppingCart,
   Users,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,16 +25,21 @@ import {
  * todo lucide) y hace visible cualquier icono nuevo del backend.
  */
 const NAV_ICONS: Record<string, LucideIcon> = {
+  "badge-dollar-sign": BadgeDollarSign,
   bot: Bot,
   building: Building2,
+  calendar: Calendar,
   contact: Contact,
   gauge: Gauge,
   home: Home,
   inbox: Inbox,
+  package: Package,
   plug: Plug,
   scroll: ScrollText,
   shield: Shield,
+  "shopping-cart": ShoppingCart,
   users: Users,
+  zap: Zap,
 };
 
 /** Icono de fallback cuando el backend emite un nombre desconocido. */

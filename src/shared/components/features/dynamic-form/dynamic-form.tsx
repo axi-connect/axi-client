@@ -75,18 +75,22 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
   }, [columns, gap])
 
   const renderField = useCallback(
-    (f: FieldConfig<TValues>) => {
+    // El índice hace la key única y estable: una config puede declarar varias
+    // variantes del mismo `name` (mutuamente excluyentes por isVisible), y
+    // solo `name` colisionaría. El orden de `fields` es fijo por render.
+    (f: FieldConfig<TValues>, index: number) => {
+      const key = `${String(f.name)}-${index}`
       if ((f as CustomFieldConfig<TValues>).component === "custom") {
         return (
           <DynamicCustomField<TValues>
-            key={String((f as CustomFieldConfig<TValues>).name)}
+            key={key}
             config={f as CustomFieldConfig<TValues>}
           />
         )
       }
       return (
         <DynamicInputField<TValues>
-          key={String((f as InputFieldConfig<TValues>).name)}
+          key={key}
           config={f as InputFieldConfig<TValues>}
         />
       )
@@ -96,8 +100,8 @@ export function DynamicForm<TValues extends FieldValues>(props: DynamicFormProps
 
   const fieldsGrid = useMemo(() => {
     const children: React.ReactNode[] = []
-    fields.forEach((f) => {
-      children.push(renderField(f))
+    fields.forEach((f, index) => {
+      children.push(renderField(f, index))
     })
     const content = <div className={gridClasses}>{children}</div>
     return renderFieldsWrapper ? (renderFieldsWrapper(content) as React.ReactElement) : content

@@ -47,9 +47,17 @@ type NotificationsStore = {
   muted: boolean
   /** Cola FIFO del toaster (cap MAX_TOASTS: se descarta la más vieja). */
   toasts: NotificationDTO[]
+  /**
+   * Prefijos de `type` cuyo toast/sonido global se suprime porque una vista
+   * montada ya los presenta con su propio toaster (p.ej. OrdersView suprime
+   * "order."). El badge y las listas SIEMPRE se actualizan.
+   */
+  suppressedPrefixes: string[]
 
   hydrateMute: () => void
   toggleMute: () => void
+  suppressToasts: (prefix: string) => void
+  unsuppressToasts: (prefix: string) => void
 
   fetchPage: (tab: NotificationsTab, page: number) => Promise<void>
   loadMore: (tab: NotificationsTab) => Promise<void>
@@ -86,6 +94,21 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
   unreadCount: 0,
   muted: false,
   toasts: [],
+  suppressedPrefixes: [],
+
+  suppressToasts: (prefix) => {
+    set((state) =>
+      state.suppressedPrefixes.includes(prefix)
+        ? state
+        : { suppressedPrefixes: [...state.suppressedPrefixes, prefix] },
+    )
+  },
+
+  unsuppressToasts: (prefix) => {
+    set((state) => ({
+      suppressedPrefixes: state.suppressedPrefixes.filter((p) => p !== prefix),
+    }))
+  },
 
   hydrateMute: () => {
     try {
@@ -168,6 +191,9 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
 
   onNotificationCreated: (evt) => {
     if (get().tabs.all.items.some((n) => n.id === evt.id)) return false
+    // Suprimido: badge y listas se actualizan, pero sin toast ni sonido
+    // globales (la vista dueña del prefijo presenta el suyo propio).
+    const suppressed = get().suppressedPrefixes.some((prefix) => evt.type.startsWith(prefix))
     const notification = fromRealtimeEvent(evt)
     set((state) => ({
       tabs: {
@@ -179,9 +205,9 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
           : state.tabs.unread,
       },
       unreadCount: state.unreadCount + 1,
-      toasts: [...state.toasts, notification].slice(-MAX_TOASTS),
+      toasts: suppressed ? state.toasts : [...state.toasts, notification].slice(-MAX_TOASTS),
     }))
-    return true
+    return !suppressed
   },
 
   markRead: async (id) => {

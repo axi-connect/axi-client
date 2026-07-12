@@ -15,9 +15,11 @@ describe("notificationTarget", () => {
     expect(notificationTarget("conversation.queued", { conversation_id: 42 })).toBeNull()
   })
 
-  it("devuelve null para order.* (sin vista de pedidos hoy)", () => {
-    expect(notificationTarget("order.created", { order_id: "o1", number: 7 })).toBeNull()
-    expect(notificationTarget("order.payment_reported", { order_id: "o1" })).toBeNull()
+  it("resuelve la familia order.* al detalle del panel de pedidos (F11)", () => {
+    expect(notificationTarget("order.created", { order_id: "o1", number: 7 })).toBe("/orders/o1")
+    expect(notificationTarget("order.payment_reported", { order_id: "o1" })).toBe("/orders/o1")
+    // Sin order_id: al panel general, nunca null (la vista ya existe)
+    expect(notificationTarget("order.created", {})).toBe("/orders")
   })
 
   it("devuelve null para tipos desconocidos y data no-objeto", () => {

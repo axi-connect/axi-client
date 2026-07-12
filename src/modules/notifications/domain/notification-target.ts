@@ -6,15 +6,14 @@
 type TargetResolver = (data: Record<string, unknown>) => string | null
 
 /** Resolvers por tipo exacto — tienen prioridad sobre la familia. */
-const EXACT: Record<string, TargetResolver> = {
-  // Cuando exista la vista de pedidos: "order.created": (d) => `/orders/${d.order_id}`
-}
+const EXACT: Record<string, TargetResolver> = {}
 
 /** Resolvers por familia (prefijo `familia.`). */
 const FAMILY: Record<string, TargetResolver> = {
   "conversation.": (d) =>
     typeof d.conversation_id === "string" ? `/workspace/inbox/${d.conversation_id}` : null,
-  // "order.": sin vista de pedidos hoy → sin destino.
+  // F11: el detalle abre como rail (ruta interceptada) sobre el panel
+  "order.": (d) => (typeof d.order_id === "string" ? `/orders/${d.order_id}` : "/orders"),
 }
 
 export function notificationTarget(type: string, data: unknown): string | null {
