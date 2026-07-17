@@ -91,6 +91,49 @@ F4 (copy platform) — independiente, cualquier momento
 
 F1+F2 ya dan cobertura completa por polling HTTP (peor caso: el usuario ve la pantalla en su siguiente request). F3 la hace instantánea. Tamaño estimado: F1 y F3 pequeñas-medianas, F2 mediana (tocar el proxy con cuidado), F4 trivial, F5 mediana.
 
+## QA manual (e2e) — guion por fase
+
+**Preparación:** backend (`../axi-server`, :3000) y frontend (:3001) corriendo. Dos navegadores o perfiles separados: **A** = usuario del tenant demo (`owner@axi.dev`), **B** = super admin en `/platform`. La suspensión se ejecuta siempre desde B: Tenants → fila del tenant demo → Suspender (ConfirmTyped).
+
+> Truco para no esperar 15 min: borrar la cookie `accessToken` en A (DevTools → Application → Cookies) fuerza el camino del refresh en el siguiente request.
+
+### F1 — Pantalla bloqueante
+
+- [ ] A logueado en `/dashboard`; suspender desde B → al siguiente request/evento, A ve la pantalla "La empresa está suspendida" (isotipo + texto de soporte + un único botón).
+- [ ] La app de fondo NO está en el DOM (inspeccionar: `children` fue sustituido, no tapado) — no se puede interactuar con nada detrás.
+- [ ] La pantalla se ve correcta en light y dark.
+- [ ] F5 con la empresa suspendida → vuelve a aterrizar en la pantalla (vía hydrate), no en el login ni en el dashboard.
+- [ ] Botón "Volver a intentar iniciar sesión" → `/auth/login`; con la empresa aún suspendida, el login responde con el mensaje de suspensión en el form — sin loop ni redirecciones.
+- [ ] Reactivar desde B → botón en A → login normal entra al dashboard de inmediato.
+
+### F2 — Interceptor HTTP y BFF
+
+- [ ] **Request normal:** A en una vista sin sockets (`/settings/company`); suspender desde B; ejecutar cualquier acción (buscar en una tabla, guardar) → pantalla bloqueante inmediata. En Network: el request devuelve **403** con `code: "auth/company_suspended"`.
+- [ ] **Refresh:** con la empresa suspendida, borrar la cookie `accessToken` en A y hacer un request → `/api/proxy/*` responde **403** (no 401) con el code de suspensión.
+- [ ] **Hydrate:** F5 → en Network, `/api/auth/session` responde `{ isAuthenticated: false, code: "auth/company_suspended" }` y las cookies quedan borradas (Application → Cookies vacío).
+- [ ] **No-regresión sesión expirada:** con la empresa ACTIVA, borrar ambas cookies → la app redirige al login normal (`?next=`), JAMÁS a la pantalla de suspensión.
+- [ ] **No-regresión RBAC:** un 403 de permisos (usuario con rol limitado intentando una acción vetada) muestra el error puntual de siempre, no la pantalla bloqueante.
+
+### F3 — WebSocket
+
+- [ ] A en `/workspace/inbox` con el socket conectado (Network → WS: frames activos). Suspender desde B → pantalla bloqueante en <1 s **sin tocar nada** (camino WS puro).
+- [ ] En Network → WS: tras `company.suspended` llega el disconnect del server y **no aparecen nuevos intentos** de conexión socket.io (sin spam de `connect_error` en consola).
+- [ ] Reactivar + re-login → el inbox reconecta el WS (halt reseteado): los mensajes en vivo vuelven a llegar (enviar un mensaje de prueba al canal demo).
+- [ ] **Evento perdido:** cortar la red de A (DevTools → offline), suspender desde B, restaurar la red → el siguiente request HTTP muestra la pantalla (cae en F2, sin depender del WS).
+
+### F4 — Panel platform
+
+- [ ] El ConfirmTyped de suspender menciona: expulsión inmediata (sesiones y tiempo real), bloqueo de login, pausa de mensajería con conservación/re-proceso, y conservación de datos.
+- [ ] Alert de éxito al suspender: "fueron expulsados y la mensajería quedó en pausa".
+- [ ] Alert al reactivar: "vuelve a operar; los mensajes pendientes se re-encolan automáticamente".
+- [ ] La sesión del super admin en `/platform` NO se ve afectada al suspender (su auth es aislado).
+
+### F5 — Regresiones generales
+
+- [ ] Login y logout normales con empresa activa.
+- [ ] Sesión larga con empresa activa (>15 min con la app abierta): el refresh silencioso sigue funcionando, sin pantallas falsas.
+- [ ] Inbox en tiempo real con empresa activa: mensajes, typing y handoff funcionan igual que antes.
+
 ## Riesgos y mitigaciones
 
 - **Evento WS perdido** (socket caído en el momento de la suspensión): cubierto por diseño — el siguiente request HTTP devuelve el 403 y activa F2. Mismo cinturón que el backend.
