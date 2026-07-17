@@ -19,6 +19,12 @@ export type LoginPayload = {
 export type SessionResponse = {
   isAuthenticated: boolean;
   user?: AuthUser;
+  /**
+   * Código RFC 7807 del fallo de hidratación cuando el cliente debe
+   * distinguirlo del "sin sesión" genérico (hoy solo
+   * `auth/company_suspended` → pantalla bloqueante, no login).
+   */
+  code?: string;
 };
 
 /** Contrato de `GET /api/auth/token` (solo para el handshake de WebSocket). */

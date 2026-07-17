@@ -1,5 +1,5 @@
 import { API_BASE_URL, API_PREFIX } from "@/core/config/env";
-import { parseHttpError } from "@/core/api/problem";
+import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT, parseHttpError } from "@/core/api/problem";
 
 /**
  * Cliente HTTP del proyecto — patrón dual browser/server.
@@ -76,7 +76,17 @@ export class HttpClient {
       cache: "no-store",
     });
 
-    if (!res.ok) throw await parseHttpError(res);
+    if (!res.ok) {
+      const error = await parseHttpError(res);
+      // F15: la suspensión de la empresa puede llegar en CUALQUIER request.
+      // Único choke-point del interceptor: se anuncia al AuthProvider (pantalla
+      // bloqueante) y se re-lanza igual para no alterar el manejo local de los
+      // callers. Solo browser: en RSC el error fluye y el cliente lo ve al hidratar.
+      if (typeof window !== "undefined" && error.is(API_ERROR_CODES.companySuspended)) {
+        window.dispatchEvent(new Event(COMPANY_SUSPENDED_EVENT));
+      }
+      throw error;
+    }
 
     // 202 (async aceptado) puede traer body; 204 nunca. Cualquier body vacío → undefined.
     if (res.status === 204) return undefined as T;

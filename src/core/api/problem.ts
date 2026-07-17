@@ -45,6 +45,15 @@ export const API_ERROR_CODES = {
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
 
 /**
+ * CustomEvent del DOM que anuncia la suspensión de la empresa (F15).
+ * Lo despachan el `HttpClient` (403 `auth/company_suspended` en cualquier
+ * request) y los hooks de tiempo real (evento WS `company.suspended`); lo
+ * escucha únicamente el `AuthProvider`, que corta la sesión y muestra la
+ * pantalla bloqueante. Convención `familia:acción:estado` (architecture §9).
+ */
+export const COMPANY_SUSPENDED_EVENT = "auth:company:suspended";
+
+/**
  * Error normalizado que lanza el HttpClient. Conserva el problema RFC 7807
  * completo, el `code` para discriminar y `retryAfterSeconds` cuando el
  * backend responde 429 con header `Retry-After`.

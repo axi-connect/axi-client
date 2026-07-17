@@ -2,10 +2,12 @@
 
 import {
   extractLocationPayload,
+  extractTranscription,
   type MediaContentKind,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
 import { AudioPlayerBubble } from "./AudioPlayerBubble"
+import { AudioTranscription } from "./AudioTranscription"
 import { DocumentCard } from "./DocumentCard"
 import { ImageBubble } from "./ImageBubble"
 import { LocationBubble } from "./LocationBubble"
@@ -65,13 +67,20 @@ export function MediaAttachment({
       )
     case "audio":
       return (
-        <AudioPlayerBubble
-          conversationId={conversationId}
-          messageId={message.id}
-          attachment={attachment}
-          outbound={outbound}
-          previewUrl={previewUrl}
-        />
+        <div className="flex flex-col gap-1.5">
+          <AudioPlayerBubble
+            conversationId={conversationId}
+            messageId={message.id}
+            attachment={attachment}
+            outbound={outbound}
+            previewUrl={previewUrl}
+          />
+          <AudioTranscription
+            transcription={extractTranscription(message.payload)}
+            pending={Boolean(message.transcription_pending)}
+            outbound={outbound}
+          />
+        </div>
       )
     case "document":
       if (!attachment) return <MediaUnavailable kind="document" outbound={outbound} />

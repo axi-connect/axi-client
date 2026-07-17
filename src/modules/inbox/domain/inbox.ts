@@ -1,4 +1,7 @@
 import type { Schemas } from "@/core/api/types";
+import type { AudioTranscription } from "@/core/realtime/events";
+
+export type { AudioTranscription };
 
 /**
  * Contratos del slice inbox — bandeja operable de conversaciones
@@ -53,10 +56,16 @@ export function parsePreview(preview: string | null): {
   text: string;
 } {
   if (!preview) return { kind: null, text: "…" };
-  const match = /^\[(image|audio|video|document|sticker|location)\]$/.exec(preview.trim());
+  const trimmed = preview.trim();
+  const match = /^\[(image|audio|video|document|sticker|location)\]$/.exec(trimmed);
   if (match) {
     const kind = match[1] as MediaContentKind;
     return { kind, text: MEDIA_PREVIEW_LABELS[kind] };
+  }
+  // Audio transcrito: el backend antepone 🎤 al texto. Se muestra con el icono
+  // Mic (regla de marca: sin emojis en la UI de trabajo, DESIGN §7).
+  if (trimmed.startsWith("🎤")) {
+    return { kind: "audio", text: trimmed.slice("🎤".length).trim() };
   }
   return { kind: null, text: preview };
 }
@@ -80,6 +89,30 @@ export function extractLocationPayload(payload: unknown): LocationPayload | null
     longitude,
     name: typeof name === "string" ? name : undefined,
     address: typeof address === "string" ? address : undefined,
+  };
+}
+
+/**
+ * Lee `payload.transcription` de un mensaje de audio (STT). El payload es
+ * `unknown` en el contrato; se valida en runtime igual que `extractLocationPayload`.
+ * Devuelve `null` si no hay transcripción o el shape no es válido.
+ */
+export function extractTranscription(payload: unknown): AudioTranscription | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const transcription = (payload as { transcription?: unknown }).transcription;
+  if (typeof transcription !== "object" || transcription === null) return null;
+  const record = transcription as Record<string, unknown>;
+  const { status, text } = record;
+  if (status !== "done" && status !== "failed") return null;
+  if (status === "done" && typeof text !== "string") return null;
+  return {
+    status,
+    ...(typeof text === "string" ? { text } : {}),
+    ...(typeof record.provider === "string" ? { provider: record.provider } : {}),
+    ...(typeof record.model === "string" ? { model: record.model } : {}),
+    ...(typeof record.audio_seconds === "number" ? { audio_seconds: record.audio_seconds } : {}),
+    ...(typeof record.latency_ms === "number" ? { latency_ms: record.latency_ms } : {}),
+    ...(typeof record.transcribed_at === "string" ? { transcribed_at: record.transcribed_at } : {}),
   };
 }
 
@@ -123,6 +156,12 @@ export type UiMessage = Message & {
   }[];
   /** F9: DTO original del envío — retry de media sin re-subir el archivo. */
   local_payload?: SendMessageDTO;
+  /**
+   * Flag efímero de UI: audio inbound recibido en vivo cuya transcripción aún
+   * no llega (`conversation.message_updated`). Enciende el indicador
+   * "Transcribiendo…". No proviene del backend.
+   */
+  transcription_pending?: boolean;
 };
 
 // ---------------------------------------------------------------- envío F9

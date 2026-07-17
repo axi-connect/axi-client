@@ -356,6 +356,182 @@ export interface paths {
         patch: operations["PlatformPricingController_update_v1"];
         trace?: never;
     };
+    "/api/v1/platform/analytics/agents-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformAnalyticsController_agentsHealth_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/analytics/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformAnalyticsController_platformAlerts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformPlansController_list_v1"];
+        put?: never;
+        post: operations["PlatformPlansController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformPlansController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TenantPlanController_get_v1"];
+        put: operations["TenantPlanController_assign_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/database": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformDatabasesController_get_v1"];
+        put: operations["PlatformDatabasesController_upsert_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/database/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformDatabasesController_validate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/database/provision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformDatabasesController_provision_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/database/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformDatabasesController_disable_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/database/migrate-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformDatabasesController_migrateData_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/database/migrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformDatabasesController_migrations_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/usage/conversations/{conversation_id}": {
         parameters: {
             query?: never;
@@ -1188,6 +1364,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analytics/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_alerts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/alerts/{id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AnalyticsController_ackAlert_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_funnel_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/agent-performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_agentPerformance_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/issues/top": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_issuesTop_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/judge-agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_judgeAgreement_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/evaluations/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AnalyticsController_review_v1"];
+        trace?: never;
+    };
+    "/api/v1/analytics/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_evaluations_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/conversations/{id}/evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AnalyticsController_conversationEvaluation_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/conversations/{id}/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AnalyticsController_evaluateNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -1939,6 +2275,7 @@ export interface components {
                 email: string;
                 password: string;
             };
+            plan_code?: string;
         };
         CreatedTenantDto: {
             /** Format: uuid */
@@ -2068,6 +2405,285 @@ export interface components {
             margin_multiplier: number;
             /** Format: date-time */
             effective_to?: string | null;
+        };
+        AgentsHealthDto: {
+            period_days: number;
+            /** @default false */
+            degraded: boolean;
+            agents: {
+                company_id: string;
+                company_name: string | null;
+                agent_id: string;
+                agent_name: string;
+                agent_status: string;
+                turns: number;
+                failed_turns: number;
+                failure_rate_pct: number;
+                escalated_by_failure: number;
+                latency_p95_ms: number | null;
+                evaluations: number;
+                avg_overall_score: number | null;
+                major_hallucinations: number;
+            }[];
+            alerts_by_company: {
+                company_id: string;
+                company_name: string | null;
+                total: number;
+                triggered: number;
+            }[];
+        };
+        PlatformAlertsDto: {
+            data: {
+                id: string;
+                company_id: string;
+                company_name: string | null;
+                rule: string;
+                subject_type: string;
+                subject_id: string | null;
+                window_start: string;
+                value_at_trigger: number;
+                threshold: number;
+                status: string;
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+                /** @default false */
+                degraded: boolean;
+            };
+        };
+        PlanListDto: {
+            data: {
+                code: string;
+                name: string;
+                description: string | null;
+                /** @enum {string} */
+                tier: "sbs" | "enterprise";
+                default_limits: {
+                    /** @enum {string} */
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes";
+                    /** @enum {string} */
+                    period: "day" | "billing_cycle";
+                    limit_value: number;
+                    /** @default false */
+                    is_cost_limit: boolean;
+                    /**
+                     * @default degrade
+                     * @enum {string}
+                     */
+                    action: "block" | "degrade" | "notify_only";
+                    /** @default 0 */
+                    grace_pct: number;
+                    /** @default true */
+                    enabled: boolean;
+                }[];
+                /** Format: uuid */
+                id: string;
+                is_active: boolean;
+                subscriptions_count: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreatePlanDto: {
+            code: string;
+            name: string;
+            description?: string | null;
+            /** @enum {string} */
+            tier: "sbs" | "enterprise";
+            /** @default [] */
+            default_limits: {
+                /** @enum {string} */
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes";
+                /** @enum {string} */
+                period: "day" | "billing_cycle";
+                limit_value: number;
+                /** @default false */
+                is_cost_limit: boolean;
+                /**
+                 * @default degrade
+                 * @enum {string}
+                 */
+                action: "block" | "degrade" | "notify_only";
+                /** @default 0 */
+                grace_pct: number;
+                /** @default true */
+                enabled: boolean;
+            }[];
+        };
+        CreatedPlanDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        UpdatePlanDto: {
+            name?: string;
+            description?: string | null;
+            /** @default [] */
+            default_limits: {
+                /** @enum {string} */
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes";
+                /** @enum {string} */
+                period: "day" | "billing_cycle";
+                limit_value: number;
+                /** @default false */
+                is_cost_limit: boolean;
+                /**
+                 * @default degrade
+                 * @enum {string}
+                 */
+                action: "block" | "degrade" | "notify_only";
+                /** @default 0 */
+                grace_pct: number;
+                /** @default true */
+                enabled: boolean;
+            }[];
+            is_active?: boolean;
+        };
+        TenantPlanViewDto: {
+            plan: {
+                code: string;
+                name: string;
+                description: string | null;
+                /** @enum {string} */
+                tier: "sbs" | "enterprise";
+                default_limits: {
+                    /** @enum {string} */
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes";
+                    /** @enum {string} */
+                    period: "day" | "billing_cycle";
+                    limit_value: number;
+                    /** @default false */
+                    is_cost_limit: boolean;
+                    /**
+                     * @default degrade
+                     * @enum {string}
+                     */
+                    action: "block" | "degrade" | "notify_only";
+                    /** @default 0 */
+                    grace_pct: number;
+                    /** @default true */
+                    enabled: boolean;
+                }[];
+                /** Format: uuid */
+                id: string;
+                is_active: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            } | null;
+            /** @enum {string|null} */
+            subscription_status: "active" | "cancelled" | null;
+            /** Format: date-time */
+            billing_cycle_anchor: string | null;
+            limits: {
+                /** @enum {string} */
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes";
+                /** @enum {string} */
+                period: "day" | "billing_cycle";
+                limit_value: number;
+                /** @default false */
+                is_cost_limit: boolean;
+                /**
+                 * @default degrade
+                 * @enum {string}
+                 */
+                action: "block" | "degrade" | "notify_only";
+                /** @default 0 */
+                grace_pct: number;
+                /** @default true */
+                enabled: boolean;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "plan" | "manual";
+            }[];
+        };
+        AssignTenantPlanDto: {
+            /** Format: uuid */
+            plan_id: string;
+        };
+        TenantDatabaseViewDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            host: string;
+            port: number;
+            database_name: string;
+            username: string;
+            /** @enum {string} */
+            ssl_mode: "disable" | "require" | "verify_full";
+            pool_max: number;
+            /** @enum {string} */
+            status: "pending" | "validating" | "migrating" | "active" | "error" | "disabled";
+            /** Format: date-time */
+            last_validated_at: string | null;
+            /** Format: date-time */
+            provisioned_at: string | null;
+            migration_version: string | null;
+            last_error: string | null;
+            /** @enum {boolean} */
+            credentials_configured: true;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpsertTenantDatabaseDto: {
+            host: string;
+            /** @default 5432 */
+            port: number;
+            database_name: string;
+            username: string;
+            /**
+             * @default require
+             * @enum {string}
+             */
+            ssl_mode: "disable" | "require" | "verify_full";
+            /** @default 10 */
+            pool_max: number;
+            password?: string;
+        };
+        DbValidationResultDto: {
+            connection: boolean;
+            server_version: string | null;
+            version_supported: boolean;
+            pg_trgm: boolean;
+            unaccent: boolean;
+            can_create: boolean;
+            error?: string;
+        };
+        ProvisionAcceptedDto: {
+            job_id: string;
+        };
+        DataMigrationAcceptedDto: {
+            /** Format: uuid */
+            migration_id: string;
+            job_id: string;
+        };
+        DataMigrationListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                /** @enum {string} */
+                status: "pending" | "copying" | "cutover" | "verifying" | "completed" | "failed" | "rolled_back";
+                progress: unknown;
+                stats: unknown;
+                error: string | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
         };
         ConversationUsageDto: {
             /** Format: uuid */
@@ -3433,6 +4049,214 @@ export interface components {
                 position: number;
             }[];
             is_active?: boolean;
+        };
+        AlertsListDto: {
+            data: {
+                id: string;
+                rule: string;
+                subject_type: string;
+                subject_id: string | null;
+                window_start: string;
+                value_at_trigger: number;
+                threshold: number;
+                status: string;
+                payload: unknown;
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        FunnelDto: {
+            /** @enum {string} */
+            period: "7d" | "30d" | "90d";
+            period_start: string | null;
+            period_end: string | null;
+            currency: string;
+            stages: {
+                conversations: number;
+                with_intent: number;
+                quoted: number;
+                orders_created: number;
+                orders_confirmed: number;
+                orders_paid: number;
+                appts_scheduled: number;
+                appts_completed: number;
+                escalated: number;
+                escalated_ai_failures: number;
+                abandoned: number;
+                closed_won: number;
+                revenue_paid_cents: number;
+            };
+            rates: {
+                close_rate_paid: number;
+                close_rate_confirmed: number;
+                quote_to_paid: number;
+                containment_rate: number;
+                escalation_rate: number;
+                abandonment_rate: number;
+            };
+            series: {
+                bucket: string;
+                conversations: number;
+                closed_won: number;
+            }[];
+            groups?: {
+                key: string | null;
+                label: string | null;
+                stages: {
+                    conversations: number;
+                    with_intent: number;
+                    quoted: number;
+                    orders_created: number;
+                    orders_confirmed: number;
+                    orders_paid: number;
+                    appts_scheduled: number;
+                    appts_completed: number;
+                    escalated: number;
+                    escalated_ai_failures: number;
+                    abandoned: number;
+                    closed_won: number;
+                    revenue_paid_cents: number;
+                };
+                rates: {
+                    close_rate_paid: number;
+                    close_rate_confirmed: number;
+                    quote_to_paid: number;
+                    containment_rate: number;
+                    escalation_rate: number;
+                    abandonment_rate: number;
+                };
+            }[];
+        };
+        AgentPerformanceDto: {
+            /** @enum {string} */
+            period: "7d" | "30d" | "90d";
+            period_start: string | null;
+            period_end: string | null;
+            agents: {
+                agent_id: string;
+                name: string;
+                status: string;
+                provider: string;
+                model: string;
+                conversations: number;
+                closed_won: number;
+                close_rate_pct: number;
+                turns: number;
+                failed_turns: number;
+                failure_rate_pct: number;
+                escalated_turns: number;
+                escalated_by_failure: number;
+                avg_tool_calls: number;
+                latency_p50_ms: number | null;
+                latency_p95_ms: number | null;
+                evaluations: number;
+                avg_overall_score: number | null;
+                major_hallucinations: number;
+            }[];
+        };
+        IssuesTopDto: {
+            /** @enum {string} */
+            period: "7d" | "30d" | "90d";
+            issues: {
+                code: string;
+                total: number;
+                by_severity: {
+                    [key: string]: number;
+                };
+                priority: number;
+            }[];
+        };
+        JudgeAgreementDto: {
+            versions: {
+                prompt_version: number;
+                reviewed: number;
+                agreement_pct: number | null;
+                avg_delta: number | null;
+            }[];
+        };
+        ReviewEvaluationDto: {
+            human_score: number;
+            human_notes?: string;
+        };
+        EvaluationsListDto: {
+            data: {
+                id: string;
+                conversation_id: string;
+                ai_agent_id: string | null;
+                channel_id: string | null;
+                intention_id: string | null;
+                trigger: string;
+                status: string;
+                funnel_stage: string;
+                outcome: string | null;
+                overall_score: number | null;
+                scores: {
+                    accuracy: number | null;
+                    tool_usage: number | null;
+                    closing: number | null;
+                    tone: number | null;
+                };
+                hallucination_severity: string | null;
+                missed_opportunity: boolean;
+                summary: string | null;
+                judge_model: string | null;
+                prompt_version: number;
+                rubric_confidence: number | null;
+                human_score: number | null;
+                evaluated_at: string | null;
+                created_at: string;
+                issues: {
+                    code: string;
+                    severity: string;
+                    detail: string;
+                    evidence_quote: string | null;
+                }[];
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        EvaluationDto: {
+            id: string;
+            conversation_id: string;
+            ai_agent_id: string | null;
+            channel_id: string | null;
+            intention_id: string | null;
+            trigger: string;
+            status: string;
+            funnel_stage: string;
+            outcome: string | null;
+            overall_score: number | null;
+            scores: {
+                accuracy: number | null;
+                tool_usage: number | null;
+                closing: number | null;
+                tone: number | null;
+            };
+            hallucination_severity: string | null;
+            missed_opportunity: boolean;
+            summary: string | null;
+            judge_model: string | null;
+            prompt_version: number;
+            rubric_confidence: number | null;
+            human_score: number | null;
+            evaluated_at: string | null;
+            created_at: string;
+            issues: {
+                code: string;
+                severity: string;
+                detail: string;
+                evidence_quote: string | null;
+            }[];
+        };
+        EvaluateAcceptedDto: {
+            enqueued: boolean;
         };
         ConversationsListDto: {
             data: {
@@ -4823,6 +5647,304 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlatformAnalyticsController_agentsHealth_v1: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentsHealthDto"];
+                };
+            };
+        };
+    };
+    PlatformAnalyticsController_platformAlerts_v1: {
+        parameters: {
+            query?: {
+                status?: "triggered" | "acknowledged" | "resolved";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAlertsDto"];
+                };
+            };
+        };
+    };
+    PlatformPlansController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanListDto"];
+                };
+            };
+        };
+    };
+    PlatformPlansController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedPlanDto"];
+                };
+            };
+        };
+    };
+    PlatformPlansController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlanDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TenantPlanController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantPlanViewDto"];
+                };
+            };
+        };
+    };
+    TenantPlanController_assign_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignTenantPlanDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformDatabasesController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantDatabaseViewDto"];
+                };
+            };
+        };
+    };
+    PlatformDatabasesController_upsert_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertTenantDatabaseDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformDatabasesController_validate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DbValidationResultDto"];
+                };
+            };
+        };
+    };
+    PlatformDatabasesController_provision_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvisionAcceptedDto"];
+                };
+            };
+        };
+    };
+    PlatformDatabasesController_disable_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformDatabasesController_migrateData_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataMigrationAcceptedDto"];
+                };
+            };
+        };
+    };
+    PlatformDatabasesController_migrations_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataMigrationListDto"];
+                };
             };
         };
     };
@@ -6704,6 +7826,223 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AnalyticsController_alerts_v1: {
+        parameters: {
+            query?: {
+                status?: "triggered" | "acknowledged" | "resolved";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsListDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_ackAlert_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_funnel_v1: {
+        parameters: {
+            query?: {
+                period?: "7d" | "30d" | "90d";
+                group_by?: "agent" | "channel" | "intention";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FunnelDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_agentPerformance_v1: {
+        parameters: {
+            query?: {
+                period?: "7d" | "30d" | "90d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentPerformanceDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_issuesTop_v1: {
+        parameters: {
+            query?: {
+                period?: "7d" | "30d" | "90d";
+                agent_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuesTopDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_judgeAgreement_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JudgeAgreementDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_review_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewEvaluationDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AnalyticsController_evaluations_v1: {
+        parameters: {
+            query?: {
+                period?: "7d" | "30d" | "90d";
+                min_score?: number;
+                max_score?: number;
+                issue_code?: string;
+                agent_id?: string;
+                sort?: "score_asc" | "score_desc" | "recent";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationsListDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_conversationEvaluation_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_evaluateNow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluateAcceptedDto"];
+                };
             };
         };
     };

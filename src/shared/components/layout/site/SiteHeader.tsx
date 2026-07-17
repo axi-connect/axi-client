@@ -60,7 +60,7 @@ const mobileItemVariants = {
     open: { opacity: 1, x: 0 },
 };
 
-const buttonText: Record<"loading" | "authenticated" | "unauthenticated", { text: string; href: string }> = {
+const buttonText: Record<"loading" | "authenticated" | "unauthenticated" | "suspended", { text: string; href: string }> = {
     authenticated: {
         text: 'Cerrar sesión',
         href: '/auth/logout',
@@ -72,6 +72,12 @@ const buttonText: Record<"loading" | "authenticated" | "unauthenticated", { text
     loading: {
         text: 'Cargando...',
         href: '#',
+    },
+    // F15: en estado suspendido el AuthProvider renderiza la pantalla
+    // bloqueante en lugar del árbol; esta entrada solo satisface el tipo.
+    suspended: {
+        text: 'Iniciar sesión',
+        href: '/auth/login',
     },
 }
 

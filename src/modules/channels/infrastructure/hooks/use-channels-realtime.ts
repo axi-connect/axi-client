@@ -1,5 +1,6 @@
 "use client"
 
+import { COMPANY_SUSPENDED_EVENT } from "@/core/api/problem"
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket"
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
 
@@ -28,6 +29,13 @@ export function useChannelsRealtime() {
   useSocketEvent(socket, "channel.session_failed", (payload) => {
     setChannelStatus(payload.channel_id, "error")
     setPairingState(payload.channel_id, { status: "error" })
+  })
+
+  // F15: el AuthProvider (único listener) frena el tiempo real y muestra la
+  // pantalla bloqueante. dispatchEvent es síncrono: el halt ocurre antes de
+  // que socket.io procese la desconexión forzada que sigue al evento.
+  useSocketEvent(socket, "company.suspended", () => {
+    window.dispatchEvent(new Event(COMPANY_SUSPENDED_EVENT))
   })
 
   return { connected }

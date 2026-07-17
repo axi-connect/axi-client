@@ -6,6 +6,7 @@ import {
   refreshSession,
 } from "@/shared/auth/auth.handlers";
 import { COOKIE_NAMES } from "@/shared/auth/auth.types";
+import { API_ERROR_CODES } from "@/core/api/problem";
 
 export const runtime = "nodejs";
 
@@ -75,6 +76,12 @@ async function proxy(req: NextRequest): Promise<NextResponse> {
     const refreshed = await refreshSession(store);
     if (refreshed.ok) {
       token = refreshed.tokens.access_token;
+    } else if (refreshed.code === API_ERROR_CODES.companySuspended) {
+      // F15: el interceptor del cliente distingue este 403 del 401 de sesión.
+      return NextResponse.json(
+        { code: refreshed.code, message: "La empresa está suspendida" },
+        { status: 403 },
+      );
     } else if (!token) {
       return NextResponse.json(
         { code: refreshed.code, message: "Sesión no válida" },
@@ -99,6 +106,13 @@ async function proxy(req: NextRequest): Promise<NextResponse> {
       const refreshed = await refreshSession(store);
       if (refreshed.ok) {
         backendRes = await doFetch(refreshed.tokens.access_token);
+      } else if (refreshed.code === API_ERROR_CODES.companySuspended) {
+        // F15: el 401 vino del bump de token_version por suspensión; el
+        // refresh revela la causa real — propagar el 403 propio, no el 401.
+        return NextResponse.json(
+          { code: refreshed.code, message: "La empresa está suspendida" },
+          { status: 403 },
+        );
       }
     }
 

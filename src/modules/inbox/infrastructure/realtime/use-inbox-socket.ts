@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef } from "react"
-import { API_ERROR_CODES } from "@/core/api/problem"
+import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT } from "@/core/api/problem"
 import { socketManager } from "@/core/realtime/socket-manager"
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
@@ -47,11 +47,27 @@ export function useInboxSocket() {
       try {
         const res = await getConversationMessages(payload.conversation_id, { limit: 5 })
         const incoming = res.data.find((m) => m.id === payload.message_id)
-        if (incoming) state.appendMessage(payload.conversation_id, incoming as UiMessage)
+        if (incoming) {
+          state.appendMessage(payload.conversation_id, incoming as UiMessage)
+          // Audio inbound: la transcripción llega unos segundos después vía
+          // `message_updated` → indicador "Transcribiendo…" mientras tanto.
+          if (incoming.content_type === "audio" && incoming.direction === "inbound") {
+            state.markTranscribing(payload.conversation_id, incoming.id)
+          }
+        }
       } catch {
         // El próximo fetch completo lo trae.
       }
     }
+  })
+
+  // STT: la transcripción de un audio quedó lista → merge en vivo en la burbuja
+  // (y preview de la lista) sin re-consultar. El reducer es no-op si esa
+  // conversación no está cargada en memoria.
+  useSocketEvent(socket, "conversation.message_updated", (payload) => {
+    store
+      .getState()
+      .applyTranscription(payload.conversation_id, payload.message_id, payload.transcription)
   })
 
   // F9.1: mensaje outbound recién PERSISTIDO (reply de IA, quick action,
@@ -106,6 +122,13 @@ export function useInboxSocket() {
   useSocketEvent(socket, "conversation.status_changed", (p) => store.getState().onHandoffEvent(p))
   useSocketEvent(socket, "conversation.sla_breached", () => {
     store.getState().fetchCounts()
+  })
+
+  // F15: el AuthProvider (único listener) frena el tiempo real y muestra la
+  // pantalla bloqueante. dispatchEvent es síncrono: el halt ocurre antes de
+  // que socket.io procese la desconexión forzada que sigue al evento.
+  useSocketEvent(socket, "company.suspended", () => {
+    window.dispatchEvent(new Event(COMPANY_SUSPENDED_EVENT))
   })
 
   // --- Join/leave de la conversación activa --------------------------------

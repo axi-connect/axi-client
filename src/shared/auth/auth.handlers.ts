@@ -114,6 +114,9 @@ export async function refreshSession(store: CookieStore): Promise<RefreshResult>
       if (
         error.is(API_ERROR_CODES.refreshReuseDetected) ||
         error.is(API_ERROR_CODES.invalidRefresh) ||
+        // F15: empresa suspendida — el backend ya revocó toda la familia de
+        // refresh; conservar las cookies solo alargaría la agonía.
+        error.is(API_ERROR_CODES.companySuspended) ||
         error.status === 401
       ) {
         clearSessionCookies(store);

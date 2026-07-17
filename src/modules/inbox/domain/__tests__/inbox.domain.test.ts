@@ -1,4 +1,4 @@
-import { extractLocationPayload, parsePreview } from "../inbox"
+import { extractLocationPayload, extractTranscription, parsePreview } from "../inbox"
 
 describe("parsePreview (tokens de media del backend)", () => {
   it.each([
@@ -22,6 +22,48 @@ describe("parsePreview (tokens de media del backend)", () => {
 
   it("un token desconocido no rompe (queda como texto)", () => {
     expect(parsePreview("[template]")).toEqual({ kind: null, text: "[template]" })
+  })
+
+  it("audio transcrito (🎤 <texto>) → icono audio + texto sin emoji", () => {
+    expect(parsePreview("🎤 quiero dos pizzas")).toEqual({ kind: "audio", text: "quiero dos pizzas" })
+  })
+})
+
+describe("extractTranscription", () => {
+  it("transcripción done con texto", () => {
+    expect(
+      extractTranscription({
+        media: { id: "x" },
+        transcription: {
+          status: "done",
+          text: "quiero dos pizzas",
+          provider: "groq",
+          model: "whisper-large-v3-turbo",
+          audio_seconds: 4.2,
+          latency_ms: 900,
+          transcribed_at: "2026-07-16T00:00:00Z",
+        },
+      }),
+    ).toEqual({
+      status: "done",
+      text: "quiero dos pizzas",
+      provider: "groq",
+      model: "whisper-large-v3-turbo",
+      audio_seconds: 4.2,
+      latency_ms: 900,
+      transcribed_at: "2026-07-16T00:00:00Z",
+    })
+  })
+
+  it("transcripción failed (sin texto)", () => {
+    expect(extractTranscription({ transcription: { status: "failed" } })).toEqual({ status: "failed" })
+  })
+
+  it("payload sin transcripción o malformado → null", () => {
+    expect(extractTranscription(null)).toBeNull()
+    expect(extractTranscription({})).toBeNull()
+    expect(extractTranscription({ transcription: { status: "pending" } })).toBeNull()
+    expect(extractTranscription({ transcription: { status: "done" } })).toBeNull() // done sin text
   })
 })
 

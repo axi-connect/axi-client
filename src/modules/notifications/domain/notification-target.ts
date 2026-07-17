@@ -6,7 +6,10 @@
 type TargetResolver = (data: Record<string, unknown>) => string | null
 
 /** Resolvers por tipo exacto — tienen prioridad sobre la familia. */
-const EXACT: Record<string, TargetResolver> = {}
+const EXACT: Record<string, TargetResolver> = {
+  // F13: alerta de anomalía de analíticas → tab Alertas de la sección.
+  "analytics.alert": () => "/analytics?tab=alertas",
+}
 
 /** Resolvers por familia (prefijo `familia.`). */
 const FAMILY: Record<string, TargetResolver> = {

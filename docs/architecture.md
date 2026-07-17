@@ -88,6 +88,7 @@ axi-client/
 │   │   ├── companies/  agents/  users/  rbac/
 │   │   ├── catalog/                             # catálogo de productos (docs/modules/catalog.md)
 │   │   ├── channels/  conversations/           # tiempo real
+│   │   ├── platform/                            # consola super admin /platform (auth aislado, §8.1)
 │   │   └── workspace/                           # capa de composición (inbox)
 │   └── shared/                       # design system + utilidades reutilizables
 │       ├── components/
@@ -296,6 +297,17 @@ Detalles: soporta `FormData`, usa `cache: "no-store"`, `202/204` sin body devuel
 7. Logout: modal interceptado → `useAuth().logout()` → `POST /api/auth/logout` → borra cookies → `/auth/login`.
 
 **RBAC / navegación:** el sidebar se arma desde `/auth/me/sidebar` (el backend filtra por permisos del rol). El frontend no decide autorización; refleja lo que el backend autoriza. Los permisos siguen el formato `resource:action`.
+
+### 8.1 Excepción sancionada: panel de plataforma (`/platform/*`)
+
+La consola interna de super admin (slice `modules/platform`, rutas `src/app/platform/`; spec: `axi-server/docs/plans/frontend_platform_plan.md`) tiene un modelo de auth **aislado** que difiere a propósito del contrato de cookies:
+
+- **Token en `sessionStorage`** (`axi.platform.token/exp/email`) + espejo en memoria — access ~15 min **sin refresh**; al vencer, re-login superpuesto (`ReLoginModal`), nunca redirect. No usa el BFF: `openapi-fetch` llama directo al backend con `Bearer` (decisión D2 del spec: la sesión de super admin no persiste entre cierres del navegador y el aislamiento del auth de tenant pesa más que el riesgo XSS de un token de 15 min).
+- **`"/platform"` está en `PUBLIC_PATHS`**: el middleware edge y el `AuthProvider` de tenant no lo interceptan; el guard real es `PlatformGuard` (client-side, binario — la barrera de seguridad es el backend).
+- **Capa de datos propia**: TanStack Query (`QueryClient` dedicado, sin caché compartida con el tenant) + cliente `openapi-fetch` tipado con el mismo `schema.d.ts`. REST puro + polling (el WS rechaza tokens sin `company_id`).
+- Reutiliza sin duplicar: `core/api/problem.ts` (RFC 7807), `core/lib/error-messages.ts`, primitivos de `shared/components/ui` y `shared/components/layout/sidebar/core`.
+
+Estas decisiones aplican SOLO a `/platform/*`; el resto de la app sigue el contrato de cookies HttpOnly + BFF de este documento.
 
 **Reglas de seguridad:**
 - Los tokens **nunca** se exponen a JS del cliente ni se guardan en `localStorage`. Solo cookies `HttpOnly`.

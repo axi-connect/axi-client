@@ -15,7 +15,7 @@ import {
   type Message,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
-import type { ConversationHandoffEvent, TypingEvent } from "@/core/realtime/events"
+import type { AudioTranscription, ConversationHandoffEvent, TypingEvent } from "@/core/realtime/events"
 
 /**
  * Store del inbox. Los datos entran por REST (listas, historial con cursor)
@@ -27,6 +27,12 @@ import type { ConversationHandoffEvent, TypingEvent } from "@/core/realtime/even
  * `failed` con reintento manual.
  */
 const SEND_CONFIRM_TIMEOUT_MS = 15_000
+/**
+ * Tras marcar un audio como "transcribiendo", si no llega `message_updated`
+ * en este margen se limpia el flag (STT deshabilitado o fallo silencioso) y la
+ * burbuja queda solo con el player.
+ */
+const TRANSCRIBE_TIMEOUT_MS = 30_000
 
 type MessagesState = {
   items: UiMessage[]
@@ -75,6 +81,14 @@ type InboxStore = {
   markMessageFailed: (conversationId: string, messageId: string) => void
   appendMessage: (conversationId: string, message: UiMessage) => void
   confirmMessage: (conversationId: string, messageId: string) => void
+  /** STT: audio inbound en vivo esperando su transcripción (indicador + timeout). */
+  markTranscribing: (conversationId: string, messageId: string) => void
+  /** STT: transcripción lista — merge en `payload` y limpieza del flag efímero. */
+  applyTranscription: (
+    conversationId: string,
+    messageId: string,
+    transcription: AudioTranscription,
+  ) => void
 
   // Reducers de eventos WS
   onHandoffEvent: (event: ConversationHandoffEvent) => void
@@ -329,6 +343,84 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
             items: current.items.map((m) =>
               m.id === messageId ? { ...m, status: "sent", delivery: "confirmed" } : m,
             ),
+          },
+        },
+      }
+    })
+  },
+
+  markTranscribing: (conversationId, messageId) => {
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      if (!current) return state
+      return {
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) =>
+              m.id === messageId ? { ...m, transcription_pending: true } : m,
+            ),
+          },
+        },
+      }
+    })
+    // Failsafe: si el STT está deshabilitado o falla en silencio, no dejamos el
+    // indicador colgado indefinidamente.
+    setTimeout(() => {
+      set((state) => {
+        const current = state.messagesById[conversationId]
+        if (!current) return state
+        const target = current.items.find((m) => m.id === messageId)
+        if (!target?.transcription_pending) return state
+        return {
+          messagesById: {
+            ...state.messagesById,
+            [conversationId]: {
+              ...current,
+              items: current.items.map((m) =>
+                m.id === messageId ? { ...m, transcription_pending: false } : m,
+              ),
+            },
+          },
+        }
+      })
+    }, TRANSCRIBE_TIMEOUT_MS)
+  },
+
+  applyTranscription: (conversationId, messageId, transcription) => {
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      const doneText = transcription.status === "done" ? transcription.text : undefined
+      // Preview en vivo de la lista: si el audio transcrito sigue siendo el
+      // último mensaje (preview `[audio]` o ya con 🎤), refleja el texto.
+      const conversations =
+        doneText != null
+          ? state.conversations.map((c) => {
+              if (c.id !== conversationId) return c
+              const preview = c.last_message_preview?.trim()
+              const isLastAudio = preview === "[audio]" || preview?.startsWith("🎤")
+              return isLastAudio ? { ...c, last_message_preview: `🎤 ${doneText}` } : c
+            })
+          : state.conversations
+
+      if (!current) return { conversations }
+      return {
+        conversations,
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) => {
+              if (m.id !== messageId) return m
+              const basePayload =
+                typeof m.payload === "object" && m.payload !== null ? m.payload : {}
+              return {
+                ...m,
+                payload: { ...basePayload, transcription },
+                transcription_pending: false,
+              }
+            }),
           },
         },
       }

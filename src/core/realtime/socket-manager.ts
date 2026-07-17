@@ -54,8 +54,25 @@ async function fetchToken(): Promise<TokenResponse> {
 class SocketManager {
   private readonly connections = new Map<RealtimeNamespace, ManagedConnection>();
 
+  /**
+   * F15: tras `company.suspended` el token está bumpeado — reconectar solo
+   * martillea el server. `halt()` corta todo y bloquea nuevos `connect()`
+   * hasta `reset()` (login exitoso) o una recarga completa de la página.
+   */
+  private halted = false;
+
+  halt(): void {
+    this.halted = true;
+    this.disconnectAll();
+  }
+
+  reset(): void {
+    this.halted = false;
+  }
+
   /** Devuelve (creando si es necesario) el socket del namespace, ya conectando. */
   async connect<N extends RealtimeNamespace>(namespace: N): Promise<TypedSocket<N>> {
+    if (this.halted) throw new Error("Tiempo real detenido: empresa suspendida");
     const existing = this.connections.get(namespace);
     if (existing) return existing.socket as TypedSocket<N>;
 

@@ -1,10 +1,14 @@
 "use client"
 
 import { isPublicPath } from "@/core/config/routes"
+import { socketManager } from "@/core/realtime/socket-manager"
+import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT } from "@/core/api/problem"
+import { CompanySuspendedScreen } from "@/core/providers/company-suspended-screen"
 import type { AuthUser, LoginPayload, SessionResponse } from "@/shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
-type AuthStatus = "loading" | "authenticated" | "unauthenticated"
+/** `suspended`: la empresa del usuario fue suspendida (F15) — pantalla bloqueante. */
+type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "suspended"
 
 /**
  * Error tipado de login propagado desde el BFF (`/api/auth/login`), que a su
@@ -60,6 +64,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/auth/login?next=" + encodeURIComponent(pathname + search)
   }, [])
 
+  /**
+   * Corta la sesión ante la suspensión de la empresa (F15): frena el tiempo
+   * real (halt síncrono ANTES de que socket.io intente reconectar), muestra la
+   * pantalla bloqueante y borra las cookies best-effort (el backend ya revocó
+   * los tokens; esto solo limpia el browser). Idempotente: da igual si la
+   * señal llega por HTTP, por WS o por ambas.
+   */
+  const markSuspended = useCallback(() => {
+    socketManager.halt()
+    setUser(null)
+    setStatus("suspended")
+    void fetch("/api/auth/logout", { method: "POST" }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener(COMPANY_SUSPENDED_EVENT, markSuspended)
+    return () => window.removeEventListener(COMPANY_SUSPENDED_EVENT, markSuspended)
+  }, [markSuspended])
+
   const hydrate = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/session", { cache: "no-store" })
@@ -67,11 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (json.isAuthenticated && json.user) {
         setUser(json.user)
         setStatus("authenticated")
+      } else if (json.code === API_ERROR_CODES.companySuspended) {
+        // Nunca al login: también respondería 403 (loop de mensajes confusos).
+        markSuspended()
       } else redirectToLogin()
     } catch {
       redirectToLogin()
     }
-  }, [redirectToLogin])
+  }, [redirectToLogin, markSuspended])
 
   useEffect(() => {
     void hydrate()
@@ -98,6 +124,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         retryAfterSeconds: retryAfter ? Number(retryAfter) : undefined,
       })
     }
+    // Login exitoso (empresa activa): re-habilita el tiempo real si venía
+    // frenado por una suspensión en esta misma sesión de página.
+    socketManager.reset()
     await hydrate()
   }, [hydrate])
 
@@ -125,7 +154,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [status, user, hasPermission, login, refresh, logout],
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {status === "suspended" ? <CompanySuspendedScreen /> : children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuthContext(): AuthContextValue {

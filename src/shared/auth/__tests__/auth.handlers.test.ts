@@ -94,6 +94,22 @@ describe("refreshSession — single-flight", () => {
     expect(store.jar.has(COOKIE_NAMES.refreshToken)).toBe(false);
   });
 
+  it("empresa suspendida (403 auth/company_suspended) limpia cookies y propaga el code (F15)", async () => {
+    postMock.mockRejectedValue(
+      new HttpError({ status: 403, code: "auth/company_suspended", message: "suspendida" }),
+    );
+    const store = makeStore({
+      [COOKIE_NAMES.accessToken]: "a",
+      [COOKIE_NAMES.refreshToken]: "r-suspended",
+    });
+
+    const result = await refreshSession(store as never);
+
+    expect(result).toEqual({ ok: false, status: 403, code: "auth/company_suspended" });
+    expect(store.jar.has(COOKIE_NAMES.accessToken)).toBe(false);
+    expect(store.jar.has(COOKIE_NAMES.refreshToken)).toBe(false);
+  });
+
   it("sin cookie de refresh → 401 sin llamar al backend", async () => {
     const store = makeStore({});
     const result = await refreshSession(store as never);

@@ -65,6 +65,33 @@ export type MessageSentEvent = {
   content_type: Schemas["EnqueuedMessageDto"]["content_type"];
 };
 
+/**
+ * Resultado de la transcripción STT (Groq/whisper) de una nota de voz.
+ * `text` solo viene con `status: "done"`; el resto son metadatos opcionales.
+ */
+export type AudioTranscription = {
+  status: "done" | "failed";
+  text?: string;
+  provider?: string;
+  model?: string;
+  audio_seconds?: number;
+  latency_ms?: number;
+  transcribed_at?: string;
+};
+
+/**
+ * Se emite cuando la transcripción de un audio queda lista — el audio ya llegó
+ * antes vía `message_received`, la transcripción unos segundos después. La UI
+ * actualiza la burbuja en vivo sin re-consultar.
+ */
+export type MessageUpdatedEvent = {
+  conversation_id: string;
+  company_id: string;
+  message_id: string;
+  content_type: Schemas["EnqueuedMessageDto"]["content_type"];
+  transcription: AudioTranscription;
+};
+
 /** F9.1: hoy el backend lo emite solo con `failed` (markFailed del outbound). */
 export type MessageStatusEvent = {
   conversation_id: string;
@@ -133,6 +160,35 @@ export type NotificationCreatedEvent = {
 };
 
 // ---------------------------------------------------------------------------
+// Analíticas (F13) — namespace /inbox, rooms company_{id} automáticos
+// ---------------------------------------------------------------------------
+
+/** Alerta de anomalía disparada (floating-alert en vivo + badge/banner). */
+export type AnalyticsAlertEvent = {
+  company_id: string;
+  rule: string;
+  subject_type: string;
+  subject_id: string | null;
+  value: number;
+  threshold: number;
+  window_start: string;
+  /** Extras por regla; `conversation_id` presente cuando aplica (deep-link). */
+  [key: string]: unknown;
+};
+
+/**
+ * Evaluación LLM-judge completada (también al room `conversation_{id}`).
+ * Cierra el loop de "Volver a evaluar" y refresca el tab Calidad.
+ */
+export type AnalyticsEvaluationCompletedEvent = {
+  company_id: string;
+  conversation_id: string;
+  ai_agent_id: string | null;
+  overall_score: number | null;
+  hallucination_severity: string | null;
+};
+
+// ---------------------------------------------------------------------------
 // Pedidos (F11) — payload resumen SIN items/payments: al recibir un evento,
 // el panel re-consulta GET /orders/:id si necesita el detalle.
 // ---------------------------------------------------------------------------
@@ -190,6 +246,18 @@ export type ChannelSessionFailedEvent = {
   reason: string;
 };
 
+/**
+ * F15: la empresa fue suspendida — llega a `/inbox` Y `/channels`, seguido de
+ * la desconexión forzada de los sockets desde el server. El cliente debe
+ * mostrar la pantalla bloqueante y NO reintentar la reconexión.
+ */
+export type CompanySuspendedEvent = {
+  company_id: string;
+  previous: string;
+  current: string;
+  reason?: string;
+};
+
 // ---------------------------------------------------------------------------
 // Eventos server → client
 // ---------------------------------------------------------------------------
@@ -199,6 +267,7 @@ export type InboxServerEvents = {
   "conversation.created": (payload: ConversationCreatedEvent) => void;
   "conversation.message_received": (payload: MessageReceivedEvent) => void;
   "conversation.message_created": (payload: MessageCreatedEvent) => void;
+  "conversation.message_updated": (payload: MessageUpdatedEvent) => void;
   "conversation.message_sent": (payload: MessageSentEvent) => void;
   "conversation.message_status": (payload: MessageStatusEvent) => void;
   "conversation.typing": (payload: TypingEvent) => void;
@@ -216,7 +285,10 @@ export type InboxServerEvents = {
   "order.updated": (payload: OrderUpdatedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
+  "analytics.alert": (payload: AnalyticsAlertEvent) => void;
+  "analytics.evaluation_completed": (payload: AnalyticsEvaluationCompletedEvent) => void;
   "notification.created": (payload: NotificationCreatedEvent) => void;
+  "company.suspended": (payload: CompanySuspendedEvent) => void;
 };
 
 /** Namespace `/channels` — solo lectura (sin comandos). */
@@ -224,6 +296,7 @@ export type ChannelsServerEvents = {
   "channel.qr_code": (payload: ChannelQrCodeEvent) => void;
   "channel.status_changed": (payload: ChannelStatusChangedEvent) => void;
   "channel.session_failed": (payload: ChannelSessionFailedEvent) => void;
+  "company.suspended": (payload: CompanySuspendedEvent) => void;
 };
 
 // ---------------------------------------------------------------------------

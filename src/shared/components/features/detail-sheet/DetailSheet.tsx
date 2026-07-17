@@ -119,7 +119,9 @@ export default function DetailSheet<Id extends string | number = string | number
       : resolvedSide === "right"
       ? "inset-y-0 right-0 h-full"
       : "inset-x-0 bottom-0",
-    `fixed z-[${zIndex}] flex flex-col border-border`,
+    // El z-index va por `style` (abajo): interpolarlo en la clase (`z-[${n}]`)
+    // no genera CSS — Tailwind extrae clases estáticamente del fuente.
+    "fixed flex flex-col border-border",
     resolvedSide === "left" ? "border-r" : resolvedSide === "right" ? "border-l" : "rounded-t-xl border-t",
     className,
   )
@@ -156,7 +158,8 @@ export default function DetailSheet<Id extends string | number = string | number
             <React.Fragment>
               <Dialog.Overlay asChild forceMount>
                 <motion.div
-                  className={`axi-detail-sheet__backdrop fixed inset-0 z-[${zIndex - 1}]`}
+                  className="axi-detail-sheet__backdrop fixed inset-0"
+                  style={{ zIndex: zIndex - 1 }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -194,7 +197,11 @@ export default function DetailSheet<Id extends string | number = string | number
                   className={containerClass}
                   dragConstraints={{ top: 0, bottom: 0 }}
                   drag={resolvedSide === "bottom" ? "y" : false}
-                  style={resolvedSide === "left" || resolvedSide === "right" ? desktopStyle : { height: mobileHeight }}
+                  style={
+                    resolvedSide === "left" || resolvedSide === "right"
+                      ? { ...desktopStyle, zIndex }
+                      : { height: mobileHeight, zIndex }
+                  }
                 >
                   {/* Handle visual for mobile */}
                   {resolvedSide === "bottom" ? (

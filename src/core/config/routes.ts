@@ -1,5 +1,8 @@
 // config/routes.ts
-export const PUBLIC_PATHS = ["/", "/marketplace", "/auth", "/api", "/_next", "/favicon.ico", "/assets", "/fonts", "/images"];
+// "/platform" es la consola interna de super admin: su auth NO usa cookies
+// (token en sessionStorage, ver modules/platform), así que el guard edge y el
+// AuthProvider de tenant no deben interceptarla — el guard real es PlatformGuard.
+export const PUBLIC_PATHS = ["/", "/marketplace", "/auth", "/api", "/_next", "/favicon.ico", "/assets", "/fonts", "/images", "/platform"];
 
 export function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));

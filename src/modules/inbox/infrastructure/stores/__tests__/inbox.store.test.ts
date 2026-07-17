@@ -153,6 +153,63 @@ describe("inbox.store — mensajería optimista", () => {
   })
 })
 
+describe("inbox.store — transcripción de audio (STT)", () => {
+  it("markTranscribing enciende el flag efímero del audio inbound", () => {
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "au-1", content_type: "audio", body: null }))
+    useInboxStore.getState().markTranscribing(CID, "au-1")
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.transcription_pending).toBe(true)
+  })
+
+  it("el flag se limpia solo si no llega la transcripción en 30s", () => {
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "au-2", content_type: "audio", body: null }))
+    useInboxStore.getState().markTranscribing(CID, "au-2")
+    jest.advanceTimersByTime(30_001)
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.transcription_pending).toBe(false)
+  })
+
+  it("applyTranscription mergea payload.transcription y apaga el flag pending", () => {
+    useInboxStore.getState().appendMessage(
+      CID,
+      makeMessage({ id: "au-3", content_type: "audio", body: null, payload: { media: { id: "x" } } }),
+    )
+    useInboxStore.getState().markTranscribing(CID, "au-3")
+
+    useInboxStore.getState().applyTranscription(CID, "au-3", { status: "done", text: "quiero dos pizzas" })
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.transcription_pending).toBe(false)
+    expect(message.payload).toEqual({ media: { id: "x" }, transcription: { status: "done", text: "quiero dos pizzas" } })
+  })
+
+  it("applyTranscription actualiza el preview de la lista cuando el audio es el último mensaje", () => {
+    useInboxStore.setState({
+      conversations: [{ id: CID, last_message_preview: "[audio]" } as never],
+    })
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "au-4", content_type: "audio", body: null }))
+
+    useInboxStore.getState().applyTranscription(CID, "au-4", { status: "done", text: "hola qué tal" })
+
+    expect(useInboxStore.getState().conversations[0].last_message_preview).toBe("🎤 hola qué tal")
+  })
+
+  it("applyTranscription con status failed no rompe ni cambia el preview", () => {
+    useInboxStore.setState({
+      conversations: [{ id: CID, last_message_preview: "[audio]" } as never],
+    })
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "au-5", content_type: "audio", body: null }))
+
+    useInboxStore.getState().applyTranscription(CID, "au-5", { status: "failed" })
+
+    expect(useInboxStore.getState().conversations[0].last_message_preview).toBe("[audio]")
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.transcription_pending).toBe(false)
+  })
+})
+
 describe("inbox.store — eventos de handoff y typing", () => {
   it("onHandoffEvent actualiza fila y conversación seleccionada", () => {
     useInboxStore.setState({
