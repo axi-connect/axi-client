@@ -7,7 +7,7 @@
 import type { TenantListItem, TenantStatus } from "../../../domain/tenant";
 import { sortRows } from "../../lib/sort-rows";
 
-export type TenantsSearchField = "name" | "nit";
+export type TenantsSearchField = keyof TenantListItem & string;
 
 export type TenantsFilterState = {
   search: { field: TenantsSearchField; value: string };
@@ -23,8 +23,9 @@ export const DEFAULT_TENANTS_FILTER: TenantsFilterState = {
   sort: { by: "created_at", dir: "desc" },
 };
 
-function normalize(value: string): string {
-  return value.trim().toLowerCase();
+/** El campo lo elige el usuario en el DataTable y puede no ser string (conteos, fechas). */
+function normalize(value: unknown): string {
+  return String(value ?? "").trim().toLowerCase();
 }
 
 export function filterTenants(items: TenantListItem[], state: TenantsFilterState): TenantListItem[] {

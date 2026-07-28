@@ -2,7 +2,9 @@
 
 > **Documento del slice `src/modules/platform/`.** Panel interno de administración de la plataforma (empleados de axi): tenants, planes, DB dedicadas, pricing IA, auditoría y salud de agentes cross-tenant. Spec rector: `axi-server/docs/plans/frontend_platform_plan.md`; la excepción de arquitectura está sancionada en `docs/architecture.md` §8.1.
 >
-> Estado: **FE1 (fundaciones), FE2 (tenants), FE3 (planes y límites) y FE4 (DB dedicada + migración) implementadas**. FE5–FE7 pendientes.
+> Estado: **FE1–FE7 implementadas — panel completo**. Checklist QA firmable en
+> [`platform-qa.md`](./platform-qa.md). Deuda registrada: smoke E2E automatizado
+> pospuesto (decisión jul 2026; el checklist manual lo sustituye por ahora).
 
 ---
 
@@ -24,20 +26,28 @@ src/modules/platform/
 │                      #   tenant / plan (tipos derivados de Schemas), catalogs (países/industrias),
 │                      #   limits (invariantes validateLimits + catálogos METRICS/PERIODS/ACTIONS),
 │                      #   database (máquina de estados, checklist, precondiciones, parseo defensivo),
-│                      #   polling (intervalos PUROS: 3s→15s provisión, 5s migración, pausa re-login)
+│                      #   polling (intervalos PUROS: 3s→15s provisión, 5s migración, pausa re-login),
+│                      #   pricing (versionado por vigencia, groupByProvider, fallback *),
+│                      #   audit (ACTION_GROUPS, RISK_ACTIONS, diffChanges defensivo),
+│                      #   analytics (periodos/status) + thresholds (umbrales §4, fuente única)
 ├── infrastructure/
 │   ├── api/           # platform-client (openapi-fetch + Bearer + HttpError + evento 401),
 │   │   │              #   query-client (staleTime 30s, sin retry 4xx), query-keys (factories)
 │   │   └── hooks/     # use-tenants, use-plans, use-tenant-plan,
 │   │                  #   use-tenant-database (404→null; poll condicional),
-│   │                  #   use-tenant-migrations (poll 5s sobre la más reciente)
+│   │                  #   use-tenant-migrations (poll 5s sobre la más reciente),
+│   │                  #   use-pricing (POST upsert; PATCH con margen requerido),
+│   │                  #   use-audit (key por filtros + keepPreviousData; limit ≤200),
+│   │                  #   use-analytics (poll 60s + focus; badge dedupe por query key)
 │   ├── auth/          # token-storage (sessionStorage+memoria), platform-auth.context (timers T−2min/T−0)
 │   └── hooks/         # use-session-countdown
 └── ui/
     ├── providers/     # PlatformProviders (QueryClientProvider + PlatformAuthProvider)
     ├── components/    # PlatformGuard/Shell/Sidebar/Header, ReLoginModal, SessionBanner,
     │                  #   SessionCountdownChip, ProblemAlert, StatusBadge, EmptyState,
-    │                  #   ConfirmTyped, RelativeDate, StepIndicator (ex-WizardStepper)
+    │                  #   ConfirmTyped, RelativeDate, StepIndicator (ex-WizardStepper),
+    │                  #   JsonDiff (changes de auditoría; fallback a JSON crudo),
+    │                  #   DegradedBanner (vista parcial por fan-out, ámbar no bloqueante)
     ├── hooks/         # use-copy (portapapeles con feedback — único punto del patrón)
     ├── lib/           # sort-rows (orden client-side genérico de tablas)
     ├── forms/         # PlatformLoginForm
@@ -45,6 +55,12 @@ src/modules/platform/
         ├── limits/    # LimitsEditor (COMPARTIDO planes↔tenant) + limit-format (valor por unidad)
         ├── plans/     # PlansView + PlanFormSheet (DetailSheet) + PlanOptionCard (compartida
         │              #   con el wizard) + tabla/acciones
+        ├── pricing/   # PricingView (agrupada por proveedor) + PricingFormSheet + pricing-format
+        ├── audit/     # AuditView (global Y tab del tenant vía companyId/lockTenant) + AuditLogRow
+        ├── analytics/ # AnalyticsView (tabs triage/alertas) + AgentsHealthTable + AlertsTable
+        │              #   + MetricCell (semáforo por thresholds) + analytics-format
+        ├── dashboard/ # DashboardView (KPIs derivados en cliente) + StatTile + 3 cards
+        │              #   independientes (salud top5, alertas recientes, tenants recientes)
         └── tenants/   # lista (view+config+filter+row actions), wizard/ (4 pasos),
                        #   detail/ (header, tabs, resumen, usuarios, TenantPlanView, ChangePlanDialog,
                        #     database/ → TenantDatabaseView, DatabaseConnectionSheet,
@@ -79,9 +95,9 @@ Coral = acción (CTAs, paso activo, tab activa) · **violeta = acento de la cons
 | FE2 Tenants (lista, wizard, detalle Resumen/Usuarios) | ✅ |
 | FE3 Planes y Plan & Límites (`LimitsEditor`) | ✅ |
 | FE4 DB dedicada + migración (polling 3s/5s) | ✅ |
-| FE5 Pricing + Auditoría (`JsonDiff`) | ⬜ |
-| FE6 Analytics + Dashboard (`DegradedBanner`, badge alertas) | ⬜ |
-| FE7 Endurecimiento (a11y, E2E) | ⬜ |
+| FE5 Pricing + Auditoría (`JsonDiff`) | ✅ |
+| FE6 Analytics + Dashboard (`DegradedBanner`, badge alertas) | ✅ |
+| FE7 Endurecimiento (errores §7, a11y, loading, breadcrumb, QA) | ✅ (E2E pospuesto — deuda) |
 
 ## 7. Tests
 

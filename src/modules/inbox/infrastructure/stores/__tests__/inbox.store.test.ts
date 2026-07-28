@@ -153,6 +153,99 @@ describe("inbox.store — mensajería optimista", () => {
   })
 })
 
+describe("inbox.store — media entrante sin attachment (resolvePendingMedia)", () => {
+  const getConversationMessages = jest.requireMock(
+    "@/modules/inbox/infrastructure/services/inbox-service.adapter",
+  ).getConversationMessages as jest.Mock
+
+  const withAttachment = (id: string) =>
+    makeMessage({
+      id,
+      content_type: "image",
+      body: null,
+      attachments: [{ id: "att-1", filename: "foto.png", mime_type: "image/png", size_bytes: 10 }],
+    })
+
+  afterEach(() => getConversationMessages.mockReset())
+
+  it("upsertMessage reemplaza attachments por id preservando local_previews y transcripción", () => {
+    const preview = { object_url: "blob:x", mime_type: "image/png", filename: "f.png", size_bytes: 1 }
+    useInboxStore.getState().appendMessage(
+      CID,
+      makeMessage({
+        id: "up-1",
+        content_type: "audio",
+        body: null,
+        payload: { transcription: { status: "done", text: "hola" } },
+        local_previews: [preview],
+      }),
+    )
+
+    useInboxStore.getState().upsertMessage(
+      CID,
+      makeMessage({
+        id: "up-1",
+        content_type: "audio",
+        body: null,
+        payload: { media: { id: "m1" } },
+        attachments: [{ id: "att-9", filename: "a.ogg", mime_type: "audio/ogg", size_bytes: 5 }],
+      }),
+    )
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.attachments).toHaveLength(1)
+    expect(message.local_previews).toEqual([preview]) // local preservado
+    expect((message.payload as { transcription?: unknown }).transcription).toEqual({ status: "done", text: "hola" })
+    expect((message.payload as { media?: unknown }).media).toEqual({ id: "m1" })
+    expect(message.media_pending).toBe(false)
+  })
+
+  it("reintenta el fetch y hace upsert cuando el attachment aparece", async () => {
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "px-1", content_type: "image", body: null }))
+    // 1er intento sin attachment, 2º con attachment.
+    getConversationMessages
+      .mockResolvedValueOnce({ data: [makeMessage({ id: "px-1", content_type: "image", attachments: [] })] })
+      .mockResolvedValueOnce({ data: [withAttachment("px-1")] })
+
+    useInboxStore.getState().resolvePendingMedia(CID, "px-1")
+    expect(useInboxStore.getState().messagesById[CID].items[0].media_pending).toBe(true)
+
+    await jest.advanceTimersByTimeAsync(800) // 1er intento (vacío)
+    await jest.advanceTimersByTimeAsync(1_500) // 2º intento (con attachment)
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.attachments).toHaveLength(1)
+    expect(message.media_pending).toBe(false)
+    expect(getConversationMessages).toHaveBeenCalledTimes(2)
+  })
+
+  it("agota los reintentos y baja media_pending (cae a MediaUnavailable)", async () => {
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "px-2", content_type: "image", body: null }))
+    getConversationMessages.mockResolvedValue({
+      data: [makeMessage({ id: "px-2", content_type: "image", attachments: [] })],
+    })
+
+    useInboxStore.getState().resolvePendingMedia(CID, "px-2")
+    // Avanza más allá de la suma de todos los delays de backoff.
+    await jest.advanceTimersByTimeAsync(800 + 1_500 + 3_000 + 5_000 + 8_000 + 100)
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.attachments).toHaveLength(0)
+    expect(message.media_pending).toBe(false)
+  })
+
+  it("no lanza un segundo bucle para el mismo mensaje", () => {
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "px-3", content_type: "image", body: null }))
+    getConversationMessages.mockResolvedValue({ data: [] })
+
+    useInboxStore.getState().resolvePendingMedia(CID, "px-3")
+    useInboxStore.getState().resolvePendingMedia(CID, "px-3")
+
+    // Ambas llamadas comparten el mismo bucle (Set de ids en curso); el flag está activo una vez.
+    expect(useInboxStore.getState().messagesById[CID].items[0].media_pending).toBe(true)
+  })
+})
+
 describe("inbox.store — transcripción de audio (STT)", () => {
   it("markTranscribing enciende el flag efímero del audio inbound", () => {
     useInboxStore.getState().appendMessage(CID, makeMessage({ id: "au-1", content_type: "audio", body: null }))

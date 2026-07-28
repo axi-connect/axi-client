@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -n '/^export type InputKind/,/^$/p' /home/davela/dev/axi-client/src/shared/components/features/dynamic-form/types/index.ts)",
+      "Bash(sed -n '/CreateTenantDto:/,/TenantUsersDto/p' /home/davela/dev/axi-client/src/core/api/schema.d.ts)",
+      "Bash(awk '/        TenantPlanViewDto: \\\\{/,/^        [A-Z][a-zA-Z]*Dto: \\\\{/' /home/davela/dev/axi-client/src/core/api/schema.d.ts)",
+      "Bash(awk '/        TenantLimitsDto: \\\\{/,/^        Replace/' /home/davela/dev/axi-client/src/core/api/schema.d.ts)",
+      "Bash(grep -rn 'z-\\\\[\\\\${' /home/davela/dev/axi-client/src --include='*.tsx' --include='*.ts')",
+      "Bash(grep -rnE '\\\\-\\\\[\\\\$\\\\{' /home/davela/dev/axi-client/src --include='*.tsx' --include='*.ts')"
+    ]
+  }
+}

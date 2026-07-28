@@ -42,6 +42,15 @@ describe("filterTenants", () => {
     expect(result.map((t) => t.id)).toEqual(["t-3"]);
   });
 
+  it("no crashea con un campo no textual: coerce y filtra por substring", () => {
+    // Regresión QA-1: el selector del DataTable puede emitir cualquier columna.
+    const result = filterTenants(ITEMS, {
+      ...DEFAULT_TENANTS_FILTER,
+      search: { field: "users_count", value: "12" },
+    });
+    expect(result.map((t) => t.id)).toEqual(["t-1"]);
+  });
+
   it("combina facets de estado y país", () => {
     expect(filterTenants(ITEMS, { ...DEFAULT_TENANTS_FILTER, status: "suspended" })).toHaveLength(1);
     expect(filterTenants(ITEMS, { ...DEFAULT_TENANTS_FILTER, country: "CO" })).toHaveLength(2);

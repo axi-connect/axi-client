@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Camera } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { PRODUCT_KIND_LABELS, type ProductRow } from "@/modules/catalog/domain/product";
 import { ProductRowActions } from "@/modules/catalog/ui/tables/product.actions";
@@ -37,6 +38,14 @@ export function ProductGrid({ rows }: { rows: ProductRow[] }) {
               {!row.is_active && <Badge variant="secondary">Inactivo</Badge>}
               {row.stock_state === "out" && <Badge variant="destructive">Agotado</Badge>}
             </div>
+            {/* Nº de fotos que la IA puede enviar (F16); 0 = producto "invisible" para el agente */}
+            <span
+              className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[11px] tabular-nums text-muted-foreground shadow-sm"
+              title={row.image_count === 0 ? "Sin fotos: tu agente no podrá mostrar este producto" : undefined}
+            >
+              <Camera className="size-3" aria-hidden />
+              {row.image_count}
+            </span>
           </div>
           <div className="relative flex items-start justify-between gap-2 p-3">
             <div className="pointer-events-none min-w-0">

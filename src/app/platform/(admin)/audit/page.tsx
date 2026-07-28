@@ -1,13 +1,6 @@
-import { ScrollText } from "lucide-react";
-import { EmptyState } from "@/modules/platform/ui/components/EmptyState";
+import { AuditView } from "@/modules/platform/ui/features/audit/AuditView";
 
-/** /platform/audit — visor global de auditoría (FE5). */
+/** /platform/audit — visor global de auditoría (últimos N eventos). */
 export default function PlatformAuditPage() {
-  return (
-    <EmptyState
-      icon={ScrollText}
-      title="Auditoría"
-      description="El visor de eventos con filtros por tenant y acción se construye en la fase FE5."
-    />
-  );
+  return <AuditView />;
 }

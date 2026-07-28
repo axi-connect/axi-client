@@ -12,6 +12,12 @@ export const DB_POLL_MS = 3_000;
 export const DB_POLL_DEGRADED_MS = 15_000;
 export const DB_POLL_DEGRADE_AFTER_MS = 10 * 60 * 1000;
 export const MIGRATION_POLL_MS = 5_000;
+export const ANALYTICS_POLL_MS = 60_000;
+
+/** Analytics y badge de alertas: refresco de 60 s salvo re-login abierto. */
+export function analyticsPollInterval(reloginOpen: boolean): number | false {
+  return reloginOpen ? false : ANALYTICS_POLL_MS;
+}
 
 export function databasePollInterval(args: {
   status: DbStatus | null | undefined;

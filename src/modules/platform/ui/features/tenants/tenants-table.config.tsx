@@ -27,6 +27,7 @@ export const tenantColumns: ColumnDef<TenantListItem>[] = [
     accessorKey: "status",
     header: "Estado",
     sortable: true,
+    searchable: false, // tiene facet propio (valores crudos en inglés)
     minWidth: 130,
     cell: ({ row }) => <StatusBadge status={row.original.status} />,
   },
@@ -34,12 +35,14 @@ export const tenantColumns: ColumnDef<TenantListItem>[] = [
     accessorKey: "country_code",
     header: "País",
     sortable: true,
+    searchable: false, // tiene facet propio
     minWidth: 90,
   },
   {
     accessorKey: "users_count",
     header: "Usuarios",
     sortable: true,
+    searchable: false, // conteo: la búsqueda textual no aplica
     minWidth: 100,
     cell: ({ row }) => <span className="tabular-nums">{row.original.users_count}</span>,
   },
@@ -47,6 +50,7 @@ export const tenantColumns: ColumnDef<TenantListItem>[] = [
     accessorKey: "created_at",
     header: "Creada",
     sortable: true,
+    searchable: false, // ISO interna ≠ fecha relativa visible
     minWidth: 120,
     cell: ({ row }) => <RelativeDate iso={row.original.created_at} className="text-muted-foreground" />,
   },

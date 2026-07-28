@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Camera } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
 import type { ColumnDef } from "@/shared/components/features/data-table/types";
@@ -33,6 +35,32 @@ export function ProductStockBadge({ row }: { row: ProductRow }) {
       <span className={cn("h-2 w-2 shrink-0 rounded-full", STOCK_DOT_CLASS[row.stock_state])} aria-hidden />
       <span className="tabular-nums">{row.stock_total}</span>
       <span className="text-muted-foreground">· {PRODUCT_STOCK_LABELS[row.stock_state]}</span>
+    </span>
+  );
+}
+
+/**
+ * Nº de fotos vivas del producto (incluye variantes). Con 0, avisa que la IA
+ * no podrá "mostrar" el producto — señal accionable para el owner (F16).
+ */
+export function ProductImageCountBadge({ count }: { count: number }) {
+  if (count === 0) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1 text-muted-foreground/60" tabIndex={0}>
+            <Camera className="size-3.5" aria-hidden />
+            <span className="tabular-nums text-sm">0</span>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Sin fotos: tu agente no podrá mostrar este producto</TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Camera className="size-3.5 text-muted-foreground" aria-hidden />
+      <span className="tabular-nums text-sm">{count}</span>
     </span>
   );
 }
@@ -93,6 +121,12 @@ export const productColumns: ColumnDef<ProductRow>[] = [
     cell: ({ row }) => <ProductStockBadge row={row.original} />,
   },
   {
+    accessorKey: "image_count",
+    header: "Fotos",
+    minWidth: 90,
+    cell: ({ row }) => <ProductImageCountBadge count={row.original.image_count} />,
+  },
+  {
     accessorKey: "is_active",
     header: "Estado",
     minWidth: 100,
@@ -127,6 +161,7 @@ export function mapProductToRow(
     currency: item.currency,
     price_label: formatMoney(item.price_cents, item.currency),
     variant_count: item.variants.length,
+    image_count: item.image_count ?? 0,
     stock_total: stock.total,
     stock_state: stock.state,
     duration_minutes: item.duration_minutes,

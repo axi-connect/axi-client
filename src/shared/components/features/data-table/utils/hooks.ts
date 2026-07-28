@@ -5,7 +5,7 @@ export function useSearchableFields<T extends DataRow>(columns: ColumnDef<T>[], 
   return useMemo(() => {
     const itemsMap = new Map<string, { key: string; label: string }>(
       columns
-        .filter((c) => !!c.accessorKey)
+        .filter((c) => !!c.accessorKey && c.searchable !== false)
         .map((c) => [
           String(c.accessorKey),
           { key: String(c.accessorKey), label: typeof c.header === "string" ? c.header : String(c.accessorKey) },

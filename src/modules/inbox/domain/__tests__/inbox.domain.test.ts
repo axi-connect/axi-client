@@ -1,4 +1,4 @@
-import { extractLocationPayload, extractTranscription, parsePreview } from "../inbox"
+import { extractCatalogSku, extractLocationPayload, extractTranscription, parsePreview } from "../inbox"
 
 describe("parsePreview (tokens de media del backend)", () => {
   it.each([
@@ -78,5 +78,19 @@ describe("extractLocationPayload", () => {
     expect(extractLocationPayload(null)).toBeNull()
     expect(extractLocationPayload({})).toBeNull()
     expect(extractLocationPayload({ location: { latitude: "4.6" } })).toBeNull()
+  })
+})
+
+describe("extractCatalogSku (foto de catálogo enviada por la IA, F16)", () => {
+  it("payload con media.catalog_sku → sku", () => {
+    expect(extractCatalogSku({ media: { catalog_sku: "CAM-R-M" } })).toBe("CAM-R-M")
+  })
+
+  it("payload sin sku o malformado → null (no revienta el render)", () => {
+    expect(extractCatalogSku(null)).toBeNull()
+    expect(extractCatalogSku({})).toBeNull()
+    expect(extractCatalogSku({ media: {} })).toBeNull()
+    expect(extractCatalogSku({ media: { catalog_sku: 42 } })).toBeNull()
+    expect(extractCatalogSku({ media: { catalog_sku: "  " } })).toBeNull()
   })
 })

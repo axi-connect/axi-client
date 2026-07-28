@@ -32,6 +32,7 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -39,7 +40,20 @@ import {
 } from "@/shared/components/layout/sidebar/core";
 import { PLATFORM_NAV } from "../../domain/navigation";
 import { usePlatformAuth } from "../../infrastructure/auth/platform-auth.context";
+import { useTriggeredAlertsCount } from "../../infrastructure/api/hooks/use-analytics";
 import { SessionCountdownChip } from "./SessionCountdownChip";
+
+/** Badge de alertas disparadas junto a "Analytics" (poll 60 s compartido
+    con el tab de alertas — misma query key). Oculto si 0 o sin datos. */
+function AlertsBadge() {
+  const { data: count } = useTriggeredAlertsCount();
+  if (!count) return null;
+  return (
+    <SidebarMenuBadge className="bg-warning/15 font-medium text-warning tabular-nums">
+      {count > 99 ? "99+" : count}
+    </SidebarMenuBadge>
+  );
+}
 
 /** Mapa local de iconos del nav de plataforma (el diccionario de
     `core/lib/icons.ts` es cerrado al nav del backend tenant). */
@@ -100,6 +114,7 @@ export function PlatformSidebar() {
                         <NavLinkSpinner />
                       </Link>
                     </SidebarMenuButton>
+                    {item.path === "/platform/analytics" && <AlertsBadge />}
                   </SidebarMenuItem>
                 );
               })}

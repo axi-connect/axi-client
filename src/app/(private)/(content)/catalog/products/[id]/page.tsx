@@ -23,6 +23,7 @@ import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.cont
 import { ProductAttributesSection } from "@/modules/catalog/ui/components/ProductAttributesSection";
 import { ProductBaseSection } from "@/modules/catalog/ui/components/ProductBaseSection";
 import { ProductDetailHeader } from "@/modules/catalog/ui/components/ProductDetailHeader";
+import { ProductPhotosSection } from "@/modules/catalog/ui/components/ProductPhotosSection";
 import { VariantsTable } from "@/modules/catalog/ui/components/VariantsTable";
 
 /**
@@ -190,6 +191,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
             <ProductBaseSection
+              product={product}
+              canManage={canManage}
+              onSaved={setProduct}
+              setAlert={setAlert}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
+            <ProductPhotosSection
               product={product}
               canManage={canManage}
               onSaved={setProduct}

@@ -116,6 +116,20 @@ export function extractTranscription(payload: unknown): AudioTranscription | nul
   };
 }
 
+/**
+ * Lee `payload.media.catalog_sku` de un mensaje de imagen (F16): presente
+ * cuando la foto la envió la IA desde el catálogo (`send_product_images`).
+ * El payload es `unknown` en el contrato; se valida en runtime igual que
+ * `extractLocationPayload`. Devuelve `null` si no aplica.
+ */
+export function extractCatalogSku(payload: unknown): string | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const media = (payload as { media?: unknown }).media;
+  if (typeof media !== "object" || media === null) return null;
+  const sku = (media as { catalog_sku?: unknown }).catalog_sku;
+  return typeof sku === "string" && sku.trim() ? sku : null;
+}
+
 /** Tabs de la bandeja: espejo de los contadores de `GET /inbox/counts`. */
 export type InboxTab = "queued" | "mine" | "ai" | "all_open";
 
@@ -162,6 +176,13 @@ export type UiMessage = Message & {
    * "Transcribiendo…". No proviene del backend.
    */
   transcription_pending?: boolean;
+  /**
+   * Flag efímero de UI: media entrante cuyo attachment aún no persiste el
+   * backend (la descarga corre en un job aparte). Mientras está activo se
+   * muestra el skeleton en vez de "no disponible todavía". No proviene del
+   * backend; lo gestiona `resolvePendingMedia` con reintentos.
+   */
+  media_pending?: boolean;
 };
 
 // ---------------------------------------------------------------- envío F9

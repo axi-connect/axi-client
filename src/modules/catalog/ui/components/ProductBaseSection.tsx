@@ -126,6 +126,9 @@ export function ProductBaseSection({
                     <FormControl>
                       <Input type="url" placeholder="https://…/producto.png" {...field} />
                     </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      La descargaremos y la serviremos desde axi para que siempre cargue rápido
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

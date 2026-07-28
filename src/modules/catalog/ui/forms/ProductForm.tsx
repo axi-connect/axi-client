@@ -202,6 +202,9 @@ export function ProductForm({ onCreated, setAlert }: ProductFormProps) {
                       className="h-9 w-9 shrink-0 rounded-lg"
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    La descargaremos y la serviremos desde axi para que siempre cargue rápido
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

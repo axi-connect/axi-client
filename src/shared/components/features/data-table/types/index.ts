@@ -7,6 +7,8 @@ export type ColumnDef<T extends DataRow = DataRow> = {
   accessorKey?: keyof T & string
   header?: string
   sortable?: boolean
+  // false la excluye del selector de campo de búsqueda (default: buscable)
+  searchable?: boolean
   // cell recibe { row.original } para alinearse al patrón de shadcn
   cell?: (ctx: { row: { original: T } }) => React.ReactNode
   // responsive hints

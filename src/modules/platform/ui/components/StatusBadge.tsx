@@ -13,6 +13,7 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone; transient?: boolea
   // Estables sanos
   active: { label: "Activo", tone: "success" },
   completed: { label: "Completada", tone: "success" },
+  current: { label: "Vigente", tone: "success" },
   // Atención / transitorios (spinner)
   trial: { label: "Trial", tone: "warning" },
   pending: { label: "Pendiente", tone: "warning", transient: true },

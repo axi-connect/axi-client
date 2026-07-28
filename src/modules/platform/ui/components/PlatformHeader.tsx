@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * Header glass del panel de plataforma: breadcrumb propio (labels de
- * PLATFORM_NAV) + trigger del sidebar + toggle de tema. Mismo lenguaje que
- * `PrivateHeader`, con labels y raíz (/platform) de la consola.
+ * Header glass del panel de plataforma: breadcrumb propio HUMANIZADO
+ * (labels de PLATFORM_NAV + sub-segmentos en español + nombre del tenant
+ * resuelto de la caché de TanStack, sin requests extra) + trigger del
+ * sidebar + toggle de tema. Mismo lenguaje que `PrivateHeader`.
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,22 +13,43 @@ import { cn } from "@/core/lib/utils";
 import { SidebarTrigger } from "@/shared/components/layout/sidebar/core";
 import { ThemeToggle } from "@/shared/components/layout/theme-toggle";
 import { PLATFORM_NAV } from "../../domain/navigation";
+import { useTenantQuery } from "../../infrastructure/api/hooks/use-tenants";
 
-/** Labels por segmento bajo /platform (los sub-segmentos llegan en FE2+). */
-const LABELS: Record<string, string> = Object.fromEntries(
-  PLATFORM_NAV.filter((item) => item.path !== "/platform").map((item) => [
-    item.path.split("/").pop() as string,
-    item.label,
-  ]),
-);
+/** Labels por segmento bajo /platform (top-level desde el nav + sub-tabs del detalle). */
+const LABELS: Record<string, string> = {
+  ...Object.fromEntries(
+    PLATFORM_NAV.filter((item) => item.path !== "/platform").map((item) => [
+      item.path.split("/").pop() as string,
+      item.label,
+    ]),
+  ),
+  new: "Nuevo tenant",
+  users: "Usuarios",
+  plan: "Plan & Límites",
+  database: "Base de datos",
+  // "audit" bajo un tenant y en el top-level comparten label ("Auditoría").
+};
+
+const UUID_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Crumb de un tenant: UUID → nombre. Solo se monta en rutas de tenant, donde
+ * la query de la lista YA está activa (misma key que el header del detalle)
+ * → reactivo y sin requests extra. Fallback: id corto mientras carga.
+ */
+function TenantCrumb({ id }: { id: string }) {
+  const { data: tenant } = useTenantQuery(id);
+  return <>{tenant?.name ?? `${id.slice(0, 8)}…`}</>;
+}
 
 export function PlatformHeader() {
   const pathname = usePathname();
+
   // Crumbs relativos a /platform: en la raíz solo se muestra "Plataforma".
   const parts = pathname.replace(/^\/platform\/?/, "").split("/").filter(Boolean);
   const crumbs = parts.map((seg, idx) => ({
     href: "/platform/" + parts.slice(0, idx + 1).join("/"),
-    label: LABELS[seg] || seg,
+    label: UUID_LIKE.test(seg) ? <TenantCrumb id={seg} /> : LABELS[seg] || seg,
   }));
 
   return (

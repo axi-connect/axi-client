@@ -64,6 +64,9 @@ export function VariantForm({
   // heredado): al editar no podemos distinguirlo, así que se parte del
   // resuelto y el usuario decide si lo cambia.
   const [priceCents, setPriceCents] = useState<number | null>(variant?.price_cents ?? null);
+  // Import por URL (F16): al guardar, el backend descarga la imagen en un job
+  // asíncrono y la añade a la galería de la variante (status pending → ready).
+  const [imageUrl, setImageUrl] = useState("");
   const [attributes, setAttributes] = useState<VariantAttributeMap>(() => {
     const initial: VariantAttributeMap = {};
     for (const [code, value] of Object.entries(variant?.attributes ?? {})) {
@@ -107,6 +110,7 @@ export function VariantForm({
       price_cents: priceCents,
       is_default: isDefault,
       is_active: isActive,
+      ...(imageUrl.trim() ? { image_url: imageUrl.trim() } : {}),
     };
 
     try {
@@ -164,6 +168,19 @@ export function VariantForm({
             onChange={setPriceCents}
           />
           <p className="text-xs text-muted-foreground">Vacío = hereda el precio base del producto</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="variant-image-url">Imagen (URL)</Label>
+          <Input
+            id="variant-image-url"
+            type="url"
+            value={imageUrl}
+            placeholder="https://…/variante.jpg"
+            onChange={(e) => setImageUrl(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            La descargaremos y la serviremos desde axi para que siempre cargue rápido
+          </p>
         </div>
 
         {variantAxes.map((axis) => {

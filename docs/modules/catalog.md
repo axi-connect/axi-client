@@ -75,9 +75,32 @@ Tipos generados en `src/core/api/schema.d.ts` (`npm run api:types`). Propiedades
 - **Precio**: `price_cents` (int, base del producto) + `currency` (ISO-4217, default `COP`). La variante puede fijar su propio `price_cents` o heredar (`null`). En las respuestas la variante ya trae el **precio resuelto**.
 - **Disponibilidad**: `available = on_hand > out_of_stock_threshold`; variante física sin fila de inventario = no disponible.
 - **Unicidad por tenant**: `catalog.code`, `variant.sku`, `product_type.name`. Por producto: combinación de atributos de variante (`catalog/duplicate_variant`).
-- **`image_url` es una URL ya resuelta** — el backend **no tiene endpoint de upload** de imágenes de producto. El frontend usa input URL + preview (gap conocido: si se quiere upload real habrá que crear endpoint en backend).
-- **Sin WebSocket**: no hay eventos de catálogo; tras cada mutación se refresca por REST.
+- **Imágenes (F16)**: galería real por producto y por variante (ver §3.1). El `image_url` de los forms dejó de ser "URL ya resuelta": ahora dispara un **import asíncrono** (el backend la descarga y la sirve desde storage propio).
+- **Sin WebSocket**: no hay eventos de catálogo (tampoco del import de imágenes); tras cada mutación se refresca por REST, y el import se sigue por **polling** del detalle.
 - Máximos: 50 atributos por tipo, 100 options por atributo select, 100 variantes por producto, 6 niveles de categorías.
+
+### 3.1 Galería de imágenes (F16)
+
+El agente IA vendedor envía **fotos reales del catálogo por SKU** (tool `send_product_images`). Resolución server-side: fotos de la **variante** → si no tiene, fotos del **producto** ("comodín") → si no hay, la IA describe con texto. La primera posición de cada galería es la **foto principal** (la que la IA envía primero).
+
+**Endpoints** (tipos: `Schemas["ProductImageDto" | "ProductImageUrlDto" | "ReorderProductImagesDto"]`):
+
+| Método/Path | Permiso | Nota |
+|---|---|---|
+| `POST /catalog/products/:id/images` | `catalog:manage` | multipart `file` + `alt_text?` → 201 `ProductImageDto` |
+| `POST /catalog/variants/:id/images` | `catalog:manage` | ídem, a la galería de la variante |
+| `GET /catalog/images/:id/url` | `catalog:read` | presigned del ORIGINAL (lightbox), `expires_in_seconds` 300 |
+| `PUT /catalog/products/:id/images/reorder` | `catalog:manage` | replace-set de UN contenedor: `{ variant_id, image_ids }` con el set **completo** → 204 |
+| `DELETE /catalog/images/:id` | `catalog:manage` | 204, soft-delete (los mensajes enviados conservan su copia) |
+
+**Reglas** (validadas también en cliente, `domain/product.ts`):
+
+- Formatos JPEG/PNG/WebP (magic bytes), máx **5 MB** por archivo (límite de WhatsApp Cloud API).
+- Topes: **10** fotos de producto, **5** por variante (`PRODUCT_GALLERY_MAX` / `VARIANT_GALLERY_MAX`).
+- `GET /catalog/products/:id` incluye `images[]` (producto primero, luego por variante, orden por `position`); el listado incluye solo `image_count` (no firma URLs por fila).
+- ⚠️ **`images[].url` es un thumbnail presigned con TTL 300 s**: no cachear; ante error de `<img>`, re-fetch del detalle.
+
+**Import por URL** (asíncrono): `image_url` en `POST/PATCH` de producto y variante crea una fila `source: "url_import", status: "pending"`; un job la descarga y optimiza. El frontend hace **polling** del detalle (3 s, tope ~30 s → botón "Actualizar"; `use-product-images-polling.ts`). `failed` → tooltip con `error` + **Reintentar** (re-guardar con la misma URL re-encola la fila). Solo http/https públicos, timeout 10 s, máx 3 redirects.
 
 ## 4. Permisos RBAC
 
@@ -91,7 +114,7 @@ El sidebar del backend emite `{ code: "catalog", path: "/catalog", icon: "packag
 
 ## 5. Errores de dominio (`code` RFC 7807, prefijo `catalog/`)
 
-`catalog_not_found`, `category_not_found`, `product_type_not_found`, `product_not_found`, `variant_not_found`, `attribute_not_found`, `duplicate_code`, `duplicate_sku`, `duplicate_variant`, `category_in_use`, `product_type_in_use`, `category_cycle`, `category_too_deep`, `attribute_invalid`, `service_fields_required`, `stock_not_applicable`, `last_variant_protected`.
+`catalog_not_found`, `category_not_found`, `product_type_not_found`, `product_not_found`, `variant_not_found`, `attribute_not_found`, `duplicate_code`, `duplicate_sku`, `duplicate_variant`, `category_in_use`, `product_type_in_use`, `category_cycle`, `category_too_deep`, `attribute_invalid`, `service_fields_required`, `stock_not_applicable`, `last_variant_protected`; imágenes (F16): `invalid_image` (422: formato/tamaño/corrupto), `image_limit_reached` (422: tope de galería), `image_not_found` (404: id inexistente o reorder con set incompleto).
 
 Todos mapeados a español en `src/core/lib/error-messages.ts` (`MESSAGES_BY_CODE`).
 
@@ -103,4 +126,5 @@ Todos mapeados a español en `src/core/lib/error-messages.ts` (`MESSAGES_BY_CODE
 - Estado: `CatalogProvider` (Context) cachea datos de referencia (catálogos/categorías/tipos) para selects y filtros. Sin Zustand (no hay realtime).
 - Dinero: `formatMoney` / `parseMoneyToCents` en `src/core/lib/format.ts` (es-CO, COP sin decimales); celdas con `tabular-nums`.
 - Permisos en UI: `hasPermission("catalog:manage")` oculta mutaciones; `hasPermission("catalog:stock")` habilita el ajuste de stock.
+- **Fotos (F16)**: sección "Fotos" en el detalle (`ProductPhotosSection` + `ui/components/photos/`): galería del producto y por variante con drag&drop (`@dnd-kit/sortable`, un `SortableContext` por contenedor, reorden **optimista** con rollback), uploader con validación cliente (mime/5 MB) y subida secuencial, lightbox del original (`Dialog` + URL fresca), variante vacía muestra "usará las del producto" (semántica real del fallback). Adapter: `product-image-service.adapter.ts`. Los `<img>` van planos (presigned rotativas ≠ caché de `next/image`). Listado: columna/badge `image_count` (0 = aviso "tu agente no podrá mostrar este producto"). Banner educativo one-shot (`localStorage: axi.catalog.photos_banner_dismissed`). En el inbox, las fotos que envía la IA llevan chip con el SKU (`extractCatalogSku` lee `payload.media.catalog_sku`).
 - Diseño: superficies sólidas (sin glass en tablas/forms), coral como color de acción, ámbar como acento secundario de la vista (stock bajo, destacados); light + dark; estados cargando/vacío/error en todas las vistas (DESIGN-SYSTEM §9.1).

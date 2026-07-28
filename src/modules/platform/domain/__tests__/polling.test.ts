@@ -1,4 +1,6 @@
 import {
+  ANALYTICS_POLL_MS,
+  analyticsPollInterval,
   databasePollInterval,
   DB_POLL_DEGRADE_AFTER_MS,
   DB_POLL_DEGRADED_MS,
@@ -51,5 +53,12 @@ describe("migrationPollInterval", () => {
     }
     expect(migrationPollInterval({ status: "copying", reloginOpen: true })).toBe(false);
     expect(migrationPollInterval({ status: null, reloginOpen: false })).toBe(false);
+  });
+});
+
+describe("analyticsPollInterval", () => {
+  it("60 s en operación normal; false con el ReLoginModal abierto", () => {
+    expect(analyticsPollInterval(false)).toBe(ANALYTICS_POLL_MS);
+    expect(analyticsPollInterval(true)).toBe(false);
   });
 });

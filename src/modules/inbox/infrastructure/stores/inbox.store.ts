@@ -33,6 +33,14 @@ const SEND_CONFIRM_TIMEOUT_MS = 15_000
  * burbuja queda solo con el player.
  */
 const TRANSCRIBE_TIMEOUT_MS = 30_000
+/**
+ * Media entrante: el attachment lo persiste un job aparte DESPUÉS de
+ * `message_received` y el backend no emite un evento de "media lista". Se
+ * reintenta el fetch con este backoff acotado hasta que aparezca el attachment.
+ */
+const MEDIA_RESOLVE_DELAYS_MS = [800, 1_500, 3_000, 5_000, 8_000]
+/** Ids con un bucle de resolución en curso (evita relanzarlo por varios eventos). */
+const resolvingMedia = new Set<string>()
 
 type MessagesState = {
   items: UiMessage[]
@@ -80,6 +88,10 @@ type InboxStore = {
   /** F9.1: fallo reportado por el backend (message_status) — por id REAL. */
   markMessageFailed: (conversationId: string, messageId: string) => void
   appendMessage: (conversationId: string, message: UiMessage) => void
+  /** Reemplaza un mensaje por id con datos frescos de servidor (attachments), preservando lo local. */
+  upsertMessage: (conversationId: string, message: UiMessage) => void
+  /** Media entrante sin attachment: reintenta el fetch hasta que el backend lo persista. */
+  resolvePendingMedia: (conversationId: string, messageId: string) => void
   confirmMessage: (conversationId: string, messageId: string) => void
   /** STT: audio inbound en vivo esperando su transcripción (indicador + timeout). */
   markTranscribing: (conversationId: string, messageId: string) => void
@@ -329,6 +341,130 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
         },
       }
     })
+  },
+
+  upsertMessage: (conversationId, message) => {
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      if (!current) return state
+      if (!current.items.some((m) => m.id === message.id)) {
+        // No estaba: append normal (mismo dedupe implícito por el some de arriba).
+        return {
+          messagesById: {
+            ...state.messagesById,
+            [conversationId]: { ...current, items: [...current.items, message] },
+          },
+        }
+      }
+      // Reemplazo en su posición: campos de servidor (attachments, status, body…)
+      // sobre los locales/efímeros que la UI ya tenía; conserva la transcripción
+      // ya mergeada en payload si el nuevo payload no la trae.
+      return {
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) => {
+              if (m.id !== message.id) return m
+              const prevTranscription =
+                typeof m.payload === "object" && m.payload !== null
+                  ? (m.payload as { transcription?: unknown }).transcription
+                  : undefined
+              const nextPayload =
+                typeof message.payload === "object" && message.payload !== null
+                  ? message.payload
+                  : m.payload
+              const payload =
+                prevTranscription !== undefined &&
+                typeof nextPayload === "object" &&
+                nextPayload !== null &&
+                (nextPayload as { transcription?: unknown }).transcription === undefined
+                  ? { ...(nextPayload as object), transcription: prevTranscription }
+                  : nextPayload
+              return {
+                ...message,
+                payload,
+                // Preserva lo local/efímero de la UI.
+                local_id: m.local_id,
+                local_previews: m.local_previews,
+                local_payload: m.local_payload,
+                delivery: m.delivery,
+                transcription_pending: m.transcription_pending,
+                media_pending: false,
+              }
+            }),
+          },
+        },
+      }
+    })
+  },
+
+  resolvePendingMedia: (conversationId, messageId) => {
+    const key = `${conversationId}:${messageId}`
+    if (resolvingMedia.has(key)) return
+    resolvingMedia.add(key)
+
+    // Enciende el estado pendiente (skeleton en vez de "no disponible todavía").
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      if (!current) return state
+      return {
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) =>
+              m.id === messageId ? { ...m, media_pending: true } : m,
+            ),
+          },
+        },
+      }
+    })
+
+    const clearPending = () => {
+      resolvingMedia.delete(key)
+      set((state) => {
+        const current = state.messagesById[conversationId]
+        if (!current) return state
+        return {
+          messagesById: {
+            ...state.messagesById,
+            [conversationId]: {
+              ...current,
+              items: current.items.map((m) =>
+                m.id === messageId ? { ...m, media_pending: false } : m,
+              ),
+            },
+          },
+        }
+      })
+    }
+
+    // Cada intento espera su propio delay antes de refetchear (backoff acotado).
+    const attempt = (index: number) => {
+      setTimeout(() => {
+        void (async () => {
+          try {
+            const res = await getConversationMessages(conversationId, { limit: 10 })
+            const fresh = res.data.find((m) => m.id === messageId)
+            if (fresh && fresh.attachments.length > 0) {
+              get().upsertMessage(conversationId, fresh as UiMessage)
+              resolvingMedia.delete(key)
+              return
+            }
+          } catch {
+            // Reintentamos igual; el próximo fetch completo lo trae al reabrir.
+          }
+          if (index + 1 < MEDIA_RESOLVE_DELAYS_MS.length) {
+            attempt(index + 1)
+          } else {
+            clearPending() // agotados los reintentos → cae a MediaUnavailable
+          }
+        })()
+      }, MEDIA_RESOLVE_DELAYS_MS[index])
+    }
+
+    attempt(0)
   },
 
   confirmMessage: (conversationId, messageId) => {

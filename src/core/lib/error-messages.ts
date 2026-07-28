@@ -20,6 +20,22 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.notFound]: "El recurso ya no existe",
   "identities/nit_taken": "Ya existe una empresa con ese NIT",
   "identities/email_taken": "Ya existe un usuario con ese correo",
+  // Panel de plataforma (super admin) — tabla §7 de frontend_platform_plan.md
+  "tenant_db/not_found": "El tenant no tiene base de datos dedicada configurada",
+  "tenant_db/not_active":
+    "Enterprise requiere una base de datos dedicada activa. Configúrala y provisiónala primero",
+  "tenant_db/in_use": "El plan enterprise usa esta base. Cambia el plan del tenant primero",
+  "tenant_db/provision_in_progress": "Provisión en curso; espera a que termine",
+  "tenant_db/connection_failed": "No se pudo conectar. Verifica host, puerto, credenciales y firewall",
+  "tenant_db/unsupported_version": "Versión de PostgreSQL no soportada",
+  "tenant_db/version_mismatch": "Las migraciones están desactualizadas: reprovisiona la base",
+  "tenant_db/missing_extension": "Falta una extensión (pg_trgm/unaccent) en la base destino",
+  "tenant_db/insufficient_privileges": "El usuario necesita privilegio CREATE sobre la base",
+  "usage/plan_code_taken": "Ya existe un plan con ese código",
+  "usage/plan_not_found": "El plan no existe",
+  "usage/plan_inactive": "El plan está desactivado",
+  "usage/plan_tier_immutable": "El tier del plan no puede cambiarse",
+  "usage/limit_invalid": "El set de límites es inválido: revisa las filas marcadas",
   "identities/owner_protected": "El usuario owner no puede modificarse así",
   "rbac/system_role_immutable": "Los roles de sistema no se pueden modificar",
   "rbac/role_not_found": "El rol ya no existe",
@@ -62,6 +78,10 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "catalog/service_fields_required": "Un servicio requiere duración en minutos",
   "catalog/stock_not_applicable": "Los servicios no manejan inventario",
   "catalog/last_variant_protected": "No puedes eliminar la última variante activa del producto",
+  // Catálogo — imágenes (F16)
+  "catalog/invalid_image": "La imagen no es válida: usa JPEG, PNG o WebP de máximo 5 MB",
+  "catalog/image_limit_reached": "Alcanzaste el límite de fotos de esta galería",
+  "catalog/image_not_found": "No encontramos esa imagen. Recarga e inténtalo de nuevo",
   // Pedidos (F11)
   "orders/not_found": "El pedido ya no existe",
   "orders/variant_not_found": "Algún producto del pedido ya no está disponible",

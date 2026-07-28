@@ -8,7 +8,7 @@ import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store
 import { getConversationMessages } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 import type { Schemas } from "@/core/api/types"
 import type { WsAck, SendMessagePayload } from "@/core/realtime/events"
-import type { UiMessage } from "@/modules/inbox/domain/inbox"
+import { isMediaContentType, type UiMessage } from "@/modules/inbox/domain/inbox"
 
 /**
  * Conexión al namespace `/inbox`: enruta eventos al store y expone los
@@ -49,6 +49,11 @@ export function useInboxSocket() {
         const incoming = res.data.find((m) => m.id === payload.message_id)
         if (incoming) {
           state.appendMessage(payload.conversation_id, incoming as UiMessage)
+          // Media sin attachment: el backend lo descarga en un job aparte y NO
+          // emite evento de "media lista" → reintentamos el fetch hasta traerlo.
+          if (isMediaContentType(incoming.content_type) && incoming.attachments.length === 0) {
+            state.resolvePendingMedia(payload.conversation_id, incoming.id)
+          }
           // Audio inbound: la transcripción llega unos segundos después vía
           // `message_updated` → indicador "Transcribiendo…" mientras tanto.
           if (incoming.content_type === "audio" && incoming.direction === "inbound") {
@@ -78,7 +83,12 @@ export function useInboxSocket() {
     const state = store.getState()
     state.bumpConversation(payload.conversation_id)
     if (state.selectedId === payload.conversation_id) {
-      state.appendMessage(payload.conversation_id, payload.message as UiMessage)
+      const message = payload.message as UiMessage
+      state.appendMessage(payload.conversation_id, message)
+      // Mismo caso simétrico: media persistida sin attachment resuelto todavía.
+      if (isMediaContentType(message.content_type) && message.attachments.length === 0) {
+        state.resolvePendingMedia(payload.conversation_id, message.id)
+      }
     }
   })
 

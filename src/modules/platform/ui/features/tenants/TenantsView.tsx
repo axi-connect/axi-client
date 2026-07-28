@@ -28,7 +28,6 @@ import {
   DEFAULT_TENANTS_FILTER,
   filterTenants,
   type TenantsFilterState,
-  type TenantsSearchField,
 } from "./tenants-filter";
 
 const STATUS_OPTIONS: { value: TenantStatus | "all"; label: string }[] = [
@@ -136,7 +135,7 @@ export function TenantsView() {
             preferredSearchFields={["name", "nit"]}
             onSortChange={(by, dir) => setFilter((f) => ({ ...f, sort: { by, dir } }))}
             onSearchChange={({ field, value }) =>
-              setFilter((f) => ({ ...f, search: { field: field as TenantsSearchField, value } }))
+              setFilter((f) => ({ ...f, search: { field, value } }))
             }
           />
         </div>
