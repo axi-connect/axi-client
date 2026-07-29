@@ -50,9 +50,5 @@ export const USAGE_METRIC_LABELS: Record<string, string> = {
   storage_bytes: "Almacenamiento",
 };
 
-export const CONTACT_STAGE_LABELS: Record<string, string> = {
-  prospect: "Prospecto",
-  lead: "Lead",
-  customer: "Cliente",
-  other: "Otro",
-};
+// La fuente canónica de los labels de ciclo de vida es el slice crm (F1).
+export { CONTACT_STAGE_LABELS } from "@/modules/crm/domain/enums";

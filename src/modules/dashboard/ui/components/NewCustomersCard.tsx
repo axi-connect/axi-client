@@ -50,7 +50,10 @@ export function NewCustomersCard({
   }
 
   const stats = section.data;
-  const stages = Object.entries(stats.by_stage) as [string, number][];
+  const stages = Object.entries(stats.by_stage) as [
+    keyof typeof stats.by_stage,
+    number,
+  ][];
 
   return (
     <DashboardCard title="Clientes nuevos">
@@ -70,7 +73,7 @@ export function NewCustomersCard({
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {stages.map(([stage, count]) => (
               <span key={stage}>
-                {CONTACT_STAGE_LABELS[stage] ?? stage}{" "}
+                {CONTACT_STAGE_LABELS[stage]}{" "}
                 <span className="font-semibold tabular-nums text-foreground">{count}</span>
               </span>
             ))}
