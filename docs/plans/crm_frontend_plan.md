@@ -22,7 +22,7 @@
 | F3 | Pipeline kanban + deals + rail | ✅ Hecha | `feat/crm-f3-pipeline` (apilado sobre F2) |
 | F4 | Tareas | ✅ Hecha | `feat/crm-f4-tasks` (apilado sobre F3) |
 | F5 | Configuración (pipelines/tags/segmentos) | ✅ Hecha | `feat/crm-f5-settings` (apilado sobre F4) |
-| F6 | Import / Export CSV | 🔒 Gate: mockup §5.6 | — |
+| F6 | Import / Export CSV | ✅ Hecha | `feat/crm-f6-import-export` (apilado sobre F5) |
 | F7 | Copiloto IA | 🔒 Gate: mockup §5.2 (panel ✦) | — |
 
 ## 2. Decisiones aprobadas (2026-07-29)

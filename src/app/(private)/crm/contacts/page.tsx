@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { CopyCheck, Plus, Search, Users } from "lucide-react";
+import { CopyCheck, Download, Plus, Search, Users } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
@@ -20,6 +20,9 @@ import {
   contactColumns,
   fetchContacts,
 } from "@/modules/crm/ui/tables/config/contacts.config";
+import { exportContactsUrl } from "@/modules/crm/infrastructure/services/imports-service.adapter";
+import { compactSegmentFilters } from "@/modules/crm/domain/segment";
+import { useAlert } from "@/core/providers/alert-provider";
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 400;
@@ -31,7 +34,9 @@ const SEARCH_DEBOUNCE_MS = 400;
  */
 export default function CrmContactsPage() {
   const { hasPermission } = useAuth();
+  const { showAlert } = useAlert();
   const canManage = hasPermission("contacts:manage");
+  const canExport = hasPermission("contacts:export");
 
   const [filters, setFilters] = useState<ContactFiltersValue>({});
   const [searchDraft, setSearchDraft] = useState("");
@@ -98,6 +103,36 @@ export default function CrmContactsPage() {
               Duplicados
             </Link>
           </Button>
+          {canExport && (
+            <Button
+              variant="ghost"
+              className="rounded-full"
+              onClick={() => {
+                // Los filtros activos se serializan al DSL del export (F6)
+                window.open(
+                  exportContactsUrl({
+                    filters: compactSegmentFilters({
+                      lifecycle_stage: filters.lifecycle_stage ? [filters.lifecycle_stage] : undefined,
+                      source: filters.source ? [filters.source] : undefined,
+                      tag_ids: filters.tag_id ? { any: [filters.tag_id] } : undefined,
+                      city: filters.city,
+                      min_score: filters.min_score,
+                      q: searchDraft.trim() || undefined,
+                    }),
+                  }),
+                  "_blank",
+                );
+                showAlert({
+                  tone: "info",
+                  title: "Exportación iniciada — esta descarga queda auditada",
+                  open: true,
+                });
+              }}
+            >
+              <Download className="size-4" />
+              Exportar
+            </Button>
+          )}
           {canManage && (
             <Button asChild className="rounded-full">
               <Link href="/crm/contacts/create">

@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: "/crm/settings/pipelines", label: "Pipelines" },
   { href: "/crm/settings/tags", label: "Etiquetas" },
   { href: "/crm/settings/segments", label: "Segmentos" },
-  // { href: "/crm/settings/imports", label: "Imports" }, // F6
+  { href: "/crm/settings/imports", label: "Imports" },
 ] as const;
 
 /**

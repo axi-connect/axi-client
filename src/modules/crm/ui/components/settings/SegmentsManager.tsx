@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { ChevronDown, Download, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { useAuth } from "@/shared/auth/auth.hooks";
+import { exportContactsUrl } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -292,8 +294,19 @@ function SegmentCard({
   onDelete: () => void;
 }) {
   const { showAlert } = useAlert();
+  const { hasPermission } = useAuth();
+  const canExport = hasPermission("contacts:export");
   const [expanded, setExpanded] = useState(false);
   const [preview, setPreview] = useState<{ total: number; rows: SegmentContactDTO[] } | null>(null);
+
+  const handleExport = () => {
+    window.open(exportContactsUrl({ segment_id: segment.id }), "_blank");
+    showAlert({
+      tone: "info",
+      title: "Exportación iniciada — esta descarga queda auditada",
+      open: true,
+    });
+  };
 
   const togglePreview = () => {
     const next = !expanded;
@@ -321,6 +334,17 @@ function SegmentCard({
           </p>
         </div>
         <div className="flex items-center gap-1">
+          {canExport && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              aria-label={`Exportar ${segment.name} a CSV`}
+              onClick={handleExport}
+            >
+              <Download className="size-3.5" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="size-7" aria-label={`Editar ${segment.name}`} onClick={onEdit}>
             <Pencil className="size-3.5" />
           </Button>
