@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Calendar,
   ListChecks,
   MessageCircle,
+  Plus,
   ShoppingCart,
   Sparkles,
   Target,
@@ -49,7 +51,14 @@ function isAiEntry(entry: TimelineEntryDTO): boolean {
  * de fuentes (re-consulta desde cero) + "Cargar más" con cursor opaco.
  * Visual patrón OrderTimeline: lista con línea vertical y badges tonales.
  */
-export function ContactTimeline({ contactId }: { contactId: string }) {
+export function ContactTimeline({
+  contactId,
+  createActivityHref,
+}: {
+  contactId: string;
+  /** Link al modal de nueva actividad/tarea (@form de la bandeja, F4). */
+  createActivityHref?: string;
+}) {
   const [enabled, setEnabled] = useState<TimelineSource[]>([...TIMELINE_SOURCES]);
   const [entries, setEntries] = useState<TimelineEntryDTO[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -101,7 +110,17 @@ export function ContactTimeline({ contactId }: { contactId: string }) {
   return (
     <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold">Historial</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">Historial</h3>
+          {createActivityHref !== undefined && (
+            <Button asChild variant="outline" size="sm" className="h-7 rounded-full text-xs">
+              <Link href={createActivityHref}>
+                <Plus className="size-3" />
+                Actividad
+              </Link>
+            </Button>
+          )}
+        </div>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Fuentes del historial">
           {TIMELINE_SOURCES.map((source) => {
             const active = enabled.includes(source);

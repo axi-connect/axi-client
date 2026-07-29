@@ -106,7 +106,10 @@ export default function Contact360Page({
         </div>
       </div>
 
-      <ContactTimeline contactId={contactId} />
+      <ContactTimeline
+        contactId={contactId}
+        createActivityHref={`/crm/tasks/create?contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`}
+      />
     </div>
   );
 }

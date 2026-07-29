@@ -20,7 +20,7 @@
 | F1 | Contactos: lista + filtros + CRUD modal | ✅ Hecha | `feat/crm-f1-contacts` (apilado sobre F0) |
 | F2 | Contacto 360 + duplicados/merge | ✅ Hecha | `feat/crm-f2-contact-360` (apilado sobre F1) |
 | F3 | Pipeline kanban + deals + rail | ✅ Hecha | `feat/crm-f3-pipeline` (apilado sobre F2) |
-| F4 | Tareas | 🔒 Gate: mockup §5.4 | — |
+| F4 | Tareas | ✅ Hecha | `feat/crm-f4-tasks` (apilado sobre F3) |
 | F5 | Configuración (pipelines/tags/segmentos) | 🔒 Gate: mockups §5.5 | — |
 | F6 | Import / Export CSV | 🔒 Gate: mockup §5.6 | — |
 | F7 | Copiloto IA | 🔒 Gate: mockup §5.2 (panel ✦) | — |

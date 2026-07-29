@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
+  CalendarPlus,
   Check,
   CheckCircle2,
   LoaderCircle,
@@ -332,6 +333,17 @@ export function DealDetailRail({ dealId, onClose }: { dealId: string; onClose: (
                 </Button>
               )}
             </div>
+
+            {deal.status === "open" && (
+              <Button asChild variant="outline" size="sm" className="w-full rounded-full">
+                <Link
+                  href={`/crm/tasks/create?contact_id=${deal.contact_id}&contact_label=${encodeURIComponent(contactName)}&deal_id=${deal.id}`}
+                >
+                  <CalendarPlus className="size-4" />
+                  Agendar seguimiento
+                </Link>
+              </Button>
+            )}
 
             {/* Historial */}
             <section>
