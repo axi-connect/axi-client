@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid, List, Plus } from "lucide-react";
+import { useState } from "react";
+import { LayoutGrid, List, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
+import { PipelineSummaryDialog } from "@/modules/crm/ui/components/PipelineSummaryDialog";
 import {
   Select,
   SelectContent,
@@ -65,6 +68,7 @@ function SegmentedToggle({
  * (modal por ruta interceptada @form).
  */
 export function PipelineHeader({ canOperate }: { canOperate: boolean }) {
+  const { hasPermission } = useAuth();
   const pipelines = useBoardStore((s) => s.pipelines);
   const pipelineId = useBoardStore((s) => s.pipelineId);
   const selectPipeline = useBoardStore((s) => s.selectPipeline);
@@ -72,6 +76,7 @@ export function PipelineHeader({ canOperate }: { canOperate: boolean }) {
   const setView = useBoardStore((s) => s.setView);
   const statsPeriod = useBoardStore((s) => s.statsPeriod);
   const setStatsPeriod = useBoardStore((s) => s.setStatsPeriod);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -117,6 +122,16 @@ export function PipelineHeader({ canOperate }: { canOperate: boolean }) {
 
       <div className="flex items-center gap-2">
         <SegmentedToggle view={view} onChange={setView} />
+        {hasPermission("crm:copilot") && pipelineId !== null && (
+          <Button
+            variant="outline"
+            className="rounded-full border-accent-violet/40 text-accent-violet hover:text-accent-violet"
+            onClick={() => setSummaryOpen(true)}
+          >
+            <Sparkles className="size-4" />
+            Resumen IA
+          </Button>
+        )}
         {canOperate && (
           <Button asChild className="rounded-full">
             <Link href="/crm/pipeline/create">
@@ -126,6 +141,10 @@ export function PipelineHeader({ canOperate }: { canOperate: boolean }) {
           </Button>
         )}
       </div>
+
+      {summaryOpen && pipelineId !== null && (
+        <PipelineSummaryDialog pipelineId={pipelineId} onOpenChange={setSummaryOpen} />
+      )}
     </div>
   );
 }

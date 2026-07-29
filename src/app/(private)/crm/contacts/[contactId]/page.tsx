@@ -20,6 +20,7 @@ import {
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
+import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
@@ -96,7 +97,10 @@ export default function Contact360Page({
       <Contact360Header contact={bundle.contact} profile={bundle.profile} users={bundle.users} />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ScorePanel profile={bundle.profile} />
+        <div className="space-y-4">
+          <ScorePanel profile={bundle.profile} />
+          <CopilotPanel contactId={contactId} />
+        </div>
         <div className="space-y-4">
           <TagsEditor contactId={contactId} initialTags={bundle.tags} />
           <ContactDealsCard

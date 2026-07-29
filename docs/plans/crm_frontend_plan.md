@@ -23,7 +23,7 @@
 | F4 | Tareas | ✅ Hecha | `feat/crm-f4-tasks` (apilado sobre F3) |
 | F5 | Configuración (pipelines/tags/segmentos) | ✅ Hecha | `feat/crm-f5-settings` (apilado sobre F4) |
 | F6 | Import / Export CSV | ✅ Hecha | `feat/crm-f6-import-export` (apilado sobre F5) |
-| F7 | Copiloto IA | 🔒 Gate: mockup §5.2 (panel ✦) | — |
+| F7 | Copiloto IA | ✅ Hecha | `feat/crm-f7-copilot` (apilado sobre F6) |
 
 ## 2. Decisiones aprobadas (2026-07-29)
 

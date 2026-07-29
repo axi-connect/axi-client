@@ -5,8 +5,10 @@
 > (fases C0–C11). Parte B: plan de implementación frontend por fases (F0–F7), con archivos
 > y QA por fase.
 >
-> **Estado (2026-07-28): NO IMPLEMENTADO en el cliente** — no existe `src/modules/crm` ni
-> ruta `/crm`. Este documento es autocontenido: no se necesita contexto previo.
+> **Estado (2026-07-29): IMPLEMENTADO (F0–F7)** — slice `src/modules/crm` + rutas `/crm/*`
+> completos, un PR por fase (`feat/crm-f0-transversales` … `feat/crm-f6-import-export`,
+> `feat/crm-f7-copilot`, apilados). Ver §C (desviaciones aplicadas) y el plan vivo con
+> mockups y estado en `docs/plans/crm_frontend_plan.md`.
 >
 > Documentos rectores: `docs/architecture.md` (§3.2 anatomía de slice, §3.3 dependencias,
 > §5 naming, §6 enrutamiento/overlays, §16 checklist), `docs/design/DESIGN.md` §3.1,
@@ -492,3 +494,33 @@ Timeline visual: patrón `OrderTimeline.tsx` (ol + línea + badges tonales + `vi
   es `stage_entered_at desc` — no implementar sort dentro de la columna.
 - El listado de deals en tabla comparte contrato con el board: no crear un segundo store;
   la tabla lee de `GET /crm/deals` con `usePaginatedList` (patrón orders tabla/board).
+
+---
+
+## Parte C — Desviaciones aplicadas en la implementación (2026-07-29)
+
+Diferencias reales del contrato encontradas contra `openapi.json` y decisiones tomadas al
+ejecutar F0–F7 (detalle completo en `docs/plans/crm_frontend_plan.md` §2–§3):
+
+1. **No existe `POST /crm/tasks` ni `PATCH /crm/tasks/:id`**: las tareas se crean/editan
+   vía `/crm/activities` (`kind: task`); `/crm/tasks` es bandeja de solo lectura
+   (devuelve la forma de activities). Solo existen `complete|reopen|cancel`.
+2. **`DealDto` NO expone `stalled_notified_at`** → el ⚠ de estancamiento se DERIVA en
+   cliente (`isStalled(stage_entered_at, rotting_days)` en `domain/deal-state.ts`); el
+   evento WS `crm.deal_stalled` solo refuerza.
+3. **`GET /contacts` no devuelve `score` ni `tags` por fila** (solo filtra/ordena por
+   ellos): la tabla de contactos no tiene esas columnas; el score vive en el 360.
+4. **`CreateContactDto` no acepta `lifecycle_stage`** (nace prospect): la etapa solo se
+   edita en el PATCH.
+5. Los `deals[]` del board son un objeto inline sin `$ref` → `normalizeBoardDeal()` los
+   unifica en un solo `DealDTO` de dominio.
+6. **`POST/PATCH /crm/tags` devuelven la lista completa** de tags (no el tag).
+7. La vista previa de segmentos ejecuta el DSL sobre el segmento GUARDADO
+   (`GET /crm/segments/:id/contacts`); el builder muestra el resumen humano en vivo.
+8. `ActivitiesListDto` no embebe el nombre del contacto → la bandeja enlaza al 360 con
+   un icono en lugar de mostrar el nombre.
+9. La referencia de la Parte A a "decisiones D0–D21" del backend está rota: el repo solo
+   documenta D2, D4, D7, D10–D14, D16 y D17 en `axi-server/docs/plans/crm_implementation.md`.
+10. Decisiones de producto aprobadas: alias de sidebar (`/contacts` → `/crm/contacts`,
+    ambos ítems visibles), acento secundario **violeta** (✦IA/copiloto; warning para
+    estancados/vencidas), `/crm` aterriza en `/crm/pipeline`.
