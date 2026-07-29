@@ -1108,6 +1108,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contacts/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactsController_duplicatePairs_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ContactsController_merge_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactsController_list_v1"];
+        put?: never;
+        post: operations["ContactsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactsController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ContactsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ContactsController_update_v1"];
+        trace?: never;
+    };
     "/api/v1/quick-actions/assets": {
         parameters: {
             query?: never;
@@ -1380,6 +1460,134 @@ export interface paths {
         patch: operations["OrdersController_verifyPayment_v1"];
         trace?: never;
     };
+    "/api/v1/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_list_v1"];
+        put?: never;
+        post: operations["ChannelsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ChannelsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ChannelsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ChannelsController_rotateCredentials_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WwebSessionController_start_v1"];
+        delete: operations["WwebSessionController_stop_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WwebSessionController_pairingState_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/qr.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WwebSessionController_pairingQrPng_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/pairing-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WwebSessionController_requestPairingCode_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WwebSessionController_logout_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payment-methods": {
         parameters: {
             query?: never;
@@ -1439,6 +1647,518 @@ export interface paths {
         put: operations["FormsController_upsert_v1"];
         post?: never;
         delete: operations["FormsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/pipelines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmPipelinesController_list_v1"];
+        put?: never;
+        post: operations["CrmPipelinesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/pipelines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmPipelinesController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["CrmPipelinesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CrmPipelinesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/pipelines/{id}/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmPipelinesController_board_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/pipelines/{id}/stages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmPipelinesController_addStage_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/pipelines/{id}/stages/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CrmPipelinesController_reorder_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/pipelines/{id}/stages/{stage_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CrmPipelinesController_removeStage_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CrmPipelinesController_updateStage_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/deals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmDealsController_list_v1"];
+        put?: never;
+        post: operations["CrmDealsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/deals/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmDealsController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/deals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmDealsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["CrmDealsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CrmDealsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/deals/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmDealsController_events_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/deals/{id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmDealsController_move_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/deals/{id}/win": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmDealsController_win_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/deals/{id}/lose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmDealsController_lose_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/deals/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmDealsController_reopen_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_list_v1"];
+        put?: never;
+        post: operations["CrmActivitiesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/activities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CrmActivitiesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CrmActivitiesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/tasks/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_taskStats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_tasks_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/tasks/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmActivitiesController_complete_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/tasks/{id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmActivitiesController_reopen_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/tasks/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmActivitiesController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{contact_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_timeline_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{contact_id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_profile_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CrmActivitiesController_assignOwner_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmTagsSegmentsController_listTags_v1"];
+        put?: never;
+        post: operations["CrmTagsSegmentsController_createTag_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CrmTagsSegmentsController_removeTag_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CrmTagsSegmentsController_updateTag_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{contact_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmTagsSegmentsController_contactTags_v1"];
+        put: operations["CrmTagsSegmentsController_setContactTags_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmTagsSegmentsController_listSegments_v1"];
+        put?: never;
+        post: operations["CrmTagsSegmentsController_createSegment_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/segments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmTagsSegmentsController_segmentById_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["CrmTagsSegmentsController_removeSegment_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CrmTagsSegmentsController_updateSegment_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/segments/{id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmTagsSegmentsController_segmentContacts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmImportsController_list_v1"];
+        put?: never;
+        post: operations["CrmImportsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmImportsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/exports/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmImportsController_exportContacts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1828,55 +2548,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ChannelsController_list_v1"];
-        put?: never;
-        post: operations["ChannelsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ChannelsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete: operations["ChannelsController_remove_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["ChannelsController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["ChannelsController_rotateCredentials_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/session": {
+    "/api/v1/crm/contacts/{contact_id}/ai/summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -1885,46 +2557,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["WwebSessionController_start_v1"];
-        delete: operations["WwebSessionController_stop_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/qr": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["WwebSessionController_pairingState_v1"];
-        put?: never;
-        post?: never;
+        post: operations["CrmCopilotController_summary_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels/{id}/whatsapp-web/qr.png": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["WwebSessionController_pairingQrPng_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/pairing-code": {
+    "/api/v1/crm/contacts/{contact_id}/ai/next-best-action": {
         parameters: {
             query?: never;
             header?: never;
@@ -1933,14 +2573,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["WwebSessionController_requestPairingCode_v1"];
+        post: operations["CrmCopilotController_nextBestAction_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels/{id}/whatsapp-web/logout": {
+    "/api/v1/crm/contacts/{contact_id}/ai/draft-followup": {
         parameters: {
             query?: never;
             header?: never;
@@ -1949,59 +2589,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["WwebSessionController_logout_v1"];
+        post: operations["CrmCopilotController_draftFollowup_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/contacts": {
+    "/api/v1/crm/pipelines/{pipeline_id}/ai/summary": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["ContactsController_list_v1"];
+        get?: never;
         put?: never;
-        post?: never;
+        post: operations["CrmCopilotController_pipelineSummary_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/v1/contacts/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ContactsController_stats_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/contacts/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ContactsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["ContactsController_update_v1"];
         trace?: never;
     };
     "/api/v1/scheduling/reminders": {
@@ -2886,6 +3494,7 @@ export interface components {
                         require_resources?: boolean;
                         require_orders?: boolean;
                         require_payments?: boolean;
+                        require_crm?: boolean;
                     } | null;
                     code: string;
                     /** @enum {string} */
@@ -2926,6 +3535,7 @@ export interface components {
                     require_resources?: boolean;
                     require_orders?: boolean;
                     require_payments?: boolean;
+                    require_crm?: boolean;
                 } | null;
                 code: string;
                 /** @enum {string} */
@@ -2987,6 +3597,7 @@ export interface components {
                     require_resources?: boolean;
                     require_orders?: boolean;
                     require_payments?: boolean;
+                    require_crm?: boolean;
                 };
             }[];
         };
@@ -3692,6 +4303,164 @@ export interface components {
         CancelAppointmentDto: {
             reason?: string;
         };
+        DuplicatesListDto: {
+            data: {
+                /** Format: uuid */
+                contact_a_id: string;
+                /** Format: uuid */
+                contact_b_id: string;
+                a_name: string | null;
+                b_name: string | null;
+                /** @enum {string} */
+                reason: "email_exact" | "similar_name";
+                confidence: number;
+            }[];
+        };
+        MergeContactDto: {
+            /** Format: uuid */
+            source_contact_id: string;
+        };
+        ContactDto: {
+            /** Format: uuid */
+            id: string;
+            full_name: string | null;
+            first_name: string | null;
+            last_name: string | null;
+            email: string | null;
+            phone: string | null;
+            /** @enum {string|null} */
+            document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
+            document_number: string | null;
+            /** Format: date-time */
+            birthdate: string | null;
+            address: string | null;
+            city: string | null;
+            avatar_url: string | null;
+            /** @enum {string} */
+            lifecycle_stage: "prospect" | "lead" | "customer" | "other";
+            /** @enum {string} */
+            source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+            custom_fields: {
+                [key: string]: unknown;
+            };
+            channel_identities: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                external_id: string;
+                display_name: string | null;
+                /** Format: date-time */
+                last_seen_at: string | null;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateContactDto: {
+            full_name?: string;
+            first_name?: string;
+            last_name?: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            /** @enum {string} */
+            document_type?: "cc" | "ce" | "ti" | "pp" | "nit";
+            document_number?: string;
+            /** Format: date */
+            birthdate?: string;
+            address?: string;
+            city?: string;
+            custom_fields?: {
+                [key: string]: (string | number | boolean) | null;
+            };
+        };
+        ContactsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                full_name: string | null;
+                first_name: string | null;
+                last_name: string | null;
+                email: string | null;
+                phone: string | null;
+                /** @enum {string|null} */
+                document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
+                document_number: string | null;
+                /** Format: date-time */
+                birthdate: string | null;
+                address: string | null;
+                city: string | null;
+                avatar_url: string | null;
+                /** @enum {string} */
+                lifecycle_stage: "prospect" | "lead" | "customer" | "other";
+                /** @enum {string} */
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                custom_fields: {
+                    [key: string]: unknown;
+                };
+                channel_identities: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                    external_id: string;
+                    display_name: string | null;
+                    /** Format: date-time */
+                    last_seen_at: string | null;
+                }[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ContactStatsDto: {
+            /** @enum {string} */
+            period: "today" | "7d" | "30d";
+            /** Format: date-time */
+            period_start: string;
+            /** Format: date-time */
+            period_end: string;
+            new_count: number;
+            by_stage: {
+                prospect: number;
+                lead: number;
+                customer: number;
+                other: number;
+            };
+            series: {
+                /** Format: date-time */
+                bucket: string;
+                count: number;
+            }[];
+        };
+        UpdateContactDto: {
+            full_name?: string | null;
+            first_name?: string | null;
+            last_name?: string | null;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            /** @enum {string|null} */
+            document_type?: "cc" | "ce" | "ti" | "pp" | "nit" | null;
+            document_number?: string | null;
+            /** Format: date */
+            birthdate?: string | null;
+            address?: string | null;
+            city?: string | null;
+            /** @enum {string} */
+            lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+            custom_fields?: {
+                [key: string]: (string | number | boolean) | null;
+            };
+        };
         QuickActionAssetDto: {
             /** Format: uuid */
             id: string;
@@ -3800,6 +4569,34 @@ export interface components {
             ai_enabled?: boolean;
             asset_ids?: string[];
         };
+        OrderNotificationSettingsViewDto: {
+            templates: {
+                confirmed: {
+                    enabled: boolean;
+                    body: string;
+                };
+                paid: {
+                    enabled: boolean;
+                    body: string;
+                };
+                fulfilled: {
+                    enabled: boolean;
+                    body: string;
+                };
+                cancelled: {
+                    enabled: boolean;
+                    body: string;
+                };
+                payment_rejected: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            usage_hint: {
+                any_enabled: boolean;
+                unsupported_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger")[];
+            };
+        };
         OrderNotificationSettingsDto: {
             templates: {
                 confirmed: {
@@ -3840,6 +4637,10 @@ export interface components {
                 };
                 /** Format: uuid */
                 conversation_id: string | null;
+                /** Format: uuid */
+                channel_id: string | null;
+                /** @enum {string|null} */
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
                 subtotal_cents: number;
                 discount_cents: number;
                 total_cents: number;
@@ -3894,6 +4695,23 @@ export interface components {
                     /** Format: date-time */
                     verified_at: string | null;
                     notes: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                }[];
+                notifications: {
+                    /** Format: uuid */
+                    id: string;
+                    notification_key: string;
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    /** @enum {string|null} */
+                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                    error_code: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
                     /** Format: date-time */
                     created_at: string;
                 }[];
@@ -3956,6 +4774,10 @@ export interface components {
             };
             /** Format: uuid */
             conversation_id: string | null;
+            /** Format: uuid */
+            channel_id: string | null;
+            /** @enum {string|null} */
+            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
             subtotal_cents: number;
             discount_cents: number;
             total_cents: number;
@@ -4013,13 +4835,30 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             }[];
+            notifications: {
+                /** Format: uuid */
+                id: string;
+                notification_key: string;
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                /** @enum {string|null} */
+                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
+                error_code: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
         };
         OrderEventsDto: {
             data: {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped";
+                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped" | "customer_notification_failed";
                 /** @enum {string} */
                 actor_type: "user" | "ai_agent" | "system";
                 /** Format: uuid */
@@ -4089,6 +4928,75 @@ export interface components {
             notes?: string;
             /** @default true */
             notify_customer: boolean;
+        };
+        CreateChannelDto: {
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web";
+            provider_account_id?: string;
+            waba_id?: string;
+            access_token?: string;
+        };
+        ChannelDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+            provider_account_id: string;
+            /** @enum {string} */
+            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+            display_phone_number: string | null;
+            verified_name: string | null;
+            waba_id: string | null;
+            default_ai_agent_id: string | null;
+            credentials_configured: boolean;
+            token_last4: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ChannelListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                provider_account_id: string;
+                /** @enum {string} */
+                status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+                display_phone_number: string | null;
+                verified_name: string | null;
+                waba_id: string | null;
+                default_ai_agent_id: string | null;
+                credentials_configured: boolean;
+                token_last4: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        UpdateChannelDto: {
+            name?: string;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
+        };
+        UpdateChannelCredentialsDto: {
+            access_token: string;
+        };
+        WwebPairingStateDto: {
+            /** @enum {string} */
+            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+            qr: string | null;
+            qr_image: string | null;
+            pairing_code: string | null;
+            phone_number: string | null;
+        };
+        WwebPairingCodeRequestDto: {
+            phone_number: string;
         };
         PaymentMethodsListDto: {
             data: {
@@ -4207,6 +5115,658 @@ export interface components {
                 position: number;
             }[];
             is_active?: boolean;
+        };
+        PipelinesListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                is_default: boolean;
+                position: number;
+                stages: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    position: number;
+                    probability_pct: number;
+                    color: string | null;
+                    rotting_days: number | null;
+                    /** Format: date-time */
+                    created_at: string;
+                    /** Format: date-time */
+                    updated_at: string;
+                }[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreatePipelineDto: {
+            name: string;
+            position?: number;
+            stages?: {
+                name: string;
+                probability_pct: number;
+                color?: string | null;
+            }[];
+        };
+        PipelineDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            is_default: boolean;
+            position: number;
+            stages: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                position: number;
+                probability_pct: number;
+                color: string | null;
+                rotting_days: number | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdatePipelineDto: {
+            name?: string;
+            position?: number;
+            /** @enum {boolean} */
+            is_default?: true;
+        };
+        BoardDto: {
+            /** Format: uuid */
+            pipeline_id: string;
+            pipeline_name: string;
+            columns: {
+                stage: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    position: number;
+                    probability_pct: number;
+                    color: string | null;
+                    rotting_days: number | null;
+                };
+                total_count: number;
+                total_value_cents: number;
+                deals: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    contact_id: string;
+                    /** Format: uuid */
+                    pipeline_id: string;
+                    /** Format: uuid */
+                    stage_id: string;
+                    title: string;
+                    value_cents: number | null;
+                    currency: string;
+                    /** @enum {string} */
+                    status: "open" | "won" | "lost";
+                    /** Format: date-time */
+                    won_at: string | null;
+                    /** Format: date-time */
+                    lost_at: string | null;
+                    lost_reason: string | null;
+                    /** Format: uuid */
+                    owner_user_id: string | null;
+                    /** Format: uuid */
+                    conversation_id: string | null;
+                    /** Format: uuid */
+                    order_id: string | null;
+                    /** Format: date-time */
+                    expected_close_date: string | null;
+                    /** Format: date-time */
+                    stage_entered_at: string;
+                    notes: string | null;
+                    /** @enum {string} */
+                    source: "manual" | "ai_conversation" | "automation" | "import";
+                    /** @enum {string} */
+                    created_by_type: "user" | "ai_agent" | "system";
+                    contact: {
+                        /** Format: uuid */
+                        id: string;
+                        full_name: string | null;
+                        phone: string | null;
+                        avatar_url: string | null;
+                    };
+                    stage: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        color: string | null;
+                        probability_pct: number;
+                    };
+                    /** Format: date-time */
+                    created_at: string;
+                    /** Format: date-time */
+                    updated_at: string;
+                }[];
+            }[];
+        };
+        CreateStageDto: {
+            name: string;
+            probability_pct: number;
+            color?: string | null;
+            rotting_days?: number | null;
+        };
+        ReorderStagesDto: {
+            stage_ids: string[];
+        };
+        UpdateStageDto: {
+            name?: string;
+            probability_pct?: number;
+            color?: string | null;
+            rotting_days?: number | null;
+        };
+        DealsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                pipeline_id: string;
+                /** Format: uuid */
+                stage_id: string;
+                title: string;
+                value_cents: number | null;
+                currency: string;
+                /** @enum {string} */
+                status: "open" | "won" | "lost";
+                /** Format: date-time */
+                won_at: string | null;
+                /** Format: date-time */
+                lost_at: string | null;
+                lost_reason: string | null;
+                /** Format: uuid */
+                owner_user_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: uuid */
+                order_id: string | null;
+                /** Format: date-time */
+                expected_close_date: string | null;
+                /** Format: date-time */
+                stage_entered_at: string;
+                notes: string | null;
+                /** @enum {string} */
+                source: "manual" | "ai_conversation" | "automation" | "import";
+                /** @enum {string} */
+                created_by_type: "user" | "ai_agent" | "system";
+                contact: {
+                    /** Format: uuid */
+                    id: string;
+                    full_name: string | null;
+                    phone: string | null;
+                    avatar_url: string | null;
+                };
+                stage: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    color: string | null;
+                    probability_pct: number;
+                };
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        DealStatsDto: {
+            /** @enum {string} */
+            period: "today" | "7d" | "30d" | "90d";
+            /** Format: date-time */
+            period_start: string | null;
+            /** Format: date-time */
+            period_end: string | null;
+            currency: string;
+            open_count: number;
+            open_value_cents: number;
+            weighted_forecast_cents: number;
+            won_count: number;
+            won_value_cents: number;
+            lost_count: number;
+            win_rate_pct: number | null;
+            avg_cycle_days: number | null;
+        };
+        CreateDealDto: {
+            /** Format: uuid */
+            contact_id: string;
+            title: string;
+            /** Format: uuid */
+            pipeline_id?: string;
+            /** Format: uuid */
+            stage_id?: string;
+            value_cents?: number | null;
+            /** Format: date */
+            expected_close_date?: string | null;
+            /** Format: uuid */
+            owner_user_id?: string | null;
+            /** Format: uuid */
+            conversation_id?: string | null;
+            notes?: string | null;
+        };
+        DealDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            pipeline_id: string;
+            /** Format: uuid */
+            stage_id: string;
+            title: string;
+            value_cents: number | null;
+            currency: string;
+            /** @enum {string} */
+            status: "open" | "won" | "lost";
+            /** Format: date-time */
+            won_at: string | null;
+            /** Format: date-time */
+            lost_at: string | null;
+            lost_reason: string | null;
+            /** Format: uuid */
+            owner_user_id: string | null;
+            /** Format: uuid */
+            conversation_id: string | null;
+            /** Format: uuid */
+            order_id: string | null;
+            /** Format: date-time */
+            expected_close_date: string | null;
+            /** Format: date-time */
+            stage_entered_at: string;
+            notes: string | null;
+            /** @enum {string} */
+            source: "manual" | "ai_conversation" | "automation" | "import";
+            /** @enum {string} */
+            created_by_type: "user" | "ai_agent" | "system";
+            contact: {
+                /** Format: uuid */
+                id: string;
+                full_name: string | null;
+                phone: string | null;
+                avatar_url: string | null;
+            };
+            stage: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                color: string | null;
+                probability_pct: number;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        DealEventsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: "created" | "updated" | "stage_changed" | "won" | "lost" | "reopened" | "value_changed" | "owner_changed" | "order_attached" | "stalled";
+                /** @enum {string} */
+                actor_type: "user" | "ai_agent" | "system";
+                /** Format: uuid */
+                actor_user_id: string | null;
+                actor_name: string | null;
+                payload: {
+                    [key: string]: unknown;
+                } | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        UpdateDealDto: {
+            title?: string;
+            value_cents?: number | null;
+            /** Format: date */
+            expected_close_date?: string | null;
+            /** Format: uuid */
+            owner_user_id?: string | null;
+            notes?: string | null;
+        };
+        MoveDealDto: {
+            /** Format: uuid */
+            stage_id: string;
+        };
+        WinDealDto: {
+            value_cents?: number;
+        };
+        LoseDealDto: {
+            reason?: string;
+        };
+        ActivitiesListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                deal_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** @enum {string} */
+                kind: "note" | "call" | "meeting" | "task";
+                title: string | null;
+                body: string | null;
+                /** Format: date-time */
+                occurred_at: string;
+                /** Format: date-time */
+                due_at: string | null;
+                /** Format: uuid */
+                assigned_user_id: string | null;
+                /** @enum {string|null} */
+                task_status: "open" | "completed" | "cancelled" | null;
+                /** Format: date-time */
+                completed_at: string | null;
+                /** Format: uuid */
+                completed_by_user_id: string | null;
+                /** @enum {string} */
+                created_by_type: "user" | "ai_agent" | "system";
+                /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        CreateActivityDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** @enum {string} */
+            kind: "note" | "call" | "meeting" | "task";
+            title?: string;
+            body?: string;
+            /** Format: uuid */
+            deal_id?: string | null;
+            /** Format: uuid */
+            conversation_id?: string | null;
+            /** Format: date-time */
+            occurred_at?: string;
+            /** Format: date-time */
+            due_at?: string;
+            /** Format: uuid */
+            assigned_user_id?: string | null;
+        };
+        ActivityDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            deal_id: string | null;
+            /** Format: uuid */
+            conversation_id: string | null;
+            /** @enum {string} */
+            kind: "note" | "call" | "meeting" | "task";
+            title: string | null;
+            body: string | null;
+            /** Format: date-time */
+            occurred_at: string;
+            /** Format: date-time */
+            due_at: string | null;
+            /** Format: uuid */
+            assigned_user_id: string | null;
+            /** @enum {string|null} */
+            task_status: "open" | "completed" | "cancelled" | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: uuid */
+            completed_by_user_id: string | null;
+            /** @enum {string} */
+            created_by_type: "user" | "ai_agent" | "system";
+            /** Format: uuid */
+            created_by_user_id: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateActivityDto: {
+            title?: string | null;
+            body?: string | null;
+            /** Format: date-time */
+            occurred_at?: string;
+            /** Format: date-time */
+            due_at?: string;
+            /** Format: uuid */
+            assigned_user_id?: string | null;
+        };
+        TaskStatsDto: {
+            open: number;
+            overdue: number;
+            due_today: number;
+            unassigned: number;
+        };
+        TimelineDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "activities" | "deals" | "orders" | "conversations" | "appointments";
+                type: string;
+                /** Format: date-time */
+                occurred_at: string;
+                title: string | null;
+                payload: {
+                    [key: string]: unknown;
+                };
+            }[];
+            next_cursor: string | null;
+        };
+        ContactProfileDto: {
+            /** Format: uuid */
+            contact_id: string;
+            score: number;
+            score_signals: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            owner_user_id: string | null;
+            /** Format: date-time */
+            last_activity_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        AssignOwnerDto: {
+            /** Format: uuid */
+            owner_user_id: string | null;
+        };
+        TagsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                color: string | null;
+                contact_count: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreateTagDto: {
+            name: string;
+            color?: string | null;
+        };
+        UpdateTagDto: {
+            name?: string;
+            color?: string | null;
+        };
+        ContactTagsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                color: string | null;
+            }[];
+        };
+        SetContactTagsDto: {
+            tag_ids: string[];
+        };
+        SegmentsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string | null;
+                filters: {
+                    [key: string]: unknown;
+                };
+                /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreateSegmentDto: {
+            name: string;
+            description?: string | null;
+            filters: {
+                [key: string]: unknown;
+            };
+        };
+        SegmentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            filters: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            created_by_user_id: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateSegmentDto: {
+            name?: string;
+            description?: string | null;
+            filters?: {
+                [key: string]: unknown;
+            };
+        };
+        SegmentContactsDto: {
+            data: ({
+                /** Format: uuid */
+                id: string;
+                full_name: string | null;
+                email: string | null;
+                phone: string | null;
+                city: string | null;
+                /** @enum {string} */
+                lifecycle_stage: "prospect" | "lead" | "customer" | "other";
+                /** @enum {string} */
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                /** Format: date-time */
+                created_at: string;
+            } & {
+                [key: string]: unknown;
+            })[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ImportOptionsDto: {
+            /**
+             * @default skip
+             * @enum {string}
+             */
+            on_duplicate: "skip" | "update";
+            tag_ids?: string;
+            /** @enum {string} */
+            lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+        };
+        ImportJobDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "processing" | "completed" | "failed";
+            filename: string;
+            options: {
+                [key: string]: unknown;
+            };
+            total_rows: number | null;
+            created_count: number;
+            updated_count: number;
+            skipped_count: number;
+            error_count: number;
+            errors: {
+                row: number;
+                field?: string;
+                message: string;
+            }[];
+            /** Format: uuid */
+            created_by_user_id: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ImportsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "pending" | "processing" | "completed" | "failed";
+                filename: string;
+                options: {
+                    [key: string]: unknown;
+                };
+                total_rows: number | null;
+                created_count: number;
+                updated_count: number;
+                skipped_count: number;
+                error_count: number;
+                errors: {
+                    row: number;
+                    field?: string;
+                    message: string;
+                }[];
+                /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
         };
         AlertsListDto: {
             data: {
@@ -4690,197 +6250,27 @@ export interface components {
             resolved?: boolean;
             reason?: string;
         };
-        CreateChannelDto: {
-            name: string;
+        CopilotSummaryDto: {
+            summary: string;
+            highlights: string[];
+            cached: boolean;
+        };
+        CopilotActionDto: {
+            action: string;
+            rationale: string;
             /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web";
-            provider_account_id?: string;
-            waba_id?: string;
-            access_token?: string;
+            urgency: "low" | "medium" | "high";
+            cached: boolean;
         };
-        ChannelDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-            provider_account_id: string;
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            display_phone_number: string | null;
-            verified_name: string | null;
-            waba_id: string | null;
-            default_ai_agent_id: string | null;
-            credentials_configured: boolean;
-            token_last4: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
+        CopilotDraftDto: {
+            message: string;
+            cached: boolean;
         };
-        ChannelListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-                provider_account_id: string;
-                /** @enum {string} */
-                status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-                display_phone_number: string | null;
-                verified_name: string | null;
-                waba_id: string | null;
-                default_ai_agent_id: string | null;
-                credentials_configured: boolean;
-                token_last4: string | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-        };
-        UpdateChannelDto: {
-            name?: string;
-            /** Format: uuid */
-            default_ai_agent_id?: string | null;
-        };
-        UpdateChannelCredentialsDto: {
-            access_token: string;
-        };
-        WwebPairingStateDto: {
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            qr: string | null;
-            qr_image: string | null;
-            pairing_code: string | null;
-            phone_number: string | null;
-        };
-        WwebPairingCodeRequestDto: {
-            phone_number: string;
-        };
-        ContactsListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                full_name: string | null;
-                first_name: string | null;
-                last_name: string | null;
-                email: string | null;
-                phone: string | null;
-                /** @enum {string|null} */
-                document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
-                document_number: string | null;
-                /** Format: date-time */
-                birthdate: string | null;
-                address: string | null;
-                city: string | null;
-                avatar_url: string | null;
-                /** @enum {string} */
-                lifecycle_stage: "prospect" | "lead" | "customer" | "other";
-                /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
-                custom_fields: {
-                    [key: string]: unknown;
-                };
-                channel_identities: {
-                    /** Format: uuid */
-                    id: string;
-                    /** @enum {string} */
-                    channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-                    external_id: string;
-                    display_name: string | null;
-                    /** Format: date-time */
-                    last_seen_at: string | null;
-                }[];
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        ContactStatsDto: {
-            /** @enum {string} */
-            period: "today" | "7d" | "30d";
-            /** Format: date-time */
-            period_start: string;
-            /** Format: date-time */
-            period_end: string;
-            new_count: number;
-            by_stage: {
-                prospect: number;
-                lead: number;
-                customer: number;
-                other: number;
-            };
-            series: {
-                /** Format: date-time */
-                bucket: string;
-                count: number;
-            }[];
-        };
-        ContactDto: {
-            /** Format: uuid */
-            id: string;
-            full_name: string | null;
-            first_name: string | null;
-            last_name: string | null;
-            email: string | null;
-            phone: string | null;
-            /** @enum {string|null} */
-            document_type: "cc" | "ce" | "ti" | "pp" | "nit" | null;
-            document_number: string | null;
-            /** Format: date-time */
-            birthdate: string | null;
-            address: string | null;
-            city: string | null;
-            avatar_url: string | null;
-            /** @enum {string} */
-            lifecycle_stage: "prospect" | "lead" | "customer" | "other";
-            /** @enum {string} */
-            source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
-            custom_fields: {
-                [key: string]: unknown;
-            };
-            channel_identities: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-                external_id: string;
-                display_name: string | null;
-                /** Format: date-time */
-                last_seen_at: string | null;
-            }[];
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        UpdateContactDto: {
-            full_name?: string | null;
-            first_name?: string | null;
-            last_name?: string | null;
-            /** Format: email */
-            email?: string | null;
-            phone?: string | null;
-            /** @enum {string|null} */
-            document_type?: "cc" | "ce" | "ti" | "pp" | "nit" | null;
-            document_number?: string | null;
-            /** Format: date */
-            birthdate?: string | null;
-            address?: string | null;
-            city?: string | null;
-            /** @enum {string} */
-            lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
-            custom_fields?: {
-                [key: string]: (string | number | boolean) | null;
-            };
+        CopilotPipelineDto: {
+            summary: string;
+            risks: string[];
+            opportunities: string[];
+            cached: boolean;
         };
         RemindersListDto: {
             data: {
@@ -7405,6 +8795,191 @@ export interface operations {
             };
         };
     };
+    ContactsController_duplicatePairs_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicatesListDto"];
+                };
+            };
+        };
+    };
+    ContactsController_merge_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MergeContactDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDto"];
+                };
+            };
+        };
+    };
+    ContactsController_list_v1: {
+        parameters: {
+            query?: {
+                q?: string;
+                lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                city?: string;
+                created_after?: string;
+                created_before?: string;
+                min_score?: number;
+                owner_user_id?: string;
+                tag_id?: string;
+                sort?: "created_at" | "score";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactsListDto"];
+                };
+            };
+        };
+    };
+    ContactsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateContactDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDto"];
+                };
+            };
+        };
+    };
+    ContactsController_stats_v1: {
+        parameters: {
+            query?: {
+                period?: "today" | "7d" | "30d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactStatsDto"];
+                };
+            };
+        };
+    };
+    ContactsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDto"];
+                };
+            };
+        };
+    };
+    ContactsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContactsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContactDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDto"];
+                };
+            };
+        };
+    };
     QuickActionsController_uploadAsset_v1: {
         parameters: {
             query?: never;
@@ -7598,7 +9173,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrderNotificationSettingsDto"];
+                    "application/json": components["schemas"]["OrderNotificationSettingsViewDto"];
                 };
             };
         };
@@ -7938,6 +9513,259 @@ export interface operations {
             };
         };
     };
+    ChannelsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelListDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateChannelDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChannelsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateChannelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_rotateCredentials_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateChannelCredentialsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    WwebSessionController_start_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_stop_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_pairingState_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WwebPairingStateDto"];
+                };
+            };
+        };
+    };
+    WwebSessionController_pairingQrPng_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PNG del código QR de vinculación */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_requestPairingCode_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WwebPairingCodeRequestDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_logout_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PaymentMethodsController_list_v1: {
         parameters: {
             query?: never;
@@ -8101,6 +9929,1109 @@ export interface operations {
         requestBody?: never;
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmPipelinesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelinesListDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePipelineDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_remove_v1: {
+        parameters: {
+            query?: {
+                move_to_pipeline_id?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmPipelinesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePipelineDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_board_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_addStage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStageDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_reorder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderStagesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDto"];
+                };
+            };
+        };
+    };
+    CrmPipelinesController_removeStage_v1: {
+        parameters: {
+            query?: {
+                move_to_stage_id?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+                stage_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmPipelinesController_updateStage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                stage_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateStageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_list_v1: {
+        parameters: {
+            query?: {
+                pipeline_id?: string;
+                stage_id?: string;
+                status?: "open" | "won" | "lost";
+                owner_user_id?: string;
+                contact_id?: string;
+                q?: string;
+                sort?: "stage_entered_at" | "value_cents" | "expected_close_date";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealsListDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDealDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_stats_v1: {
+        parameters: {
+            query?: {
+                period?: "today" | "7d" | "30d" | "90d";
+                pipeline_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealStatsDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmDealsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDealDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_events_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealEventsListDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_move_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveDealDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_win_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WinDealDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_lose_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoseDealDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmDealsController_reopen_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_list_v1: {
+        parameters: {
+            query?: {
+                contact_id?: string;
+                deal_id?: string;
+                kind?: "note" | "call" | "meeting" | "task";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivitiesListDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateActivityDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmActivitiesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateActivityDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_taskStats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskStatsDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_tasks_v1: {
+        parameters: {
+            query?: {
+                assignee?: "me" | "unassigned" | string;
+                status?: "open" | "completed" | "cancelled";
+                due?: "overdue" | "today" | "week";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivitiesListDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_complete_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_reopen_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_timeline_v1: {
+        parameters: {
+            query?: {
+                sources?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_profile_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactProfileDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_assignOwner_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignOwnerDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactProfileDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_listTags_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagsListDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_createTag_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTagDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagsListDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_removeTag_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmTagsSegmentsController_updateTag_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagsListDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_contactTags_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactTagsDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_setContactTags_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetContactTagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactTagsDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_listSegments_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentsListDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_createSegment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSegmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_segmentById_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_removeSegment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmTagsSegmentsController_updateSegment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSegmentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentDto"];
+                };
+            };
+        };
+    };
+    CrmTagsSegmentsController_segmentContacts_v1: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentContactsDto"];
+                };
+            };
+        };
+    };
+    CrmImportsController_list_v1: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportsListDto"];
+                };
+            };
+        };
+    };
+    CrmImportsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ImportOptionsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJobDto"];
+                };
+            };
+        };
+    };
+    CrmImportsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJobDto"];
+                };
+            };
+        };
+    };
+    CrmImportsController_exportContacts_v1: {
+        parameters: {
+            query?: {
+                segment_id?: string;
+                filters?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8676,54 +11607,12 @@ export interface operations {
             };
         };
     };
-    ChannelsController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelListDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateChannelDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_byId_v1: {
+    CrmCopilotController_summary_v1: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                contact_id: string;
             };
             cookie?: never;
         };
@@ -8734,124 +11623,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ChannelDto"];
+                    "application/json": components["schemas"]["CopilotSummaryDto"];
                 };
             };
         };
     };
-    ChannelsController_remove_v1: {
+    CrmCopilotController_nextBestAction_v1: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChannelsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateChannelDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_rotateCredentials_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateChannelCredentialsDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    WwebSessionController_start_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_stop_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_pairingState_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
+                contact_id: string;
             };
             cookie?: never;
         };
@@ -8862,124 +11644,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WwebPairingStateDto"];
+                    "application/json": components["schemas"]["CopilotActionDto"];
                 };
             };
         };
     };
-    WwebSessionController_pairingQrPng_v1: {
+    CrmCopilotController_draftFollowup_v1: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description PNG del código QR de vinculación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_requestPairingCode_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WwebPairingCodeRequestDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_logout_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ContactsController_list_v1: {
-        parameters: {
-            query?: {
-                q?: string;
-                lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContactsListDto"];
-                };
-            };
-        };
-    };
-    ContactsController_stats_v1: {
-        parameters: {
-            query?: {
-                period?: "today" | "7d" | "30d";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ContactStatsDto"];
-                };
-            };
-        };
-    };
-    ContactsController_byId_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
+                contact_id: string;
             };
             cookie?: never;
         };
@@ -8990,32 +11665,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDto"];
+                    "application/json": components["schemas"]["CopilotDraftDto"];
                 };
             };
         };
     };
-    ContactsController_update_v1: {
+    CrmCopilotController_pipelineSummary_v1: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                pipeline_id: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateContactDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ContactDto"];
+                    "application/json": components["schemas"]["CopilotPipelineDto"];
                 };
             };
         };
