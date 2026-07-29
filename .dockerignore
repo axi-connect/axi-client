@@ -1,0 +1,30 @@
+# Contexto de build de la imagen de producción (ver Dockerfile).
+# Cuanto menos se envíe al daemon, más rápido el build y mejor la caché.
+
+.git
+.gitignore
+.github
+.claude
+.vscode
+
+node_modules
+.next
+out
+build
+coverage
+
+# Documentación y tests no participan en `next build`.
+docs
+**/__tests__
+jest.config.cjs
+jest.setup.ts
+tsconfig.jest.json
+
+# Nunca deben entrar en la imagen.
+.env*
+
+Dockerfile
+.dockerignore
+desktop.ini
+*.log
+npm-debug.log*
