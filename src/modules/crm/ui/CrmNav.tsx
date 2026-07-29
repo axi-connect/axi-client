@@ -19,7 +19,7 @@ const NAV_ITEMS: ReadonlyArray<{
   { href: "/crm/contacts", label: "Contactos" },
   { href: "/crm/pipeline", label: "Pipeline" },
   { href: "/crm/tasks", label: "Tareas" },
-  // { href: "/crm/settings", label: "Configuración", permission: "crm:manage" }, // F5
+  { href: "/crm/settings", label: "Configuración", permission: "crm:manage" },
 ];
 
 export function CrmNav() {
