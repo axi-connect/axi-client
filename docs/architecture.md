@@ -7,6 +7,55 @@
 > Documento hermano: `axi-server/docs/architecture.md` (backend). Este frontend consume su API REST y sus WebSockets. Cuando un contrato cambie, ambos documentos deben quedar consistentes.
 >
 > **Estado (julio 2026): migrado al backend v2 (axi-connect).** Contrato bajo `/api/v1/*`, tipos generados desde `axi-server/openapi/openapi.json` (`npm run api:types`), errores RFC 7807 discriminados por `code`, WebSocket en namespaces `/inbox` y `/channels`. La guía de consumo del backend es `axi-server/docs/integracion_frontend.md`.
+>
+> 🧠 **La base de conocimientos del código está en `codebase-memory` (MCP).** Antes de explorar el repo a mano, consulta el grafo indexado: es la primera herramienta para cualquier búsqueda estructural. Ver **§0**.
+
+---
+
+## 0. Base de conocimientos — grafo `codebase-memory` (MCP)
+
+**La base de conocimientos de este proyecto vive en `codebase-memory`**, un servidor MCP que mantiene un grafo del código (símbolos, llamadas, imports, rutas, métricas de complejidad). Es la **primera** herramienta a usar para explorar: sustituye a `grep`/`glob` cuando buscas definiciones, implementaciones o relaciones. `grep`/`glob`/`read` quedan para texto plano, configs y archivos no-código.
+
+Ambos repos del producto están indexados:
+
+| Proyecto | ID en el grafo | Ruta local |
+|---|---|---|
+| Frontend (este repo) | `home-davela-dev-axi-axi-client` | `/home/davela/dev/axi/axi-client` |
+| Backend (hermano) | `home-davela-dev-axi-axi-server` | `/home/davela/dev/axi/axi-server` |
+
+> Los IDs los deriva el MCP de la **ruta absoluta** del repo (el parámetro `name` de `index_repository` se ignora). Si clonas en otra ruta, tus IDs serán distintos: confírmalos con `list_projects`.
+
+### 0.1 Herramientas
+
+- **`search_graph(query="...")`** — búsqueda BM25 en lenguaje natural (parte identificadores camelCase, prioriza funciones/rutas/clases). Punto de entrada por defecto.
+- **`search_graph(name_pattern=…/qn_pattern=…)`** — match exacto por regex. **`semantic_query=["a","b"]`** (array, no string) para búsqueda vectorial que salva diferencias de vocabulario.
+- **`get_code_snippet(qualified_name)`** — fuente exacta de un símbolo, con rango preciso.
+- **`trace_path(function_name, mode=calls|data_flow|cross_service)`** — cadenas de llamada y análisis de impacto.
+- **`query_graph(query)`** — Cypher para patrones multi-hop, agregaciones y métricas (`complexity`, `transitive_loop_depth`, `linear_scan_in_loop`).
+- **`get_architecture(aspects=[...])`** — estructura, `boundaries`, `hotspots` y `clusters` (detección de comunidades Leiden: revela los módulos de facto, que a menudo cruzan el layout de carpetas).
+- Mantenimiento: **`index_repository`**, **`index_status`**, **`detect_changes`**, **`get_graph_schema`**, **`list_projects`**, **`manage_adr`**.
+
+Cada repo tiene además un **ADR persistido en el grafo** (`manage_adr(mode='get')`) con sus decisiones e invariantes. Leerlo antes de un cambio arquitectónico.
+
+### 0.2 Mantener el índice fresco
+
+El índice **no se actualiza solo**. Tras cambios relevantes (nuevos slices, refactors, cambios de contrato):
+
+```
+index_repository(repo_path="/home/davela/dev/axi/axi-client", mode="full", persistence=true)
+```
+
+`mode`: `full` (todos los archivos + aristas de similitud/semántica), `moderate` (filtrado + semántica), `fast` (sin semántica). `detect_changes(project=...)` muestra el diff frente a la base y su impacto.
+
+El artefacto `.codebase-memory/graph.db.zst` está en **`.gitignore`**: cada dev indexa en local (toma segundos). No se versiona.
+
+### 0.3 Gotchas de este grafo (verificados)
+
+- **Los nodos `Route` NO son los endpoints del backend.** Los 172 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
+- **Las llamadas reales al API son aristas `HTTP_CALLS`** (189). Filtra `callee STARTS WITH 'http.'` para quedarte con las **159 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
+- Los `url_path` de esas aristas son **relativos al prefijo `/api/v1`** (p.ej. `/orders/:id/cancel`), porque así los expresa `HttpClient` (§7.1).
+- **No existen aristas cross-repo automáticas con `axi-server`**: `index_repository(mode='cross-repo-intelligence')` devuelve 0 y es un límite estructural, no un error de configuración — el BFF proxy interpone la indirección y el backend no expone nodos `Route` reales. **Puente manual:** toma el `url_path` del frontend y busca en el backend el `@Controller` cuyo prefijo coincida (`MATCH (c:Class) WHERE c.decorators CONTAINS 'Controller'`). La fuente de verdad del contrato sigue siendo `axi-server/openapi/openapi.json`.
+- Hotspots de fan-in de este repo: `cn` (205), `errorMessage` (86), `showAlert` (43), `HttpClient.post`/`get` (20/19). Tocarlos tiene alcance amplio.
 
 ---
 

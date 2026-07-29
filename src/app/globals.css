@@ -242,12 +242,58 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   will-change: transform, opacity;
 }
 
+/* -------- Landing pública: mascotas y superficies flotantes --------
+   Loops expresivos EXCLUSIVOS de superficies de marketing (DESIGN.md §6):
+   en las vistas de trabajo nada se mueve en loop. En CSS y no en framer-motion
+   porque corren en el compositor (misma razón que el splash). */
+
+/* Flotación de las mascotas (Lumo/Nova): vaivén con leve rotación. */
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+
+.animate-mascot-bob {
+  animation: mascot-bob 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-mascot-bob-slow { animation-duration: 8s; }
+
+/* Flotación del card protagonista del hero. */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-hero-float {
+  animation: hero-float 9s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* -------- Acordeón (shared/components/ui/accordion.tsx) --------
+   Radix expone la altura del contenido en --radix-accordion-content-height. */
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+.animate-accordion-down { animation: accordion-down 0.2s ease-out; }
+.animate-accordion-up { animation: accordion-up 0.2s ease-out; }
+
 /* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
    `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja
    intensidad. El splash cae a crossfade puro (el provider maneja la rama JS). */
 @media (prefers-reduced-motion: reduce) {
   .animate-brand-pulse { animation: none; }
   .animate-splash-in { animation-name: fade-in; }
+  .animate-mascot-bob, .animate-hero-float { animation: none; }
+  .animate-accordion-down, .animate-accordion-up { animation: none; }
   /* Entradas/salidas de Radix (popover, dropdown, sheet): sin animación,
      los elementos aparecen/desaparecen al instante. */
   .animate-in, .animate-out { animation: none; }

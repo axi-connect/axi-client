@@ -124,14 +124,16 @@ export default function SiteHeader({ scrollContainerRef }: { scrollContainerRef:
             variants={headerVariants}
             animate={isScrolled ? 'scrolled' : 'animate'}
             transition={fade.slow}
-            className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${isScrolled ? 'glass' : ''}`}
-            style={{
-                // backdropFilter: isScrolled ? 'blur(20px)' : 'none',
-                // backgroundColor: isScrolled
-                // ? (theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)')
-                // : (theme === 'dark' ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)'),
-                // boxShadow: isScrolled ? '0 8px 32px rgba(0, 0, 0, 0.1)' : 'none',
-            }}
+            // El borde de 1px existe SIEMPRE (transparente en reposo): togglear
+            // `.glass` a secas hacía saltar border-width 0→1px y `transition-all`
+            // interpolaba el border-color desde el gris por defecto — el "flash"
+            // de borde iluminado al cambiar de estado. Solo transicionan las
+            // propiedades del material (fondo, borde, sombra, blur).
+            className={`fixed top-0 right-0 left-0 z-50 border border-transparent transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${
+                isScrolled
+                    ? 'glass'
+                    : 'bg-transparent shadow-none [-webkit-backdrop-filter:saturate(100%)_blur(0px)] [backdrop-filter:saturate(100%)_blur(0px)]'
+            }`}
         >
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between lg:h-20">

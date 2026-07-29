@@ -10,8 +10,10 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // `relative` en el contenedor de scroll: framer-motion (useScroll de la
+  // landing) exige posición no estática para calcular offsets correctos.
   return (
-    <div ref={scrollContainerRef} data-app-scroll className="h-screen w-screen overflow-y-auto sidebar-scroll">
+    <div ref={scrollContainerRef} data-app-scroll className="relative h-screen w-screen overflow-y-auto sidebar-scroll">
       <SiteHeader scrollContainerRef={scrollContainerRef} />
       <div className="flex flex-col items-center justify-center">
         {children}
