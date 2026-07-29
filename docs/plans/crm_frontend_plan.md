@@ -18,7 +18,7 @@
 |---|---|---|---|
 | F0 | Transversales (schema, icono, alias, eventos WS, errores, deep-links) | ✅ Hecha | `feat/crm-f0-transversales` |
 | F1 | Contactos: lista + filtros + CRUD modal | ✅ Hecha | `feat/crm-f1-contacts` (apilado sobre F0) |
-| F2 | Contacto 360 + duplicados/merge | 🔒 **Gate: aprobar mockups §5.2** | — |
+| F2 | Contacto 360 + duplicados/merge | ✅ Hecha | `feat/crm-f2-contact-360` (apilado sobre F1) |
 | F3 | Pipeline kanban + deals + rail | 🔒 Gate: mockups §5.3 | — |
 | F4 | Tareas | 🔒 Gate: mockup §5.4 | — |
 | F5 | Configuración (pipelines/tags/segmentos) | 🔒 Gate: mockups §5.5 | — |
