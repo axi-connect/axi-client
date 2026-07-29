@@ -17,14 +17,15 @@ export const NAV_PATH_ALIASES: Record<string, string> = {
   "/inbox": "/workspace/inbox",
   "/ai-agents": "/admin/agents",
   "/catalog": "/catalog/products",
+  // El ítem `contacts` del backend vive dentro del módulo CRM del cliente.
+  "/contacts": "/crm/contacts",
 };
 
 /**
  * Paths de navegación del backend que aún no tienen UI (módulos pendientes:
- * contacts, usage, audit). Se filtran del sidebar para no producir 404.
+ * usage, audit). Se filtran del sidebar para no producir 404.
  */
 export const UNIMPLEMENTED_NAV_PATHS = new Set([
-  "/contacts",
   "/usage",
   "/settings/audit",
   "/settings/channels",

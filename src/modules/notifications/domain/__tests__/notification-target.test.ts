@@ -22,6 +22,32 @@ describe("notificationTarget", () => {
     expect(notificationTarget("order.created", {})).toBe("/orders")
   })
 
+  it("resuelve crm.deal_* al rail del board (CRM F0)", () => {
+    expect(notificationTarget("crm.deal_created", { deal_id: "d1" })).toBe(
+      "/crm/pipeline/deal/d1",
+    )
+    expect(notificationTarget("crm.deal_stalled", { deal_id: "d2" })).toBe(
+      "/crm/pipeline/deal/d2",
+    )
+    // Sin deal_id: al board general, nunca null
+    expect(notificationTarget("crm.deal_won", {})).toBe("/crm/pipeline")
+  })
+
+  it("resuelve crm.task_* a la bandeja y crm.import_* al historial", () => {
+    expect(notificationTarget("crm.task_due", { activity_id: "a1" })).toBe("/crm/tasks")
+    expect(notificationTarget("crm.task_assigned", {})).toBe("/crm/tasks")
+    expect(notificationTarget("crm.import_completed", { import_job_id: "j1" })).toBe(
+      "/crm/settings/imports",
+    )
+  })
+
+  it("resuelve contact.* al 360 del contacto ganador", () => {
+    expect(notificationTarget("contact.merged", { contact_id: "c1" })).toBe(
+      "/crm/contacts/c1",
+    )
+    expect(notificationTarget("contact.lifecycle_changed", {})).toBeNull()
+  })
+
   it("devuelve null para tipos desconocidos y data no-objeto", () => {
     expect(notificationTarget("usage.threshold", { metric: "messages" })).toBeNull()
     expect(notificationTarget("conversation.queued", null)).toBeNull()

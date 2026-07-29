@@ -224,6 +224,100 @@ export type OrderPaymentReportedEvent = OrderRealtimeSummary & { payment_id: str
 /** Edición de items/notas/descuento en draft|pending. */
 export type OrderUpdatedEvent = OrderRealtimeSummary;
 
+// ---------------------------------------------------------------------------
+// CRM (F0) — deals/actividades/imports en vivo. Rooms company_{id} (+
+// conversation_{id} si el deal nació de una conversación). `crm.task_due` NO
+// viaja por WS: llega solo como notification.created (campanita).
+// Payloads espejo de axi-server src/modules/crm/application/crm_events.ts.
+// ---------------------------------------------------------------------------
+
+export type DealStatus = Schemas["DealDto"]["status"];
+export type DealSource = Schemas["DealDto"]["source"];
+export type ActivityKind = Schemas["ActivityDto"]["kind"];
+export type TaskStatus = Schemas["ActivityDto"]["task_status"];
+
+/** Payload base de todos los `crm.deal_*` (sin contact/stage embebidos: si la
+ * vista necesita el detalle completo, re-consulta GET /crm/deals/:id). */
+export type CrmDealRealtimeSummary = {
+  company_id: string;
+  deal_id: string;
+  contact_id: string;
+  pipeline_id: string;
+  stage_id: string;
+  title: string;
+  status: DealStatus;
+  value_cents: number | null;
+  currency: string;
+  owner_user_id: string | null;
+  conversation_id: string | null;
+  order_id: string | null;
+  source: DealSource;
+  created_by_type: Schemas["DealDto"]["created_by_type"];
+};
+
+/** Manual, tool IA `open_deal` o automatización order→deal (ver `source`). */
+export type CrmDealCreatedEvent = CrmDealRealtimeSummary;
+
+/** PATCH de campos / reopen: kanban y detalle refrescan sin round-trip. */
+export type CrmDealUpdatedEvent = CrmDealRealtimeSummary;
+
+/** POST /crm/deals/:id/move (drag del kanban). */
+export type CrmDealStageChangedEvent = CrmDealRealtimeSummary & { from_stage_id: string };
+
+export type CrmDealWonEvent = CrmDealRealtimeSummary;
+
+export type CrmDealLostEvent = CrmDealRealtimeSummary & { lost_reason: string | null };
+
+/** Sweep horario: deal sin moverse más de `rotting_days` de su etapa. */
+export type CrmDealStalledEvent = CrmDealRealtimeSummary & { stalled_days: number };
+
+/** Payload común de actividad/tarea (operador o IA). */
+export type CrmActivityRealtimeSummary = {
+  company_id: string;
+  activity_id: string;
+  contact_id: string;
+  deal_id: string | null;
+  conversation_id: string | null;
+  kind: ActivityKind;
+  title: string | null;
+  due_at: string | null;
+  assigned_user_id: string | null;
+  task_status: TaskStatus;
+  created_by_type: Schemas["ActivityDto"]["created_by_type"];
+  created_by_user_id: string | null;
+};
+
+export type CrmActivityCreatedEvent = CrmActivityRealtimeSummary;
+
+export type CrmTaskCompletedEvent = CrmActivityRealtimeSummary;
+
+/** Fin del import CSV (éxito o fallo); con `failed` solo llegan los básicos. */
+export type CrmImportCompletedEvent = {
+  company_id: string;
+  import_job_id: string;
+  status: "completed" | "failed";
+  created_by_user_id: string | null;
+  error_count: number;
+  total_rows?: number;
+  created_count?: number;
+  updated_count?: number;
+  skipped_count?: number;
+};
+
+/** Promoción prospect→lead→customer (server-side, p.ej. al ganar un deal). */
+export type ContactLifecycleChangedEvent = {
+  company_id: string;
+  contact_id: string;
+  lifecycle_stage: Schemas["ContactDto"]["lifecycle_stage"];
+};
+
+/** Merge de duplicados: quitar al perdedor (`merged_contact_id`) de listados. */
+export type ContactMergedEvent = {
+  company_id: string;
+  contact_id: string;
+  merged_contact_id: string;
+};
+
 export type ChannelQrCodeEvent = {
   channel_id: string;
   company_id: string;
@@ -283,6 +377,17 @@ export type InboxServerEvents = {
   "order.status_changed": (payload: OrderStatusChangedEvent) => void;
   "order.payment_reported": (payload: OrderPaymentReportedEvent) => void;
   "order.updated": (payload: OrderUpdatedEvent) => void;
+  "crm.deal_created": (payload: CrmDealCreatedEvent) => void;
+  "crm.deal_updated": (payload: CrmDealUpdatedEvent) => void;
+  "crm.deal_stage_changed": (payload: CrmDealStageChangedEvent) => void;
+  "crm.deal_won": (payload: CrmDealWonEvent) => void;
+  "crm.deal_lost": (payload: CrmDealLostEvent) => void;
+  "crm.deal_stalled": (payload: CrmDealStalledEvent) => void;
+  "crm.activity_created": (payload: CrmActivityCreatedEvent) => void;
+  "crm.task_completed": (payload: CrmTaskCompletedEvent) => void;
+  "crm.import_completed": (payload: CrmImportCompletedEvent) => void;
+  "contact.lifecycle_changed": (payload: ContactLifecycleChangedEvent) => void;
+  "contact.merged": (payload: ContactMergedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;

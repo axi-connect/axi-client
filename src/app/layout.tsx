@@ -33,15 +33,15 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001"),
   title: {
-    default: "Axi Connect",
+    default: "axi connect",
     template: "%s — Axi Connect",
   },
   description:
     "Atención al cliente omnicanal con IA: WhatsApp, Instagram y Messenger en un solo inbox, con agentes inteligentes y handoff humano.",
   openGraph: {
     type: "website",
-    siteName: "Axi Connect",
-    title: "Axi Connect",
+    siteName: "axi connect",
+    title: "axi connect",
     description:
       "Atención al cliente omnicanal con IA: WhatsApp, Instagram y Messenger en un solo inbox.",
     locale: "es_CO",

@@ -14,6 +14,7 @@ import {
   ScrollText,
   Shield,
   ShoppingCart,
+  Target,
   Users,
   Zap,
   type LucideIcon,
@@ -40,6 +41,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   scroll: ScrollText,
   shield: Shield,
   "shopping-cart": ShoppingCart,
+  target: Target,
   users: Users,
   zap: Zap,
 };
