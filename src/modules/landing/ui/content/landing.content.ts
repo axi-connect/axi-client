@@ -56,8 +56,8 @@ export const MASCOTS = {
 
 export const HERO = {
   // kicker: "Convierte cada conversación en una oportunidad de venta.",
-  headline: "Todo empieza con una conversación.",
-  headlineGradient: "Y debería terminar en una venta.",
+  headline: "El futuro es conversacional.",
+  // headlineGradient: "Y debería terminar en una venta.",
   subheadline:
     "Tus clientes ya te compran por WhatsApp e Instagram. Axi Connect pone ahí a tu mejor vendedor: responde en segundos, cotiza con tus precios reales, arma el pedido, comparte tus medios de pago y te muestra —en pesos— lo que produjo cada conversación. Y cuando hace falta una persona, tu equipo entra sin que el cliente note el cambio.",
   ctaPrimary: "Agenda tu demo",
@@ -67,9 +67,28 @@ export const HERO = {
 
 /* ─────────────────────── Mockup de chat (hero y §4) ─────────────────── */
 
+/**
+ * CÓMO AÑADIR IMÁGENES REALES (`imageSrc` aquí y `photoSrc` en CASES):
+ *   a) URL de Cloudinary (host ya permitido en next.config.ts):
+ *      imageSrc: "https://res.cloudinary.com/<cloud>/image/upload/v.../foto.jpg"
+ *   b) Archivo local: copiarlo a `public/images/landing/` y referenciarlo como
+ *      "/images/landing/foto.jpg" — SIEMPRE bajo `images/` (el middleware
+ *      redirige a login cualquier otra carpeta de public/).
+ *   c) Otro dominio remoto: además de la URL, añadir su hostname a
+ *      `images.remotePatterns` en next.config.ts.
+ * Sin `imageSrc`/`photoSrc`, el mockup muestra el placeholder punteado.
+ */
 export type ChatMessage =
   | { id: string; from: "customer" | "agent"; kind: "text"; text: string }
-  | { id: string; from: "agent"; kind: "product"; placeholder: string; caption: string }
+  | {
+      id: string;
+      from: "agent";
+      kind: "product";
+      placeholder: string;
+      caption: string;
+      /** URL de la foto real del producto; sin ella se muestra el placeholder. */
+      imageSrc?: string;
+    }
   | { id: string; from: "system"; kind: "system"; text: string };
 
 export const CHAT_MOCKUP = {
@@ -78,7 +97,16 @@ export const CHAT_MOCKUP = {
   messages: [
     { id: "m1", from: "customer", kind: "text", text: "Hola, ¿tienen la camizeta oversize en talla M?" },
     { id: "m2", from: "agent", kind: "text", text: "Sí 🙌 La Oversize Heavy en talla M está disponible. Te mando la foto." },
-    { id: "m3", from: "agent", kind: "product", placeholder: "foto real del producto (catálogo)", caption: "Oversize Heavy · M — $89.900" },
+    {
+      id: "m3",
+      from: "agent",
+      kind: "product",
+      placeholder: "foto real del producto (catálogo)",
+      caption: "Oversize Heavy · M — $89.900",
+      // TODO [A VALIDAR]: pegar aquí la URL de la foto real de la Oversize
+      // Heavy del catálogo de Savage (ver guía de imágenes arriba).
+      imageSrc: null,
+    },
     { id: "m4", from: "customer", kind: "text", text: "Perfecto, la llevo. ¿Cómo pago?" },
     { id: "m5", from: "agent", kind: "text", text: "Listo, pedido #1042 por $89.900. Puedes pagar a Nequi 300 123 4567 o por link." },
   ] as ReadonlyArray<ChatMessage>,
@@ -362,7 +390,9 @@ export const TEAM_CONTROL = {
 
 // TODO [CIFRA REAL] + [A VALIDAR]: cifras y permiso de publicación de los
 // tres pilotos. Mientras `pending` sea true, la tarjeta muestra el badge
-// "CIFRA PENDIENTE" (como la plantilla).
+// "CIFRA PENDIENTE" (como la plantilla). `photoSrc` sigue la guía de
+// imágenes de arriba (Cloudinary o /images/landing/...); sin él se muestra
+// el placeholder punteado.
 export const CASES = {
   title: "Tres negocios que ya no adivinan cuánto les vende el chat.",
   cases: [
@@ -372,6 +402,8 @@ export const CASES = {
       sector: "Comida rápida — Palmira, Valle",
       body: "Pedidos a domicilio por WhatsApp, pagos por Nequi y efectivo. El agente toma el pedido completo, comparte los medios de pago y el equipo solo verifica y despacha.",
       photoPlaceholder: "foto del negocio · Joao's Burguer",
+      // TODO [A VALIDAR]: URL de la foto real del negocio.
+      photoSrc: undefined as string | undefined,
       stat: { value: 74, decimals: 0, prefix: "", suffix: "%", caption: "de los pedidos se toman sin intervención humana", pending: true },
     },
     {
@@ -380,6 +412,8 @@ export const CASES = {
       sector: "Moda urbana — Bogotá",
       body: "129 productos con tallas y fotos por variante, envíos a todo el país. El agente encuentra la prenda aunque se la pidan con errores de escritura, envía las fotos reales y cierra el pedido con el stock del sistema.",
       photoPlaceholder: "foto del negocio · Savage",
+      // TODO [A VALIDAR]: URL de la foto real del negocio.
+      photoSrc: undefined as string | undefined,
       stat: { value: 18, decimals: 0, prefix: "", suffix: "%", caption: "de tasa de cierre sobre las conversaciones del mes", pending: true },
     },
     {
@@ -388,6 +422,8 @@ export const CASES = {
       sector: "Estudio de grabación — Bogotá",
       body: "Aquí lo que se vende es tiempo: sesiones de grabación. El agente consulta la disponibilidad real, agenda la sesión y el sistema envía recordatorios automáticos 24 horas y 1 hora antes.",
       photoPlaceholder: "foto del negocio · TBI Studio",
+      // TODO [A VALIDAR]: URL de la foto real del negocio.
+      photoSrc: undefined as string | undefined,
       stat: { value: -31, decimals: 0, prefix: "", suffix: "%", caption: "de citas incumplidas desde los recordatorios", pending: true },
     },
   ],

@@ -72,20 +72,76 @@ export const DUPLICATE_REASON_LABELS: Record<DuplicatePairDTO["reason"], string>
 };
 
 /**
- * Señales del score con sus pesos DEFAULT (espejo de crm_settings del backend,
- * cap 100). El breakdown se muestra tal cual: `score_signals` marca cuáles
- * están activas (`clave: true`); los pesos por tenant no viajan en el DTO.
+ * HITOS del embudo con sus pesos DEFAULT (S3 backend: espejo de crm_settings,
+ * cap 100). El modelo es MONOTÓNICO: cada hito implica los anteriores (un
+ * pedido ⇒ hubo intención) y los caminos producto (pedido→pago) y servicio
+ * (cita→completada) convergen al mismo hito — ambos llegan a 100.
+ * `score_signals.milestones[hito] = { at, evidence }`; los pesos por tenant
+ * no viajan en el DTO.
  */
-export const SCORE_SIGNALS: ReadonlyArray<{ key: string; label: string; weight: number }> = [
-  { key: "engaged_conversation", label: "Conversación activa", weight: 30 },
-  { key: "sales_intent", label: "Intención de venta", weight: 20 },
-  { key: "has_order", label: "Pedido realizado", weight: 20 },
-  { key: "open_deal", label: "Oportunidad abierta", weight: 20 },
-  { key: "appointment", label: "Cita agendada", weight: 15 },
+export const SCORE_MILESTONES: ReadonlyArray<{
+  key: string;
+  label: string;
+  detail: string;
+  weight: number;
+}> = [
+  { key: "engaged", label: "Conversación iniciada", detail: "Habló con el negocio", weight: 15 },
+  {
+    key: "interest",
+    label: "Interés demostrado",
+    detail: "Exploró catálogo o intención de venta",
+    weight: 20,
+  },
+  {
+    key: "evaluating",
+    label: "Evaluando",
+    detail: "Cotización u oportunidad abierta",
+    weight: 25,
+  },
+  { key: "committed", label: "Compromiso", detail: "Pedido creado o cita agendada", weight: 25 },
+  {
+    key: "converted",
+    label: "Convertido",
+    detail: "Pago verificado, deal ganado o cita cumplida",
+    weight: 15,
+  },
 ];
 
-export function isSignalActive(profile: ContactProfileDTO, key: string): boolean {
-  return profile.score_signals?.[key] === true;
+export interface MilestoneEntry {
+  at?: string;
+  evidence?: string;
+}
+
+/** Entry del hito si fue alcanzado; undefined si está pendiente. */
+export function milestoneEntry(
+  profile: ContactProfileDTO,
+  key: string,
+): MilestoneEntry | undefined {
+  const milestones = (profile.score_signals as { milestones?: Record<string, unknown> } | null)
+    ?.milestones;
+  const entry = milestones?.[key];
+  return entry !== null && typeof entry === "object" ? (entry as MilestoneEntry) : undefined;
+}
+
+/** Evidencia legible del hito: qué evento lo disparó. */
+export function milestoneEvidenceLabel(entry: MilestoneEntry | undefined): string | null {
+  const evidence = entry?.evidence;
+  if (!evidence) return null;
+  if (evidence.startsWith("implied_by:")) return "Implícito por un hito posterior";
+  if (evidence === "backfill") return "Derivado del historial";
+  const map: Record<string, string> = {
+    "conversation.created": "Inició conversación",
+    "conversation.intent_detected": "Intención detectada",
+    "conversation.intent_detected:behavior": "Cotizó o pidió en la conversación",
+    "ai.turn_completed:catalog_tools": "Exploró el catálogo",
+    "order.quoted": "Recibió cotización",
+    "crm.deal_created": "Oportunidad abierta",
+    "order.created": "Creó un pedido",
+    "scheduling.appointment_booked": "Agendó una cita",
+    "order.status_changed": "Pago verificado",
+    "crm.deal_won": "Oportunidad ganada",
+  };
+  return map[evidence] ?? evidence;
 }
 
 /** Nombre visible con fallback: full_name → first+last → teléfono → correo. */

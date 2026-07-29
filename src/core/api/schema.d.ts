@@ -5570,6 +5570,7 @@ export interface components {
                 /** Format: date-time */
                 occurred_at: string;
                 title: string | null;
+                subtitle: string | null;
                 payload: {
                     [key: string]: unknown;
                 };

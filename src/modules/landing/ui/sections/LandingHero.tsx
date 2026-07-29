@@ -51,7 +51,7 @@ export default function LandingHero() {
           <h1 className="font-heading text-2xl leading-[1.06] font-bold tracking-tight text-balance sm:text-5xl lg:text-[62px]">
             {HERO.headline}
             <br />
-            <span className="font-heading text-2xl leading-[1.06] font-bold tracking-tight text-balance sm:text-5xl lg:text-[62px]">{HERO.headlineGradient}</span>
+            {/* <span className="font-heading text-2xl leading-[1.06] font-bold tracking-tight text-balance sm:text-5xl lg:text-[62px]">{HERO.headlineGradient}</span> */}
           </h1>
           <p className="text-muted-foreground mt-6 max-w-[610px] text-[17px] leading-relaxed text-pretty">
             {HERO.subheadline}

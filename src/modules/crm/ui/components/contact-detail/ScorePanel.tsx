@@ -1,10 +1,11 @@
 "use client";
 
-import { Check, Minus } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import {
-  isSignalActive,
-  SCORE_SIGNALS,
+  milestoneEntry,
+  milestoneEvidenceLabel,
+  SCORE_MILESTONES,
   type ContactProfileDTO,
 } from "@/modules/crm/domain/contact";
 
@@ -19,9 +20,11 @@ function scoreTone(score: number): { text: string; stroke: string } {
 }
 
 /**
- * Score 0-100 con anillo + breakdown de señales (pesos default del backend,
- * D12: determinista y explicable). Señal activa = ✓ con su peso; inactiva
- * queda atenuada — el operador ve exactamente de dónde sale el número.
+ * Score 0-100 con anillo + STEPPER de hitos del embudo (S3 backend: modelo
+ * monotónico — cada hito implica los anteriores; pedido/cita convergen al
+ * mismo compromiso). Hito alcanzado = ✓ con peso y evidencia (qué evento lo
+ * disparó); pendiente queda atenuado con la línea del stepper cortada — el
+ * operador ve exactamente en qué punto del embudo está el contacto.
  */
 export function ScorePanel({ profile }: { profile: ContactProfileDTO }) {
   const tone = scoreTone(profile.score);
@@ -29,8 +32,8 @@ export function ScorePanel({ profile }: { profile: ContactProfileDTO }) {
 
   return (
     <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
-      <h3 className="text-base font-semibold">Score</h3>
-      <div className="mt-3 flex items-center gap-5">
+      <h3 className="text-base font-semibold">Score del embudo</h3>
+      <div className="mt-3 flex items-start gap-5">
         <div className="relative shrink-0" role="img" aria-label={`Score ${profile.score} de 100`}>
           <svg width="84" height="84" viewBox="0 0 84 84" className="-rotate-90">
             <circle
@@ -57,30 +60,54 @@ export function ScorePanel({ profile }: { profile: ContactProfileDTO }) {
           </span>
         </div>
 
-        <ul className="min-w-0 flex-1 space-y-1.5">
-          {SCORE_SIGNALS.map((signal) => {
-            const active = isSignalActive(profile, signal.key);
+        <ol className="min-w-0 flex-1">
+          {SCORE_MILESTONES.map((milestone, index) => {
+            const entry = milestoneEntry(profile, milestone.key);
+            const reached = entry !== undefined;
+            const evidence = milestoneEvidenceLabel(entry);
+            const isLast = index === SCORE_MILESTONES.length - 1;
             return (
-              <li
-                key={signal.key}
-                className={cn(
-                  "flex items-center justify-between gap-2 text-sm",
-                  active ? "text-foreground" : "text-muted-foreground/60",
+              <li key={milestone.key} className="relative flex gap-2.5 pb-3 last:pb-0">
+                {!isLast && (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute top-5 left-[9px] h-[calc(100%-1.25rem)] w-px",
+                      reached ? "bg-success/50" : "bg-border",
+                    )}
+                  />
                 )}
-              >
-                <span className="flex min-w-0 items-center gap-1.5">
-                  {active ? (
-                    <Check className="size-3.5 shrink-0 text-success" aria-hidden />
-                  ) : (
-                    <Minus className="size-3.5 shrink-0" aria-hidden />
+                <span
+                  className={cn(
+                    "z-10 flex size-[18px] shrink-0 items-center justify-center rounded-full border mt-0.5",
+                    reached
+                      ? "border-success bg-success/15 text-success"
+                      : "border-border bg-background text-muted-foreground/50",
                   )}
-                  <span className="truncate">{signal.label}</span>
+                >
+                  {reached ? (
+                    <Check className="size-3" aria-hidden />
+                  ) : (
+                    <span className="size-1.5 rounded-full bg-current" aria-hidden />
+                  )}
                 </span>
-                <span className="shrink-0 text-xs tabular-nums">+{signal.weight}</span>
+                <div className={cn("min-w-0 flex-1", !reached && "opacity-55")}>
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <span className={cn("truncate", reached && "font-medium")}>
+                      {milestone.label}
+                    </span>
+                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                      +{milestone.weight}
+                    </span>
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {reached && evidence ? evidence : milestone.detail}
+                  </p>
+                </div>
               </li>
             );
           })}
-        </ul>
+        </ol>
       </div>
     </section>
   );

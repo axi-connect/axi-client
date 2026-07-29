@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
@@ -23,10 +25,22 @@ export default function LandingCases() {
             <Reveal key={businessCase.id} delay={i * 0.08} className="h-full">
               <TiltCard depth={8} className="h-full">
                 <div className="border-border bg-card flex h-full flex-col overflow-hidden rounded-2xl border shadow-float">
-                  {/* Foto del negocio (pendiente de asset real) */}
-                  <div className="border-border/70 bg-secondary/50 text-muted-foreground flex aspect-[16/9] items-center justify-center border-b border-dashed p-4 text-center text-xs leading-snug">
-                    {businessCase.photoPlaceholder}
-                  </div>
+                  {/* Foto del negocio: real si hay photoSrc, placeholder si no */}
+                  {businessCase.photoSrc ? (
+                    <div className="border-border/70 relative aspect-[16/9] border-b">
+                      <Image
+                        src={businessCase.photoSrc}
+                        alt={businessCase.name}
+                        fill
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="border-border/70 bg-secondary/50 text-muted-foreground flex aspect-[16/9] items-center justify-center border-b border-dashed p-4 text-center text-xs leading-snug">
+                      {businessCase.photoPlaceholder}
+                    </div>
+                  )}
                   <div className="flex flex-1 flex-col gap-3 p-6">
                     <div>
                       <h3 className="font-heading text-lg font-bold">{businessCase.name}</h3>

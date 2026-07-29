@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { cn } from "@/core/lib/utils";
 import type { ChatMessage } from "@/modules/landing/ui/content/landing.content";
 
@@ -19,9 +21,21 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
   if (message.kind === "product") {
     return (
       <div className="border-border bg-card self-end overflow-hidden rounded-2xl rounded-br-md border shadow-float max-w-[86%]">
-        <div className="border-border/60 text-muted-foreground flex aspect-[5/3] w-44 items-center justify-center border-b border-dashed text-center text-[11px] leading-snug">
-          {message.placeholder}
-        </div>
+        {message.imageSrc ? (
+          <div className="border-border/60 relative aspect-[5/3] w-44 border-b">
+            <Image
+              src={message.imageSrc}
+              alt={message.caption}
+              fill
+              sizes="176px"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <div className="border-border/60 text-muted-foreground flex aspect-[5/3] w-44 items-center justify-center border-b border-dashed text-center text-[11px] leading-snug">
+            {message.placeholder}
+          </div>
+        )}
         <p className="px-3 py-2 font-mono text-[11px]">{message.caption}</p>
       </div>
     );

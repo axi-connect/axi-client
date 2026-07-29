@@ -37,8 +37,9 @@ const SOURCE_VISUAL: Record<
   appointments: { icon: Calendar, badge: "bg-warning/12 text-warning" },
 };
 
+/** Entidad del evento; el backend garantiza title salvo shapes legacy. */
 function entryTitle(entry: TimelineEntryDTO): string {
-  return entry.title?.trim() || `${TIMELINE_SOURCE_LABELS[entry.source]}: ${entry.type}`;
+  return entry.title?.trim() || TIMELINE_SOURCE_LABELS[entry.source];
 }
 
 function isAiEntry(entry: TimelineEntryDTO): boolean {
@@ -177,8 +178,15 @@ export function ContactTimeline({
                   <Icon className="size-3.5" aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1 pt-0.5">
+                  {/* Estructura uniforme entidad + novedad: title en bold y
+                      subtitle en secundario — misma forma para toda fuente */}
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="min-w-0 truncate text-sm font-medium">{entryTitle(entry)}</p>
+                    <p className="min-w-0 truncate text-sm">
+                      <span className="font-medium">{entryTitle(entry)}</span>
+                      {entry.subtitle && (
+                        <span className="text-muted-foreground"> — {entry.subtitle}</span>
+                      )}
+                    </p>
                     {isAiEntry(entry) && (
                       <Badge variant="outline" className="gap-1 border-accent-violet/40 text-accent-violet">
                         <Sparkles className="size-3" aria-hidden />

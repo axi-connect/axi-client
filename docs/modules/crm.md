@@ -89,12 +89,17 @@ El drag del kanban SOLO cambia `stage_id` vía `move` — win/lose van por menú
 
 | Método | Path | Permiso | Propósito |
 |---|---|---|---|
-| GET | `/crm/contacts/:contact_id/timeline` | `crm:read` | `sources=activities,deals,orders,conversations,appointments` (CSV), `cursor`, `limit≤50`. Respuesta `{data[{id, source, type, occurred_at, title, payload}], next_cursor}` — cursor opaco `{iso}_{id}`, orden desc |
+| GET | `/crm/contacts/:contact_id/timeline` | `crm:read` | `sources=activities,deals,orders,conversations,appointments` (CSV), `cursor`, `limit≤50`. Respuesta `{data[{id, source, type, occurred_at, title, subtitle, payload}], next_cursor}` — cursor opaco `{iso}_{id}`, orden desc. **Estructura uniforme entidad+novedad**: `title` = entidad ("Pedido #1", "Oportunidad · Plan anual", "Cita") y `subtitle` = novedad ("Pago verificado", "Ganada", "Agendada") — la UI compone `title — subtitle`. El 360 EXCLUYE ruido operativo (orders: `customer_notified*`/`updated`; deals: `updated`/`owner_changed`) — ese detalle vive en `GET /orders/:id/events` y `GET /crm/deals/:id/events` |
 | GET/PATCH | `/crm/contacts/:contact_id/profile` | read / **manage** | `{score (0-100, read-only), score_signals (breakdown), owner_user_id, last_activity_at}`. PATCH: `{owner_user_id}`. Get lazy: siempre hay profile |
 | GET/PUT | `/crm/contacts/:contact_id/tags` | `crm:read` | PUT `{tag_ids[]}` = replace-set |
 
-Señales del score (pesos default, cap 100 — mostrar el breakdown tal cual):
-`engaged_conversation` 30 · `sales_intent` 20 · `has_order` 20 · `open_deal` 20 · `appointment` 15.
+Score por **hitos de embudo** (S3 backend — modelo monotónico: cada hito implica los
+anteriores; pedido y cita convergen al mismo compromiso, ambos verticales llegan a 100):
+`engaged` 15 → `interest` 20 → `evaluating` 25 → `committed` 25 → `converted` 15.
+`score_signals = { milestones: { <hito>: { at, evidence } }, last_signal_at }` — `evidence`
+indica el evento que lo disparó (`order.quoted`, `ai.turn_completed:catalog_tools`,
+`implied_by:<hito>`, `backfill`…). El ScorePanel lo pinta como stepper
+(`SCORE_MILESTONES` + `milestoneEvidenceLabel` en `domain/contact.ts`).
 
 **Tags y segmentos**
 
