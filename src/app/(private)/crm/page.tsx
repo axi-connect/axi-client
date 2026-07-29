@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Raíz de la sección: aterriza en Contactos (pasará a /crm/pipeline en F3). */
+/** Raíz de la sección: aterriza en el pipeline (el corazón del CRM). */
 export default function CrmIndexPage() {
-  redirect("/crm/contacts");
+  redirect("/crm/pipeline");
 }

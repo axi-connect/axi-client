@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
-import type {
-  ContactDTO,
-  ContactProfileDTO,
-  ContactTagDTO,
+import {
+  contactDisplayName,
+  type ContactDTO,
+  type ContactProfileDTO,
+  type ContactTagDTO,
 } from "@/modules/crm/domain/contact";
 import type { DealDTO } from "@/modules/crm/domain/deal";
 import {
@@ -98,7 +99,10 @@ export default function Contact360Page({
         <ScorePanel profile={bundle.profile} />
         <div className="space-y-4">
           <TagsEditor contactId={contactId} initialTags={bundle.tags} />
-          <ContactDealsCard deals={bundle.deals} />
+          <ContactDealsCard
+            deals={bundle.deals}
+            contact={{ id: contactId, label: contactDisplayName(bundle.contact) }}
+          />
         </div>
       </div>
 

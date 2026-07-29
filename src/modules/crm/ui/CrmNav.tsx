@@ -17,7 +17,7 @@ const NAV_ITEMS: ReadonlyArray<{
   permission?: string;
 }> = [
   { href: "/crm/contacts", label: "Contactos" },
-  // { href: "/crm/pipeline", label: "Pipeline" },                            // F3
+  { href: "/crm/pipeline", label: "Pipeline" },
   // { href: "/crm/tasks", label: "Tareas" },                                 // F4
   // { href: "/crm/settings", label: "Configuración", permission: "crm:manage" }, // F5
 ];
