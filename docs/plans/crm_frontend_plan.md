@@ -16,14 +16,14 @@
 
 | Fase | Contenido | Estado | PR |
 |---|---|---|---|
-| F0 | Transversales (schema, icono, alias, eventos WS, errores, deep-links) | ✅ Hecha | `feat/crm-f0-transversales` |
-| F1 | Contactos: lista + filtros + CRUD modal | ✅ Hecha | `feat/crm-f1-contacts` (apilado sobre F0) |
-| F2 | Contacto 360 + duplicados/merge | ✅ Hecha | `feat/crm-f2-contact-360` (apilado sobre F1) |
-| F3 | Pipeline kanban + deals + rail | ✅ Hecha | `feat/crm-f3-pipeline` (apilado sobre F2) |
-| F4 | Tareas | ✅ Hecha | `feat/crm-f4-tasks` (apilado sobre F3) |
-| F5 | Configuración (pipelines/tags/segmentos) | ✅ Hecha | `feat/crm-f5-settings` (apilado sobre F4) |
-| F6 | Import / Export CSV | ✅ Hecha | `feat/crm-f6-import-export` (apilado sobre F5) |
-| F7 | Copiloto IA | ✅ Hecha | `feat/crm-f7-copilot` (apilado sobre F6) |
+| F0 | Transversales (schema, icono, alias, eventos WS, errores, deep-links) | ✅ Hecha | commit en `feat/crm` |
+| F1 | Contactos: lista + filtros + CRUD modal | ✅ Hecha | commit en `feat/crm` |
+| F2 | Contacto 360 + duplicados/merge | ✅ Hecha | commit en `feat/crm` |
+| F3 | Pipeline kanban + deals + rail | ✅ Hecha | commit en `feat/crm` |
+| F4 | Tareas | ✅ Hecha | commit en `feat/crm` |
+| F5 | Configuración (pipelines/tags/segmentos) | ✅ Hecha | commit en `feat/crm` |
+| F6 | Import / Export CSV | ✅ Hecha | commit en `feat/crm` |
+| F7 | Copiloto IA | ✅ Hecha | commit en `feat/crm` |
 
 ## 2. Decisiones aprobadas (2026-07-29)
 

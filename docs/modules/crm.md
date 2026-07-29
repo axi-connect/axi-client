@@ -6,9 +6,8 @@
 > y QA por fase.
 >
 > **Estado (2026-07-29): IMPLEMENTADO (F0–F7)** — slice `src/modules/crm` + rutas `/crm/*`
-> completos, un PR por fase (`feat/crm-f0-transversales` … `feat/crm-f6-import-export`,
-> `feat/crm-f7-copilot`, apilados). Ver §C (desviaciones aplicadas) y el plan vivo con
-> mockups y estado en `docs/plans/crm_frontend_plan.md`.
+> completos en la rama `feat/crm` (un commit por fase). Ver §C (desviaciones aplicadas)
+> y el plan vivo con mockups y estado en `docs/plans/crm_frontend_plan.md`.
 >
 > Documentos rectores: `docs/architecture.md` (§3.2 anatomía de slice, §3.3 dependencias,
 > §5 naming, §6 enrutamiento/overlays, §16 checklist), `docs/design/DESIGN.md` §3.1,
