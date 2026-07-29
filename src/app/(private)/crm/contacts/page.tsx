@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Users } from "lucide-react";
+import { CopyCheck, Plus, Search, Users } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
+import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
@@ -63,6 +64,10 @@ export default function CrmContactsPage() {
     return () => window.clearTimeout(timer);
   }, [searchDraft, setSearch]);
 
+  // Merge en vivo (propio o de otro usuario): el perdedor sale del listado.
+  const { socket } = useSocket("inbox");
+  useSocketEvent(socket, "contact.merged", () => void refresh());
+
   // La tabla se refresca cuando el modal guarda o una fila elimina.
   useEffect(() => {
     const onMutation = () => void refresh();
@@ -86,14 +91,22 @@ export default function CrmContactsPage() {
             {loading && total === 0 ? "Cargando…" : `${total} contacto${total === 1 ? "" : "s"}`}
           </p>
         </div>
-        {canManage && (
-          <Button asChild className="rounded-full">
-            <Link href="/crm/contacts/create">
-              <Plus className="size-4" />
-              Nuevo contacto
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" className="rounded-full">
+            <Link href="/crm/contacts/duplicates">
+              <CopyCheck className="size-4" />
+              Duplicados
             </Link>
           </Button>
-        )}
+          {canManage && (
+            <Button asChild className="rounded-full">
+              <Link href="/crm/contacts/create">
+                <Plus className="size-4" />
+                Nuevo contacto
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {error ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -16,16 +16,15 @@ import type { ContactRow } from "@/modules/crm/domain/contact";
 import { deleteContact } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 
 /**
- * Menú ⋮ de la fila de contactos: Editar abre el modal por ruta interceptada;
- * Eliminar (gate `contacts:manage`) confirma con Modal y notifica vía
- * CustomEvent `crm:contacts:delete:success`. "Ver 360" llega en F2.
+ * Menú ⋮ de la fila de contactos: Ver abre el 360; Editar abre el modal por
+ * ruta interceptada; Eliminar (gate `contacts:manage`) confirma con Modal y
+ * notifica vía CustomEvent `crm:contacts:delete:success`.
  */
 export function ContactRowActions({ row }: { row: ContactRow }) {
   const router = useRouter();
   const { hasPermission } = useAuth();
   const { showAlert, showModal, closeModal } = useAlert();
-
-  if (!hasPermission("contacts:manage")) return null;
+  const canManage = hasPermission("contacts:manage");
 
   const handleDelete = async () => {
     try {
@@ -53,10 +52,19 @@ export function ContactRowActions({ row }: { row: ContactRow }) {
       <DropdownMenuContent align="end">
         <DropdownMenuItem
           className="flex items-center gap-2"
+          onClick={() => router.push(`/crm/contacts/${row.id}`)}
+        >
+          <Eye className="size-4" /> Ver contacto
+        </DropdownMenuItem>
+        {canManage && (
+        <DropdownMenuItem
+          className="flex items-center gap-2"
           onClick={() => router.push(`/crm/contacts/update/${row.id}`)}
         >
           <Pencil className="size-4" /> Editar
         </DropdownMenuItem>
+        )}
+        {canManage && (
         <DropdownMenuItem
           className="flex items-center gap-2 text-destructive"
           onClick={() =>
@@ -79,6 +87,7 @@ export function ContactRowActions({ row }: { row: ContactRow }) {
         >
           <Trash2 className="size-4" /> Eliminar
         </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

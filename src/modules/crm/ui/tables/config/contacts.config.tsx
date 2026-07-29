@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar } from "@/shared/components/ui/avatar";
 import type { ColumnDef } from "@/shared/components/features/data-table";
@@ -35,15 +36,20 @@ export const contactColumns: ColumnDef<ContactRow>[] = [
     alwaysVisible: true,
     minWidth: 220,
     cell: ({ row }) => (
-      <div className="flex items-center gap-3 py-0.5">
+      <Link
+        href={`/crm/contacts/${row.original.id}`}
+        className="group flex items-center gap-3 py-0.5"
+      >
         <Avatar src={row.original.avatar_url} alt={row.original.full_name} fallback={row.original.full_name} />
         <div className="min-w-0">
-          <p className="truncate font-medium">{row.original.full_name}</p>
+          <p className="truncate font-medium transition-colors group-hover:text-brand">
+            {row.original.full_name}
+          </p>
           <p className="truncate text-xs text-muted-foreground">
             {row.original.phone ?? row.original.email ?? "Sin datos de contacto"}
           </p>
         </div>
-      </div>
+      </Link>
     ),
   },
   {

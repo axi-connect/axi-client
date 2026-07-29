@@ -40,6 +40,54 @@ export type ContactRow = {
   created_at: string;
 };
 
+// ---------------------------------------------------------------------------
+// Contacto 360 (F2): profile/score, timeline multi-fuente, tags y duplicados
+// ---------------------------------------------------------------------------
+
+export type ContactProfileDTO = Schemas["ContactProfileDto"];
+export type ContactTagDTO = Schemas["ContactTagsDto"]["data"][number];
+export type TimelineEntryDTO = Schemas["TimelineDto"]["data"][number];
+export type TimelineSource = TimelineEntryDTO["source"];
+export type DuplicatePairDTO = Schemas["DuplicatesListDto"]["data"][number];
+
+export const TIMELINE_SOURCES: readonly TimelineSource[] = [
+  "activities",
+  "deals",
+  "orders",
+  "conversations",
+  "appointments",
+];
+
+export const TIMELINE_SOURCE_LABELS: Record<TimelineSource, string> = {
+  activities: "Actividades",
+  deals: "Oportunidades",
+  orders: "Pedidos",
+  conversations: "Conversaciones",
+  appointments: "Citas",
+};
+
+export const DUPLICATE_REASON_LABELS: Record<DuplicatePairDTO["reason"], string> = {
+  email_exact: "Email exacto",
+  similar_name: "Nombre similar",
+};
+
+/**
+ * Señales del score con sus pesos DEFAULT (espejo de crm_settings del backend,
+ * cap 100). El breakdown se muestra tal cual: `score_signals` marca cuáles
+ * están activas (`clave: true`); los pesos por tenant no viajan en el DTO.
+ */
+export const SCORE_SIGNALS: ReadonlyArray<{ key: string; label: string; weight: number }> = [
+  { key: "engaged_conversation", label: "Conversación activa", weight: 30 },
+  { key: "sales_intent", label: "Intención de venta", weight: 20 },
+  { key: "has_order", label: "Pedido realizado", weight: 20 },
+  { key: "open_deal", label: "Oportunidad abierta", weight: 20 },
+  { key: "appointment", label: "Cita agendada", weight: 15 },
+];
+
+export function isSignalActive(profile: ContactProfileDTO, key: string): boolean {
+  return profile.score_signals?.[key] === true;
+}
+
 /** Nombre visible con fallback: full_name → first+last → teléfono → correo. */
 export function contactDisplayName(
   dto: Pick<ContactListItemDTO, "full_name" | "first_name" | "last_name" | "phone" | "email">,
