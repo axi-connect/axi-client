@@ -20,19 +20,22 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
 
   if (message.kind === "product") {
     return (
-      <div className="border-border bg-card self-end overflow-hidden rounded-2xl rounded-br-md border shadow-float max-w-[86%]">
+      <div className="border-border bg-card w-60 max-w-[86%] self-end overflow-hidden rounded-2xl rounded-br-md border shadow-float">
         {message.imageSrc ? (
-          <div className="border-border/60 relative aspect-[5/3] w-44 border-b">
+          /* La foto ocupa TODO el ancho de la tarjeta y se muestra completa
+             (object-contain): nunca se recorta el producto, sea cual sea la
+             proporción de la imagen. */
+          <div className="border-border/60 bg-secondary/40 relative aspect-[4/3] w-full border-b">
             <Image
               src={message.imageSrc}
               alt={message.caption}
               fill
-              sizes="176px"
+              sizes="240px"
               className="object-cover"
             />
           </div>
         ) : (
-          <div className="border-border/60 text-muted-foreground flex aspect-[5/3] w-44 items-center justify-center border-b border-dashed text-center text-[11px] leading-snug">
+          <div className="border-border/60 text-muted-foreground flex aspect-[4/3] w-full items-center justify-center border-b border-dashed p-3 text-center text-[11px] leading-snug">
             {message.placeholder}
           </div>
         )}

@@ -21,15 +21,20 @@ export default function LandingCases() {
         </Reveal>
 
         <div className="mt-12 grid items-start gap-5 md:grid-cols-3">
-          {CASES.cases.map((businessCase, i) => (
+          {CASES.cases.map((businessCase, i) => {
+            /* Tipo ancho a propósito: en el contenido photoSrc puede ser URL,
+               null o undefined según lo vaya llenando negocio — sin esto, un
+               literal siempre-truthy colapsa la rama del placeholder a never */
+            const photoSrc: string | null | undefined = businessCase.photoSrc;
+            return (
             <Reveal key={businessCase.id} delay={i * 0.08} className="h-full">
               <TiltCard depth={8} className="h-full">
                 <div className="border-border bg-card flex h-full flex-col overflow-hidden rounded-2xl border shadow-float">
                   {/* Foto del negocio: real si hay photoSrc, placeholder si no */}
-                  {businessCase.photoSrc ? (
+                  {photoSrc ? (
                     <div className="border-border/70 relative aspect-[16/9] border-b">
                       <Image
-                        src={businessCase.photoSrc}
+                        src={photoSrc}
                         alt={businessCase.name}
                         fill
                         sizes="(min-width: 768px) 33vw, 100vw"
@@ -71,7 +76,8 @@ export default function LandingCases() {
                 </div>
               </TiltCard>
             </Reveal>
-          ))}
+            );
+          })}
         </div>
 
         <Reveal className="mt-12 flex justify-center">

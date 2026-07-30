@@ -271,6 +271,22 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   will-change: transform;
 }
 
+/* Marquee de logos (landing §2): la pista duplicada recorre el 50% de su
+   ancho y reinicia — loop perfecto. Solo transform (compositor). */
+@keyframes logo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-logo-marquee {
+  animation: logo-marquee var(--marquee-duration, 30s) linear infinite;
+  will-change: transform;
+}
+
+/* Pausa al hover — aquí y no como utilidad: este bloque es CSS sin capa y
+   ganaría siempre sobre una utilidad layered de animation-play-state. */
+.group\/marquee:hover .animate-logo-marquee { animation-play-state: paused; }
+
 /* -------- Acordeón (shared/components/ui/accordion.tsx) --------
    Radix expone la altura del contenido en --radix-accordion-content-height. */
 @keyframes accordion-down {
@@ -293,6 +309,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .animate-brand-pulse { animation: none; }
   .animate-splash-in { animation-name: fade-in; }
   .animate-mascot-bob, .animate-hero-float { animation: none; }
+  .animate-logo-marquee { animation: none; }
   .animate-accordion-down, .animate-accordion-up { animation: none; }
   /* Entradas/salidas de Radix (popover, dropdown, sheet): sin animación,
      los elementos aparecen/desaparecen al instante. */

@@ -12,20 +12,22 @@ import { AgentMascot } from "@/modules/landing/ui/components/mockups/AgentMascot
 import { ChatConversation } from "@/modules/landing/ui/components/mockups/ChatConversation";
 import { SalePaidCard } from "@/modules/landing/ui/components/mockups/SalePaidCard";
 import {
-  CHAT_MOCKUP,
   HOW_IT_WORKS,
   LANDING_ANCHORS,
+  STORY_CHAT,
   type ChatMessage,
 } from "@/modules/landing/ui/content/landing.content";
 
 /**
- * Mensajes del chat de §4: la conversación del hero + los dos hitos del
- * sistema (pago reportado, verificado) como píldoras dentro del hilo.
+ * Mensajes del chat de §4: la venta del hoodie de Savage + los dos hitos
+ * del sistema (pago reportado, verificado) como píldoras dentro del hilo.
  */
 const STORY_MESSAGES: ReadonlyArray<ChatMessage> = [
-  ...CHAT_MOCKUP.messages,
-  { id: "s1", from: "system", kind: "system", text: HOW_IT_WORKS.timeline.events[1] },
-  { id: "s2", from: "system", kind: "system", text: HOW_IT_WORKS.timeline.events[2] },
+  ...STORY_CHAT.messages,
+  /* ids con prefijo propio ("sys-"): los mensajes del contenido usan s1…s5
+     y estos hitos añadidos aquí no deben poder chocar con ellos (React keys) */
+  { id: "sys-payment-reported", from: "system", kind: "system", text: HOW_IT_WORKS.timeline.events[1] },
+  { id: "sys-payment-verified", from: "system", kind: "system", text: HOW_IT_WORKS.timeline.events[2] },
 ];
 
 /** Cuántos mensajes del hilo revela cada paso del timeline (1-indexado). */
@@ -135,8 +137,8 @@ export default function LandingHowItWorks() {
             </TiltCard>
 
             <ChatConversation
-              businessName={CHAT_MOCKUP.businessName}
-              status={CHAT_MOCKUP.status}
+              businessName={STORY_CHAT.businessName}
+              status={STORY_CHAT.status}
               messages={STORY_MESSAGES}
               mode="controlled"
               visibleUpTo={visibleUpTo}
@@ -149,7 +151,7 @@ export default function LandingHowItWorks() {
               )}
               aria-hidden={activeStep < 3}
             >
-              <SalePaidCard />
+              <SalePaidCard card={STORY_CHAT.saleCard} />
             </div>
           </div>
         </div>

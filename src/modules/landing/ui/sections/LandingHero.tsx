@@ -11,8 +11,8 @@ import { ChatConversation } from "@/modules/landing/ui/components/mockups/ChatCo
 import { SalePaidCard } from "@/modules/landing/ui/components/mockups/SalePaidCard";
 import {
   buildWaLink,
-  CHAT_MOCKUP,
   HERO,
+  HERO_CHAT,
   LANDING_ANCHORS,
   WA_MESSAGES,
 } from "@/modules/landing/ui/content/landing.content";
@@ -83,13 +83,13 @@ export default function LandingHero() {
               className="absolute -bottom-10 -left-6 z-[2] max-lg:w-36 sm:-left-14 lg:-left-24"
             />
             <ChatConversation
-              businessName={CHAT_MOCKUP.businessName}
-              status={CHAT_MOCKUP.status}
-              messages={CHAT_MOCKUP.messages}
+              businessName={HERO_CHAT.businessName}
+              status={HERO_CHAT.status}
+              messages={HERO_CHAT.messages}
               mode="autoplay"
             />
             <ParallaxLayer strength={0.1} className="absolute -right-2 -bottom-12 z-[3] sm:-right-5">
-              <SalePaidCard />
+              <SalePaidCard card={HERO_CHAT.saleCard} />
             </ParallaxLayer>
           </div>
         </div>

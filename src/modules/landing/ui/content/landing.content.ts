@@ -86,49 +86,101 @@ export type ChatMessage =
       kind: "product";
       placeholder: string;
       caption: string;
-      /** URL de la foto real del producto; sin ella se muestra el placeholder. */
-      imageSrc?: string;
+      /** URL de la foto real del producto; null/undefined → placeholder. */
+      imageSrc?: string | null;
     }
   | { id: string; from: "system"; kind: "system"; text: string };
 
-export const CHAT_MOCKUP = {
-  businessName: "Savage · Moda urbana",
+/** Datos de la tarjeta "Venta pagada" que remata cada mockup de chat. */
+export interface SaleCardData {
+  title: string;
+  amountValue: number;
+  caption: string;
+}
+
+/**
+ * Mockup del HERO — venta retail de tecnología (Apple Watch): cada mockup
+ * de la página habla a un vertical distinto del ICP (aquí tecnología; en
+ * §4, moda con Savage).
+ */
+export const HERO_CHAT = {
+  businessName: "Tecnología, Medellín",
   status: "agente en línea · 8:47 p.m.",
   messages: [
-    { id: "m1", from: "customer", kind: "text", text: "Hola, ¿tienen la camizeta oversize en talla M?" },
-    { id: "m2", from: "agent", kind: "text", text: "Sí 🙌 La Oversize Heavy en talla M está disponible. Te mando la foto." },
+    { id: "h1", from: "customer", kind: "text", text: "Hola, ¿tienen el Apple Watch SE de 44mm?" },
+    { id: "h2", from: "agent", kind: "text", text: "¡Sí! El Apple Watch SE (2ª gen) de 44mm está disponible en Starlight. Te comparto la foto." },
     {
-      id: "m3",
+      id: "h3",
       from: "agent",
       kind: "product",
       placeholder: "foto real del producto (catálogo)",
-      caption: "Oversize Heavy · M — $89.900",
-      // TODO [A VALIDAR]: pegar aquí la URL de la foto real de la Oversize
-      // Heavy del catálogo de Savage (ver guía de imágenes arriba).
-      imageSrc: null,
+      caption: "Apple Watch SE 44mm — $1.249.000",
+      imageSrc: "https://res.cloudinary.com/dpfnxj52w/image/upload/v1785424235/apple_watch_hpyikz.jpg",
     },
-    { id: "m4", from: "customer", kind: "text", text: "Perfecto, la llevo. ¿Cómo pago?" },
-    { id: "m5", from: "agent", kind: "text", text: "Listo, pedido #1042 por $89.900. Puedes pagar a Nequi 300 123 4567 o por link." },
+    { id: "h4", from: "customer", kind: "text", text: "Me gusta. ¿Cómo lo pago?" },
+    { id: "h5", from: "agent", kind: "text", text: "Listo, pedido #2087 por $1.249.000. Puedes pagar por Nequi, tarjeta o link de pago." },
   ] as ReadonlyArray<ChatMessage>,
+  saleCard: {
+    title: "Venta pagada",
+    amountValue: 1_249_000,
+    caption: "verificada por tu equipo · 8:53 p.m.",
+  } as SaleCardData,
 } as const;
 
-/** Tarjeta "Venta pagada" superpuesta al chat (hero) y remate del timeline (§4). */
-export const SALE_PAID_CARD = {
-  title: "Venta pagada",
-  amount: "$89.900",
-  amountValue: 89_900,
-  caption: "verificada por tu equipo · 8:53 p.m.",
+/**
+ * Mockup de §4 (Cómo funciona) — Savage vendiendo un hoodie: la historia
+ * completa del timeline (pedido #1042, pago verificado por Laura).
+ */
+export const STORY_CHAT = {
+  businessName: "Savage · Moda urbana",
+  status: "agente en línea · 8:47 p.m.",
+  messages: [
+    { id: "s1", from: "customer", kind: "text", text: "Hola, ¿tienen el hodie oversize en talla M?" },
+    { id: "s2", from: "agent", kind: "text", text: "Sí 🙌 El Hoodie Heavy en talla M está disponible. Te mando la foto." },
+    {
+      id: "s3",
+      from: "agent",
+      kind: "product",
+      placeholder: "foto real del producto (catálogo)",
+      caption: "Hoodie Heavy · M — $129.900",
+      imageSrc: "https://res.cloudinary.com/dpfnxj52w/image/upload/v1785426993/hoodie_savage_ntmzum.jpg",
+    },
+    { id: "s4", from: "customer", kind: "text", text: "Perfecto, lo llevo. ¿Cómo pago?" },
+    { id: "s5", from: "agent", kind: "text", text: "Listo, pedido #1042 por $129.900. Puedes pagar a Nequi 300 123 4567 o por link." },
+  ] as ReadonlyArray<ChatMessage>,
+  saleCard: {
+    title: "Venta pagada",
+    amountValue: 129_900,
+    caption: "verificada por tu equipo · 8:53 p.m.",
+  } as SaleCardData,
 } as const;
 
 /* ─────────────────────── §2 Barra de prueba social ──────────────────── */
 
-// TODO [A VALIDAR]: permiso de uso de marca de los tres pilotos.
+/** Con al menos estos negocios, la banda de logos pasa a marquee automático. */
+export const MARQUEE_MIN_ITEMS = 5;
+
 export const SOCIAL_PROOF = {
   kicker: "Ya venden con Axi",
   businesses: [
-    { name: "Joao's Burguer", detail: "comida rápida, Palmira" },
-    { name: "Savage", detail: "moda urbana, Bogotá" },
-    { name: "TBI, The Brothers Inc", detail: "estudio de grabación, Bogotá" },
+    {
+      name: "Joao's Burguer",
+      detail: "comida rápida, Palmira",
+      logoSrc: null as string | null | undefined,
+      websiteUrl: "https://www.joaosburguer.com/",
+    },
+    {
+      name: "Savage",
+      detail: "moda urbana, Bogotá",
+      logoSrc: "https://res.cloudinary.com/dpfnxj52w/image/upload/v1785430138/logo_savage_crop_lzvouy.png",
+      websiteUrl: "https://www.savagecolombia.com/",
+    },
+    {
+      name: "The Brothers Inc",
+      detail: "estudio de grabación, Bogotá",
+      logoSrc: null as string | null | undefined,
+      websiteUrl: "https://thebrothersinc.co/",
+    },
   ],
   closing: "Tres formas distintas de vender. Cero desarrollo a medida.",
 } as const;
@@ -172,13 +224,13 @@ export const HOW_IT_WORKS = {
     {
       n: "01",
       title: "Un cliente escribe a las 8:47 p.m.",
-      body: "“Hola, ¿tienen la camiseta oversize en talla M?” Por WhatsApp, Instagram o Messenger — da igual: todos llegan al mismo lugar, y si ya te había escrito por otro canal, Axi sabe que es la misma persona.",
+      body: "“Hola, ¿tienen el hoodie oversize en talla M?” Por WhatsApp, Instagram o Messenger — da igual: todos llegan al mismo lugar, y si ya te había escrito por otro canal, Axi sabe que es la misma persona.",
       // TODO [A VALIDAR]: puesta en producción de Instagram/Messenger (checklist landing-copy.md).
     },
     {
       n: "02",
       title: "Tu agente responde en segundos, con tu catálogo real.",
-      body: "Encuentra el producto aunque el cliente escriba “camizeta”, envía las fotos reales, responde con el precio de tu sistema. No improvisa: consulta.",
+      body: "Encuentra el producto aunque el cliente escriba “hodie”, envía las fotos reales, responde con el precio de tu sistema. No improvisa: consulta.",
     },
     {
       n: "03",
@@ -207,10 +259,10 @@ export const HOW_IT_WORKS = {
     title: "Pedido #1042",
     badge: "PAGO VERIFICADO",
     lines: [
-      { label: "Oversize Heavy · M", value: "$89.900" },
+      { label: "Hoodie Heavy · M", value: "$129.900" },
       { label: "Envío Bogotá", value: "$0" },
     ],
-    total: { label: "Total", value: "$89.900" },
+    total: { label: "Total", value: "$129.900" },
   },
   /** Línea de tiempo del panel sticky. */
   timeline: {
@@ -255,7 +307,7 @@ export const GUARDRAILS = {
     hint: "pásale el cursor",
     caption: "Cada conversación pasa por aquí: datos de tu negocio, no invenciones de un modelo.",
     vocabulary:
-      "hola tienes disponible talla M cuanto vale precio $89.900 pedido #1042 nequi comprobante gracias envio bogota agendar cita camizeta oversize stock catalogo pago verificado ",
+      "hola tienes disponible talla M cuanto vale precio $129.900 pedido #1042 nequi comprobante gracias envio bogota agendar cita hoodie oversize stock catalogo pago verificado ",
   },
   punchlineLead: "Compruébalo en la demo:",
   punchline: "pídele al agente un descuento que no autorizaste y mira qué hace.",
@@ -402,8 +454,7 @@ export const CASES = {
       sector: "Comida rápida — Palmira, Valle",
       body: "Pedidos a domicilio por WhatsApp, pagos por Nequi y efectivo. El agente toma el pedido completo, comparte los medios de pago y el equipo solo verifica y despacha.",
       photoPlaceholder: "foto del negocio · Joao's Burguer",
-      // TODO [A VALIDAR]: URL de la foto real del negocio.
-      photoSrc: undefined as string | undefined,
+      photoSrc: "https://res.cloudinary.com/dpfnxj52w/image/upload/v1785425234/joaos_burguer_site_evwjvf.png",
       stat: { value: 74, decimals: 0, prefix: "", suffix: "%", caption: "de los pedidos se toman sin intervención humana", pending: true },
     },
     {
@@ -412,18 +463,16 @@ export const CASES = {
       sector: "Moda urbana — Bogotá",
       body: "129 productos con tallas y fotos por variante, envíos a todo el país. El agente encuentra la prenda aunque se la pidan con errores de escritura, envía las fotos reales y cierra el pedido con el stock del sistema.",
       photoPlaceholder: "foto del negocio · Savage",
-      // TODO [A VALIDAR]: URL de la foto real del negocio.
-      photoSrc: undefined as string | undefined,
+      photoSrc: "https://res.cloudinary.com/dpfnxj52w/image/upload/v1785430467/savage_site_svb3ss.png",
       stat: { value: 18, decimals: 0, prefix: "", suffix: "%", caption: "de tasa de cierre sobre las conversaciones del mes", pending: true },
     },
     {
       id: "tbi",
-      name: "TBI — The Brothers Inc",
+      name: "The Brothers Inc",
       sector: "Estudio de grabación — Bogotá",
       body: "Aquí lo que se vende es tiempo: sesiones de grabación. El agente consulta la disponibilidad real, agenda la sesión y el sistema envía recordatorios automáticos 24 horas y 1 hora antes.",
       photoPlaceholder: "foto del negocio · TBI Studio",
-      // TODO [A VALIDAR]: URL de la foto real del negocio.
-      photoSrc: undefined as string | undefined,
+      photoSrc: "https://res.cloudinary.com/dvtz1qx7g/image/upload/v1773613307/DSC05581.jpg_smbyqx.jpg",
       stat: { value: -31, decimals: 0, prefix: "", suffix: "%", caption: "de citas incumplidas desde los recordatorios", pending: true },
     },
   ],
@@ -548,8 +597,8 @@ export const TERMINAL = {
       results: ["✔ Contacto reconocido: Andrés M. (ya escribió por Instagram)", "✔ Conversación abierta · agente en turno"],
     },
     {
-      cmd: 'axi cotizar "camizeta oversize talla M"',
-      results: ["✔ Producto encontrado en tu catálogo: Oversize Heavy · M", "✔ Precio calculado por el servidor: $89.900"],
+      cmd: 'axi cotizar "hodie oversize talla M"',
+      results: ["✔ Producto encontrado en tu catálogo: Hoodie Heavy · M", "✔ Precio calculado por el servidor: $129.900"],
     },
     {
       cmd: "axi cerrar --pedido",
