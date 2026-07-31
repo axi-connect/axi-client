@@ -1,5 +1,6 @@
 import {
   BadgeDollarSign,
+  BellRing,
   Bot,
   Building2,
   Calendar,
@@ -28,6 +29,7 @@ import {
  */
 const NAV_ICONS: Record<string, LucideIcon> = {
   "badge-dollar-sign": BadgeDollarSign,
+  "bell-ring": BellRing,
   bot: Bot,
   building: Building2,
   calendar: Calendar,
