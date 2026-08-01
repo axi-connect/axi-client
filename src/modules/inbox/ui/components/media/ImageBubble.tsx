@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { cn } from "@/core/lib/utils"
 import { useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
-import type { MessageAttachment } from "@/modules/inbox/domain/inbox"
+import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
 import { MediaError, MediaSkeleton } from "./MediaStates"
 import { MediaLightbox } from "./MediaLightbox"
 
@@ -57,13 +57,13 @@ export function ImageBubble({
       <button
         onClick={() => attachment && setLightboxOpen(true)}
         className={cn("block overflow-hidden rounded-xl", sticker ? "size-32" : "max-w-full")}
-        aria-label={`Ver imagen ${attachment?.filename ?? ""}`}
+        aria-label={`Ver ${attachment !== undefined ? attachmentDisplayName(attachment) : "imagen"}`}
       >
         {/* URL firmada rotativa (TTL 300 s): incompatible con el cache de next/image */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
-          alt={attachment?.filename ?? "Imagen"}
+          alt={attachment !== undefined ? attachmentDisplayName(attachment) : "Imagen"}
           loading="lazy"
           className={cn(
             "object-cover",

@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Fecha relativa con la absoluta en tooltip (patrón del spec §4 para todo el
- * panel: tablas, auditoría, analytics). Reutiliza los formatters
- * transversales — no re-implementa Intl.
+ * Fecha relativa con la absoluta en tooltip. Primitivo transversal: lo usan la
+ * consola de plataforma, el rail de contexto del inbox y las tablas del panel.
+ * Reutiliza los formatters de `core/lib` — no re-implementa `Intl`.
  */
 import { relativeTime } from "@/core/lib/relative-time";
 import { formatShortDate } from "@/core/lib/format";

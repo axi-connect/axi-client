@@ -1,4 +1,17 @@
-import { extractCatalogSku, extractLocationPayload, extractTranscription, parsePreview } from "../inbox"
+import {
+  attachmentCategory,
+  attachmentDisplayName,
+  extractCatalogSku,
+  extractLocationPayload,
+  extractTranscription,
+  isAttachmentMessage,
+  isAwaitingReply,
+  isNotablePriority,
+  parsePreview,
+  waitingSince,
+  type ConversationDTO,
+  type UiMessage,
+} from "../inbox"
 
 describe("parsePreview (tokens de media del backend)", () => {
   it.each([
@@ -92,5 +105,276 @@ describe("extractCatalogSku (foto de catálogo enviada por la IA, F16)", () => {
     expect(extractCatalogSku({ media: {} })).toBeNull()
     expect(extractCatalogSku({ media: { catalog_sku: 42 } })).toBeNull()
     expect(extractCatalogSku({ media: { catalog_sku: "  " } })).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Adjuntos del hilo (rail de contexto): el panel se deriva del store, así que
+// el predicado es lo único que decide qué archivo se lista y qué se ignora.
+// ---------------------------------------------------------------------------
+
+function message(overrides: Partial<UiMessage> = {}): UiMessage {
+  return {
+    id: "m1",
+    direction: "inbound",
+    sender_type: "contact",
+    sender_user_id: null,
+    content_type: "text",
+    body: null,
+    payload: null,
+    provider_message_id: null,
+    status: "received",
+    status_updated_at: null,
+    error: null,
+    attachments: [],
+    created_at: "2026-07-28T10:00:00.000Z",
+    ...overrides,
+  } as UiMessage
+}
+
+const attachment = { id: "a1", filename: "foto.jpg", mime_type: "image/jpeg", size_bytes: 1024 }
+
+describe("isAttachmentMessage", () => {
+  it("ignora texto sin adjuntos", () => {
+    expect(isAttachmentMessage(message({ body: "hola" }))).toBe(false)
+  })
+
+  it("lista un mensaje con attachments persistidos", () => {
+    expect(
+      isAttachmentMessage(message({ content_type: "image", attachments: [attachment] })),
+    ).toBe(true)
+  })
+
+  it("lista el optimista que aún solo tiene preview local", () => {
+    expect(
+      isAttachmentMessage(
+        message({
+          content_type: "image",
+          local_previews: [
+            { object_url: "blob:x", mime_type: "image/jpeg", filename: "f.jpg", size_bytes: 10 },
+          ],
+        }),
+      ),
+    ).toBe(true)
+  })
+
+  it("lista media entrante cuyo attachment aún no materializa el backend", () => {
+    expect(isAttachmentMessage(message({ content_type: "audio", media_pending: true }))).toBe(true)
+  })
+
+  it("excluye location: no hay archivo que descargar", () => {
+    expect(isAttachmentMessage(message({ content_type: "location" }))).toBe(false)
+  })
+
+  it("excluye location incluso si trajera attachments", () => {
+    expect(
+      isAttachmentMessage(message({ content_type: "location", attachments: [attachment] })),
+    ).toBe(false)
+  })
+})
+
+describe("attachmentCategory", () => {
+  it.each([
+    ["image", "image"],
+    ["sticker", "image"],
+    ["video", "video"],
+    ["audio", "audio"],
+    ["document", "document"],
+  ] as const)("content_type %s → %s", (contentType, expected) => {
+    expect(attachmentCategory(message({ content_type: contentType }))).toBe(expected)
+  })
+
+  it("cae al mime del adjunto cuando el content_type no es media", () => {
+    expect(
+      attachmentCategory(
+        message({
+          content_type: "template",
+          attachments: [{ ...attachment, mime_type: "image/png" }],
+        }),
+      ),
+    ).toBe("image")
+  })
+
+  it("mime desconocido cae a documento (nunca deja el adjunto fuera de todo filtro)", () => {
+    expect(
+      attachmentCategory(
+        message({
+          content_type: "template",
+          attachments: [{ ...attachment, mime_type: "application/x-rar" }],
+        }),
+      ),
+    ).toBe("document")
+  })
+})
+
+describe("attachmentDisplayName", () => {
+  // Caso real: WhatsApp manda como `filename` el JSON de media en base64url.
+  const WHATSAPP_TOKEN =
+    "eyJraW5kIjoiaW1hZ2UiLCJ1cmwiOiJodHRwczovL21tZy53aGF0c2FwcC5uZXQvbzEvdi90MjQvZjIvbTIzNS9BUU5zalpPRk9UbWM2MmFzVjFCTDVEczF2eUZNMzM0dWljdWlMeEY2dzNPLUYxbGtaY2FDbERMSmctSUJxTGhzbElfb25BbmdSVi1kekQ5UlZCem12Tld2VnQ2VGZrWkdUZmg0eklOcWtRIiwibWltZV90eXBlIjoiaW1hZ2UvanBlZyJ9"
+
+  it("sustituye el token base64 de WhatsApp por un nombre legible", () => {
+    expect(
+      attachmentDisplayName({ filename: WHATSAPP_TOKEN, mime_type: "image/jpeg" }),
+    ).toBe("Foto.jpg")
+  })
+
+  it("el resultado es corto: es lo que evita que la modal se ensanche", () => {
+    const name = attachmentDisplayName({ filename: WHATSAPP_TOKEN, mime_type: "image/jpeg" })
+    expect(name.length).toBeLessThan(30)
+  })
+
+  it("respeta un nombre real tal cual", () => {
+    expect(
+      attachmentDisplayName({ filename: "cotizacion-final.pdf", mime_type: "application/pdf" }),
+    ).toBe("cotizacion-final.pdf")
+  })
+
+  it("respeta nombres con espacios y acentos", () => {
+    expect(
+      attachmentDisplayName({ filename: "Diseño propuesta v2.png", mime_type: "image/png" }),
+    ).toBe("Diseño propuesta v2.png")
+  })
+
+  it("compone nombre cuando el proveedor no manda ninguno", () => {
+    expect(attachmentDisplayName({ filename: "", mime_type: "video/mp4" })).toBe("Video.mp4")
+    expect(attachmentDisplayName({ filename: "   ", mime_type: "audio/ogg" })).toBe(
+      "Nota de voz.ogg",
+    )
+    expect(attachmentDisplayName({ filename: "", mime_type: "application/pdf" })).toBe(
+      "Documento.pdf",
+    )
+  })
+
+  it("normaliza extensiones raras del mime", () => {
+    expect(attachmentDisplayName({ filename: "", mime_type: "video/quicktime" })).toBe("Video.mov")
+    expect(attachmentDisplayName({ filename: "", mime_type: "image/svg+xml" })).toBe("Foto.svg")
+    expect(
+      attachmentDisplayName({
+        filename: "",
+        mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      }),
+    ).toBe("Documento.document")
+  })
+
+  it("sin mime utilizable devuelve solo la etiqueta", () => {
+    expect(attachmentDisplayName({ filename: "", mime_type: "" })).toBe("Documento")
+  })
+
+  it("recorta nombres reales absurdamente largos", () => {
+    const long = `${"a".repeat(200)}.jpg`
+    expect(attachmentDisplayName({ filename: long, mime_type: "image/jpeg" })).toBe("Foto.jpg")
+  })
+
+  it("no confunde un nombre corto sin extensión con un token", () => {
+    expect(attachmentDisplayName({ filename: "README", mime_type: "text/plain" })).toBe("README")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Señales de la cabecera del chat: derivadas del DTO, sin peticiones extra.
+// ---------------------------------------------------------------------------
+
+function conversation(overrides: Partial<ConversationDTO> = {}): ConversationDTO {
+  return {
+    id: "conv-1",
+    channel_id: "ch-1",
+    contact_id: "c-1",
+    status: "open",
+    mode: "human_active",
+    assigned_user_id: null,
+    priority: "normal",
+    unread_count: 0,
+    last_message_at: null,
+    last_inbound_at: null,
+    last_message_preview: null,
+    contact: { id: "c-1", full_name: "Cristian", phone: null, avatar_url: null },
+    channel: { id: "ch-1", name: "WhatsApp", kind: "whatsapp_cloud" },
+    created_at: "2026-07-28T10:00:00.000Z",
+    updated_at: "2026-07-28T10:00:00.000Z",
+    ...overrides,
+  } as ConversationDTO
+}
+
+describe("isAwaitingReply", () => {
+  it("espera si el último mensaje es el entrante", () => {
+    expect(
+      isAwaitingReply(
+        conversation({
+          last_inbound_at: "2026-07-28T12:00:00.000Z",
+          last_message_at: "2026-07-28T12:00:00.000Z",
+        }),
+      ),
+    ).toBe(true)
+  })
+
+  it("tolera el desfase de milisegundos entre ambos timestamps", () => {
+    // El backend los escribe en operaciones distintas: comparar por igualdad
+    // daría false para el mismo mensaje entrante.
+    expect(
+      isAwaitingReply(
+        conversation({
+          last_inbound_at: "2026-07-28T12:00:00.400Z",
+          last_message_at: "2026-07-28T12:00:00.000Z",
+        }),
+      ),
+    ).toBe(true)
+  })
+
+  it("no espera si ya respondimos después", () => {
+    expect(
+      isAwaitingReply(
+        conversation({
+          last_inbound_at: "2026-07-28T12:00:00.000Z",
+          last_message_at: "2026-07-28T12:05:00.000Z",
+        }),
+      ),
+    ).toBe(false)
+  })
+
+  it("no espera si nunca escribió", () => {
+    expect(isAwaitingReply(conversation({ last_inbound_at: null }))).toBe(false)
+  })
+
+  it("espera si hay entrante pero el hilo no registra último mensaje", () => {
+    expect(
+      isAwaitingReply(
+        conversation({ last_inbound_at: "2026-07-28T12:00:00.000Z", last_message_at: null }),
+      ),
+    ).toBe(true)
+  })
+})
+
+describe("waitingSince", () => {
+  it("devuelve el ISO del entrante cuando espera", () => {
+    expect(
+      waitingSince(
+        conversation({
+          last_inbound_at: "2026-07-28T12:00:00.000Z",
+          last_message_at: "2026-07-28T12:00:00.000Z",
+        }),
+      ),
+    ).toBe("2026-07-28T12:00:00.000Z")
+  })
+
+  it("null cuando no espera", () => {
+    expect(
+      waitingSince(
+        conversation({
+          last_inbound_at: "2026-07-28T12:00:00.000Z",
+          last_message_at: "2026-07-28T12:05:00.000Z",
+        }),
+      ),
+    ).toBeNull()
+  })
+})
+
+describe("isNotablePriority", () => {
+  it.each([
+    ["urgent", true],
+    ["high", true],
+    ["normal", false],
+    ["low", false],
+  ] as const)("%s → %s", (priority, expected) => {
+    expect(isNotablePriority(priority)).toBe(expected)
   })
 })

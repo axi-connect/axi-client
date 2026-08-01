@@ -1,9 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Bot, CheckCheck, Hand, Undo2 } from "lucide-react"
+import { Bot, CheckCheck, Hand, type LucideIcon } from "lucide-react"
 import { Modal } from "@/shared/components/ui/modal"
-import { Button } from "@/shared/components/ui/button"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { Switch } from "@/shared/components/ui/switch"
 import { useAlert } from "@/core/providers/alert-provider"
@@ -14,19 +13,43 @@ import type { ConversationDTO } from "@/modules/inbox/domain/inbox"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 
 /**
- * Acciones de handoff según el `mode` de la conversación y los permisos:
- * - human_queued → Atender (claim)
- * - ai_active   → Intervenir (takeover, pausa la IA)
- * - human_active → Devolver a la IA (con nota) · Cerrar (resolved + razón)
- * Van por WS con ack; `handoff_conflict` ya lo auto-corrige el hook del socket.
+ * Acciones de handoff como DESCRIPTORES, para que la cabecera decida dónde va
+ * cada una: la principal inline y las secundarias en el menú de desborde.
+ *
+ * Reemplaza al antiguo componente `HandoffActions`, que pintaba su propia fila.
+ * El estado de los dos modales sigue viviendo en un único sitio (aquí) para no
+ * duplicarlo entre el botón inline y el menú.
+ *
+ * Mapa de acciones por `mode`:
+ * - `human_queued` → Atender (claim)
+ * - `ai_active`    → Intervenir (takeover, pausa la IA)
+ * - `human_active` → Devolver a la IA (con nota) · Cerrar (resolved + razón)
+ *
+ * Van por WS con ack; `handoff_conflict` ya lo auto-corrige el hook del socket,
+ * aquí solo se traduce a un mensaje legible.
  */
-export function HandoffActions({
-  conversation,
-  commands,
-}: {
-  conversation: ConversationDTO
-  commands: InboxCommands
-}) {
+
+export interface HandoffActionDescriptor {
+  id: string
+  label: string
+  icon: LucideIcon
+  onSelect: () => void
+}
+
+export interface HandoffActionsState {
+  /** Acción destacada de la cabecera; `null` si no hay ninguna disponible. */
+  primary: HandoffActionDescriptor | null
+  /** Acciones para el menú de desborde. */
+  secondary: HandoffActionDescriptor[]
+  /** Los modales de nota y cierre; el consumidor debe renderizarlo. */
+  dialogs: React.ReactNode
+  busy: boolean
+}
+
+export function useHandoffActions(
+  conversation: ConversationDTO,
+  commands: InboxCommands,
+): HandoffActionsState {
   const { showAlert } = useAlert()
   const { hasPermission } = useAuth()
   const [busy, setBusy] = useState(false)
@@ -36,9 +59,6 @@ export function HandoffActions({
   const [reason, setReason] = useState("")
   const [resolved, setResolved] = useState(true)
 
-  const canClaim = hasPermission("conversations:claim")
-  if (!canClaim || conversation.status !== "open") return null
-
   const run = async (action: () => ReturnType<InboxCommands["claim"]>, successTitle: string) => {
     if (busy) return
     setBusy(true)
@@ -47,11 +67,17 @@ export function HandoffActions({
       if (ack.ok) {
         showAlert({ tone: "success", title: successTitle, open: true, autoCloseMs: 3000 })
       } else if (ack.error.code !== API_ERROR_CODES.handoffConflict) {
-        showAlert({ tone: "error", title: ack.error.message || "No se pudo completar la acción", open: true })
+        showAlert({
+          tone: "error",
+          title: ack.error.message || "No se pudo completar la acción",
+          open: true,
+        })
       } else {
         showAlert({
           tone: "error",
-          title: formatError(new HttpError({ status: 409, code: ack.error.code, message: ack.error.message })),
+          title: formatError(
+            new HttpError({ status: 409, code: ack.error.code, message: ack.error.message }),
+          ),
           open: true,
         })
       }
@@ -60,31 +86,49 @@ export function HandoffActions({
     }
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      {conversation.mode === "human_queued" && (
-        <Button size="sm" disabled={busy} onClick={() => void run(() => commands.claim(conversation.id), "Conversación asignada a ti")}>
-          <Hand className="size-4" /> Atender
-        </Button>
-      )}
+  // Sin permiso o fuera de `open` no hay ninguna transición legal: la cabecera
+  // simplemente no pinta acciones (y no cambia de altura por ello).
+  const available = hasPermission("conversations:claim") && conversation.status === "open"
 
-      {conversation.mode === "ai_active" && (
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => void run(() => commands.takeover(conversation.id), "Tomaste la conversación (IA en pausa)")}>
-          <Hand className="size-4" /> Intervenir
-        </Button>
-      )}
+  let primary: HandoffActionDescriptor | null = null
+  const secondary: HandoffActionDescriptor[] = []
 
-      {conversation.mode === "human_active" && (
-        <>
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => setReturnOpen(true)}>
-            <Bot className="size-4" /> Devolver a la IA
-          </Button>
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => setCloseOpen(true)}>
-            <CheckCheck className="size-4" /> Cerrar
-          </Button>
-        </>
-      )}
+  if (available) {
+    if (conversation.mode === "human_queued") {
+      primary = {
+        id: "claim",
+        label: "Atender",
+        icon: Hand,
+        onSelect: () => void run(() => commands.claim(conversation.id), "Conversación asignada a ti"),
+      }
+    } else if (conversation.mode === "ai_active") {
+      primary = {
+        id: "takeover",
+        label: "Intervenir",
+        icon: Hand,
+        onSelect: () =>
+          void run(() => commands.takeover(conversation.id), "Tomaste la conversación (IA en pausa)"),
+      }
+    } else {
+      // human_active: la conversación ya es de un humano. Lo frecuente es
+      // cerrarla, así que esa es la acción destacada.
+      primary = {
+        id: "close",
+        label: "Cerrar",
+        icon: CheckCheck,
+        onSelect: () => setCloseOpen(true),
+      }
+      secondary.push({
+        id: "return_to_ai",
+        label: "Devolver a la IA",
+        icon: Bot,
+        onSelect: () => setReturnOpen(true),
+      })
+    }
+  }
 
+  const dialogs = (
+    <>
       {/* Devolver a la IA con nota opcional */}
       <Modal
         open={returnOpen}
@@ -100,7 +144,10 @@ export function HandoffActions({
               asClose: false,
               id: "return-confirm",
               onClick: async () => {
-                await run(() => commands.returnToAi(conversation.id, note.trim() || undefined), "Conversación devuelta a la IA")
+                await run(
+                  () => commands.returnToAi(conversation.id, note.trim() || undefined),
+                  "Conversación devuelta a la IA",
+                )
                 setReturnOpen(false)
                 setNote("")
               },
@@ -133,7 +180,11 @@ export function HandoffActions({
               id: "close-confirm",
               onClick: async () => {
                 await run(
-                  () => commands.close(conversation.id, { resolved, ...(reason.trim() ? { reason: reason.trim() } : {}) }),
+                  () =>
+                    commands.close(conversation.id, {
+                      resolved,
+                      ...(reason.trim() ? { reason: reason.trim() } : {}),
+                    }),
                   resolved ? "Conversación resuelta" : "Conversación cerrada",
                 )
                 setCloseOpen(false)
@@ -146,7 +197,11 @@ export function HandoffActions({
       >
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm">
-            <Switch checked={resolved} onCheckedChange={setResolved} aria-label="Marcar como resuelta" />
+            <Switch
+              checked={resolved}
+              onCheckedChange={setResolved}
+              aria-label="Marcar como resuelta"
+            />
             Marcar como resuelta
           </label>
           <Textarea
@@ -157,12 +212,8 @@ export function HandoffActions({
           />
         </div>
       </Modal>
-
-      {conversation.mode === "human_active" && (
-        <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <Undo2 className="size-3" /> Atendiendo tú
-        </span>
-      )}
-    </div>
+    </>
   )
+
+  return { primary, secondary, dialogs, busy }
 }

@@ -5,7 +5,7 @@ import { Download, Loader2 } from "lucide-react"
 import { formatBytes } from "@/core/lib/format"
 import { Dialog, DialogContent, DialogTitle } from "@/shared/components/ui/dialog"
 import { getFreshAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
-import type { MessageAttachment } from "@/modules/inbox/domain/inbox"
+import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
 
 /**
  * Visor de imagen a pantalla (casi) completa sobre el Dialog del design
@@ -28,6 +28,7 @@ export function MediaLightbox({
   messageId: string
 }) {
   const [downloading, setDownloading] = useState(false)
+  const displayName = attachmentDisplayName(attachment)
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -42,20 +43,24 @@ export function MediaLightbox({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-auto max-w-[92vw] gap-2 p-3 sm:max-w-[92vw]">
-        <DialogTitle className="sr-only">{attachment.filename}</DialogTitle>
+        <DialogTitle className="sr-only">{displayName}</DialogTitle>
         {imageUrl && (
           // URL firmada rotativa (TTL 300 s): el optimizador de next/image
           // cachearía por URL y fallaría el hit en cada renovación.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
-            alt={attachment.filename}
+            alt={displayName}
             className="max-h-[80vh] w-auto max-w-full rounded-lg object-contain"
           />
         )}
         <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground">
-          <span className="min-w-0 truncate">
-            {attachment.filename} · {formatBytes(attachment.size_bytes)}
+          {/* El DialogContent es `w-auto`: su ancho lo dicta el contenido, así
+              que un nombre largo (sin oportunidades de corte) estiraría la modal
+              hasta 92vw y el `truncate` nunca entraría. El tope en `ch` acota la
+              contribución intrínseca del texto al ancho. */}
+          <span className="min-w-0 max-w-[min(100%,44ch)] truncate" title={displayName}>
+            {displayName} · {formatBytes(attachment.size_bytes)}
           </span>
           <button
             onClick={() => void handleDownload()}

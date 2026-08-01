@@ -17,6 +17,7 @@ import { cn } from "@/core/lib/utils";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { FieldList } from "@/shared/components/features/field-list";
 import {
   formatMoney,
   mapOrderToRow,
@@ -292,50 +293,64 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               {/* Detalles */}
               <section className="space-y-2 rounded-2xl border border-border bg-background p-4 text-sm">
                 <SectionTitle>Detalles</SectionTitle>
-                <dl className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <dt className="text-muted-foreground">Origen</dt>
-                    <dd><OrderOriginBadge origin={order.created_by_type} /></dd>
-                  </div>
-                  {order.conversation_id !== null ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="text-muted-foreground">Conversación</dt>
-                      <dd>
-                        <Link
-                          href={`/workspace/inbox/${order.conversation_id}`}
-                          className="inline-flex items-center gap-1 text-primary hover:underline"
-                        >
-                          <MessageSquareText className="size-3.5" /> Abrir
-                          <ExternalLink className="size-3" />
-                        </Link>
-                      </dd>
-                    </div>
-                  ) : null}
-                  {usage !== null ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="flex items-center gap-1 text-muted-foreground">
-                        <Sparkles className="size-3.5 text-accent-violet" /> Costo IA
-                      </dt>
-                      <dd className="tabular-nums" title={`${usage.tokens_input + usage.tokens_output} tokens · ${usage.ai_requests} llamadas`}>
-                        US$ {usage.cost_usd.toFixed(4)}
-                      </dd>
-                    </div>
-                  ) : null}
-                  {order.notes !== null && order.notes !== "" ? (
-                    <div className="pt-1">
-                      <dt className="text-muted-foreground">Notas</dt>
-                      <dd className="mt-0.5 rounded-lg bg-secondary/60 p-2 text-xs">«{order.notes}»</dd>
-                    </div>
-                  ) : null}
-                  {order.cancellation_reason !== null ? (
-                    <div className="pt-1">
-                      <dt className="text-muted-foreground">Motivo de cancelación</dt>
-                      <dd className="mt-0.5 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
-                        «{order.cancellation_reason}»
-                      </dd>
-                    </div>
-                  ) : null}
-                </dl>
+                <FieldList
+                  className="pt-1"
+                  items={[
+                    {
+                      label: "Origen",
+                      value: <OrderOriginBadge origin={order.created_by_type} />,
+                    },
+                    {
+                      label: "Conversación",
+                      value:
+                        order.conversation_id !== null ? (
+                          <Link
+                            href={`/workspace/inbox/${order.conversation_id}`}
+                            className="inline-flex items-center gap-1 text-primary hover:underline"
+                          >
+                            <MessageSquareText className="size-3.5" /> Abrir
+                            <ExternalLink className="size-3" />
+                          </Link>
+                        ) : null,
+                    },
+                    {
+                      label: (
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="size-3.5 text-accent-violet" /> Costo IA
+                        </span>
+                      ),
+                      value:
+                        usage !== null ? (
+                          <span
+                            className="tabular-nums"
+                            title={`${usage.tokens_input + usage.tokens_output} tokens · ${usage.ai_requests} llamadas`}
+                          >
+                            US$ {usage.cost_usd.toFixed(4)}
+                          </span>
+                        ) : null,
+                    },
+                    {
+                      label: "Notas",
+                      block: true,
+                      value:
+                        order.notes !== null && order.notes !== "" ? (
+                          <span className="mt-0.5 block rounded-lg bg-secondary/60 p-2 text-xs">
+                            «{order.notes}»
+                          </span>
+                        ) : null,
+                    },
+                    {
+                      label: "Motivo de cancelación",
+                      block: true,
+                      value:
+                        order.cancellation_reason !== null ? (
+                          <span className="mt-0.5 block rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
+                            «{order.cancellation_reason}»
+                          </span>
+                        ) : null,
+                    },
+                  ]}
+                />
               </section>
             </>
           )}

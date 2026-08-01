@@ -4,7 +4,7 @@
  */
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import type { TenantListItem } from "../../../domain/tenant";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../components/StatusBadge";
 import { TenantRowActions } from "./TenantRowActions";
 

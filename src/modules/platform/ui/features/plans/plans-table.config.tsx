@@ -7,7 +7,7 @@ import { cn } from "@/core/lib/utils";
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import { Badge } from "@/shared/components/ui/badge";
 import type { PlanListItem, PlanTier } from "../../../domain/plan";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../components/StatusBadge";
 import { PlanRowActions } from "./PlanRowActions";
 

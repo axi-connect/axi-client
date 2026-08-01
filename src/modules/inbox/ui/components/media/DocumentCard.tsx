@@ -5,7 +5,7 @@ import { cn } from "@/core/lib/utils"
 import { Download, File, FileSpreadsheet, FileText, Loader2 } from "lucide-react"
 import { formatBytes } from "@/core/lib/format"
 import { getFreshAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
-import type { MessageAttachment } from "@/modules/inbox/domain/inbox"
+import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
 
 function iconForMime(mime: string) {
   if (mime.includes("pdf") || mime.includes("word") || mime.startsWith("text/")) return FileText
@@ -33,6 +33,7 @@ export function DocumentCard({
 }) {
   const [downloading, setDownloading] = useState(false)
   const Icon = iconForMime(attachment.mime_type)
+  const displayName = attachmentDisplayName(attachment)
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -62,10 +63,10 @@ export function DocumentCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-xs font-medium", outbound ? "text-white" : "text-foreground")}>
-          {attachment.filename}
+          {displayName}
         </p>
         <p className={cn("text-[10px]", outbound ? "text-white/70" : "text-muted-foreground")}>
-          {extensionLabel(attachment.filename, attachment.mime_type)} ·{" "}
+          {extensionLabel(displayName, attachment.mime_type)} ·{" "}
           {formatBytes(attachment.size_bytes)}
         </p>
       </div>
@@ -76,7 +77,7 @@ export function DocumentCard({
           "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
           outbound ? "text-white hover:bg-white/15" : "text-muted-foreground hover:bg-muted",
         )}
-        aria-label={`Descargar ${attachment.filename}`}
+        aria-label={`Descargar ${displayName}`}
       >
         {downloading ? (
           <Loader2 className="size-4 animate-spin" aria-hidden />

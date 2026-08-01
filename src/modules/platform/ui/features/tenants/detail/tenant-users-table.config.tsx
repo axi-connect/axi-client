@@ -5,7 +5,7 @@
 import type { ColumnDef } from "@/shared/components/features/data-table";
 import { Badge } from "@/shared/components/ui/badge";
 import type { TenantUser } from "../../../../domain/tenant";
-import { RelativeDate } from "../../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../../components/StatusBadge";
 
 export const tenantUserColumns: ColumnDef<TenantUser>[] = [

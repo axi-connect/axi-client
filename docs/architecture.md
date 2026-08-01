@@ -135,15 +135,20 @@ axi-client/
 │   │   └── styles/                   # helpers de estilo (gradients)
 │   ├── modules/                      # vertical slices (§3.2)
 │   │   ├── companies/  agents/  users/  rbac/
-│   │   ├── catalog/                             # catálogo de productos (docs/modules/catalog.md)
-│   │   ├── channels/  conversations/           # tiempo real
+│   │   ├── catalog/  orders/  crm/  analytics/  dashboard/  notifications/
+│   │   │                                        # docs/modules/<slice>.md por cada uno
+│   │   ├── channels/                            # tiempo real: QR y estado de WhatsApp Web
+│   │   ├── inbox/                               # conversación, mensajes, handoff, adjuntos y
+│   │   │                                        #   rail de contexto (docs/modules/inbox.md)
+│   │   ├── quick-actions/  landing/
 │   │   ├── platform/                            # consola super admin /platform (auth aislado, §8.1)
-│   │   └── workspace/                           # capa de composición (inbox)
+│   │   └── workspace/                           # capa de composición: sidebar de canales
 │   └── shared/                       # design system + utilidades reutilizables
 │       ├── components/
 │       │   ├── ui/                   # primitivos shadcn/ui + Radix (§11)
 │       │   ├── features/             # componentes complejos: data-table, detail-sheet,
-│       │   │                         #   dynamic-form, tree-view, multi-select (§12)
+│       │   │                         #   dynamic-form, tree-view, multi-select,
+│       │   │                         #   timeline, field-list (§12)
 │       │   └── layout/               # sidebar, site (landing), private-header
 │       ├── api/                      # buildListParams, usePaginatedList (§9)
 │       └── auth/                     # auth.types, auth.hooks, auth.handlers (§8)
@@ -156,6 +161,8 @@ axi-client/
 
 ```
 src/modules/<slice>/
+├── public.ts                       # superficie pública para OTROS slices (§3.3 regla 5);
+│                                   #   solo si el slice tiene consumidores externos
 ├── domain/                         # TypeScript PURO: cero React, cero http, cero zod
 │   ├── <entity>.ts                 # tipos de dominio + contratos: <Entity>Row, <Entity>DTO,
 │   │                               #   Create<Entity>DTO, Update<Entity>DTO, List<Entity>Params
@@ -189,8 +196,8 @@ src/modules/<slice>/
 
 **Casos representativos:**
 - `channels` — slice con tiempo real: añade `domain/enums.ts`, `domain/websocket.types.ts`, `infrastructure/hooks/` (WS) e `infrastructure/store/{channels.store.ts, websocket.context.tsx}`.
-- `conversations` — slice sin UI propia: solo `domain/` + `infrastructure/{services,store}`; su UI la aporta `workspace`.
-- `workspace` — **capa de composición** (excepción sancionada): solo `ui/`, agrega los stores/servicios de `channels` y `conversations` para construir el inbox. No tiene dominio propio.
+- `inbox` — slice más grande y el de mayor superficie de tiempo real: añade `domain/inbox.ts` (alias de `Schemas` + tipos de UI + parsers puros), `infrastructure/{services,stores,realtime,hooks}` y una `ui/` con subcarpetas por capacidad (`composer/`, `media/`, `context-rail/`). Consume `crm` **solo** por su `public.ts` para el rail de contexto (§3.3.5). Doc: `docs/modules/inbox.md`.
+- `workspace` — **capa de composición** (excepción sancionada): solo `ui/`, monta el sidebar de canales del workspace agregando `channels`. No tiene dominio propio.
 
 **Regla de escape sancionada:** un slice puramente CRUD puede omitir `application/` (y usar `domain/ + infrastructure/ + ui/`) manteniendo puertos solo donde exista lógica real. No se fabrica ceremonia donde no hay dominio — igual que en el backend.
 
@@ -205,8 +212,11 @@ Dentro de un slice (dependencias solo hacia adentro):
 
 Entre slices:
 
-5. Un slice importa de otro **solo sus contratos públicos**: tipos de `domain`, su `store`/`context`/hook, o sus puertos. **Prohibido** importar `infrastructure/` interna, componentes internos o casos de uso de otro slice.
-6. `workspace` es la única capa de composición: puede consumir `channels` y `conversations` para orquestar el inbox (documentado).
+5. Un slice importa de otro **solo a través de su barrel `public.ts`** (`src/modules/<slice>/public.ts`), que declara explícitamente su superficie pública: tipos de `domain`, labels/helpers puros, sus hooks/store/context y sus puertos. **Prohibido** importar rutas internas de otro slice (`infrastructure/`, `ui/components/`, casos de uso), incluso si el símbolo está exportado. Si un slice necesita algo que no está en el `public.ts` del otro, se **añade al barrel en el mismo PR** (decisión consciente y revisable), nunca se importa por la ruta profunda.
+   - Un slice sin consumidores externos **no necesita `public.ts`**: el barrel aparece cuando aparece el primer consumidor.
+   - Lo que se publica queda acoplado: preferir tipos y hooks a componentes. Un componente en el barrel debe ser presentacional o autosuficiente (traer sus propios datos), no depender del contexto del slice dueño.
+   - Barrels existentes: `modules/crm/public.ts` (consumido por `inbox` para el rail de contexto de la conversación, y por `dashboard` para los labels de ciclo de vida).
+6. `workspace` es la única capa de composición: puede consumir `channels` para montar el sidebar del workspace (documentado).
 7. `core/` y `shared/` **nunca** importan de `modules/`. Comunicación desacoplada preferente: `WebSocketEventBus` (§10), stores compartidos, o CustomEvents del DOM (§9).
 
 **Deuda saldada en la migración v2** (histórico):
@@ -389,7 +399,7 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 - **`core/realtime/events.ts`** — contrato tipado completo: `InboxServerEvents`, `InboxCommands` (ack `{ok:true,data} | {ok:false,error:{code,message}}`), `ChannelsServerEvents`. Incluye ya los eventos `usage.*` y `notification.created` para los módulos futuros.
 - **`core/realtime/socket-manager.ts`** — singleton por namespace sobre `socket.io-client`. Token vía `GET /api/auth/token` (que auto-refresca si expira en <60 s) en `handshake.auth.token`. **Rotación**: antes de que el access (15 min) caduque, obtiene token nuevo y hace `disconnect()`+`connect()` (Socket.IO no re-negocia auth en caliente). `connect_error` → token fresco + backoff (1s→2s→5s→…30s). `emitWithAck` con timeout.
 - **`core/realtime/use-socket.ts`** — `useSocket(namespace)` (conexión con contador de consumidores) y `useSocketEvent(socket, event, handler)` (suscripción declarativa con cleanup).
-- **Integración por slice** — `channels/infrastructure/hooks/use-channels-realtime.ts` (namespace `/channels` → `channels.store`); `inbox/infrastructure/realtime/use-inbox-socket.ts` (namespace `/inbox` → `inbox.store`, comandos `claim/takeover/return_to_ai/close/send_message/mark_read/typing`, re-join automático al reconectar, `handoff_conflict` → re-fetch).
+- **Integración por slice** — `channels/infrastructure/hooks/use-channels-realtime.ts` (namespace `/channels` → `channels.store`); `inbox/infrastructure/realtime/use-inbox-socket.ts` (namespace `/inbox` → `inbox.store`, comandos `claim/takeover/return_to_ai/close/send_message/mark_read/typing`, re-join automático al reconectar, `handoff_conflict` → re-fetch). Ese mismo hook escucha además los eventos `contact.*`, `crm.*` y `order.*` que traen `contact_id` para refrescar el rail de contexto de la conversación (`docs/modules/inbox.md` §C.4): el backend **no** emite `contact.updated`, así que ese es el único mecanismo de refresco del panel.
 
 **Reglas:** las acciones del inbox van SIEMPRE por WS (mismos use cases y RBAC que REST); REST solo como fallback con el socket caído. Los envíos y acciones wweb son **202/ack = aceptado, no confirmado**: la confirmación llega por evento (`conversation.message_sent`, `channel.status_changed`). Ningún componente usa `socket.io-client` directo.
 
@@ -431,8 +441,10 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 - **`DetailSheet<Id>`** (`detail-sheet/`) — panel lateral (desktop) / bottom sheet (móvil) sobre Radix Dialog + framer-motion. Props: `open`, `onOpenChange`, `id`, `title`, `subtitle`, `size` (xs–xl o número), `side` (`auto|left|right|bottom`), `fetchDetail(id)` (carga async con guard anti-race + `skeleton`), `closeOnEsc`, `closeOnOverlayClick`, `renderHeader/renderFooter`. Drag-to-dismiss, focus management, scroll lock, `prefers-reduced-motion`.
 - **`TreeView<T>`** (`tree-view/`) — árbol genérico: `data`, `mapToNode`, expansión controlada, selección, renderers (`renderLabel/renderActions/getIcon`), `search`, CRUD async y lazy-load (`loadChildren`).
 - **`MultiSelect`** (`multi-select.tsx`) — selección múltiple sobre Popover + Command + Badge: grupos, búsqueda, select-all, animaciones configurables.
+- **`Timeline`** (`timeline/`) — timeline vertical genérico (línea conectora + nodo tonal con icono + hasta 3 líneas). `TimelineItem` = `{ id, icon, tone, title, description?, meta?, badge? }`; `tone` ∈ `neutral|info|success|warning|destructive|violet`. Presentacional puro: los datos, la paginación y los labels los aporta el slice. Incluye `TimelineSkeleton` y `AiBadge` (✦IA violeta). **Única implementación del patrón**: la consumen el historial 360 del contacto, la actividad del pedido y el rail de contexto del inbox.
+- **`FieldList`** (`field-list/`) — `<dl>` etiqueta→valor para rails y cards de detalle. `FieldItem` = `{ label, value, copyable?, block?, hideWhenEmpty? }`; **oculta los campos vacíos por defecto** (los DTO traen casi todo nullable) y no trata `0`/`false` como vacío. `layout` `rows` (rail estrecho) o `grid` (card ancha).
 
-**Regla:** un nuevo listado usa `DataTable` + `usePaginatedList`; un nuevo formulario usa `DynamicForm` + un `*.config.tsx` con Zod; un nuevo panel de detalle usa `DetailSheet` con `fetchDetail`.
+**Regla:** un nuevo listado usa `DataTable` + `usePaginatedList`; un nuevo formulario usa `DynamicForm` + un `*.config.tsx` con Zod; un nuevo panel de detalle usa `DetailSheet` con `fetchDetail`; un nuevo feed de actividad usa `Timeline`; un nuevo bloque de datos de entidad usa `FieldList`.
 
 ---
 

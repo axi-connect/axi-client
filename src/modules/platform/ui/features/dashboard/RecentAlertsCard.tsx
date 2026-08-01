@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useAlertsQuery } from "../../../infrastructure/api/hooks/use-analytics";
 import { ProblemAlert } from "../../components/ProblemAlert";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 
 export function RecentAlertsCard() {
   const { data, isPending, isError, error, refetch } = useAlertsQuery("triggered");

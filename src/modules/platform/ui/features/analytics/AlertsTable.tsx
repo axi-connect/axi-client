@@ -18,7 +18,7 @@ import {
 } from "@/shared/components/ui/table";
 import type { PlatformAlert } from "../../../domain/analytics";
 import { alertProgressPct } from "../../../domain/thresholds";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 
 function ThresholdBar({ alert }: { alert: PlatformAlert }) {
   const pct = alertProgressPct(alert.value_at_trigger, alert.threshold);

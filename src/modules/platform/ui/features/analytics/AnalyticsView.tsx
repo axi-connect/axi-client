@@ -31,7 +31,7 @@ import {
 import { DegradedBanner } from "../../components/DegradedBanner";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { AgentsHealthTable } from "./AgentsHealthTable";
 import { AlertsTable } from "./AlertsTable";
 

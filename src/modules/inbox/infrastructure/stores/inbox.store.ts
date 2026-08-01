@@ -102,6 +102,14 @@ type InboxStore = {
     transcription: AudioTranscription,
   ) => void
 
+  /**
+   * Contador por contacto que invalida los paneles del rail de contexto.
+   * El backend no emite `contact.updated`, así que el refresco lo disparan los
+   * eventos que SÍ traen `contact_id` (`contact.*`, `crm.*`, `order.*`).
+   */
+  contextVersion: Record<string, number>
+  bumpContactContext: (contactId: string) => void
+
   // Reducers de eventos WS
   onHandoffEvent: (event: ConversationHandoffEvent) => void
   onTyping: (event: TypingEvent) => void
@@ -123,6 +131,15 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
   selected: null,
   messagesById: {},
   typingByConversation: {},
+  contextVersion: {},
+
+  bumpContactContext: (contactId) =>
+    set((state) => ({
+      contextVersion: {
+        ...state.contextVersion,
+        [contactId]: (state.contextVersion[contactId] ?? 0) + 1,
+      },
+    })),
 
   setTab: (tab) => {
     set({ tab, page: 1 })

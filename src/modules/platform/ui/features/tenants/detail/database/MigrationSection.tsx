@@ -51,7 +51,7 @@ import {
   useStartDataMigration,
 } from "../../../../../infrastructure/api/hooks/use-tenant-migrations";
 import { ConfirmTyped } from "../../../../components/ConfirmTyped";
-import { RelativeDate } from "../../../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../../../components/StatusBadge";
 import { StepIndicator } from "../../../../components/StepIndicator";
 

@@ -12,7 +12,7 @@ import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { ACTOR_TONES, RISK_ACTIONS, type AuditLog } from "../../../domain/audit";
 import { JsonDiff } from "../../components/JsonDiff";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { useCopy } from "../../hooks/use-copy";
 
 const ACTOR_BADGE_CLASSES: Record<(typeof ACTOR_TONES)[keyof typeof ACTOR_TONES], string> = {

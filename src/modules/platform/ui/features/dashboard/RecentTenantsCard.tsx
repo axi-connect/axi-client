@@ -11,7 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useTenantsQuery } from "../../../infrastructure/api/hooks/use-tenants";
 import { ProblemAlert } from "../../components/ProblemAlert";
-import { RelativeDate } from "../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../components/StatusBadge";
 
 export function RecentTenantsCard() {

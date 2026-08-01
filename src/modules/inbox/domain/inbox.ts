@@ -254,6 +254,144 @@ export function mediaKindForMime(mime: string): OutboundMediaKind | null {
   return null;
 }
 
+// -------------------------------------------- señales de la cabecera del chat
+
+/**
+ * ¿El contacto escribió lo último y sigue esperando respuesta?
+ *
+ * Se deriva comparando `last_inbound_at` con `last_message_at` por ORDEN, no por
+ * igualdad: ambos los escribe el backend en operaciones distintas y no coinciden
+ * al milisegundo aunque correspondan al mismo mensaje.
+ */
+export function isAwaitingReply(conversation: ConversationDTO): boolean {
+  const { last_inbound_at, last_message_at } = conversation;
+  if (last_inbound_at === null) return false;
+  if (last_message_at === null) return true;
+  return new Date(last_inbound_at).getTime() >= new Date(last_message_at).getTime();
+}
+
+/**
+ * Instante desde el que el contacto espera respuesta, o `null` si no espera.
+ * Devuelve el ISO crudo: el formateo relativo es de la UI — `domain/` es
+ * TypeScript puro y no importa utilidades de `core/lib` (§3.3 regla 1).
+ */
+export function waitingSince(conversation: ConversationDTO): string | null {
+  return isAwaitingReply(conversation) ? conversation.last_inbound_at : null;
+}
+
+/**
+ * ¿La prioridad merece señal visual? Solo `high` y `urgent`: pintar un badge en
+ * cada conversación `normal` es ruido, y `low` no aporta nada al operador.
+ *
+ * La prioridad es de SOLO LECTURA — el backend no expone forma de cambiarla; el
+ * único escritor es el sweep de SLA vencido (`normal → high`).
+ */
+export function isNotablePriority(priority: ConversationDTO["priority"]): boolean {
+  return priority === "high" || priority === "urgent";
+}
+
+/**
+ * Nombre de archivo opaco del proveedor: WhatsApp entrega como `filename` el
+ * JSON de media codificado en base64url (400+ chars, sin extensión ni puntos).
+ * No es un nombre: mostrarlo ensancha modales y no informa de nada.
+ */
+const OPAQUE_FILENAME = /^[A-Za-z0-9_-]{40,}$/;
+
+/** Extensión razonable a partir del mime (`image/jpeg` → `jpg`). */
+function extensionForMime(mime: string): string | null {
+  const subtype = (mime.split(";")[0] ?? "").split("/")[1]?.trim().toLowerCase();
+  if (subtype === undefined || subtype === "") return null;
+  if (subtype === "jpeg") return "jpg";
+  if (subtype === "quicktime") return "mov";
+  // `svg+xml`, `vnd.openxmlformats-...` → se queda el último segmento útil.
+  return subtype.split("+")[0].split(".").pop() ?? null;
+}
+
+/**
+ * Nombre presentable de un adjunto. Si el proveedor no mandó un nombre real
+ * (vacío, o el token base64 de WhatsApp), se compone uno legible a partir del
+ * tipo: "Foto.jpg", "Nota de voz.ogg", "Documento.pdf".
+ *
+ * Un nombre real se devuelve tal cual: recortarlo es cosa de CSS, no del dominio.
+ */
+export function attachmentDisplayName(attachment: {
+  filename: string;
+  mime_type: string;
+}): string {
+  const filename = attachment.filename?.trim() ?? "";
+  if (filename !== "" && !OPAQUE_FILENAME.test(filename) && filename.length <= 120) {
+    return filename;
+  }
+
+  const mime = attachment.mime_type?.toLowerCase() ?? "";
+  const label = mime.startsWith("image/")
+    ? MEDIA_PREVIEW_LABELS.image
+    : mime.startsWith("video/")
+      ? MEDIA_PREVIEW_LABELS.video
+      : mime.startsWith("audio/")
+        ? MEDIA_PREVIEW_LABELS.audio
+        : MEDIA_PREVIEW_LABELS.document;
+
+  const extension = extensionForMime(mime);
+  return extension !== null ? `${label}.${extension}` : label;
+}
+
+// ------------------------------------------------- adjuntos del hilo (rail)
+
+/**
+ * Categorías del panel de adjuntos. `sticker` cae en `image` (se ve igual) y
+ * `location` queda fuera: no hay archivo que listar ni descargar.
+ */
+export type AttachmentCategory = "image" | "video" | "audio" | "document";
+
+export const ATTACHMENT_CATEGORY_LABELS: Record<AttachmentCategory, string> = {
+  image: "Imágenes",
+  video: "Video",
+  audio: "Audio",
+  document: "Documentos",
+};
+
+/**
+ * ¿El mensaje aporta un archivo al panel de adjuntos?
+ *
+ * Cubre tres situaciones: el mensaje ya tiene `attachments` persistidos, es un
+ * optimista recién enviado que solo tiene `local_previews`, o es media entrante
+ * cuyo attachment aún no materializa el backend (`media_pending`) — en ese
+ * último caso interesa listarlo para mostrar el skeleton.
+ */
+export function isAttachmentMessage(message: UiMessage): boolean {
+  if (message.content_type === "location") return false;
+  return (
+    message.attachments.length > 0 ||
+    (message.local_previews?.length ?? 0) > 0 ||
+    isMediaContentType(message.content_type)
+  );
+}
+
+/**
+ * Categoría del mensaje para filtrar el panel. Prioriza `content_type` (lo que
+ * dijo el proveedor) y cae al mime del adjunto cuando no es un tipo de media
+ * — p. ej. un `template` que llevaba una imagen.
+ */
+export function attachmentCategory(message: UiMessage): AttachmentCategory {
+  switch (message.content_type) {
+    case "image":
+    case "sticker":
+      return "image";
+    case "video":
+      return "video";
+    case "audio":
+      return "audio";
+    case "document":
+      return "document";
+    default: {
+      const mime = message.attachments[0]?.mime_type ?? message.local_previews?.[0]?.mime_type;
+      const kind = mime !== undefined ? mediaKindForMime(mime) : null;
+      return kind ?? "document";
+    }
+  }
+}
+
 /** Filtros que la UI traduce a query params de `GET /inbox/conversations`. */
 export function tabToQuery(tab: InboxTab): Record<string, string> {
   switch (tab) {

@@ -1,17 +1,13 @@
 "use client"
 
-import Image from "next/image"
 import { useEffect, useRef } from "react"
-import { ArrowLeft, MessageSquareDashed } from "lucide-react"
+import { MessageSquareDashed } from "lucide-react"
 import { cn } from "@/core/lib/utils"
-import { Badge } from "@/shared/components/ui/badge"
-import { Button } from "@/shared/components/ui/button"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send-message"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
-import { MODE_LABELS, STATUS_LABELS } from "@/modules/inbox/domain/inbox"
 import { MessageBubble } from "./MessageBubble"
-import { HandoffActions } from "./HandoffActions"
+import { ConversationHeader } from "./header/ConversationHeader"
 import { Composer } from "./composer/Composer"
 
 /**
@@ -27,7 +23,7 @@ export function ConversationPanel({
   socketConnected: boolean
   className?: string
 }) {
-  const { selected, selectedId, messagesById, typingByConversation, fetchOlderMessages, select } = useInboxStore()
+  const { selected, selectedId, messagesById, typingByConversation, fetchOlderMessages } = useInboxStore()
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
 
@@ -66,53 +62,9 @@ export function ConversationPanel({
     )
   }
 
-  const contactName = selected.contact.full_name || selected.contact.phone || "Sin nombre"
-
   return (
     <div className={cn("h-full flex-1 flex-col overflow-hidden", className)}>
-      {/* Header */}
-      <div className="border-b border-border bg-background/60 px-4 py-3">
-        <div className="flex items-center gap-3">
-          {/* Volver a la lista en móvil (maestro-detalle); en md+ la lista ya es visible. */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-9 shrink-0 md:hidden"
-            aria-label="Volver a la lista"
-            onClick={() => void select(null)}
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          {selected.contact.avatar_url ? (
-            <Image
-              src={selected.contact.avatar_url}
-              alt={`Avatar de ${contactName}`}
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded-full object-cover bg-muted"
-            />
-          ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-sm font-medium">
-              {contactName.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate font-medium">{contactName}</span>
-              <Badge variant="secondary" className="text-[10px]">{MODE_LABELS[selected.mode]}</Badge>
-              {selected.status !== "open" && (
-                <Badge variant="outline" className="text-[10px]">{STATUS_LABELS[selected.status]}</Badge>
-              )}
-            </div>
-            <div className="truncate text-xs text-muted-foreground">
-              {selected.contact.phone ?? ""} · {selected.channel.name}
-            </div>
-          </div>
-        </div>
-        <div className="mt-2">
-          <HandoffActions conversation={selected} commands={commands} />
-        </div>
-      </div>
+      <ConversationHeader conversation={selected} commands={commands} />
 
       {/* Timeline */}
       <div

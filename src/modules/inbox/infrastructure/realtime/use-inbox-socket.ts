@@ -134,6 +134,33 @@ export function useInboxSocket() {
     store.getState().fetchCounts()
   })
 
+  // --- Contexto del contacto (rail) ----------------------------------------
+  // El backend NO emite `contact.updated`: si la IA captura la dirección con
+  // `save_contact_data` o un operador edita la ficha, no llega nada. Lo que sí
+  // llega son estos eventos, que traen `contact_id` y bastan para invalidar el
+  // panel abierto.
+  useSocketEvent(socket, "contact.lifecycle_changed", (payload) => {
+    store.getState().bumpContactContext(payload.contact_id)
+  })
+  useSocketEvent(socket, "contact.merged", (payload) => {
+    store.getState().bumpContactContext(payload.contact_id)
+  })
+
+  // Fuentes del historial 360 (actividades, oportunidades, pedidos). Todas
+  // traen `contact_id`, así que el bump es directo: el panel abierto re-consulta
+  // y los demás contactos no se tocan.
+  useSocketEvent(socket, "crm.activity_created", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.task_completed", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.deal_created", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.deal_updated", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.deal_stage_changed", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.deal_won", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.deal_lost", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "crm.deal_stalled", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "order.created", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "order.status_changed", (p) => store.getState().bumpContactContext(p.contact_id))
+  useSocketEvent(socket, "order.payment_reported", (p) => store.getState().bumpContactContext(p.contact_id))
+
   // F15: el AuthProvider (único listener) frena el tiempo real y muestra la
   // pantalla bloqueante. dispatchEvent es síncrono: el halt ocurre antes de
   // que socket.io procese la desconexión forzada que sigue al evento.

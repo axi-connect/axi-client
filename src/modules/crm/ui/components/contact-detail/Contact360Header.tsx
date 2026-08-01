@@ -38,20 +38,16 @@ import {
   type ContactDTO,
   type ContactProfileDTO,
 } from "@/modules/crm/domain/contact";
-import { CONTACT_STAGE_LABELS, type ContactLifecycleStage } from "@/modules/crm/domain/enums";
+import {
+  CONTACT_STAGE_BADGE_CLASSES,
+  CONTACT_STAGE_LABELS,
+} from "@/modules/crm/domain/enums";
 import {
   assignContactOwner,
   deleteContact,
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 
 const NO_OWNER = "__none__";
-
-const STAGE_BADGE_CLASSES: Record<ContactLifecycleStage, string> = {
-  prospect: "border-transparent bg-secondary text-secondary-foreground",
-  lead: "border-transparent bg-info/12 text-info",
-  customer: "border-transparent bg-success/12 text-success",
-  other: "border-border bg-transparent text-muted-foreground",
-};
 
 const CHANNEL_META: Record<
   ContactChannelIdentity["channel_kind"],
@@ -141,7 +137,7 @@ export function Contact360Header({
               <h2 className="truncate text-xl font-semibold tracking-tight">{name}</h2>
               <Badge
                 variant="outline"
-                className={cn(STAGE_BADGE_CLASSES[contact.lifecycle_stage])}
+                className={cn(CONTACT_STAGE_BADGE_CLASSES[contact.lifecycle_stage])}
               >
                 {CONTACT_STAGE_LABELS[contact.lifecycle_stage]}
               </Badge>

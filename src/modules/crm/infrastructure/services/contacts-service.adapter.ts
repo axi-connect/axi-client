@@ -103,15 +103,24 @@ export function mergeContacts(
 }
 
 /**
- * Usuarios del tenant para el select de owner. El recurso `/users` es del
- * backend compartido; este slice no importa infraestructura de `modules/users`
- * (§3.3.5): expone su propia proyección mínima.
+ * Usuarios del tenant para los selectores de responsable. El recurso `/users`
+ * es del backend compartido; este slice no importa infraestructura de
+ * `modules/users` (§3.3.5): expone su propia proyección.
+ *
+ * `avatar_url` y `role` se incluyen para el selector con búsqueda (avatares y
+ * agrupado por rol). El endpoint no acepta filtros ni paginación: devuelve todos
+ * los usuarios del tenant, así que el filtrado por `status` es del consumidor.
  */
-export async function listAssignableUsers(): Promise<
-  Array<{ id: string; name: string; status: string }>
-> {
-  const res = await http.get<{ data: Array<{ id: string; name: string; status: string }> }>(
-    "/users",
-  );
+export interface AssignableUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+  status: "active" | "invited" | "disabled";
+  role: { id: string; code: string; name: string };
+}
+
+export async function listAssignableUsers(): Promise<AssignableUser[]> {
+  const res = await http.get<{ data: AssignableUser[] }>("/users");
   return res.data;
 }

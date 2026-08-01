@@ -33,7 +33,7 @@ import { EmptyState } from "../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
 import { StatusBadge } from "../../../../components/StatusBadge";
 import { StepIndicator } from "../../../../components/StepIndicator";
-import { RelativeDate } from "../../../../components/RelativeDate";
+import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { DatabaseConnectionSheet } from "./DatabaseConnectionSheet";
 import { ValidationChecklist } from "./ValidationChecklist";
 import { MigrationSection } from "./MigrationSection";

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
-import type { MessageAttachment } from "@/modules/inbox/domain/inbox"
+import { attachmentDisplayName, type MessageAttachment } from "@/modules/inbox/domain/inbox"
 import { MediaError, MediaSkeleton } from "./MediaStates"
 
 export function VideoBubble({
@@ -48,7 +48,7 @@ export function VideoBubble({
       preload="metadata"
       playsInline
       className="max-h-72 w-auto max-w-full rounded-xl bg-black/20"
-      aria-label={attachment?.filename ?? "Video"}
+      aria-label={attachment !== undefined ? attachmentDisplayName(attachment) : "Video"}
       onError={() => {
         if (previewUrl) return
         if (autoRetriedRef.current) {
