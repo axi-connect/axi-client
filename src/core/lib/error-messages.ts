@@ -123,6 +123,23 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "crm/import_invalid_file": "El archivo no es un CSV válido. Revisa las columnas y el formato",
   "crm/import_too_large": "El archivo supera el límite (10 MB / 20.000 filas)",
   "crm/export_invalid_filters": "Los filtros de la exportación no son válidos",
+  // Calidad (consola platform) — quality_frontend_implementation_plan.md.
+  // Los 409/422 con `details` (tenant_not_eligible, spend_cap_exceeded) se
+  // enriquecen en la UI con los helpers de domain/quality-runs.ts.
+  "quality/scenario_not_found": "El escenario ya no existe o está archivado",
+  "quality/suite_not_found": "La suite ya no existe o no tiene escenarios activos",
+  "quality/run_not_found": "La ejecución ya no existe",
+  "quality/conversation_not_found": "La conversación ya no existe",
+  "quality/scenario_immutable": "Los escenarios de sistema no se pueden modificar: clónalo para editarlo",
+  "quality/suite_immutable": "Las suites de sistema no se pueden modificar: clónala para editarla",
+  "quality/scenario_code_taken": "Ya existe un escenario con ese código",
+  "quality/suite_code_taken": "Ya existe una suite con ese código",
+  "quality/run_already_active": "El tenant ya tiene una ejecución activa: espera a que termine o cancélala",
+  "quality/tenant_not_eligible": "El tenant no es elegible para esta ejecución",
+  "quality/run_not_cancelable": "La ejecución ya terminó: no se puede cancelar",
+  "quality/run_not_purgeable": "La ejecución sigue activa: espera a que termine para purgar",
+  "quality/spend_cap_exceeded": "El tope de gasto no alcanza para la ejecución estimada",
+  "platform/forbidden": "Tu cuenta no tiene acceso a la consola de plataforma",
   "client/network": "No fue posible contactar al servidor",
 };
 

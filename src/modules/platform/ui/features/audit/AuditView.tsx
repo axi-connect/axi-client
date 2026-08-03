@@ -31,9 +31,10 @@ import { useAuditLogsQuery } from "../../../infrastructure/api/hooks/use-audit";
 import { useTenantsQuery } from "../../../infrastructure/api/hooks/use-tenants";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
+import { ALL_TENANTS, TenantSelect } from "../../components/TenantSelect";
 import { AuditLogRow } from "./AuditLogRow";
 
-const ALL = "all";
+const ALL = ALL_TENANTS;
 const CUSTOM = "custom";
 
 type AuditViewProps = {
@@ -92,17 +93,12 @@ export function AuditView({ companyId, lockTenant = false }: AuditViewProps) {
 
       <div className="flex flex-wrap items-center gap-2">
         {!lockTenant && (
-          <Select value={tenantFilter} onValueChange={setTenantFilter}>
-            <SelectTrigger className="w-48" aria-label="Filtrar por tenant">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todos los tenants</SelectItem>
-              {(tenantsQuery.data?.data ?? []).map((tenant) => (
-                <SelectItem key={tenant.id} value={tenant.id}>{tenant.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <TenantSelect
+            value={tenantFilter}
+            onValueChange={setTenantFilter}
+            allowAll
+            ariaLabel="Filtrar por tenant"
+          />
         )}
 
         <Select value={actionChoice} onValueChange={setActionChoice}>

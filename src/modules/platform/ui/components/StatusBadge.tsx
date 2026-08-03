@@ -14,6 +14,8 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone; transient?: boolea
   active: { label: "Activo", tone: "success" },
   completed: { label: "Completada", tone: "success" },
   current: { label: "Vigente", tone: "success" },
+  // Estables sanos — calidad
+  passed: { label: "Aprobado", tone: "success" },
   // Atención / transitorios (spinner)
   trial: { label: "Trial", tone: "warning" },
   pending: { label: "Pendiente", tone: "warning", transient: true },
@@ -23,17 +25,28 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone; transient?: boolea
   cutover: { label: "Cutover", tone: "warning", transient: true },
   verifying: { label: "Verificando", tone: "warning", transient: true },
   acknowledged: { label: "Reconocida", tone: "warning" },
+  // Atención / transitorios — calidad
+  running: { label: "En curso", tone: "warning", transient: true },
+  queued: { label: "En cola", tone: "warning", transient: true },
+  purging: { label: "Purgando", tone: "warning", transient: true },
+  blocked: { label: "Bloqueado", tone: "warning" },
   // Peligro
   suspended: { label: "Suspendido", tone: "destructive" },
   error: { label: "Error", tone: "destructive" },
   failed: { label: "Fallida", tone: "destructive" },
   triggered: { label: "Disparada", tone: "destructive" },
+  timeout: { label: "Timeout", tone: "destructive" },
   // Apagados
   inactive: { label: "Inactivo", tone: "neutral" },
   disabled: { label: "Deshabilitada", tone: "neutral" },
   rolled_back: { label: "Revertida", tone: "neutral" },
   resolved: { label: "Resuelta", tone: "neutral" },
   cancelled: { label: "Cancelada", tone: "neutral" },
+  // El API de calidad usa `canceled` (una l); `cancelled` (arriba) es de
+  // otros recursos — ambas variantes deben existir.
+  canceled: { label: "Cancelada", tone: "neutral" },
+  purged: { label: "Purgada", tone: "neutral" },
+  archived: { label: "Archivado", tone: "neutral" },
 };
 
 const TONE_CLASSES: Record<Tone, string> = {

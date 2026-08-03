@@ -5,14 +5,17 @@
  *   · ReLoginModal abierto → `false` (el token venció; se reanuda al renovar).
  *   · Provisión: 3 s; pasados 10 min degrada a 15 s (job largo, no colgar).
  *   · Migración de datos: 5 s constante.
+ *   · Ejecuciones de calidad: 3 s mientras pending|running|purging.
  */
 import { isDbSettled, isMigrationRunning, type DbStatus, type MigrationStatus } from "./database";
+import { isCaseSettled, isRunActive, type CaseStatus, type RunStatus } from "./quality-runs";
 
 export const DB_POLL_MS = 3_000;
 export const DB_POLL_DEGRADED_MS = 15_000;
 export const DB_POLL_DEGRADE_AFTER_MS = 10 * 60 * 1000;
 export const MIGRATION_POLL_MS = 5_000;
 export const ANALYTICS_POLL_MS = 60_000;
+export const RUN_POLL_MS = 3_000;
 
 /** Analytics y badge de alertas: refresco de 60 s salvo re-login abierto. */
 export function analyticsPollInterval(reloginOpen: boolean): number | false {
@@ -41,4 +44,24 @@ export function migrationPollInterval(args: {
   const { status, reloginOpen } = args;
   if (!status || !isMigrationRunning(status) || reloginOpen) return false;
   return MIGRATION_POLL_MS;
+}
+
+/** Detalle de una ejecución de calidad: 3 s mientras siga en vuelo. */
+export function runPollInterval(args: {
+  status: RunStatus | null | undefined;
+  reloginOpen: boolean;
+}): number | false {
+  const { status, reloginOpen } = args;
+  if (!status || !isRunActive(status) || reloginOpen) return false;
+  return RUN_POLL_MS;
+}
+
+/** Detalle de un case: 3 s mientras no esté asentado (queued|running). */
+export function casePollInterval(args: {
+  status: CaseStatus | null | undefined;
+  reloginOpen: boolean;
+}): number | false {
+  const { status, reloginOpen } = args;
+  if (!status || isCaseSettled(status) || reloginOpen) return false;
+  return RUN_POLL_MS;
 }

@@ -1,12 +1,15 @@
 import {
   ANALYTICS_POLL_MS,
   analyticsPollInterval,
+  casePollInterval,
   databasePollInterval,
   DB_POLL_DEGRADE_AFTER_MS,
   DB_POLL_DEGRADED_MS,
   DB_POLL_MS,
   MIGRATION_POLL_MS,
   migrationPollInterval,
+  RUN_POLL_MS,
+  runPollInterval,
 } from "../polling";
 
 const NOW = 1_800_000_000_000;
@@ -53,6 +56,37 @@ describe("migrationPollInterval", () => {
     }
     expect(migrationPollInterval({ status: "copying", reloginOpen: true })).toBe(false);
     expect(migrationPollInterval({ status: null, reloginOpen: false })).toBe(false);
+  });
+});
+
+describe("runPollInterval", () => {
+  it("3 s mientras la ejecución sigue en vuelo (pending/running/purging)", () => {
+    for (const status of ["pending", "running", "purging"] as const) {
+      expect(runPollInterval({ status, reloginOpen: false })).toBe(RUN_POLL_MS);
+    }
+  });
+
+  it("false en terminales, sin status y con re-login abierto", () => {
+    for (const status of ["completed", "failed", "canceled", "purged"] as const) {
+      expect(runPollInterval({ status, reloginOpen: false })).toBe(false);
+    }
+    expect(runPollInterval({ status: null, reloginOpen: false })).toBe(false);
+    expect(runPollInterval({ status: "running", reloginOpen: true })).toBe(false);
+  });
+});
+
+describe("casePollInterval", () => {
+  it("3 s mientras el case no está asentado (queued/running)", () => {
+    expect(casePollInterval({ status: "queued", reloginOpen: false })).toBe(RUN_POLL_MS);
+    expect(casePollInterval({ status: "running", reloginOpen: false })).toBe(RUN_POLL_MS);
+  });
+
+  it("false en asentados, sin status y con re-login abierto", () => {
+    for (const status of ["passed", "failed", "blocked", "error", "timeout"] as const) {
+      expect(casePollInterval({ status, reloginOpen: false })).toBe(false);
+    }
+    expect(casePollInterval({ status: null, reloginOpen: false })).toBe(false);
+    expect(casePollInterval({ status: "queued", reloginOpen: true })).toBe(false);
   });
 });
 
