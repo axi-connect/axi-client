@@ -13,25 +13,13 @@ import {
 export default function SiteFooter() {
   return (
     <footer className="relative z-10 mt-8 w-full overflow-hidden pt-16 pb-8">
-      {/* Material propio del footer — NUNCA redefinir la clase global `.glass`
-          del design system (ya ocurrió una vez: `.glass` quedó secuestrada en
-          toda la app desde este archivo). La transición se acota a las
-          propiedades del material: `transition: all` interpolaba también layout. */}
-      <style jsx global>{`
-        .footer-glass {
-          backdrop-filter: blur(3px) saturate(180%);
-          background: radial-gradient(circle, var(--background) 0%, color-mix(in oklab, var(--axi-brand) 20%, var(--background)) 60%, var(--background) 100%);
-          border: 1px solid color-mix(in oklab, var(--axi-brand) 25%, transparent);
-          transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
-        }
-        .footer-glass:where(.dark, .dark *) {
-          backdrop-filter: blur(2px);
-          background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 10%, transparent) 0%, color-mix(in oklab, var(--axi-brand-2) 20%, var(--background)) 60%, color-mix(in srgb, var(--background) 25%, transparent) 100%);
-          border: 1px solid color-mix(in srgb, var(--foreground) 5%, transparent);
-        }
-      `}</style>
-
-      <div className="footer-glass relative mx-auto flex max-w-6xl flex-col items-center gap-8 rounded-2xl px-6 py-10 md:flex-row md:items-start md:justify-between md:gap-12">
+      {/* Superficie: `.bg-brand-ambient` del design system (globals.css), no un
+          material propio. Antes esto era un `<style jsx global>` con su propia
+          paleta y distribución — divergía del hero en espacio de color,
+          saturación, borde y token por tema. Además, definir clases globales
+          desde aquí ya secuestró `.glass` en toda la app una vez: la regla es
+          que el material vive en globals.css, no en el componente. */}
+      <div className="bg-brand-ambient border-border relative mx-auto flex max-w-6xl flex-col items-center gap-8 rounded-2xl border px-6 py-10 md:flex-row md:items-start md:justify-between md:gap-12">
         <div className="flex flex-col items-center md:items-start">
           {/* BrandMark inline: el isotipo se cargaba desde Cloudinary (request
               externo) y el PNG local pesa 423 KB para renderizar 36px. */}

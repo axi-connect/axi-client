@@ -158,6 +158,34 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .text-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .text-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
+/* -------- Ambientación de marca para superficies grandes -------- */
+
+/**
+ * Halo de marca difuso para una superficie amplia (hoy: la tarjeta del footer).
+ *
+ * Replica el LENGUAJE del hero (`LandingHero`): elipses suaves ancladas a una
+ * esquina, en `srgb`, muy poco saturadas — no un anillo radial centrado. La
+ * versión anterior del footer divergía en todo: `oklab` (único uso en el
+ * proyecto, y con el coral produce un rosa mucho más saturado), tinte al 20%
+ * (por encima del techo del sistema, que es el 14% de `--color-accent`), borde
+ * al 25% (el doble de `--color-border`) y `--axi-brand-2` solo en dark, así que
+ * la paleta cambiaba de tema además de intensidad.
+ *
+ * Coral únicamente: el tricolor está reservado a los momentos hero (DESIGN §3.2,
+ * hoy hero y CTA final) y el violeta queda como firma del bloque de Kodecol, que
+ * vive justo debajo.
+ *
+ * Un solo token (`--axi-brand`) para ambos temas: el token ya cambia de valor
+ * por tema (#E65759 → #FB7185), así que no hace falta una regla `.dark` que
+ * duplique la estructura.
+ */
+.bg-brand-ambient {
+  background-color: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  background-image:
+    radial-gradient(75% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand) 13%, transparent), transparent 72%),
+    radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-brand) 8%, transparent), transparent 70%);
+}
+
 /* -------- Glass: material de superficies flotantes (DESIGN-SYSTEM §5) -------- */
 
 /* Flotantes ligeros: header, sidebar, popovers, dropdowns, tooltips, alerts */
