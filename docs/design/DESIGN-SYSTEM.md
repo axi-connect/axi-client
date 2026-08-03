@@ -225,7 +225,11 @@ Reglas:
 - **Control de tema** (`ThemeToggle`, a crear en `shared/components/layout/`): toggle de 3 estados (light / dark / system) presente en `PrivateHeader`, footer del `AppSidebar` y `SiteHeader`.
 - Todo componente nuevo se revisa en ambos temas antes de mergear; los tokens hacen el 95% del trabajo si no hay hex sueltos.
 - Evitar flash de tema: no leer `window`/tema en render de servidor; `suppressHydrationWarning` en `<html>` (ya aplicado).
-- Imágenes/logos con variante por tema: renderizar ambas con `dark:hidden` / `hidden dark:block` (no JS).
+- Imágenes/logos con variante por tema — **dos casos, según el logo**:
+  - **A color** (varias tintas, como el logo horizontal de axi con sus tres cintas): dos archivos, renderizando ambos con `dark:hidden` / `hidden dark:block` (no JS).
+  - **Monocromo** (silueta con canal alfa): **un solo archivo** como `mask-image` + `bg-current`. El color lo aporta el token de texto, así que sigue al tema sin una sola variante `dark:` y sin un segundo asset que mantener sincronizado. El color del archivo es irrelevante — solo cuenta su transparencia. Referencia: `shared/components/layout/site/KodecolBanner.tsx`.
+    - La `mask-image` va en `style` inline si la URL es un valor de runtime: Tailwind necesita clases estáticas en build time. En ese caso, escribir los `-webkit-mask-*` a mano — los estilos inline de React no pasan por Lightning CSS y no reciben prefijado automático.
+    - Sin `<img>` no hay semántica de imagen: declarar `role="img"` + `aria-label`.
 
 ---
 

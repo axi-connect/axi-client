@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { Button } from "@/shared/components/ui/button";
 import { KODECOL } from "@/shared/components/layout/site/kodecol.content";
 import { SocialIcon } from "@/shared/components/layout/site/SocialIcon";
@@ -10,12 +8,16 @@ import { SocialIcon } from "@/shared/components/layout/site/SocialIcon";
  * Intención de diseño: que se lea como una **credencial**, no como un banner
  * pegado al final. Dos decisiones sostienen eso:
  *
- *  1. **Acento violeta, no coral.** El coral es el color de acción de Axi; si
- *     este bloque lo usara, competiría con los CTA de la página. El violeta lo
- *     separa como firma de otra marca (DESIGN §3.1 — y el footer no usa ámbar,
- *     así que no se rompe la regla de "nunca los tres acentos juntos").
+ *  1. **Acento violeta en la ambientación, no en el texto.** El coral es el
+ *     color de acción de Axi; si este bloque lo usara, competiría con los CTA de
+ *     la página. El violeta vive en la textura de puntos, el halo y el hover de
+ *     las redes, así que separa la firma de otra marca sin teñir el contenido
+ *     (DESIGN §3.1 — y el footer no usa ámbar, así que no se rompe la regla de
+ *     "nunca los tres acentos juntos").
  *  2. **La jerarquía la hace la tipografía.** Kicker pequeño en mayúsculas +
  *     nombre en Nexa grande, sin recuadros ni sombras duras (DESIGN §4).
+ *  3. **Logo y nombre siguen el token de texto**, no colores fijos: negros en
+ *     claro, blancos en oscuro, con un solo asset (ver el bloque del logo).
  *
  * Los datos viven en `kodecol.content.ts` y el bloque degrada solo si faltan.
  */
@@ -47,15 +49,34 @@ export function KodecolBanner() {
         }}
       />
 
-      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-10 text-center md:flex-row md:justify-between md:gap-10 md:text-left">
-        <div className="flex flex-col items-center gap-5 md:flex-row md:items-center">
+      <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-10 text-center md:flex-row md:justify-between md:gap-10 md:text-left">
+        <div className="flex flex-col items-center gap-4 md:flex-row md:items-center">
+          {/* El logo se pinta con `bg-current` a través de una MÁSCARA, no se
+              renderiza como imagen: así un único asset monocromo sirve para
+              ambos temas (el color sale de `--foreground`, no del archivo) y no
+              hace falta mantener una versión blanca y otra negra.
+              Ver DESIGN-SYSTEM §8 y el requisito del asset en kodecol.content.ts.
+
+              La máscara va en `style` y no en clases Tailwind porque la URL es
+              un valor de runtime, y Tailwind necesita clases estáticas en build
+              time. Los prefijos `-webkit-` se escriben a mano: los estilos
+              inline de React no pasan por Lightning CSS, así que no reciben el
+              prefijado automático. */}
           {KODECOL.logoSrc ? (
-            <Image
-              src={KODECOL.logoSrc}
-              alt={KODECOL.logoAlt}
-              width={56}
-              height={56}
-              className="size-14 shrink-0 rounded-xl object-contain transition-transform duration-200 hover:scale-105"
+            <span
+              role="img"
+              aria-label={KODECOL.logoAlt}
+              className="text-foreground size-14 shrink-0 bg-current transition-transform duration-200 hover:scale-105"
+              style={{
+                maskImage: `url(${KODECOL.logoSrc})`,
+                WebkitMaskImage: `url(${KODECOL.logoSrc})`,
+                maskSize: "contain",
+                WebkitMaskSize: "contain",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
+                maskPosition: "center",
+                WebkitMaskPosition: "center",
+              }}
             />
           ) : null}
 
@@ -63,7 +84,7 @@ export function KodecolBanner() {
             <p className="text-muted-foreground text-[11px] font-medium tracking-[0.18em] uppercase">
               {KODECOL.kicker}
             </p>
-            <p className="font-heading text-accent-violet mt-1.5 text-2xl font-bold tracking-tight">
+            <p className="font-heading text-foreground text-2xl font-bold tracking-tight">
               {KODECOL.name}
             </p>
             {KODECOL.claim ? (
