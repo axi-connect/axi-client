@@ -28,6 +28,9 @@ const LABELS: Record<string, string> = {
   plan: "Plan & Límites",
   database: "Base de datos",
   // "audit" bajo un tenant y en el top-level comparten label ("Auditoría").
+  // Sub-secciones de Calidad (F3 añade runs; F5, debugger).
+  scenarios: "Escenarios",
+  suites: "Suites",
 };
 
 const UUID_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
