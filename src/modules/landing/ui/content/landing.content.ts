@@ -640,6 +640,26 @@ export const FINAL_CTA = {
   },
 } as const;
 
+/* ─────────────────────── Datos de contacto (/contacto) ──────────────────── */
+
+/**
+ * Datos de la empresa que se muestran en `/contacto`.
+ *
+ * PENDIENTE DE DATOS: el correo comercial. Cada entrada se renderiza solo si
+ * tiene `value`, así que la tarjeta no muestra huecos mientras falte.
+ */
+export const CONTACT = {
+  title: "Axi Connect",
+  details: [
+    { label: "WhatsApp", value: "+57 322 497 0950", href: `https://wa.me/${WHATSAPP_AGENT_NUMBER}` },
+    { label: "Ubicación", value: "Colombia", href: undefined },
+  ].filter((detail) => detail.value.length > 0) as readonly {
+    label: string;
+    value: string;
+    href?: string;
+  }[],
+} as const;
+
 /** Mensaje de WhatsApp que construye el submit del formulario de demo. */
 export function buildDemoLeadWaText(values: {
   name: string;

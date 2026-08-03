@@ -1,4 +1,9 @@
 @import "tailwindcss";
+/* Utilidades de entrada/salida que consumen los primitivos de Radix
+   (`animate-in`, `fade-in-0`, `zoom-in-95`, `slide-in-from-*`). Sin este import
+   esas clases NO existen y popover, tooltip, sheet y select se muestran de
+   golpe, sin transición. Ver docs/design/DESIGN-SYSTEM.md §6. */
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 

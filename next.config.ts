@@ -26,9 +26,40 @@ const nextConfig: NextConfig = {
   // La versión de Next no aporta nada al cliente y sí a quien busca exploits.
   poweredByHeader: false,
 
+  /**
+   * Redirects de la capa pública (docs/plans/public-gtm-plan.md §F1).
+   *
+   * Dos familias:
+   *  1. Rutas que la navegación anuncia pero que NO son página propia: los
+   *     precios viven en la sección `#planes` de la home y la demo en
+   *     /contacto. Se redirige en lugar de duplicar contenido (y de partir el
+   *     SEO en dos URLs que compiten).
+   *  2. Rutas heredadas de la plantilla original del sitio, que quedaron
+   *     enlazadas desde material externo y desde el propio navbar antiguo.
+   *
+   * Todas permanentes (308): son decisiones de arquitectura de URLs, no
+   * pruebas temporales.
+   */
+  async redirects() {
+    return [
+      { source: "/precios", destination: "/#planes", permanent: true },
+      { source: "/demo", destination: "/contacto", permanent: true },
+      // Legacy de la plantilla: rutas en inglés y de un registro que no existe
+      // (el alta de empresas es asistida, ver knowledge-base §15.1).
+      { source: "/products", destination: "/productos", permanent: true },
+      { source: "/solutions", destination: "/soluciones", permanent: true },
+      { source: "/login", destination: "/auth/login", permanent: true },
+      { source: "/signup", destination: "/contacto", permanent: true },
+      { source: "/legal", destination: "/legal/terminos", permanent: true },
+    ];
+  },
+
   // La verja de ESLint está ACTIVA en el build: el código nuevo no introduce
   // errores de lint (regla del proyecto, docs/architecture.md §15).
   images: {
+    // Formatos modernos: la capa pública sirve fotos de producto y de clientes
+    // desde Cloudinary; sin esto Next las entrega en el formato original.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "pps.whatsapp.net" }, // avatares de WhatsApp
       { protocol: "https", hostname: "res.cloudinary.com" }, // assets de marca

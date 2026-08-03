@@ -2,7 +2,30 @@
 // "/platform" es la consola interna de super admin: su auth NO usa cookies
 // (token en sessionStorage, ver modules/platform), así que el guard edge y el
 // AuthProvider de tenant no deben interceptarla — el guard real es PlatformGuard.
-export const PUBLIC_PATHS = ["/", "/marketplace", "/auth", "/api", "/_next", "/favicon.ico", "/assets", "/fonts", "/images", "/platform"];
+//
+// IMPORTANTE — toda página pública nueva DEBE listarse aquí. Si falta, el
+// middleware la trata como privada y redirige al login a los visitantes
+// anónimos: no da 404, da un muro de acceso (peor señal comercial que un 404).
+export const PUBLIC_PATHS = [
+  "/",
+  // Capa pública / GTM (docs/plans/public-gtm-plan.md)
+  "/productos",
+  "/soluciones",
+  "/contacto",
+  "/legal",
+  "/precios", // redirige a /#planes (next.config.ts)
+  "/demo", // redirige a /contacto (next.config.ts)
+  "/marketplace",
+  "/auth",
+  // Infraestructura y estáticos
+  "/api",
+  "/_next",
+  "/favicon.ico",
+  "/assets",
+  "/fonts",
+  "/images",
+  "/platform",
+];
 
 export function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));

@@ -9,8 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // El hover NO puede ser `hover:bg-primary/90`: `.bg-brand-gradient`
+        // pinta un `background-image` que tapa cualquier `background-color`, así
+        // que el botón primario se quedaba sin estado hover visible en toda la
+        // app. `brightness` actúa sobre el resultado compuesto, gradiente
+        // incluido (la transición la aporta el `transition-all` de la base).
         default:
-          "bg-brand-gradient text-primary-foreground shadow-xs hover:bg-primary/90",
+          "bg-brand-gradient text-primary-foreground shadow-xs hover:brightness-110",
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
