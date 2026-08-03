@@ -21,6 +21,21 @@ export type CreatedTenant = Schemas["CreatedTenantDto"];
 /** Body de `PATCH /platform/tenants/:id` (204; suspender bloquea el login del tenant). */
 export type UpdateTenantDTO = Schemas["UpdateTenantDto"];
 
+/** Body de `POST /platform/tenants/:id/trial` (asignar/extender prueba). */
+export type StartTrialDTO = Schemas["StartTrialDto"];
+
+/** Respuesta del trial: `{trial_ends_at}` para mostrar la fecha sin re-fetch. */
+export type TrialStarted = Schemas["TrialStartedDto"];
+
+/**
+ * ¿El tenant admite iniciar/extender un trial? Espejo de la validación del
+ * backend (`platform/trial_not_allowed`): una suspensión manual no se
+ * puentea con un trial — solo la causada por el propio vencimiento.
+ */
+export function canStartTrial(tenant: Pick<TenantListItem, "status" | "status_reason">): boolean {
+  return tenant.status !== "suspended" || tenant.status_reason === "trial_expired";
+}
+
 /** Fila de `GET /platform/tenants/:id/users` (read-only, sin acciones). */
 export type TenantUser = Schemas["TenantUsersDto"]["data"][number];
 

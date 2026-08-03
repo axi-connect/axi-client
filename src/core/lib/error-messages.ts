@@ -12,6 +12,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.unauthorized]: "Tu sesión expiró. Vuelve a iniciar sesión",
   [API_ERROR_CODES.refreshReuseDetected]: "Por seguridad tu sesión fue revocada. Inicia sesión de nuevo",
   [API_ERROR_CODES.companySuspended]: "La empresa está suspendida. Contacta a soporte",
+  [API_ERROR_CODES.trialExpired]: "Tu prueba gratuita terminó. Contáctanos para activar tu plan",
   [API_ERROR_CODES.permissionDenied]: "No tienes permiso para realizar esta acción",
   [API_ERROR_CODES.usageLimitExceeded]: "Alcanzaste el límite de uso del plan",
   [API_ERROR_CODES.outsideServiceWindow]: "Fuera de la ventana de 24 h de WhatsApp: se requiere plantilla",

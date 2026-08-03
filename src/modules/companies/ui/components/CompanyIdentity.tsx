@@ -6,32 +6,19 @@ import { Avatar } from "@/shared/components/ui/avatar"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { BrandMark } from "@/shared/components/ui/brand-mark"
 import type { CompanyDTO } from "@/modules/companies/domain/company"
-import { getMyCompany } from "@/modules/companies/infrastructure/services/company-service.adapter"
+import { loadMyCompanyOnce } from "@/modules/companies/infrastructure/services/company-cache"
 
 /**
  * Identidad del tenant para el header del sidebar: isotipo + nombre de la
- * empresa (`GET /companies/me`) y rol del usuario. Fallbacks: skeleton
- * mientras carga; marca Axi (BrandMark + "axi connect") si no hay logo o si
- * el fetch falla (p.ej. 403 por RBAC en roles sin permiso de empresa).
+ * empresa (`GET /companies/me`, cache compartido en company-cache.ts) y rol
+ * del usuario. Fallbacks: skeleton mientras carga; marca Axi (BrandMark +
+ * "axi connect") si no hay logo o si el fetch falla (p.ej. 403 por RBAC en
+ * roles sin permiso de empresa).
  *
  * Se inyecta en `AppSidebar` desde `(private)/layout.tsx` (shared no puede
  * importar de modules — arquitectura §3.3). La parte textual se oculta en
  * modo colapsado vía `group-data-[collapsible=icon]` del sidebar.
  */
-
-// Cache a nivel de módulo: una sola petición por sesión de página, compartida
-// entre montajes. Se limpia en fallo para permitir reintento en otro montaje.
-let companyPromise: Promise<CompanyDTO> | null = null
-
-function loadMyCompanyOnce(): Promise<CompanyDTO> {
-  if (!companyPromise) {
-    companyPromise = getMyCompany().catch((err) => {
-      companyPromise = null
-      throw err
-    })
-  }
-  return companyPromise
-}
 
 export function CompanyIdentity() {
   const { user, status } = useSession()

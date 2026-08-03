@@ -6,7 +6,12 @@
  * `invalidateQueries` del recurso (nunca optimistic — spec D9).
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CreateTenantDTO, TenantListItem, UpdateTenantDTO } from "../../../domain/tenant";
+import type {
+  CreateTenantDTO,
+  StartTrialDTO,
+  TenantListItem,
+  UpdateTenantDTO,
+} from "../../../domain/tenant";
 import { platformClient } from "../platform-client";
 import { platformKeys } from "../query-keys";
 
@@ -72,6 +77,25 @@ export function useUpdateTenant() {
       });
     },
     // 204 sin body → re-fetch del recurso para reflejar el cambio real.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.tenants.all }),
+  });
+}
+
+/**
+ * Inicia/extiende el trial de un tenant. Devuelve `{trial_ends_at}` para
+ * mostrar la fecha en el alert de éxito sin esperar el re-fetch. El costo de
+ * IA corre por cuenta de axi; aplican los topes del plan `trial`.
+ */
+export function useStartTrial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: StartTrialDTO }) => {
+      const { data } = await platformClient.POST("/api/v1/platform/tenants/{id}/trial", {
+        params: { path: { id } },
+        body,
+      });
+      return data!;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.tenants.all }),
   });
 }

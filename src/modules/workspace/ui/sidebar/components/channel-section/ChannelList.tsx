@@ -4,7 +4,7 @@ import { cn } from "@/core/lib/utils"
 import { PackageOpen, Plus, QrCode, Loader } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
-import { FaWhatsapp, FaInstagram, FaFacebookMessenger } from "react-icons/fa"
+import { FaWhatsapp, FaInstagram, FaFacebookMessenger, FaRobot } from "react-icons/fa"
 import { startWwebSession } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import {
   CHANNEL_STATUS_LABELS,
@@ -33,6 +33,8 @@ const KIND_ICONS: Record<ChannelKind, React.ComponentType<{ size?: number }>> = 
   whatsapp_web: FaWhatsapp,
   instagram_dm: FaInstagram,
   facebook_messenger: FaFacebookMessenger,
+  // Canal sintético del módulo quality: no aparece en el sidebar en la práctica
+  simulator: FaRobot,
 }
 
 const ChannelsLoadingState = () => (

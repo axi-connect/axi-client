@@ -24,6 +24,27 @@ function SummaryCard({ label, children }: { label: string; children: React.React
   );
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Línea de vencimiento bajo el badge cuando hay trial acotado o vencido. */
+function TrialCountdown({ tenant }: { tenant: { status: string; trial_ends_at: string | null; status_reason: string | null } }) {
+  const isExpired = tenant.status === "suspended" && tenant.status_reason === "trial_expired";
+  if (!tenant.trial_ends_at || (tenant.status !== "trial" && !isExpired)) return null;
+
+  const endsAt = new Date(tenant.trial_ends_at);
+  const daysLeft = Math.max(0, Math.ceil((endsAt.getTime() - Date.now()) / DAY_MS));
+  const date = endsAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
+  const ending = isExpired || daysLeft <= 2;
+
+  return (
+    <p className={`mt-2 text-xs tabular-nums ${ending ? "text-warning" : "text-muted-foreground"}`}>
+      {isExpired
+        ? `Prueba vencida el ${date}`
+        : `Prueba vence el ${date} · ${daysLeft === 1 ? "1 día" : `${daysLeft} días`}`}
+    </p>
+  );
+}
+
 export function TenantSummary({ tenantId }: { tenantId: string }) {
   const { data: tenant, isPending } = useTenantQuery(tenantId);
   const { copied, copy } = useCopy();
@@ -48,6 +69,7 @@ export function TenantSummary({ tenantId }: { tenantId: string }) {
       <div className="grid gap-3 sm:grid-cols-3">
         <SummaryCard label="Estado">
           <StatusBadge status={tenant.status} />
+          <TrialCountdown tenant={tenant} />
         </SummaryCard>
         <SummaryCard label="Usuarios">
           <p className="text-2xl font-semibold tabular-nums">{tenant.users_count}</p>

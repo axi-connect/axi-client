@@ -1,6 +1,6 @@
 "use client"
 
-import { COMPANY_SUSPENDED_EVENT } from "@/core/api/problem"
+import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT } from "@/core/api/problem"
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket"
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
 
@@ -34,8 +34,13 @@ export function useChannelsRealtime() {
   // F15: el AuthProvider (único listener) frena el tiempo real y muestra la
   // pantalla bloqueante. dispatchEvent es síncrono: el halt ocurre antes de
   // que socket.io procese la desconexión forzada que sigue al evento.
-  useSocketEvent(socket, "company.suspended", () => {
-    window.dispatchEvent(new Event(COMPANY_SUSPENDED_EVENT))
+  useSocketEvent(socket, "company.suspended", (payload) => {
+    // El reason del backend distingue trial vencido de suspensión manual
+    const code =
+      payload.reason === "trial_expired"
+        ? API_ERROR_CODES.trialExpired
+        : API_ERROR_CODES.companySuspended
+    window.dispatchEvent(new CustomEvent(COMPANY_SUSPENDED_EVENT, { detail: code }))
   })
 
   return { connected }

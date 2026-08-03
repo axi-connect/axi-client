@@ -77,7 +77,8 @@ src/modules/inbox/
 └── ui/
     ├── InboxView.tsx                   # 3 superficies + ContextSurface bajo Suspense
     └── components/
-        ├── InboxList.tsx  ConversationPanel.tsx  HandoffActions.tsx  MessageBubble.tsx
+        ├── InboxList.tsx  ConversationPanel.tsx  MessageBubble.tsx
+        ├── header/                     # Parte D (absorbió el antiguo HandoffActions.tsx)
         ├── composer/                   # Composer, AttachmentPicker/Tray, QuickActionsMenu,
         │                               #   VoiceRecorderBar
         ├── media/                      # MediaAttachment + burbujas por tipo + lightbox + estados
@@ -235,7 +236,7 @@ Para no crear la cuarta copia de patrones existentes (`architecture.md` §12):
 - **Verificación visual pendiente**: el recorrido en navegador (light/dark, los tres breakpoints,
   foco con Tab, RBAC sin `crm:read`) no se ha ejecutado por falta de backend disponible.
 
-### C.7 Verificación
+### C.7 Verificación (rail)
 
 ```bash
 npm run lint && npm test && npm run build
@@ -249,3 +250,152 @@ Suites propias del rail: `shared/components/features/{timeline,field-list}/__tes
 Recorrido manual: abrir una conversación → los 3 iconos con tooltip a la izquierda → contrastar cada
 panel → `?panel=history` en pestaña nueva → back cierra → 1400px / 1100px / 600px → light y dark →
 rol sin `crm:read` (desaparece Historial y el panel Contacto pierde score/etiquetas/responsable).
+
+---
+
+## Parte D — Cabecera del chat
+
+### D.1 Qué es
+
+Una **única fila de 56px** (`h-14` + borde = 57px) que reúne identidad, contexto del contacto y
+acciones. Antes eran dos filas que sumaban ~105px: identidad arriba y los botones de handoff en una
+fila propia que reservaba 32px para uno o dos botones.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ◉  Cristian Velásquez  [Cliente][IA] 78 [VIP][+2]   👤 Isabel ▾ [Cerrar] ⋯  │
+│    +57 300 123 4567 · WhatsApp Principal · esperando hace 12 min             │
+└──────────────────────────────────────────────────────────────────────────────┘
+   └── <Link ?panel=contact> ──┘ └─ chips, fuera del link ─┘  └── controles ──┘
+```
+
+**La altura es fija:** no cambia entre modos, ni cuando falta el permiso de handoff, ni cuando el
+contacto no tiene etapa ni etiquetas. Lo que varía es qué controles se pintan.
+
+### D.2 Estructura
+
+```
+ui/components/header/
+├── ConversationHeader.tsx    # la fila
+├── ConversationChips.tsx     # etapa, modo, estado, prioridad, score, etiquetas
+├── HeaderOverflowMenu.tsx    # Popover de acciones secundarias
+└── use-handoff-actions.tsx   # descriptores de acción + los dos modales
+```
+
+`use-handoff-actions` **sustituye al antiguo componente `HandoffActions.tsx`** (eliminado). El diseño
+necesita una acción inline y el resto en el menú; mantener el componente habría obligado a duplicar
+el estado de los dos modales o a abrir dos menús `⋯`. El hook devuelve descriptores y la cabecera
+decide dónde va cada uno:
+
+```ts
+{ primary: HandoffActionDescriptor | null, secondary: HandoffActionDescriptor[],
+  dialogs: React.ReactNode, busy: boolean }
+```
+
+Mapa de acciones (idéntico al de antes, con distinto reparto visual):
+
+| `mode` | Destacada (inline) | En el `⋯` |
+|---|---|---|
+| `human_queued` | **Atender** (`claim`) | — |
+| `ai_active` | **Intervenir** (`takeover`) | — |
+| `human_active` | **Cerrar** (modal `resolved` + razón) | **Devolver a la IA** (modal con nota) |
+
+> Cambio de énfasis respecto a la versión anterior: en `human_active` los dos botones tenían el mismo
+> peso (`outline`). Ahora Cerrar es la destacada por ser el final natural del trabajo del operador, y
+> Devolver a la IA pasa al menú.
+
+Sin `conversations:claim` o con `status !== "open"` no hay ninguna transición legal: no se pinta
+acción alguna, y la fila **no se descuadra** por ello.
+
+### D.3 Selector de responsable
+
+`ContactOwnerSelect` (de `@/modules/crm/public`) asigna el **responsable comercial del contacto**
+vía `PATCH /crm/contacts/{id}/profile`. Es un atributo del **contacto**, no de la conversación:
+persiste entre conversaciones, y el encabezado del popover lo dice explícitamente.
+
+**No asigna la conversación a otro operador: eso no existe en el backend** (§D.6). "Quién atiende
+ahora" lo comunican el badge de modo y el botón de acción.
+
+Detalles: trigger `h-8` con avatar 20px (el nombre aparece desde `lg`; por debajo queda solo el
+avatar, con el responsable en el `aria-label`); popover de ancho fijo `w-64` — heredar el ancho del
+trigger daría una lista inservible; lista cargada **al abrir**, no al montar; búsqueda por nombre
+**y correo**; cambio optimista con rollback y alerta si el PATCH falla; sin `crm:manage` queda
+`disabled` mostrando el responsable actual, no desaparece.
+
+### D.4 Presupuesto de chips
+
+`DESIGN.md` §8 exige que la jerarquía la haga la tipografía y que no compitan dos acentos. Con seis
+señales posibles en 56px, las reglas son:
+
+| Señal | Cuándo | Forma | Visible desde |
+|---|---|---|---|
+| Etapa del contacto | si hay contacto | badge con `CONTACT_STAGE_BADGE_CLASSES` | siempre |
+| Modo (IA · En cola · Humano) | siempre | badge `secondary` | `md` |
+| Estado | solo `status !== "open"` | badge `outline` | `md` |
+| Prioridad | **solo** `high`/`urgent` | badge `warning`/`destructive` | `lg` |
+| Score del embudo | si hay profile | **texto** `tabular-nums` + tooltip | `lg` |
+| Etiquetas | máx. 2 + `+N`, tooltip con todas | badge `outline` **gris** | `xl` |
+| Espera | si el contacto espera respuesta | **texto** en la línea secundaria | siempre |
+
+Las etiquetas van en gris aunque el tenant les asigne color: seis colores distintos junto a etapa y
+prioridad rompen la regla de un solo acento. El color se conserva en el panel Contacto del rail.
+
+Lo que no cabe **se oculta por ancho**; el juego completo está en el rail a un clic. El menú `⋯`
+contiene **solo acciones** (las secundarias de handoff + copiar teléfono + ver ficha completa) — un
+chip informativo dentro de un menú de acciones desorienta.
+
+### D.5 Datos: un solo fetch compartido
+
+La etapa, el score, las etiquetas y el responsable exigen las tres llamadas de `useContactContext`
+(§C.4), que el panel Contacto del rail **también** necesita. Para no pedirlas dos veces:
+
+`inbox/infrastructure/stores/contact-context.context.tsx`
+```tsx
+<ContactContextProvider contactId version>   // monta useContactContext 1× en InboxView
+useConversationContact(): ContactContext      // lo consumen la cabecera y el rail
+```
+
+`InboxView` suscribe **primitivos** (`contactId`, `contextVersion`) al store, no el objeto
+`selected`, para no re-renderizar la vista completa en cada actualización de la conversación.
+
+Al cambiar el responsable, la cabecera llama a `bumpContactContext(contactId)` para invalidar el
+contexto compartido: cabecera y rail ven el nuevo valor sin recargar.
+
+Derivaciones puras en `domain/inbox.ts` (con tests): `isAwaitingReply`, `waitingSince` — devuelve el
+ISO crudo porque `domain/` no importa utilidades de `core/lib` (§3.3 regla 1) — y
+`isNotablePriority`.
+
+### D.6 Lo que el backend NO permite (peticiones abiertas)
+
+Verificado sobre `openapi.json` y los controllers/gateway:
+
+| Acción | Estado |
+|---|---|
+| **Asignar/reasignar la conversación a otro usuario** | **No existe.** `claim`/`takeover` no aceptan body (`inbox.controller.ts:87,98`) y el dueño sale del token (`conversation_mode.ts:74,85`). El permiso `conversations:manage` —*"Reasignar conversaciones ajenas y cambiar prioridad"*, `security.seeder.ts:31-34`— está sembrado y **sin un solo consumidor en el código**. |
+| **Soltar a la cola** sin devolver a la IA | No existe. `escalate` produce ese estado pero no está expuesto (solo el pipeline y la tool IA). Un operador no puede liberar una conversación que tomó por error. |
+| **Cambiar prioridad** | No existe. Solo escribe el sweep de SLA (`normal → high`). `priority_changed` es **enum sin productor**. |
+| **Snooze** | No existe, y **no hay columna** `snoozed_until` en el schema: `status='snoozed'` es inalcanzable. Requiere migración. |
+| **Reabrir** cerradas | No existe; la máquina de estados es terminal (`409 invalid_transition`). `reopened` es enum sin productor. |
+| **Nota interna** en el timeline del inbox | Solo como efecto colateral de `return_to_ai`, y esa nota la lee la IA (`for_ai_history: true`): no es privada. |
+| **`assigned_user` hidratado** en `ConversationDto` | Llega solo el uuid; hay que cruzar con `GET /users`. |
+
+Fuera de alcance por decisión de producto, todos construibles con datos ya disponibles: aviso de la
+**ventana de 24 h** de WhatsApp (derivable de `last_inbound_at`; hoy el operador descubre que venció
+al enviar y recibir `channels/outside_service_window`), icono del proveedor del canal, y costo IA de
+la conversación (`GET /usage/conversations/{id}`).
+
+### D.7 Verificación (cabecera)
+
+Suites: `inbox/domain/__tests__/inbox.domain.test.ts` (derivaciones),
+`inbox/ui/components/header/__tests__/use-handoff-actions.test.tsx`,
+`crm/ui/components/contact-detail/__tests__/ContactOwnerSelect.test.tsx`.
+
+> `jest.setup.ts` incorpora polyfills de `ResizeObserver`, `DOMRect` y los métodos de puntero que
+> jsdom no implementa: sin ellos **cualquier** test que abra un primitivo de Radix con posicionado
+> (Popover, Select, Tooltip) falla con `ResizeObserver is not defined`.
+
+Manual: los tres modos; medir que la altura sigue siendo 57px al alternar de modo y sin
+`conversations:claim`; buscar por nombre y por correo en el selector, asignar, quitar y forzar un
+fallo para ver el rollback; contacto sin etapa ni etiquetas (sin huecos); conversación `urgent`;
+anchos 1400/1100/800/600; light y dark; recorrido con Tab comprobando que el `<Link>` de identidad no
+atrapa los controles de la derecha.

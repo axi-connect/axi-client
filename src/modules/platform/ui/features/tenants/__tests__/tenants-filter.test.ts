@@ -6,6 +6,8 @@ const tenant = (over: Partial<TenantListItem>): TenantListItem => ({
   name: "Empresa",
   nit: "900000000",
   status: "active",
+  status_reason: null,
+  trial_ends_at: null,
   city: null,
   country_code: "CO",
   users_count: 1,

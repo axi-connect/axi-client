@@ -1,7 +1,9 @@
 "use client";
 
 /**
- * Menú ⋮ de una fila de tenant: Ver detalle · Suspender/Reactivar.
+ * Menú ⋮ de una fila de tenant: Ver detalle · Iniciar/Extender prueba ·
+ * Suspender/Reactivar. La prueba se oculta en suspensiones manuales (espejo
+ * del 409 `platform/trial_not_allowed` del backend).
  * Suspender = ConfirmTyped (bloquea el login de todo el tenant);
  * Reactivar = Modal simple compartido. Tras mutar, invalidate → re-fetch
  * (el badge refleja el estado real del backend, spec D9).
@@ -9,7 +11,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, MoreVertical, PauseCircle, PlayCircle } from "lucide-react";
+import { Eye, MoreVertical, PauseCircle, PlayCircle, Sparkles } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Modal } from "@/shared/components/ui/modal";
@@ -20,9 +22,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
-import type { TenantListItem } from "../../../domain/tenant";
+import { canStartTrial, type TenantListItem } from "../../../domain/tenant";
 import { useUpdateTenant } from "../../../infrastructure/api/hooks/use-tenants";
 import { ConfirmTyped } from "../../components/ConfirmTyped";
+import { StartTrialDialog } from "./StartTrialDialog";
 
 type TenantRowActionsProps = {
   tenant: TenantListItem;
@@ -36,7 +39,10 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
   const updateTenant = useUpdateTenant();
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);
+  const [trialOpen, setTrialOpen] = useState(false);
   const isSuspended = tenant.status === "suspended";
+  const trialAllowed = canStartTrial(tenant);
+  const trialLabel = tenant.status === "trial" ? "Extender prueba" : "Iniciar prueba";
 
   async function setStatus(status: "active" | "suspended") {
     try {
@@ -82,6 +88,12 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
               <DropdownMenuSeparator />
             </>
           )}
+          {trialAllowed && (
+            <DropdownMenuItem className="flex items-center gap-2" onClick={() => setTrialOpen(true)}>
+              <Sparkles aria-hidden="true" className="size-4" />
+              {trialLabel}
+            </DropdownMenuItem>
+          )}
           {isSuspended ? (
             <DropdownMenuItem className="flex items-center gap-2" onClick={() => setReactivateOpen(true)}>
               <PlayCircle aria-hidden="true" className="size-4" />
@@ -98,6 +110,8 @@ export function TenantRowActions({ tenant, showViewAction = true }: TenantRowAct
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <StartTrialDialog open={trialOpen} onOpenChange={setTrialOpen} tenant={tenant} />
 
       <ConfirmTyped
         open={suspendOpen}

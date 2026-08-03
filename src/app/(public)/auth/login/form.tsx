@@ -23,6 +23,8 @@ function loginErrorMessage(error: LoginError): string {
       return "Tu correo existe en varias empresas: indica el NIT de la empresa"
     case API_ERROR_CODES.companySuspended:
       return "La empresa está suspendida. Contacta a soporte."
+    case API_ERROR_CODES.trialExpired:
+      return "Tu prueba gratuita terminó. Contáctanos para activar tu plan."
     default:
       if (error.status === 429) {
         const wait = error.retryAfterSeconds ? ` Reintenta en ${error.retryAfterSeconds}s.` : ""

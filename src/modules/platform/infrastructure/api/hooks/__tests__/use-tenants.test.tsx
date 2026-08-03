@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { platformKeys } from "../../query-keys";
-import { useCreateTenant, useTenantQuery, useTenantsQuery } from "../use-tenants";
+import { useCreateTenant, useStartTrial, useTenantQuery, useTenantsQuery } from "../use-tenants";
 
 const TENANTS = {
   data: [
@@ -14,7 +14,11 @@ const TENANTS = {
 jest.mock("../../platform-client", () => ({
   platformClient: {
     GET: jest.fn(async () => ({ data: TENANTS })),
-    POST: jest.fn(async () => ({ data: { id: "t-3", owner_user_id: "u-9" } })),
+    POST: jest.fn(async (path: string) =>
+      path.endsWith("/trial")
+        ? { data: { trial_ends_at: "2026-08-10T15:00:00Z" } }
+        : { data: { id: "t-3", owner_user_id: "u-9" } },
+    ),
     PATCH: jest.fn(async () => ({})),
   },
 }));
@@ -66,6 +70,19 @@ describe("hooks de tenants", () => {
         owner: { name: "Ana", email: "ana@n.co", password: "x".repeat(12) },
       });
       expect(created.id).toBe("t-3");
+    });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: platformKeys.tenants.all });
+  });
+
+  it("useStartTrial devuelve trial_ends_at e invalida el recurso tenants", async () => {
+    const { queryClient, wrapper } = createWrapper();
+    const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useStartTrial(), { wrapper });
+
+    await waitFor(async () => {
+      const started = await result.current.mutateAsync({ id: "t-2", body: { days: 7 } });
+      expect(started.trial_ends_at).toBe("2026-08-10T15:00:00Z");
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: platformKeys.tenants.all });

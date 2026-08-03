@@ -164,8 +164,13 @@ export function useInboxSocket() {
   // F15: el AuthProvider (único listener) frena el tiempo real y muestra la
   // pantalla bloqueante. dispatchEvent es síncrono: el halt ocurre antes de
   // que socket.io procese la desconexión forzada que sigue al evento.
-  useSocketEvent(socket, "company.suspended", () => {
-    window.dispatchEvent(new Event(COMPANY_SUSPENDED_EVENT))
+  useSocketEvent(socket, "company.suspended", (payload) => {
+    // El reason del backend distingue trial vencido de suspensión manual
+    const code =
+      payload.reason === "trial_expired"
+        ? API_ERROR_CODES.trialExpired
+        : API_ERROR_CODES.companySuspended
+    window.dispatchEvent(new CustomEvent(COMPANY_SUSPENDED_EVENT, { detail: code }))
   })
 
   // --- Join/leave de la conversación activa --------------------------------

@@ -2,7 +2,7 @@
 
 import { isPublicPath } from "@/core/config/routes"
 import { socketManager } from "@/core/realtime/socket-manager"
-import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT } from "@/core/api/problem"
+import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT, isSuspensionCode } from "@/core/api/problem"
 import { CompanySuspendedScreen } from "@/core/providers/company-suspended-screen"
 import type { AuthUser, LoginPayload, SessionResponse } from "@/shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
@@ -54,6 +54,9 @@ function permissionMatches(granted: string, required: string): boolean {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [status, setStatus] = useState<AuthStatus>("loading")
+  // Code del bloqueo (F15): elige la variante de copy de la pantalla
+  // (suspensión genérica vs prueba finalizada)
+  const [suspensionCode, setSuspensionCode] = useState<string>(API_ERROR_CODES.companySuspended)
 
   const redirectToLogin = useCallback(() => {
     const { pathname, search } = window.location
@@ -71,16 +74,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * los tokens; esto solo limpia el browser). Idempotente: da igual si la
    * señal llega por HTTP, por WS o por ambas.
    */
-  const markSuspended = useCallback(() => {
+  const markSuspended = useCallback((code?: string) => {
     socketManager.halt()
     setUser(null)
+    setSuspensionCode(code ?? API_ERROR_CODES.companySuspended)
     setStatus("suspended")
     void fetch("/api/auth/logout", { method: "POST" }).catch(() => {})
   }, [])
 
   useEffect(() => {
-    window.addEventListener(COMPANY_SUSPENDED_EVENT, markSuspended)
-    return () => window.removeEventListener(COMPANY_SUSPENDED_EVENT, markSuspended)
+    // El detail del CustomEvent lleva el code; un Event plano cae al genérico
+    const onSuspended = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail
+      markSuspended(typeof detail === "string" ? detail : undefined)
+    }
+    window.addEventListener(COMPANY_SUSPENDED_EVENT, onSuspended)
+    return () => window.removeEventListener(COMPANY_SUSPENDED_EVENT, onSuspended)
   }, [markSuspended])
 
   const hydrate = useCallback(async () => {
@@ -90,9 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (json.isAuthenticated && json.user) {
         setUser(json.user)
         setStatus("authenticated")
-      } else if (json.code === API_ERROR_CODES.companySuspended) {
+      } else if (isSuspensionCode(json.code)) {
         // Nunca al login: también respondería 403 (loop de mensajes confusos).
-        markSuspended()
+        markSuspended(json.code)
       } else redirectToLogin()
     } catch {
       redirectToLogin()
@@ -156,7 +165,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {status === "suspended" ? <CompanySuspendedScreen /> : children}
+      {status === "suspended" ? (
+        <CompanySuspendedScreen
+          variant={suspensionCode === API_ERROR_CODES.trialExpired ? "trial_expired" : "suspended"}
+        />
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   )
 }

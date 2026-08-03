@@ -292,6 +292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/tenants/{id}/trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TenantTrialController_start_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/audit-logs": {
         parameters: {
             query?: never;
@@ -622,6 +638,230 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["UsageController_ack_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityScenariosController_list_v1"];
+        put?: never;
+        post: operations["QualityScenariosController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/scenarios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityScenariosController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["QualityScenariosController_archive_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityScenariosController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/scenarios/{id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityScenariosController_clone_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/suites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySuitesController_list_v1"];
+        put?: never;
+        post: operations["QualitySuitesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/suites/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySuitesController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["QualitySuitesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/suites/{id}/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["QualitySuitesController_setScenarios_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityRunsController_list_v1"];
+        put?: never;
+        post: operations["QualityRunsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityRunsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/runs/{id}/cases/{caseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityRunsController_caseDetail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/runs/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityRunsController_cancelRun_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/runs/{id}/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityRunsController_purgeRun_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/debug/{companyId}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDebugController_contacts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/debug/{companyId}/contacts/{contactId}/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDebugController_conversations_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/debug/{companyId}/conversations/{conversationId}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDebugController_report_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2814,6 +3054,8 @@ export interface components {
             timezone: string;
             /** @enum {string} */
             status: "active" | "trial" | "suspended";
+            /** Format: date-time */
+            trial_ends_at: string | null;
             schedules: {
                 /** Format: uuid */
                 id: string;
@@ -2935,6 +3177,9 @@ export interface components {
                 nit: string;
                 /** @enum {string} */
                 status: "active" | "trial" | "suspended";
+                status_reason: string | null;
+                /** Format: date-time */
+                trial_ends_at: string | null;
                 city: string | null;
                 country_code: string;
                 users_count: number;
@@ -2974,7 +3219,7 @@ export interface components {
         UpdateTenantDto: {
             name?: string;
             /** @enum {string} */
-            status?: "active" | "trial" | "suspended";
+            status?: "active" | "suspended";
         };
         TenantUsersDto: {
             data: {
@@ -2988,6 +3233,14 @@ export interface components {
                 /** Format: date-time */
                 last_login_at: string | null;
             }[];
+        };
+        StartTrialDto: {
+            /** @default 7 */
+            days: number;
+        };
+        TrialStartedDto: {
+            /** Format: date-time */
+            trial_ends_at: string;
         };
         AuditLogListDto: {
             data: {
@@ -3465,6 +3718,444 @@ export interface components {
                 };
             }[];
         };
+        ScenariosPageDto: {
+            data: {
+                code: string;
+                name: string;
+                description: string | null;
+                persona: string;
+                goal: string;
+                /** @default 12 */
+                max_turns: number;
+                success_criteria: {
+                    [key: string]: unknown;
+                }[];
+                /** @default [] */
+                tags: string[];
+                /** Format: uuid */
+                id: string;
+                criteria_version: number;
+                is_system: boolean;
+                /** Format: uuid */
+                cloned_from_id: string | null;
+                /** @enum {string} */
+                status: "active" | "archived";
+                created_by: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ScenarioDto: {
+            code: string;
+            name: string;
+            description: string | null;
+            persona: string;
+            goal: string;
+            /** @default 12 */
+            max_turns: number;
+            success_criteria: {
+                [key: string]: unknown;
+            }[];
+            /** @default [] */
+            tags: string[];
+            /** Format: uuid */
+            id: string;
+            criteria_version: number;
+            is_system: boolean;
+            /** Format: uuid */
+            cloned_from_id: string | null;
+            /** @enum {string} */
+            status: "active" | "archived";
+            created_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateScenarioDto: {
+            code: string;
+            name: string;
+            description?: string | null;
+            persona: string;
+            goal: string;
+            /** @default 12 */
+            max_turns: number;
+            success_criteria: ({
+                /** @enum {string} */
+                kind: "order_created";
+                min_items?: number;
+                product_codes?: string[];
+            } | {
+                /** @enum {string} */
+                kind: "order_not_created";
+            } | {
+                /** @enum {string} */
+                kind: "escalated";
+            } | {
+                /** @enum {string} */
+                kind: "not_escalated";
+            } | {
+                /** @enum {string} */
+                kind: "reply_contains";
+                pattern: string;
+            } | {
+                /** @enum {string} */
+                kind: "reply_not_contains";
+                pattern: string;
+            } | {
+                /** @enum {string} */
+                kind: "no_agent_error";
+            } | {
+                /** @enum {string} */
+                kind: "max_reply_ms";
+                threshold_ms: number;
+            })[];
+            /** @default [] */
+            tags: string[];
+        };
+        CloneScenarioDto: {
+            code: string;
+            name?: string;
+        };
+        UpdateScenarioDto: {
+            name?: string;
+            description?: string | null;
+            persona?: string;
+            goal?: string;
+            /** @default 12 */
+            max_turns: number;
+            success_criteria?: ({
+                /** @enum {string} */
+                kind: "order_created";
+                min_items?: number;
+                product_codes?: string[];
+            } | {
+                /** @enum {string} */
+                kind: "order_not_created";
+            } | {
+                /** @enum {string} */
+                kind: "escalated";
+            } | {
+                /** @enum {string} */
+                kind: "not_escalated";
+            } | {
+                /** @enum {string} */
+                kind: "reply_contains";
+                pattern: string;
+            } | {
+                /** @enum {string} */
+                kind: "reply_not_contains";
+                pattern: string;
+            } | {
+                /** @enum {string} */
+                kind: "no_agent_error";
+            } | {
+                /** @enum {string} */
+                kind: "max_reply_ms";
+                threshold_ms: number;
+            })[];
+            /** @default [] */
+            tags: string[];
+            /** @enum {string} */
+            status?: "active" | "archived";
+        };
+        SuitesPageDto: {
+            data: {
+                code: string;
+                name: string;
+                description: string | null;
+                /** Format: uuid */
+                id: string;
+                is_system: boolean;
+                /** @enum {string} */
+                status: "active" | "archived";
+                scenarios_count: number;
+                created_by: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        SuiteDetailDto: {
+            code: string;
+            name: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+            is_system: boolean;
+            /** @enum {string} */
+            status: "active" | "archived";
+            scenarios_count: number;
+            created_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            scenarios: {
+                position: number;
+                scenario: {
+                    code: string;
+                    name: string;
+                    description: string | null;
+                    persona: string;
+                    goal: string;
+                    /** @default 12 */
+                    max_turns: number;
+                    success_criteria: {
+                        [key: string]: unknown;
+                    }[];
+                    /** @default [] */
+                    tags: string[];
+                    /** Format: uuid */
+                    id: string;
+                    criteria_version: number;
+                    is_system: boolean;
+                    /** Format: uuid */
+                    cloned_from_id: string | null;
+                    /** @enum {string} */
+                    status: "active" | "archived";
+                    created_by: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                    /** Format: date-time */
+                    updated_at: string;
+                };
+            }[];
+        };
+        CreateSuiteDto: {
+            code: string;
+            name: string;
+            description?: string | null;
+        };
+        UpdateSuiteDto: {
+            name?: string;
+            description?: string | null;
+            /** @enum {string} */
+            status?: "active" | "archived";
+        };
+        SetSuiteScenariosDto: {
+            scenario_ids: string[];
+        };
+        RunsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                /** @enum {string} */
+                kind: "qa" | "stress";
+                /** @enum {string} */
+                status: "pending" | "running" | "completed" | "failed" | "canceled" | "purging" | "purged";
+                /** @enum {string|null} */
+                ai_mode: "real" | "mock" | null;
+                params: unknown;
+                cases_total: number;
+                cases_passed: number;
+                cases_failed: number;
+                cases_blocked: number;
+                avg_judge_score: number | null;
+                metrics: unknown;
+                spend_usd: number | null;
+                error: string | null;
+                suite: {
+                    code: string;
+                    name: string;
+                } | null;
+                target_agent: {
+                    name: string;
+                    model: string;
+                    provider: string;
+                } | null;
+                created_by: string;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        RunDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            /** @enum {string} */
+            kind: "qa" | "stress";
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "failed" | "canceled" | "purging" | "purged";
+            /** @enum {string|null} */
+            ai_mode: "real" | "mock" | null;
+            params: unknown;
+            cases_total: number;
+            cases_passed: number;
+            cases_failed: number;
+            cases_blocked: number;
+            avg_judge_score: number | null;
+            metrics: unknown;
+            spend_usd: number | null;
+            error: string | null;
+            suite: {
+                code: string;
+                name: string;
+            } | null;
+            target_agent: {
+                name: string;
+                model: string;
+                provider: string;
+            } | null;
+            created_by: string;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            cases: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "queued" | "running" | "passed" | "failed" | "blocked" | "error" | "timeout";
+                scenario: {
+                    code: string;
+                    name: string;
+                } | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                turns_used: number;
+                judge_score: number | null;
+                checks: unknown;
+                failure_reason: string | null;
+                purged: boolean;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+            }[];
+        };
+        CaseDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "queued" | "running" | "passed" | "failed" | "blocked" | "error" | "timeout";
+            scenario: {
+                code: string;
+                name: string;
+            } | null;
+            /** Format: uuid */
+            conversation_id: string | null;
+            turns_used: number;
+            judge_score: number | null;
+            checks: unknown;
+            failure_reason: string | null;
+            purged: boolean;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            scenario_goal: string | null;
+            timings: unknown;
+            transcript: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                direction: "inbound" | "outbound";
+                /** @enum {string} */
+                sender_type: "contact" | "ai_agent" | "user" | "system";
+                content_type: string;
+                body: string | null;
+                status: string;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            evaluation: {
+                overall_score: number | null;
+                outcome: string | null;
+                score_accuracy: number | null;
+                score_tool_usage: number | null;
+                score_closing: number | null;
+                score_tone: number | null;
+                hallucination_severity: string | null;
+                summary: string | null;
+                issues: {
+                    code: string;
+                    severity: string;
+                    detail: string;
+                }[];
+            } | null;
+        };
+        CreateRunDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** @enum {string} */
+            kind: "qa" | "stress";
+            /** Format: uuid */
+            agent_id: string;
+            /** Format: uuid */
+            suite_id?: string;
+            scenario_ids?: string[];
+            concurrency?: number;
+            /** @enum {string} */
+            ai_mode?: "mock" | "real";
+            conversations?: number;
+            turns_per_conversation?: number;
+            mock_latency_ms?: number;
+            spend_cap_usd?: number;
+        };
+        DebugContactsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                full_name: string | null;
+                phone: string | null;
+                email: string | null;
+                lifecycle_stage: string;
+                simulated: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        DebugConversationsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                status: string;
+                mode: string;
+                /** Format: uuid */
+                channel_id: string;
+                simulated: boolean;
+                last_message_preview: string | null;
+                /** Format: date-time */
+                last_message_at: string | null;
+                closed_reason: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
         AiAgentListDto: {
             data: {
                 /** Format: uuid */
@@ -3475,7 +4166,7 @@ export interface components {
                 system_prompt: string;
                 skills: string[];
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic";
+                provider: "openai_compatible" | "anthropic" | "mock";
                 model: string;
                 model_params: {
                     [key: string]: unknown;
@@ -3516,7 +4207,7 @@ export interface components {
             system_prompt: string;
             skills: string[];
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic";
+            provider: "openai_compatible" | "anthropic" | "mock";
             model: string;
             model_params: {
                 [key: string]: unknown;
@@ -4942,7 +5633,7 @@ export interface components {
             id: string;
             name: string;
             /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
             provider_account_id: string;
             /** @enum {string} */
             status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
@@ -4963,7 +5654,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
                 provider_account_id: string;
                 /** @enum {string} */
                 status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
@@ -7067,6 +7758,31 @@ export interface operations {
             };
         };
     };
+    TenantTrialController_start_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartTrialDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialStartedDto"];
+                };
+            };
+        };
+    };
     PlatformAuditController_list_v1: {
         parameters: {
             query?: {
@@ -7621,6 +8337,453 @@ export interface operations {
         requestBody?: never;
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityScenariosController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "active" | "archived";
+                is_system?: "true" | "false";
+                search?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenariosPageDto"];
+                };
+            };
+        };
+    };
+    QualityScenariosController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateScenarioDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityScenariosController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioDto"];
+                };
+            };
+        };
+    };
+    QualityScenariosController_archive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityScenariosController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateScenarioDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityScenariosController_clone_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloneScenarioDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualitySuitesController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "active" | "archived";
+                search?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuitesPageDto"];
+                };
+            };
+        };
+    };
+    QualitySuitesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSuiteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualitySuitesController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuiteDetailDto"];
+                };
+            };
+        };
+    };
+    QualitySuitesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSuiteDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualitySuitesController_setScenarios_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetSuiteScenariosDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityRunsController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                kind?: "qa" | "stress";
+                status?: "pending" | "running" | "completed" | "failed" | "canceled" | "purging" | "purged";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsPageDto"];
+                };
+            };
+        };
+    };
+    QualityRunsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRunDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityRunsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunDetailDto"];
+                };
+            };
+        };
+    };
+    QualityRunsController_caseDetail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseDetailDto"];
+                };
+            };
+        };
+    };
+    QualityRunsController_cancelRun_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityRunsController_purgeRun_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDebugController_contacts_v1: {
+        parameters: {
+            query?: {
+                search?: string;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugContactsDto"];
+                };
+            };
+        };
+    };
+    QualityDebugController_conversations_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugConversationsDto"];
+                };
+            };
+        };
+    };
+    QualityDebugController_report_v1: {
+        parameters: {
+            query?: {
+                format?: "md" | "json";
+                include_raw?: "true" | "false";
+            };
+            header?: never;
+            path: {
+                companyId: string;
+                conversationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

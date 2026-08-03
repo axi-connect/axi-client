@@ -462,6 +462,9 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3000   # backend axi-server (API bajo /api/v1)
 NEXT_PUBLIC_WS_BASE_URL=http://localhost:3000    # WebSocket (namespaces /inbox y /channels)
+NEXT_PUBLIC_SALES_WHATSAPP=573001234567          # WhatsApp comercial de axi (solo dígitos, con indicativo);
+                                                 #   CTA del trial (banner de vencimiento y pantalla de prueba
+                                                 #   finalizada). Sin valor, el CTA simplemente no se muestra
 ```
 
 Registrar el origin del frontend (p.ej. `http://localhost:3001`) en `CORS_ORIGINS` del backend.

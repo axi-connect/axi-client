@@ -2,7 +2,7 @@ import "server-only";
 
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import { http } from "@/core/services/http";
-import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
+import { API_ERROR_CODES, isHttpError, isSuspensionCode } from "@/core/api/problem";
 import {
   COOKIE_NAMES,
   REFRESH_TOKEN_MAX_AGE_SECONDS,
@@ -114,9 +114,10 @@ export async function refreshSession(store: CookieStore): Promise<RefreshResult>
       if (
         error.is(API_ERROR_CODES.refreshReuseDetected) ||
         error.is(API_ERROR_CODES.invalidRefresh) ||
-        // F15: empresa suspendida — el backend ya revocó toda la familia de
-        // refresh; conservar las cookies solo alargaría la agonía.
-        error.is(API_ERROR_CODES.companySuspended) ||
+        // F15: empresa bloqueada (suspensión o trial vencido) — el backend ya
+        // revocó toda la familia de refresh; conservar las cookies solo
+        // alargaría la agonía.
+        isSuspensionCode(error.code) ||
         error.status === 401
       ) {
         clearSessionCookies(store);

@@ -33,6 +33,7 @@ export const API_ERROR_CODES = {
   refreshReuseDetected: "auth/refresh_reuse_detected",
   unauthorized: "auth/unauthorized",
   companySuspended: "auth/company_suspended",
+  trialExpired: "auth/trial_expired",
   permissionDenied: "rbac/permission_denied",
   usageLimitExceeded: "usage/limit_exceeded",
   outsideServiceWindow: "channels/outside_service_window",
@@ -46,12 +47,23 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES
 
 /**
  * CustomEvent del DOM que anuncia la suspensión de la empresa (F15).
- * Lo despachan el `HttpClient` (403 `auth/company_suspended` en cualquier
- * request) y los hooks de tiempo real (evento WS `company.suspended`); lo
- * escucha únicamente el `AuthProvider`, que corta la sesión y muestra la
- * pantalla bloqueante. Convención `familia:acción:estado` (architecture §9).
+ * Lo despachan el `HttpClient` (403 de suspensión en cualquier request) y los
+ * hooks de tiempo real (evento WS `company.suspended`); lo escucha únicamente
+ * el `AuthProvider`, que corta la sesión y muestra la pantalla bloqueante.
+ * El `detail` lleva el code (`auth/company_suspended` | `auth/trial_expired`)
+ * para elegir la variante de copy; un Event sin detail cae a la genérica.
+ * Convención `familia:acción:estado` (architecture §9).
  */
 export const COMPANY_SUSPENDED_EVENT = "auth:company:suspended";
+
+/**
+ * ¿El code corresponde a un bloqueo total de la empresa (F15)? El trial
+ * vencido comparte TODO el mecanismo de la suspensión (tokens revocados,
+ * pantalla bloqueante, sin refresh) — solo cambia el copy de la pantalla.
+ */
+export function isSuspensionCode(code: string | undefined): boolean {
+  return code === API_ERROR_CODES.companySuspended || code === API_ERROR_CODES.trialExpired;
+}
 
 /**
  * Error normalizado que lanza el HttpClient. Conserva el problema RFC 7807

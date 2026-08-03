@@ -4,6 +4,8 @@ import { PrivateHeader } from "@/shared/components/layout/private-header";
 import { SidebarProvider, SidebarInset } from "@/shared/components/layout/sidebar/core"
 import { NotificationBell } from "@/modules/notifications/ui/components/NotificationBell";
 import { CompanyIdentity } from "@/modules/companies/ui/components/CompanyIdentity";
+import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusChip";
+import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
 
 export default function PrivateLayout({
   children,
@@ -21,8 +23,12 @@ export default function PrivateLayout({
           público): html/body llevan overflow hidden, así que el scroll vive
           aquí, con la scrollbar de marca. El header sticky se ancla a él. */}
       <main data-app-scroll className="h-svh flex-1 overflow-y-auto sidebar-scroll">
-        {/* La campana monta el realtime de notificaciones para todo el panel */}
-        <PrivateHeader actions={<NotificationBell />} />
+        {/* La campana monta el realtime de notificaciones para todo el panel;
+            el chip de trial es permanente y no altera los 52px del header */}
+        <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} />
+        {/* Últimos 2 días de trial: banner sticky en flujo (empuja contenido,
+            no rompe los calc de 52px del workspace full-bleed) */}
+        <TrialCountdownBanner />
         <SidebarInset>
           {/* Superficie de marca a ancho completo; el centrado del contenido
               (max-w + gutters) lo aporta el layout del grupo (content). Las

@@ -24,6 +24,8 @@ export const AGENT_STATUS_LABELS: Record<AgentStatus, string> = {
 export const AI_PROVIDER_LABELS: Record<AiProvider, string> = {
   openai_compatible: "OpenAI compatible",
   anthropic: "Anthropic",
+  // Uso interno del módulo quality (QA simulado): jamás se ofrece en el form
+  mock: "Mock (QA interno)",
 };
 
 /** Forma que consume la tabla de agentes. */

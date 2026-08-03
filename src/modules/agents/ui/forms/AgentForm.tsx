@@ -92,7 +92,9 @@ function agentToFormValues(agent: AiAgentDTO): AgentFormValues {
   return {
     name: agent.name,
     status: agent.status,
-    provider: agent.provider,
+    // 'mock' es interno del módulo quality y el form no lo ofrece: al editar
+    // un agente mock (no ocurre desde la UI) se cae al provider por defecto
+    provider: agent.provider === "mock" ? "openai_compatible" : agent.provider,
     model: agent.model,
     system_prompt: agent.system_prompt,
     character_id: agent.character_id ?? undefined,

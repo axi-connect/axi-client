@@ -20,6 +20,8 @@ export const CHANNEL_KIND_LABELS: Record<ChannelKind, string> = {
   whatsapp_web: "WhatsApp Web (QR)",
   instagram_dm: "Instagram DM",
   facebook_messenger: "Facebook Messenger",
+  // Canal sintético del módulo quality (QA simulado): no se crea desde la UI
+  simulator: "Simulador (QA)",
 };
 
 export const CHANNEL_STATUS_LABELS: Record<ChannelStatus, string> = {

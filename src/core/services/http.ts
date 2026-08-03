@@ -1,5 +1,5 @@
 import { API_BASE_URL, API_PREFIX } from "@/core/config/env";
-import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT, parseHttpError } from "@/core/api/problem";
+import { COMPANY_SUSPENDED_EVENT, isSuspensionCode, parseHttpError } from "@/core/api/problem";
 
 /**
  * Cliente HTTP del proyecto — patrón dual browser/server.
@@ -82,8 +82,10 @@ export class HttpClient {
       // Único choke-point del interceptor: se anuncia al AuthProvider (pantalla
       // bloqueante) y se re-lanza igual para no alterar el manejo local de los
       // callers. Solo browser: en RSC el error fluye y el cliente lo ve al hidratar.
-      if (typeof window !== "undefined" && error.is(API_ERROR_CODES.companySuspended)) {
-        window.dispatchEvent(new Event(COMPANY_SUSPENDED_EVENT));
+      if (typeof window !== "undefined" && isSuspensionCode(error.code)) {
+        // El detail lleva el code: el AuthProvider elige la variante de copy
+        // (suspensión genérica vs prueba finalizada)
+        window.dispatchEvent(new CustomEvent(COMPANY_SUSPENDED_EVENT, { detail: error.code }));
       }
       throw error;
     }
