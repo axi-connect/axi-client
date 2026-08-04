@@ -3819,6 +3819,9 @@ export interface components {
                 kind: "order_not_created";
             } | {
                 /** @enum {string} */
+                kind: "appointment_created";
+            } | {
+                /** @enum {string} */
                 kind: "escalated";
             } | {
                 /** @enum {string} */
@@ -3861,6 +3864,9 @@ export interface components {
             } | {
                 /** @enum {string} */
                 kind: "order_not_created";
+            } | {
+                /** @enum {string} */
+                kind: "appointment_created";
             } | {
                 /** @enum {string} */
                 kind: "escalated";
