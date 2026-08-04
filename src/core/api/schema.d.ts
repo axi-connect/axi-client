@@ -884,6 +884,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-agents/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiAgentsController_listModels_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-agents/{id}": {
         parameters: {
             query?: never;
@@ -3308,6 +3324,8 @@ export interface components {
                 /** @enum {string} */
                 provider: "openai_compatible" | "anthropic";
                 model: string;
+                display_name: string | null;
+                is_default: boolean;
                 input_cost_per_mtok_usd: number;
                 output_cost_per_mtok_usd: number;
                 cache_read_per_mtok_usd: number | null;
@@ -3324,6 +3342,8 @@ export interface components {
             /** @enum {string} */
             provider: "openai_compatible" | "anthropic";
             model: string;
+            display_name?: string | null;
+            is_default?: boolean;
             input_cost_per_mtok_usd: number;
             output_cost_per_mtok_usd: number;
             cache_read_per_mtok_usd?: number | null;
@@ -3339,6 +3359,8 @@ export interface components {
             id: string;
         };
         UpdatePricingDto: {
+            display_name?: string | null;
+            is_default?: boolean;
             input_cost_per_mtok_usd?: number;
             output_cost_per_mtok_usd?: number;
             cache_read_per_mtok_usd?: number | null;
@@ -4196,6 +4218,16 @@ export interface components {
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
+            }[];
+        };
+        AiModelListDto: {
+            data: {
+                /** @enum {string} */
+                provider: "openai_compatible" | "anthropic";
+                model: string;
+                display_name: string;
+                is_default: boolean;
+                temperature_max: number;
             }[];
         };
         AiAgentDto: {
@@ -8829,6 +8861,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiAgentDto"];
+                };
+            };
+        };
+    };
+    AiAgentsController_listModels_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiModelListDto"];
                 };
             };
         };

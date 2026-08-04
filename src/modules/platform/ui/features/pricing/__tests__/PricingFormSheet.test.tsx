@@ -28,6 +28,8 @@ const RATE: PricingRate = {
   id: "r-1",
   provider: "anthropic",
   model: "claude-sonnet-5",
+  display_name: "Claude Sonnet 4.5",
+  is_default: false,
   input_cost_per_mtok_usd: 3,
   output_cost_per_mtok_usd: 15,
   cache_read_per_mtok_usd: 0.3,
@@ -61,6 +63,9 @@ describe("PricingFormSheet", () => {
     render(<PricingFormSheet open onOpenChange={onOpenChange} rate={null} />);
 
     fireEvent.change(screen.getByLabelText(/modelo/i), { target: { value: "gpt-5-mini" } });
+    // El catálogo de modelos del tenant sale de estas tarifas: sin nombre
+    // visible el selector del agente mostraría el id técnico
+    fireEvent.change(screen.getByLabelText(/nombre visible/i), { target: { value: "GPT-5 mini" } });
     fireEvent.change(screen.getByLabelText(/entrada/i), { target: { value: "0.25" } });
     fireEvent.change(screen.getByLabelText(/salida/i), { target: { value: "2" } });
     fireEvent.change(screen.getByLabelText(/margen/i), { target: { value: "1.4" } });
@@ -71,12 +76,48 @@ describe("PricingFormSheet", () => {
     expect(createMutateAsync).toHaveBeenCalledWith({
       provider: "anthropic",
       model: "gpt-5-mini",
+      display_name: "GPT-5 mini",
+      is_default: false,
       input_cost_per_mtok_usd: 0.25,
       output_cost_per_mtok_usd: 2,
       cache_read_per_mtok_usd: null,
       margin_multiplier: 1.4,
       effective_from: "2026-08-01T00:00:00.000Z",
     });
+  });
+
+  it("un modelo del catálogo no se crea sin nombre visible", async () => {
+    render(<PricingFormSheet open onOpenChange={() => {}} rate={null} />);
+
+    fireEvent.change(screen.getByLabelText(/modelo/i), { target: { value: "gpt-5-mini" } });
+    fireEvent.change(screen.getByLabelText(/entrada/i), { target: { value: "0.25" } });
+    fireEvent.change(screen.getByLabelText(/salida/i), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText(/margen/i), { target: { value: "1.4" } });
+    fireEvent.change(screen.getByLabelText(/vigente desde/i), { target: { value: "2026-08-01" } });
+    fireEvent.click(screen.getByRole("button", { name: /crear tarifa/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/necesita un nombre visible/i)).toBeInTheDocument(),
+    );
+    expect(createMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("la tarifa fallback (*) NO exige nombre visible: no es un modelo elegible", async () => {
+    createMutateAsync.mockResolvedValueOnce({ id: "r-10" });
+    const onOpenChange = jest.fn();
+    render(<PricingFormSheet open onOpenChange={onOpenChange} rate={null} />);
+
+    fireEvent.change(screen.getByLabelText(/modelo/i), { target: { value: "*" } });
+    fireEvent.change(screen.getByLabelText(/entrada/i), { target: { value: "3" } });
+    fireEvent.change(screen.getByLabelText(/salida/i), { target: { value: "15" } });
+    fireEvent.change(screen.getByLabelText(/margen/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/vigente desde/i), { target: { value: "2026-08-01" } });
+    fireEvent.click(screen.getByRole("button", { name: /crear tarifa/i }));
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(createMutateAsync).toHaveBeenCalledWith(
+      expect.not.objectContaining({ display_name: expect.anything() }),
+    );
   });
 
   it("editar cierra la vigencia enviando effective_to ISO y el margen siempre", async () => {

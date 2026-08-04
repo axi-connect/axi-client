@@ -61,6 +61,8 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
     ? {
         provider: rate.provider,
         model: rate.model,
+        display_name: rate.display_name ?? "",
+        is_default: rate.is_default,
         input_cost_per_mtok_usd: rate.input_cost_per_mtok_usd,
         output_cost_per_mtok_usd: rate.output_cost_per_mtok_usd,
         cache_read_per_mtok_usd: rate.cache_read_per_mtok_usd ?? undefined,
@@ -93,6 +95,28 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
       autoComplete: "off",
       description: isEditing ? IMMUTABLE_HINT : "Usa * como modelo para la tarifa fallback del proveedor.",
       inputProps: { disabled: isEditing, className: "font-mono" },
+    }),
+    // El catálogo de modelos del tenant sale de estas tarifas: sin nombre
+    // visible el selector del agente mostraría el id técnico
+    createInputField<PricingFormValues>("display_name", {
+      label: "Nombre visible",
+      placeholder: "Claude Sonnet 4.5",
+      autoComplete: "off",
+      description: "Lo ve el tenant al elegir el modelo de un agente. Vacío solo en la tarifa fallback (*).",
+    }),
+    createCustomField<PricingFormValues>("is_default", ({ value, setValue }) => (
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-4 accent-[var(--axi-brand)]"
+          checked={value === true}
+          onChange={(event) => setValue("is_default", event.target.checked)}
+        />
+        Preseleccionar para el proveedor
+      </label>
+    ), {
+      label: "Preselección",
+      description: "Solo uno por proveedor: al marcarlo, el anterior deja de serlo.",
     }),
     createInputField<PricingFormValues>("input_cost_per_mtok_usd", {
       label: "Entrada (USD/MTok) *",

@@ -175,12 +175,23 @@ export function PricingView() {
                     return (
                       <TableRow key={rate.id} className={cn(!current && "opacity-60")}>
                         <TableCell>
-                          <span className="flex items-center gap-2">
-                            <span className="font-mono text-xs">{rate.model}</span>
-                            {rate.model === FALLBACK_MODEL && (
-                              <Badge className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet" variant="outline">
-                                fallback
-                              </Badge>
+                          <span className="flex flex-col gap-0.5">
+                            <span className="flex items-center gap-2">
+                              <span className="font-mono text-xs">{rate.model}</span>
+                              {rate.model === FALLBACK_MODEL && (
+                                <Badge className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet" variant="outline">
+                                  fallback
+                                </Badge>
+                              )}
+                              {rate.is_default && (
+                                <Badge variant="outline" className="text-xs">
+                                  por defecto
+                                </Badge>
+                              )}
+                            </span>
+                            {/* El nombre que verá el tenant en el selector del agente */}
+                            {rate.display_name !== null && (
+                              <span className="text-xs text-muted-foreground">{rate.display_name}</span>
                             )}
                           </span>
                         </TableCell>
