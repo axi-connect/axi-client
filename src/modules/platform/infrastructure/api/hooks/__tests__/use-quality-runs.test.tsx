@@ -3,7 +3,14 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { HttpError } from "@/core/api/problem";
 import { platformKeys } from "../../query-keys";
 import { platformClient } from "../../platform-client";
-import { useCancelRun, useCreateRun, useRunsQuery } from "../use-quality-runs";
+import {
+  useCancelRun,
+  useCreateRun,
+  usePurgeRun,
+  useRunCaseQuery,
+  useRunQuery,
+  useRunsQuery,
+} from "../use-quality-runs";
 
 const RUNS_PAGE = {
   data: [
@@ -120,6 +127,54 @@ describe("useCreateRun", () => {
       code: "quality/tenant_not_eligible",
       problem: { details: { reason: "agent_not_active" } },
     });
+  });
+});
+
+describe("useRunQuery / useRunCaseQuery", () => {
+  it("trae el detalle por id con la key correcta", async () => {
+    mockedClient.GET.mockResolvedValueOnce({
+      data: { ...RUNS_PAGE.data[0], cases: [] },
+    } as never);
+    const { queryClient, wrapper } = createWrapper();
+    const { result } = renderHook(() => useRunQuery("r-1"), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedClient.GET).toHaveBeenLastCalledWith("/api/v1/platform/quality/runs/{id}", {
+      params: { path: { id: "r-1" } },
+    });
+    expect(queryClient.getQueryData(platformKeys.quality.runs.detail("r-1"))).toBeDefined();
+  });
+
+  it("trae el case con la key anidada run→case", async () => {
+    mockedClient.GET.mockResolvedValueOnce({
+      data: { id: "c-1", status: "passed", transcript: [], evaluation: null },
+    } as never);
+    const { queryClient, wrapper } = createWrapper();
+    const { result } = renderHook(() => useRunCaseQuery("r-1", "c-1"), { wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedClient.GET).toHaveBeenLastCalledWith(
+      "/api/v1/platform/quality/runs/{id}/cases/{caseId}",
+      { params: { path: { id: "r-1", caseId: "c-1" } } },
+    );
+    expect(queryClient.getQueryData(platformKeys.quality.runs.case("r-1", "c-1"))).toBeDefined();
+  });
+});
+
+describe("usePurgeRun", () => {
+  it("hace POST /purge (202) e invalida quality.runs.all", async () => {
+    const { queryClient, wrapper } = createWrapper();
+    const invalidateSpy = jest.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => usePurgeRun(), { wrapper });
+
+    await waitFor(async () => {
+      await result.current.mutateAsync("r-1");
+    });
+
+    expect(mockedClient.POST).toHaveBeenCalledWith("/api/v1/platform/quality/runs/{id}/purge", {
+      params: { path: { id: "r-1" } },
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: platformKeys.quality.runs.all });
   });
 });
 

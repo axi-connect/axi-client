@@ -22,7 +22,7 @@
 | F1 | Fundaciones: dominio quality, polling, query keys, StatusBadge, errores, `TenantSelect` | ✅ Código completo (lint + 420 tests verdes) | pendiente |
 | F2 | Escenarios + Suites (catálogo CRUD + editor de criterios) | ✅ Código completo (lint + tsc + 443 tests; E2E crear/archivar y visual light/dark contra backend local) | pendiente |
 | F3 | Ejecuciones: lista + wizard de creación | ✅ Código completo (lint + tsc + 457 tests; E2E: estrés mock 2×2 lanzado desde el wizard, completado y purgado; visual light/dark) | pendiente |
-| F4 | Detalle de ejecución + detalle de case en vivo | ⏳ Pendiente | — |
+| F4 | Detalle de ejecución + detalle de case en vivo | ✅ Código completo (lint + tsc + 463 tests; E2E: detalle en vivo hasta Completada, case con transcript, purga con ConfirmTyped → purging → purged) | pendiente |
 | F5 | Depurador de conversaciones | ⏳ Pendiente | — |
 
 ## 2. Decisiones aprobadas
@@ -359,6 +359,20 @@ purged, invalid_criteria, evaluation null, aplanado.
 **Aceptación:** detalle vivo cada ~3 s con stop en terminal y pausa con
 ReLoginModal; cancelar/purgar con 409 mapeados y purging→purged reflejado;
 case crece en vivo; stress (scenario null) y purged no rompen.
+
+**Notas de implementación (post-F4):**
+- La tabla de cases SÍ usa `DataTable` (modo cliente): los cases llegan
+  completos y su búsqueda local por escenario es útil — a diferencia de la
+  lista de runs (server, sin search).
+- Case purgado: la sección de transcript no se renderiza (el EmptyState
+  "Datos purgados" lo explica); checks/scores/timings agregados se conservan.
+- `queue_depth_samples` (solo estrés) se expone colapsado en crudo
+  (`<details>` + JSON) — es material de diagnóstico, no dashboard.
+- Los UUID de runId/caseId caen en la rama `UUID_LIKE` del breadcrumb (id
+  corto); no se resuelve nombre — el header de la vista ya da el contexto.
+- Verificación E2E pendiente de una ejecución QA REAL (usa el agente y el
+  juez con LLM de verdad → costo): los paneles de checks/juez quedan
+  cubiertos por unit tests y render defensivo.
 
 ### F5 — Depurador de conversaciones
 

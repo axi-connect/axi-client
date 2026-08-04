@@ -32,6 +32,7 @@ const LABELS: Record<string, string> = {
   runs: "Ejecuciones",
   scenarios: "Escenarios",
   suites: "Suites",
+  cases: "Casos",
 };
 
 /** "new" es ambiguo por segmento: depende de qué colección cuelga. */

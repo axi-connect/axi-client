@@ -69,14 +69,14 @@ export function RunWizard() {
     if (!companyId || !agentId) return;
     setSubmitError(null);
     try {
-      await createRun.mutateAsync(buildCreateRunDTO({ companyId, agentId, config }));
+      const created = await createRun.mutateAsync(buildCreateRunDTO({ companyId, agentId, config }));
       showAlert({
         tone: "success",
         title: "Ejecución creada",
-        description: `Quedó en cola contra ${companyName}; síguela desde la lista.`,
+        description: `Quedó en cola contra ${companyName}; el detalle se actualiza en vivo.`,
         autoCloseMs: 5000,
       });
-      router.replace("/platform/quality/runs");
+      router.replace(`/platform/quality/runs/${created.id}`);
     } catch (error) {
       const details = problemDetails(error);
       if (isHttpError(error) && error.is("quality/tenant_not_eligible")) {

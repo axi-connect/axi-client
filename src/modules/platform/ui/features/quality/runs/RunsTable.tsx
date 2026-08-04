@@ -3,9 +3,10 @@
 /**
  * Tabla de ejecuciones sobre primitivos (patrón `AgentsHealthTable`): el
  * endpoint no tiene búsqueda ni orden — el backend lista por `created_at
- * desc` y así se respeta. Semáforo del score con `thresholds.ts`. En F3 la
- * fila no navega (el detalle llega en F4).
+ * desc` y así se respeta. Semáforo del score con `thresholds.ts`. Fila →
+ * detalle en vivo (mismo patrón que el triage de agentes).
  */
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -25,6 +26,8 @@ import { RunRowActions } from "./RunRowActions";
 import { aiModeLabel, formatSpendUsd, runKindLabel, runScopeLabel } from "./runs-format";
 
 export function RunsTable({ runs }: { runs: RunListItem[] }) {
+  const router = useRouter();
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-background">
       <Table>
@@ -47,7 +50,12 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
             const mode = aiModeLabel(run.ai_mode);
             const settled = run.cases_passed + run.cases_failed + run.cases_blocked;
             return (
-              <TableRow key={run.id}>
+              <TableRow
+                key={run.id}
+                onClick={() => router.push(`/platform/quality/runs/${run.id}`)}
+                className="cursor-pointer"
+                aria-label={`Ver la ejecución en ${run.company_name}`}
+              >
                 <TableCell>
                   <span className="flex items-center gap-1.5">
                     <Badge
@@ -110,7 +118,8 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                 <TableCell>
                   <RelativeDate iso={run.created_at} className="text-muted-foreground" />
                 </TableCell>
-                <TableCell className="w-10">
+                {/* Las acciones no deben disparar la navegación de la fila. */}
+                <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
                   <RunRowActions run={run} />
                 </TableCell>
               </TableRow>
