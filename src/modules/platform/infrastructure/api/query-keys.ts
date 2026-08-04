@@ -38,4 +38,37 @@ export const platformKeys = {
     agentsHealth: (days: number) => [...platformKeys.analytics.all, "agents-health", days] as const,
     alerts: (status: string) => [...platformKeys.analytics.all, "alerts", status] as const,
   },
+
+  // Módulo Calidad (quality_frontend_implementation_plan.md). Las listas
+  // paginan en server: los filtros (page incluido) viajan en la key.
+  quality: {
+    all: ["platform", "quality"] as const,
+    scenarios: {
+      all: ["platform", "quality", "scenarios"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.scenarios.all, "list", filters ?? {}] as const,
+      detail: (id: string) => [...platformKeys.quality.scenarios.all, id] as const,
+    },
+    suites: {
+      all: ["platform", "quality", "suites"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.suites.all, "list", filters ?? {}] as const,
+      detail: (id: string) => [...platformKeys.quality.suites.all, id] as const,
+    },
+    runs: {
+      all: ["platform", "quality", "runs"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.runs.all, "list", filters ?? {}] as const,
+      detail: (id: string) => [...platformKeys.quality.runs.all, id] as const,
+      case: (runId: string, caseId: string) =>
+        [...platformKeys.quality.runs.all, runId, "cases", caseId] as const,
+    },
+    debug: {
+      all: ["platform", "quality", "debug"] as const,
+      contacts: (companyId: string, search: string) =>
+        [...platformKeys.quality.debug.all, companyId, "contacts", search] as const,
+      conversations: (companyId: string, contactId: string) =>
+        [...platformKeys.quality.debug.all, companyId, "contacts", contactId, "conversations"] as const,
+    },
+  },
 } as const;

@@ -98,7 +98,12 @@ Coral = acción (CTAs, paso activo, tab activa) · **violeta = acento de la cons
 | FE5 Pricing + Auditoría (`JsonDiff`) | ✅ |
 | FE6 Analytics + Dashboard (`DegradedBanner`, badge alertas) | ✅ |
 | FE7 Endurecimiento (errores §7, a11y, loading, breadcrumb, QA) | ✅ (E2E pospuesto — deuda) |
+| Calidad F1–F5 (escenarios/suites, ejecuciones + wizard, detalle en vivo, depurador forense) | ✅ (plan: `docs/plans/quality_frontend_implementation_plan.md`) |
 
 ## 7. Tests
 
 `__tests__/` junto al código: `token-storage`, middleware de `platform-client` (Bearer/401/HttpError), `use-session-countdown` (fake timers), hooks de tenants (derivación por id + invalidación), `tenants-filter` (búsqueda/facets/orden), `ConfirmTyped` (habilitación por match exacto) y `TenantWizard` (borrador al volver atrás, `nit_taken` → paso 1, alta exitosa → credenciales + redirect).
+
+Calidad añade: dominio (`quality`, `quality-runs`: parsers defensivos, máquina de estados, presupuesto de estrés, mensajes de 409/422), `polling` (run/case), hooks de escenarios/suites/runs (keys con filtros, invalidaciones, `problem.details` intacto), `run-config` del wizard (XOR, rangos, frontera 3600 s), aplanado de cases (`invalid_criteria`), `CriteriaEditor`, `quality-report` (Content-Disposition, Bearer por header, error sin descarga) y `ReportDownloadDialog` (advertencia PII, params de descarga).
+
+**Nota de Calidad sobre D5**: sus listados de escenarios/suites/ejecuciones SÍ paginan en server (`page`/`page_size` del contrato quality) — DataTable en modo `total` + filtros en la query key + `keepPreviousData`; la lista de ejecuciones usa tabla de primitivos (el endpoint no tiene búsqueda). Los `cases[]` del detalle llegan completos → DataTable cliente.

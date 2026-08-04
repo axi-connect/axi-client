@@ -13,6 +13,7 @@ import {
   Activity,
   Building2,
   CircleDollarSign,
+  FlaskConical,
   Layers,
   LayoutDashboard,
   LoaderCircle,
@@ -64,6 +65,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "circle-dollar-sign": CircleDollarSign,
   "scroll-text": ScrollText,
   activity: Activity,
+  "flask-conical": FlaskConical,
 };
 
 /** Indicador de navegación pendiente (mismo patrón que el sidebar de tenant). */
