@@ -28,6 +28,23 @@ export const AI_PROVIDER_LABELS: Record<AiProvider, string> = {
   mock: "Mock (QA interno)",
 };
 
+/** Proveedor asignable desde el panel: `mock` es interno de quality y el
+ * backend lo rechaza, así que el selector del formulario NO debe ofrecerlo
+ * (los labels de arriba sí lo tienen: tabla y detalle deben poder mostrarlo). */
+export type AssignableAiProvider = Exclude<AiProvider, "mock">;
+
+export const ASSIGNABLE_AI_PROVIDERS: AssignableAiProvider[] = [
+  "openai_compatible",
+  "anthropic",
+];
+
+/**
+ * Modelo del catálogo (`GET /ai-agents/models`). El catálogo son las tarifas
+ * vigentes del panel de plataforma: un modelo sin precio no es elegible,
+ * porque su consumo se mediría sin costo y el tope de gasto quedaría ciego.
+ */
+export type AiModelDTO = Schemas["AiModelListDto"]["data"][number];
+
 /** Forma que consume la tabla de agentes. */
 export type AgentRow = {
   id: string;

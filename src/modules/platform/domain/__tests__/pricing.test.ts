@@ -6,6 +6,8 @@ const rate = (over: Partial<PricingRate>): PricingRate => ({
   id: "r-x",
   provider: "anthropic",
   model: "claude-sonnet-5",
+  display_name: "Claude Sonnet 4.5",
+  is_default: false,
   input_cost_per_mtok_usd: 3,
   output_cost_per_mtok_usd: 15,
   cache_read_per_mtok_usd: 0.3,

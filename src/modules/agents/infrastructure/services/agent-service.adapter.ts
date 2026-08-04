@@ -12,6 +12,14 @@ export function listAgents(): Promise<Schemas["AiAgentListDto"]> {
   return http.get<Schemas["AiAgentListDto"]>("/ai-agents");
 }
 
+/**
+ * Catálogo de modelos elegibles. El backend lo deriva de las tarifas vigentes:
+ * un modelo sin precio no aparece aquí y el CRUD lo rechaza.
+ */
+export function listAiModels(): Promise<Schemas["AiModelListDto"]> {
+  return http.get<Schemas["AiModelListDto"]>("/ai-agents/models");
+}
+
 export function getAgentById(id: string): Promise<AiAgentDTO> {
   return http.get<AiAgentDTO>(`/ai-agents/${id}`);
 }

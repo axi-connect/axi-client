@@ -3,7 +3,7 @@
 import { z } from "zod"
 import Image from "next/image"
 import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { cn } from "@/core/lib/utils"
 import { Input } from "@/shared/components/ui/input"
@@ -14,13 +14,16 @@ import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context"
 import { AgentIntentionsEditor } from "@/modules/agents/ui/components/AgentIntentionsEditor"
 import {
   createAgent,
+  listAiModels,
   setAgentIntentions,
   updateAgent,
 } from "@/modules/agents/infrastructure/services/agent-service.adapter"
 import {
   AGENT_STATUS_LABELS,
   AI_PROVIDER_LABELS,
+  ASSIGNABLE_AI_PROVIDERS,
   type AiAgentDTO,
+  type AiModelDTO,
   type CreateAiAgentDTO,
   type UpdateAiAgentDTO,
 } from "@/modules/agents/domain/agent"
@@ -53,6 +56,8 @@ const agentFormSchema = z.object({
   system_prompt: z.string().trim().min(10, "El prompt del sistema es el corazón del agente"),
   character_id: z.string().optional(),
   // Numéricos como string en el form (inputs HTML); se parsean en toDto.
+  // El tope depende del proveedor (Anthropic corta en 1, OpenAI en 2): el
+  // schema valida el rango máximo y el form afina el mensaje con el catálogo
   temperature: z
     .string()
     .trim()
@@ -74,11 +79,6 @@ const agentFormSchema = z.object({
 
 type AgentFormValues = z.infer<typeof agentFormSchema>
 
-const MODEL_PLACEHOLDERS: Record<AgentFormValues["provider"], string> = {
-  anthropic: "claude-sonnet-5",
-  openai_compatible: "gpt-4o-mini",
-}
-
 function splitCsv(value?: string): string[] {
   return (value ?? "")
     .split(",")
@@ -92,8 +92,9 @@ function agentToFormValues(agent: AiAgentDTO): AgentFormValues {
   return {
     name: agent.name,
     status: agent.status,
-    // 'mock' es interno del módulo quality y el form no lo ofrece: al editar
-    // un agente mock (no ocurre desde la UI) se cae al provider por defecto
+    // 'mock' es interno de quality y no se puede asignar desde el panel; sus
+    // agentes tampoco aparecen en el listado del tenant. Si llegara uno aquí,
+    // se cae al default en vez de mandar un provider que el backend rechaza
     provider: agent.provider === "mock" ? "openai_compatible" : agent.provider,
     model: agent.model,
     system_prompt: agent.system_prompt,
@@ -160,13 +161,44 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
         },
   })
 
+  // Catálogo de modelos: lo sirve el backend desde las tarifas vigentes, así
+  // que un modelo sin precio ni siquiera es ofrecible (antes era texto libre y
+  // un typo creaba un agente que fallaba en cada conversación)
+  const [models, setModels] = useState<AiModelDTO[] | null>(null)
+
   useEffect(() => {
     if (characters.length === 0) void fetchCharacters()
     if (intentions.length === 0) void fetchIntentions()
+    void listAiModels()
+      .then((res) => setModels(res.data))
+      .catch(() => setModels([]))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const provider = form.watch("provider")
+  const selectedModel = form.watch("model")
+
+  const providerModels = useMemo(
+    () => (models ?? []).filter((entry) => entry.provider === provider),
+    [models, provider],
+  )
+  const maxTemperature =
+    providerModels.find((entry) => entry.model === selectedModel)?.temperature_max ??
+    (provider === "anthropic" ? 1 : 2)
+  // Al editar, un modelo retirado del catálogo (tarifa cerrada) seguiría
+  // guardado: se muestra marcado en vez de desaparecer sin aviso
+  const isOrphanModel =
+    models !== null && selectedModel !== "" &&
+    !providerModels.some((entry) => entry.model === selectedModel)
+
+  /** Cambiar de proveedor cambia el juego de modelos: se preselecciona su
+   * default para no dejar el form en un estado inválido. */
+  const handleProviderChange = (next: string) => {
+    form.setValue("provider", next as AgentFormValues["provider"])
+    const candidates = (models ?? []).filter((entry) => entry.provider === next)
+    const preferred = candidates.find((entry) => entry.is_default) ?? candidates[0]
+    form.setValue("model", preferred?.model ?? "")
+  }
 
   const handleSubmit = async (values: AgentFormValues) => {
     if (submitting) return
@@ -251,15 +283,17 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Proveedor</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value} onValueChange={handleProviderChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Object.entries(AI_PROVIDER_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    {ASSIGNABLE_AI_PROVIDERS.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {AI_PROVIDER_LABELS[value]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -273,9 +307,37 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Modelo</FormLabel>
-                <FormControl>
-                  <Input placeholder={MODEL_PLACEHOLDERS[provider]} {...field} />
-                </FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={models === null || providerModels.length === 0}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          models === null
+                            ? "Cargando modelos…"
+                            : providerModels.length === 0
+                              ? "Sin modelos disponibles"
+                              : "Elige un modelo"
+                        }
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {isOrphanModel ? (
+                      <SelectItem value={field.value}>
+                        {field.value} (ya no disponible)
+                      </SelectItem>
+                    ) : null}
+                    {providerModels.map((entry) => (
+                      <SelectItem key={entry.model} value={entry.model}>
+                        {entry.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -355,7 +417,15 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
               <FormItem>
                 <FormLabel>Temperatura</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" min={0} max={2} placeholder="0.7" {...field} value={field.value ?? ""} />
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={maxTemperature}
+                    placeholder={`0 a ${String(maxTemperature)}`}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
