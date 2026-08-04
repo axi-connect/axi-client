@@ -28,9 +28,16 @@ const LABELS: Record<string, string> = {
   plan: "Plan & Límites",
   database: "Base de datos",
   // "audit" bajo un tenant y en el top-level comparten label ("Auditoría").
-  // Sub-secciones de Calidad (F3 añade runs; F5, debugger).
+  // Sub-secciones de Calidad (F5 añade debugger).
+  runs: "Ejecuciones",
   scenarios: "Escenarios",
   suites: "Suites",
+};
+
+/** "new" es ambiguo por segmento: depende de qué colección cuelga. */
+const NEW_BY_PARENT: Record<string, string> = {
+  tenants: "Nuevo tenant",
+  runs: "Nueva ejecución",
 };
 
 const UUID_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -52,7 +59,13 @@ export function PlatformHeader() {
   const parts = pathname.replace(/^\/platform\/?/, "").split("/").filter(Boolean);
   const crumbs = parts.map((seg, idx) => ({
     href: "/platform/" + parts.slice(0, idx + 1).join("/"),
-    label: UUID_LIKE.test(seg) ? <TenantCrumb id={seg} /> : LABELS[seg] || seg,
+    label: UUID_LIKE.test(seg) ? (
+      <TenantCrumb id={seg} />
+    ) : seg === "new" ? (
+      NEW_BY_PARENT[parts[idx - 1] ?? ""] ?? LABELS.new
+    ) : (
+      LABELS[seg] || seg
+    ),
   }));
 
   return (

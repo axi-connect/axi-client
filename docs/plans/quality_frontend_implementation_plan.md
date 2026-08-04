@@ -21,7 +21,7 @@
 |---|---|---|---|
 | F1 | Fundaciones: dominio quality, polling, query keys, StatusBadge, errores, `TenantSelect` | ✅ Código completo (lint + 420 tests verdes) | pendiente |
 | F2 | Escenarios + Suites (catálogo CRUD + editor de criterios) | ✅ Código completo (lint + tsc + 443 tests; E2E crear/archivar y visual light/dark contra backend local) | pendiente |
-| F3 | Ejecuciones: lista + wizard de creación | ⏳ Pendiente | — |
+| F3 | Ejecuciones: lista + wizard de creación | ✅ Código completo (lint + tsc + 457 tests; E2E: estrés mock 2×2 lanzado desde el wizard, completado y purgado; visual light/dark) | pendiente |
 | F4 | Detalle de ejecución + detalle de case en vivo | ⏳ Pendiente | — |
 | F5 | Depurador de conversaciones | ⏳ Pendiente | — |
 
@@ -318,6 +318,18 @@ horario valle + costo), `steps/ReviewStep`. Tests del schema y del wizard.
 **Aceptación:** crear QA y estrés de punta a punta; validaciones cliente =
 servidor; estimación de ocupación pre-submit; cancelar desde lista;
 terminología "Ejecución" en toda la UI.
+
+**Notas de implementación (post-F3):**
+- La lista usa tabla de PRIMITIVOS (`RunsTable`, patrón `AgentsHealthTable`)
+  + `BasicPagination`: el endpoint no tiene búsqueda ni orden y el `DataTable`
+  pintaría una barra de búsqueda muerta. Orden del backend (`created_at desc`)
+  respetado.
+- `useRunsQuery` se auto-refresca cada 3 s mientras alguna ejecución de la
+  página siga viva (pending/running/purging) — la lista "respira" sin F4.
+- La validación del wizard es un validador PURO (`validateRunConfig`) en vez
+  de zod: mismas reglas espejo, testeable sin RHF.
+- Breadcrumb: el segmento `new` es ambiguo → `NEW_BY_PARENT` en
+  `PlatformHeader` ("Nuevo tenant" bajo tenants, "Nueva ejecución" bajo runs).
 
 ### F4 — Detalle de ejecución + case en vivo
 

@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/core/lib/utils";
 
 const TABS = [
-  // { label: "Ejecuciones", segment: "runs" },    ← F3
+  { label: "Ejecuciones", segment: "runs" },
   { label: "Escenarios", segment: "scenarios" },
   { label: "Suites", segment: "suites" },
   // { label: "Depurador", segment: "debugger" },  ← F5
