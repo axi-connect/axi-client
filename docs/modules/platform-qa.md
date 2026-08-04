@@ -130,4 +130,23 @@
 | 6º intento de login | `429` | Botón con countdown 60 s |
 | Límite inválido (server) | `usage/limit_invalid` | Editor abierto + mensaje |
 
+## Guion manual — Calidad (F1–F5)
+
+Prerrequisitos: seed (7 escenarios system + suite `basic_smoke`) y un tenant demo con agente activo.
+
+1. **Escenarios**: filtrar por origen/estado y buscar en server (sin parpadeo al paginar). Ver un system (solo lectura, "Clonar" como única salida) → clonar (code snake_case; duplicado → error inline) → el clon se abre en edición. Crear escenario con criterios cruzados inválidos (`escalated`+`not_escalated`) → el editor lo dice en vivo y el submit se bloquea. Archivar → desaparece de Activos → Restaurar.
+2. **Suites**: crear suite → se abre la composición → añadir/ordenar (↑↓)/quitar (1–50, sin duplicados) → guardar (PUT total). `basic_smoke` solo lectura. Escenario archivado en una suite → aviso "no se ejecuta".
+3. **Ejecuciones**: `/platform/quality` cae en Ejecuciones. Wizard: tenant suspendido deshabilitado; sin agente activo → EmptyState; QA exige suite XOR escenarios; estrés muestra ocupación en vivo y bloquea >3600 s; `no_pricing` en real → CTA "usar mock". Crear estrés mock 2×2 → aterriza en el detalle → se completa solo (~20 s). Segunda ejecución sobre el mismo tenant mientras corre → `run_already_active` con CTA a la lista.
+4. **Detalle/case**: tiles y métricas al finalizar (latencias con semáforo); tabla de cases con búsqueda local; case → transcript tipo chat + timings; en QA además checks ✓/✗ y juez (`invalid_criteria` en ámbar = escenario roto). Cancelar solo visible en vuelo; Purgar (ConfirmTyped con el nombre del tenant) → Purgando → Purgada; el case purgado explica la ausencia de transcript.
+5. **Depurador**: aviso de auditoría visible; tenant → contactos (cap 25, badge "Simulada") → conversaciones → "Descargar reporte" SIEMPRE pasa por la advertencia PII; md descarga con el nombre del `Content-Disposition`; json también; token vencido a mitad → error legible + ReLoginModal.
+
+| Provocación | Código esperado | UI esperada |
+|---|---|---|
+| PATCH a escenario system (fila sin Editar; via API) | `quality/scenario_immutable` | Toast con mensaje ES |
+| Clonar con code existente | `quality/scenario_code_taken` | Error inline en `code` |
+| Segunda ejecución en el mismo tenant | `quality/run_already_active` | Alerta en revisión + CTA a la lista |
+| Estrés real sin pricing del modelo | `quality/spend_cap_exceeded` (`no_pricing`) | Alerta + CTA "Cambiar a modo mock" |
+| Cancelar una completada (carrera) | `quality/run_not_cancelable` | Toast honesto |
+| Purgar una en curso (carrera) | `quality/run_not_purgeable` | Toast honesto |
+
 **Firmado por:** ______________ · **Fecha:** ______________ · **Commit:** ______________

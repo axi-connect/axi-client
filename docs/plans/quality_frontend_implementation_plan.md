@@ -23,7 +23,7 @@
 | F2 | Escenarios + Suites (catálogo CRUD + editor de criterios) | ✅ Código completo (lint + tsc + 443 tests; E2E crear/archivar y visual light/dark contra backend local) | pendiente |
 | F3 | Ejecuciones: lista + wizard de creación | ✅ Código completo (lint + tsc + 457 tests; E2E: estrés mock 2×2 lanzado desde el wizard, completado y purgado; visual light/dark) | pendiente |
 | F4 | Detalle de ejecución + detalle de case en vivo | ✅ Código completo (lint + tsc + 463 tests; E2E: detalle en vivo hasta Completada, case con transcript, purga con ConfirmTyped → purging → purged) | pendiente |
-| F5 | Depurador de conversaciones | ⏳ Pendiente | — |
+| F5 | Depurador de conversaciones | ✅ Código completo (lint + tsc + 471 tests; E2E: descarga real del .md con nombre del Content-Disposition; visual light/dark) — MÓDULO CERRADO | pendiente |
 
 ## 2. Decisiones aprobadas
 

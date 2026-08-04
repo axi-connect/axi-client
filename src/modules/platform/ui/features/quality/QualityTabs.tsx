@@ -2,8 +2,7 @@
 
 /**
  * Tabs de la sección Calidad como SEGMENTOS DE RUTA (spec D11): deep-linking
- * directo y back/forward correcto. Crece por fases: F3 añade "Ejecuciones"
- * (primera posición, default) y F5 "Depurador". Terminología: NUNCA "Corridas".
+ * directo y back/forward correcto. Terminología: NUNCA "Corridas".
  */
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,7 +12,7 @@ const TABS = [
   { label: "Ejecuciones", segment: "runs" },
   { label: "Escenarios", segment: "scenarios" },
   { label: "Suites", segment: "suites" },
-  // { label: "Depurador", segment: "debugger" },  ← F5
+  { label: "Depurador", segment: "debugger" },
 ] as const;
 
 const BASE = "/platform/quality";

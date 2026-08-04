@@ -28,11 +28,12 @@ const LABELS: Record<string, string> = {
   plan: "Plan & Límites",
   database: "Base de datos",
   // "audit" bajo un tenant y en el top-level comparten label ("Auditoría").
-  // Sub-secciones de Calidad (F5 añade debugger).
+  // Sub-secciones de Calidad.
   runs: "Ejecuciones",
   scenarios: "Escenarios",
   suites: "Suites",
   cases: "Casos",
+  debugger: "Depurador",
 };
 
 /** "new" es ambiguo por segmento: depende de qué colección cuelga. */
