@@ -21,11 +21,20 @@ import { cn } from "@/core/lib/utils";
  */
 export function TiltCard({
   depth = 10,
+  // Renombrado: dentro del efecto `glare` es la referencia al DOM del reflejo.
+  glare: glareTone = "soft",
   className,
   children,
 }: {
   /** Intensidad de la rotación en grados (como `data-tilt` de la plantilla). */
   depth?: number;
+  /**
+   * Carácter del reflejo que sigue al cursor.
+   * `soft` (default) mezcla en `overlay`: realza sobre superficies claras.
+   * `bright` mezcla en `screen` y baja la opacidad — sobre una superficie
+   * oscura el `overlay` con blanco apenas aclara y el cometa se pierde.
+   */
+  glare?: "soft" | "bright";
   className?: string;
   children: ReactNode;
 }) {
@@ -61,11 +70,15 @@ export function TiltCard({
       if (!raf) raf = requestAnimationFrame(loop);
     };
 
+    // `bright` va contenido: el reflejo se pinta por ENCIMA del contenido, y
+    // en `screen` una opacidad alta lava el texto claro.
+    const [core, halo] = glareTone === "bright" ? [0.13, 0.04] : [0.35, 0.1];
+
     const onMove = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
       tx = (e.clientX - r.left) / r.width - 0.5;
       ty = (e.clientY - r.top) / r.height - 0.5;
-      glare.style.background = `radial-gradient(circle at ${((tx + 0.5) * 100).toFixed(1)}% ${((ty + 0.5) * 100).toFixed(1)}%, rgb(255 255 255 / 0.35) 0%, rgb(255 255 255 / 0.10) 35%, transparent 70%)`;
+      glare.style.background = `radial-gradient(circle at ${((tx + 0.5) * 100).toFixed(1)}% ${((ty + 0.5) * 100).toFixed(1)}%, rgb(255 255 255 / ${core}) 0%, rgb(255 255 255 / ${halo}) 35%, transparent 70%)`;
       start();
     };
     const onEnter = () => {
@@ -93,7 +106,7 @@ export function TiltCard({
       el.removeEventListener("pointerleave", onLeave);
       el.style.transform = "";
     };
-  }, [depth, reduced]);
+  }, [depth, glareTone, reduced]);
 
   return (
     <div ref={rootRef} className={cn("relative rounded-2xl [transform-style:preserve-3d]", className)}>
@@ -101,7 +114,10 @@ export function TiltCard({
       <div
         ref={glareRef}
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-[5] rounded-[inherit] opacity-0 mix-blend-overlay transition-opacity duration-200"
+        className={cn(
+          "pointer-events-none absolute inset-0 z-[5] rounded-[inherit] opacity-0 transition-opacity duration-200",
+          glareTone === "bright" ? "mix-blend-screen" : "mix-blend-overlay",
+        )}
       />
     </div>
   );

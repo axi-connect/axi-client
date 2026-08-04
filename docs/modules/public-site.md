@@ -83,6 +83,41 @@ El hero del marketplace vive aparte: `src/shared/components/layout/marketplace-h
 - Fuentes: **Nexa** (headings) + **Poppins** (cuerpo). framer-motion con tipos ambient (no importar tipos del paquete).
 - Formularios → reutilizar `DynamicForm` (`src/shared/components/features/dynamic-form/`); datos → `http` (`src/core/services/http.ts`) vía BFF `/api/proxy`; backend en `../axi-server`.
 
+### 4.1 Mantenimiento del Programa Fundadores (§9 Planes)
+
+La sección de precios lleva dos valores **manuales** en
+`modules/landing/ui/content/landing.content.ts` (`FOUNDERS`), sin backend detrás:
+
+- **`claimed`** — cupos ya tomados; súbelo al cerrar cada venta. El contador y la barra de
+  la franja salen de ahí, y al llegar a `slots` la franja pasa a «Cupos agotados» y las
+  tarjetas vuelven al precio de lista.
+- **`deadline`** — fecha de cierre en ISO. Al pasar, la oferta se cierra sola (fallo
+  seguro ante un olvido): desaparece el descuento y quedan los precios de lista. Para
+  renovar el ciclo, fecha nueva y `claimed` reiniciado.
+
+Los precios con descuento **no se escriben a mano**: salen de `founderCop()` sobre
+`SBS_TIERS[].listCop` y `FOUNDERS.discount`, así que el tachado y el precio final no
+pueden contradecirse.
+
+`FOUNDERS.deadline` alimenta además el **split-flap** de la franja (`FlipCountdown`).
+Todo lo que depende del reloj se calcula tras montar, nunca en render: la home se
+prerenderiza estática, así que en render quedaría congelado en la fecha del deploy —
+antes de hidratar las fichas muestran guiones con su tamaño final, sin salto de layout.
+Las keyframes del doblez viven en `globals.css` (`animate-flip-top` / `animate-flip-bottom`)
+y están anuladas en el bloque de `prefers-reduced-motion`: la cuenta sigue corriendo, solo
+desaparece el giro.
+
+La tarjeta es una **isla oscura** (`.dark` + `.theme-dark-island` + `.bg-founders-slab`):
+se mantiene oscura en ambos temas a propósito. `.theme-dark-island` existe porque
+`@theme inline` sustituye los tokens de capa 2 en `:root`, así que al anidar `.dark` solo
+se re-resuelve la capa 1 — las clases CSS crudas que leen `--color-*` necesitan que se
+re-declaren.
+
+**No metas `backdrop-filter` dentro de esta tarjeta.** Lleva tilt, y bajo un transform 3D
+el filtro captura otro backdrop (la superficie se desatura) y recalcularlo por frame hunde
+el frame rate: el reloj se ve congelado mientras haya hover. Por eso las fichas usan
+`.glass-flat` —mismo aspecto, sin filtro— y hay un test que lo protege.
+
 ## 5. Estado de la capa GTM y brechas abiertas
 
 Plan maestro y fases: **`docs/plans/public-gtm-plan.md`**.

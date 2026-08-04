@@ -482,67 +482,219 @@ export const CASES = {
 
 /* ─────────────────────────────── §9 Planes ──────────────────────────── */
 
+/**
+ * Programa Fundadores — la urgencia de la sección de precios.
+ *
+ * MANTENIMIENTO (son valores manuales, no hay backend detrás):
+ *   `claimed`  — subirlo al cerrar cada venta. Al llegar a `slots` la franja
+ *                pasa a "cupos agotados" y hay que decidir: renovar el ciclo
+ *                con una fecha nueva, o retirar el programa.
+ *   `deadline` — al pasar la fecha, la oferta se cierra sola: la franja
+ *                desaparece y las tarjetas muestran el precio de lista sin
+ *                tocar nada más. Fallo seguro ante un olvido.
+ */
+export const FOUNDERS = {
+  kicker: "Programa Fundadores",
+  slots: 20,
+  claimed: 13,
+  /** Fracción de descuento sobre el precio de lista (0.4 = −40 %). */
+  discount: 0.4,
+  /** Cierre del programa, ISO sin hora: cuenta hasta el final de ese día. */
+  deadline: "2026-09-31",
+  headline: "−40 % de descuento para las primeras 20 empresas.",
+  promise:
+    "Tu tarifa queda congelada mientras sigas con nosotros. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
+  discountBadge: "−40 % precio fundador",
+  countdownLabel: "Cierra en",
+  soldOut: "Cupos agotados",
+  /** Etiquetas de las fichas de la cuenta atrás. */
+  units: {
+    days: "días",
+    hours: "horas",
+    minutes: "min",
+    seconds: "seg",
+  },
+} as const;
+
+/**
+ * Tramos de volumen del plan SBS.
+ *
+ * El producto NO cierra funciones por plan: `usage_plan` solo lleva límites
+ * numéricos (tokens, requests, tope de gasto). Lo único que escala con el
+ * precio es el volumen — de ahí que SBS sea una sola tarjeta y no dos.
+ */
 // TODO [A VALIDAR]: precios ancla definitivos y política de excedente
 // (racional en landing-copy.md §9). Los valores actuales son la propuesta.
+// Falta también decidir si hay un tramo intermedio: entre 300 y 3.000
+// conversaciones el salto es de 3,4× sin escalón, y el estimador lo expone.
+export const SBS_TIERS = [
+  { id: "t300", listCop: 250_000, volumeBullet: "Hasta 300 conversaciones/mes" },
+  { id: "t3000", listCop: 850_000, volumeBullet: "Hasta 3.000 conversaciones/mes" },
+] as const;
+
+export type SbsTierId = (typeof SBS_TIERS)[number]["id"];
+
+/**
+ * Estimador de volumen: resuelve la objeción real ("no sé cuántas
+ * conversaciones manejo") fijando el tramo de precio de SBS y moviendo la
+ * recomendación. `unknown` es el estado inicial y deja el precio en "Desde".
+ */
+export const VOLUME_ESTIMATOR = {
+  legend: "¿Cuántas conversaciones maneja tu negocio al mes?",
+  recommendedBadge: "Tu plan",
+  choices: [
+    { id: "lt_300", label: "Menos de 300", recommends: "sbs", tier: "t300" },
+    { id: "300_3k", label: "300 a 3.000", recommends: "sbs", tier: "t3000" },
+    { id: "gt_3k", label: "Más de 3.000", recommends: "enterprise", tier: null },
+    { id: "unknown", label: "No lo sé", recommends: null, tier: null },
+  ],
+} as const;
+
+export type VolumeChoiceId = (typeof VOLUME_ESTIMATOR)["choices"][number]["id"];
+
 export const PRICING = {
   title: "Pagas por lo que tu negocio conversa y vende. No por funciones.",
   intro:
-    "Todos los planes incluyen lo esencial completo: tu agente vendedor, el catálogo, los pedidos, el inbox de tu equipo y la medición de ventas. Lo que cambia es el volumen que tu negocio maneja y los canales que conecta.",
+    "Todos los planes incluyen el producto completo: tu agente vendedor, el catálogo, los pedidos, el inbox de tu equipo y la medición de ventas. Lo único que cambia es el volumen de conversaciones que tu negocio maneja.",
   plans: [
     {
-      id: "inicio",
-      name: "Inicio",
-      tagline: "Para el negocio que empieza a ordenar su venta por chat.",
-      pricePrefix: "Desde",
-      price: "$250.000",
-      priceUnit: "COP/mes",
+      id: "free_trial",
+      name: "Free Trial",
+      abbr: null,
+      badge: null,
       featured: false,
+      tagline: "Pruébalo con tu propio catálogo y tu WhatsApp, sin poner un peso.",
+      /** `free` · `tiered` (precio por tramo de volumen) · `custom` */
+      priceKind: "free",
+      priceValue: "7 días",
+      priceUnit: "gratis",
       bullets: [
-        "Hasta 300 conversaciones/mes",
-        "Conecta tu número de WhatsApp actual en minutos (escaneando un código, como WhatsApp Web)",
-        "1 agente vendedor con tu catálogo y tus pedidos",
-        "Inbox para tu equipo y medición esencial de ventas",
+        "El producto completo, sin funciones recortadas",
+        "Sin tarjeta de crédito ni compromiso",
+        "Si no sigues, tus datos quedan intactos",
+        "Te acompañamos en la activación",
       ],
-      cta: "Agenda tu demo",
+      cta: "Empieza tus 7 días gratis",
+      ctaMicrocopy: "Sin tarjeta — la activamos contigo.",
     },
     {
-      id: "crecimiento",
-      name: "Crecimiento",
-      badge: "El más elegido",
-      tagline: "Para el negocio que ya no da abasto.",
-      pricePrefix: "Desde",
-      price: "$850.000",
-      priceUnit: "COP/mes",
+      id: "sbs",
+      name: "Small Business Suite",
+      abbr: null,
+      badge: "Most popular",
       featured: true,
+      tagline: "Para el negocio que ya vende por chat y quiere ordenarlo y medirlo.",
+      priceKind: "tiered",
+      priceValue: null,
+      priceUnit: "COP/mes",
+      // El bullet de volumen NO va aquí: lo aporta el tramo activo
+      // (`SBS_TIERS[].volumeBullet`) y encabeza la lista.
       bullets: [
-        "Hasta 3.000 conversaciones/mes",
         // TODO [A VALIDAR]: estado de producción de Instagram/Messenger.
-        "WhatsApp oficial (API de Meta) + Instagram + Messenger",
-        "Varios agentes por canal y agenda de citas con recordatorios automáticos",
-        "Medición completa: embudo en pesos, calidad de cada conversación y ranking de qué corregir",
-        "Roles y permisos para todo tu equipo",
+        "WhatsApp oficial (API de Meta), Instagram y Messenger",
+        "Agentes vendedores con tu catálogo, tus pedidos y tu agenda",
+        "Medición completa: embudo en pesos y calidad de cada conversación",
+        "Inbox, roles y permisos para todo tu equipo",
       ],
-      cta: "Agenda tu demo",
+      cta: "Reclama tu cupo fundador",
+      ctaMicrocopy: null,
     },
     {
       id: "enterprise",
       name: "Enterprise",
-      tagline: "Para operaciones de alto volumen o con exigencias de aislamiento de datos.",
-      pricePrefix: "",
-      price: "Precio a la medida",
-      priceUnit: "",
+      abbr: null,
+      badge: null,
       featured: false,
+      tagline: "Para operaciones de alto volumen o con exigencias de aislamiento de datos.",
+      priceKind: "custom",
+      priceValue: "Precio a la medida",
+      priceUnit: null,
       bullets: [
         "Volumen de conversaciones a la medida",
         "Base de datos dedicada solo para tu empresa",
-        "Límites, acompañamiento y soporte prioritario",
+        "Límites ampliados y soporte prioritario",
+        "Acompañamiento en la implementación",
       ],
       cta: "Hablemos",
+      ctaMicrocopy: "Te respondemos el mismo día.",
     },
   ],
   microcopy:
-    "¿No sabes cuántas conversaciones maneja tu negocio? Normal: casi nadie lo sabe antes de medirlo. En la demo lo estimamos contigo y te decimos exactamente qué plan te corresponde.",
+    "El plan se define por volumen, no por funciones: todos incluyen el producto completo. Si no sabes cuántas conversaciones manejas, lo estimamos contigo en la demo.",
 } as const;
+
+export type PricingPlan = (typeof PRICING)["plans"][number];
+
+/** Formato de moneda de la landing: pesos sin decimales ("$250.000"). */
+const COP_FORMAT = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+
+export function formatCop(value: number): string {
+  return `$${COP_FORMAT.format(value)}`;
+}
+
+/**
+ * Precio con descuento de fundador, redondeado al millar.
+ * Los dos precios de la tarjeta (tachado y final) salen SIEMPRE de aquí: así
+ * es imposible que se contradigan al editar el descuento.
+ */
+export function founderCop(listCop: number): number {
+  return Math.round((listCop * (1 - FOUNDERS.discount)) / 1000) * 1000;
+}
+
+export function foundersRemaining(): number {
+  return Math.max(0, FOUNDERS.slots - FOUNDERS.claimed);
+}
+
+export function sbsTier(id: SbsTierId) {
+  return SBS_TIERS.find((tier) => tier.id === id) ?? SBS_TIERS[0];
+}
+
+/** «31 de octubre de 2026» — con año, para el pie de la cuenta atrás. */
+export function formatDeadlineLong(iso: string): string {
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${iso}T00:00:00`));
+}
+
+/** «31 de octubre» — sin año, que ya se sobreentiende en el ciclo en curso. */
+export function formatDeadline(iso: string): string {
+  // Sin sufijo Z: se interpreta en hora local, así el servidor (UTC) y el
+  // navegador (Bogotá) formatean el MISMO día y no hay mismatch de hidratación.
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long" }).format(
+    new Date(`${iso}T00:00:00`),
+  );
+}
+
+/** Días que faltan para el cierre. Solo en cliente: depende del reloj. */
+export function daysUntil(iso: string, now: Date): number {
+  const end = new Date(`${iso}T23:59:59`).getTime();
+  return Math.ceil((end - now.getTime()) / 86_400_000);
+}
+
+export type CountdownParts = {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+};
+
+/**
+ * Descompone lo que falta hasta el cierre. Vencida la fecha devuelve todo a
+ * cero (nunca negativos): quien decide ocultar la oferta es `PricingPlans`,
+ * aquí solo se cuenta.
+ */
+export function countdownParts(iso: string, now: Date): CountdownParts {
+  const ms = Math.max(0, new Date(`${iso}T23:59:59`).getTime() - now.getTime());
+  const total = Math.floor(ms / 1000);
+  return {
+    days: Math.floor(total / 86_400),
+    hours: Math.floor(total / 3_600) % 24,
+    minutes: Math.floor(total / 60) % 60,
+    seconds: total % 60,
+  };
+}
 
 /* ─────────────────────────────── §10 FAQ ────────────────────────────── */
 

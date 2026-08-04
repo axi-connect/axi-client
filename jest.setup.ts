@@ -43,6 +43,42 @@ if (!('DOMRect' in globalThis)) {
   } as unknown as typeof globalThis.DOMRect
 }
 
+/**
+ * framer-motion las necesita: `matchMedia` para `useReducedMotion` (y
+ * `TiltCard`, que además consulta `(hover: none)`) e `IntersectionObserver`
+ * para el `whileInView` de `Reveal`. Sin estos, cualquier test que renderice
+ * una sección de la landing revienta antes del primer assert.
+ *
+ * Los defaults describen el navegador de referencia: sin preferencia de
+ * movimiento reducido y con puntero fino.
+ */
+if (!('matchMedia' in globalThis)) {
+  globalThis.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof globalThis.matchMedia
+}
+
+if (!('IntersectionObserver' in globalThis)) {
+  globalThis.IntersectionObserver = class IntersectionObserver {
+    root = null
+    rootMargin = ''
+    thresholds: readonly number[] = []
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords(): IntersectionObserverEntry[] {
+      return []
+    }
+  } as unknown as typeof globalThis.IntersectionObserver
+}
+
 // Radix las usa para el foco y el scroll dentro de los overlays.
 Element.prototype.scrollIntoView ??= function scrollIntoView() {}
 Element.prototype.releasePointerCapture ??= function releasePointerCapture() {}

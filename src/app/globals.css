@@ -335,6 +335,98 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-accordion-down { animation: accordion-down 0.2s ease-out; }
 .animate-accordion-up { animation: accordion-up 0.2s ease-out; }
 
+/* Glass SIN `backdrop-filter`, para superficies que viven dentro de un
+ * contenedor con transform 3D (las fichas del countdown dentro de la tarjeta
+ * de fundadores, que lleva tilt).
+ *
+ * Ahí el filtro se rompe de dos maneras: el backdrop que captura deja de ser
+ * el fondo de la tarjeta —la superficie se desatura y las cifras pierden su
+ * color— y recalcular un blur de 16px por ficha en cada frame del bucle rAF
+ * del tilt hunde el frame rate, así que el reloj se percibe congelado.
+ *
+ * El blur no aportaba nada: detrás solo hay un degradado estático que la
+ * propia app controla (DESIGN-SYSTEM §5.2). Mismo fondo, borde y sombra que
+ * `.glass` — el aspecto es idéntico. */
+.glass-flat {
+  background-color: color-mix(in srgb, var(--color-background) 65%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  box-shadow: var(--shadow-float);
+}
+
+/* -------- Franja de fundadores (landing §9): isla oscura de marca --------
+ *
+ * La tarjeta es un momento de marca (DESIGN §3.2 reserva el tricolor para
+ * eso), y se mantiene oscura en ambos temas a propósito: el corte de
+ * luminosidad contra la página es lo que le da presencia, y garantiza que las
+ * cifras ámbar y la barra neón se lean igual en light y en dark.
+ *
+ * `.theme-dark-island` acompaña siempre a `.dark`: la capa 1 (`--background`,
+ * `--axi-*`) sí se re-resuelve al anidar, pero los tokens de capa 2 los emitió
+ * `@theme inline` ya sustituidos en :root, así que las clases CSS crudas que
+ * los consumen (`.glass`) se quedarían con el valor del tema de la página.
+ * Aquí se re-derivan con la MISMA fórmula del bloque `@theme`. */
+.theme-dark-island {
+  --color-background: var(--background);
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+}
+
+/* Fondo: las tres cintas del isotipo como halos difusos sobre el negro de
+   marca. Mismo lenguaje que el hero (elipses ancladas a los bordes, en srgb,
+   poco saturadas), no un anillo radial centrado. */
+.bg-founders-slab {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(80% 130% at 0% 100%, color-mix(in srgb, var(--axi-brand) 26%, transparent), transparent 62%),
+    radial-gradient(70% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand-2) 18%, transparent), transparent 58%),
+    radial-gradient(65% 130% at 62% 105%, color-mix(in srgb, var(--axi-amber) 12%, transparent), transparent 60%),
+    radial-gradient(60% 120% at 100% 0%, color-mix(in srgb, var(--axi-violet) 14%, transparent), transparent 62%);
+}
+
+/* Barra de cupos: filamento de neón coral→ámbar con halo propio y una cabeza
+   encendida en la punta. El halo va en `box-shadow` (no en un blur aparte)
+   para que no cueste una capa de composición extra. */
+.bar-neon {
+  background-image: linear-gradient(90deg, var(--axi-brand-2), var(--axi-brand) 45%, var(--axi-amber));
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--axi-brand) 55%, transparent),
+    0 0 16px color-mix(in srgb, var(--axi-amber) 30%, transparent);
+}
+
+.bar-neon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  transform: translate(45%, -50%);
+  border-radius: 9999px;
+  background-color: var(--axi-amber);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--axi-amber) 85%, transparent);
+}
+
+/* -------- Split-flap del countdown de fundadores (landing §9) --------
+   Tablero de aeropuerto: la mitad superior de la cifra vieja se dobla hacia
+   abajo y, cuando desaparece, la mitad inferior de la nueva sube a su sitio.
+   Las dos mitades giran sobre la costura (transform-origin en el borde que
+   comparten) y el retardo de la segunda es exactamente la duración de la
+   primera: si se solaparan, se verían las dos hojas a la vez.
+
+   En CSS y no en framer-motion (DESIGN-SYSTEM §6): es transform puro, corre en
+   el compositor y no se congela mientras algo pesado hidrata. */
+@keyframes flip-top {
+  from { transform: rotateX(0); }
+  to { transform: rotateX(-90deg); }
+}
+
+@keyframes flip-bottom {
+  from { transform: rotateX(90deg); }
+  to { transform: rotateX(0); }
+}
+
+.animate-flip-top { animation: flip-top 0.14s ease-in forwards; }
+.animate-flip-bottom { animation: flip-bottom 0.14s 0.14s ease-out both; }
+
 /* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
    `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja
    intensidad. El splash cae a crossfade puro (el provider maneja la rama JS). */
@@ -344,6 +436,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .animate-mascot-bob, .animate-hero-float { animation: none; }
   .animate-logo-marquee { animation: none; }
   .animate-accordion-down, .animate-accordion-up { animation: none; }
+  /* El countdown sigue contando: solo desaparece el doblez (la cifra cambia
+     de golpe). El componente además no monta las hojas con reduced-motion. */
+  .animate-flip-top, .animate-flip-bottom { animation: none; }
   /* Entradas/salidas de Radix (popover, dropdown, sheet): sin animación,
      los elementos aparecen/desaparecen al instante. */
   .animate-in, .animate-out { animation: none; }

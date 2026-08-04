@@ -49,13 +49,16 @@ index_repository(repo_path="/home/davela/dev/axi/axi-client", mode="full", persi
 
 El artefacto `.codebase-memory/graph.db.zst` está en **`.gitignore`**: cada dev indexa en local (toma segundos). No se versiona.
 
+> ⚠️ **Re-indexar BORRA el ADR del grafo.** Tras `index_repository`, `adr_present` vuelve a `false` y `manage_adr(mode='get')` queda vacío. Si el ADR tiene información que no está en este documento, cópiala antes de re-indexar y vuelve a escribirla después.
+
 ### 0.3 Gotchas de este grafo (verificados)
 
-- **Los nodos `Route` NO son los endpoints del backend.** Los 172 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
-- **Las llamadas reales al API son aristas `HTTP_CALLS`** (189). Filtra `callee STARTS WITH 'http.'` para quedarte con las **159 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
+- **Los nodos `Route` NO son los endpoints del backend.** Los 252 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
+- **Las llamadas reales al API son aristas `HTTP_CALLS`** (263). Filtra `callee STARTS WITH 'http.'` para quedarte con las **216 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
 - Los `url_path` de esas aristas son **relativos al prefijo `/api/v1`** (p.ej. `/orders/:id/cancel`), porque así los expresa `HttpClient` (§7.1).
 - **No existen aristas cross-repo automáticas con `axi-server`**: `index_repository(mode='cross-repo-intelligence')` devuelve 0 y es un límite estructural, no un error de configuración — el BFF proxy interpone la indirección y el backend no expone nodos `Route` reales. **Puente manual:** toma el `url_path` del frontend y busca en el backend el `@Controller` cuyo prefijo coincida (`MATCH (c:Class) WHERE c.decorators CONTAINS 'Controller'`). La fuente de verdad del contrato sigue siendo `axi-server/openapi/openapi.json`.
-- Hotspots de fan-in de este repo: `cn` (205), `errorMessage` (86), `showAlert` (43), `HttpClient.post`/`get` (20/19). Tocarlos tiene alcance amplio.
+- **Los contadores de `boundaries` de `get_architecture` tienen ruido de resolución.** Incluyen invocaciones de *props callback* (`onSubmit`, `isVisible`, `fetcher`, `onDelete`) que van de `shared` a `modules` **por diseño** — es la inversión de control de los componentes dirigidos por configuración (§12) — y falsos positivos por nombres genéricos (el `fetch` de `HttpClient` resuelto contra el `fetch` de un store, el `render` de Testing Library). **Antes de declarar una violación de las reglas de §3.3, confírmalo con aristas `IMPORTS`, no con `CALLS`.** En el índice actual hay **0 aristas `IMPORTS` de `core`/`shared` → `modules`**: la regla se sostiene.
+- Hotspots de fan-in de este repo: `cn` (272), `errorMessage` (140), `showAlert` (96), `useAlert` (72), `HttpClient.post`/`get` (33/26). Tocarlos tiene alcance amplio.
 
 ---
 
