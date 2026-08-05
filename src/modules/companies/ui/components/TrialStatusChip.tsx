@@ -7,9 +7,10 @@ import { useTrialStatus } from "@/modules/companies/infrastructure/hooks/use-tri
 /**
  * Píldora permanente del trial en el `PrivateHeader` («Prueba: N días»).
  * Se inyecta como `actions` desde `(private)/layout.tsx` (shared no importa
- * de modules, §3.3) y cabe en el `py-2` del header: no altera los 52px de
- * los que dependen los layouts full-bleed. Tono warning en los últimos 2
- * días; el banner `TrialCountdownBanner` escala el aviso en ese tramo.
+ * de modules, §3.3). Su alto (`h-7`) cabe en el del header sin ampliarlo, y
+ * de todos modos ninguna vista depende ya de esa medida: el shell reparte la
+ * altura por flex (DESIGN-SYSTEM §4.2). Tono warning en los últimos 2 días;
+ * el banner `TrialCountdownBanner` escala el aviso en ese tramo.
  */
 export function TrialStatusChip() {
   const { active, daysLeft, ending } = useTrialStatus()

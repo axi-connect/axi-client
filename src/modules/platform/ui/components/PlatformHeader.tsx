@@ -71,7 +71,9 @@ export function PlatformHeader() {
   }));
 
   return (
-    <div className="glass sticky top-0 z-40 py-2">
+    // Sin sticky/z propios: los aporta el grupo pegado de PlatformShell, que
+    // agrupa header + SessionBanner. Sin altura fija a propósito.
+    <div className="glass py-2">
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">
         <SidebarTrigger />
         <nav aria-label="Breadcrumb" className="min-w-0 text-sm text-muted-foreground">

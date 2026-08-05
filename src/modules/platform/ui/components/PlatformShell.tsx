@@ -13,19 +13,27 @@ import { SessionBanner } from "./SessionBanner";
 
 export function PlatformShell({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
+    // Marco fijo topado al viewport: el documento nunca scrollea. Mismo
+    // reparto de altura por flex que el shell privado (DESIGN-SYSTEM §4.2):
+    // ninguna vista resta la altura del header.
+    <SidebarProvider className="h-dvh min-h-0 overflow-hidden">
       <PlatformSidebar />
-      <main data-app-scroll className="h-svh flex-1 overflow-y-auto sidebar-scroll">
-        <PlatformHeader />
-        <SessionBanner />
+      {/* ÚNICO contenedor de scroll de la consola */}
+      <div data-app-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto sidebar-scroll">
+        {/* Header + banner de sesión pegados como un solo grupo: el contenido
+            pasa por detrás del glass y el banner no calcula el offset. */}
+        <div className="sticky top-0 z-40 shrink-0">
+          <PlatformHeader />
+          <SessionBanner />
+        </div>
         <SidebarInset>
-          <div className="min-h-[calc(100vh-52px)] w-full rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted">
+          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted">
             {/* Centrado estándar del contenido (DESIGN-SYSTEM §4.2): las
                 páginas no añaden padding propio. */}
             <div className="mx-auto w-full max-w-7xl p-4 md:p-6">{children}</div>
           </div>
         </SidebarInset>
-      </main>
+      </div>
       <ReLoginModal />
     </SidebarProvider>
   );

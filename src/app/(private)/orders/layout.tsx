@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
 
 /**
- * Shell del panel de pedidos (F11): full-bleed acotado al viewport (patrón
- * workspace, 52px = PrivateHeader). El slot @sheet renderiza el detalle como
- * RAIL derecho inline (mockup "Cart") vía la ruta interceptada
- * /orders/[orderId] — URL compartible, back cierra.
+ * Shell del panel de pedidos (F11): full-bleed acotado a la altura disponible
+ * (patrón workspace). El slot @sheet renderiza el detalle como RAIL derecho
+ * inline (mockup "Cart") vía la ruta interceptada /orders/[orderId] — URL
+ * compartible, back cierra.
+ *
+ * `min-h-0 flex-1` en vez de `calc(100svh - alto del header)`: la altura la
+ * reparte el flex del shell privado (DESIGN-SYSTEM §4.2).
  */
 export default function OrdersLayout({
   children,
@@ -14,7 +17,7 @@ export default function OrdersLayout({
   sheet: ReactNode;
 }) {
   return (
-    <div className="flex w-full h-[calc(100svh-52px)] min-h-0 overflow-hidden">
+    <div className="flex min-h-0 w-full flex-1 overflow-hidden">
       <div className="min-w-0 flex-1 overflow-hidden">{children}</div>
       {sheet}
     </div>

@@ -46,7 +46,10 @@ export default async function PrivateLayout({
     .filter((code) => code.length > 0);
 
   return (
-    <SidebarProvider defaultOpen={sidebarOpen}>
+    // Marco fijo del panel, topado al viewport: el documento nunca scrollea.
+    // `min-h-0` anula el `min-h-svh` del primitivo (misma propiedad, gana por
+    // orden en tailwind-merge), que de otro modo dejaría crecer el wrapper.
+    <SidebarProvider defaultOpen={sidebarOpen} className="h-dvh min-h-0 overflow-hidden">
       {/* Notifica al splash post-login que la app ya está montada */}
       <AppReadySignal />
       {/* Identidad del tenant (logo/nombre de empresa): composición desde la
@@ -56,25 +59,34 @@ export default async function PrivateLayout({
         initialItems={navigation}
         defaultOpenCodes={openCodes}
       />
-      {/* Contenedor de scroll del panel privado (mismo patrón que el layout
-          público): html/body llevan overflow hidden, así que el scroll vive
-          aquí, con la scrollbar de marca. El header sticky se ancla a él. */}
-      <main data-app-scroll className="h-svh flex-1 overflow-y-auto sidebar-scroll">
-        {/* La campana monta el realtime de notificaciones para todo el panel;
-            el chip de trial es permanente y no altera los 52px del header */}
-        <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} />
-        {/* Últimos 2 días de trial: banner sticky en flujo (empuja contenido,
-            no rompe los calc de 52px del workspace full-bleed) */}
-        <TrialCountdownBanner />
+      {/* ÚNICO contenedor de scroll del panel, con la scrollbar de marca.
+          Es `flex-col` a propósito: el grupo pegado de arriba consume su altura
+          REAL y `SidebarInset` se queda con el resto vía `flex-1`. Así ninguna
+          vista tiene que restar la altura del header — restarla a mano (52px
+          contra un header de 54px) era la causa del doble scroll.
+          Ver DESIGN-SYSTEM §4.2. */}
+      <div data-app-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto sidebar-scroll">
+        {/* Header y banner pegados como un solo grupo: el contenido sigue
+            pasando por detrás del glass al scrollear (DESIGN §5.1) y el banner
+            no necesita conocer la altura del header para colocarse debajo. */}
+        <div className="sticky top-0 z-40 shrink-0">
+          {/* La campana monta el realtime de notificaciones para todo el panel;
+              el chip de trial es permanente */}
+          <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} />
+          {/* Últimos 2 días de trial: en flujo, empuja el contenido */}
+          <TrialCountdownBanner />
+        </div>
         <SidebarInset>
           {/* Superficie de marca a ancho completo; el centrado del contenido
               (max-w + gutters) lo aporta el layout del grupo (content). Las
-              vistas de aplicación (workspace) son full-bleed sobre ella. */}
-          <div className="w-full min-h-[calc(100vh-52px)] rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted">
+              vistas de aplicación (workspace) son full-bleed sobre ella.
+              `flex-1` sin `min-h-0`: rellena cuando el contenido es corto y
+              CRECE cuando es largo (su min-height auto es lo que lo permite). */}
+          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted">
             {children}
           </div>
         </SidebarInset>
-      </main>
+      </div>
     </SidebarProvider>
   );
 }

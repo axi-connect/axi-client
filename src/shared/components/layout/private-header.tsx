@@ -42,7 +42,11 @@ export function PrivateHeader({ actions }: PrivateHeaderProps) {
 		// El glass ocupa todo el ancho; el contenido del header se centra con el
 		// mismo max-w + gutters que el contenido de página para que el
 		// breadcrumb quede alineado con las vistas del grupo (content).
-		<div className="glass sticky top-0 z-40 py-2">
+		//
+		// Sin `sticky`/`z` propios: los aporta el grupo pegado del layout, que
+		// agrupa header + banner de trial. Y SIN altura fija a propósito —
+		// ninguna vista debe depender de cuánto mide (DESIGN-SYSTEM §4.2).
+		<div className="glass py-2">
 			<div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">
 			<Tooltip>
 				<TooltipTrigger asChild>

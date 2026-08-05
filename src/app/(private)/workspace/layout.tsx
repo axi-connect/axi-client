@@ -25,14 +25,14 @@ export default function WorkspacesLayout({ children, modal }: { children: ReactN
   }, [])
 
   return (
-    // Vista de aplicación full-bleed acotada al viewport: 52px = altura del
-    // PrivateHeader (mismo valor que asume el shell privado). Con la altura
-    // topada aquí, el ÚNICO scroll de cada área es el interno (timeline,
-    // lista, canales) — sin scroll de página.
-    <div className="flex w-full h-[calc(100svh-52px)] min-h-0 overflow-hidden">
-      {/* min-h-0 neutraliza el min-h-svh base del SidebarProvider anidado
-          (causa del desborde de ~52px): la columna de canales queda topada
-          y su SidebarContent scrollea internamente. Solo inline en lg+. */}
+    // Vista de aplicación full-bleed acotada a la altura disponible, que
+    // reparte el flex del shell privado (DESIGN-SYSTEM §4.2) — nada de restar
+    // la altura del header a mano. Con la altura topada aquí, el ÚNICO scroll
+    // de cada área es el interno (timeline, lista, canales).
+    <div className="flex min-h-0 w-full flex-1 overflow-hidden">
+      {/* min-h-0 neutraliza el min-h-svh base del SidebarProvider anidado: la
+          columna de canales queda topada y su SidebarContent scrollea
+          internamente. Solo inline en lg+. */}
       <SidebarProvider className="hidden w-max h-full min-h-0 lg:flex">
         <WorkspaceSidebar />
       </SidebarProvider>

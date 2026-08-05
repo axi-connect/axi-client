@@ -138,6 +138,26 @@ Escala Tailwind estándar (base 4px). Convenciones:
 
 **Ancho de contenido (panel privado):** las **superficies** (fondo degradado del panel, header glass) ocupan siempre el **100%** del ancho disponible; el **contenido** se centra con `mx-auto max-w-7xl` + gutters `p-4 md:p-6`. Ese centrado lo aporta el layout del route group `(content)` (`src/app/(private)/(content)/layout.tsx`) y el wrapper interno del `PrivateHeader` — **las páginas no añaden padding de página propio** (los skeletons de `features/loading/` tampoco). Las vistas de aplicación (`workspace/inbox`) viven fuera del grupo `(content)` y son **full-bleed**: aprovechan todo el ancho sobre la superficie.
 
+**Propiedad del scroll (alto del panel privado y de `/platform`).** Cada superficie tiene **un solo** contenedor scrolleable, marcado `[data-app-scroll]`. La cadena es fija:
+
+```
+SidebarProvider          h-dvh min-h-0 overflow-hidden          ← marco topado al viewport
+└ div[data-app-scroll]   flex min-h-0 flex-1 flex-col overflow-y-auto   ← ÚNICO scroller
+  ├ div                  sticky top-0 z-40 shrink-0             ← header + banners, juntos
+  └ SidebarInset         flex-1                                 ← toma la altura restante
+    └ superficie         flex flex-1 flex-col                   (sin min-h-0: debe poder crecer)
+      └ vista full-bleed flex min-h-0 flex-1 overflow-hidden
+```
+
+Reglas que se derivan de ahí:
+
+- **Nunca `calc(100svh - <alto del header>)`.** Restar la altura del header a mano es el defecto que produjo el doble scroll de todo el panel: el header medía **54px** reales (`py-2` + `size-9` de la campana + los 2px de borde de `.glass`) y seis archivos asumían **52px**, así que el scroller desbordaba 2px y pintaba una barra fantasma junto a la del contenido. La altura la reparte flex: el grupo pegado es `shrink-0` y consume su alto real, y el hermano de abajo toma el resto con `flex-1`.
+- **El header y los banners viven DENTRO del scroller**, como un único grupo `sticky top-0 shrink-0`. Es lo que mantiene el blur-through del glass (§5.1): el contenido sigue pasando por detrás del cristal al scrollear. No sacarlos fuera.
+- **El header no declara altura fija**, a propósito: nada debe depender de cuánto mide.
+- **`min-h-0` solo en los contenedores que deben encogerse** (el marco y el scroller). `SidebarInset` y la superficie conservan su `min-height: auto`, que es lo que les permite **crecer** con contenido largo; ponerles `min-h-0` recorta el contenido.
+- **`flex-1`, nunca porcentajes**, en la superficie y en las vistas full-bleed: `SidebarInset` tiene altura `auto` y un `min-h-full` contra un padre `auto` resuelve a 0.
+- Los scrollers internos de las vistas (tablas, rails, columnas kanban, lista del inbox) siguen usando `min-h-0 flex-1 overflow-y-auto` y son el único scroll de su área.
+
 ### 4.3 Elevación (sombras)
 
 | Token | Receta | Uso |

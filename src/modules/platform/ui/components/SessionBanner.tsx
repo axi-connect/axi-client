@@ -20,7 +20,7 @@ export function SessionBanner() {
   return (
     <div
       role="alert"
-      className="sticky top-[52px] z-30 flex items-center justify-between gap-3 border-b border-warning/30 bg-warning/10 px-4 py-2 md:px-6"
+      className="flex items-center justify-between gap-3 border-b border-warning/30 bg-warning/10 px-4 py-2 md:px-6"
     >
       <p className="flex items-center gap-2 text-sm text-foreground">
         <TriangleAlert aria-hidden="true" className="size-4 shrink-0 text-warning" />
