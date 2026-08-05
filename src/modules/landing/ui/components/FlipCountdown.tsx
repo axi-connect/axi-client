@@ -30,7 +30,7 @@ export function FlipCountdown({
   className,
 }: {
   deadline: string;
-  /** Fecha ya formateada («31 de octubre»), para el pie y el texto accesible. */
+  /** Fecha ya formateada (día y mes, sin año), para el pie y el texto accesible. */
   deadlineLabel: string;
   className?: string;
 }) {

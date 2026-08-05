@@ -493,18 +493,33 @@ export const CASES = {
  *                desaparece y las tarjetas muestran el precio de lista sin
  *                tocar nada más. Fallo seguro ante un olvido.
  */
+/** Cupos totales del ciclo. Fuente única: la prosa de abajo lo compone. */
+const FOUNDERS_SLOTS = 20;
+/** Fracción de descuento sobre el precio de lista (0.4 = −40 %). */
+const FOUNDERS_DISCOUNT = 0.4;
+/**
+ * Etiqueta del descuento, derivada de la fracción. El signo es U+2212 MINUS
+ * SIGN (−), no un guion ASCII: es el que compone tipográficamente con las
+ * cifras. Se deriva para que `headline` y `discountBadge` no puedan
+ * desincronizarse de `FOUNDERS_DISCOUNT`.
+ */
+const FOUNDERS_DISCOUNT_LABEL = `−${Math.round(FOUNDERS_DISCOUNT * 100)} %`;
+
 export const FOUNDERS = {
   kicker: "Programa Fundadores",
-  slots: 20,
+  slots: FOUNDERS_SLOTS,
   claimed: 13,
-  /** Fracción de descuento sobre el precio de lista (0.4 = −40 %). */
-  discount: 0.4,
-  /** Cierre del programa, ISO sin hora: cuenta hasta el final de ese día. */
-  deadline: "2026-09-31",
-  headline: "−40 % de descuento para las primeras 20 empresas.",
+  discount: FOUNDERS_DISCOUNT,
+  /**
+   * Cierre del programa, ISO sin hora: cuenta hasta el final de ese día.
+   * Se valida al parsearse (`parseIsoDate`): una fecha que no existe en el
+   * calendario rompe el build en vez de rodar en silencio al día siguiente.
+   */
+  deadline: "2026-09-30",
+  headline: `${FOUNDERS_DISCOUNT_LABEL} de descuento para las primeras ${FOUNDERS_SLOTS} empresas.`,
   promise:
     "Tu tarifa queda congelada mientras sigas con nosotros. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
-  discountBadge: "−40 % precio fundador",
+  discountBadge: `${FOUNDERS_DISCOUNT_LABEL} precio fundador`,
   countdownLabel: "Cierra en",
   soldOut: "Cupos agotados",
   /** Etiquetas de las fichas de la cuenta atrás. */
@@ -649,27 +664,55 @@ export function sbsTier(id: SbsTierId) {
   return SBS_TIERS.find((tier) => tier.id === id) ?? SBS_TIERS[0];
 }
 
-/** «31 de octubre de 2026» — con año, para el pie de la cuenta atrás. */
+/**
+ * Parsea una fecha `YYYY-MM-DD` del content **validando que exista**.
+ *
+ * `new Date("2026-09-31T00:00:00")` NO lanza error: el parser laxo de V8 rueda
+ * la fecha al 1 de octubre. Un dato imposible viajaba así hasta producción,
+ * publicando una fecha equivocada y adelantando el cierre del programa. La
+ * única forma de detectarlo es comparar los componentes DESPUÉS de construir:
+ * si el día no sobrevivió al viaje, la fecha no existía.
+ *
+ * Se construye en hora **local** y sin sufijo `Z` a propósito: así el servidor
+ * (UTC) y el navegador (Bogotá) formatean el MISMO día y no hay mismatch de
+ * hidratación.
+ *
+ * Lanza en vez de degradar: la home se prerenderiza estática, así que un dato
+ * inválido rompe `next build` y nunca llega a un visitante.
+ */
+function parseIsoDate(iso: string, endOfDay = false): Date {
+  const [year, month, day] = iso.split("-").map(Number);
+  const date = endOfDay
+    ? new Date(year, month - 1, day, 23, 59, 59)
+    : new Date(year, month - 1, day);
+
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    throw new Error(
+      `Fecha inválida en el content de la landing: "${iso}" no existe en el calendario.`,
+    );
+  }
+  return date;
+}
+
+/** Día, mes y año en español («30 de septiembre de 2026»), para el pie de la cuenta atrás. */
 export function formatDeadlineLong(iso: string): string {
   return new Intl.DateTimeFormat("es-CO", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  }).format(new Date(`${iso}T00:00:00`));
+  }).format(parseIsoDate(iso));
 }
 
-/** «31 de octubre» — sin año, que ya se sobreentiende en el ciclo en curso. */
+/** Día y mes en español, sin año — se sobreentiende en el ciclo en curso. */
 export function formatDeadline(iso: string): string {
-  // Sin sufijo Z: se interpreta en hora local, así el servidor (UTC) y el
-  // navegador (Bogotá) formatean el MISMO día y no hay mismatch de hidratación.
   return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long" }).format(
-    new Date(`${iso}T00:00:00`),
+    parseIsoDate(iso),
   );
 }
 
 /** Días que faltan para el cierre. Solo en cliente: depende del reloj. */
 export function daysUntil(iso: string, now: Date): number {
-  const end = new Date(`${iso}T23:59:59`).getTime();
+  const end = parseIsoDate(iso, true).getTime();
   return Math.ceil((end - now.getTime()) / 86_400_000);
 }
 
@@ -686,7 +729,7 @@ export type CountdownParts = {
  * aquí solo se cuenta.
  */
 export function countdownParts(iso: string, now: Date): CountdownParts {
-  const ms = Math.max(0, new Date(`${iso}T23:59:59`).getTime() - now.getTime());
+  const ms = Math.max(0, parseIsoDate(iso, true).getTime() - now.getTime());
   const total = Math.floor(ms / 1000);
   return {
     days: Math.floor(total / 86_400),

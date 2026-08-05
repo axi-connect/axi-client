@@ -123,6 +123,12 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "crm/import_invalid_file": "El archivo no es un CSV válido. Revisa las columnas y el formato",
   "crm/import_too_large": "El archivo supera el límite (10 MB / 20.000 filas)",
   "crm/export_invalid_filters": "Los filtros de la exportación no son válidos",
+  // Formularios de captura (F10)
+  "forms/not_found": "El formulario ya no existe",
+  "forms/invalid_definition":
+    "La definición del formulario no es válida: revisa códigos, tipos y opciones",
+  // No sale de /forms (lo lanzan las tools de cierre); se mapea para no mostrar el detail crudo
+  "forms/invalid_data": "Los datos capturados no cumplen el formulario",
   // Calidad (consola platform) — quality_frontend_implementation_plan.md.
   // Los 409/422 con `details` (tenant_not_eligible, spend_cap_exceeded) se
   // enriquecen en la UI con los helpers de domain/quality-runs.ts.
@@ -165,6 +171,11 @@ export function errorMessage(error: unknown, fallback = "Ocurrió un error inesp
  * Mapea los issues de `validation/failed` (`errors[]` con `path` de Zod del
  * backend) a los campos del form RHF. Devuelve true si aplicó al menos uno
  * (la UI puede omitir el toast general en ese caso).
+ *
+ * Los índices numéricos del path se conservan: un issue en
+ * `["fields", 3, "code"]` produce `"fields.3.code"`, que es exactamente el
+ * nombre que usa `useFieldArray`. Filtrarlos daría `"fields.code"`, un campo
+ * inexistente, y el error se perdería en silencio.
  */
 export function applyServerValidation<TValues extends FieldValues>(
   error: unknown,
@@ -174,7 +185,7 @@ export function applyServerValidation<TValues extends FieldValues>(
 
   let applied = false;
   for (const issue of error.validationIssues) {
-    const field = issue.path?.filter((p) => typeof p === "string").join(".");
+    const field = issue.path?.map(String).join(".");
     if (!field) continue;
     form.setError(field as Path<TValues>, { type: "server", message: issue.message });
     applied = true;

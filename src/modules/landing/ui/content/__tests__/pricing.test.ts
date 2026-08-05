@@ -7,6 +7,7 @@ import {
   daysUntil,
   formatCop,
   formatDeadline,
+  formatDeadlineLong,
   founderCop,
   foundersRemaining,
   sbsTier,
@@ -80,6 +81,36 @@ describe("cupos y fecha de cierre", () => {
     // daysUntil redondea hacia arriba (cuenta el día en curso); countdownParts
     // trunca, porque las horas sueltas van en su propia ficha.
     expect(daysUntil("2026-10-31", now)).toBe(countdownParts("2026-10-31", now).days + 1)
+  })
+})
+
+describe("validación de la fecha de cierre", () => {
+  // Un "2026-09-31" NO lanza error en JS: el parser laxo de V8 lo rueda al 1 de
+  // octubre. Así se publicó una vez una fecha equivocada que además adelantaba
+  // el cierre del programa. Estas pruebas son la red que faltaba.
+  const IMPOSSIBLE = ["2026-09-31", "2026-02-30", "2026-04-31", "2026-13-01"]
+
+  it.each(IMPOSSIBLE)("rechaza %s en vez de rodar al día siguiente", (iso) => {
+    expect(() => formatDeadline(iso)).toThrow(/no existe en el calendario/)
+    expect(() => formatDeadlineLong(iso)).toThrow(/no existe en el calendario/)
+    expect(() => daysUntil(iso, new Date("2026-01-01T10:00:00"))).toThrow(
+      /no existe en el calendario/,
+    )
+    expect(() => countdownParts(iso, new Date("2026-01-01T10:00:00"))).toThrow(
+      /no existe en el calendario/,
+    )
+  })
+
+  it("acepta el último día de un mes de 30 y un 29 de febrero bisiesto", () => {
+    expect(formatDeadline("2026-09-30")).toBe("30 de septiembre")
+    // 2028 sí es bisiesto: el guard no debe pasarse de estricto.
+    expect(formatDeadline("2028-02-29")).toBe("29 de febrero")
+  })
+
+  it("FOUNDERS.deadline es una fecha real del calendario", () => {
+    // La aserción que habría atrapado el bug el día que se introdujo, y la que
+    // protege cada renovación del ciclo del programa.
+    expect(() => formatDeadlineLong(FOUNDERS.deadline)).not.toThrow()
   })
 })
 

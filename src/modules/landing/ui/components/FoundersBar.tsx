@@ -59,7 +59,10 @@ export function FoundersBar() {
                   style={{ width: `${takenRatio * 100}%` }}
                 />
               </div>
-              <p className="shrink-0 font-mono text-xs tabular-nums">
+              {/* El testid da un asidero al contador: el <p> envuelve dos
+                  <span>, así que no tiene nodos de texto directos y
+                  `getByText` no puede matchear la frase completa. */}
+              <p data-testid="founders-slots" className="shrink-0 font-mono text-xs tabular-nums">
                 {remaining > 0 ? (
                   <>
                     <span className="text-foreground font-semibold">{taken}</span>
