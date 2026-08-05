@@ -3035,25 +3035,18 @@ export interface components {
         UpdateRolePermissionsDto: {
             permission_codes: string[];
         };
+        NavigationDto__schema0: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            icon: string | null;
+            path: string | null;
+            sort_order: number;
+            children: components["schemas"]["NavigationDto__schema0"][];
+        };
         NavigationDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                code: string;
-                name: string;
-                icon: string | null;
-                path: string;
-                sort_order: number;
-                children: {
-                    /** Format: uuid */
-                    id: string;
-                    code: string;
-                    name: string;
-                    icon: string | null;
-                    path: string;
-                    sort_order: number;
-                }[];
-            }[];
+            data: components["schemas"]["NavigationDto__schema0"][];
         };
         CompanyDto: {
             /** Format: uuid */

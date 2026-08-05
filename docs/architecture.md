@@ -251,7 +251,18 @@ Estas reglas son la política del proyecto; el objetivo es hacerlas cumplir con 
 
 - **`components/ui/`** — primitivos shadcn/ui + Radix (§11).
 - **`components/features/`** — componentes complejos reutilizables (§12).
-- **`components/layout/`** — `sidebar/` (sistema completo + `AppSidebar` que lee `/api/auth/sidebar`, con `SidebarNavSkeleton` mientras carga; recibe la identidad del tenant vía prop `identity` inyectada desde la capa app — mismo patrón que `PrivateHeader actions` —, y el footer expone el menú de cuenta con "Cerrar sesión" → modal interceptado `/auth/logout`), `site/` (landing), `private-header.tsx`.
+- **`components/layout/`** — `sidebar/` (sistema completo + `AppSidebar`), `site/` (landing), `private-header.tsx`.
+
+**Sidebar del tenant — navegación jerárquica.** El menú es un **árbol recursivo** que llega de `/me/navigation` (contrato en `axi-server/docs/plans/integracion_frontend.md`); hoy el seed usa 3 niveles. Piezas:
+
+  - **`nav-tree.ts`** — `mapNavigation()`: ordena por `sort_order` en cada nivel, aplica `resolveNavPath`, resuelve el icono lucide **solo en el nivel 0** (en los subniveles la indentación y la línea guía sustituyen al icono) y **poda** los nodos sin ruta navegable y sin hijos visibles. Módulo puro, testeado aislado.
+  - **`nav-active.ts`** — `findActiveTrail()`: devuelve el rastro de `code` del ancestro al activo, ganando la URL **más específica** que prefija el `pathname` (match por segmento, `url + "/"`, para que `/dashboard` no se active en `/dashboard-legacy`). El último código es el activo pleno; los anteriores son ancestros y se pintan distinto.
+  - **`components/nav-item.tsx`** — fila recursiva. Un padre **con** página propia navega en la fila y pliega con un chevron aparte (`aria-expanded` + `aria-controls`, hit-area táctil propia); un **grupo puro** (`path: null`) no genera link y la fila entera es el toggle. Despliegue animado con `spring.snappy` + `useReducedMotion`.
+  - **`components/nav-flyout.tsx`** — en modo icono los subniveles están ocultos por CSS, así que los grupos abren un `Popover` glass a la derecha con sus descendientes (aplanados a dos planos). Los ítems hoja usan la prop `tooltip` de `SidebarMenuButton`.
+  - **Estado y persistencia** — los grupos abiertos viven en `AppSidebar` como un `Set` de `code` (estable entre entornos, a diferencia del uuid `id`) y se persisten en la cookie `sidebar_nav_open`; **solo se guardan códigos de grupo**, nunca hojas. La rama activa se abre siempre, aunque no esté en la cookie.
+  - **Precarga en el servidor** — `app/(private)/layout.tsx` (server component) llama a `/me/navigation` y pasa `initialItems`, más `defaultOpenCodes` y el `defaultOpen` del `SidebarProvider` leídos de cookies. Así el menú sale completo en el primer paint: sin `SidebarNavSkeleton` y sin round-trip del browser. El prefetch **falla en silencio**: si el backend está caído, `AppSidebar` cae a su fetch cliente (`/api/auth/sidebar`) y a su estado de error con reintento.
+
+  La identidad del tenant entra por la prop `identity` inyectada desde la capa app (mismo patrón que `PrivateHeader actions`, §3.3), y el footer expone el menú de cuenta con "Cerrar sesión" → modal interceptado `/auth/logout`.
 - **`api/`** — `buildListParams()` (construye `{ limit, offset, sortBy, sortDir, [searchField], ...extra }`) y `usePaginatedList()` (hook de listado paginado sobre un `fetcher` que devuelve `ApiResponse<T>`). **Reutilizar siempre** para listados en tablas.
 - **`auth/`** — `auth.types.ts` (`AuthUser`, `Tokens`, `LoginPayload`, `SessionResponse`, `COOKIE_NAMES`), `auth.hooks.ts` (`useAuth`, `useSession`) y `auth.handlers.ts` (`refreshToken()` server-side).
 
@@ -338,7 +349,7 @@ Detalles: soporta `FormData`, usa `cache: "no-store"`, `202/204` sin body devuel
 - **`api/auth/logout`** (`POST`) — best-effort al backend, borra ambas cookies.
 - **`api/auth/refresh`** (`POST`) — delega en `refreshToken()` (rota tokens).
 - **`api/auth/session`** (`GET`) — hidratación: llama `/auth/me`; si falla intenta un refresh y reintenta; devuelve `{ isAuthenticated, user? }`.
-- **`api/auth/sidebar`** (`GET`) — `/auth/me/sidebar` → `SidebarSectionDTO[]` para el `AppSidebar`.
+- **`api/auth/sidebar`** (`GET`) — `/me/navigation` → el array `data` del `NavigationDto` (árbol recursivo) para el `AppSidebar`. Es el **fallback**: el camino normal es la precarga en el layout server (§4.2).
 - **`api/auth/token`** (`GET`) — devuelve el `accessToken` crudo + `expiresAt` **solo** para el handshake de WebSocket (Socket.IO no lee cookies `HttpOnly`).
 
 ---
@@ -358,7 +369,7 @@ Detalles: soporta `FormData`, usa `cache: "no-store"`, `202/204` sin body devuel
 6. WebSocket: `WebSocketService` obtiene el JWT crudo vía `/api/auth/token` para el handshake.
 7. Logout: modal interceptado → `useAuth().logout()` → `POST /api/auth/logout` → borra cookies → `/auth/login`.
 
-**RBAC / navegación:** el sidebar se arma desde `/auth/me/sidebar` (el backend filtra por permisos del rol). El frontend no decide autorización; refleja lo que el backend autoriza. Los permisos siguen el formato `resource:action`.
+**RBAC / navegación:** el sidebar se arma desde `/me/navigation` (el backend filtra el árbol por permisos del rol y poda los grupos que quedan vacíos). El frontend no decide autorización; refleja lo que el backend autoriza. Los permisos siguen el formato `resource:action`.
 
 ### 8.1 Excepción sancionada: panel de plataforma (`/platform/*`)
 

@@ -1,21 +1,25 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { ChevronsUpDown, LogOut } from "lucide-react"
 import NavItemNode from './components/nav-item'
-import { iconFromString } from "@/core/lib/icons"
-import { resolveNavPath } from "@/core/config/routes"
+import { mapNavigation } from "./nav-tree"
+import { findActiveTrail } from "./nav-active"
 import { useSession } from '@/shared/auth/auth.hooks'
 import { Avatar } from "@/shared/components/ui/avatar"
 import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { BrandMark } from "@/shared/components/ui/brand-mark"
 import { ThemeToggle } from "@/shared/components/layout/theme-toggle"
-import { useSidebar } from "@/shared/components/layout/sidebar/core"
+import {
+  useSidebar,
+  SIDEBAR_COOKIE_MAX_AGE,
+  SIDEBAR_NAV_COOKIE_NAME,
+} from "@/shared/components/layout/sidebar/core"
 import { SidebarNavSkeleton } from "./components/nav-skeleton"
-import type { NavigationChildDTO, NavigationItemDTO, SidebarNavItem } from "./types"
+import type { NavigationNodeDTO, SidebarNavItem } from "./types"
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -36,59 +40,40 @@ import {
   SidebarGroupContent,
 } from "@/shared/components/layout/sidebar/core"
 
-/**
- * Mapea el árbol de `/me/navigation` a la forma de UI: ordena por
- * `sort_order`, resuelve iconos lucide y traduce los paths del backend a las
- * rutas del frontend. Los ítems sin UI (módulos pendientes) se filtran; un
- * padre sin hijos visibles y sin ruta propia también desaparece.
- */
-function mapNavigation(items: NavigationItemDTO[]): SidebarNavItem[] {
-  const bySortOrder = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order
-
-  const mapChild = (child: NavigationChildDTO): SidebarNavItem | null => {
-    const url = resolveNavPath(child.path)
-    if (!url) return null
-    return { id: child.id, title: child.name, url, icon: iconFromString(child.icon) }
-  }
-
-  return [...items]
-    .sort(bySortOrder)
-    .map((item): SidebarNavItem | null => {
-      const children = [...item.children]
-        .sort(bySortOrder)
-        .map(mapChild)
-        .filter((child): child is SidebarNavItem => child !== null)
-      const url = resolveNavPath(item.path)
-      if (!url && children.length === 0) return null
-      return {
-        id: item.id,
-        title: item.name,
-        url: url ?? undefined,
-        icon: iconFromString(item.icon),
-        children,
-      }
-    })
-    .filter((item): item is SidebarNavItem => item !== null)
-}
-
 type AppSidebarProps = {
   /** Identidad del tenant (logo/nombre de empresa) para el header. Se inyecta
       desde la capa app — shared no importa de modules (arquitectura §3.3). */
   identity?: React.ReactNode
+  /**
+   * Árbol precargado en el layout server. Con él el menú sale completo en el
+   * primer paint: ni skeleton ni round-trip del browser a `/api/auth/sidebar`.
+   * Si el prefetch falla llega `undefined` y se cae al fetch cliente.
+   */
+  initialItems?: NavigationNodeDTO[]
+  /** Grupos abiertos según la cookie, leída también en el server. */
+  defaultOpenCodes?: string[]
 }
 
-export function AppSidebar({ identity }: AppSidebarProps) {
+export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: AppSidebarProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { state } = useSidebar()
   const { user, status } = useSession()
-  const [loaderSidebar, setLoaderSidebar] = useState(true)
+  const [items, setItems] = useState<SidebarNavItem[]>(() =>
+    initialItems ? mapNavigation(initialItems) : [],
+  )
+  // Con árbol precargado no hay nada que cargar: el skeleton se salta.
+  const [loaderSidebar, setLoaderSidebar] = useState(initialItems === undefined)
   const [errorSidebar, setErrorSidebar] = useState(false)
-  const [items, setItems] = useState<SidebarNavItem[]>([])
   // Incrementarlo re-dispara el fetch del menú (botón "Reintentar").
   const [reloadKey, setReloadKey] = useState(0)
+  const [openCodes, setOpenCodes] = useState<Set<string>>(() => new Set(defaultOpenCodes))
 
   useEffect(() => {
     if (status !== "authenticated") return
+    // El prefetch del server ya resolvió el menú; el fetch cliente queda solo
+    // como fallback y para el botón "Reintentar".
+    if (initialItems !== undefined && reloadKey === 0) return
     let ignore = false
     async function loadSidebar() {
       try {
@@ -96,7 +81,7 @@ export function AppSidebar({ identity }: AppSidebarProps) {
         setErrorSidebar(false)
         const res = await fetch("/api/auth/sidebar", { cache: "no-store" })
         if (!res.ok) throw new Error(`sidebar ${res.status}`)
-        const data: NavigationItemDTO[] = await res.json()
+        const data: NavigationNodeDTO[] = await res.json()
         if (!ignore) setItems(mapNavigation(data))
       } catch {
         // El layout no se rompe por un fallo del sidebar; se ofrece reintento.
@@ -107,7 +92,54 @@ export function AppSidebar({ identity }: AppSidebarProps) {
     }
     loadSidebar()
     return () => { ignore = true }
-  }, [status, reloadKey])
+  }, [status, reloadKey, initialItems])
+
+  const activeTrail = useMemo(() => findActiveTrail(items, pathname), [items, pathname])
+
+  /** Códigos que son grupo (tienen hijos): los únicos que pueden estar abiertos. */
+  const groupCodes = useMemo(() => {
+    const codes = new Set<string>()
+    const walk = (nodes: SidebarNavItem[]) => {
+      for (const node of nodes) {
+        if (node.children.length > 0) {
+          codes.add(node.code)
+          walk(node.children)
+        }
+      }
+    }
+    walk(items)
+    return codes
+  }, [items])
+
+  // La rama activa se abre siempre, aunque no estuviera en la cookie: entrar
+  // por URL directa o por un redirect debe dejar el grupo visible.
+  // Solo se añaden los ANCESTROS (códigos de grupo): meter la hoja activa
+  // ensuciaría la cookie con un código por cada página visitada.
+  useEffect(() => {
+    const ancestors = activeTrail.filter((code) => groupCodes.has(code))
+    if (ancestors.length === 0) return
+    setOpenCodes((current) => {
+      const missing = ancestors.filter((code) => !current.has(code))
+      if (missing.length === 0) return current
+      const next = new Set(current)
+      for (const code of missing) next.add(code)
+      return next
+    })
+  }, [activeTrail, groupCodes])
+
+  const toggleGroup = useCallback((code: string) => {
+    setOpenCodes((current) => {
+      const next = new Set(current)
+      if (next.has(code)) {
+        next.delete(code)
+      } else {
+        next.add(code)
+      }
+      // Se persiste por `code` (estable entre entornos, a diferencia del uuid).
+      document.cookie = `${SIDEBAR_NAV_COOKIE_NAME}=${[...next].join(",")}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax`
+      return next
+    })
+  }, [])
 
   return (
     <Sidebar collapsible="icon">
@@ -138,9 +170,15 @@ export function AppSidebar({ identity }: AppSidebarProps) {
         ) : (
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu aria-label="Navegación principal">
                 {items.map((item) => (
-                  <NavItemNode key={item.id} item={item} />
+                  <NavItemNode
+                    key={item.id}
+                    item={item}
+                    activeTrail={activeTrail}
+                    openCodes={openCodes}
+                    onToggle={toggleGroup}
+                  />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>

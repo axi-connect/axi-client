@@ -10,13 +10,17 @@ import {
   Gauge,
   Home,
   Inbox,
+  Lock,
   Package,
   Plug,
   ScrollText,
+  Settings,
   Shield,
+  ShoppingBag,
   ShoppingCart,
   Target,
   Users,
+  Workflow,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -38,13 +42,19 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   gauge: Gauge,
   home: Home,
   inbox: Inbox,
+  // Los cuatro siguientes son los grupos puros del árbol jerárquico
+  // (Seguridad, Configuración, Ventas, Automatización).
+  lock: Lock,
   package: Package,
   plug: Plug,
   scroll: ScrollText,
+  settings: Settings,
   shield: Shield,
+  "shopping-bag": ShoppingBag,
   "shopping-cart": ShoppingCart,
   target: Target,
   users: Users,
+  workflow: Workflow,
   zap: Zap,
 };
 

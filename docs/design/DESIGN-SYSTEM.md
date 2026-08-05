@@ -263,6 +263,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Selección múltiple | `MultiSelect` |
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
+| Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
 
 Patrones de estado obligatorios en toda vista: **cargando** (§9.1), **vacío** (icono + frase + acción sugerida), **error** (`errorMessage(err)` + reintento).
@@ -282,6 +283,22 @@ Reglas:
 - Todo estado de carga usa tokens (light + dark), expone `role="status"` + `aria-label`, y anima solo `transform`/`opacity`.
 - **Prohibido**: animaciones Lottie para loaders, spinners ad-hoc, texto "Cargando..." suelto como único indicador.
 - El splash post-login (`SplashProvider` + `useSplash`) es el único loader de pantalla completa por encima de los layouts; ver LOADING.md §Splash.
+
+### 9.2 Navegación jerárquica del sidebar
+
+El menú del tenant es un árbol de hasta 3 niveles (contrato y piezas en arquitectura §4.2). Reglas visuales:
+
+| Estado | Tratamiento |
+|---|---|
+| **Activo** (hoja del rastro) | `bg-accent` + `text-accent-foreground` + **barra coral de 2px** a la izquierda (`before:`, `bg-brand`, `rounded-full`, 16px de alto) + `aria-current="page"` |
+| **Ancestro** del activo | Sin fondo: icono en `text-brand` y label `font-medium`. Su grupo aparece desplegado |
+| **Hover** | `bg-accent` en la fila; el chevron tiene su propio hover, porque es un target distinto |
+
+- **Un icono por nivel 0 y ninguno debajo.** En los subniveles la indentación (12px por nivel) y la línea guía (`border-l` de `SidebarMenuSub`, atenuada a `border-border/60` en nivel ≥2) sustituyen al icono. Los nombres de icono que emite el backend deben existir en el diccionario **cerrado** de `core/lib/icons.ts` o caen a `Circle`.
+- **Fila y chevron son targets separados** cuando el padre tiene página propia: la fila navega, el chevron pliega. El chevron lleva `aria-label` dinámico ("Expandir/Contraer <nombre>"), `aria-expanded`, `aria-controls` y hit-area táctil de ≥40px en móvil (`after:-inset-2 md:after:hidden`).
+- **Movimiento:** despliegue con `spring.snappy` (§6) sobre `height`/`opacity` y `overflow-hidden`; el chevron rota 200ms. Todo se anula con `useReducedMotion`. Se anima altura solo porque los grupos son de ≤8 filas — en listas grandes sigue prohibido (§6).
+- **Modo icono:** un grupo colapsado abre un flyout (`Popover`, glass + `rounded-lg` + `shadow-float`, `side="right"`) con sus descendientes; los ítems hoja usan la prop `tooltip` de `SidebarMenuButton`. Sin esto la fila de un grupo sería un click muerto, porque los subniveles llevan `group-data-[collapsible=icon]:hidden`.
+- **Sin secciones con etiqueta:** la agrupación la dan exclusivamente los padres colapsables. No se mezclan dos mecanismos de agrupación en el mismo menú.
 
 ---
 

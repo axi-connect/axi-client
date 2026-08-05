@@ -25,7 +25,13 @@ import {
 } from "@/shared/components/ui/tooltip"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+/**
+ * Grupos desplegados del menú, como lista de `code` separados por coma. Se lee
+ * en el layout server (`app/(private)/layout.tsx`) para que el primer paint ya
+ * traiga la jerarquía abierta, sin salto tras hidratar.
+ */
+export const SIDEBAR_NAV_COOKIE_NAME = "sidebar_nav_open"
+export const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
