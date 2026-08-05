@@ -40,11 +40,20 @@ export type ConversationCreatedEvent = {
   company_id: string;
 };
 
+/**
+ * Mensaje INBOUND persistido. `message` trae la vista completa (misma forma que
+ * `MessageCreatedEvent`) para que el hilo abierto lo pinte sin round-trip.
+ *
+ * Es **opcional** a propósito: durante un despliegue escalonado un backend
+ * previo emite solo el resumen. Los consumidores conservan el camino de rescate
+ * (re-fetch del timeline) para ese caso — ver `use-inbox-socket`.
+ */
 export type MessageReceivedEvent = {
   conversation_id: string;
   message_id: string;
   company_id: string;
   content_type: Schemas["EnqueuedMessageDto"]["content_type"];
+  message?: Schemas["ConversationMessagesDto"]["data"][number];
 };
 
 /**

@@ -41,6 +41,17 @@ const TRANSCRIBE_TIMEOUT_MS = 30_000
 const MEDIA_RESOLVE_DELAYS_MS = [800, 1_500, 3_000, 5_000, 8_000]
 /** Ids con un bucle de resolución en curso (evita relanzarlo por varios eventos). */
 const resolvingMedia = new Set<string>()
+/**
+ * Página que se pide al resincronizar el hilo. Cubre de sobra cualquier ráfaga
+ * entre el hueco y la recuperación.
+ */
+const MESSAGES_PAGE_SIZE = 50
+/**
+ * Generación de la última petición de mensajes por conversación. Una respuesta
+ * de una petición anterior (cambio rápido de conversación, reintento lento) se
+ * descarta en vez de pisar el estado actual.
+ */
+const messagesRequestSeq = new Map<string, number>()
 
 type MessagesState = {
   items: UiMessage[]
@@ -72,6 +83,13 @@ type InboxStore = {
   refreshSelected: () => Promise<void>
   fetchMessages: (conversationId: string) => Promise<void>
   fetchOlderMessages: (conversationId: string) => Promise<void>
+  /**
+   * Re-consulta la última página y la fusiona con lo que ya hay en memoria.
+   * Es el mecanismo de recuperación del hilo: cualquier delta perdido (evento
+   * que no llegó, re-fetch fallido, socket caído) se rellena aquí. Idempotente
+   * y silencioso ante error — quien lo llama no depende de su resultado.
+   */
+  resyncMessages: (conversationId: string) => Promise<void>
 
   // Mensajería optimista (F9: media con previews locales y payload de retry)
   sendOptimistic: (
@@ -173,7 +191,11 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
       const conversation = await getConversation(id)
       // Evita pisar una selección más reciente (carrera de clicks).
       if (get().selectedId === id) set({ selected: conversation })
-      if (!get().messagesById[id]?.loaded) await get().fetchMessages(id)
+      // Siempre, aunque ya estuviera cargada: el hilo en memoria puede tener
+      // huecos (un evento que no llegó mientras estaba cerrada, un delta
+      // descartado). `fetchMessages` fusiona, así que reabrir nunca pierde los
+      // optimistas en vuelo.
+      await get().fetchMessages(id)
     } catch (err) {
       set({ error: errorMessage(err, "No se pudo cargar la conversación") })
     }
@@ -192,20 +214,20 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
 
   fetchMessages: async (conversationId) => {
     try {
-      const res = await getConversationMessages(conversationId, { limit: 50 })
-      set((state) => ({
-        messagesById: {
-          ...state.messagesById,
-          [conversationId]: {
-            // El backend devuelve el timeline del más reciente al más viejo.
-            items: [...res.data].reverse(),
-            next_cursor: res.next_cursor,
-            loaded: true,
-          },
-        },
-      }))
+      await loadLatestMessages(conversationId, set)
     } catch (err) {
       set({ error: errorMessage(err, "No se pudieron cargar los mensajes") })
+    }
+  },
+
+  resyncMessages: async (conversationId) => {
+    // Solo sobre un hilo ya abierto: si nunca se cargó, lo hará `select`.
+    if (!get().messagesById[conversationId]?.loaded) return
+    try {
+      await loadLatestMessages(conversationId, set)
+    } catch {
+      // Recuperación de fondo: no se pinta banner de error (sería ruido para
+      // algo que el usuario no pidió). El próximo evento o reapertura reintenta.
     }
   },
 
@@ -351,10 +373,18 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
       const current = state.messagesById[conversationId] ?? { items: [], loaded: false }
       // Dedupe por id (el WS puede repetir tras un re-join).
       if (current.items.some((m) => m.id === message.id)) return state
+      const last = current.items[current.items.length - 1]
+      // Camino normal (el mensaje es el más reciente): append directo. Solo se
+      // reordena cuando llega fuera de orden — un rescate tardío o dos eventos
+      // casi simultáneos — para no pagar el sort en cada mensaje.
+      const items =
+        last === undefined || Date.parse(message.created_at) >= Date.parse(last.created_at)
+          ? [...current.items, message]
+          : sortByCreatedAt([...current.items, message])
       return {
         messagesById: {
           ...state.messagesById,
-          [conversationId]: { ...current, items: [...current.items, message] },
+          [conversationId]: { ...current, items },
         },
       }
     })
@@ -618,3 +648,90 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     if (get().selectedId === conversationId) void get().refreshSelected()
   },
 }))
+
+type SetState = (
+  partial: (state: InboxStore) => Partial<InboxStore>,
+) => void
+
+/**
+ * Trae la última página del timeline y la FUSIONA con lo que hay en memoria.
+ *
+ * Dos garantías que el reemplazo en bloque no daba:
+ * - **Anti-race**: si mientras la petición vuela se dispara otra para la misma
+ *   conversación (cambio rápido de selección, resync solapado), la respuesta
+ *   vieja se descarta en vez de pisar la nueva.
+ * - **Sin lost update**: los mensajes que llegaron por WS durante el vuelo y
+ *   los optimistas aún sin reconciliar sobreviven.
+ *
+ * Propaga el error: cada llamador decide si lo pinta (`fetchMessages`) o lo
+ * traga (`resyncMessages`, recuperación de fondo).
+ */
+async function loadLatestMessages(conversationId: string, set: SetState): Promise<void> {
+  const generation = (messagesRequestSeq.get(conversationId) ?? 0) + 1
+  messagesRequestSeq.set(conversationId, generation)
+
+  const res = await getConversationMessages(conversationId, { limit: MESSAGES_PAGE_SIZE })
+  if (messagesRequestSeq.get(conversationId) !== generation) return
+
+  set((state) => {
+    const current = state.messagesById[conversationId]
+    // El backend devuelve el timeline del más reciente al más viejo.
+    const fresh = [...res.data].reverse() as UiMessage[]
+    return {
+      messagesById: {
+        ...state.messagesById,
+        [conversationId]: {
+          items: mergeMessages(current?.items ?? [], fresh),
+          next_cursor: res.next_cursor,
+          loaded: true,
+        },
+      },
+    }
+  })
+}
+
+/**
+ * Une el timeline en memoria con una página del servidor, ordenado por
+ * `created_at`.
+ *
+ * - La versión del servidor gana sobre la local en los ids que coinciden
+ *   (trae attachments resueltos, status real), pero conserva lo que solo vive
+ *   en el cliente: el `local_id` y los previews de media, para que la burbuja
+ *   no parpadee mientras el attachment resuelve su URL firmada.
+ * - Los optimistas sin id real (`local-…`, aún no reconciliados) se conservan
+ *   siempre: el servidor todavía no los conoce.
+ */
+function mergeMessages(current: UiMessage[], fresh: UiMessage[]): UiMessage[] {
+  if (current.length === 0) return fresh
+  const freshById = new Map(fresh.map((m) => [m.id, m]))
+  const merged: UiMessage[] = []
+
+  for (const local of current) {
+    const server = freshById.get(local.id)
+    if (!server) {
+      merged.push(local)
+      continue
+    }
+    merged.push({
+      ...server,
+      local_id: local.local_id,
+      local_previews: local.local_previews,
+      local_payload: local.local_payload,
+      delivery: local.delivery,
+    })
+    freshById.delete(local.id)
+  }
+  // Lo que el servidor tiene y el cliente no: los deltas perdidos.
+  merged.push(...freshById.values())
+
+  return sortByCreatedAt(merged)
+}
+
+/** Orden estable por `created_at`; empates por id para que no baile entre renders. */
+function sortByCreatedAt(messages: UiMessage[]): UiMessage[] {
+  return [...messages].sort((a, b) => {
+    const diff = Date.parse(a.created_at) - Date.parse(b.created_at)
+    if (diff !== 0 && !Number.isNaN(diff)) return diff
+    return a.id.localeCompare(b.id)
+  })
+}

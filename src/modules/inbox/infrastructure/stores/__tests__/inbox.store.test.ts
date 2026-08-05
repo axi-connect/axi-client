@@ -338,3 +338,152 @@ describe("inbox.store — eventos de handoff y typing", () => {
     expect(useInboxStore.getState().typingByConversation[CID]).toEqual([])
   })
 })
+
+/**
+ * Regresión del hilo desfasado: el timeline abierto era una caché write-once
+ * que se reemplazaba en bloque y no se resincronizaba nunca. Un solo delta
+ * perdido dejaba un hueco permanente hasta recargar la página, mientras la
+ * lista de conversaciones sí se actualizaba.
+ */
+describe("inbox.store — resincronización del hilo", () => {
+  const { getConversationMessages } = jest.requireMock(
+    "@/modules/inbox/infrastructure/services/inbox-service.adapter",
+  ) as { getConversationMessages: jest.Mock }
+
+  beforeEach(() => getConversationMessages.mockReset())
+
+  it("fetchMessages fusiona en vez de reemplazar: no pierde lo que llegó por WS", async () => {
+    // El hilo ya tiene un mensaje que el servidor todavía no devuelve en su página.
+    useInboxStore.setState({
+      messagesById: {
+        [CID]: {
+          items: [makeMessage({ id: "ws-1", created_at: "2026-07-09T00:00:05Z" })],
+          loaded: true,
+        },
+      },
+    })
+    getConversationMessages.mockResolvedValueOnce({
+      data: [makeMessage({ id: "srv-1", created_at: "2026-07-09T00:00:00Z" })],
+    })
+
+    await useInboxStore.getState().fetchMessages(CID)
+
+    const items = useInboxStore.getState().messagesById[CID].items
+    expect(items.map((m) => m.id)).toEqual(["srv-1", "ws-1"])
+  })
+
+  it("conserva los optimistas en vuelo, que el servidor aún no conoce", async () => {
+    const localId = useInboxStore
+      .getState()
+      .sendOptimistic(CID, { content_type: "text", body: "ahí voy" })
+    useInboxStore.setState((s) => ({
+      messagesById: { [CID]: { ...s.messagesById[CID], loaded: true } },
+    }))
+    getConversationMessages.mockResolvedValueOnce({
+      data: [makeMessage({ id: "srv-1", created_at: "2026-07-09T00:00:00Z" })],
+    })
+
+    await useInboxStore.getState().fetchMessages(CID)
+
+    const items = useInboxStore.getState().messagesById[CID].items
+    expect(items.some((m) => m.local_id === localId)).toBe(true)
+    expect(items.some((m) => m.id === "srv-1")).toBe(true)
+  })
+
+  it("la versión del servidor gana en los ids que coinciden, sin perder el preview local", async () => {
+    useInboxStore.setState({
+      messagesById: {
+        [CID]: {
+          items: [
+            makeMessage({ id: "m1", attachments: [], local_previews: ["blob:local"] as never }),
+          ],
+          loaded: true,
+        },
+      },
+    })
+    getConversationMessages.mockResolvedValueOnce({
+      data: [makeMessage({ id: "m1", attachments: [{ id: "att-1" }] as never })],
+    })
+
+    await useInboxStore.getState().fetchMessages(CID)
+
+    const [item] = useInboxStore.getState().messagesById[CID].items
+    expect(item.attachments).toHaveLength(1)
+    expect(item.local_previews).toEqual(["blob:local"])
+  })
+
+  it("descarta la respuesta de una petición superada (anti-race)", async () => {
+    useInboxStore.setState({ messagesById: { [CID]: { items: [], loaded: true } } })
+    let resolveFirst: (value: unknown) => void = () => {}
+    getConversationMessages
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve
+          }),
+      )
+      .mockResolvedValueOnce({ data: [makeMessage({ id: "nueva" })] })
+
+    const stale = useInboxStore.getState().fetchMessages(CID)
+    await useInboxStore.getState().fetchMessages(CID)
+    resolveFirst({ data: [makeMessage({ id: "vieja" })] })
+    await stale
+
+    expect(useInboxStore.getState().messagesById[CID].items.map((m) => m.id)).toEqual(["nueva"])
+  })
+
+  it("resyncMessages rellena el hueco y es idempotente", async () => {
+    useInboxStore.setState({
+      messagesById: { [CID]: { items: [makeMessage({ id: "m1" })], loaded: true } },
+    })
+    getConversationMessages.mockResolvedValue({
+      data: [
+        makeMessage({ id: "perdido", created_at: "2026-07-09T00:00:10Z" }),
+        makeMessage({ id: "m1" }),
+      ],
+    })
+
+    await useInboxStore.getState().resyncMessages(CID)
+    expect(useInboxStore.getState().messagesById[CID].items.map((m) => m.id)).toEqual([
+      "m1",
+      "perdido",
+    ])
+
+    await useInboxStore.getState().resyncMessages(CID)
+    expect(useInboxStore.getState().messagesById[CID].items.map((m) => m.id)).toEqual([
+      "m1",
+      "perdido",
+    ])
+  })
+
+  it("resyncMessages no pinta banner de error: es recuperación de fondo", async () => {
+    useInboxStore.setState({ messagesById: { [CID]: { items: [], loaded: true } }, error: null })
+    getConversationMessages.mockRejectedValueOnce(new Error("429"))
+
+    await useInboxStore.getState().resyncMessages(CID)
+
+    expect(useInboxStore.getState().error).toBeNull()
+  })
+
+  it("resyncMessages es no-op sobre un hilo que nunca se cargó", async () => {
+    await useInboxStore.getState().resyncMessages("sin-cargar")
+    expect(getConversationMessages).not.toHaveBeenCalled()
+  })
+
+  it("appendMessage ordena por created_at cuando el mensaje llega fuera de orden", () => {
+    useInboxStore.setState({
+      messagesById: {
+        [CID]: {
+          items: [makeMessage({ id: "m2", created_at: "2026-07-09T00:00:10Z" })],
+          loaded: true,
+        },
+      },
+    })
+
+    useInboxStore
+      .getState()
+      .appendMessage(CID, makeMessage({ id: "m1", created_at: "2026-07-09T00:00:05Z" }))
+
+    expect(useInboxStore.getState().messagesById[CID].items.map((m) => m.id)).toEqual(["m1", "m2"])
+  })
+})

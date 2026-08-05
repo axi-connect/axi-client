@@ -55,6 +55,16 @@ class SocketManager {
   private readonly connections = new Map<RealtimeNamespace, ManagedConnection>();
 
   /**
+   * Conexiones en curso. `connect()` espera un token antes de poder registrar
+   * nada en `connections`, así que dos consumidores que montan en el mismo
+   * commit (p.ej. la campana de notificaciones del layout y la vista del inbox)
+   * pasaban los dos el chequeo de "¿ya existe?" y abrían DOS sockets al mismo
+   * namespace. Solo uno quedaba registrado; el otro seguía conectado como
+   * zombi, duplicando entregas y peticiones de token.
+   */
+  private readonly pending = new Map<RealtimeNamespace, Promise<Socket>>();
+
+  /**
    * F15: tras `company.suspended` el token está bumpeado — reconectar solo
    * martillea el server. `halt()` corta todo y bloquea nuevos `connect()`
    * hasta `reset()` (login exitoso) o una recarga completa de la página.
@@ -76,6 +86,19 @@ class SocketManager {
     const existing = this.connections.get(namespace);
     if (existing) return existing.socket as TypedSocket<N>;
 
+    // Se memoiza ANTES del primer await: los consumidores concurrentes comparten
+    // el mismo socket en vez de abrir uno cada uno.
+    const inFlight = this.pending.get(namespace);
+    if (inFlight) return (await inFlight) as TypedSocket<N>;
+
+    const attempt = this.openConnection(namespace).finally(() => {
+      this.pending.delete(namespace);
+    });
+    this.pending.set(namespace, attempt);
+    return (await attempt) as TypedSocket<N>;
+  }
+
+  private async openConnection(namespace: RealtimeNamespace): Promise<Socket> {
     const { token, expires_at } = await fetchToken();
     const socket = io(`${WS_BASE_URL}/${namespace}`, {
       auth: { token },
@@ -102,7 +125,7 @@ class SocketManager {
     });
 
     this.scheduleTokenRotation(namespace, connection, expires_at);
-    return socket as TypedSocket<N>;
+    return socket;
   }
 
   /** Socket ya creado para el namespace (o null si no se ha conectado). */
@@ -115,6 +138,9 @@ class SocketManager {
   }
 
   disconnect(namespace: RealtimeNamespace): void {
+    // Una conexión a medio abrir ya no interesa a nadie: se descarta la
+    // memoización para que el próximo `connect()` empiece de cero.
+    this.pending.delete(namespace);
     const connection = this.connections.get(namespace);
     if (!connection) return;
     this.clearTimers(connection);

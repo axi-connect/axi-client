@@ -20,6 +20,10 @@ export function useSocket<N extends RealtimeNamespace>(namespace: N) {
 
   useEffect(() => {
     let cancelled = false;
+    // Listeners propios de ESTE consumidor: hay que poder quitarlos al
+    // desmontar. Sin esto se acumulaban en el socket compartido (que sobrevive
+    // a la navegación) y disparaban `setState` sobre componentes ya muertos.
+    let detach: (() => void) | undefined;
     consumers.set(namespace, (consumers.get(namespace) ?? 0) + 1);
 
     socketManager
@@ -32,6 +36,10 @@ export function useSocket<N extends RealtimeNamespace>(namespace: N) {
         const onDisconnect = () => setConnected(false);
         s.on("connect", onConnect);
         s.on("disconnect", onDisconnect);
+        detach = () => {
+          s.off("connect", onConnect);
+          s.off("disconnect", onDisconnect);
+        };
       })
       .catch(() => {
         // Sin sesión válida: el manager reintenta con backoff; el estado queda desconectado.
@@ -39,6 +47,7 @@ export function useSocket<N extends RealtimeNamespace>(namespace: N) {
 
     return () => {
       cancelled = true;
+      detach?.();
       const remaining = (consumers.get(namespace) ?? 1) - 1;
       consumers.set(namespace, remaining);
       if (remaining <= 0) {
