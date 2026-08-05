@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/core/lib/utils"
-import { SidebarTrigger } from "@/shared/components/layout/sidebar/core"
+import { SidebarTrigger, useSidebar } from "@/shared/components/layout/sidebar/core"
 import { ThemeToggle } from "@/shared/components/layout/theme-toggle"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip"
 import { ChevronRight } from "lucide-react"
 
 const LABELS: Record<string, string> = {
@@ -22,6 +23,15 @@ type PrivateHeaderProps = {
 
 export function PrivateHeader({ actions }: PrivateHeaderProps) {
 	const pathname = usePathname()
+	const { state, isMobile } = useSidebar()
+	// Este trigger NO es redundante con el botón de la cabecera del sidebar: en
+	// móvil el menú es un sheet, y con el sheet cerrado no hay sidebar donde
+	// alojar ningún control. Es la única entrada.
+	const sidebarLabel = isMobile
+		? "Abrir menú"
+		: state === "collapsed"
+			? "Expandir menú"
+			: "Colapsar menú"
 	const parts = pathname.split("/").filter(Boolean)
 	const crumbs = parts.map((seg, idx) => {
 		const href = "/" + parts.slice(0, idx + 1).join("/")
@@ -34,7 +44,14 @@ export function PrivateHeader({ actions }: PrivateHeaderProps) {
 		// breadcrumb quede alineado con las vistas del grupo (content).
 		<div className="glass sticky top-0 z-40 py-2">
 			<div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 md:px-6">
-			<SidebarTrigger />
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<SidebarTrigger aria-label={sidebarLabel} />
+				</TooltipTrigger>
+				<TooltipContent side="bottom" sideOffset={6}>
+					{sidebarLabel}
+				</TooltipContent>
+			</Tooltip>
 			{/* En móvil (<sm) solo se muestra la página actual (último crumb); el
 			    rastro completo aparece desde sm para no desbordar el header. */}
 			<nav aria-label="Breadcrumb" className="min-w-0 text-sm text-muted-foreground">

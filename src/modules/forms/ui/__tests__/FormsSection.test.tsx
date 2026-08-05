@@ -102,7 +102,11 @@ const addField = (label: string) => {
  * etiqueta su trigger), así que `getByLabelText` encontraría dos elementos.
  */
 const setCode = (code: string) => {
-  fireEvent.click(screen.getByRole("button", { name: /clave técnica/i }));
+  // Un dato personalizado nuevo ya nace con la sección abierta; solo se despliega
+  // si está cerrada (si no, el clic la cerraría).
+  if (screen.queryByRole("textbox", { name: /clave técnica/i }) === null) {
+    fireEvent.click(screen.getByRole("button", { name: /clave técnica/i }));
+  }
   fireEvent.change(screen.getByRole("textbox", { name: /clave técnica/i }), {
     target: { value: code },
   });
@@ -239,6 +243,28 @@ describe("guardado", () => {
     expect(upsertForm).not.toHaveBeenCalled();
   });
 
+  /**
+   * El `code` vive en una sección colapsable y el panel se remonta al cambiar de
+   * campo, así que un error ahí podría quedar oculto: la sección debe abrirse
+   * sola cuando hay error, o el usuario no sabe por qué no puede guardar.
+   */
+  it("el error del code queda visible aunque su sección sea colapsable", async () => {
+    listForms.mockResolvedValue({ data: [CONTACT_WITH_TWO] });
+    await renderReady();
+
+    fireEvent.click(screen.getByRole("button", { name: /añadir dato/i }));
+    fireEvent.change(screen.getByLabelText(/nombre del dato/i), { target: { value: "Otro" } });
+    setCode("phone");
+    // Cierra la sección a mano antes de guardar.
+    fireEvent.click(screen.getByRole("button", { name: /clave técnica/i }));
+    expect(screen.queryByRole("textbox", { name: /clave técnica/i })).not.toBeInTheDocument();
+
+    save();
+
+    await waitFor(() => expect(screen.getByText(/ya la usa otro dato/i)).toBeInTheDocument());
+    expect(screen.getByRole("textbox", { name: /clave técnica/i })).toBeInTheDocument();
+  });
+
   it("un error del servidor conserva el borrador intacto", async () => {
     upsertForm.mockRejectedValue(new Error("500"));
     await renderReady();
@@ -303,12 +329,39 @@ describe("herencia de contact_registration en order_intake", () => {
     ).toBeInTheDocument();
   });
 
-  it("appointment_booking avisa de que NO hereda", async () => {
+  it("appointment_booking avisa de que NO hereda, en su descripción", async () => {
     listForms.mockResolvedValue({ data: [CONTACT_WITH_TWO] });
     await renderReady();
 
     selectTab(/datos de la cita/i);
     expect(screen.getByText(/la cita no hereda los datos del cliente/i)).toBeInTheDocument();
+  });
+
+  /**
+   * Las alertas por flujo repetían lo que ya dice la descripción de arriba y
+   * estorbaban en cada cambio de pestaña. Solo queda el bloque de herencia de
+   * `order_intake`, que sí aporta datos que no están en ningún otro sitio.
+   */
+  it("no muestra alertas redundantes al cambiar de pestaña", async () => {
+    listForms.mockResolvedValue({ data: [CONTACT_WITH_TWO] });
+    await renderReady();
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    selectTab(/datos de la cita/i);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+});
+
+describe("pestañas", () => {
+  it("los títulos de los flujos se leen completos (sin truncar)", async () => {
+    await renderReady();
+
+    for (const label of ["Datos del cliente", "Datos del pedido", "Datos de la cita"]) {
+      const tab = screen.getByRole("tab", { name: new RegExp(label, "i") });
+      expect(tab).toHaveTextContent(label);
+      expect(tab.querySelector(".truncate")).toBeNull();
+    }
   });
 });
 
@@ -345,6 +398,96 @@ describe("reordenar", () => {
       expect.objectContaining({ code: "phone", position: 0 }),
       expect.objectContaining({ code: "full_name", position: 1 }),
     ]);
+  });
+});
+
+/**
+ * Regresión: el panel de detalle no refrescaba al cambiar de campo.
+ *
+ * El formulario demo de `order_intake` mezcla tipos (text, select, text), y el
+ * bloque de `options` solo existe para `select`. Al cambiar la forma del árbol,
+ * React reutilizaba los mismos nodos DOM para inputs registrados con OTRO
+ * nombre; como `register` los deja no controlados, el valor pintado se quedaba
+ * clavado en el del campo anterior.
+ */
+describe("cambiar de campo refresca el panel (regresión)", () => {
+  const MIXED = definition("order_intake", {
+    fields: [
+      { code: "full_name", label: "Nombre completo", type: "text", required: true, position: 0 },
+      {
+        code: "delivery_method",
+        label: "Método de entrega",
+        type: "select",
+        required: true,
+        options: ["domicilio", "recoger en local"],
+        ai_prompt: "pregunta si lo quiere a domicilio",
+        position: 1,
+      },
+      { code: "notas", label: "Notas", type: "text", required: false, position: 2 },
+    ],
+  });
+
+  /**
+   * Selecciona una fila de la lista maestra. El nombre accesible del botón de
+   * selección empieza por su número de orden ("2 Método de entrega …"), lo que
+   * lo distingue de los icon-buttons "Reordenar/Subir/Bajar <dato>".
+   */
+  const selectField = (label: string) =>
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`^\\d+\\s*${label}`) }));
+
+  const shownLabel = () => (screen.getByLabelText(/nombre del dato/i) as HTMLInputElement).value;
+
+  beforeEach(() => {
+    listForms.mockResolvedValue({ data: [MIXED] });
+  });
+
+  it("de select a texto: el panel muestra el campo recién elegido", async () => {
+    await renderReady();
+    selectTab(/datos del pedido/i);
+
+    selectField("Método de entrega");
+    expect(shownLabel()).toBe("Método de entrega");
+
+    selectField("Notas");
+    expect(shownLabel()).toBe("Notas");
+  });
+
+  it("desde el último campo opcional se puede volver a cualquier otro", async () => {
+    await renderReady();
+    selectTab(/datos del pedido/i);
+
+    selectField("Notas");
+    expect(shownLabel()).toBe("Notas");
+
+    selectField("Método de entrega");
+    expect(shownLabel()).toBe("Método de entrega");
+
+    selectField("Nombre completo");
+    expect(shownLabel()).toBe("Nombre completo");
+  });
+
+  it("las opciones solo aparecen en el campo select, y desaparecen al salir de él", async () => {
+    await renderReady();
+    selectTab(/datos del pedido/i);
+
+    selectField("Método de entrega");
+    expect(screen.getByText("domicilio")).toBeInTheDocument();
+
+    selectField("Notas");
+    expect(screen.queryByText("domicilio")).not.toBeInTheDocument();
+  });
+
+  it("la indicación para la IA no se arrastra entre campos", async () => {
+    await renderReady();
+    selectTab(/datos del pedido/i);
+
+    selectField("Método de entrega");
+    expect((screen.getByLabelText(/cómo debe preguntarlo/i) as HTMLTextAreaElement).value).toBe(
+      "pregunta si lo quiere a domicilio",
+    );
+
+    selectField("Notas");
+    expect((screen.getByLabelText(/cómo debe preguntarlo/i) as HTMLTextAreaElement).value).toBe("");
   });
 });
 

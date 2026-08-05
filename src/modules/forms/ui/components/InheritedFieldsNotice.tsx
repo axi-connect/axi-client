@@ -1,18 +1,20 @@
 "use client";
 
 import { Badge } from "@/shared/components/ui/badge";
-import { StatusAlert } from "@/shared/components/ui/notice";
-import { FLOW_LABELS, FLOW_NOTES, type EditableFormField, type FormFlow } from "@/modules/forms/domain/form";
+import { FLOW_LABELS, type EditableFormField, type FormFlow } from "@/modules/forms/domain/form";
 import { FieldTypeIcon } from "./FieldTypeIcon";
 
 /**
- * La asimetría del backend, hecha visible. `create_order.tool.ts` concatena
- * `contact_registration.fields + order_intake.fields`, pero
- * `book_appointment.tool.ts` NO hereda nada.
+ * La herencia del backend, hecha visible: `create_order.tool.ts` concatena
+ * `contact_registration.fields + order_intake.fields`.
  *
  * Es el punto ciego más peligroso de la feature: un tenant con 0 campos de
  * pedido y 3 de cliente cree que "no pide nada" cuando en realidad pide 3. Por
  * eso el bloque se pinta también cuando la lista del pedido está vacía.
+ *
+ * Solo aplica a `order_intake`: es el único flujo que hereda. Los otros dos no
+ * llevan aviso — lo que tenían que decir ya lo dice su descripción
+ * (`FLOW_DESCRIPTIONS`), y una alerta que repite la línea de arriba solo estorba.
  */
 export function InheritedFieldsNotice({
   flow,
@@ -26,12 +28,7 @@ export function InheritedFieldsNotice({
   ownRequiredCount: number;
   onGoToContactFlow: () => void;
 }) {
-  // Los otros dos flujos solo llevan su nota recíproca.
-  if (flow !== "order_intake") {
-    return <StatusAlert tone="info" dismissible={false} compact title={FLOW_NOTES[flow]} />;
-  }
-
-  if (inheritedFields.length === 0) {
+  if (flow !== "order_intake" || inheritedFields.length === 0) {
     return null;
   }
 

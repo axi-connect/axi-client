@@ -91,4 +91,30 @@ describe("mapNavigation", () => {
     expect(tree[0].code).toBe("settings");
     expect(tree[0].id).toBe("id-settings");
   });
+
+  /**
+   * F10: la entrada de los formularios de captura cuelga de
+   * Configuración › Automatización (profundidad 2). El seeder del backend la
+   * emite con `path: '/settings/forms'`, que debe pasar TAL CUAL: si acabara en
+   * `UNIMPLEMENTED_NAV_PATHS` o necesitara un alias, el ítem se filtraría y la
+   * página quedaría inalcanzable desde el menú — el mismo fallo que tuvo
+   * `order_notifications`.
+   */
+  it("emite la entrada de formularios de captura anidada en Automatización", () => {
+    const tree = mapNavigation([
+      dto("settings", null, 60, [
+        dto("automation", null, 40, [
+          dto("quick_actions", "/settings/quick-actions", 10, [], "zap"),
+          dto("order_notifications", "/settings/orders", 20, [], "bell-ring"),
+          dto("intake_forms", "/settings/forms", 30, [], "clipboard-list"),
+        ]),
+      ]),
+    ]);
+
+    const automation = tree[0].children[0];
+    const forms = automation.children.find((item) => item.code === "intake_forms");
+
+    expect(forms?.url).toBe("/settings/forms");
+    expect(forms?.depth).toBe(2);
+  });
 });

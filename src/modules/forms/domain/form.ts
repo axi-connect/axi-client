@@ -69,23 +69,21 @@ export const FLOW_AI_LABELS: Record<FormFlow, string> = {
   appointment_booking: "agendar una cita",
 };
 
+/**
+ * Descripción del flujo, en la línea atenuada bajo las pestañas.
+ *
+ * La de `appointment_booking` lleva pegada la asimetría del backend
+ * (`book_appointment.tool.ts` usa SOLO `appointment_booking`, mientras
+ * `create_order.tool.ts` concatena `contact_registration + order_intake`). Va
+ * aquí y no en una alerta aparte porque es el ÚNICO sitio donde se dice: el
+ * flujo de la cita no tiene bloque de herencia que lo muestre, a diferencia del
+ * de pedido.
+ */
 export const FLOW_DESCRIPTIONS: Record<FormFlow, string> = {
   contact_registration: "Antes de registrar al cliente, tu agente pedirá estos datos.",
   order_intake: "Antes de crear un pedido, tu agente pedirá estos datos.",
-  appointment_booking: "Antes de agendar una cita, tu agente pedirá estos datos.",
-};
-
-/**
- * La asimetría real del backend, hecha copy. `create_order.tool.ts` concatena
- * `contact_registration.fields + order_intake.fields`; `book_appointment.tool.ts`
- * usa SOLO `appointment_booking`. Es contraintuitivo en las dos direcciones, así
- * que se dice en los tres flujos.
- */
-export const FLOW_NOTES: Record<FormFlow, string> = {
-  contact_registration: "Estos datos también se piden antes de crear un pedido.",
-  order_intake: "Además de estos, tu agente pedirá los datos del cliente.",
   appointment_booking:
-    "La cita no hereda los datos del cliente. Si necesitas su nombre o teléfono para agendar, añádelos aquí también.",
+    "Antes de agendar una cita, tu agente pedirá estos datos. La cita no hereda los datos del cliente: si necesitas su nombre o teléfono para agendar, añádelos aquí también.",
 };
 
 export const FIELD_TYPE_LABELS: Record<FormFieldType, string> = {

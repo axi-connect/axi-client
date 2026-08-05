@@ -27,27 +27,35 @@ export function FlowTabs({
 }) {
   return (
     <Tabs value={flow} onValueChange={(value) => onFlowChange(value as FormFlow)}>
-      <TabsList className="h-10 w-full rounded-full p-1 sm:w-fit">
-        {FORM_FLOWS.map((candidate) => (
-          <TabsTrigger key={candidate} value={candidate} className="min-w-0 rounded-full px-4">
-            <span className="truncate">{FLOW_LABELS[candidate]}</span>
-            <span
-              className={cn(
-                "ml-1.5 shrink-0 text-xs tabular-nums text-muted-foreground",
-                !configured[candidate] && "sr-only",
-              )}
-            >
-              {configured[candidate] ? counts[candidate] : "Sin configurar"}
-            </span>
-            {dirtyFlows.has(candidate) && (
+      {/*
+        `w-max` en la lista y sin `truncate` en el trigger: los títulos se leen
+        completos siempre. El contenedor scrollea por su cuenta en pantallas
+        estrechas — el body de la página nunca scrollea en horizontal
+        (DESIGN-SYSTEM §4.2).
+      */}
+      <div className="-mx-1 overflow-x-auto px-1 py-1">
+        <TabsList className="h-10 w-max rounded-full p-1">
+          {FORM_FLOWS.map((candidate) => (
+            <TabsTrigger key={candidate} value={candidate} className="rounded-full px-4">
+              <span>{FLOW_LABELS[candidate]}</span>
               <span
-                className="ml-1 size-1.5 shrink-0 rounded-full bg-primary"
-                aria-label="Con cambios sin guardar"
-              />
-            )}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+                className={cn(
+                  "ml-1.5 shrink-0 text-xs tabular-nums text-muted-foreground",
+                  !configured[candidate] && "sr-only",
+                )}
+              >
+                {configured[candidate] ? counts[candidate] : "Sin configurar"}
+              </span>
+              {dirtyFlows.has(candidate) && (
+                <span
+                  className="ml-1 size-1.5 shrink-0 rounded-full bg-primary"
+                  aria-label="Con cambios sin guardar"
+                />
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
     </Tabs>
   );
 }

@@ -39,6 +39,29 @@ const ACTIVE_BAR =
   "before:absolute before:left-0 before:top-1/2 before:h-4 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-brand before:content-['']"
 
 /**
+ * Geometría ÚNICA del chevron, compartida por la variante interactiva y la
+ * decorativa. Cuando cada una escribía la suya (`right-1` con caja `size-5`
+ * frente a `right-2` con svg `size-4`) las flechas de filas hermanas no
+ * alineaban entre sí.
+ *
+ * Se posiciona contra LA FILA, nunca contra el `<li>`: ver el wrapper en
+ * `NavItemNode`.
+ */
+const CHEVRON_BOX =
+  "absolute top-1/2 right-1.5 grid size-5 -translate-y-1/2 place-items-center rounded-sm"
+const CHEVRON_ICON = "size-4 transition-transform duration-200"
+/**
+ * Compensa el `translate-x-px` que `SidebarMenuSub` aplica al `<ul>` para
+ * cuadrar su línea guía. Las filas ya lo devuelven con su propio
+ * `-translate-x-px`, pero el chevron cuelga del wrapper, no de la fila: sin
+ * esto las flechas de los subniveles caen 1px a la derecha de las de nivel 0 y
+ * la columna de flechas deja de ser una sola.
+ */
+const CHEVRON_NESTED_NUDGE = "-translate-x-px"
+/** Hueco reservado en la fila para que el label no pase por debajo de la flecha. */
+const CHEVRON_GUTTER = "pr-8"
+
+/**
  * Chevron de plegado. Es un target SEPARADO del link de la fila: la fila
  * navega a la ruta del padre y esto solo abre/cierra. Por eso lleva su propio
  * `aria-label` y su propia hit-area táctil (`after:-inset-2`, ≥40px en móvil,
@@ -48,33 +71,34 @@ function NavChevron({
   open,
   title,
   controls,
+  nested,
   onToggle,
 }: {
   open: boolean
   title: string
   controls: string
+  nested: boolean
   onToggle: () => void
 }) {
   return (
     <button
       type="button"
+      data-testid="nav-chevron"
       aria-expanded={open}
       aria-controls={controls}
       aria-label={`${open ? "Contraer" : "Expandir"} ${title}`}
       onClick={onToggle}
       className={cn(
-        "absolute top-1/2 right-1 z-10 grid size-5 -translate-y-1/2 place-items-center rounded-sm",
-        "text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+        CHEVRON_BOX,
+        nested && CHEVRON_NESTED_NUDGE,
+        "z-10 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         // Agranda el área táctil en móvil sin mover el layout.
         "after:absolute after:-inset-2 md:after:hidden",
         "group-data-[collapsible=icon]:hidden",
       )}
     >
-      <ChevronDown
-        aria-hidden="true"
-        className={cn("size-4 transition-transform duration-200", open ? "rotate-180" : "rotate-0")}
-      />
+      <ChevronDown aria-hidden="true" className={cn(CHEVRON_ICON, open ? "rotate-180" : "rotate-0")} />
     </button>
   )
 }
@@ -120,14 +144,17 @@ export default function NavItemNode({ item, activeTrail, openCodes, onToggle }: 
     "relative",
     isActive && ACTIVE_BAR,
     isAncestor && "font-medium [&>svg]:text-brand",
-    hasChildren && "pr-8",
+    hasChildren && CHEVRON_GUTTER,
   )
 
   // Contenido común de la fila (el icono solo existe en el nivel 0).
+  // El `truncate` va en el span y no se delega al `[&>span:last-child]` de los
+  // primitivos: con el spinner de navegación pendiente el título deja de ser el
+  // último hijo y perdería el truncado justo cuando más se nota.
   const label = (
     <>
       {item.icon ? <item.icon /> : null}
-      <span>{item.title}</span>
+      <span className="truncate">{item.title}</span>
     </>
   )
 
@@ -146,18 +173,32 @@ export default function NavItemNode({ item, activeTrail, openCodes, onToggle }: 
       </Link>
     </Button>
   ) : (
-    // Grupo puro: no hay a dónde navegar, la fila es el toggle.
+    // Grupo puro: no hay a dónde navegar, la fila es el toggle. Como no hay
+    // chevron interactivo que lo declare, el estado de plegado lo anuncia la
+    // propia fila; la flecha de al lado es decorativa (`aria-hidden`).
     <Button
       asChild={item.depth > 0}
       isActive={false}
       data-state={open ? "open" : "closed"}
+      aria-expanded={item.depth === 0 ? open : undefined}
+      aria-controls={item.depth === 0 ? subId : undefined}
       onClick={item.depth === 0 ? () => onToggle(item.code) : undefined}
       className={cn(rowClassName, "cursor-pointer")}
     >
       {item.depth > 0 ? (
         // SidebarMenuSubButton renderiza un <a>: para un toggle hace falta un
         // <button> real (semántica + teclado), así que va por asChild.
-        <button type="button" onClick={() => onToggle(item.code)}>
+        // El `w-full` es obligatorio: un <button> no se estira con `display:flex`
+        // como sí lo hace un <a>, así que sin él la fila se encogía al ancho del
+        // texto y su fondo de hover salía como una píldora corta entre hermanas
+        // a ancho completo.
+        <button
+          type="button"
+          className="w-full"
+          aria-expanded={open}
+          aria-controls={subId}
+          onClick={() => onToggle(item.code)}
+        >
           {label}
         </button>
       ) : (
@@ -177,9 +218,16 @@ export default function NavItemNode({ item, activeTrail, openCodes, onToggle }: 
           transition={reduceMotion ? { duration: 0 } : spring.snappy}
           className="overflow-hidden"
         >
+          {/* `mr-0 pr-0` anula el sangrado DERECHO del primitivo (`mx-3.5
+              px-2.5`): la jerarquía se lee por la izquierda, y con el submenú
+              también estrechado por la derecha las filas hijas quedaban 24px
+              más cortas que las de nivel 0 — sus fondos de hover y sus chevrons
+              no alineaban con el resto del menú. La sangría izquierda no se
+              toca: son los 24px que dejan el label del hijo justo bajo el del
+              padre. */}
           <SidebarMenuSub
             id={subId}
-            className={cn(item.depth > 0 && "border-border/60")}
+            className={cn("mr-0 pr-0", item.depth > 0 && "border-border/60")}
           >
             {item.children.map((child) => (
               <NavItemNode
@@ -211,25 +259,43 @@ export default function NavItemNode({ item, activeTrail, openCodes, onToggle }: 
 
   return (
     <Item>
-      {row}
-      {hasChildren && item.url && (
-        <NavChevron
-          open={open}
-          title={item.title}
-          controls={subId}
-          onToggle={() => onToggle(item.code)}
-        />
-      )}
-      {hasChildren && !item.url && (
-        <ChevronDown
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute top-1/2 right-2 size-4 -translate-y-1/2 text-muted-foreground transition-transform duration-200",
-            "group-data-[collapsible=icon]:hidden",
-            open ? "rotate-180" : "rotate-0",
-          )}
-        />
-      )}
+      {/* La fila y su chevron viven en una caja posicionada PROPIA, que NO
+          contiene el submenú. Sin ella el chevron se posiciona contra el <li>
+          —los primitivos `SidebarMenuItem`/`SidebarMenuSubItem` llevan
+          `relative`—, y ese <li> también envuelve los hijos: `top-1/2` medía
+          entonces la mitad de (fila + submenú), así que al desplegar la flecha
+          se salía de su fila hacia abajo, en proporción al número de hijos.
+          Caía sobre la fila de un hijo (aparentando una flecha en una hoja) o
+          junto a la flecha de un subgrupo (aparentando dos), y además viajaba
+          mientras se animaba la altura. */}
+      <div className="relative">
+        {row}
+        {hasChildren &&
+          (item.url ? (
+            <NavChevron
+              open={open}
+              title={item.title}
+              controls={subId}
+              nested={item.depth > 0}
+              onToggle={() => onToggle(item.code)}
+            />
+          ) : (
+            // Grupo puro: la fila entera ya es el toggle, así que la flecha es
+            // decorativa y deja pasar el click hasta el botón de debajo.
+            <span
+              data-testid="nav-chevron"
+              aria-hidden="true"
+              className={cn(
+                CHEVRON_BOX,
+                item.depth > 0 && CHEVRON_NESTED_NUDGE,
+                "pointer-events-none text-muted-foreground",
+                "group-data-[collapsible=icon]:hidden",
+              )}
+            >
+              <ChevronDown className={cn(CHEVRON_ICON, open ? "rotate-180" : "rotate-0")} />
+            </span>
+          ))}
+      </div>
       {children}
     </Item>
   )

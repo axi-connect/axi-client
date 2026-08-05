@@ -207,6 +207,125 @@ describe("AppSidebar — carga y error", () => {
   });
 });
 
+describe("AppSidebar — colapso a modo icono", () => {
+  beforeEach(() => {
+    pathname = "/dashboard";
+    document.cookie = "sidebar_state=; path=/; max-age=0";
+  });
+
+  const collapseButton = () => screen.getByRole("button", { name: /^(Colapsar|Expandir) menú$/ });
+
+  it("la cabecera ofrece un control de colapso etiquetado", () => {
+    // El modo icono existía desde el principio, pero sólo se activaba desde un
+    // botón sin etiqueta del header de página, el atajo de teclado o una franja
+    // de 4px. Ninguno se ve.
+    renderSidebar();
+
+    expect(collapseButton()).toHaveAccessibleName("Colapsar menú");
+  });
+
+  it("alterna el estado y cambia su etiqueta a la acción inversa", () => {
+    renderSidebar();
+
+    fireEvent.click(collapseButton());
+    // Colapsado el botón sigue presente: es el único camino de vuelta, porque
+    // los subniveles del menú se ocultan por CSS en modo icono.
+    expect(collapseButton()).toHaveAccessibleName("Expandir menú");
+
+    fireEvent.click(collapseButton());
+    expect(collapseButton()).toHaveAccessibleName("Colapsar menú");
+  });
+
+  it("persiste el colapso en la cookie que lee el layout server", () => {
+    // Sin esto el colapso no sobrevive a una recarga: `(private)/layout.tsx`
+    // arranca el SidebarProvider con `defaultOpen` leído de esta cookie.
+    renderSidebar();
+
+    fireEvent.click(collapseButton());
+
+    expect(document.cookie).toContain("sidebar_state=false");
+  });
+
+  it("en modo icono el tema sigue siendo accesible", () => {
+    // Antes el segmentado de tres opciones se ocultaba al colapsar y no había
+    // forma de cambiar el tema sin volver a expandir el menú.
+    renderSidebar();
+    expect(screen.getByRole("radiogroup", { name: "Tema de la interfaz" })).toBeInTheDocument();
+
+    fireEvent.click(collapseButton());
+
+    const trigger = screen.getByRole("button", { name: /^Tema de la interfaz:/ });
+    fireEvent.click(trigger);
+
+    // Las tres opciones siguen ofreciéndose, no se degrada a un botón cíclico.
+    expect(screen.getByRole("radio", { name: "Tema claro" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Tema del sistema" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Tema oscuro" })).toBeInTheDocument();
+  });
+});
+
+describe("AppSidebar — geometría del chevron", () => {
+  beforeEach(() => {
+    pathname = "/dashboard";
+  });
+
+  /** El `<li>` que contiene una fila, que es también su contenedor de posición. */
+  const rowItem = (el: HTMLElement) => el.closest("li") as HTMLElement;
+
+  it("el chevron NO comparte caja posicionada con el submenú", () => {
+    // Este es el invariante que falló: el chevron es `absolute top-1/2`, así que
+    // si su contenedor de posición incluye el submenú, la flecha se coloca en la
+    // mitad de (fila + hijos) y se sale de su propia fila al desplegar.
+    // jsdom no calcula layout, así que se asserta la estructura que lo causaba.
+    renderSidebar(["crm"]);
+
+    const chevron = screen.getByRole("button", { name: "Contraer crm" });
+    const sub = document.getElementById(chevron.getAttribute("aria-controls") as string);
+    expect(sub).not.toBeNull();
+    expect(chevron.parentElement?.contains(sub as HTMLElement)).toBe(false);
+  });
+
+  it("una hoja dentro de un grupo abierto no tiene ningún chevron", () => {
+    renderSidebar(["crm"]);
+
+    const leaf = rowItem(screen.getByRole("link", { name: "contacts" }));
+    expect(within(leaf).queryAllByTestId("nav-chevron")).toHaveLength(0);
+  });
+
+  it("cada grupo pinta exactamente un chevron, en su propia fila", () => {
+    // settings (grupo puro) → security (grupo puro) → users, roles.
+    // Con los dos abiertos, el <li> de settings contiene el de security: contar
+    // sobre el <li> delataría la flecha del padre colándose en el hijo.
+    renderSidebar(["settings", "security"]);
+
+    const securityRow = screen.getByText("security");
+    const securityItem = rowItem(securityRow);
+
+    // La caja de la fila de security tiene su flecha y solo la suya.
+    expect(within(securityRow.closest("div.relative") as HTMLElement).getAllByTestId("nav-chevron"))
+      .toHaveLength(1);
+    // Y la flecha de settings no vive dentro del <li> de security.
+    const settingsChevron = within(rowItem(screen.getByText("settings")))
+      .getAllByTestId("nav-chevron")
+      .find((node) => !securityItem.contains(node));
+    expect(settingsChevron).toBeDefined();
+  });
+
+  it("un grupo puro anuncia su estado de plegado en la propia fila", () => {
+    // No hay chevron interactivo que lo declare (la flecha es decorativa), así
+    // que sin esto un lector de pantalla no sabría que la fila es plegable.
+    renderSidebar();
+
+    const row = screen.getByText("settings").closest("[aria-expanded]") as HTMLElement;
+    expect(row).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(row);
+
+    expect(row).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(row.getAttribute("aria-controls") as string)).not.toBeNull();
+  });
+});
+
 describe("AppSidebar — accesibilidad del árbol", () => {
   beforeEach(() => {
     pathname = "/dashboard";

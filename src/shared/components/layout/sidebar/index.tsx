@@ -19,6 +19,7 @@ import {
   SIDEBAR_NAV_COOKIE_NAME,
 } from "@/shared/components/layout/sidebar/core"
 import { SidebarNavSkeleton } from "./components/nav-skeleton"
+import { SidebarCollapseButton } from "./components/sidebar-collapse-button"
 import type { NavigationNodeDTO, SidebarNavItem } from "./types"
 import {
   DropdownMenu,
@@ -57,8 +58,12 @@ type AppSidebarProps = {
 export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: AppSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { state } = useSidebar()
+  const { state, isMobile } = useSidebar()
   const { user, status } = useSession()
+  // Mismo cálculo que `nav-item.tsx`: en el sheet móvil `state` sigue
+  // reflejando la cookie de escritorio, así que sin `!isMobile` se pintaría el
+  // pie compacto en un panel que sí tiene ancho de sobra.
+  const isCollapsedRail = state === "collapsed" && !isMobile
   const [items, setItems] = useState<SidebarNavItem[]>(() =>
     initialItems ? mapNavigation(initialItems) : [],
   )
@@ -143,18 +148,32 @@ export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: Ap
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="px-3 py-2">
-        {/* Identidad del tenant inyectada desde la capa app; en colapsado el
-            texto se oculta solo (group-data) y queda el logo. */}
-        {identity ?? (
-          <div className="flex items-center gap-2">
-            <BrandMark className="size-8 shrink-0" aria-label="Axi Connect" />
-            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-medium">axi connect</span>
-              <span className="text-xs text-foreground/70 capitalize">{user?.role?.name ?? ""}</span>
-            </div>
+      {/* `px-2` en modo icono: el rail mide 48px, así que con el `px-3` de
+          expandido la caja interior quedaba en 24px y el isotipo (`size-8`,
+          32px) se desbordaba. 48 − 16 = 32px, además alineado con las filas
+          del menú (`SidebarGroup px-2` + botón `size-8`). */}
+      <SidebarHeader className="px-3 py-2 group-data-[collapsible=icon]:px-2">
+        {/* Colapsado pasa a columna: identidad arriba y el control de plegado
+            centrado debajo, que es el único camino de vuelta a expandido. */}
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">
+          {/* Identidad del tenant inyectada desde la capa app; en colapsado el
+              texto se oculta solo (group-data) y queda el logo. El wrapper es
+              de AppSidebar, así que el contrato del nodo inyectado no cambia. */}
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
+            {identity ?? (
+              <div className="flex items-center gap-2">
+                <BrandMark className="size-8 shrink-0" aria-label="Axi Connect" />
+                <div className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="truncate text-sm font-medium">axi connect</span>
+                  <span className="truncate text-xs text-foreground/70 capitalize">
+                    {user?.role?.name ?? ""}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+          <SidebarCollapseButton />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="sidebar-scroll">
@@ -187,8 +206,12 @@ export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: Ap
       </SidebarContent>
 
       <SidebarFooter className="px-3 py-2">
-        <div className={cn("flex justify-center pb-1", state === "collapsed" && "hidden")}>
-          <ThemeToggle />
+        {/* En el rail de 48px el segmentado de tres opciones (~84px) no cabe,
+            así que se cambia por su variante compacta en vez de ocultarse:
+            antes el cambio de tema desaparecía al colapsar y no había forma de
+            tocarlo sin volver a expandir. */}
+        <div className="flex justify-center pb-1">
+          {isCollapsedRail ? <ThemeToggle variant="compact" /> : <ThemeToggle />}
         </div>
         {user ? (
           /* Menú de cuenta: la fila del usuario es el trigger; "Cerrar sesión"
@@ -201,7 +224,7 @@ export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: Ap
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-accent",
                   "focus-visible:outline-2 focus-visible:outline-ring",
-                  state === "collapsed" && "justify-center p-1",
+                  isCollapsedRail && "justify-center p-1",
                 )}
               >
                 <Avatar
@@ -210,13 +233,13 @@ export function AppSidebar({ identity, initialItems, defaultOpenCodes = [] }: Ap
                   fallback={user.name}
                   size={32}
                 />
-                <div className={cn("min-w-0 flex-1", state === "collapsed" && "hidden")}>
+                <div className={cn("min-w-0 flex-1", isCollapsedRail && "hidden")}>
                   <div className="truncate text-sm font-medium">{user.name}</div>
                   <div className="truncate text-xs text-foreground/70">{user.email ?? ""}</div>
                 </div>
                 <ChevronsUpDown
                   aria-hidden="true"
-                  className={cn("size-4 shrink-0 text-muted-foreground", state === "collapsed" && "hidden")}
+                  className={cn("size-4 shrink-0 text-muted-foreground", isCollapsedRail && "hidden")}
                 />
               </button>
             </DropdownMenuTrigger>

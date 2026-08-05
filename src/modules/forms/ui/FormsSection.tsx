@@ -370,7 +370,18 @@ export function FormsSection() {
       readOnly ? (
         <FieldReadOnlyPanel field={fields[selectedIndex]} />
       ) : (
+        /*
+         * `key` por campo, NO por índice: fuerza un remount al cambiar de
+         * selección. Los inputs vienen de `register`, así que son NO
+         * controlados: su valor lo escribe RHF en el nodo DOM al registrarse. Sin
+         * remount, React reutiliza esos nodos para un campo registrado con otro
+         * nombre y el valor pintado se queda clavado en el del campo anterior
+         * (se notaba al pasar de un `select` —que añade el bloque de opciones y
+         * cambia la forma del árbol— a un campo de texto, y con un `ai_prompt`
+         * que se arrastraba a un campo que lo tenía vacío).
+         */
         <FieldDetailPanel
+          key={fields[selectedIndex].key}
           form={form}
           flow={flow}
           index={selectedIndex}

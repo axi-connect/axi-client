@@ -88,8 +88,24 @@ Los flujos son **pestañas de cliente**, no rutas: `GET /forms` trae los tres de
 
 **`ConversationPreview`** — burbujas con el vocabulario de `MessageBubble`. Su valor no es mostrar cómo suena una pregunta (no sabemos qué dirá el LLM: de ahí el disclaimer), es el **efecto acumulado**: con ≥5 obligatorios avisa en neutro de que son 5 preguntas antes de poder cobrar. Para `order_intake` muestra la **concatenación** con `contact_registration` vía `effectiveFields()`, y corre sobre el borrador sin guardar.
 
+## Entrada de sidebar
+
+El menú se construye 100% desde `GET /me/navigation`, así que la entrada vive en `UI_MODULE_TREE` de `axi-server/prisma/seeders/security.seeder.ts`, dentro del grupo **Configuración › Automatización** (junto a Acciones rápidas y Avisos automáticos):
+
+```ts
+{ code: 'intake_forms', name: 'Formularios de captura', path: '/settings/forms',
+  icon: 'clipboard-list', required_permission_code: 'forms:manage' }
+```
+
+- `sort_order` **no se declara**: `flattenUiModuleTree` lo deriva de la posición entre hermanos en pasos de 10 (aquí, 30).
+- `forms:manage` y no `forms:read` — es una página de configuración, y `forms:read` lo tiene también el operador. Aun así el editor renderiza read-only con solo `forms:read`, porque la URL es alcanzable a mano.
+- `path` calza exacto con la carpeta ⇒ **cero entradas nuevas en `NAV_PATH_ALIASES`**, y no está en `UNIMPLEMENTED_NAV_PATHS`.
+- `"clipboard-list"` está en el diccionario cerrado `NAV_ICONS` (`src/core/lib/icons.ts`) para mantener el invariante seeder↔frontend, **aunque hoy no se pinte**: `mapNavigation` resuelve el icono solo en profundidad 0 y esta entrada va en profundidad 2.
+- Cubierto por `sidebar/__tests__/nav-tree.test.ts` ("emite la entrada de formularios de captura anidada en Automatización").
+
+**Para materializarla en un entorno**: sembrar el RBAC. Ojo con `npm run seed`, que corre el seed COMPLETO — su `seedSalesDemo` hace upsert del formulario `order_intake` del tenant demo y sobrescribiría lo configurado ahí. Para solo el RBAC basta un script que llame a `seedRbac(prisma)`.
+
 ## Pendiente
 
-- **Entrada de sidebar**: falta el nodo en `UI_MODULE_TREE` de `axi-server/prisma/seeders/security.seeder.ts` (el sidebar se construye 100% desde `GET /me/navigation`). Previsto: `{ code: 'intake_forms', name: 'Formularios de captura', path: '/settings/forms', icon: 'clipboard-list', required_permission_code: 'forms:manage' }` + `"clipboard-list"` en `NAV_ICONS` de `src/core/lib/icons.ts`. Hasta entonces la página solo es alcanzable por URL.
-- **Verificación visual**: pendiente de ojo humano (light/dark, layout del split, drag con ratón). Los 27 tests de componente cubren el mecanismo.
+- **Verificación visual**: pendiente de ojo humano (light/dark, layout del split, drag con ratón, y el ítem en el menú). Los 27 tests de componente cubren el mecanismo.
 - **Gap del backend**: `book_appointment.tool.ts` valida con el guard pero **no persiste** `scheduling_appointment.intake_data` (la columna existe; `create_order` sí lo hace vía `collectFormData`). El copy de `appointment_booking` no promete "verás estos datos en la cita".

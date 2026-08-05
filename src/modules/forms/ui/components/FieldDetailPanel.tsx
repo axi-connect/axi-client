@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { Lock, Trash2 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
@@ -67,6 +68,19 @@ export function FieldDetailPanel({
   const aiPrompt = field?.ai_prompt ?? "";
   const type = (field?.type ?? "text") as FormFieldType;
   const displayName = label.trim() === "" ? "este dato" : label;
+
+  /*
+   * El acordeón de la clave técnica arranca abierto para un dato personalizado
+   * nuevo (nace sin clave, hay que ponérsela) y se ABRE SIEMPRE que haya un
+   * error en el `code`: si no, el mensaje quedaría dentro de una sección
+   * colapsada y el usuario no vería por qué no puede guardar. El estado local es
+   * correcto porque el panel se remonta por campo (ver la `key` en FormsSection).
+   */
+  const hasCodeError = errors?.code !== undefined;
+  const [codeOpenedByUser, setCodeOpenedByUser] = useState(
+    field?.persisted !== true && (field?.code ?? "") === "",
+  );
+  const codeSectionOpen = codeOpenedByUser || hasCodeError;
 
   return (
     <div className="space-y-5">
@@ -209,7 +223,12 @@ export function FieldDetailPanel({
       {field !== undefined && <AiPromptPreview field={field} />}
 
       {/* Clave técnica — cerrada por defecto; inmutable si ya se guardó */}
-      <Accordion type="single" collapsible>
+      <Accordion
+        type="single"
+        collapsible
+        value={codeSectionOpen ? "code" : ""}
+        onValueChange={(value) => setCodeOpenedByUser(value === "code")}
+      >
         <AccordionItem value="code" className="border-b-0">
           <AccordionTrigger className="py-2 text-sm hover:no-underline">
             <span className="flex items-center gap-2">
