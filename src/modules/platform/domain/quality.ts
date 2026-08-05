@@ -53,6 +53,7 @@ export const MAX_SUITE_SCENARIOS = 50;
 export type SuccessCriterion =
   | { kind: "order_created"; min_items?: number; product_codes?: string[] }
   | { kind: "order_not_created" }
+  | { kind: "appointment_created" }
   | { kind: "escalated" }
   | { kind: "not_escalated" }
   | { kind: "reply_contains"; pattern: string }
@@ -76,6 +77,11 @@ export const CRITERION_KINDS: {
     description: "La conversación termina con un pedido (opcional: mínimo de unidades y productos esperados)",
   },
   { value: "order_not_created", label: "Sin pedido", description: "La conversación NO debe crear un pedido" },
+  {
+    value: "appointment_created",
+    label: "Cita agendada",
+    description: "La conversación deja una cita agendada (requiere un tenant con servicios agendables)",
+  },
   { value: "escalated", label: "Escala a humano", description: "El agente debe transferir a un operador" },
   { value: "not_escalated", label: "No escala", description: "El agente debe resolver sin transferir" },
   {
@@ -128,6 +134,7 @@ export function parseSuccessCriteria(raw: unknown): SuccessCriterion[] {
         return criterion;
       }
       case "order_not_created":
+      case "appointment_created":
       case "escalated":
       case "not_escalated":
       case "no_agent_error":
@@ -160,6 +167,8 @@ export function criterionLabel(criterion: SuccessCriterion): string {
     }
     case "order_not_created":
       return "Sin pedido";
+    case "appointment_created":
+      return "Cita agendada";
     case "escalated":
       return "Escala a humano";
     case "not_escalated":

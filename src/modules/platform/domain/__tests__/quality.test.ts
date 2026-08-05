@@ -9,10 +9,15 @@ import {
 } from "../quality";
 
 describe("parseSuccessCriteria", () => {
-  it("parsea los ocho kinds v1 con sus campos", () => {
+  // Los nueve kinds de criteria_version 1 (success_criteria.schema.ts del
+  // backend). Esta lista debe cubrirlos TODOS: un kind ausente aquí cae a
+  // `unknown` y `toWireCriteria` lo descarta al guardar, perdiendo el criterio
+  // en silencio — que es justo lo que pasaba con `appointment_created`.
+  it("parsea los nueve kinds v1 con sus campos", () => {
     const parsed = parseSuccessCriteria([
       { kind: "order_created", min_items: 5, product_codes: ["BURGER"] },
       { kind: "order_not_created" },
+      { kind: "appointment_created" },
       { kind: "escalated" },
       { kind: "not_escalated" },
       { kind: "reply_contains", pattern: "gracias" },
@@ -23,6 +28,7 @@ describe("parseSuccessCriteria", () => {
     expect(parsed).toEqual([
       { kind: "order_created", min_items: 5, product_codes: ["BURGER"] },
       { kind: "order_not_created" },
+      { kind: "appointment_created" },
       { kind: "escalated" },
       { kind: "not_escalated" },
       { kind: "reply_contains", pattern: "gracias" },
@@ -60,6 +66,7 @@ describe("criterionLabel", () => {
     expect(criterionLabel({ kind: "order_created", min_items: 5 })).toBe("Pedido creado · ≥ 5 unidades");
     expect(criterionLabel({ kind: "reply_contains", pattern: "hola" })).toBe("Respuesta contiene /hola/i");
     expect(criterionLabel({ kind: "max_reply_ms", threshold_ms: 3000 })).toBe("Latencia máx. 3000 ms");
+    expect(criterionLabel({ kind: "appointment_created" })).toBe("Cita agendada");
     expect(criterionLabel({ kind: "unknown", raw: { kind: "x" } })).toBe("Criterio no reconocido (x)");
   });
 });
