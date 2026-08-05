@@ -76,13 +76,18 @@ export default async function PrivateLayout({
           {/* Últimos 2 días de trial: en flujo, empuja el contenido */}
           <TrialCountdownBanner />
         </div>
-        <SidebarInset>
+        {/* `min-height: auto` en estos dos niveles es lo que deja CRECER a las
+            vistas documentales (dashboard, ajustes) para que scrollee el panel.
+            Pero una vista de APLICACIÓN necesita lo contrario: quedarse topada
+            para que scrollee su interior (el timeline del inbox, una tabla).
+            Como el mismo shell sirve a las dos, la vista lo declara con
+            `data-app-view` y aquí se recoge con `:has()` — mismo mecanismo que
+            el `has-data-[variant=inset]` del primitivo. Ver DESIGN-SYSTEM §4.2. */}
+        <SidebarInset className="has-[[data-app-view]]:min-h-0">
           {/* Superficie de marca a ancho completo; el centrado del contenido
               (max-w + gutters) lo aporta el layout del grupo (content). Las
-              vistas de aplicación (workspace) son full-bleed sobre ella.
-              `flex-1` sin `min-h-0`: rellena cuando el contenido es corto y
-              CRECE cuando es largo (su min-height auto es lo que lo permite). */}
-          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted">
+              vistas de aplicación (workspace) son full-bleed sobre ella. */}
+          <div className="flex w-full flex-1 flex-col rounded-3xl rounded-b-none bg-gradient-to-br from-muted/50 to-muted has-[[data-app-view]]:min-h-0">
             {children}
           </div>
         </SidebarInset>

@@ -14,7 +14,7 @@ export function InboxSkeleton({ className }: { className?: string }) {
       role="status"
       aria-label="Cargando conversaciones"
       aria-busy="true"
-      className={cn("flex h-full min-h-[60vh] overflow-hidden", className)}
+      className={cn("flex min-h-0 flex-1 overflow-hidden", className)}
     >
       {/* Lista de conversaciones */}
       <div className="flex w-full max-w-xs shrink-0 flex-col gap-1 border-r border-border p-3">

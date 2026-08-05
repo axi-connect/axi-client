@@ -37,7 +37,7 @@ export function ContextPanel({
   const { Panel } = panel;
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end xl:static xl:z-auto xl:h-full">
+    <div className="fixed inset-0 z-40 flex justify-end xl:static xl:z-auto xl:min-h-0">
       {/* Scrim solo cuando el panel flota; en xl+ convive con el chat */}
       <button
         type="button"
@@ -50,7 +50,7 @@ export function ContextPanel({
         initial={prefersReducedMotion === true ? false : { x: 24, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={prefersReducedMotion === true ? { duration: 0 } : spring.soft}
-        className="relative flex h-full w-full flex-col overflow-hidden border-l border-border bg-background md:w-[340px] xl:shrink-0"
+        className="relative flex h-full w-full flex-col overflow-hidden border-l border-border bg-background md:w-[340px] xl:h-auto xl:min-h-0 xl:shrink-0"
       >
         <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
           <h2 className="truncate text-sm font-semibold">{panel.label}</h2>

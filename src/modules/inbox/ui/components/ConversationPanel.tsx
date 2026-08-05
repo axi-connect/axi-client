@@ -80,7 +80,7 @@ export function ConversationPanel({
     return (
       <div
         className={cn(
-          "h-full flex-1 flex-col items-center justify-center gap-3 text-muted-foreground",
+          "min-h-0 flex-1 flex-col items-center justify-center gap-3 text-muted-foreground",
           className,
         )}
       >
@@ -91,7 +91,7 @@ export function ConversationPanel({
   }
 
   return (
-    <div className={cn("h-full flex-1 flex-col overflow-hidden", className)}>
+    <div className={cn("min-h-0 flex-1 flex-col overflow-hidden", className)}>
       <ConversationHeader conversation={selected} commands={commands} />
 
       {/* Timeline */}

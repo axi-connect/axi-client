@@ -109,7 +109,7 @@ export function InboxList({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex h-full w-full flex-col border-r border-border bg-background/60 md:w-72 md:shrink-0",
+        "flex min-h-0 w-full flex-col border-r border-border bg-background/60 md:w-72 md:shrink-0",
         className,
       )}
     >

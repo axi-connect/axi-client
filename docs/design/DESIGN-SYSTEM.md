@@ -141,12 +141,15 @@ Escala Tailwind estándar (base 4px). Convenciones:
 **Propiedad del scroll (alto del panel privado y de `/platform`).** Cada superficie tiene **un solo** contenedor scrolleable, marcado `[data-app-scroll]`. La cadena es fija:
 
 ```
-SidebarProvider          h-dvh min-h-0 overflow-hidden          ← marco topado al viewport
-└ div[data-app-scroll]   flex min-h-0 flex-1 flex-col overflow-y-auto   ← ÚNICO scroller
-  ├ div                  sticky top-0 z-40 shrink-0             ← header + banners, juntos
-  └ SidebarInset         flex-1                                 ← toma la altura restante
-    └ superficie         flex flex-1 flex-col                   (sin min-h-0: debe poder crecer)
-      └ vista full-bleed flex min-h-0 flex-1 overflow-hidden
+SidebarProvider            h-dvh min-h-0 overflow-hidden        ← marco topado al viewport
+└ div[data-app-scroll]     flex min-h-0 flex-1 flex-col overflow-y-auto   ← scroller del PANEL
+  ├ div                    sticky top-0 z-40 shrink-0           ← header + banners, juntos
+  └ SidebarInset           flex-1  has-[[data-app-view]]:min-h-0
+    └ superficie           flex flex-1 flex-col  has-[[data-app-view]]:min-h-0
+      └ vista full-bleed   data-app-view + flex min-h-0 flex-1 overflow-hidden
+        └ wrapper children flex min-w-0 min-h-0 flex-1 overflow-hidden
+          └ raíz de vista  flex min-h-0 flex-1                  ← la page NO añade wrapper
+            └ columnas     min-h-0 flex-1 overflow-y-auto       ← el único scroll del área
 ```
 
 Reglas que se derivan de ahí:
@@ -154,8 +157,9 @@ Reglas que se derivan de ahí:
 - **Nunca `calc(100svh - <alto del header>)`.** Restar la altura del header a mano es el defecto que produjo el doble scroll de todo el panel: el header medía **54px** reales (`py-2` + `size-9` de la campana + los 2px de borde de `.glass`) y seis archivos asumían **52px**, así que el scroller desbordaba 2px y pintaba una barra fantasma junto a la del contenido. La altura la reparte flex: el grupo pegado es `shrink-0` y consume su alto real, y el hermano de abajo toma el resto con `flex-1`.
 - **El header y los banners viven DENTRO del scroller**, como un único grupo `sticky top-0 shrink-0`. Es lo que mantiene el blur-through del glass (§5.1): el contenido sigue pasando por detrás del cristal al scrollear. No sacarlos fuera.
 - **El header no declara altura fija**, a propósito: nada debe depender de cuánto mide.
-- **`min-h-0` solo en los contenedores que deben encogerse** (el marco y el scroller). `SidebarInset` y la superficie conservan su `min-height: auto`, que es lo que les permite **crecer** con contenido largo; ponerles `min-h-0` recorta el contenido.
-- **`flex-1`, nunca porcentajes**, en la superficie y en las vistas full-bleed: `SidebarInset` tiene altura `auto` y un `min-h-full` contra un padre `auto` resuelve a 0.
+- **Hay DOS modos de scroll y la vista elige, con `data-app-view`.** Una vista **documental** (dashboard, ajustes, cualquier página de `(content)`) debe **crecer** y que scrollee el panel. Una vista de **aplicación** (inbox, CRM) debe quedarse **topada** y que scrollee su interior. Como el shell es el mismo, `SidebarInset` y la superficie llevan `min-height: auto` por defecto —que es lo que permite crecer— y lo cambian a `min-h-0` con `has-[[data-app-view]]` cuando la vista se declara de aplicación. Sin ese marcador, una vista full-bleed puede poner todos los `min-h-0` que quiera abajo: sus dos ancestros seguirán estirándose con el contenido y el scroll se irá al panel. **Solo poner `data-app-view` si la vista garantiza un scroller interno propio**; si no, el contenido se recorta en vez de scrollear.
+- **`flex-1`, nunca porcentajes**, en toda la cadena — superficie, vistas full-bleed **y todo lo que cuelgue de ellas**: `SidebarInset` tiene altura `auto` y un `h-full`/`min-h-full` contra un padre `auto` resuelve a `auto`, no a la altura del viewport. Corolario que ya costó un bug: **quitar una altura definida (`h-[calc(...)]`) obliga a convertir en el mismo commit todos los `h-full` que colgaban de ella**. El inbox se quedó con nueve (`page.tsx`, `InboxView`, `InboxList`, `ConversationPanel`, `ContextPanel`, el skeleton…) cuando su raíz pasó de `h-[calc(100svh-52px)]` a `flex-1`: el timeline crecía hasta 7361px con 60 mensajes en vez de acotarse a 625px, y el panel entero scrolleaba.
+- **Las `page.tsx` no envuelven la vista en un `<div>` de altura.** Un `<div className="h-full">` intermedio rompe la cadena; la vista es directamente el ítem flex.
 - Los scrollers internos de las vistas (tablas, rails, columnas kanban, lista del inbox) siguen usando `min-h-0 flex-1 overflow-y-auto` y son el único scroll de su área.
 
 ### 4.3 Elevación (sombras)

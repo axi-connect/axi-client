@@ -7,9 +7,6 @@ export default async function WorkspaceInboxConversationPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  return (
-    <div className="h-full">
-      <InboxView initialConversationId={id} />
-    </div>
-  )
+  // Sin wrapper de altura: ver la nota de `../page.tsx`.
+  return <InboxView initialConversationId={id} />
 }

@@ -11,7 +11,7 @@ import { CrmNav } from "@/modules/crm/ui/CrmNav";
  */
 export default function CrmLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+    <div data-app-view className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
       <CrmNav />
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</div>
     </div>
