@@ -104,7 +104,7 @@ export function ContextMenu({ open, position, onOpenChange, className, children 
       role="menu"
       aria-orientation="vertical"
       className={cn(
-        "z-50 min-w-40 rounded-md border border-border bg-background p-1 shadow-lg",
+        "z-[70] min-w-40 rounded-md border border-border bg-background p-1 shadow-lg",
         "flex flex-col outline-none",
         className
       )}

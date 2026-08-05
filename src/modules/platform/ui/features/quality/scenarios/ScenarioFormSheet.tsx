@@ -6,6 +6,7 @@
  * `quality/scenario_immutable`) con "Clonar" como única salida de edición.
  * 409 `quality/scenario_code_taken` → error inline en `code`, sin cerrar.
  */
+import { useMemo } from "react";
 import { Copy, Lock } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { isHttpError } from "@/core/api/problem";
@@ -57,8 +58,16 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone 
   const isEditing = mode === "edit" && scenario !== null;
   const isViewing = mode === "view" && scenario !== null;
 
-  const defaultValues: ScenarioFormValues =
-    scenario !== null ? scenarioToFormValues(scenario) : defaultScenarioFormValues;
+  // `DynamicForm` hace `form.reset()` cuando cambia la IDENTIDAD de este
+  // objeto: construirlo en cada render descartaría lo que el usuario lleve
+  // escrito (criterios incluidos) ante cualquier re-render del sheet — un
+  // refetch de la lista, un cambio de `isPending`. Solo un escenario distinto,
+  // o una versión más reciente del mismo, debe repoblar el formulario.
+  const defaultValues: ScenarioFormValues = useMemo(
+    () => (scenario !== null ? scenarioToFormValues(scenario) : defaultScenarioFormValues),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scenario?.id, scenario?.updated_at],
+  );
 
   const fields: FieldConfig<ScenarioFormValues>[] = [
     createInputField<ScenarioFormValues>("code", {

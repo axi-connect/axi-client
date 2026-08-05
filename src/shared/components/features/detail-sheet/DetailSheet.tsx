@@ -8,6 +8,7 @@ import { useBodyScrollLock } from "./hooks/useBodyScrollLock"
 import { useResponsiveSide } from "./hooks/useResponsiveSide"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { spring } from "@/core/styles/motion"
+import { LAYERS } from "@/core/styles/layers"
 
 export type DetailSheetSize = "xs" | "sm" | "md" | "lg" | "xl" | number
 
@@ -58,7 +59,10 @@ export default function DetailSheet<Id extends string | number = string | number
     skeleton,
     className,
     size = 420,
-    zIndex = 60,
+    // Capa del panel según la escala de DESIGN-SYSTEM §4.4. Subirlo por encima
+    // de `LAYERS.floating` (70) dejaría los selects/popovers de su contenido
+    // pintados DETRÁS del panel opaco: se ven cortados y no reciben el clic.
+    zIndex = LAYERS.detailSheet,
     fetchDetail,
     onOpenChange,
     renderHeader,

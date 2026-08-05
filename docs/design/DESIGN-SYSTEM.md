@@ -148,6 +148,23 @@ Escala Tailwind estándar (base 4px). Convenciones:
 
 Sombras siempre difusas y de baja opacidad; en dark el borde sutil pesa más que la sombra.
 
+### 4.4 Capas (z-index)
+
+Fuente única: `src/core/styles/layers.ts` (`LAYERS`). **Ningún z-index suelto en componentes**; si hace falta una capa nueva, se añade allí y se documenta aquí.
+
+| Capa | Valor | Qué vive ahí |
+|---|---|---|
+| `overlay` | 50 | `Dialog`, `Sheet`, `Modal` — overlays de Radix con backdrop propio |
+| `detailSheet` | 60 | Panel del `DetailSheet` (su backdrop se pinta en 59) |
+| `floating` | 70 | Contenido **portalado** a `body`: `Select`, `Popover`, `Tooltip`, `ContextMenu` |
+| `alert` | 9999 | `FloatingAlert` |
+
+`DropdownMenu` queda fuera de la tabla a propósito: es una implementación propia con `absolute`, así que vive dentro del contexto de apilamiento de su contenedor y nunca compite con los overlays.
+
+**Regla: el contenido flotante vive siempre por encima de la superficie que lo ancla.** El contenido de un `Select` se portaliza a `document.body`, así que su z-index compite con el de los overlays, no con el del formulario que lo contiene. Si empata o queda por debajo del panel opaco que lo abrió, el listado se pinta detrás y el clic lo recibe el panel: el control parece no funcionar.
+
+En Tailwind v4 las clases se extraen estáticamente del fuente: usar `z-[70]` literal, nunca `z-[${valor}]`. Cuando el valor tiene que ser dinámico (el `zIndex` configurable del `DetailSheet`), va por `style` inline leyendo `LAYERS`.
+
 ---
 
 ## 5. Glass (material flotante)
