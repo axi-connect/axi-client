@@ -12,6 +12,7 @@ import {
   Home,
   Inbox,
   Lock,
+  Mic,
   Package,
   Plug,
   ScrollText,
@@ -47,6 +48,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   // Los cuatro siguientes son los grupos puros del árbol jerárquico
   // (Seguridad, Configuración, Ventas, Automatización).
   lock: Lock,
+  mic: Mic,
   package: Package,
   plug: Plug,
   scroll: ScrollText,

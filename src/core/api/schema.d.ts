@@ -6722,6 +6722,8 @@ export interface components {
                 escalated_turns: number;
                 escalated_by_failure: number;
                 avg_tool_calls: number;
+                voice_replies: number;
+                voice_notes_delivered: number;
                 latency_p50_ms: number | null;
                 latency_p95_ms: number | null;
                 evaluations: number;
