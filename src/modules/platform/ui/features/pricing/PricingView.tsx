@@ -172,7 +172,10 @@ export function PricingView() {
               )}
             </h2>
             <div className="overflow-x-auto rounded-2xl border border-border bg-background">
-              <Table>
+              {/* La tabla va full-bleed dentro de la card: el p-2 del primitivo
+                  deja las columnas pegadas al borde redondeado — se abre el
+                  padding al aire del mockup de F3 */}
+              <Table className="[&_th]:h-11 [&_th]:px-4 [&_td]:px-4 [&_td]:py-3">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Modelo</TableHead>
