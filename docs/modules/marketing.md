@@ -82,23 +82,33 @@ D6 del backend). Por eso el detalle de campaña combina WS + un polling lento.
 
 ```
 src/modules/marketing/
-├── domain/                       # TS PURO + __tests__/ (52 tests)
+├── domain/                       # TS PURO + __tests__/
 │   ├── enums.ts                  # uniones desde Schemas + labels ES
 │   ├── campaign.ts               # DTOs + params de listado
 │   ├── campaign-state.ts         # predicados de acción, campaignPollInterval, progreso
+│   ├── campaign-draft.ts         # wizard: bloqueo por paso, payloads excluyentes, estimación
 │   ├── automation.ts             # AutomationConditions + parseConditions defensivo, requiresHsm
 │   ├── promotion.ts              # estado derivado, describePromotionKind, progreso de canjes
+│   ├── template.ts               # espejo del renderer del backend + vista previa
+│   ├── template-catalog.ts       # plantillas del tenant y HSM de Meta
+│   ├── settings.ts               # defaults y rangos de la configuración
 │   └── skip-reasons.ts           # 21 motivos + fallback crudo + desglose
 ├── infrastructure/
-│   ├── services/                 # campaigns · automations · promotions · opt-outs (adapters http)
+│   ├── services/                 # campaigns · automations · promotions · templates ·
+│   │                             #   hsm-templates · opt-outs · marketing-settings
 │   ├── stores/overview.store.ts  # Section<T> por bloque + topes de fan-out
 │   └── realtime/use-marketing-socket.ts
 └── ui/
-    ├── MarketingOverviewView.tsx
-    └── components/               # LiveCampaignCard · RecoveryFeed · OverviewSkeleton
+    ├── MarketingOverviewView · CampaignsView · CampaignWizard · PromotionsView ·
+    │   AutomationsView · MarketingSettingsView · TemplatesView · MetaTemplatesView · OptOutsView
+    ├── components/               # LiveCampaignCard · RecoveryFeed · OverviewSkeleton ·
+    │                             #   PromotionCard · RedemptionsSheet · AutomationCard ·
+    │                             #   MessageTemplateField · MarketingSettingsNav
+    └── forms/config/             # promotion.config · automation.config
 
 src/app/(private)/(content)/marketing/
 ├── {page,loading}.tsx                Resumen
+├── campaigns/{page,loading}.tsx + campaigns/new/page.tsx
 ├── promotions/{page,loading}.tsx
 ├── automations/{page,loading}.tsx
 └── settings/{layout,page,loading}.tsx + templates/ + meta-templates/ + opt-outs/
@@ -112,6 +122,9 @@ src/app/(private)/(content)/marketing/
 - Los montos son **centavos**: `formatMoney` siempre, nunca el entero crudo.
 - Un estado o motivo desconocido del backend se muestra **crudo**, no traducido a la fuerza: tiene
   que verse raro para que lo mapeemos.
+- El DSL de audiencia **no se reimplementa**: el constructor y su descripción humana son del CRM
+  (`AudienceFilterBuilder` y `describeSegmentFilters` vía `crm/public.ts`). Un segundo builder sería
+  un segundo sitio donde el DSL se puede desincronizar.
 
 ---
 

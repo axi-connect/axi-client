@@ -45,3 +45,24 @@ export { ContactTimelineFeed } from "./ui/components/contact-detail/ContactTimel
  * Muta un recurso de CRM, de ahí que viva en este slice.
  */
 export { ContactOwnerSelect } from "./ui/components/contact-detail/ContactOwnerSelect";
+
+/**
+ * DSL de audiencia. El CRM es su dueño (segmentos guardados) y `marketing` lo
+ * consume para armar la audiencia de una campaña. Se publica el DSL COMPLETO —
+ * tipos, normalizador, descripción humana, lecturas y el builder — porque
+ * partirlo obligaría al consumidor a reimplementar la mitad.
+ */
+export {
+  compactSegmentFilters,
+  describeSegmentFilters,
+  type SegmentDTO,
+  type SegmentFilters,
+  type TagDTO,
+} from "./domain/segment";
+
+export { AudienceFilterBuilder } from "./ui/components/segments/AudienceFilterBuilder";
+
+export {
+  listSegments,
+  listTags,
+} from "./infrastructure/services/segments-service.adapter";

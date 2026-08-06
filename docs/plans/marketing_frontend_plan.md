@@ -23,7 +23,7 @@
 | F2 | Promociones y cupones + `catalog/public.ts` + `VariantPicker` | ✅ Código completo | `Promociones` ✅ |
 | F3 | Recuperación de ventas (reglas + métricas) | ✅ Código completo | `Recuperación` ✅ |
 | F4 | Configuración: ajustes, plantillas, plantillas de Meta y bajas | ✅ Código completo | `Configuración` ✅ |
-| F5 | Campañas: lista + wizard de 4 pasos | ⬜ Pendiente | `Campañas` |
+| F5 | Campañas: lista + wizard de 4 pasos | ✅ Código completo | `Campañas` ✅ |
 | F6 | Detalle de campaña en vivo (embudo, destinatarios, ciclo de vida) | ⬜ Pendiente | — |
 
 Orden justificado: F2 antes que F3 porque el editor de reglas **selecciona una promoción**; F4 antes
@@ -145,6 +145,33 @@ Y dos piezas nuevas genuinamente reutilizables:
   captura en claro, oscuro y ancho móvil con un guard automático de desbordamiento horizontal.
   Levantar `axi-server` desde el worktree de marketing aplicaría sus migraciones a la BD de
   desarrollo compartida: es una decisión del usuario, no del agente.
+
+### Estado de F5
+
+- Backend: hijo `marketing_campaigns` en el seeder, **primero** de los cuatro (el orden del array es
+  el orden del menú y campañas es la cabecera del módulo).
+- **`AudienceFilterBuilder` extraído del CRM**, no reimplementado: el constructor de las 11 claves
+  del DSL y `describeSegmentFilters` vivían privados dentro de `SegmentsManager.tsx`. Ahora el
+  componente es controlado (`{value, onChange, tags, idPrefix, disabled}`), la descripción humana es
+  una función pura de `crm/domain/segment.ts`, y ambos se publican por `crm/public.ts`.
+  `SegmentsManager` adelgaza ~185 líneas y sigue guardando exactamente el mismo DSL — eso es lo que
+  fijan los **10 tests de regresión** que clavan la cadena de descripción carácter a carácter.
+- **El wizard crea el borrador al salir del paso 1.** No es una elección de diseño: `preview-audience`
+  es un POST sobre una campaña que ya existe (§ desviación 4), así que sin crearla antes no hay a
+  quién preguntarle por la audiencia. El aviso del paso 1 lo dice con esas palabras.
+- Las bajas se presentan **siempre como estimación** ("≈ 1.000 recibirán · estimado sobre una muestra
+  de 1.000"): el backend las cuenta sobre una muestra de 1.000, no sobre el total.
+- La lista **no pide stats**: el endpoint de listado no las trae y pedirlas por fila sería una
+  petición por campaña. El embudo vive en el detalle (F6), que es donde se mira.
+- Acciones por fila derivadas de **predicados puros** (`canPause/canResume/canCancel/canDelete`), no
+  de un `try/catch` contra el backend: un botón que solo falla al pulsarlo es un botón que miente.
+- `defaultScheduleSlot()` nació de la verificación visual: el valor por defecto al marcar "Programar"
+  era hoy a las 9:00 y aparecía ya vencido, obligando a corregir un aviso nada más marcar la opción.
+  Ahora es la siguiente hora en punto con dos horas de margen, y de noche salta a mañana a las 9:00.
+- **26 tests nuevos** (10 de regresión del CRM, 17 de dominio del wizard, 8+7 de vista en 2 suites).
+  Suite completa: **861 verdes**. Rutas: `campaigns` 9,4 kB · `campaigns/new` 7,0 kB.
+- Verificación visual sobre la app compilada en claro, oscuro y ancho móvil, recorriendo los cuatro
+  pasos del wizard con el stub del backend: sin errores de página ni desbordamiento horizontal.
 
 ### Estado de F4
 
