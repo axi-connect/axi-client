@@ -7,7 +7,7 @@
  * "Cerrar vigencia hoy" = PATCH `effective_to: hoy` (Modal simple).
  */
 import { useMemo, useState } from "react";
-import { CircleDollarSign, MoreVertical, PencilLine, Plus, TimerOff } from "lucide-react";
+import { CircleDollarSign, Mic, MoreVertical, PencilLine, Plus, TimerOff } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -34,8 +34,10 @@ import {
 import {
   FALLBACK_MODEL,
   groupByProvider,
+  groupUnit,
   isCurrentRate,
   providerLabel,
+  unitLabel,
   type PricingRate,
 } from "../../../domain/pricing";
 import { usePricingQuery, useUpdatePricing } from "../../../infrastructure/api/hooks/use-pricing";
@@ -126,7 +128,9 @@ export function PricingView() {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Pricing IA</h1>
-          <p className="text-sm text-muted-foreground">Tarifas por proveedor y modelo · USD/MTok</p>
+          <p className="text-sm text-muted-foreground">
+            Tarifas por proveedor y modelo · USD por millón de unidades (tokens o caracteres)
+          </p>
         </div>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -144,7 +148,7 @@ export function PricingView() {
         <EmptyState
           icon={CircleDollarSign}
           title="Aún no hay tarifas"
-          description="Registra el costo por MTok de cada proveedor y modelo; usa * como fallback por proveedor."
+          description="Registra el costo por millón de unidades (MTok, caracteres…) de cada proveedor y modelo; usa * como fallback por proveedor."
           action={
             <Button variant="outline" onClick={() => setSheetRate(null)}>
               Crear la primera tarifa
@@ -154,8 +158,18 @@ export function PricingView() {
       ) : (
         groups.map((group) => (
           <section key={group.provider} className="space-y-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {providerLabel(group.provider)}
+              {group.provider === "elevenlabs" && (
+                <Badge variant="outline" className="border-accent-violet/40 bg-accent-violet/10 normal-case text-accent-violet">
+                  <Mic className="size-3" aria-hidden /> voz
+                </Badge>
+              )}
+              {groupUnit(group.rates) !== null && (
+                <span className="font-normal normal-case tracking-normal">
+                  · USD / {unitLabel(groupUnit(group.rates)!)}
+                </span>
+              )}
             </h2>
             <div className="overflow-x-auto rounded-2xl border border-border bg-background">
               <Table>
@@ -197,8 +211,21 @@ export function PricingView() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{formatUsdPerMtok(rate.input_cost_per_mtok_usd)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatUsdPerMtok(rate.output_cost_per_mtok_usd)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatUsdPerMtok(rate.cache_read_per_mtok_usd)}</TableCell>
+                        {/* En tarifas por caracteres (voz) salida/caché no aplican */}
+                        <TableCell className="text-right tabular-nums">
+                          {rate.unit === "characters" ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : (
+                            formatUsdPerMtok(rate.output_cost_per_mtok_usd)
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {rate.unit === "characters" ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : (
+                            formatUsdPerMtok(rate.cache_read_per_mtok_usd)
+                          )}
+                        </TableCell>
                         <TableCell className="text-right tabular-nums">{formatMargin(rate.margin_multiplier)}</TableCell>
                         <TableCell>
                           {current ? (

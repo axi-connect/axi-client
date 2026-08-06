@@ -13,17 +13,45 @@ export type CreatePricingDTO = Schemas["CreatePricingDto"];
 export type UpdatePricingDTO = Schemas["UpdatePricingDto"];
 
 export type PricingProvider = PricingRate["provider"];
+export type PricingUnit = PricingRate["unit"];
 
 /** `model: "*"` = tarifa fallback del proveedor (badge violeta). */
 export const FALLBACK_MODEL = "*";
 
+// El orden define las secciones de la tabla: groupByProvider filtra por esta
+// lista, así que un proveedor ausente aquí NO se pinta
 export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   { value: "anthropic", label: "Anthropic" },
   { value: "openai_compatible", label: "OpenAI compatible" },
+  { value: "elevenlabs", label: "ElevenLabs" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {
   return PROVIDERS.find((p) => p.value === provider)?.label ?? provider;
+}
+
+/**
+ * Unidad de la tarifa (§10.5 F3): la tarifa siempre es "USD por millón de
+ * <unidad>". Para `characters` (voz) el costo vive en la columna de ENTRADA
+ * y salida/caché no aplican.
+ */
+export const UNIT_LABELS: Record<PricingUnit, string> = {
+  tokens: "MTok",
+  characters: "M caracteres",
+  seconds: "M segundos",
+  requests: "M requests",
+};
+
+export function unitLabel(unit: PricingUnit): string {
+  return UNIT_LABELS[unit] ?? unit;
+}
+
+/** Unidad del grupo si todas sus tarifas coinciden (caso real); si un
+ * proveedor mezclara unidades, no se afirma ninguna a nivel de grupo. */
+export function groupUnit(rates: PricingRate[]): PricingUnit | null {
+  const first = rates[0]?.unit;
+  if (first === undefined) return null;
+  return rates.every((rate) => rate.unit === first) ? first : null;
 }
 
 /** ¿La tarifa está vigente? (`effective_to` null o en el futuro). */

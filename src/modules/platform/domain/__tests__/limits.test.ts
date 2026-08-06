@@ -1,12 +1,22 @@
 import {
   hasOtherCostCap,
   MAX_LIMITS,
+  metricInfo,
   newLimitRow,
   validateLimits,
   type LimitInput,
 } from "../limits";
 
 const limit = (over: Partial<LimitInput>): LimitInput => ({ ...newLimitRow(), ...over });
+
+describe("metricInfo (F3 voz)", () => {
+  it("tts_characters está en el catálogo con unidad characters", () => {
+    expect(metricInfo("tts_characters")).toMatchObject({
+      label: "Caracteres de voz",
+      unit: "characters",
+    });
+  });
+});
 
 describe("validateLimits (invariantes del backend en UI)", () => {
   it("un set válido no produce issues", () => {

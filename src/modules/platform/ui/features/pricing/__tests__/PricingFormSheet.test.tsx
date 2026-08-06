@@ -139,4 +139,27 @@ describe("PricingFormSheet", () => {
       }),
     });
   });
+
+  it("una tarifa por caracteres (voz) ajusta labels y deshabilita salida/caché", () => {
+    render(
+      <PricingFormSheet
+        open
+        onOpenChange={() => {}}
+        rate={{
+          ...RATE,
+          provider: "elevenlabs",
+          unit: "characters",
+          model: "eleven_flash_v2_5",
+          display_name: "Eleven Flash v2.5",
+          output_cost_per_mtok_usd: 0,
+          cache_read_per_mtok_usd: null,
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText(/entrada \(usd\/m caracteres\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/salida/i)).toBeDisabled();
+    expect(screen.getByLabelText(/caché/i)).toBeDisabled();
+    expect(screen.getByText(/Tarifa por caracteres \(voz\)/)).toBeInTheDocument();
+  });
 });

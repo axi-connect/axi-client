@@ -25,7 +25,10 @@ export const MAX_LIMITS = 30;
 export const PLAN_CODE_REGEX = /^[a-z][a-z0-9_]*$/;
 
 /** Unidad de la métrica: decide el formato del valor en la UI. */
-export type MetricUnit = "count" | "bytes" | "cost";
+export type MetricUnit = "count" | "bytes" | "cost" | "characters";
+
+/** Nota de voz típica (§10.5): la equivalencia hace legible el tope. */
+export const CHARS_PER_VOICE_NOTE = 280;
 
 export const METRICS: { value: LimitMetric; label: string; unit: MetricUnit }[] = [
   { value: "ai_tokens_input", label: "Tokens IA (entrada)", unit: "count" },
@@ -37,6 +40,9 @@ export const METRICS: { value: LimitMetric; label: string; unit: MetricUnit }[] 
   { value: "external_api_calls", label: "Llamadas API externas", unit: "count" },
   { value: "conversations_active", label: "Conversaciones activas", unit: "count" },
   { value: "storage_bytes", label: "Almacenamiento", unit: "bytes" },
+  // Voz (§10.5 F3): período recomendado billing_cycle, acción degrade — agotar
+  // la voz solo pausa la voz, jamás la IA completa
+  { value: "tts_characters", label: "Caracteres de voz", unit: "characters" },
 ];
 
 export function metricInfo(metric: LimitMetric): { label: string; unit: MetricUnit } {

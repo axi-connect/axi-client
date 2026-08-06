@@ -1,4 +1,4 @@
-import { groupByProvider, isCurrentRate, type PricingRate } from "../pricing";
+import { groupByProvider, groupUnit, isCurrentRate, unitLabel, type PricingRate } from "../pricing";
 
 const NOW = "2026-07-17T12:00:00Z";
 
@@ -36,16 +36,36 @@ describe("groupByProvider", () => {
       rate({ id: "r-3", model: "claude-sonnet-5" }),
       rate({ id: "r-4", provider: "openai_compatible", model: "gpt-5-mini" }),
       rate({ id: "r-5", model: "claude-haiku-4", effective_to: "2026-01-31T00:00:00Z" }),
+      // Voz (F3): sin la entrada en PROVIDERS este grupo se descartaría
+      rate({ id: "r-6", provider: "elevenlabs", unit: "characters", model: "eleven_flash_v2_5" }),
     ];
 
     const groups = groupByProvider(rates, NOW);
 
-    expect(groups.map((g) => g.provider)).toEqual(["anthropic", "openai_compatible"]);
+    expect(groups.map((g) => g.provider)).toEqual([
+      "anthropic",
+      "openai_compatible",
+      "elevenlabs",
+    ]);
     expect(groups[0].rates.map((r) => r.id)).toEqual(["r-3", "r-2", "r-1", "r-5"]);
     expect(groups[1].rates.map((r) => r.id)).toEqual(["r-4"]);
+    expect(groups[2].rates.map((r) => r.id)).toEqual(["r-6"]);
   });
 
   it("omite proveedores sin tarifas", () => {
     expect(groupByProvider([rate({})], NOW)).toHaveLength(1);
+  });
+});
+
+describe("unidad de la tarifa (F3 voz)", () => {
+  it("groupUnit afirma la unidad solo si todo el grupo coincide", () => {
+    expect(groupUnit([rate({ unit: "characters" }), rate({ unit: "characters" })])).toBe("characters");
+    expect(groupUnit([rate({ unit: "tokens" }), rate({ unit: "characters" })])).toBeNull();
+    expect(groupUnit([])).toBeNull();
+  });
+
+  it("unitLabel traduce la unidad para la tabla y el form", () => {
+    expect(unitLabel("tokens")).toBe("MTok");
+    expect(unitLabel("characters")).toBe("M caracteres");
   });
 });
