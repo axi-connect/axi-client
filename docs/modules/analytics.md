@@ -58,6 +58,14 @@ src/modules/analytics/
   conservan los datos viejos (shimmer `opacity-60`, nunca skeleton). El
   desglose "¿Quién convierte mejor?" cachea por dimensión (agente se siembra
   del fetch del funnel; canal/intención lazy).
+- **Voz (§10.5 F5)**: quinta sección del tab Conversión (`VoiceCard`), con
+  ámbito de **CICLO de facturación** — `setPeriod` NO la re-fetchea a
+  propósito. `getVoiceUsage()` compone `/usage/summary` (cuota + ventana) con
+  `/usage/history?metric=tts_characters&granularity=day` acotada al ciclo
+  (serie, costo de la voz y notas reales por `event_count`); el mapper puro es
+  `voiceUsageFromSources` (domain, testeado). La tabla "Calidad por agente"
+  añade la columna secundaria "Notas voz" (`voice_replies`, entregadas en el
+  tooltip; `—` = agente sin voz).
 - **Semáforo fijo** (`labels.ts#scoreBand`): ≥80 `success` · 50–79 `warning` ·
   <50 `destructive`; `hallucination_severity=major` → destructive SIEMPRE.
 - **Realtime** (AV3/AV4, ns `/inbox`): `analytics.alert` → badge inmediato +

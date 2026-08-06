@@ -6,6 +6,7 @@ import {
   getFunnel,
   getJudgeAgreement,
   getTopIssues,
+  getVoiceUsage,
 } from "@/modules/analytics/infrastructure/services/analytics-service.adapter";
 import type { AnalyticsEvaluationCompletedEvent } from "@/core/realtime/events";
 import type {
@@ -18,6 +19,7 @@ import type {
   FunnelGroupBy,
   IssuesTopDTO,
   JudgeAgreementDTO,
+  VoiceUsageView,
 } from "@/modules/analytics/domain/analytics";
 
 /** Estado de una sección (patrón dashboard.store): carga lazy e independiente. */
@@ -49,6 +51,8 @@ interface AnalyticsState {
   groupBy: FunnelGroupBy;
   /** Cache por dimensión: agente se siembra del funnel; canal/intención lazy. */
   groups: Record<FunnelGroupBy, Section<FunnelGroup[]>>;
+  /** Voz del CICLO de facturación (§10.5 F5): el período del tab no la afecta. */
+  voice: Section<VoiceUsageView>;
 
   // ── Tab Calidad (LLM-judge) ──
   performance: Section<AgentPerformanceDTO>;
@@ -66,6 +70,7 @@ interface AnalyticsState {
 
   setPeriod: (period: AnalyticsPeriod) => void;
   loadConversion: () => Promise<void>;
+  loadVoice: () => Promise<void>;
   setGroupBy: (groupBy: FunnelGroupBy) => void;
   loadQuality: () => Promise<void>;
   refreshQuality: () => Promise<void>;
@@ -89,7 +94,9 @@ interface AnalyticsState {
  */
 export const useAnalyticsStore = create<AnalyticsState>((set, get) => {
   /** Envuelve un fetch de sección top-level con loading/ready/error. */
-  async function run<K extends "funnel" | "performance" | "topIssues" | "judgeAgreement" | "alerts">(
+  async function run<
+    K extends "funnel" | "performance" | "topIssues" | "judgeAgreement" | "alerts" | "voice",
+  >(
     key: K,
     fetcher: () => Promise<NonNullable<AnalyticsState[K]["data"]>>,
   ): Promise<void> {
@@ -156,6 +163,7 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => {
     funnel: idle(),
     groupBy: "agent",
     groups: { agent: idle(), channel: idle(), intention: idle() },
+    voice: idle(),
 
     performance: idle(),
     topIssues: idle(),
@@ -198,6 +206,12 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => {
       // Lazy con cache (ready) y sin dobles disparos (loading); error reintenta.
       if (status === "ready" || status === "loading") return;
       await fetchFunnel();
+    },
+
+    async loadVoice() {
+      const status = get().voice.status;
+      if (status === "ready" || status === "loading") return;
+      await run("voice", getVoiceUsage);
     },
 
     setGroupBy(groupBy) {

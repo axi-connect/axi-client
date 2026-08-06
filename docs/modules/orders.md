@@ -125,6 +125,9 @@ en `notifications/domain/notification-target.ts`; API `suppressToastPrefixes` en
 - **Detalle navegable**: slot paralelo + ruta interceptada (regla §6 de architecture) — URL
   compartible, back cierra. El rail escucha `orders:detail:refresh` (CustomEvent del store) para
   refrescarse en vivo. Costo IA vía `GET /usage/conversations/:id` (best-effort: sin permiso se oculta).
+  El mismo response trae `tts_characters` (§10.5 F5): la fila "Voz" (caracteres · ≈ notas, ya
+  incluida en el costo IA) aparece SOLO cuando la conversación consumió voz — valor `null` y
+  `FieldList` la auto-oculta.
 - **Permisos**: `orders:manage` habilita drag/menús/acciones; con solo `orders:read` el tablero es
   de lectura. El sidebar ya emite `/orders` desde el backend (icono `shopping-cart` mapeado).
 - **Preferencias de dispositivo** en localStorage: `axi:orders:view`, `axi:orders:sound`

@@ -55,6 +55,7 @@ export function AnalyticsView() {
   const storePeriod = useAnalyticsStore((state) => state.period);
   const setPeriod = useAnalyticsStore((state) => state.setPeriod);
   const loadConversion = useAnalyticsStore((state) => state.loadConversion);
+  const loadVoice = useAnalyticsStore((state) => state.loadVoice);
   const loadQuality = useAnalyticsStore((state) => state.loadQuality);
   const loadAlertsBadge = useAnalyticsStore((state) => state.loadAlertsBadge);
   const triggeredCount = useAnalyticsStore((state) => state.triggeredCount);
@@ -82,9 +83,13 @@ export function AnalyticsView() {
   // Carga lazy por tab (con cache: volver no re-fetchea).
   useEffect(() => {
     if (!canRead) return;
-    if (tab === "conversion") void loadConversion();
+    if (tab === "conversion") {
+      void loadConversion();
+      // La tarjeta Voz es por CICLO: carga aparte y el período no la re-fetchea
+      void loadVoice();
+    }
     if (tab === "calidad") void loadQuality();
-  }, [canRead, tab, loadConversion, loadQuality]);
+  }, [canRead, tab, loadConversion, loadVoice, loadQuality]);
 
   const goToTabRef = useCallback(
     (next: AnalyticsTab) => replaceParams({ tab: next }),

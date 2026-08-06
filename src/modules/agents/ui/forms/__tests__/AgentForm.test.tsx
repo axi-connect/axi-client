@@ -40,13 +40,19 @@ jest.mock("@/modules/agents/infrastructure/services/agent-service.adapter", () =
   setAgentIntentions: jest.fn(),
 }));
 
+// Mutable por test: la sección de voz depende del switch de empresa
+const agentContext = {
+  characters: [] as unknown[],
+  intentions: [],
+  voices: null,
+  voiceSettings: null as { ai_enabled: boolean } | null,
+  fetchCharacters: jest.fn(),
+  fetchIntentions: jest.fn(),
+  fetchVoices: jest.fn(),
+  fetchVoiceSettings: jest.fn(),
+};
 jest.mock("@/modules/agents/infrastructure/stores/agent.context", () => ({
-  useAgent: () => ({
-    characters: [],
-    intentions: [],
-    fetchCharacters: jest.fn(),
-    fetchIntentions: jest.fn(),
-  }),
+  useAgent: () => agentContext,
 }));
 
 jest.mock("@/modules/agents/ui/components/AgentIntentionsEditor", () => ({
@@ -57,6 +63,7 @@ describe("AgentForm — selector de modelos", () => {
   beforeEach(() => {
     listAiModels.mockReset();
     listAiModels.mockResolvedValue({ data: MODELS });
+    agentContext.voiceSettings = null;
   });
 
   it("el modelo ya no es un campo de texto libre", async () => {
@@ -100,5 +107,42 @@ describe("AgentForm — selector de modelos", () => {
     await waitFor(() => {
       expect(screen.getByText(/Sin modelos disponibles/u)).toBeInTheDocument();
     });
+  });
+});
+
+describe("AgentForm — política de voz (§10.5 F2)", () => {
+  beforeEach(() => {
+    listAiModels.mockReset();
+    listAiModels.mockResolvedValue({ data: MODELS });
+    agentContext.voiceSettings = null;
+  });
+
+  it("la sección existe con el switch de responder con notas de voz", async () => {
+    render(<AgentForm />);
+    await waitFor(() => {
+      expect(screen.getByRole("switch", { name: /Responder con notas de voz/u })).toBeInTheDocument();
+    });
+  });
+
+  it("con la voz de empresa APAGADA la sección se deshabilita y se explica (nunca se oculta)", async () => {
+    agentContext.voiceSettings = { ai_enabled: false };
+    render(<AgentForm />);
+    await waitFor(() => {
+      expect(screen.getByText(/La voz está desactivada para tu empresa/u)).toBeInTheDocument();
+    });
+    expect(screen.getByRole("switch", { name: /Responder con notas de voz/u })).toBeDisabled();
+    expect(screen.getByRole("link", { name: /Actívala en Configuración/u })).toHaveAttribute(
+      "href",
+      "/settings/voice",
+    );
+  });
+
+  it("con el switch de empresa desconocido (fetch fallido) NO se bloquea la sección", async () => {
+    agentContext.voiceSettings = null;
+    render(<AgentForm />);
+    await waitFor(() => {
+      expect(screen.getByRole("switch", { name: /Responder con notas de voz/u })).toBeEnabled();
+    });
+    expect(screen.queryByText(/La voz está desactivada/u)).not.toBeInTheDocument();
   });
 });

@@ -63,8 +63,12 @@ export function UsagePanel({ section }: { section: Section<UsageSummaryDTO> }) {
   }
 
   const summary = section.data;
-  const highlighted = summary.metrics.filter((metric) =>
-    (HIGHLIGHTED_USAGE_METRICS as readonly string[]).includes(metric.metric),
+  const highlighted = summary.metrics.filter(
+    (metric) =>
+      (HIGHLIGHTED_USAGE_METRICS as readonly string[]).includes(metric.metric) ||
+      // La voz es opcional y de pago: se destaca solo cuando el tenant la
+      // tiene contratada (límite propio) o ya consumió en el ciclo
+      (metric.metric === "tts_characters" && (metric.limit !== null || metric.used > 0)),
   );
 
   return (

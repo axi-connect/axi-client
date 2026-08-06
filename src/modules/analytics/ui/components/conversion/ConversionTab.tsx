@@ -10,6 +10,7 @@ import { KpiHeroRow } from "./KpiHeroRow";
 import { FunnelCard } from "./FunnelCard";
 import { TrendCard } from "./TrendCard";
 import { GroupBreakdownCard } from "./GroupBreakdownCard";
+import { VoiceCard } from "./VoiceCard";
 import { SectionError, sectionRefetching } from "./section-states";
 
 /**
@@ -23,6 +24,8 @@ export function ConversionTab({ onGoToQuality }: { onGoToQuality?: () => void })
   const groups = useAnalyticsStore((state) => state.groups);
   const setGroupBy = useAnalyticsStore((state) => state.setGroupBy);
   const loadConversion = useAnalyticsStore((state) => state.loadConversion);
+  const voice = useAnalyticsStore((state) => state.voice);
+  const loadVoice = useAnalyticsStore((state) => state.loadVoice);
 
   // Empty state de tab completo: el período no tuvo NINGUNA conversación.
   if (funnel.status === "ready" && funnel.data?.stages.conversations === 0) {
@@ -76,6 +79,10 @@ export function ConversionTab({ onGoToQuality }: { onGoToQuality?: () => void })
           onGroupByChange={setGroupBy}
           onRetry={() => setGroupBy(groupBy)}
         />
+      </StaggerIn>
+
+      <StaggerIn index={4}>
+        <VoiceCard section={voice} onRetry={() => void loadVoice()} />
       </StaggerIn>
     </div>
   );

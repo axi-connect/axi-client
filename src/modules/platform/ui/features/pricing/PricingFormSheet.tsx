@@ -6,7 +6,8 @@
  * - Editar: `provider/model/effective_from` inmutables (candado) — el
  *   versionado canónico es cerrar con "Vigente hasta" y crear una nueva.
  */
-import { Lock, TriangleAlert, Info } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Lock, Mic, TriangleAlert, Info } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useAlert } from "@/core/providers/alert-provider";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
@@ -26,7 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { PROVIDERS, type PricingRate } from "../../../domain/pricing";
+import {
+  PROVIDERS,
+  UNIT_LABELS,
+  unitLabel,
+  type PricingRate,
+  type PricingUnit,
+} from "../../../domain/pricing";
 import { useCreatePricing, useUpdatePricing } from "../../../infrastructure/api/hooks/use-pricing";
 import { isoToDateInput } from "./pricing-format";
 import {
@@ -60,6 +67,7 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
   const defaultValues: PricingFormValues = isEditing
     ? {
         provider: rate.provider,
+        unit: rate.unit,
         model: rate.model,
         display_name: rate.display_name ?? "",
         is_default: rate.is_default,
@@ -72,11 +80,28 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
       }
     : defaultPricingFormValues;
 
+  // La unidad decide los labels de los costos y el aviso de voz; vive también
+  // como estado local porque los labels de FieldConfig son estáticos por render
+  const [unit, setUnit] = useState<PricingUnit>(defaultValues.unit);
+  useEffect(() => {
+    setUnit(defaultValues.unit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, rate?.id]);
+  const perUnit = `USD/${unitLabel(unit)}`;
+
   const fields: FieldConfig<PricingFormValues>[] = [
     createCustomField<PricingFormValues>("provider", ({ value, setValue }) => (
       <Select
         value={String(value ?? "anthropic")}
-        onValueChange={(provider) => setValue("provider", provider as PricingFormValues["provider"])}
+        onValueChange={(provider) => {
+          setValue("provider", provider as PricingFormValues["provider"]);
+          // La voz se tarifica por caracteres: preseleccionar evita la
+          // combinación sin sentido elevenlabs+tokens
+          if (provider === "elevenlabs") {
+            setValue("unit", "characters");
+            setUnit("characters");
+          }
+        }}
         disabled={isEditing}
       >
         <SelectTrigger className="w-full" aria-label="Proveedor">
@@ -89,6 +114,30 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
         </SelectContent>
       </Select>
     ), { label: "Proveedor *", description: isEditing ? IMMUTABLE_HINT : undefined }),
+    createCustomField<PricingFormValues>("unit", ({ value, setValue }) => (
+      <Select
+        value={String(value ?? "tokens")}
+        onValueChange={(next) => {
+          setValue("unit", next as PricingUnit);
+          setUnit(next as PricingUnit);
+        }}
+        disabled={isEditing}
+      >
+        <SelectTrigger className="w-full" aria-label="Unidad">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {(Object.keys(UNIT_LABELS) as PricingUnit[]).map((option) => (
+            <SelectItem key={option} value={option}>
+              {option === "tokens" ? "Tokens" : option === "characters" ? "Caracteres (voz)" : unitLabel(option).slice(2)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ), {
+      label: "Unidad *",
+      description: isEditing ? IMMUTABLE_HINT : "La tarifa siempre es USD por millón de la unidad.",
+    }),
     createInputField<PricingFormValues>("model", {
       label: "Modelo *",
       placeholder: "claude-sonnet-5",
@@ -119,19 +168,22 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
       description: "Solo uno por proveedor: al marcarlo, el anterior deja de serlo.",
     }),
     createInputField<PricingFormValues>("input_cost_per_mtok_usd", {
-      label: "Entrada (USD/MTok) *",
+      label: `Entrada (${perUnit}) *`,
       inputKind: "number",
       inputProps: { step: "0.000001", min: 0 },
     }),
     createInputField<PricingFormValues>("output_cost_per_mtok_usd", {
-      label: "Salida (USD/MTok) *",
+      label: `Salida (${perUnit})${unit === "characters" ? "" : " *"}`,
       inputKind: "number",
+      description: unit === "characters" ? "No aplica en síntesis de voz." : undefined,
+      isDisabled: (values) => values.unit === "characters",
       inputProps: { step: "0.000001", min: 0 },
     }),
     createInputField<PricingFormValues>("cache_read_per_mtok_usd", {
-      label: "Caché lectura (USD/MTok)",
+      label: `Caché lectura (${perUnit})`,
       inputKind: "number",
-      description: "Vacío si el proveedor no factura caché.",
+      description: unit === "characters" ? "No aplica en síntesis de voz." : "Vacío si el proveedor no factura caché.",
+      isDisabled: (values) => values.unit === "characters",
       inputProps: { step: "0.000001", min: 0 },
     }),
     createInputField<PricingFormValues>("margin_multiplier", {
@@ -184,10 +236,20 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? `Editar tarifa · ${rate.model}` : "Crear tarifa"}
-      subtitle="USD por millón de tokens (MTok)"
+      subtitle={`USD por millón de ${unit === "tokens" ? "tokens (MTok)" : unitLabel(unit).slice(2)}`}
       size="lg"
     >
       <div className="space-y-4 p-4">
+        {unit === "characters" && (
+          <Alert className="border-accent-violet/30 bg-accent-violet/5">
+            <Mic aria-hidden="true" className="size-4 text-accent-violet" />
+            <AlertTitle>Tarifa por caracteres (voz)</AlertTitle>
+            <AlertDescription>
+              El costo va en <strong>Entrada</strong>; salida y caché no aplican en síntesis de voz.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {isEditing ? (
           <Alert className="border-info/30 bg-info/5">
             <Info aria-hidden="true" className="size-4 text-info" />

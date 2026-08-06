@@ -164,7 +164,9 @@ export function TenantPlanView({ tenantId }: { tenantId: string }) {
             Sin límites: el consumo del tenant no se controla. Asigna un plan o añade límites manuales.
           </p>
         ) : (
-          <Table>
+          /* Mismo aire que la tabla de pricing (mockup F3): el p-2 del
+             primitivo se queda corto en tablas full-bleed dentro de card */
+          <Table className="[&_th]:h-11 [&_th]:px-4 [&_td]:px-4 [&_td]:py-3">
             <TableHeader>
               <TableRow>
                 <TableHead>Métrica</TableHead>
