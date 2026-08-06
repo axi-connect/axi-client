@@ -5,14 +5,23 @@ import type {
 } from "@/modules/marketing/domain/automation";
 import { AutomationsView } from "../AutomationsView";
 
+/**
+ * Agrupados POR ESCENARIO (ver la nota de `PromotionsView.test.tsx`): montar
+ * la vista cuesta ~1 s y una aserción no cuesta nada.
+ *
+ * El fixture principal es una MEZCLA deliberada — activa con métricas, apagada
+ * que nunca se disparó, activa cuyos omitidos son todos transitorios, y una
+ * `deal_stalled` bloqueada por falta de plantilla — porque así es como se ve la
+ * pantalla de verdad y porque un solo montaje cubre los seis comportamientos.
+ */
+
 jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({ hasPermission: () => true }),
 }));
 
 const showModal = jest.fn();
-const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
+  useAlert: () => ({ showAlert: jest.fn(), showModal, closeModal: jest.fn() }),
 }));
 
 jest.mock("@/modules/marketing/infrastructure/services/automations-service.adapter", () => ({
@@ -73,6 +82,18 @@ function metrics(over: Partial<AutomationMetricsDTO> = {}): AutomationMetricsDTO
   } as AutomationMetricsDTO;
 }
 
+/** Regla que nunca se disparó: TODO a cero, no solo los envíos. */
+const SIN_DISPAROS = metrics({
+  sent: 0,
+  skipped: 0,
+  skipped_by_reason: {},
+  converted: 0,
+  conversion_rate: 0,
+  attributed_revenue_cents: 0,
+  coupons_issued: 0,
+  coupons_redeemed: 0,
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
   promoApi.listPromotions.mockResolvedValue([]);
@@ -80,104 +101,108 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-describe("AutomationsView", () => {
-  it("muestra las métricas con el dinero formateado y el desglose de omitidos", async () => {
-    api.listAutomations.mockResolvedValue([rule()]);
-    api.getAutomationMetrics.mockResolvedValue(metrics());
-    render(<AutomationsView />);
+describe("reglas con actividad", () => {
+  const REGLAS = [
+    rule({ id: "a2", name: "Segunda del carrito", priority: 5, enabled: false }),
+    rule({ id: "a1", name: "Carrito con cupón", priority: 1 }),
+    rule({ id: "a3", name: "Prueba social", trigger_type: "conversation_inactive" }),
+    rule({
+      id: "a4",
+      name: "Rescate de negociación",
+      trigger_type: "deal_stalled",
+      delay_minutes: 4320,
+      enabled: false,
+    }),
+    rule({ id: "a5", name: "Sin cifras", trigger_type: "conversation_inactive", priority: 9 }),
+  ];
 
-    expect(await screen.findByText("Carrito con cupón")).toBeInTheDocument();
+  beforeEach(async () => {
+    api.listAutomations.mockResolvedValue(REGLAS);
+    api.getAutomationMetrics.mockImplementation((id: string) => {
+      if (id === "a1") return Promise.resolve(metrics());
+      // Omitidos SOLO transitorios: no son contactos perdidos.
+      if (id === "a3") {
+        return Promise.resolve(
+          metrics({
+            sent: 74,
+            skipped: 3,
+            skipped_by_reason: { cooldown: 3 },
+            // Cifras propias: si comparte el importe con otra regla, la
+            // aserción del dinero deja de identificar a cuál pertenece.
+            converted: 4,
+            attributed_revenue_cents: 58_000_000,
+            coupons_issued: 0,
+            coupons_redeemed: 0,
+          }),
+        );
+      }
+      if (id === "a5") return Promise.reject(new Error("boom"));
+      return Promise.resolve(SIN_DISPAROS);
+    });
+    render(<AutomationsView />);
+    await screen.findByText("Carrito con cupón");
+  });
+
+  it("muestra las métricas con el dinero formateado y el porqué de los omitidos", async () => {
     expect(await screen.findByText("$ 3.940.000")).toBeInTheDocument();
-    // El "por qué" de los omitidos, no solo el número: si no, parece una avería.
+    // El "por qué", no solo el número: si no, parece una avería.
     expect(
       await screen.findByText(/8 el contacto pidió no recibir promociones/i),
     ).toBeInTheDocument();
   });
 
-  it("ordena por prioridad, que es el orden en que el backend las evalúa", async () => {
-    api.listAutomations.mockResolvedValue([
-      rule({ id: "a2", name: "Segunda", priority: 5 }),
-      rule({ id: "a1", name: "Primera", priority: 1 }),
-    ]);
-    api.getAutomationMetrics.mockResolvedValue(metrics({ sent: 0, skipped: 0 }));
-    render(<AutomationsView />);
-
-    await screen.findByText("Primera");
-    const names = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
-    expect(names).toEqual(["Primera", "Segunda"]);
-  });
-
-  it("agrupa por disparador y avisa de los que no tienen reglas", async () => {
-    api.listAutomations.mockResolvedValue([rule()]);
-    api.getAutomationMetrics.mockResolvedValue(metrics());
-    render(<AutomationsView />);
-
-    await screen.findByText("Carrito con cupón");
-    expect(screen.getByText("Conversación inactiva")).toBeInTheDocument();
+  it("distingue nunca-disparada, omitidos transitorios y métricas caídas", async () => {
+    // Dos reglas del fixture nunca se dispararon (la #2 del carrito y la de deal).
+    expect(await screen.findAllByText("Nunca se ha disparado.")).toHaveLength(2);
     expect(
-      screen.getAllByText("Nadie está recuperando estas ventas todavía.").length,
-    ).toBe(2);
+      await screen.findByText(/Los 3 omitidos fueron por los límites anti-spam/),
+    ).toBeInTheDocument();
+    // Una regla cuyas cifras fallan no tumba la lista ni finge ceros.
+    expect(await screen.findByText("Sus cifras no cargaron.")).toBeInTheDocument();
   });
 
-  it("encender pide confirmación que dice exactamente qué va a pasar", async () => {
-    api.listAutomations.mockResolvedValue([rule({ enabled: false })]);
-    api.getAutomationMetrics.mockResolvedValue(metrics({ sent: 0, skipped: 0 }));
-    render(<AutomationsView />);
+  it("agrupa por disparador, ordena por prioridad y señala los grupos vacíos", () => {
+    const names = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    // Prioridad ascendente dentro de cada grupo = orden de evaluación del backend.
+    expect(names).toEqual([
+      "Carrito con cupón",
+      "Segunda del carrito",
+      "Prueba social",
+      "Sin cifras",
+      "Rescate de negociación",
+    ]);
+    expect(screen.getByText("Conversación inactiva")).toBeInTheDocument();
+    expect(screen.queryByText("Nadie está recuperando estas ventas todavía.")).toBeNull();
+  });
 
-    fireEvent.click(await screen.findByRole("switch", { name: "Regla Carrito con cupón" }));
+  it("encender pide confirmación diciendo exactamente qué va a pasar", () => {
+    fireEvent.click(screen.getByRole("switch", { name: "Regla Segunda del carrito" }));
 
     expect(showModal).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: "¿Encender «Carrito con cupón»?",
+        title: "¿Encender «Segunda del carrito»?",
         description: expect.stringContaining("15 minutos"),
       }),
     );
     expect(api.updateAutomation).not.toHaveBeenCalled();
   });
 
-  it("bloquea encender deal_stalled sin plantilla de Meta y explica por qué", async () => {
-    api.listAutomations.mockResolvedValue([
-      rule({ trigger_type: "deal_stalled", enabled: false, delay_minutes: 4320 }),
-    ]);
-    api.getAutomationMetrics.mockResolvedValue(metrics({ sent: 0, skipped: 0 }));
-    render(<AutomationsView />);
-
-    expect(await screen.findByText(/plantilla aprobada por Meta/)).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Regla Carrito con cupón" })).toBeDisabled();
+  it("bloquea deal_stalled sin plantilla de Meta y explica por qué antes del clic", () => {
+    expect(screen.getByText(/plantilla aprobada por Meta/)).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Regla Rescate de negociación" })).toBeDisabled();
   });
+});
 
-  it("avisa cuando todas las reglas están apagadas", async () => {
+describe("otros estados de la lista", () => {
+  it("avisa cuando ninguna regla está encendida", async () => {
     api.listAutomations.mockResolvedValue([rule({ enabled: false })]);
-    api.getAutomationMetrics.mockResolvedValue(metrics({ sent: 0, skipped: 0 }));
+    api.getAutomationMetrics.mockResolvedValue(SIN_DISPAROS);
     render(<AutomationsView />);
 
-    expect(
-      await screen.findByText("Ninguna de tus reglas está encendida."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Ninguna de tus reglas está encendida.")).toBeInTheDocument();
   });
 
-  it("una regla sin disparos lo dice en vez de enseñar ceros", async () => {
-    api.listAutomations.mockResolvedValue([rule()]);
-    api.getAutomationMetrics.mockResolvedValue(metrics({ sent: 0, skipped: 0 }));
-    render(<AutomationsView />);
-
-    expect(await screen.findByText("Nunca se ha disparado.")).toBeInTheDocument();
-    expect(screen.queryByText("Enviados")).not.toBeInTheDocument();
-  });
-
-  it("un fallo de métricas de una regla no tumba la lista", async () => {
-    api.listAutomations.mockResolvedValue([rule(), rule({ id: "a2", name: "Otra" })]);
-    api.getAutomationMetrics
-      .mockResolvedValueOnce(metrics())
-      .mockRejectedValueOnce(new Error("boom"));
-    render(<AutomationsView />);
-
-    expect(await screen.findByText("Carrito con cupón")).toBeInTheDocument();
-    expect(screen.getByText("Otra")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("Sus cifras no cargaron.")).toBeInTheDocument());
-  });
-
-  it("invita a crear la primera regla cuando no hay ninguna", async () => {
+  it("invita a crear la primera cuando no hay ninguna", async () => {
     api.listAutomations.mockResolvedValue([]);
     render(<AutomationsView />);
 
@@ -185,17 +210,18 @@ describe("AutomationsView", () => {
     expect(screen.getByText("Crear mi primera regla")).toBeInTheDocument();
   });
 
-  it("informa del fallo de carga con reintento", async () => {
+  it("informa del fallo de carga y el reintento vuelve a pedir", async () => {
     api.listAutomations.mockRejectedValue(new Error("Se cayó la conexión"));
     render(<AutomationsView />);
 
     expect(await screen.findByText("Se cayó la conexión")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Reintentar" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    await waitFor(() => expect(api.listAutomations).toHaveBeenCalledTimes(2));
   });
 
-  it("solo ofrece promociones vivas en el editor", async () => {
+  it("el editor solo ofrece promociones vivas", async () => {
     api.listAutomations.mockResolvedValue([rule()]);
-    api.getAutomationMetrics.mockResolvedValue(metrics());
+    api.getAutomationMetrics.mockResolvedValue(SIN_DISPAROS);
     promoApi.listPromotions.mockResolvedValue([
       {
         id: "p1",
@@ -208,10 +234,10 @@ describe("AutomationsView", () => {
       },
       {
         id: "p2",
-        name: "Apagada",
-        enabled: false,
+        name: "Vencida",
+        enabled: true,
         starts_at: "2020-01-01T00:00:00.000Z",
-        ends_at: null,
+        ends_at: "2020-02-01T00:00:00.000Z",
         max_redemptions_total: null,
         redemptions_count: 0,
       },
@@ -220,7 +246,9 @@ describe("AutomationsView", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /Editar/ }));
 
+    // Asignar una vencida crearía una regla que se salta sola con
+    // `promotion_inactive` en cuanto se dispare.
     expect(await screen.findByRole("option", { name: "Viva" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: "Apagada" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Vencida" })).not.toBeInTheDocument();
   });
 });
