@@ -97,6 +97,36 @@ export function redemptionProgressPct(promotion: PromotionDTO): number | null {
 }
 
 /**
+ * Filtro de estado del catálogo. Qué cuenta como "activa" es una decisión de
+ * negocio (una programada todavía no da nada, pero va a darlo), así que vive
+ * en el dominio y se testea sin montar la vista.
+ */
+export type PromotionStateFilter = "active" | "all" | "off" | "expired";
+
+export const PROMOTION_STATE_FILTER_LABELS: Record<PromotionStateFilter, string> = {
+  active: "Activas",
+  all: "Todas",
+  off: "Apagadas",
+  expired: "Vencidas o agotadas",
+};
+
+export function matchesPromotionStateFilter(
+  state: PromotionState,
+  filter: PromotionStateFilter,
+): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "active":
+      return state === "live" || state === "scheduled";
+    case "off":
+      return state === "off";
+    case "expired":
+      return state === "expired" || state === "exhausted";
+  }
+}
+
+/**
  * Cupones emitidos que nadie ha canjeado.
  *
  * OJO: NO son "cupones vivos". El DTO no expone cuántos vencieron, así que este

@@ -20,7 +20,7 @@
 |---|---|---|---|
 | F0 | Mockup HTML navegable de alta fidelidad (Artifact privado) | ✅ Aprobado | — |
 | F1 | Fundaciones transversales + piezas compartidas + **Resumen `/marketing`** | ✅ Código completo | — (la raíz ya está sembrada) |
-| F2 | Promociones y cupones + `catalog/public.ts` + `VariantPicker` | ⬜ Pendiente | `Promociones` |
+| F2 | Promociones y cupones + `catalog/public.ts` + `VariantPicker` | ✅ Código completo | `Promociones` ✅ |
 | F3 | Recuperación de ventas (reglas + métricas) | ⬜ Pendiente | `Recuperación` |
 | F4 | Configuración: ajustes, plantillas, plantillas de Meta y bajas | ⬜ Pendiente | `Configuración` |
 | F5 | Campañas: lista + wizard de 4 pasos | ⬜ Pendiente | `Campañas` |
@@ -79,7 +79,11 @@ primero porque `/marketing` ya está sembrado en el sidebar del backend y hoy da
 11. **`completed` ≠ entregado**: se etiqueta **"Procesada"**, nunca "Completada".
 12. **El DTO de promoción no expone los cupones vencidos**: solo `coupons_issued` y
     `redemptions_recorded`. No existe "cupones vigentes" — se etiqueta "sin canjear".
-13. **No hay agregado de ingresos por período.** `attributed_revenue_cents` es por regla y de todo el
+13. **`PromotionDto` no trae el nombre de la variante de regalo**, solo `gift_variant_id`, y no
+    existe endpoint de variante suelta. Resolverlo exigiría recorrer el catálogo producto a
+    producto (decenas de peticiones), así que al editar se muestra una frase honesta en vez de un
+    uuid. Se arregla embebiendo el nombre en el DTO desde el backend.
+14. **No hay agregado de ingresos por período.** `attributed_revenue_cents` es por regla y de todo el
     histórico. → el KPI se llama **"Recuperado por tus reglas"**, no "Recuperado · 30 días" como
     proponía el mockup: no se puede acotar a 30 días sin inventar el dato.
 
@@ -140,6 +144,19 @@ Y dos piezas nuevas genuinamente reutilizables:
   captura en claro, oscuro y ancho móvil con un guard automático de desbordamiento horizontal.
   Levantar `axi-server` desde el worktree de marketing aplicaría sus migraciones a la BD de
   desarrollo compartida: es una decisión del usuario, no del agente.
+
+### Estado de F2
+
+- Backend: hijo `marketing_promotions` en `UI_MODULE_TREE` + su spec (11 tests del seeder verdes).
+  Los hijos se siembran **fase a fase**, no todos de golpe.
+- `modules/catalog/public.ts` nuevo + `VariantPicker` en dos pasos (producto → variante), que es la
+  única forma posible: las variantes solo llegan embebidas en el producto completo.
+- Formulario con parámetro condicional por `kind`: el que no aplica se manda `null`, no basta con
+  ocultarlo (el backend rechaza con 422 lo que sobre).
+- **34 tests nuevos** (14 de la config del formulario, 10 de la vista, 4 del filtro de estado en el
+  dominio, +6 previos). Suite completa: **744 verdes**. `next build` verde;
+  `/marketing/promotions` en 16,5 kB.
+- Verificado visualmente en claro, oscuro y móvil sobre la app compilada con el stub del backend.
 
 ### Estado de F1
 

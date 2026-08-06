@@ -2,6 +2,8 @@ import { formatMoney } from "@/core/lib/format";
 import type { PromotionDTO } from "../promotion";
 import {
   describePromotionKind,
+  matchesPromotionStateFilter,
+  PROMOTION_STATE_FILTER_LABELS,
   isPromotionLive,
   promotionState,
   PROMOTION_KIND_PARAM,
@@ -135,5 +137,39 @@ describe("unredeemedCoupons", () => {
 
   it("nunca es negativo aunque los contadores se crucen", () => {
     expect(unredeemedCoupons(promo({ coupons_issued: 2, redemptions_recorded: 9 }))).toBe(0);
+  });
+});
+
+describe("filtro de estado del catálogo", () => {
+  const ALL_STATES = ["live", "scheduled", "exhausted", "expired", "off"] as const;
+
+  it("«activas» incluye las programadas: todavía no dan nada, pero lo van a dar", () => {
+    expect(ALL_STATES.filter((s) => matchesPromotionStateFilter(s, "active"))).toEqual([
+      "live",
+      "scheduled",
+    ]);
+  });
+
+  it("«todas» no descarta ninguna", () => {
+    expect(ALL_STATES.every((s) => matchesPromotionStateFilter(s, "all"))).toBe(true);
+  });
+
+  it("«apagadas» y «vencidas o agotadas» no se solapan", () => {
+    const off = ALL_STATES.filter((s) => matchesPromotionStateFilter(s, "off"));
+    const gone = ALL_STATES.filter((s) => matchesPromotionStateFilter(s, "expired"));
+    expect(off).toEqual(["off"]);
+    expect(gone).toEqual(["exhausted", "expired"]);
+    expect(off.filter((s) => gone.includes(s))).toEqual([]);
+  });
+
+  it("cada estado cae en exactamente un filtro además de «todas»", () => {
+    for (const state of ALL_STATES) {
+      const matched = (Object.keys(PROMOTION_STATE_FILTER_LABELS) as Array<
+        keyof typeof PROMOTION_STATE_FILTER_LABELS
+      >)
+        .filter((f) => f !== "all")
+        .filter((f) => matchesPromotionStateFilter(state, f));
+      expect(matched).toHaveLength(1);
+    }
   });
 });
