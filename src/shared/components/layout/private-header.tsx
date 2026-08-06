@@ -13,6 +13,17 @@ const LABELS: Record<string, string> = {
 	"companies": "Empresas",
 	"users": "Usuarios",
 	"roles": "Roles",
+	// Un slug en inglés dentro de una UI en español es un defecto en cualquier
+	// ruta, no solo en marketing: `settings` ya se pintaba crudo en /settings/*.
+	"settings": "Configuración",
+	"marketing": "Marketing",
+	"campaigns": "Campañas",
+	"automations": "Recuperación",
+	"promotions": "Promociones",
+	"templates": "Plantillas",
+	"meta-templates": "Plantillas de Meta",
+	"opt-outs": "Bajas",
+	"new": "Nueva",
 }
 
 type PrivateHeaderProps = {

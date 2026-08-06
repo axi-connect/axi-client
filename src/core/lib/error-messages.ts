@@ -145,6 +145,33 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "quality/run_not_cancelable": "La ejecución ya terminó: no se puede cancelar",
   "quality/run_not_purgeable": "La ejecución sigue activa: espera a que termine para purgar",
   "quality/spend_cap_exceeded": "El tope de gasto no alcanza para la ejecución estimada",
+  // Marketing (campañas, recuperación, promociones y bajas).
+  // Los mensajes explican qué hacer, no solo qué falló: el módulo escribe a
+  // clientes reales y el operador necesita saber si puede reintentar.
+  "marketing/campaign_not_found": "La campaña ya no existe",
+  "marketing/campaign_not_editable":
+    "La campaña ya se lanzó: su audiencia y su contenido quedaron congelados. Duplícala para cambiar algo",
+  "marketing/template_not_found": "La plantilla ya no existe",
+  "marketing/template_name_taken": "Ya existe una plantilla con ese nombre",
+  "marketing/template_invalid_content": "El contenido de la plantilla no es válido para ese tipo",
+  "marketing/invalid_template_variables":
+    "El mensaje usa variables que no existen. Usa solo las de la lista",
+  "marketing/automation_not_found": "La regla ya no existe",
+  "marketing/automation_name_taken": "Ya existe una regla con ese nombre",
+  "marketing/automation_hsm_required":
+    "Esta regla escribe fuera de las 24 h: elige una plantilla de Meta aprobada para poder encenderla",
+  "marketing/promotion_not_found": "La promoción ya no existe",
+  "marketing/promotion_name_taken": "Ya existe una promoción con ese nombre",
+  "marketing/promotion_shared_code_taken": "Ese código compartido ya está en uso",
+  "marketing/promotion_invalid_params":
+    "Los parámetros no corresponden al tipo de promoción elegido",
+  "marketing/gift_variant_not_found": "La variante de regalo ya no existe en tu catálogo",
+  "marketing/opt_out_not_found": "La baja ya no existe",
+  "marketing/opt_out_already_active": "Ese contacto ya está dado de baja",
+  "marketing/segment_not_found": "El segmento ya no existe",
+  // `channels/template_not_supported` ya vive en el bloque de canales (arriba).
+  "channels/template_sync_failed":
+    "Meta rechazó la sincronización de plantillas. Revisa el detalle e inténtalo de nuevo",
   "platform/forbidden": "Tu cuenta no tiene acceso a la consola de plataforma",
   "client/network": "No fue posible contactar al servidor",
 };

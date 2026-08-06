@@ -2420,6 +2420,294 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketing/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CampaignsController_list_v1"];
+        put?: never;
+        post: operations["CampaignsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CampaignsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["CampaignsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["CampaignsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/preview-audience": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CampaignsController_previewAudience_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/recipients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CampaignsController_listRecipients_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CampaignsController_byIdStats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MarketingTemplatesController_list_v1"];
+        put?: never;
+        post: operations["MarketingTemplatesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MarketingTemplatesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["MarketingTemplatesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/marketing/hsm-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HsmTemplatesController_list_v1"];
+        put?: never;
+        post: operations["HsmTemplatesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/hsm-templates/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["HsmTemplatesController_sync_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/automations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutomationsController_list_v1"];
+        put?: never;
+        post: operations["AutomationsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/automations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutomationsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["AutomationsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["AutomationsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/marketing/automations/{id}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AutomationsController_byIdMetrics_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PromotionsController_list_v1"];
+        put?: never;
+        post: operations["PromotionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/promotions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PromotionsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["PromotionsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["PromotionsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/marketing/promotions/{id}/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PromotionsController_redemptions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/opt-outs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OptOutsController_list_v1"];
+        put?: never;
+        post: operations["OptOutsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/opt-outs/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OptOutsController_revoke_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MarketingSettingsController_get_v1"];
+        put: operations["MarketingSettingsController_put_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/analytics/alerts": {
         parameters: {
             query?: never;
@@ -2898,6 +3186,70 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["RemindersController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/launch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CampaignLifecycleController_launch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CampaignLifecycleController_pause_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CampaignLifecycleController_resume_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/campaigns/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CampaignLifecycleController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/notifications": {
@@ -4207,6 +4559,7 @@ export interface components {
                         require_orders?: boolean;
                         require_payments?: boolean;
                         require_crm?: boolean;
+                        require_promotions?: boolean;
                     } | null;
                     code: string;
                     /** @enum {string} */
@@ -4258,6 +4611,7 @@ export interface components {
                     require_orders?: boolean;
                     require_payments?: boolean;
                     require_crm?: boolean;
+                    require_promotions?: boolean;
                 } | null;
                 code: string;
                 /** @enum {string} */
@@ -4320,6 +4674,7 @@ export interface components {
                     require_orders?: boolean;
                     require_payments?: boolean;
                     require_crm?: boolean;
+                    require_promotions?: boolean;
                 };
             }[];
         };
@@ -6491,6 +6846,624 @@ export interface components {
                 page_size: number;
             };
         };
+        CampaignsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string | null;
+                /** @enum {string} */
+                status: "draft" | "scheduled" | "running" | "paused" | "completed" | "cancelled";
+                /** Format: uuid */
+                segment_id: string | null;
+                audience_filters: {
+                    [key: string]: unknown;
+                } | null;
+                audience_total: number;
+                template: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    kind: string;
+                } | null;
+                /** Format: uuid */
+                hsm_channel_template_id: string | null;
+                hsm_param_mapping: unknown[] | null;
+                /** Format: date-time */
+                scheduled_at: string | null;
+                /** Format: date-time */
+                launched_at: string | null;
+                /** Format: date-time */
+                paused_at: string | null;
+                /** Format: date-time */
+                completed_at: string | null;
+                /** Format: date-time */
+                cancelled_at: string | null;
+                /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        CreateCampaignDto: {
+            name: string;
+            description?: string | null;
+            /** Format: uuid */
+            segment_id?: string | null;
+            audience_filters?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: uuid */
+            template_id?: string | null;
+            /** Format: uuid */
+            hsm_channel_template_id?: string | null;
+            hsm_param_mapping?: {
+                index: number;
+                source: string;
+            }[] | null;
+            /** Format: date-time */
+            scheduled_at?: string | null;
+        };
+        CampaignDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "draft" | "scheduled" | "running" | "paused" | "completed" | "cancelled";
+            /** Format: uuid */
+            segment_id: string | null;
+            audience_filters: {
+                [key: string]: unknown;
+            } | null;
+            audience_total: number;
+            template: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                kind: string;
+            } | null;
+            /** Format: uuid */
+            hsm_channel_template_id: string | null;
+            hsm_param_mapping: unknown[] | null;
+            /** Format: date-time */
+            scheduled_at: string | null;
+            /** Format: date-time */
+            launched_at: string | null;
+            /** Format: date-time */
+            paused_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            cancelled_at: string | null;
+            /** Format: uuid */
+            created_by_user_id: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateCampaignDto: {
+            name?: string;
+            description?: string | null;
+            /** Format: uuid */
+            segment_id?: string | null;
+            audience_filters?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: uuid */
+            template_id?: string | null;
+            /** Format: uuid */
+            hsm_channel_template_id?: string | null;
+            hsm_param_mapping?: {
+                index: number;
+                source: string;
+            }[] | null;
+            /** Format: date-time */
+            scheduled_at?: string | null;
+        };
+        AudiencePreviewDto: {
+            total: number;
+            sample_size: number;
+            sample_opted_out: number;
+        };
+        CampaignRecipientsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                contact: {
+                    /** Format: uuid */
+                    id: string;
+                    full_name: string | null;
+                    phone: string | null;
+                    email: string | null;
+                };
+                /** @enum {string} */
+                status: "pending" | "queued" | "sent" | "delivered" | "read" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                channel_kind: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                sent_at: string | null;
+                /** Format: date-time */
+                delivered_at: string | null;
+                /** Format: date-time */
+                read_at: string | null;
+                /** Format: date-time */
+                replied_at: string | null;
+                /** Format: uuid */
+                converted_order_id: string | null;
+                revenue_cents: number | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        CampaignStatsDto: {
+            /** Format: uuid */
+            campaign_id: string;
+            audience_total: number;
+            pending: number;
+            queued: number;
+            sent: number;
+            delivered: number;
+            read: number;
+            failed: number;
+            skipped: number;
+            skipped_by_reason: {
+                [key: string]: number;
+            };
+            replies: number;
+            conversions: number;
+            revenue_cents: number;
+            delivery_rate: number;
+            reply_rate: number;
+            conversion_rate: number;
+        };
+        TemplatesListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "text" | "media" | "hsm";
+                body: string | null;
+                media: {
+                    [key: string]: unknown;
+                } | null;
+                hsm_ref: {
+                    [key: string]: unknown;
+                } | null;
+                is_active: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreateTemplateDto: {
+            name: string;
+            /** @enum {string} */
+            kind: "text" | "media" | "hsm";
+            body?: string | null;
+            media?: {
+                storage_key: string;
+                mime_type: string;
+                /** @enum {string} */
+                media_kind: "image" | "video" | "audio" | "document";
+                filename?: string;
+                size_bytes?: number;
+            } | null;
+            hsm_ref?: {
+                /** Format: uuid */
+                channel_template_id: string;
+                name: string;
+                language: string;
+            } | null;
+            is_active?: boolean;
+        };
+        TemplateDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "text" | "media" | "hsm";
+            body: string | null;
+            media: {
+                [key: string]: unknown;
+            } | null;
+            hsm_ref: {
+                [key: string]: unknown;
+            } | null;
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateTemplateDto: {
+            name?: string;
+            /** @enum {string} */
+            kind?: "text" | "media" | "hsm";
+            body?: string | null;
+            media?: {
+                storage_key: string;
+                mime_type: string;
+                /** @enum {string} */
+                media_kind: "image" | "video" | "audio" | "document";
+                filename?: string;
+                size_bytes?: number;
+            } | null;
+            hsm_ref?: {
+                /** Format: uuid */
+                channel_template_id: string;
+                name: string;
+                language: string;
+            } | null;
+            is_active?: boolean;
+        };
+        HsmTemplatesListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                channel_id: string;
+                name: string;
+                language: string;
+                /** @enum {string} */
+                category: "marketing" | "utility" | "authentication";
+                body: string;
+                components: unknown[];
+                /** @enum {string} */
+                approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+                external_id: string | null;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        SyncHsmTemplatesDto: {
+            /** Format: uuid */
+            channel_id: string;
+        };
+        SyncHsmResultDto: {
+            synced: number;
+        };
+        CreateHsmTemplateDto: {
+            /** Format: uuid */
+            channel_id: string;
+            name: string;
+            language: string;
+            /** @enum {string} */
+            category: "marketing" | "utility" | "authentication";
+            body: string;
+        };
+        HsmTemplateDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            channel_id: string;
+            name: string;
+            language: string;
+            /** @enum {string} */
+            category: "marketing" | "utility" | "authentication";
+            body: string;
+            components: unknown[];
+            /** @enum {string} */
+            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+            external_id: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        AutomationsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                trigger_type: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+                delay_minutes: number;
+                priority: number;
+                conditions: {
+                    [key: string]: unknown;
+                };
+                promotion: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    kind: string;
+                } | null;
+                message_template: string;
+                hsm_template_name: string | null;
+                hsm_template_language: string | null;
+                attribution_window_hours: number;
+                enabled: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreateAutomationDto: {
+            name: string;
+            /** @enum {string} */
+            trigger_type: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            delay_minutes: number;
+            priority?: number;
+            conditions?: {
+                has_active_cart?: boolean;
+                min_score?: number;
+                max_score?: number;
+                lifecycle_stage_in?: ("prospect" | "lead" | "customer" | "other")[];
+                min_cart_total_cents?: number;
+                /** @enum {string} */
+                intent_type?: "sales" | "support" | "technical" | "onboarding" | "follow_up";
+                include_pending?: boolean;
+            };
+            /** Format: uuid */
+            promotion_id?: string | null;
+            message_template: string;
+            hsm_template_name?: string | null;
+            hsm_template_language?: string | null;
+            attribution_window_hours?: number;
+            enabled?: boolean;
+        };
+        AutomationDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            trigger_type: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            delay_minutes: number;
+            priority: number;
+            conditions: {
+                [key: string]: unknown;
+            };
+            promotion: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                kind: string;
+            } | null;
+            message_template: string;
+            hsm_template_name: string | null;
+            hsm_template_language: string | null;
+            attribution_window_hours: number;
+            enabled: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateAutomationDto: {
+            name?: string;
+            /** @enum {string} */
+            trigger_type?: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            delay_minutes?: number;
+            priority?: number;
+            conditions?: {
+                has_active_cart?: boolean;
+                min_score?: number;
+                max_score?: number;
+                lifecycle_stage_in?: ("prospect" | "lead" | "customer" | "other")[];
+                min_cart_total_cents?: number;
+                /** @enum {string} */
+                intent_type?: "sales" | "support" | "technical" | "onboarding" | "follow_up";
+                include_pending?: boolean;
+            };
+            /** Format: uuid */
+            promotion_id?: string | null;
+            message_template?: string;
+            hsm_template_name?: string | null;
+            hsm_template_language?: string | null;
+            attribution_window_hours?: number;
+            enabled?: boolean;
+        };
+        AutomationMetricsDto: {
+            /** Format: uuid */
+            automation_id: string;
+            sent: number;
+            skipped: number;
+            skipped_by_reason: {
+                [key: string]: number;
+            };
+            converted: number;
+            conversion_rate: number;
+            attributed_revenue_cents: number;
+            coupons_issued: number;
+            coupons_redeemed: number;
+        };
+        PromotionsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+                percent: number | null;
+                amount_cents: number | null;
+                /** Format: uuid */
+                gift_variant_id: string | null;
+                shipping_value_cents: number | null;
+                min_order_cents: number | null;
+                shared_code: string | null;
+                validity_hours: number | null;
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string | null;
+                max_redemptions_total: number | null;
+                max_redemptions_per_contact: number;
+                redemptions_count: number;
+                coupons_issued: number;
+                redemptions_recorded: number;
+                enabled: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreatePromotionDto: {
+            name: string;
+            /** @enum {string} */
+            kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+            percent?: number | null;
+            amount_cents?: number | null;
+            /** Format: uuid */
+            gift_variant_id?: string | null;
+            shipping_value_cents?: number | null;
+            min_order_cents?: number | null;
+            shared_code?: string | null;
+            validity_hours?: number | null;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            max_redemptions_total?: number | null;
+            max_redemptions_per_contact?: number;
+            enabled?: boolean;
+        };
+        PromotionDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+            percent: number | null;
+            amount_cents: number | null;
+            /** Format: uuid */
+            gift_variant_id: string | null;
+            shipping_value_cents: number | null;
+            min_order_cents: number | null;
+            shared_code: string | null;
+            validity_hours: number | null;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string | null;
+            max_redemptions_total: number | null;
+            max_redemptions_per_contact: number;
+            redemptions_count: number;
+            coupons_issued: number;
+            redemptions_recorded: number;
+            enabled: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdatePromotionDto: {
+            name?: string;
+            /** @enum {string} */
+            kind?: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+            percent?: number | null;
+            amount_cents?: number | null;
+            /** Format: uuid */
+            gift_variant_id?: string | null;
+            shipping_value_cents?: number | null;
+            min_order_cents?: number | null;
+            shared_code?: string | null;
+            validity_hours?: number | null;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            max_redemptions_total?: number | null;
+            max_redemptions_per_contact?: number;
+            enabled?: boolean;
+        };
+        RedemptionsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                order_id: string;
+                /** Format: uuid */
+                conversation_id: string | null;
+                coupon_code: string | null;
+                coupon_status: string | null;
+                amount_applied_cents: number;
+                effect: {
+                    [key: string]: unknown;
+                } | null;
+                /** @enum {string} */
+                status: "applied" | "reverted";
+                /** Format: date-time */
+                reverted_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        OptOutsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                contact: {
+                    /** Format: uuid */
+                    id: string;
+                    full_name: string | null;
+                    phone: string | null;
+                    email: string | null;
+                };
+                /** @enum {string} */
+                source: "inbound_keyword" | "manual" | "import";
+                keyword_text: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** Format: uuid */
+                created_by_user_id: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                revoked_at: string | null;
+                /** Format: uuid */
+                revoked_by_user_id: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        CreateOptOutDto: {
+            /** Format: uuid */
+            contact_id: string;
+        };
+        MarketingSettingsDto: {
+            attribution_window_hours: number;
+            cooldown_hours: number;
+            daily_cap_per_contact: number;
+            exclude_human_active: boolean;
+            opt_out: {
+                keywords: string[];
+                confirmation_body: string;
+            };
+            wweb: {
+                daily_cap: number;
+                min_interval_seconds: number;
+                jitter_pct: number;
+            };
+        };
         AlertsListDto: {
             data: {
                 id: string;
@@ -7059,6 +8032,10 @@ export interface components {
             /** Format: date-time */
             next_run_at?: string | null;
             is_active?: boolean;
+        };
+        LaunchResultDto: {
+            /** @enum {string} */
+            status: "scheduled" | "running";
         };
         NotificationsListDto: {
             data: {
@@ -12253,6 +13230,707 @@ export interface operations {
             };
         };
     };
+    CampaignsController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "draft" | "scheduled" | "running" | "paused" | "completed" | "cancelled";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignsListDto"];
+                };
+            };
+        };
+    };
+    CampaignsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCampaignDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDto"];
+                };
+            };
+        };
+    };
+    CampaignsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDto"];
+                };
+            };
+        };
+    };
+    CampaignsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CampaignsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCampaignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDto"];
+                };
+            };
+        };
+    };
+    CampaignsController_previewAudience_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudiencePreviewDto"];
+                };
+            };
+        };
+    };
+    CampaignsController_listRecipients_v1: {
+        parameters: {
+            query?: {
+                status?: "pending" | "queued" | "sent" | "delivered" | "read" | "failed" | "skipped";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignRecipientsListDto"];
+                };
+            };
+        };
+    };
+    CampaignsController_byIdStats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignStatsDto"];
+                };
+            };
+        };
+    };
+    MarketingTemplatesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplatesListDto"];
+                };
+            };
+        };
+    };
+    MarketingTemplatesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateDto"];
+                };
+            };
+        };
+    };
+    MarketingTemplatesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketingTemplatesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_list_v1: {
+        parameters: {
+            query: {
+                channel_id: string;
+                category?: "marketing" | "utility" | "authentication";
+                approval_status?: "pending" | "approved" | "rejected" | "paused" | "disabled";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmTemplatesListDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateHsmTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmTemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_sync_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncHsmTemplatesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncHsmResultDto"];
+                };
+            };
+        };
+    };
+    AutomationsController_list_v1: {
+        parameters: {
+            query?: {
+                trigger_type?: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationsListDto"];
+                };
+            };
+        };
+    };
+    AutomationsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAutomationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationDto"];
+                };
+            };
+        };
+    };
+    AutomationsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationDto"];
+                };
+            };
+        };
+    };
+    AutomationsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AutomationsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAutomationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationDto"];
+                };
+            };
+        };
+    };
+    AutomationsController_byIdMetrics_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutomationMetricsDto"];
+                };
+            };
+        };
+    };
+    PromotionsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionsListDto"];
+                };
+            };
+        };
+    };
+    PromotionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePromotionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionDto"];
+                };
+            };
+        };
+    };
+    PromotionsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionDto"];
+                };
+            };
+        };
+    };
+    PromotionsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PromotionsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePromotionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionDto"];
+                };
+            };
+        };
+    };
+    PromotionsController_redemptions_v1: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RedemptionsListDto"];
+                };
+            };
+        };
+    };
+    OptOutsController_list_v1: {
+        parameters: {
+            query?: {
+                active_only?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OptOutsListDto"];
+                };
+            };
+        };
+    };
+    OptOutsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOptOutDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OptOutsListDto"];
+                };
+            };
+        };
+    };
+    OptOutsController_revoke_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketingSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketingSettingsDto"];
+                };
+            };
+        };
+    };
+    MarketingSettingsController_put_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketingSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketingSettingsDto"];
+                };
+            };
+        };
+    };
     AnalyticsController_alerts_v1: {
         parameters: {
             query?: {
@@ -13012,6 +14690,84 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReminderDto"];
                 };
+            };
+        };
+    };
+    CampaignLifecycleController_launch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LaunchResultDto"];
+                };
+            };
+        };
+    };
+    CampaignLifecycleController_pause_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CampaignLifecycleController_resume_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CampaignLifecycleController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
