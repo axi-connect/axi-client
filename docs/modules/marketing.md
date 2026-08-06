@@ -87,6 +87,7 @@ src/modules/marketing/
 │   ├── campaign.ts               # DTOs + params de listado
 │   ├── campaign-state.ts         # predicados de acción, campaignPollInterval, progreso
 │   ├── campaign-draft.ts         # wizard: bloqueo por paso, payloads excluyentes, estimación
+│   ├── campaign-funnel.ts        # etapas acumuladas, caída por etapa, hitos del destinatario
 │   ├── automation.ts             # AutomationConditions + parseConditions defensivo, requiresHsm
 │   ├── promotion.ts              # estado derivado, describePromotionKind, progreso de canjes
 │   ├── template.ts               # espejo del renderer del backend + vista previa
@@ -99,16 +100,17 @@ src/modules/marketing/
 │   ├── stores/overview.store.ts  # Section<T> por bloque + topes de fan-out
 │   └── realtime/use-marketing-socket.ts
 └── ui/
-    ├── MarketingOverviewView · CampaignsView · CampaignWizard · PromotionsView ·
-    │   AutomationsView · MarketingSettingsView · TemplatesView · MetaTemplatesView · OptOutsView
+    ├── MarketingOverviewView · CampaignsView · CampaignWizard · CampaignDetailView ·
+    │   PromotionsView · AutomationsView · MarketingSettingsView · TemplatesView ·
+    │   MetaTemplatesView · OptOutsView
     ├── components/               # LiveCampaignCard · RecoveryFeed · OverviewSkeleton ·
-    │                             #   PromotionCard · RedemptionsSheet · AutomationCard ·
-    │                             #   MessageTemplateField · MarketingSettingsNav
+    │                             #   CampaignFunnel · PromotionCard · RedemptionsSheet ·
+    │                             #   AutomationCard · MessageTemplateField · MarketingSettingsNav
     └── forms/config/             # promotion.config · automation.config
 
 src/app/(private)/(content)/marketing/
 ├── {page,loading}.tsx                Resumen
-├── campaigns/{page,loading}.tsx + campaigns/new/page.tsx
+├── campaigns/{page,loading}.tsx + new/page.tsx + [campaignId]/{page,loading}.tsx
 ├── promotions/{page,loading}.tsx
 ├── automations/{page,loading}.tsx
 └── settings/{layout,page,loading}.tsx + templates/ + meta-templates/ + opt-outs/
@@ -125,6 +127,10 @@ src/app/(private)/(content)/marketing/
 - El DSL de audiencia **no se reimplementa**: el constructor y su descripción humana son del CRM
   (`AudienceFilterBuilder` y `describeSegmentFilters` vía `crm/public.ts`). Un segundo builder sería
   un segundo sitio donde el DSL se puede desincronizar.
+- Los contadores de stats son un `groupBy(status)` del backend: **excluyentes entre sí**. Para
+  cualquier lectura acumulativa (el embudo) hay que sumarlos, nunca leerlos crudos.
+- Un evento WS se filtra por el id de la entidad que mira la pantalla. Ninguna vista del módulo
+  invalida "todo" al recibir un evento.
 
 ---
 
@@ -136,3 +142,4 @@ tres que más condicionan el diseño:
 1. `channel.template_status_changed` **no existe**: la pantalla de HSM no refresca por WS.
 2. La lista de campañas **no trae stats**: prohibido el fan-out; el Resumen pide como mucho 5.
 3. `preview-audience` es un POST sobre una campaña existente: el wizard crea el borrador en el paso 1.
+4. `sent`/`delivered`/`read` de las stats son excluyentes: el embudo del detalle los acumula.

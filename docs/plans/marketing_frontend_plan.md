@@ -24,7 +24,7 @@
 | F3 | Recuperación de ventas (reglas + métricas) | ✅ Código completo | `Recuperación` ✅ |
 | F4 | Configuración: ajustes, plantillas, plantillas de Meta y bajas | ✅ Código completo | `Configuración` ✅ |
 | F5 | Campañas: lista + wizard de 4 pasos | ✅ Código completo | `Campañas` ✅ |
-| F6 | Detalle de campaña en vivo (embudo, destinatarios, ciclo de vida) | ⬜ Pendiente | — |
+| F6 | Detalle de campaña en vivo (embudo, destinatarios, ciclo de vida) | ✅ Código completo | — |
 
 Orden justificado: F2 antes que F3 porque el editor de reglas **selecciona una promoción**; F4 antes
 que F5 porque el wizard **selecciona una plantilla o una HSM aprobada**; F6 depende de F5. F1 va
@@ -145,6 +145,37 @@ Y dos piezas nuevas genuinamente reutilizables:
   captura en claro, oscuro y ancho móvil con un guard automático de desbordamiento horizontal.
   Levantar `axi-server` desde el worktree de marketing aplicaría sus migraciones a la BD de
   desarrollo compartida: es una decisión del usuario, no del agente.
+
+### Estado de F6 — última fase del módulo
+
+- **Hallazgo del contrato, leído en el código y no en la KB** (`campaign_stats.query.ts:66-74`): los
+  contadores de stats son un `groupBy(status)`, así que `sent`, `delivered` y `read` son EXCLUYENTES
+  entre sí. Un embudo que los leyera crudos crecería hacia abajo. `campaignFunnel()` los acumula y
+  hay un test que fija la invariante (`delivered ≤ despachados ≤ audiencia`) para tres formas de
+  campaña distintas.
+- **`queued` no cuenta como «Despachado»**, aunque el backend sí lo mete en el denominador de sus
+  `*_rate`. Un mensaje en cola todavía no salió; contarlo inflaría la etapa con lo que aún puede
+  fallar. Es una desviación deliberada y está escrita en el propio módulo.
+- **Tres fuentes que no se pisan:** REST al montar; WebSocket como señal primaria **filtrada a esta
+  campaña** (un evento de otra no dispara nada — hay un test que lo comprueba, porque es la
+  diferencia entre tiempo real dirigido e invalidación global); y polling derivado de
+  `campaignPollInterval(status)` solo para `delivered`/`read`, que se reconcilian por lotes cada
+  5 min y no tienen evento. En la reconexión se recarga entero: lo emitido con el socket caído se
+  perdió y las cifras habrían quedado desfasadas en silencio.
+- **El CSV baja TODOS los destinatarios**, paginando hasta el final con tope de seguridad. Exportar
+  los 20 visibles de 1.200 sería una trampa.
+- El embudo se dibuja con divs animados y `useReducedMotion`, no con Recharts: cinco barras no
+  justifican cargar una librería de charts en la ruta.
+- Dos correcciones que salieron de mirar las capturas, no de los tests: las barras eran **corales** y
+  convivían con «Pausar» y «Cancelar» — el coral es solo de acción (DESIGN §3.1), así que pasaron al
+  ámbar del módulo; y en móvil el embudo enseñaba etiquetas y porcentajes **sin una sola cifra**,
+  porque la etiqueta ocupaba el ancho completo al ocultarse la barra.
+- **20 tests nuevos** (9 de dominio, 11 de vista). Suite completa: **881 verdes**.
+  Ruta `campaigns/[campaignId]`: 9,4 kB.
+
+**Nit preexistente que F6 NO toca:** el breadcrumb muestra el id crudo (`c1`) en toda ruta dinámica
+del panel — también en `orders/[orderId]`, `crm/contacts/[contactId]` y `catalog/products/[id]`.
+Arreglarlo es un cambio en `private-header.tsx` que afecta a cinco módulos ajenos.
 
 ### Estado de F5
 
