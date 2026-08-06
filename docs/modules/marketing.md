@@ -97,7 +97,11 @@ src/modules/marketing/
     ├── MarketingOverviewView.tsx
     └── components/               # LiveCampaignCard · RecoveryFeed · OverviewSkeleton
 
-src/app/(private)/(content)/marketing/{page,loading}.tsx
+src/app/(private)/(content)/marketing/
+├── {page,loading}.tsx                Resumen
+├── promotions/{page,loading}.tsx
+├── automations/{page,loading}.tsx
+└── settings/{layout,page,loading}.tsx + templates/ + meta-templates/ + opt-outs/
 ```
 
 **Reglas propias del slice:**

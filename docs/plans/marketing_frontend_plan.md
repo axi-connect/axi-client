@@ -22,7 +22,7 @@
 | F1 | Fundaciones transversales + piezas compartidas + **Resumen `/marketing`** | ✅ Código completo | — (la raíz ya está sembrada) |
 | F2 | Promociones y cupones + `catalog/public.ts` + `VariantPicker` | ✅ Código completo | `Promociones` ✅ |
 | F3 | Recuperación de ventas (reglas + métricas) | ✅ Código completo | `Recuperación` ✅ |
-| F4 | Configuración: ajustes, plantillas, plantillas de Meta y bajas | ⬜ Pendiente | `Configuración` |
+| F4 | Configuración: ajustes, plantillas, plantillas de Meta y bajas | ✅ Código completo | `Configuración` ✅ |
 | F5 | Campañas: lista + wizard de 4 pasos | ⬜ Pendiente | `Campañas` |
 | F6 | Detalle de campaña en vivo (embudo, destinatarios, ciclo de vida) | ⬜ Pendiente | — |
 
@@ -145,6 +145,22 @@ Y dos piezas nuevas genuinamente reutilizables:
   captura en claro, oscuro y ancho móvil con un guard automático de desbordamiento horizontal.
   Levantar `axi-server` desde el worktree de marketing aplicaría sus migraciones a la BD de
   desarrollo compartida: es una decisión del usuario, no del agente.
+
+### Estado de F4
+
+- Backend: hijo `marketing_settings` en el seeder (último de los tres, que es su sitio en el menú).
+- **`modules/channels/public.ts` nuevo**: la pantalla de HSM necesita saber qué canales cloud hay, y
+  `listChannels` ya existía en ese slice. Publicarlo por su barrel es lo correcto; duplicar la
+  llamada a `/channels` desde marketing habría dejado dos dueños del mismo recurso.
+- Sub-navegación por **segmento de ruta** (`crm/settings` como referencia): cada pestaña tiene su
+  propio fetch y su propio estado, así que merece URL propia y que el back del navegador funcione.
+- Los ajustes parten SIEMPRE del GET y reenvían la sección completa (el PUT no admite parches).
+  Si el GET falla **no se ofrece guardar**: escribir sobre defaults inventados pisaría la
+  configuración real del tenant.
+- La pantalla de HSM cuenta *cuántas sirven de verdad* y, en las que no, muestra **el motivo** en
+  vez de su texto: una `utility` aprobada se ve bien y falla al lanzar la campaña.
+- **31 tests nuevos** (19 de dominio, 12 de vista en 2 suites). Suite completa: **819 verdes** en
+  36 s. Las cuatro rutas entre 6 y 8 kB.
 
 ### Estado de F3
 
