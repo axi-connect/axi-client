@@ -21,7 +21,7 @@
 | F0 | Mockup HTML navegable de alta fidelidad (Artifact privado) | ✅ Aprobado | — |
 | F1 | Fundaciones transversales + piezas compartidas + **Resumen `/marketing`** | ✅ Código completo | — (la raíz ya está sembrada) |
 | F2 | Promociones y cupones + `catalog/public.ts` + `VariantPicker` | ✅ Código completo | `Promociones` ✅ |
-| F3 | Recuperación de ventas (reglas + métricas) | ⬜ Pendiente | `Recuperación` |
+| F3 | Recuperación de ventas (reglas + métricas) | ✅ Código completo | `Recuperación` ✅ |
 | F4 | Configuración: ajustes, plantillas, plantillas de Meta y bajas | ⬜ Pendiente | `Configuración` |
 | F5 | Campañas: lista + wizard de 4 pasos | ⬜ Pendiente | `Campañas` |
 | F6 | Detalle de campaña en vivo (embudo, destinatarios, ciclo de vida) | ⬜ Pendiente | — |
@@ -144,6 +144,23 @@ Y dos piezas nuevas genuinamente reutilizables:
   captura en claro, oscuro y ancho móvil con un guard automático de desbordamiento horizontal.
   Levantar `axi-server` desde el worktree de marketing aplicaría sus migraciones a la BD de
   desarrollo compartida: es una decisión del usuario, no del agente.
+
+### Estado de F3
+
+- Backend: hijo `marketing_automations` en el seeder + spec (11 tests verdes).
+- `domain/template.ts` es un **espejo exacto** del `template_renderer.ts` del backend (catálogo de
+  variables, patrón de placeholder y normalización). Se replica y no se aproxima porque la vista
+  previa tiene que enseñar EXACTAMENTE lo que recibirá el cliente, incluido cómo se cierran los
+  huecos cuando una variable no tiene dato.
+- Reglas agrupadas por disparador y ordenadas por prioridad: es el orden en que el backend las
+  evalúa (first-match-wins), y una lista plana escondería la única relación que importa entre ellas.
+- Encender exige confirmación que dice qué va a pasar; `deal_stalled` sin plantilla de Meta queda
+  bloqueado ANTES del clic, no con un 422 después.
+- El desglose de omitidos excluye los motivos transitorios (cooldown, cupo diario) porque no son
+  contactos perdidos. Cuando TODOS los omitidos son transitorios se explica en la fila, en vez de
+  decir "sin omisiones" con el contador en 3.
+- **46 tests nuevos** (17 del renderizador, 18 de la config del formulario, 11 de la vista).
+  Suite completa: **790 verdes**. `/marketing/automations` en 12 kB.
 
 ### Estado de F2
 
