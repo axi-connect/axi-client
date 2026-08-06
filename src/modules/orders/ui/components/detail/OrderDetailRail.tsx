@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  AudioLines,
   ExternalLink,
   MessageSquareText,
   PackageCheck,
@@ -326,6 +327,22 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                             title={`${usage.tokens_input + usage.tokens_output} tokens · ${usage.ai_requests} llamadas`}
                           >
                             US$ {usage.cost_usd.toFixed(4)}
+                          </span>
+                        ) : null,
+                    },
+                    {
+                      // §10.5 F5: solo cuando la conversación consumió voz —
+                      // valor null y FieldList auto-oculta la fila
+                      label: (
+                        <span className="flex items-center gap-1">
+                          <AudioLines className="size-3.5 text-accent-violet" /> Voz
+                        </span>
+                      ),
+                      value:
+                        usage !== null && usage.tts_characters > 0 ? (
+                          <span className="tabular-nums" title="incluida en el costo IA">
+                            {usage.tts_characters.toLocaleString("es-CO")} caracteres · ≈{" "}
+                            {Math.max(1, Math.round(usage.tts_characters / 280))} notas
                           </span>
                         ) : null,
                     },

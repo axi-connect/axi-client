@@ -1,4 +1,10 @@
 import { http } from "@/core/services/http";
+import {
+  voiceUsageFromSources,
+  type UsageHistoryDTO,
+  type UsageSummaryDTO,
+  type VoiceUsageView,
+} from "@/modules/analytics/domain/analytics";
 import type {
   AgentPerformanceDTO,
   AlertsListDTO,
@@ -97,4 +103,20 @@ export function getAlerts(status: AlertStatus): Promise<AlertsListDTO> {
 /** Marca una alerta como atendida (204): triggered → acknowledged. */
 export function ackAlert(alertId: string): Promise<void> {
   return http.post<void>(`/analytics/alerts/${alertId}/ack`, {});
+}
+
+/**
+ * Consumo de voz del CICLO para la tarjeta "Voz" (§10.5 F5): el summary da
+ * cuota y ventana del ciclo; la history acotada a esa ventana da la serie
+ * diaria, el costo de la voz y las notas reales (`event_count` = síntesis).
+ */
+export async function getVoiceUsage(): Promise<VoiceUsageView> {
+  const summary = await http.get<UsageSummaryDTO>("/usage/summary");
+  const history = await http.get<UsageHistoryDTO>("/usage/history", {
+    metric: "tts_characters",
+    granularity: "day",
+    from: summary.period_start,
+    to: summary.period_end,
+  });
+  return voiceUsageFromSources(summary, history);
 }
