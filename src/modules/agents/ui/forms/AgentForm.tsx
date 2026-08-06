@@ -2,14 +2,18 @@
 
 import { z } from "zod"
 import Image from "next/image"
+import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { useEffect, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { AudioLines, Info, TriangleAlert } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { Input } from "@/shared/components/ui/input"
+import { Badge } from "@/shared/components/ui/badge"
+import { Switch } from "@/shared/components/ui/switch"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages"
-import { characterStyle } from "@/modules/agents/domain/character"
+import { characterHasVoice, characterStyle } from "@/modules/agents/domain/character"
 import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context"
 import { AgentIntentionsEditor } from "@/modules/agents/ui/components/AgentIntentionsEditor"
 import {
@@ -22,6 +26,7 @@ import {
   AGENT_STATUS_LABELS,
   AI_PROVIDER_LABELS,
   ASSIGNABLE_AI_PROVIDERS,
+  agentVoicePolicy,
   type AiAgentDTO,
   type AiModelDTO,
   type CreateAiAgentDTO,
@@ -75,6 +80,19 @@ const agentFormSchema = z.object({
     .refine((v) => v === "" || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 10), "Entre 1 y 10")
     .optional(),
   skills: z.string().trim().optional(),
+  // Política de voz (§10.5 F2). El schema del backend es STRICT: toDto
+  // re-anida EXACTAMENTE las claves conocidas, jamás claves extra.
+  voice_enabled: z.boolean(),
+  voice_max_per_conversation: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 20), "Entre 1 y 20")
+    .optional(),
+  voice_max_chars: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 2000), "Entre 1 y 2000")
+    .optional(),
 })
 
 type AgentFormValues = z.infer<typeof agentFormSchema>
@@ -89,7 +107,12 @@ function splitCsv(value?: string): string[] {
 function agentToFormValues(agent: AiAgentDTO): AgentFormValues {
   const handoff = agent.handoff_policy as { keywords?: string[]; max_failures?: number }
   const params = agent.model_params as { temperature?: number; max_tokens?: number }
+  const voice = agentVoicePolicy(agent.voice_policy)
   return {
+    voice_enabled: voice.enabled,
+    voice_max_per_conversation:
+      voice.max_per_conversation !== undefined ? String(voice.max_per_conversation) : "",
+    voice_max_chars: voice.max_chars !== undefined ? String(voice.max_chars) : "",
     name: agent.name,
     status: agent.status,
     // 'mock' es interno de quality y no se puede asignar desde el panel; sus
@@ -124,6 +147,16 @@ function toDto(values: AgentFormValues): CreateAiAgentDTO {
       keywords: splitCsv(values.handoff_keywords),
       ...(values.max_failures ? { max_failures: Number(values.max_failures) } : {}),
     },
+    // Reemplazo completo, como handoff_policy. `mode: "mirror"` es el único
+    // modo válido hoy: responder con voz solo cuando el cliente usó voz
+    voice_policy: {
+      enabled: values.voice_enabled,
+      mode: "mirror",
+      ...(values.voice_max_per_conversation
+        ? { max_per_conversation: Number(values.voice_max_per_conversation) }
+        : {}),
+      ...(values.voice_max_chars ? { max_chars: Number(values.voice_max_chars) } : {}),
+    },
   }
 }
 
@@ -136,7 +169,8 @@ export type AgentFormHost = {
 
 export function AgentForm({ host }: { host?: AgentFormHost }) {
   const isEdit = Boolean(host?.agent)
-  const { characters, intentions, fetchCharacters, fetchIntentions } = useAgent()
+  const { characters, intentions, voiceSettings, fetchCharacters, fetchIntentions, fetchVoiceSettings } =
+    useAgent()
   const [selectedIntentions, setSelectedIntentions] = useState<Set<string>>(
     () => new Set(host?.agent?.intentions.map((i) => i.intention_id) ?? []),
   )
@@ -158,6 +192,9 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
           max_failures: "",
           handoff_keywords: "humano, asesor",
           skills: "",
+          voice_enabled: false,
+          voice_max_per_conversation: "",
+          voice_max_chars: "",
         },
   })
 
@@ -169,6 +206,8 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
   useEffect(() => {
     if (characters.length === 0) void fetchCharacters()
     if (intentions.length === 0) void fetchIntentions()
+    // El switch de empresa puede cambiar en otra pestaña: siempre re-fetch
+    void fetchVoiceSettings()
     void listAiModels()
       .then((res) => setModels(res.data))
       .catch(() => setModels([]))
@@ -488,6 +527,8 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
           />
         </div>
 
+        <VoicePolicySection form={form} />
+
         <div>
           <h3 className="mb-2 text-sm font-medium">Intenciones que atiende</h3>
           <AgentIntentionsEditor
@@ -498,5 +539,137 @@ export function AgentForm({ host }: { host?: AgentFormHost }) {
         </div>
       </form>
     </Form>
+  )
+}
+
+/**
+ * Política de voz del agente (§10.5 F2): CUÁNDO habla. Con el switch de
+ * empresa apagado la sección se DESHABILITA con explicación — nunca se oculta
+ * sin decir por qué. Si el character elegido no tiene voz, se avisa: la
+ * política degradaría a texto en silencio.
+ */
+function VoicePolicySection({ form }: { form: ReturnType<typeof useForm<AgentFormValues>> }) {
+  const { characters, voiceSettings } = useAgent()
+  // Desconocido (null) no bloquea: solo un `false` explícito apaga la sección
+  const voiceOff = voiceSettings !== null && !voiceSettings.ai_enabled
+  const enabled = form.watch("voice_enabled")
+  const characterId = form.watch("character_id")
+  const character = characters.find((entry) => entry.id === characterId)
+  const missingVoice = enabled && (character === undefined || !characterHasVoice(character))
+
+  return (
+    <section className="space-y-3 border-t border-border pt-4">
+      <div className="flex items-center gap-2">
+        <AudioLines className="size-4 text-accent-violet" aria-hidden />
+        <h3 className="text-sm font-semibold">Notas de voz</h3>
+        <Badge
+          variant="outline"
+          className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
+        >
+          IA
+        </Badge>
+      </div>
+
+      {voiceOff && (
+        <p className="flex items-start gap-2 rounded-md border border-accent-violet/25 bg-accent-violet/10 p-3 text-xs">
+          <Info className="mt-0.5 size-3.5 shrink-0 text-accent-violet" aria-hidden />
+          <span>
+            La voz está desactivada para tu empresa.{" "}
+            <Link href="/settings/voice" className="font-medium text-brand underline-offset-2 hover:underline">
+              Actívala en Configuración → Voz
+            </Link>
+            .
+          </span>
+        </p>
+      )}
+
+      <fieldset disabled={voiceOff} className={cn("space-y-3", voiceOff && "opacity-50")}>
+        <FormField
+          name="voice_enabled"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <FormLabel>Responder con notas de voz</FormLabel>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Solo cuando el cliente le habla con audio (espejo). Las respuestas largas o con
+                    enlaces salen en texto.
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-label="Responder con notas de voz"
+                  />
+                </FormControl>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {missingVoice && (
+          <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
+            <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
+            <span>
+              {character === undefined ? (
+                <>Elige un character con voz: sin él, el agente seguirá respondiendo por texto.</>
+              ) : (
+                <>
+                  El character <span className="font-medium">{character.name}</span> aún no tiene voz
+                  elegida — el agente seguirá respondiendo por texto.{" "}
+                  <Link
+                    href={`/admin/agents/characters/update/${character.id}`}
+                    className="font-medium text-brand underline-offset-2 hover:underline"
+                  >
+                    Elegir voz del character
+                  </Link>
+                  .
+                </>
+              )}
+            </span>
+          </p>
+        )}
+
+        {enabled && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+              name="voice_max_per_conversation"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Máx. notas por conversación</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={1} max={20} placeholder="6" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Entre 1 y 20 · cortesía con el cliente y control de costo.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="voice_max_chars"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Largo máx. por nota (caracteres)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={1} max={2000} placeholder="600" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Opcional: si lo dejas vacío aplica el tope de la plataforma.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+      </fieldset>
+    </section>
   )
 }
