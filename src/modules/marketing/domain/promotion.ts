@@ -21,6 +21,19 @@ export const PROMOTION_KIND_PARAM: Record<PromotionKind, keyof PromotionDTO> = {
   free_shipping: "shipping_value_cents",
 };
 
+/**
+ * Nombre legible de la variante de regalo ("Camiseta básica · Talla M").
+ *
+ * El backend embebe `gift_variant` justo para esto: no hay endpoint de variante
+ * suelta, y resolverlo en el cliente costaría recorrer el catálogo entero.
+ * `null` cuando la promoción no es de regalo.
+ */
+export function giftVariantLabel(promotion: PromotionDTO): string | null {
+  const gift = promotion.gift_variant;
+  if (!gift) return null;
+  return gift.name ? `${gift.product_name} · ${gift.name}` : gift.product_name;
+}
+
 /** Resumen legible de lo que da la promoción ("25% de descuento"). */
 export function describePromotionKind(promotion: PromotionDTO): string {
   switch (promotion.kind) {
@@ -36,8 +49,10 @@ export function describePromotionKind(promotion: PromotionDTO): string {
       return promotion.shipping_value_cents !== null
         ? `Envío gratis · descuenta ${formatMoney(promotion.shipping_value_cents)} de flete`
         : PROMOTION_KIND_LABELS.free_shipping;
-    case "gift_product":
-      return PROMOTION_KIND_LABELS.gift_product;
+    case "gift_product": {
+      const gift = giftVariantLabel(promotion);
+      return gift ? `Producto de regalo · ${gift}` : PROMOTION_KIND_LABELS.gift_product;
+    }
   }
 }
 

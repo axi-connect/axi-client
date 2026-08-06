@@ -7,10 +7,11 @@ import {
 } from "@/shared/components/features/dynamic-form";
 import { VariantPicker, type VariantSelection } from "@/modules/catalog/public";
 import { PROMOTION_KIND_LABELS, PROMOTION_KIND_ORDER } from "@/modules/marketing/domain/enums";
-import type {
-  CreatePromotionDTO,
-  PromotionDTO,
-  UpdatePromotionDTO,
+import {
+  giftVariantLabel,
+  type CreatePromotionDTO,
+  type PromotionDTO,
+  type UpdatePromotionDTO,
 } from "@/modules/marketing/domain/promotion";
 
 /**
@@ -111,21 +112,7 @@ function fromDateInput(value: string): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-/**
- * Texto del regalo ya configurado.
- *
- * CARENCIA DEL CONTRATO: `PromotionDto` solo trae `gift_variant_id`, y no hay
- * endpoint de variante suelta — resolver el nombre exigiría recorrer el
- * catálogo producto a producto. Se muestra una frase honesta en vez de un uuid
- * o de un fan-out de decenas de peticiones. Se resuelve embebiendo el nombre de
- * la variante en el DTO desde el backend.
- */
-const GIFT_PLACEHOLDER = "Regalo ya configurado — elige otro para cambiarlo";
-
-export function promotionToFormValues(
-  promotion: PromotionDTO,
-  giftLabel: string | null,
-): PromotionFormValues {
+export function promotionToFormValues(promotion: PromotionDTO): PromotionFormValues {
   return {
     name: promotion.name,
     kind: promotion.kind,
@@ -133,7 +120,12 @@ export function promotionToFormValues(
     amount_cents: promotion.amount_cents,
     gift:
       promotion.gift_variant_id !== null
-        ? { variant_id: promotion.gift_variant_id, label: giftLabel ?? GIFT_PLACEHOLDER }
+        ? {
+            variant_id: promotion.gift_variant_id,
+            // El backend embebe la variante resuelta: ya no hace falta ni un
+            // uuid a la vista ni recorrer el catálogo para etiquetarla.
+            label: giftVariantLabel(promotion) ?? promotion.gift_variant_id,
+          }
         : null,
     shipping_value_cents: promotion.shipping_value_cents,
     min_order_cents: promotion.min_order_cents,

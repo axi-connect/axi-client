@@ -113,6 +113,7 @@ describe("promotionToFormValues", () => {
     percent: null,
     amount_cents: null,
     gift_variant_id: "v-9",
+    gift_variant: { name: "Talla M", sku: "CB-M", product_name: "Camiseta básica" },
     shipping_value_cents: null,
     min_order_cents: null,
     shared_code: null,
@@ -124,26 +125,29 @@ describe("promotionToFormValues", () => {
     enabled: true,
   } as PromotionDTO;
 
-  it("no muestra el uuid del regalo cuando no hay nombre resuelto", () => {
-    const form = promotionToFormValues(promotion, null);
+  it("usa la variante que embebe el backend, no el uuid", () => {
+    const form = promotionToFormValues(promotion);
     expect(form.gift?.variant_id).toBe("v-9");
-    expect(form.gift?.label).not.toContain("v-9");
+    expect(form.gift?.label).toBe("Camiseta básica · Talla M");
   });
 
-  it("usa el nombre resuelto cuando lo hay", () => {
-    expect(promotionToFormValues(promotion, "Camiseta · Talla M").gift?.label).toBe(
-      "Camiseta · Talla M",
-    );
+  it("una variante sin nombre propio cae al nombre del producto", () => {
+    expect(
+      promotionToFormValues({
+        ...promotion,
+        gift_variant: { name: null, sku: "CB", product_name: "Camiseta básica" },
+      }).gift?.label,
+    ).toBe("Camiseta básica");
   });
 
   it("pasa las fechas a formato de input y el código null a cadena vacía", () => {
-    const form = promotionToFormValues(promotion, null);
+    const form = promotionToFormValues(promotion);
     expect(form.starts_at).toBe("2026-07-01");
     expect(form.ends_at).toBe("");
     expect(form.shared_code).toBe("");
   });
 
   it("el resultado de editar vuelve a validar", () => {
-    expect(promotionFormSchema.safeParse(promotionToFormValues(promotion, "X")).success).toBe(true);
+    expect(promotionFormSchema.safeParse(promotionToFormValues(promotion)).success).toBe(true);
   });
 });

@@ -79,10 +79,11 @@ primero porque `/marketing` ya está sembrado en el sidebar del backend y hoy da
 11. **`completed` ≠ entregado**: se etiqueta **"Procesada"**, nunca "Completada".
 12. **El DTO de promoción no expone los cupones vencidos**: solo `coupons_issued` y
     `redemptions_recorded`. No existe "cupones vigentes" — se etiqueta "sin canjear".
-13. **`PromotionDto` no trae el nombre de la variante de regalo**, solo `gift_variant_id`, y no
-    existe endpoint de variante suelta. Resolverlo exigiría recorrer el catálogo producto a
-    producto (decenas de peticiones), así que al editar se muestra una frase honesta en vez de un
-    uuid. Se arregla embebiendo el nombre en el DTO desde el backend.
+13. ~~**`PromotionDto` no traía el nombre de la variante de regalo**~~ — **RESUELTO en el
+    backend (2026-08-06)**: `PromotionDto.gift_variant` embebe ahora `{name, sku, product_name}`.
+    Era la única alternativa razonable: no hay endpoint de variante suelta y resolverlo en el
+    cliente costaba recorrer el catálogo producto a producto. El frontend lo consume con
+    `giftVariantLabel()` y la promoción de regalo ya se etiqueta con su nombre real.
 14. **No hay agregado de ingresos por período.** `attributed_revenue_cents` es por regla y de todo el
     histórico. → el KPI se llama **"Recuperado por tus reglas"**, no "Recuperado · 30 días" como
     proponía el mockup: no se puede acotar a 30 días sin inventar el dato.

@@ -7296,6 +7296,11 @@ export interface components {
                 amount_cents: number | null;
                 /** Format: uuid */
                 gift_variant_id: string | null;
+                gift_variant: {
+                    name: string | null;
+                    sku: string;
+                    product_name: string;
+                } | null;
                 shipping_value_cents: number | null;
                 min_order_cents: number | null;
                 shared_code: string | null;
@@ -7346,6 +7351,11 @@ export interface components {
             amount_cents: number | null;
             /** Format: uuid */
             gift_variant_id: string | null;
+            gift_variant: {
+                name: string | null;
+                sku: string;
+                product_name: string;
+            } | null;
             shipping_value_cents: number | null;
             min_order_cents: number | null;
             shared_code: string | null;

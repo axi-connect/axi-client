@@ -2,6 +2,7 @@ import { formatMoney } from "@/core/lib/format";
 import type { PromotionDTO } from "../promotion";
 import {
   describePromotionKind,
+  giftVariantLabel,
   matchesPromotionStateFilter,
   PROMOTION_STATE_FILTER_LABELS,
   isPromotionLive,
@@ -22,6 +23,7 @@ function promo(over: Partial<PromotionDTO> = {}): PromotionDTO {
     percent: 25,
     amount_cents: null,
     gift_variant_id: null,
+    gift_variant: null,
     shipping_value_cents: null,
     min_order_cents: 5_000_000,
     shared_code: "VUELVE10",
@@ -171,5 +173,50 @@ describe("filtro de estado del catálogo", () => {
         .filter((f) => matchesPromotionStateFilter(state, f));
       expect(matched).toHaveLength(1);
     }
+  });
+});
+
+describe("giftVariantLabel", () => {
+  it("compone producto y variante con lo que embebe el backend", () => {
+    expect(
+      giftVariantLabel(
+        promo({
+          kind: "gift_product",
+          percent: null,
+          gift_variant_id: "v-9",
+          gift_variant: { name: "Talla M", sku: "CB-M", product_name: "Camiseta básica" },
+        }),
+      ),
+    ).toBe("Camiseta básica · Talla M");
+  });
+
+  it("cae al nombre del producto si la variante no tiene uno propio", () => {
+    expect(
+      giftVariantLabel(
+        promo({
+          kind: "gift_product",
+          percent: null,
+          gift_variant_id: "v-9",
+          gift_variant: { name: null, sku: "CB", product_name: "Camiseta básica" },
+        }),
+      ),
+    ).toBe("Camiseta básica");
+  });
+
+  it("es null cuando la promoción no regala nada", () => {
+    expect(giftVariantLabel(promo())).toBeNull();
+  });
+
+  it("la descripción del tipo incluye el regalo, no el uuid", () => {
+    const text = describePromotionKind(
+      promo({
+        kind: "gift_product",
+        percent: null,
+        gift_variant_id: "v-9",
+        gift_variant: { name: "Talla M", sku: "CB-M", product_name: "Camiseta básica" },
+      }),
+    );
+    expect(text).toBe("Producto de regalo · Camiseta básica · Talla M");
+    expect(text).not.toContain("v-9");
   });
 });

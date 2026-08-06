@@ -32,22 +32,16 @@ export const PROMOTION_FORM_ID = "marketing-promotion-form";
  */
 export function PromotionForm({
   promotion,
-  giftLabel,
   onSaved,
 }: {
   promotion: PromotionDTO | null;
-  /** Nombre ya resuelto de la variante de regalo, si la promoción tiene una. */
-  giftLabel?: string | null;
   onSaved: (promotion: PromotionDTO) => void;
 }) {
   const { showAlert } = useAlert();
 
   const defaultValues = useMemo<PromotionFormValues>(
-    () =>
-      promotion
-        ? promotionToFormValues(promotion, giftLabel ?? null)
-        : defaultPromotionFormValues,
-    [promotion, giftLabel],
+    () => (promotion ? promotionToFormValues(promotion) : defaultPromotionFormValues),
+    [promotion],
   );
 
   const fields = useMemo(() => buildPromotionFormFields(), []);
