@@ -5,6 +5,7 @@ const NOW = "2026-07-17T12:00:00Z";
 const rate = (over: Partial<PricingRate>): PricingRate => ({
   id: "r-x",
   provider: "anthropic",
+  unit: "tokens",
   model: "claude-sonnet-5",
   display_name: "Claude Sonnet 4.5",
   is_default: false,

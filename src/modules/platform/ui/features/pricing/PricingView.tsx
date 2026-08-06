@@ -98,6 +98,7 @@ export function PricingView() {
       await updatePricing.mutateAsync({
         id: closingRate.id,
         body: {
+          unit: closingRate.unit,
           margin_multiplier: closingRate.margin_multiplier,
           effective_to: new Date().toISOString(),
         },

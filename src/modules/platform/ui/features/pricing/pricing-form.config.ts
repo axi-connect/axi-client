@@ -62,6 +62,9 @@ export function toCreatePricingDTO(values: PricingFormValues): CreatePricingDTO 
   return {
     provider: values.provider,
     model,
+    // Compat mínima tras el contrato de voz: `unit` es requerido por el DTO.
+    // El selector de unidad (characters/seconds/requests) llega en F3.
+    unit: "tokens",
     ...(model === "*"
       ? {}
       : { display_name: values.display_name?.trim(), is_default: values.is_default }),
@@ -73,8 +76,14 @@ export function toCreatePricingDTO(values: PricingFormValues): CreatePricingDTO 
   };
 }
 
-export function toUpdatePricingDTO(values: PricingFormValues): UpdatePricingDTO {
+export function toUpdatePricingDTO(
+  values: PricingFormValues,
+  // La unidad de la tarifa existente: el PATCH la exige y el form aún no la
+  // edita (F3), así que viaja tal cual está guardada para no reescribirla
+  unit: UpdatePricingDTO["unit"],
+): UpdatePricingDTO {
   return {
+    unit,
     ...(values.model.trim() === "*"
       ? {}
       : { display_name: values.display_name?.trim(), is_default: values.is_default }),

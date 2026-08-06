@@ -27,6 +27,7 @@ jest.mock("@/shared/components/features/detail-sheet", () => ({
 const RATE: PricingRate = {
   id: "r-1",
   provider: "anthropic",
+  unit: "tokens",
   model: "claude-sonnet-5",
   display_name: "Claude Sonnet 4.5",
   is_default: false,
@@ -75,6 +76,8 @@ describe("PricingFormSheet", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     expect(createMutateAsync).toHaveBeenCalledWith({
       provider: "anthropic",
+      // Compat: el DTO exige unidad; el selector de unidad llega en F3
+      unit: "tokens",
       model: "gpt-5-mini",
       display_name: "GPT-5 mini",
       is_default: false,

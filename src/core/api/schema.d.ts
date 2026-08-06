@@ -868,6 +868,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-agents/voice-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VoiceSettingsController_get_v1"];
+        put: operations["VoiceSettingsController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-agents": {
         parameters: {
             query?: never;
@@ -4225,6 +4241,9 @@ export interface components {
                 created_at: string;
             }[];
         };
+        VoiceSettingsDto: {
+            ai_enabled: boolean;
+        };
         AiAgentListDto: {
             data: {
                 /** Format: uuid */
@@ -4421,8 +4440,17 @@ export interface components {
                 [key: string]: unknown;
             };
             voice?: {
-                [key: string]: unknown;
-            };
+                /** @enum {string} */
+                provider: "elevenlabs";
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+            } | Record<string, never>;
             resources?: {
                 [key: string]: unknown;
             };
@@ -4455,8 +4483,17 @@ export interface components {
                 [key: string]: unknown;
             };
             voice?: {
-                [key: string]: unknown;
-            };
+                /** @enum {string} */
+                provider: "elevenlabs";
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+            } | Record<string, never>;
             resources?: {
                 [key: string]: unknown;
             };
@@ -8908,6 +8945,46 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    VoiceSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceSettingsDto"];
+                };
+            };
+        };
+    };
+    VoiceSettingsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSettingsDto"];
+            };
+        };
+        responses: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };

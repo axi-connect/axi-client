@@ -59,7 +59,9 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
 
   const defaultValues: PricingFormValues = isEditing
     ? {
-        provider: rate.provider,
+        // Compat mínima: el form aún no ofrece `elevenlabs` (llega en F3 junto
+        // con el selector de unidad); una tarifa de voz no es editable aquí
+        provider: rate.provider === "elevenlabs" ? "anthropic" : rate.provider,
         model: rate.model,
         display_name: rate.display_name ?? "",
         is_default: rate.is_default,
@@ -160,7 +162,7 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
   async function onSubmit(values: PricingFormValues, form: UseFormReturn<PricingFormValues>) {
     try {
       if (isEditing) {
-        await updatePricing.mutateAsync({ id: rate.id, body: toUpdatePricingDTO(values) });
+        await updatePricing.mutateAsync({ id: rate.id, body: toUpdatePricingDTO(values, rate.unit) });
       } else {
         await createPricing.mutateAsync(toCreatePricingDTO(values));
       }
