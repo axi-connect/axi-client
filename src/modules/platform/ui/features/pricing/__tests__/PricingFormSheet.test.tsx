@@ -27,6 +27,7 @@ jest.mock("@/shared/components/features/detail-sheet", () => ({
 const RATE: PricingRate = {
   id: "r-1",
   provider: "anthropic",
+  unit: "tokens",
   model: "claude-sonnet-5",
   display_name: "Claude Sonnet 4.5",
   is_default: false,
@@ -75,6 +76,8 @@ describe("PricingFormSheet", () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
     expect(createMutateAsync).toHaveBeenCalledWith({
       provider: "anthropic",
+      // Compat: el DTO exige unidad; el selector de unidad llega en F3
+      unit: "tokens",
       model: "gpt-5-mini",
       display_name: "GPT-5 mini",
       is_default: false,
@@ -135,5 +138,28 @@ describe("PricingFormSheet", () => {
         effective_to: "2026-07-17T00:00:00.000Z",
       }),
     });
+  });
+
+  it("una tarifa por caracteres (voz) ajusta labels y deshabilita salida/caché", () => {
+    render(
+      <PricingFormSheet
+        open
+        onOpenChange={() => {}}
+        rate={{
+          ...RATE,
+          provider: "elevenlabs",
+          unit: "characters",
+          model: "eleven_flash_v2_5",
+          display_name: "Eleven Flash v2.5",
+          output_cost_per_mtok_usd: 0,
+          cache_read_per_mtok_usd: null,
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText(/entrada \(usd\/m caracteres\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/salida/i)).toBeDisabled();
+    expect(screen.getByLabelText(/caché/i)).toBeDisabled();
+    expect(screen.getByText(/Tarifa por caracteres \(voz\)/)).toBeInTheDocument();
   });
 });

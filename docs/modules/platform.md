@@ -24,10 +24,12 @@
 src/modules/platform/
 ├── domain/            # auth (claves storage, evento), navigation (nav estático),
 │                      #   tenant / plan (tipos derivados de Schemas), catalogs (países/industrias),
-│                      #   limits (invariantes validateLimits + catálogos METRICS/PERIODS/ACTIONS),
+│                      #   limits (invariantes validateLimits + catálogos METRICS/PERIODS/ACTIONS;
+│                      #     incluye tts_characters con unidad "characters" — F3 voz),
 │                      #   database (máquina de estados, checklist, precondiciones, parseo defensivo),
 │                      #   polling (intervalos PUROS: 3s→15s provisión, 5s migración, pausa re-login),
-│                      #   pricing (versionado por vigencia, groupByProvider, fallback *),
+│                      #   pricing (versionado por vigencia, groupByProvider, fallback *;
+│                      #     unidad de tarifa UNIT_LABELS/groupUnit — elevenlabs por caracteres),
 │                      #   audit (ACTION_GROUPS, RISK_ACTIONS, diffChanges defensivo),
 │                      #   analytics (periodos/status) + thresholds (umbrales §4, fuente única)
 ├── infrastructure/
@@ -52,10 +54,13 @@ src/modules/platform/
     ├── lib/           # sort-rows (orden client-side genérico de tablas)
     ├── forms/         # PlatformLoginForm
     └── features/
-        ├── limits/    # LimitsEditor (COMPARTIDO planes↔tenant) + limit-format (valor por unidad)
+        ├── limits/    # LimitsEditor (COMPARTIDO planes↔tenant) + limit-format (valor por unidad;
+        │              #   "characters" muestra la equivalencia ≈ notas de voz, 280 chars/nota)
         ├── plans/     # PlansView + PlanFormSheet (DetailSheet) + PlanOptionCard (compartida
         │              #   con el wizard) + tabla/acciones
-        ├── pricing/   # PricingView (agrupada por proveedor) + PricingFormSheet + pricing-format
+        ├── pricing/   # PricingView (agrupada por proveedor, chip de unidad, salida/caché "—"
+        │              #   en tarifas por caracteres) + PricingFormSheet (selector de unidad,
+        │              #   labels dinámicos, inmutable en edición) + pricing-format
         ├── audit/     # AuditView (global Y tab del tenant vía companyId/lockTenant) + AuditLogRow
         ├── analytics/ # AnalyticsView (tabs triage/alertas) + AgentsHealthTable + AlertsTable
         │              #   + MetricCell (semáforo por thresholds) + analytics-format
@@ -99,6 +104,7 @@ Coral = acción (CTAs, paso activo, tab activa) · **violeta = acento de la cons
 | FE6 Analytics + Dashboard (`DegradedBanner`, badge alertas) | ✅ |
 | FE7 Endurecimiento (errores §7, a11y, loading, breadcrumb, QA) | ✅ (E2E pospuesto — deuda) |
 | Calidad F1–F5 (escenarios/suites, ejecuciones + wizard, detalle en vivo, depurador forense) | ✅ (plan: `docs/plans/quality_frontend_implementation_plan.md`) |
+| Voz F3 (pricing con unidad `elevenlabs`/caracteres + límite `tts_characters` con preview en notas) | ✅ (plan: `axi-server/docs/plans/voice_agents_frontend_plan.md`) |
 
 ## 7. Tests
 

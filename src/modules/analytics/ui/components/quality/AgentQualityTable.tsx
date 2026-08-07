@@ -50,6 +50,7 @@ export function AgentQualityTable({
                 <th className="hidden pb-2 text-right font-medium md:table-cell">
                   Latencia p95
                 </th>
+                <th className="hidden pb-2 text-right font-medium md:table-cell">Notas voz</th>
                 <th className="pb-2 text-right font-medium">Alucin. graves</th>
               </tr>
             </thead>
@@ -72,6 +73,17 @@ export function AgentQualityTable({
                   </td>
                   <td className="hidden py-2.5 text-right tabular-nums text-muted-foreground md:table-cell">
                     {formatLatency(agent.latency_p95_ms)}
+                  </td>
+                  {/* §10.5 F5: respuestas del agente que salieron en audio;
+                      "—" = agente sin voz en el período */}
+                  <td className="hidden py-2.5 text-right tabular-nums text-muted-foreground md:table-cell">
+                    {agent.voice_replies > 0 ? (
+                      <span title={`${String(agent.voice_notes_delivered)} entregadas al cliente`}>
+                        {agent.voice_replies.toLocaleString("es-CO")}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="py-2.5 text-right tabular-nums">
                     {agent.major_hallucinations > 0 ? (

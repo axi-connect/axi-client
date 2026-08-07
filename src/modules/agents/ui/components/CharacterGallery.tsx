@@ -1,14 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/core/lib/utils";
 import { Modal } from "@/shared/components/ui/modal";
 import { Badge } from "@/shared/components/ui/badge";
 import { errorMessage } from "@/core/lib/error-messages";
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
-import { characterStyle, type CharacterDTO } from "@/modules/agents/domain/character";
+import { ChevronLeft, ChevronRight, Mic, Pencil, Trash2 } from "lucide-react";
+import {
+  characterHasVoice,
+  characterStyle,
+  characterVoice,
+  type CharacterDTO,
+} from "@/modules/agents/domain/character";
+import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context";
 import { deleteCharacter } from "@/modules/agents/infrastructure/services/character-service.adapter";
 
 /**
@@ -31,6 +37,20 @@ export default function CharacterGallery({
   const [page, setPage] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState<CharacterDTO | null>(null);
+  const { voices, fetchVoices } = useAgent();
+
+  // Solo para resolver el NOMBRE de la voz del chip: si el catálogo ya está
+  // en el contexto, no se re-pide (los preview_url no se usan aquí).
+  useEffect(() => {
+    if (voices === null && characters.some(characterHasVoice)) void fetchVoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [characters]);
+
+  const voiceName = (character: CharacterDTO): string | null => {
+    if (!characterHasVoice(character)) return null;
+    const voiceId = characterVoice(character).voice_id;
+    return voices?.find((voice) => voice.external_voice_id === voiceId)?.name ?? "Voz";
+  };
 
   const totalPages = Math.max(1, Math.ceil(characters.length / pageSize));
   const visible = characters.slice(page * pageSize, (page + 1) * pageSize);
@@ -113,6 +133,15 @@ export default function CharacterGallery({
                   <div className="absolute inset-0 bg-background/85 backdrop-blur-sm rounded-md pointer-events-none" />
                   <div className="relative z-10 flex flex-col h-full w-full items-center justify-center gap-2 px-2">
                     <span className="max-w-full truncate text-sm font-medium">{character.name}</span>
+                    {voiceName(character) !== null && (
+                      <Badge
+                        variant="outline"
+                        className="max-w-full border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
+                      >
+                        <Mic className="size-3 shrink-0" aria-hidden />
+                        <span className="truncate">{voiceName(character)}</span>
+                      </Badge>
+                    )}
                     {character.is_system ? (
                       <Badge variant="outline">Plantilla</Badge>
                     ) : (

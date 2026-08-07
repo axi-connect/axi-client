@@ -2,16 +2,23 @@
 
 import Image from "next/image";
 import { cn } from "@/core/lib/utils";
-import { Bot } from "lucide-react";
+import { Bot, Mic } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { useCallback, useEffect, useState } from "react";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
-import { characterStyle, type CharacterDTO } from "@/modules/agents/domain/character";
+import {
+  characterHasVoice,
+  characterStyle,
+  characterVoice,
+  type CharacterDTO,
+} from "@/modules/agents/domain/character";
 import { useAgent } from "@/modules/agents/infrastructure/stores/agent.context";
 import { getAgentById } from "@/modules/agents/infrastructure/services/agent-service.adapter";
 import {
   AGENT_STATUS_LABELS,
   AI_PROVIDER_LABELS,
+  agentVoicePolicy,
+  VOICE_POLICY_LIMITS,
   type AiAgentDTO,
 } from "@/modules/agents/domain/agent";
 
@@ -20,7 +27,7 @@ import {
  * `agents:view:open` (detail: { id }).
  */
 export default function AgentDetailSheet() {
-  const { characters } = useAgent();
+  const { characters, voices, fetchVoices } = useAgent();
   const [open, setOpen] = useState(false);
   const [id, setId] = useState<string | undefined>(undefined);
   const [detail, setDetail] = useState<AiAgentDTO | null>(null);
@@ -42,6 +49,17 @@ export default function AgentDetailSheet() {
   }, []);
 
   const character: CharacterDTO | undefined = characters.find((c) => c.id === detail?.character_id);
+
+  const voicePolicy = detail ? agentVoicePolicy(detail.voice_policy) : null;
+  // Nombre de la voz del character (solo si la política está activa)
+  useEffect(() => {
+    if (voicePolicy?.enabled === true && voices === null) void fetchVoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voicePolicy?.enabled]);
+  const voiceName =
+    character !== undefined && characterHasVoice(character)
+      ? (voices?.find((v) => v.external_voice_id === characterVoice(character).voice_id)?.name ?? "Voz")
+      : null;
 
   return (
     <DetailSheet
@@ -79,6 +97,23 @@ export default function AgentDetailSheet() {
           <div className="text-sm text-muted-foreground">
             {AI_PROVIDER_LABELS[detail.provider]} · <span className="font-mono">{detail.model}</span>
           </div>
+
+          {voicePolicy?.enabled === true && (
+            <div className="flex items-center gap-2 text-sm">
+              <Mic className="size-4 text-accent-violet" aria-hidden />
+              {voiceName !== null ? (
+                <span>
+                  Voz: <span className="font-medium">{voiceName}</span> · espejo · máx{" "}
+                  {voicePolicy.max_per_conversation ?? VOICE_POLICY_LIMITS.max_per_conversation.fallback}
+                  /conv
+                </span>
+              ) : (
+                <span className="text-muted-foreground">
+                  Voz activada — el character aún no tiene voz (responde por texto)
+                </span>
+              )}
+            </div>
+          )}
 
           {detail.skills.length > 0 && (
             <div className="flex flex-wrap gap-2">

@@ -18,6 +18,22 @@ const readState = (): LimitInput[] =>
   JSON.parse(screen.getByTestId("state").textContent ?? "[]");
 
 describe("LimitsEditor", () => {
+  it("la métrica de voz muestra el preview en notas (caracteres → notas)", () => {
+    render(
+      <Harness
+        initial={[
+          {
+            ...newLimitRow(),
+            metric: "tts_characters",
+            period: "billing_cycle",
+            limit_value: 400_000,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("≈ 400.000 caracteres ≈ 1.429 notas de voz")).toBeInTheDocument();
+  });
+
   it("activar cost cap fuerza billing_cycle y bloquea el periodo con candado", () => {
     render(<Harness initial={[{ ...newLimitRow(), period: "day" }]} />);
 

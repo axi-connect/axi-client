@@ -13,6 +13,7 @@ import {
   Inbox,
   Lock,
   Megaphone,
+  Mic,
   Package,
   Plug,
   ScrollText,
@@ -49,6 +50,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   // (Seguridad, Configuración, Ventas, Automatización).
   lock: Lock,
   megaphone: Megaphone,
+  mic: Mic,
   package: Package,
   plug: Plug,
   scroll: ScrollText,

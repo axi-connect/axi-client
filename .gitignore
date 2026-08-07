@@ -42,3 +42,5 @@ next-env.d.ts
 
 # codebase-memory (índice del grafo; se regenera con index_repository)
 .codebase-memory/
+
+.claude/worktrees/
