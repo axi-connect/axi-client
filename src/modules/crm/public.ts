@@ -6,7 +6,8 @@
  * frontera; el import correcto es `@/modules/crm/public`.
  *
  * Consumidores actuales: `modules/inbox` (rail de contexto de la conversación),
- * `modules/dashboard` (labels de etapa de ciclo de vida).
+ * `modules/dashboard` (labels de etapa de ciclo de vida), `modules/scheduling`
+ * (hidratación de nombres de contacto y selector de contacto).
  */
 
 export {
@@ -14,12 +15,25 @@ export {
   TIMELINE_SOURCE_LABELS,
   contactDisplayName,
   type ContactDTO,
+  type ContactListItemDTO,
   type ContactProfileDTO,
   type ContactTagDTO,
   type ContactChannelIdentity,
   type TimelineEntryDTO,
   type TimelineSource,
 } from "./domain/contact";
+
+/**
+ * Lectura de contactos para otros slices (scheduling hidrata los nombres de
+ * `contact_id` de las citas; el DTO del backend no los embebe).
+ */
+export { getContact, listContacts } from "./infrastructure/services/contacts-service.adapter";
+
+/**
+ * Combobox de contacto con búsqueda server-side. Autosuficiente (trae sus
+ * propios datos); lo consume el formulario de cita de `scheduling`.
+ */
+export { ContactPicker } from "./ui/forms/ContactPicker";
 
 export {
   CONTACT_STAGE_LABELS,
