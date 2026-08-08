@@ -78,6 +78,12 @@ export function todayKey(now: Date, tz: string): DayKey {
   return keyFromParts(zoned.getFullYear(), zoned.getMonth() + 1, zoned.getDate());
 }
 
+/** "HH:mm" de pared del negocio del instante (para inputs `type="time"`). */
+export function hhmmFromInstant(utcIso: string, tz: string): string {
+  const minutes = minutesIntoDay(utcIso, tz);
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+}
+
 // ---------------------------------------------------------------------------
 // Grillas de calendario (semana inicia LUNES; weekday backend 0=domingo)
 // ---------------------------------------------------------------------------

@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MessageSquareText, Sparkles } from "lucide-react";
+import { useAuth } from "@/shared/auth/auth.hooks";
 import { Badge } from "@/shared/components/ui/badge";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import { FieldList } from "@/shared/components/features/field-list/FieldList";
@@ -25,6 +26,8 @@ import {
   hydrateContactNames,
   hydrateServiceNames,
 } from "@/modules/scheduling/infrastructure/services/entity-names.cache";
+import { useCalendarStore } from "@/modules/scheduling/infrastructure/stores/calendar.store";
+import { StatusActions } from "./StatusActions";
 
 function durationMinutes(appointment: AppointmentDTO): number {
   return Math.round(
@@ -35,7 +38,10 @@ function durationMinutes(appointment: AppointmentDTO): number {
 /**
  * Rail de detalle de la cita (DetailSheet). Adaptador de ruta, patrón
  * DealDetailRoute: `back` para la ruta interceptada, `replace` para hard-nav.
- * Solo lectura en F1 — las acciones (confirmar/reagendar/cancelar) llegan en F2.
+ *
+ * `open` se deriva del pathname: al navegar a /create (reagendar) el slot
+ * @sheet conserva su contenido en la navegación suave, así que el sheet debe
+ * cerrarse solo cuando la URL deja de apuntar a la cita.
  */
 export function AppointmentSheetRoute({
   appointmentId,
@@ -45,10 +51,21 @@ export function AppointmentSheetRoute({
   closeBehavior: "back" | "replace";
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { hasPermission } = useAuth();
   const { timezone } = useCompanySchedule();
-  const [appointment, setAppointment] = useState<AppointmentDTO | null>(null);
+  const [fetched, setFetched] = useState<AppointmentDTO | null>(null);
   const [contactName, setContactName] = useState<string | null>(null);
   const [serviceName, setServiceName] = useState<string | null>(null);
+
+  // Tras una mutación el store tiene la versión fresca (upsert + refresh).
+  const stored = useCalendarStore((s) => s.appointmentsById[appointmentId]);
+  const upsertAppointment = useCalendarStore((s) => s.upsertAppointment);
+  const refresh = useCalendarStore((s) => s.refresh);
+  const appointment = stored ?? fetched;
+
+  const canManage = hasPermission("scheduling:manage");
+  const open = pathname !== null && pathname.includes(`/appointment/${appointmentId}`);
 
   const close = () => {
     if (closeBehavior === "back") router.back();
@@ -57,9 +74,15 @@ export function AppointmentSheetRoute({
 
   const fetchDetail = useCallback(async (id: string | number) => {
     const data = await getAppointment(String(id));
-    setAppointment(data);
+    setFetched(data);
     return data;
   }, []);
+
+  const onUpdated = (fresh: AppointmentDTO) => {
+    setFetched(fresh);
+    upsertAppointment(fresh);
+    void refresh();
+  };
 
   // Hidratación de nombres (el DTO no los embebe; caché compartida del slice).
   useEffect(() => {
@@ -89,11 +112,16 @@ export function AppointmentSheetRoute({
   return (
     <DetailSheet
       id={appointmentId}
-      open
-      onOpenChange={(open) => {
-        if (!open) close();
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) close();
       }}
       size="md"
+      renderFooter={() =>
+        appointment !== null && canManage ? (
+          <StatusActions appointment={appointment} onUpdated={onUpdated} />
+        ) : null
+      }
       title={contactName ?? "Cita"}
       subtitle={
         appointment !== null && tz !== null

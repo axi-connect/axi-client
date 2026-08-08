@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { RotateCcw } from "lucide-react";
+import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { StatusAlert } from "@/shared/components/ui/notice";
 import {
@@ -32,6 +33,7 @@ import { TimeGrid } from "./components/calendar/TimeGrid";
 export function CalendarView() {
   const router = useRouter();
   const company = useCompanySchedule();
+  const { hasPermission } = useAuth();
 
   const view = useCalendarStore((s) => s.view);
   const anchor = useCalendarStore((s) => s.anchor);
@@ -116,10 +118,12 @@ export function CalendarView() {
         view={view}
         statusFilter={statusFilter}
         timezone={timezone}
+        canManage={hasPermission("scheduling:manage")}
         onToday={goToday}
         onStep={step}
         onViewChange={setView}
         onStatusChange={setStatusFilter}
+        onCreate={() => router.push("/scheduling/calendar/create")}
       />
 
       {!company.loading && !company.scheduleConfigured && <ScheduleUnconfiguredBanner />}

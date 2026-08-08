@@ -29,6 +29,12 @@ export {
  */
 export { getContact, listContacts } from "./infrastructure/services/contacts-service.adapter";
 
+/**
+ * Combobox de contacto con búsqueda server-side. Autosuficiente (trae sus
+ * propios datos); lo consume el formulario de cita de `scheduling`.
+ */
+export { ContactPicker } from "./ui/forms/ContactPicker";
+
 export {
   CONTACT_STAGE_LABELS,
   CONTACT_STAGE_BADGE_CLASSES,

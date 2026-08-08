@@ -1,7 +1,14 @@
 "use client";
 
-import { CalendarDays, CalendarRange, Clock, List } from "lucide-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  List,
+  Plus,
+} from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -64,19 +71,24 @@ export function CalendarToolbar({
   view,
   statusFilter,
   timezone,
+  canManage,
   onToday,
   onStep,
   onViewChange,
   onStatusChange,
+  onCreate,
 }: {
   title: string;
   view: CalendarViewKind;
   statusFilter: AppointmentStatus | "all";
   timezone: string | null;
+  /** `scheduling:manage`: sin él no se ofrece "Nueva cita". */
+  canManage: boolean;
   onToday: () => void;
   onStep: (delta: 1 | -1) => void;
   onViewChange: (view: CalendarViewKind) => void;
   onStatusChange: (status: AppointmentStatus | "all") => void;
+  onCreate: () => void;
 }) {
   const browserTz =
     typeof window === "undefined" ? null : Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -139,6 +151,12 @@ export function CalendarToolbar({
           </SelectContent>
         </Select>
         <ViewToggle view={view} onChange={onViewChange} />
+        {canManage && (
+          <Button size="sm" onClick={onCreate}>
+            <Plus aria-hidden className="size-4" />
+            Nueva cita
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -66,6 +66,15 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "quick_actions/asset_in_use": "El archivo está en uso por una acción activa",
   "quick_actions/name_taken": "Ya existe una acción con ese nombre",
   "quick_actions/invalid_config": "La acción está mal configurada",
+  // Agenda (scheduling_frontend_plan.md)
+  "scheduling/appointment_not_found": "La cita ya no existe",
+  "scheduling/reminder_not_found": "El recordatorio ya no existe",
+  "scheduling/slot_unavailable": "Ese horario acaba de ocuparse. Elige otro",
+  "scheduling/invalid_time_range": "El rango de fechas no es válido",
+  "scheduling/invalid_rrule": "La recurrencia no es válida",
+  "scheduling/invalid_timezone": "La zona horaria no es válida",
+  "scheduling/no_channel_identity": "El contacto no tiene identidad en ese canal: elige otro canal",
+  "scheduling/product_not_bookable": "Ese producto no es un servicio agendable",
   // Catálogo (F8)
   "catalog/catalog_not_found": "El catálogo ya no existe",
   "catalog/category_not_found": "La categoría ya no existe",
