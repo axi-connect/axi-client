@@ -16,4 +16,14 @@ export {
 } from "./domain/company";
 
 /** Cache por sesión de `GET /companies/me` (una sola petición compartida). */
-export { loadMyCompanyOnce } from "./infrastructure/services/company-cache";
+export {
+  loadMyCompanyOnce,
+  invalidateMyCompanyCache,
+} from "./infrastructure/services/company-cache";
+
+/**
+ * Editor autocontenido del horario de atención (`PUT /companies/me/schedules`).
+ * Lo embebe la Configuración de la agenda: el horario gobierna la
+ * disponibilidad del calendario y de la IA.
+ */
+export { SchedulesEditor } from "./ui/forms/SchedulesEditor";

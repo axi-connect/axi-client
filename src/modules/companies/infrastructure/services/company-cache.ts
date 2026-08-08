@@ -18,3 +18,11 @@ export function loadMyCompanyOnce(): Promise<CompanyDTO> {
   }
   return companyPromise
 }
+
+/**
+ * Invalida el cache tras mutar la empresa (p.ej. reemplazar el horario desde
+ * la agenda): el próximo consumidor re-fetchea en vez de leer datos viejos.
+ */
+export function invalidateMyCompanyCache(): void {
+  companyPromise = null
+}

@@ -6,8 +6,7 @@ import { CalendarOff } from "lucide-react";
 /**
  * La empresa no tiene franjas de horario: sin horario no hay grilla de
  * disponibilidad y el asistente de IA no puede agendar. NUNCA confundir con
- * "sin cupo" (kb §3). El CTA lleva al editor de horario existente
- * (`/settings/company`; en F3 pasará a `/scheduling/settings`).
+ * "sin cupo" (kb §3). El CTA lleva al tab Configuración de la agenda.
  */
 export function ScheduleUnconfiguredBanner() {
   return (
@@ -21,7 +20,7 @@ export function ScheduleUnconfiguredBanner() {
         </p>
       </div>
       <Link
-        href="/settings/company"
+        href="/scheduling/settings"
         className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         Configurar horario

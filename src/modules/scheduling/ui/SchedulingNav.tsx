@@ -6,11 +6,13 @@ import { cn } from "@/core/lib/utils";
 
 /**
  * Cabecera + sub-navegación persistente de la sección full-bleed `/scheduling`
- * (patrón CrmNav). Los ítems se activan por fase: Recordatorios (F4) y
- * Configuración (F3) se añaden a NAV_ITEMS al implementarse.
+ * (patrón CrmNav). Recordatorios (F4) se añade a NAV_ITEMS al implementarse.
+ * Configuración es visible también para solo-lectura (`scheduling:read` cubre
+ * el GET); sin `scheduling:manage` la vista deshabilita la edición.
  */
 const NAV_ITEMS: ReadonlyArray<{ href: string; label: string }> = [
   { href: "/scheduling/calendar", label: "Calendario" },
+  { href: "/scheduling/settings", label: "Configuración" },
 ];
 
 export function SchedulingNav() {

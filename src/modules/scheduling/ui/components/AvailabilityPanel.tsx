@@ -93,7 +93,7 @@ export function AvailabilityPanel({
         <span>
           La empresa aún no tiene horario de atención configurado: no hay horarios sugeridos, pero
           puedes elegir una hora libre.{" "}
-          <Link href="/settings/company" className="font-medium text-brand hover:underline">
+          <Link href="/scheduling/settings" className="font-medium text-brand hover:underline">
             Configurar horario
           </Link>
         </span>
