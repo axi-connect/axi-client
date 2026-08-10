@@ -578,6 +578,14 @@ tienen tres capas:
    porque ahí es un estado y no un hover.
 3. **Placa del logo** teñida al 10% del color de la app con una línea de un pelo al 22%.
 
+**El proveedor seleccionado NO lleva anillo coral** (decisión del usuario, 2026-08-09): el borde
+ya está ocupado por el cometa y los dos efectos se estorbaban. La selección se lee por tres
+señales que no tocan el borde: el cometa encendido, el resplandor más presente y una **marca de
+verificación** en la esquina, en el color de la app. El badge "Recomendado" se conserva. En la
+implementación de F1 estas tarjetas son un grupo de radio de verdad (`role="radio"` /
+`aria-checked`), no botones con `aria-pressed`: la marca es el afijo visual del estado, no su
+única expresión.
+
 Dos decisiones que no son estéticas:
 
 - **Un canal caído deja de presumir de marca.** `--ch-glow` pasa a `--axi-destructive`, así que
