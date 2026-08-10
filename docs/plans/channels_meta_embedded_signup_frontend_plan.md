@@ -1,6 +1,10 @@
 # Plan frontend — Conexión de canales Meta "de un botón"
 
 > **Estado**: aprobado 2026-08-08. Ampliado a documento auditable 2026-08-08.
+> **F0 entregado 2026-08-09** (`docs/design/mockups/channels-connect.html`), pendiente de
+> aprobación explícita. En esa fecha se rebasó la rama sobre `main` y se **cerró §4.3**: el
+> backend ya mergeó B1–B7 y B9, así que las seis peticiones de contrato dejaron de ser
+> negociaciones y F2–F5 quedaron desbloqueadas.
 > Rama: `feat/channels-frontend` (worktree `axi-client/.claude/worktrees/feat-channels-frontend`).
 > Plan hermano del backend: `axi-server/docs/plans/meta_channels_onboarding_plan.md`
 > (worktree `axi-server/.claude/worktrees/feat-meta-channels`, rama `feat/meta-channels`).
@@ -66,11 +70,15 @@ src/modules/channels/ui/components/ChannelDetailSheet.tsx
 src/modules/channels/ui/forms/ChannelForm.tsx
 ```
 
-No tiene `application/`, no tiene `public.ts` y no tiene ningún directorio `__tests__`. La
-ausencia de `public.ts` es correcta según `docs/architecture.md §3.3` regla 5 ("un slice sin
-consumidores externos no necesita `public.ts`"), aunque `modules/workspace` ya importa
-rutas internas del slice; eso lo cubre la **regla 6**, que sanciona a `workspace` como única
-capa de composición autorizada a consumir `channels`.
+No tiene `application/` ni ningún directorio `__tests__`.
+
+> **Corregido el 2026-08-09 (rebase sobre `main`)**: el slice **sí tiene** `public.ts` desde el
+> merge del módulo Agenda (`a2aada0`). Su superficie pública declara hoy `CHANNEL_KIND_LABELS`,
+> `CHANNEL_STATUS_LABELS`, `ChannelDTO`, `ChannelKind`, `ChannelStatus` y `listChannels`, con
+> `modules/scheduling` como consumidor declarado (selector de canal de los recordatorios).
+> Consecuencia para las fases siguientes: **todo símbolo del slice que consuma otro slice se
+> añade a `public.ts`**, no se importa por ruta interna. `modules/workspace` sigue siendo la
+> excepción sancionada por la regla 6 de `architecture.md §3.3` como capa de composición.
 
 **No existe página real de canales.** Las dos únicas rutas de canales son *intercepting
 routes* dentro del workspace:
@@ -228,6 +236,16 @@ plan del backend habla de `npm run typecheck` porque el backend sí lo tiene; aq
 comprobación de tipos se hace con `npx tsc --noEmit` o, indirectamente, con `npm run build`
 (que además corre ESLint, porque la verja de lint está activa en el build).
 
+**(k) Tercera trampa del worktree, descubierta el 2026-08-09: `npm run api:types` falla aquí
+dentro.** El script es
+`openapi-typescript ../axi-server/openapi/openapi.json -o src/core/api/schema.d.ts`, con ruta
+**relativa**. Desde este worktree `../axi-server` resuelve a
+`axi-client/.claude/worktrees/axi-server`, que no existe, así que el comando muere sin generar
+nada — y `api:types:check`, que es criterio de cierre de F2, muere por la misma razón. Las dos
+salidas válidas: ejecutarlo desde el repositorio padre (`/home/davela/dev/axi/axi-client`), o
+invocar `npx openapi-typescript` con la ruta absoluta del `openapi.json`. Es la misma familia
+de trampa que (i): el worktree no está en la ruta que las herramientas asumen.
+
 ### 2.3 Hechos del repositorio que el plan original no registraba y que cambian decisiones
 
 - **No existe primitivo `Checkbox` ni `Card` en `src/shared/components/ui/`**, y
@@ -357,81 +375,110 @@ todo lo anterior y de una capacidad del backend que hoy no está declarada.
 
 Esta tabla es el contrato de secuenciación. La columna "no se mergea hasta" es normativa.
 
-| PR frontend | Depende de | No se mergea hasta que exista | Motivo del bloqueo |
+| PR frontend | Depende de | No se mergea hasta que exista | Estado del bloqueo al 2026-08-09 |
 |---|---|---|---|
-| **F0** | — | — | Es un mockup, no toca `src/` |
-| **F1** | F0 aprobado | — | No consume ningún endpoint nuevo. Es el PR que se puede mergear primero pase lo que pase |
-| **F2** | F1 (registry, store) | **B4 mergeado y `openapi/openapi.json` regenerado en `axi-server`** | Los tipos del adapter salen de `Schemas[...]` tras `npm run api:types`. Sin los DTOs en el `openapi.json`, `api:types:check` falla y el adapter tendría tipos inventados a mano |
-| **F3** | F1 + F2 | **B4** (heredado de F2) | Consume `POST /channels/meta/embedded-signup` en vivo |
-| **F4** | F3 | **B6**, y además el acuerdo de contrato de §4.3 sobre los campos de salud en `ChannelDto` | Sin B6 no hay `expires_at` poblado ni detección de revocación; sin el acuerdo de campos, la tarjeta de salud no tiene qué mostrar |
-| **F5** | F4 | **B9** del backend **y** la extensión del endpoint de config con parámetro de producto (§4.3, petición 4) | Sin B9 no hay adaptador de Instagram/Messenger: el canal se crearía y no podría enviar ni recibir |
+| **F0** | — | — | Es un mockup, no toca `src/`. **Entregado**: `docs/design/mockups/channels-connect.html` |
+| **F1** | F0 aprobado | — | **Libre**. No consume ningún endpoint nuevo; es el PR que se puede mergear pase lo que pase |
+| **F2** | F1 (registry, store) | B4 mergeado y `openapi.json` regenerado | **DESBLOQUEADO**. B4 está en `main` de `axi-server` y el `openapi.json` ya declara los tres endpoints y sus DTOs |
+| **F3** | F1 + F2 | B4 (heredado de F2) | **DESBLOQUEADO** |
+| **F4** | F3 | B6 + los campos de salud en `ChannelDto` | **DESBLOQUEADO**. B6 está mergeado y `ChannelDto` expone los campos (véase §4.3) |
+| **F5** | F4 | B9 + config por producto | **DESBLOQUEADO**. B9 mergeado; el endpoint de config acepta `?product=` |
 
-Regla operativa que se deriva: **F2 y F4 se desarrollan contra un `openapi.json` que todavía
-no tiene los endpoints**, así que durante el desarrollo el adapter usa tipos locales marcados
-explícitamente como provisionales, y el paso final de cada PR es sustituirlos por
-`Schemas[...]` tras regenerar. Un PR de F2 o F4 con tipos locales sin sustituir **no está
-terminado**, aunque compile.
+Regla operativa que se deriva, y que **ya no es hipotética**: los tipos del adapter salen de
+`Schemas[...]` tras regenerar. El primer paso de F2 es
+**regenerar `src/core/api/schema.d.ts`** (ojo con la trampa §2.2k: el comando no funciona
+dentro del worktree) y dejar `api:types:check` pasando. Ningún PR de F2 o F4 puede declarar
+tipos locales para respuestas del backend: si aparece un `type` propio para un DTO, el PR **no
+está terminado**, aunque compile.
 
-### 4.3 Contrato que este plan pide al backend
+Matiz que sigue vigente sobre B9: el alta por Embedded Signup de Instagram y Messenger **no
+está implementada en el backend**. B9 entregó sus adaptadores de envío y sus routers de webhook,
+pero la verificación de propiedad de esos productos usa `/me/accounts`, distinta de la de
+WhatsApp, y su caso de uso está pendiente. Por eso F5 mantiene los dos proveedores marcados en
+la galería hasta que exista: sin verificación de propiedad, el alta por botón sería el agujero
+que B4 cerró para WhatsApp.
 
-Estas son las peticiones que el frontend hace al plan del backend. Cada una está redactada
-para que se pueda aceptar, rechazar o modificar en la revisión conjunta de los dos planes. No
-son supuestos: son negociaciones abiertas, y mientras no se cierren, la fase que depende de
-ellas no puede darse por planificada.
+### 4.3 Contrato con el backend — CERRADO el 2026-08-09
 
-**Petición 1 (bloquea F2) — Fijar los nombres de los DTOs en el `openapi.json`.** El plan del
-backend describe la respuesta de `GET /channels/meta/embedded-signup/config` como
-`{ enabled, app_id, config_id, graph_api_version }` pero no dice cómo se llamará el schema. El
-frontend necesita el nombre exacto porque `src/core/api/types.ts` deriva todo de
-`components["schemas"]`. Nombres propuestos, coherentes con la convención existente
-(`ChannelDto`, `ChannelListDto`, `CreateChannelDto`): `MetaEmbeddedSignupConfigDto`,
-`CompleteMetaEmbeddedSignupDto` (petición) y la reutilización de `ChannelDto` para la
-respuesta.
+Esta sección era una lista de seis negociaciones abiertas. **Ya no lo es.** El backend mergeó
+B1–B7 y B9, y su `openapi.json` (`axi-server/openapi/openapi.json`) es hoy la fuente de verdad.
+Lo que sigue es el contrato verificado contra ese archivo, petición por petición, para que la
+auditoría pueda comparar lo pedido con lo entregado.
 
-**Petición 2 (bloquea F2/F3) — Confirmar la forma exacta del cuerpo de
-`POST /channels/meta/embedded-signup`.** Del plan del backend se deducen con certeza dos
-campos: `code` (aparece en la lista de *redact* de B7 como `req.body.code` y es el argumento
-del paso 4) y `register_pin` (aparece como `req.body.register_pin`). Un tercero,
-`phone_number_id`, es seguro porque es la clave del lock de Redis
-(`channel:onboarding:{company_id}:{phone_number_id}`) y la clave natural de idempotencia. Dos
-más se infieren de §4.2 del plan del backend pero no están escritos como campos de petición:
-`waba_id` (necesario para el chequeo de `target_ids` del paso 5) y `business_id` (hay columna
-en B3). Y uno no aparece en absoluto: **el nombre del canal**. Hoy `POST /channels` exige
-`name` (`CreateChannelDto`); si el nuevo endpoint no lo acepta, el canal nacerá con un nombre
-autogenerado y el paso 4 del wizard tendrá que renombrarlo con un `PATCH` posterior. Hay que
-decidirlo, porque cambia la UI.
+**Los tres endpoints que existen** (todos bajo `/api/v1`, todos con `ApiBearerAuth`):
 
-**Petición 3 (bloquea F4) — Exponer los campos de salud en `ChannelDto`, no solo en el panel
-de plataforma.** El plan del backend guarda `quality_rating` en `config.health` (B3) y lo
-expone en `GET /platform/channels/health` (B7), que es super-admin. El tenant no lo ve por
-ningún sitio. F4 necesita, como mínimo, estos campos en `ChannelDto`, todos anulables:
-`quality_rating`, `connection_method`, `last_health_check_at`, `token_expires_at` (el
-`expires_at` de la credencial, que B6 empieza a poblar) y el bloque `onboarding` con su
-`status`. Si el backend prefiere no ensanchar `ChannelDto`, la alternativa es un
-`GET /channels/:id/health` propio; lo que no es viable es que F4 dependa de un endpoint de
-plataforma.
+| Endpoint | Petición | Respuesta |
+|---|---|---|
+| `GET /channels/meta/embedded-signup/config?product=…` | `product` es query **obligatorio** | `MetaSignupConfigDto` |
+| `POST /channels/meta/embedded-signup` | `MetaEmbeddedSignupDto` | `201` → `ChannelDto` |
+| `POST /channels/:id/meta/register` | `MetaRegisterPhoneDto` = `{ register_pin }` | `200` → `ChannelDto` |
 
-**Petición 4 (bloquea F5) — Parametrizar el endpoint de config por producto.** La tabla
-`channel_meta_app` ya tiene `config_id_whatsapp`, `config_id_instagram` y
-`config_id_messenger`, pero el endpoint devuelve un `config_id` a secas. F5 necesita
-`GET /channels/meta/embedded-signup/config?product=whatsapp|instagram|messenger`, o bien que
-la respuesta devuelva el mapa completo de `config_id` por producto y el frontend elija. La
-segunda opción es preferible: ahorra un round-trip por cada cambio de proveedor en el paso 1
-del wizard.
+**Petición 1 — nombres de los DTOs. CONCEDIDA, con otros nombres.** No son los propuestos:
+son **`MetaSignupConfigDto`** y **`MetaEmbeddedSignupDto`**, más `MetaRegisterPhoneDto`. La
+respuesta de alta sí reutiliza `ChannelDto`, como se pedía. El adapter de F2 los alcanza como
+`Schemas["MetaSignupConfigDto"]` y `Schemas["MetaEmbeddedSignupDto"]`.
 
-**Petición 5 (afecta a F4, no la bloquea) — Decidir si existe una desconexión voluntaria.**
-Hoy el tenant solo puede **eliminar** el canal (`DELETE /channels/:id`, que el frontend ya
-consume desde `ChannelDetailSheet.tsx:104`). El mockup de F0 contempla un botón "Desconectar"
-distinto de "Eliminar", con la promesa de que el historial se conserva. Si el backend no
-implementa un endpoint para eso, **el botón no debe existir**: prometer en la UI una
-semántica que el backend no tiene es peor que no ofrecerla. La decisión afecta al mockup, así
-que conviene cerrarla antes del gate de F0.
+`MetaSignupConfigDto` = `{ enabled: boolean, app_id: string|null, config_id: string|null,
+graph_api_version: string, product: "whatsapp"|"instagram"|"messenger" }`, los cinco
+requeridos. Que `app_id` y `config_id` sean anulables es la señal de "flag apagado o app sin
+configurar": es el caso que lleva al camino manual, y hay que tratarlo, no asumirlo.
 
-**Petición 6 (afecta a F4, no la bloquea) — Confirmar si habrá evento WebSocket de salud.**
-El plan del backend no declara ninguno. Si no lo hay, F4 se apoya en `channel.status_changed`
-(que ya existe) más un refetch al montar la vista, y la notificación de desconexión llega por
-la campanita. Es aceptable, pero hay que escribirlo para que la auditoría no busque un evento
-que nadie va a emitir.
+**Petición 2 — cuerpo del POST. CONCEDIDA, y más amplia de lo pedido.**
+
+| Campo | Tipo | ¿Obligatorio? |
+|---|---|---|
+| `code` | `string` (10–2048) | **Sí** |
+| `waba_id` | `string` de solo dígitos | **Sí** |
+| `phone_number_id` | `string` de solo dígitos | **Sí** |
+| `business_id` | `string` de solo dígitos | No |
+| `name` | `string` (1–120) | No |
+| `register_pin` | `string` de exactamente 6 dígitos | No |
+
+Lo que esto resuelve: **`name` sí se acepta en el alta**, así que el `PATCH` posterior que el
+plan temía no hace falta y el paso 4 del wizard puede nombrar el canal en la misma llamada. Y
+`register_pin` es opcional en el alta, lo que confirma el diseño de dos caminos: se manda si el
+usuario ya lo tenía a mano, y si no, el 409 `channels/meta_registration_required` lleva al
+endpoint de registro con la pantalla del PIN.
+
+**Petición 3 — campos de salud en `ChannelDto`. CONCEDIDA.** Todo lo pedido está, más cosas
+que no se pidieron. Campos nuevos, todos anulables salvo donde se indica:
+
+`quality_rating` · `messaging_limit` · `last_health_check_at` · `token_expires_at` ·
+`credentials_revoked` (booleano, no anulable) · `business_id` · `connection_method`
+(`manual_token` | `embedded_signup` | `qr_pairing`, no anulable) · `onboarding`
+(`{ status, method, attempted_at, last_error_code }`, el objeto entero anulable).
+
+**Dos avisos de nomenclatura para no perder media hora en F4**: el campo se llama
+**`messaging_limit`**, no `messaging_limit_tier`; y `credentials_revoked` es la forma directa
+de detectar "Meta retiró el acceso", que antes había que inferir del estado.
+
+**Petición 4 — config por producto. CONCEDIDA, pero no como el plan prefería.** El plan pedía
+que la respuesta trajera el mapa completo de `config_id` por producto, para ahorrar un
+round-trip al cambiar de proveedor en el paso 1. El backend lo resolvió al contrario: `product`
+es un query param **obligatorio** y la respuesta trae un solo `config_id` más el `product` que
+resolvió. Consecuencia real para F5: **una llamada por proveedor**, disparada al seleccionarlo,
+no al montar la galería. Es aceptable —el SDK igualmente se precarga una sola vez (D2), y el
+`config_id` solo se necesita en el momento de abrir el popup— pero hay que escribirlo así en el
+hook para no pedir tres configuraciones que nadie va a usar.
+
+**Petición 5 — desconexión voluntaria. RECHAZADA POR AHORA; decisión tomada el 2026-08-09.**
+El backend abrió la fase **B10** para la desconexión suave (revocar el acceso conservando el
+canal y su historial) pero **no está implementada**. Decisión del usuario: **el botón
+"Desconectar" no existe** ni en el mockup de F0 ni en F4. El detalle del canal ofrece
+exactamente dos acciones: **Renovar conexión** (relanza el mismo Embedded Signup) y **Eliminar
+canal** (`DELETE /channels/:id`, que el frontend ya consume). Cuando B10 exista, añadir el
+botón es aditivo. Prometer antes en la UI una semántica que el backend no tiene sería peor que
+no ofrecerla.
+
+**Petición 6 — evento WebSocket de salud. RESUELTA A FAVOR.** Sí lo hay, y no hay que declarar
+nada nuevo en el frontend: el backend publica **`channel.status_changed`** desde tres sitios
+—el caso de uso de onboarding, el processor de salud y su subscriber— con el payload
+`{ channel_id, company_id, status }`. El frontend ya lo declara en
+`src/core/realtime/events.ts:411` como `ChannelStatusChangedEvent` con ese mismo payload
+(`phone_number` es opcional y no viaja en los eventos de Meta). Lo que F4 debe hacer es
+**montar el hook de realtime también fuera del layout del workspace**, que es lo que el plan ya
+decía. La notificación de desconexión sigue llegando además por la campanita
+(`notification.created` en `/inbox`).
 
 ---
 
@@ -449,10 +496,15 @@ frente a un `cancelled` no funciona. Hay que poder pulsar y ver la transición.
 #### Inventario de archivos
 
 **Nuevos**: ninguno dentro de `src/`. El entregable es un HTML autocontenido publicado como
-Artifact privado. Si se quiere conservar en el repositorio, el sitio es
-`docs/design/mockups/channels-connect.html` (el directorio `docs/design/` existe y contiene
-hoy `DESIGN-SYSTEM.md`, `DESIGN.md`, `IMPLEMENTATION-PLAN.md` y `LOADING.md`; no existe
-subcarpeta `mockups/`).
+Artifact privado y conservado en el repositorio como
+`docs/design/mockups/channels-connect.html` (el directorio `docs/design/` ya existía con
+`DESIGN-SYSTEM.md`, `DESIGN.md`, `IMPLEMENTATION-PLAN.md` y `LOADING.md`; la subcarpeta
+`mockups/` la crea esta fase). **Entregado el 2026-08-09.**
+
+Extra del archivo entregado, no previsto en el plan: además del selector de pantallas, el
+mockup admite un atajo por hash (`channels-connect.html#w3`) para saltar directo a una pantalla
+durante la revisión. No sustituye a la navegación por clic, que sigue siendo el criterio de
+cierre.
 
 **Modificados**: `docs/plans/channels_meta_embedded_signup_frontend_plan.md` (este archivo),
 para pegar los mockups aprobados como ASCII, siguiendo la convención de
@@ -467,44 +519,242 @@ El HTML lleva los tokens de la capa 1 de `DESIGN-SYSTEM.md §2.1` copiados como 
 
 #### Pantallas que debe cubrir
 
-1. `/settings/channels` en dos versiones: vacío (cero canales) y poblado (tres canales con
-   estados distintos, incluido uno en `error`).
-2. `/settings/channels/connect`, paso 1: galería de proveedores.
-3. Paso 2: checklist de prerrequisitos, incluida la rama "no cumplo esto todavía".
-4. Paso 3: el botón, con sus **ocho estados** conmutables mediante botones de "simular"
+1. `/settings/channels` vacío (cero canales).
+2. `/settings/channels` poblado: tres canales con estados distintos, uno en `error`.
+3. `/settings/channels/connect`, paso 1: galería de proveedores.
+4. Paso 2: checklist de prerrequisitos, incluida la rama "no cumplo esto todavía".
+5. Paso 3: el botón, con **nueve estados** conmutables desde un selector de simulación
    (`preparing`, `ready`, `unavailable`, `popup_open`, `popup_blocked`, `exchanging`,
-   `cancelled`, `error`; el noveno, `success`, es la pantalla 5).
-5. Paso 4: éxito, con resumen, asignación de agente y mensaje de prueba.
-6. `/settings/channels/[id]`: tarjeta de salud, renovación de conexión y desconexión.
-7. El fallback manual desplegado desde "Opciones avanzadas".
+   `awaiting_pin`, `cancelled`, `error`). Dentro de `error`, un segundo selector recorre los
+   **siete códigos reales** del backend con su copy en español.
+6. Paso 3b: la pantalla del PIN, con su variante de PIN incorrecto. **No estaba en el plan
+   original**: existe porque el backend expone `POST /channels/:id/meta/register` y responde
+   409 `channels/meta_registration_required`, así que es un camino alcanzable de verdad.
+7. Paso 4: éxito, con resumen, nombre del canal, asignación de agente y mensaje de prueba.
+8. `/settings/channels/[id]`: tarjeta de salud y renovación, con simulador de canal sano y
+   canal con el acceso revocado. Sin botón de desconexión (petición 5 de §4.3). El fallback
+   manual cuelga de "Opciones avanzadas", tanto aquí como en el paso 3.
 
 Todo en **light y dark**, porque el checklist de `DESIGN-SYSTEM §11` lo exige y porque los
 tres tonos de calidad (alta, media, baja) son el punto donde el contraste falla primero.
 
 #### Contrato con el backend
 
-Ninguno. F0 no consume nada. Sí depende de que estén **decididas** las peticiones 3 y 5 de
-§4.3, porque determinan qué campos y qué botones existen en las pantallas 6 y 7: dibujar una
-tarjeta de salud con métricas que nadie va a servir es fabricar trabajo que habrá que
-deshacer.
+Ninguno: F0 no consume nada. Pero sí dependía de que estuvieran **decididas** las peticiones 3
+y 5 de §4.3, porque determinan qué campos y qué botones existen en las pantallas 6 y 8. Ambas
+están cerradas (véase §4.3), así que cada dato del mockup se puede señalar a un campo real de
+`ChannelDto` y no hay ningún botón que prometa una semántica inexistente.
 
 #### Criterio de cierre
 
-- El HTML abre en un navegador sin servidor, sin red y sin CDN (es autocontenido).
-- Las siete pantallas son alcanzables por clic desde la primera, sin editar la URL.
-- Los ocho estados del paso 3 se pueden simular sin recargar.
-- El conmutador light/dark funciona y ninguna de las siete pantallas pierde contraste.
-- Aprobación **explícita** del usuario. Según la regla de gate por fase del proyecto, un "sigue
+- ✅ El HTML abre en un navegador sin servidor, sin red y sin CDN (es autocontenido).
+- ✅ Las **ocho** pantallas son alcanzables por clic desde la primera, sin editar la URL.
+- ✅ Los **nueve** estados del paso 3 se simulan sin recargar, y los siete códigos de error
+  también.
+- ✅ El conmutador light/dark funciona y ninguna pantalla pierde contraste. Verificado
+  renderizando con chromium headless en ambos temas.
+- ⏳ Aprobación **explícita** del usuario. Según la regla de gate por fase del proyecto, un "sigue
   adelante" genérico o un "antes de proceder" **no** cuenta como aprobación de la fase
   siguiente: hay que cerrar F0, reportar y esperar.
 - Los mockups aprobados quedan pegados como ASCII en este documento.
+
+#### Mockups entregados — referencia normativa de F1 a F4
+
+Estos ASCII no son decoración: son la referencia contra la que se revisan los PR siguientes.
+El original navegable e interactivo es `docs/design/mockups/channels-connect.html`.
+
+**1 · `/settings/channels` vacío**
+
+```
+Canales
+Conecta WhatsApp, Instagram o Messenger para atender a tus clientes desde Axi.
+┌────────────────────────── (borde discontinuo) ──────────────────────────┐
+│                              ( ⚡ enchufe )                              │
+│                 Todavía no tienes canales conectados                    │
+│      Conectar tu número de WhatsApp toma un par de minutos y no          │
+│      necesitas conocimientos técnicos. Te acompañamos paso a paso.       │
+│                     [ + Conectar un canal ]                             │
+│        También puedes conectar WhatsApp escaneando un código QR.         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**2 · `/settings/channels` poblado** — el canal roto va arriba, porque es el que pide acción
+
+```
+Canales                                              [ + Conectar canal ]
+Tienes 3 canales. Uno necesita tu atención.
+┌─ ⚠ (rojo) ──────────────────────────────────────────────────────────────┐
+│ Cobranza dejó de enviar mensajes                                        │
+│ Meta retiró el acceso de este canal, probablemente porque alguien lo    │
+│ revocó desde el Administrador comercial. Los mensajes que te escriben   │
+│ siguen llegando; no puedes responder hasta reconectarlo.                │
+│ [ Renovar conexión ]  Ver detalles                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────┐ ┌───────────────────┐ ┌───────────────────┐
+│ (wa) Ventas  ●Conectado │ (wa) Soporte ●Conectado │ (wa) Cobranza ●Sin conexión │
+│ WhatsApp · +57 300…│ │ WhatsApp con QR …  │ │ WhatsApp · +57 302…│
+│ Calidad   Puede   │ │ Sesión             │ │ Calidad   Última  │
+│ Alta      iniciar │ │ Vinculada al cel.  │ │ Media     hace 6m │
+│           1.000/d │ │                    │ │                   │
+└───────────────────┘ └───────────────────┘ └───────────────────┘
+Instagram y Messenger están disponibles para conectar.
+```
+
+**3 · Paso 1, galería de proveedores**
+
+```
+← Canales
+Conectar un canal
+Elige por dónde quieres atender a tus clientes.
+①Canal ── ②Requisitos ── ③Conexión ── ④Listo
+┌═ seleccionado, anillo coral ═┐ ┌──────────────────┐ ┌──────────────────┐
+│ (wa) WhatsApp [Recomendado]  │ │ (qr) WhatsApp con│ │ (ig) Instagram   │
+│ El canal oficial de negocio. │ │  código QR       │ │     [Muy pronto] │
+│ Tu número queda en la nube   │ │ Vinculas tu      │ │ Mensajes directos│
+│ de Meta, sin depender de un  │ │ WhatsApp actual  │ │ de tu cuenta     │
+│ celular encendido.           │ │ escaneando un    │ │ profesional.     │
+│ Se conecta con un botón ·    │ │ código.          │ │ Se conecta con   │
+│ unos 2 minutos               │ │ Necesita celular │ │ el mismo botón   │
+└──────────────────────────────┘ └──────────────────┘ └──────────────────┘
+┌──────────────────┐
+│ (ms) Messenger   │        [ Continuar ]
+│     [Muy pronto] │
+└──────────────────┘
+```
+
+**4 · Paso 2, requisitos** — casillas nativas; "Continuar" deshabilitado hasta marcarlas todas
+
+```
+← Elegir otro canal
+Antes de empezar
+Revisa estos puntos. Si algo falta, es mejor saberlo ahora que a mitad del proceso.
+✓Canal ── ②Requisitos ── ③Conexión ── ④Listo
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ☐ Puedo entrar a la cuenta de Facebook que administra mi negocio        │
+│   Es la cuenta con la que autorizarás la conexión…                     │
+│ ─────────────────────────────────────────────────────────────────────  │
+│ ☐ Tengo el número a mano y puedo recibir un SMS o una llamada           │
+│ ─────────────────────────────────────────────────────────────────────  │
+│ ☐ Ese número NO está usándose en WhatsApp ni en WhatsApp Business       │
+│   ┌─ ⚠ ámbar ───────────────────────────────────────────────────────┐  │
+│   │ Al conectarlo, ese número DEJA DE FUNCIONAR EN EL CELULAR. Sus  │  │
+│   │ chats pasan a atenderse desde Axi y no se pueden recuperar.     │  │
+│   │ Es el punto donde más altas se caen.                            │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│ ─────────────────────────────────────────────────────────────────────  │
+│ ☐ Entiendo que Meta cobra los mensajes directamente a mi negocio        │
+└─────────────────────────────────────────────────────────────────────────┘
+[ Continuar (deshabilitado) ]   Algo de esto no lo cumplo ▾
+```
+
+**5 · Paso 3, el botón** — un solo estado visible a la vez
+
+```
+✓Canal ── ✓Requisitos ── ③Conexión ── ④Listo
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [ ↗ Conectar con Meta ]                                                 │
+│ Al pulsar se abre una ventana de Meta. NO LA CIERRES hasta que te diga  │
+│ que terminó.                                                            │
+│ Necesitarás iniciar sesión con la cuenta de Facebook de tu negocio.     │
+└─────────────────────────────────────────────────────────────────────────┘
+> Opciones avanzadas   (pega credenciales a mano: nombre, phone number id,
+                        waba id, token — el escape hatch de soporte)
+
+  · preparing      [ ◌ Preparando la conexión… ] (deshabilitado)
+  · unavailable    ⚠ No pudimos cargar el conector de Meta → bloqueador o
+                     red de la empresa. [Volver a intentar] [Camino manual]
+  · popup_open     [ ◌ Esperando a Meta… ]  ◉ Autorizas en la ventana
+                                             ○ Verificamos el número
+                                             ○ Activamos el canal
+  · popup_blocked  ⚠ Tu navegador bloqueó la ventana → cómo permitirla
+  · exchanging     [ ◌ Activando el canal… ] ✓ ✓ ◉
+  · awaiting_pin   ℹ Este número ya estaba dado de alta en Meta
+                     Código de referencia: channels/meta_registration_required
+  · cancelled      ℹ Cerraste la ventana antes de terminar. No se guardó nada.
+  · error          ✖ <título> / <qué hacer> / Código de referencia: channels/…
+                     (siete códigos: meta_code_expired, meta_missing_scopes,
+                      meta_account_mismatch, onboarding_in_progress,
+                      meta_payment_method_required, provider_account_taken,
+                      meta_signup_disabled)
+```
+
+**6 · Paso 3b, el PIN**
+
+```
+Confirma el PIN del número
+Este número ya estaba dado de alta en Meta, así que necesitamos el PIN de
+seis dígitos que definiste entonces.
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ┌─ ✓ verde ───────────────────────────────────────────────────────────┐ │
+│ │ Ya autorizaste en Meta y verificamos que +57 300 123 4567 es tuyo.  │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ PIN de seis dígitos                                                     │
+│ [_] [_] [_] [_] [_] [_]     (avance automático entre dígitos)          │
+│ Lo eligió quien dio de alta el número en Meta. Nosotros no lo tenemos.  │
+│ ┌─ ✖ rojo, variante de error ─────────────────────────────────────────┐ │
+│ │ El PIN no coincide · Código de referencia: channels/meta_pin_invalid│ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ [ Confirmar y activar ]   Terminar más tarde                            │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**7 · Paso 4, éxito**
+
+```
+✓Canal ── ✓Requisitos ── ✓Conexión ── ④Listo
+┌─────────────────────────────────────────────────────────────────────────┐
+│ (wa) Tu WhatsApp ya está conectado                        ●Conectado    │
+│      Desde ahora los mensajes que lleguen a +57 300 123 4567           │
+│      aparecen en Conversaciones.                                        │
+│ ──────────────────────────────────────────────────────────────────────  │
+│ Nombre del canal            │ Agente de IA que responde                 │
+│ [ Ventas              ]     │ [ Asesora de ventas          ▾]           │
+│ ┌─ ℹ ─────────────────────────────────────────────────────────────────┐ │
+│ │ Falta un paso que solo puedes hacer tú: añade un método de pago en  │ │
+│ │ el Administrador de WhatsApp. Sin él puedes recibir y responder,    │ │
+│ │ pero no iniciar conversaciones nuevas.                              │ │
+│ └─────────────────────────────────────────────────────────────────────┘ │
+│ [ Enviar un mensaje de prueba ]  [ Ir a mis canales ]                   │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**8 · `/settings/channels/[id]`** — cada dato apunta a un campo de `ChannelDto`
+
+```
+← Canales
+(wa) Ventas                                                  ●Conectado
+     WhatsApp · +57 300 123 4567 · Axi Demo
+   (variante degradada: ⚠ Meta retiró el acceso de este canal…)
+┌─ Estado del canal ──────────────────────────────────────────────────────┐
+│ Conexión            Calidad del número   Conversaciones que puedes      │
+│ ●Conectado          Alta                 iniciar                        │
+│ ← status            ← quality_rating     1.000 personas nuevas al día   │
+│                                          ← messaging_limit              │
+│ Acceso de Meta      Última comprobación  Forma de conexión              │
+│ Vigente             hace 12 minutos      Con un botón                   │
+│ ← token_expires_at  ← last_health_       ← connection_method            │
+│   + credentials_       check_at                                         │
+│     revoked                                                             │
+└─────────────────────────────────────────────────────────────────────────┘
+┌─ 🕐 La ventana de 24 horas ─────────────────────────────────────────────┐
+│ …explicación fija. Se cuenta POR CONVERSACIÓN, no por canal: cada       │
+│ cliente tiene su propia ventana. (No se falsea ninguna métrica.)        │
+└─────────────────────────────────────────────────────────────────────────┘
+┌─ Agente que responde ─┐  > Opciones avanzadas (reemplazar token)
+│ [Asesora ▾] [Ventas ] │
+└───────────────────────┘
+┌─ Acciones ──────────────────────────────────────────────────────────────┐
+│ [ ⟳ Renovar conexión ]   [ 🗑 Eliminar canal ]   ← SIN "Desconectar"     │
+│ Renovar vuelve a pedir tu autorización en Meta; no pierdes historial.   │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 #### Riesgos de la fase
 
 | Riesgo | Mitigación |
 |---|---|
 | El mockup usa colores crudos y luego el código no puede reproducirlos con tokens | Los tokens se copian literalmente de `globals.css` al `:root` del HTML; cualquier color que no salga de un token es una señal de que el diseño no es implementable |
-| Se aprueba un mockup que promete datos que el backend no sirve (calidad, límite de mensajería, desconexión suave) | Cerrar las peticiones 3 y 5 de §4.3 **antes** del gate; cada dato del mockup debe poder señalarse a un campo de un contrato |
+| Se aprueba un mockup que promete datos que el backend no sirve (calidad, límite de mensajería, desconexión suave) | **Mitigado**: peticiones 3 y 5 cerradas antes del gate. Calidad y límite existen en `ChannelDto`; la desconexión suave no existe, así que su botón no se dibujó |
 | El mockup se aprueba y luego se implementa "libremente" | Los ASCII pegados en este documento son la referencia de la revisión de F1-F4, no una decoración |
 
 #### Qué NO entra en F0
