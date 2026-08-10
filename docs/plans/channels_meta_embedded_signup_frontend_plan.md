@@ -1368,6 +1368,12 @@ errores de Meta a español: la máquina de estados propaga el `code`, y el dicci
 
 ### F3 — El flujo de conexión
 
+> **ENTREGADA 2026-08-09.** Verificada: `npx tsc --noEmit` limpio, **97 suites / 808 tests**
+> (33 nuevos entre el wizard y el diccionario), `npm run build` verde con
+> `/settings/channels/connect` en el árbol, eslint limpio. Efecto colateral bueno: el First Load
+> JS de `/settings/channels` **bajó de 248 kB a 143 kB** al sacar de ahí el `ChannelForm` y su
+> cadena (`zod` + `react-hook-form` + adapter de agentes), que se replegó al wizard.
+
 #### Objetivo y por qué
 
 La fase donde la feature se vuelve visible. Un wizard de cuatro pasos en
@@ -1537,6 +1543,46 @@ Comportamiento observable:
 | El fallback manual queda tan escondido que en `unavailable` nadie lo encuentra | Comportamiento condicional explícito: en `unavailable` sube a aviso visible. Es un caso de prueba del criterio de cierre |
 | El paso 2 se convierte en un muro que reduce la conversión | Los cinco ítems son marcables por el usuario, no validados por el sistema. El ítem 5 (método de pago) está declarado **no bloqueante**, alineado con el plan del backend |
 | El wizard se rompe si el usuario recarga en mitad del paso 3 | El estado del wizard es efímero a propósito y el `code` **nunca** se persiste (D5). Recargar vuelve al paso 1; es el comportamiento correcto, y debe anotarse para que no se reporte como bug |
+
+#### Lo que se hizo distinto de lo planificado (F3, 2026-08-09)
+
+**El checklist tiene cuatro ítems, no cinco.** Los cinco del plan se solapaban: "tengo o puedo
+crear Business Manager" y "soy administrador de esa cuenta" son la misma comprobación desde el
+punto de vista del usuario ("puedo entrar a la cuenta de Facebook que administra mi negocio"), y
+crear la cuenta se puede hacer dentro del propio popup. Los cuatro que quedan son los que ya
+aprobaste en el mockup de F0 y los que declara el registry, que es la fuente única. El ítem del
+método de pago se conserva como **reconocimiento** ("entiendo que Meta cobra…"), que es lo que el
+plan quería decir con "no bloqueante": no bloquea la conexión, aunque sí haya que marcarlo.
+
+**Un archivo nuevo que el inventario no listaba: `MetaPinForm.tsx`.** Es la pantalla del PIN, que
+en F2 resultó ser un camino alcanzable de verdad (201 con `awaiting_registration`, no un 409). Lo
+mismo que ya dibujaba el mockup. Incluye avance automático entre dígitos, retroceso que salta a la
+casilla anterior y pegado de los seis dígitos de una vez, porque el PIN normalmente se copia.
+
+**«Enviar un mensaje de prueba» no es un botón: es una instrucción.** El plan lo pedía y el mockup
+lo dibujaba, pero **no existe endpoint** para enviar un mensaje de prueba, y ninguno de los que
+enumera el contrato de la fase sirve. Un botón que no hace nada es peor que no tenerlo, así que el
+paso 4 explica el camino real —escribirle al número desde otro teléfono— y ofrece "Ir a
+Conversaciones". Si más adelante hubiera endpoint, el botón se añade sin rediseñar nada.
+
+**El camino manual no puede devolver el canal creado.** `ChannelForm.onSuccess` no recibe
+argumentos y su lógica no se toca en esta fase (regla explícita del plan), así que
+`ManualCredentialsFallback` avisa sin payload y el wizard cierra llevando al listado, que refresca
+desde el store. La alternativa era modificar `ChannelForm` para propagar el canal, y eso contradice
+el "se envuelve, no se reescribe".
+
+**El redirect de F1 quedó repuntado**, como decía la nota al final de F1 (opción 2):
+`/workspace/channels/create` ya apunta a `/settings/channels/connect`, que ahora existe. Con ello
+el `+` del sidebar del workspace y el estado vacío del listado también llevan al wizard, y el
+`Modal` con `ChannelForm` que F1 montaba en el listado **desaparece**: su sitio es "Opciones
+avanzadas" del paso 3.
+
+**La traducción de los errores se verifica con un test, no con capturas.** El criterio de cierre
+pedía comprobar los siete códigos "con el diccionario"; el test vive en
+`src/core/lib/__tests__/error-messages.test.ts` y comprueba tres cosas por cada uno de los **nueve**
+códigos: que tiene traducción propia (no el detalle crudo del backend), que **no filtra jerga**
+(`phone_number_id`, `waba`, `access_token`, `graph api`, `oauth`) y que dice qué hacer. Falla el día
+que alguien añada un código sin traducir, que es exactamente cuando hace falta que falle.
 
 #### Qué NO entra en F3
 

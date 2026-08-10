@@ -56,7 +56,9 @@ const nextConfig: NextConfig = {
       // 404. Las URLs canónicas viven en `/settings/channels` (D4 del plan). El
       // ORDEN importa: Next devuelve la primera coincidencia, así que `create`
       // tiene que ir antes que `:id` o se trataría como un id de canal.
-      { source: "/workspace/channels/create", destination: "/settings/channels", permanent: true },
+      // F1 apuntaba `create` al listado porque el wizard no existía; F3 lo
+      // repunta a su destino real.
+      { source: "/workspace/channels/create", destination: "/settings/channels/connect", permanent: true },
       { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
     ];
   },

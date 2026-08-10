@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Plug, Plus } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
@@ -14,7 +15,7 @@ import { Button } from "@/shared/components/ui/button";
  * Deuda consciente: unificar los estados vacíos del proyecto merece su propio PR
  * de design system, desacoplado de canales.
  */
-export function ChannelsEmptyState({ onConnect }: { onConnect: () => void }) {
+export function ChannelsEmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border px-6 py-14 text-center">
       <span className="grid size-12 place-items-center rounded-full bg-brand/10 text-brand">
@@ -25,9 +26,11 @@ export function ChannelsEmptyState({ onConnect }: { onConnect: () => void }) {
         Conectar tu número de WhatsApp toma un par de minutos y no necesitas conocimientos
         técnicos. Te acompañamos paso a paso.
       </p>
-      <Button size="lg" className="mt-1" onClick={onConnect}>
-        <Plus aria-hidden="true" className="size-4" />
-        Conectar un canal
+      <Button asChild size="lg" className="mt-1">
+        <Link href="/settings/channels/connect">
+          <Plus aria-hidden="true" className="size-4" />
+          Conectar un canal
+        </Link>
       </Button>
       <p className="text-xs text-muted-foreground">
         También puedes conectar WhatsApp escaneando un código QR.

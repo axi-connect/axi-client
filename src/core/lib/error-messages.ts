@@ -49,6 +49,25 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "ai/tts_credential_context": "La credencial de voz solo puede gestionarse desde el panel del negocio",
   "ai/voice_not_in_catalog": "Esa voz no está en el catálogo: elige una de la lista",
   "channels/provider_account_taken": "Ese número/cuenta ya está conectado en otro canal",
+  // Embedded Signup de Meta (F3). Cada mensaje dice QUÉ HACER, no qué falló, y
+  // ninguno usa jerga: el usuario no lee `phone_number_id`, `WABA`, `token` ni
+  // `code`. Eso vive en "Detalles técnicos" del paso 4, para soporte.
+  "channels/meta_signup_disabled":
+    "La conexión automática con Meta no está disponible ahora mismo. Puedes usar el camino manual o intentarlo más tarde",
+  "channels/meta_code_expired":
+    "La autorización caducó. Es normal si la ventana estuvo abierta un rato: vuelve a intentarlo y tardará menos de un minuto",
+  "channels/meta_missing_scopes":
+    "No nos diste todos los accesos que Meta pide. Al volver a intentarlo, acepta todas las casillas que te muestre",
+  "channels/meta_account_mismatch":
+    "El número que elegiste no pertenece al negocio con el que autorizaste. Revisa que sea la cuenta correcta de tu empresa",
+  "channels/onboarding_in_progress":
+    "Ese número se está conectando ahora mismo, quizá en otra pestaña. Espera unos segundos antes de intentarlo de nuevo",
+  "channels/meta_registration_required":
+    "Ese número ya estaba dado de alta en Meta: necesitamos el PIN de seis dígitos que se definió entonces",
+  "channels/meta_pin_invalid":
+    "El PIN no coincide. Tiene que ser el mismo que registraste en Meta para ese número",
+  "channels/meta_payment_method_required":
+    "Meta pide un método de pago para ese número. Añádelo en el Administrador de WhatsApp y vuelve a intentarlo",
   "channels/invalid_credentials": "Las credenciales del canal no son válidas",
   "channels/not_connected": "El canal no está conectado",
   "channels/qr_not_available": "El código QR aún no está disponible",

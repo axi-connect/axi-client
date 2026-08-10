@@ -1,29 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { Plus, RefreshCw, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
-import { Modal } from "@/shared/components/ui/modal";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
 import { useChannelsRealtime } from "@/modules/channels/infrastructure/hooks/use-channels-realtime";
-import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
 import { ChannelCard } from "./ChannelCard";
 import { ChannelsEmptyState } from "./ChannelsEmptyState";
 
 /**
- * `/settings/channels` — la primera página real de canales.
+ * `/settings/channels` — la página de canales del tenant.
  *
  * Antes de F1 las únicas rutas de canales eran dos *intercepting routes* del
  * workspace sin página subyacente, así que recargar `/workspace/channels/create`
  * daba 404. Esta vista es la URL canónica: conectar un canal es una tarea de
  * administración que se hace una vez, no trabajo de inbox (D4 del plan).
  *
- * El alta sigue usando el `ChannelForm` de siempre dentro de un modal. En F3 lo
- * sustituye el wizard de Embedded Signup y el formulario queda como el camino
- * manual de "Opciones avanzadas".
+ * El alta vive en `/settings/channels/connect` desde F3. El `ChannelForm` que F1
+ * montaba aquí en un modal se replegó a "Opciones avanzadas" del paso 3 del
+ * wizard, que es su sitio: es el escape hatch de soporte, no el camino normal.
  */
 export function ChannelsView() {
   // Montado también aquí, no solo en el layout del workspace: sin esto los
@@ -36,7 +34,6 @@ export function ChannelsView() {
   const loading = useChannelStore((s) => s.loading);
   const error = useChannelStore((s) => s.error);
   const fetchChannels = useChannelStore((s) => s.fetchChannels);
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     void fetchChannels();
@@ -57,9 +54,11 @@ export function ChannelsView() {
               <RefreshCw aria-hidden="true" className="size-4" />
               Actualizar
             </Button>
-            <Button onClick={() => setCreating(true)}>
-              <Plus aria-hidden="true" className="size-4" />
-              Conectar canal
+            <Button asChild>
+              <Link href="/settings/channels/connect">
+                <Plus aria-hidden="true" className="size-4" />
+                Conectar canal
+              </Link>
             </Button>
           </div>
         )}
@@ -97,7 +96,7 @@ export function ChannelsView() {
           </Button>
         </div>
       ) : channels.length === 0 ? (
-        <ChannelsEmptyState onConnect={() => setCreating(true)} />
+        <ChannelsEmptyState />
       ) : (
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
           {channels.map((channel) => (
@@ -111,36 +110,6 @@ export function ChannelsView() {
         canal.
       </p>
 
-      <Modal
-        open={creating}
-        onOpenChange={setCreating}
-        config={{
-          title: "Conectar un canal",
-          description: "Registra un canal de mensajería para automatizarlo con tus agentes.",
-          className: "sm:max-w-lg",
-          actions: [
-            { label: "Cancelar", variant: "outline", asClose: true, id: "channel-cancel" },
-            {
-              label: "Guardar",
-              asClose: false,
-              id: "channel-save",
-              onClick: () => {
-                const form = document.getElementById("channels-form");
-                (form as HTMLFormElement | null)?.requestSubmit();
-              },
-            },
-          ],
-        }}
-      >
-        <ChannelForm
-          onSuccess={() => {
-            setCreating(false);
-            // Refetch y no upsert local: el alta de un cloud puede tocar más
-            // campos que los que devuelve el POST (verified_name, teléfono)
-            void fetchChannels();
-          }}
-        />
-      </Modal>
     </div>
   );
 }
