@@ -200,6 +200,7 @@ src/modules/<slice>/
 **Casos representativos:**
 - `channels` — slice con tiempo real: añade `domain/enums.ts`, `domain/websocket.types.ts`, `infrastructure/hooks/` (WS) e `infrastructure/store/{channels.store.ts, websocket.context.tsx}`.
 - `inbox` — slice más grande y el de mayor superficie de tiempo real: añade `domain/inbox.ts` (alias de `Schemas` + tipos de UI + parsers puros), `infrastructure/{services,stores,realtime,hooks}` y una `ui/` con subcarpetas por capacidad (`composer/`, `media/`, `context-rail/`). Consume `crm` **solo** por su `public.ts` para el rail de contexto (§3.3.5). Doc: `docs/modules/inbox.md`.
+- `marketing` — slice con el `domain/` más grande del panel (10 módulos puros: máquina de estados de campaña, embudo, borrador del wizard, motivos de omisión, espejo del renderer de plantillas). Consume `crm`, `catalog` y `channels` **solo** por sus barrels. Doc: `docs/modules/marketing.md`.
 - `workspace` — **capa de composición** (excepción sancionada): solo `ui/`, monta el sidebar de canales del workspace agregando `channels`. No tiene dominio propio.
 
 **Regla de escape sancionada:** un slice puramente CRUD puede omitir `application/` (y usar `domain/ + infrastructure/ + ui/`) manteniendo puertos solo donde exista lógica real. No se fabrica ceremonia donde no hay dominio — igual que en el backend.
@@ -218,7 +219,10 @@ Entre slices:
 5. Un slice importa de otro **solo a través de su barrel `public.ts`** (`src/modules/<slice>/public.ts`), que declara explícitamente su superficie pública: tipos de `domain`, labels/helpers puros, sus hooks/store/context y sus puertos. **Prohibido** importar rutas internas de otro slice (`infrastructure/`, `ui/components/`, casos de uso), incluso si el símbolo está exportado. Si un slice necesita algo que no está en el `public.ts` del otro, se **añade al barrel en el mismo PR** (decisión consciente y revisable), nunca se importa por la ruta profunda.
    - Un slice sin consumidores externos **no necesita `public.ts`**: el barrel aparece cuando aparece el primer consumidor.
    - Lo que se publica queda acoplado: preferir tipos y hooks a componentes. Un componente en el barrel debe ser presentacional o autosuficiente (traer sus propios datos), no depender del contexto del slice dueño.
-   - Barrels existentes: `modules/crm/public.ts` (consumido por `inbox` para el rail de contexto de la conversación, y por `dashboard` para los labels de ciclo de vida).
+   - Barrels existentes:
+     - `modules/crm/public.ts` — consumido por `inbox` (rail de contexto de la conversación), `dashboard` (labels de ciclo de vida) y `marketing` (el DSL de audiencia: `AudienceFilterBuilder`, `describeSegmentFilters`, `compactSegmentFilters`, `listSegments`, `listTags`).
+     - `modules/catalog/public.ts` — consumido por `marketing` para el `VariantPicker` del regalo de una promoción.
+     - `modules/channels/public.ts` — consumido por `marketing` para elegir el canal cloud del que cuelgan las plantillas de Meta. Se creó en vez de duplicar la llamada a `/channels`: el dueño del recurso es uno solo.
 6. `workspace` es la única capa de composición: puede consumir `channels` para montar el sidebar del workspace (documentado).
 7. `core/` y `shared/` **nunca** importan de `modules/`. Comunicación desacoplada preferente: `WebSocketEventBus` (§10), stores compartidos, o CustomEvents del DOM (§9).
 

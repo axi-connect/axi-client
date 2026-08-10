@@ -228,6 +228,22 @@ export interface paths {
         patch: operations["UsersController_update_v1"];
         trace?: never;
     };
+    "/api/v1/platform/channels/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformChannelsController_health_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/auth/login": {
         parameters: {
             query?: never;
@@ -1778,6 +1794,54 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["OrdersController_verifyPayment_v1"];
+        trace?: never;
+    };
+    "/api/v1/channels/meta/embedded-signup/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MetaOnboardingController_config_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/meta/embedded-signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaOnboardingController_connect_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/meta/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaChannelRegisterController_register_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/channels": {
@@ -3582,6 +3646,31 @@ export interface components {
             /** @enum {string} */
             status?: "active" | "disabled";
             password?: string;
+        };
+        PlatformChannelHealthListDto: {
+            data: {
+                /** Format: uuid */
+                channel_id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                name: string;
+                kind: string;
+                status: string;
+                connection_method: string;
+                waba_id: string | null;
+                onboarding_status: string | null;
+                quality_rating: string | null;
+                /** Format: date-time */
+                last_health_check_at: string | null;
+                /** Format: date-time */
+                token_expires_at: string | null;
+                credentials_revoked: boolean;
+                webhook_events_24h: number;
+                /** Format: date-time */
+                last_webhook_event_at: string | null;
+                silent: boolean;
+            }[];
         };
         PlatformLoginDto: {
             /** Format: email */
@@ -6167,13 +6256,21 @@ export interface components {
             /** @default true */
             notify_customer: boolean;
         };
-        CreateChannelDto: {
-            name: string;
+        MetaSignupConfigDto: {
+            enabled: boolean;
+            app_id: string | null;
+            config_id: string | null;
+            graph_api_version: string;
             /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web";
-            provider_account_id?: string;
-            waba_id?: string;
-            access_token?: string;
+            product: "whatsapp" | "instagram" | "messenger";
+        };
+        MetaEmbeddedSignupDto: {
+            code: string;
+            waba_id: string;
+            phone_number_id: string;
+            business_id?: string;
+            name?: string;
+            register_pin?: string;
         };
         ChannelDto: {
             /** Format: uuid */
@@ -6190,10 +6287,37 @@ export interface components {
             default_ai_agent_id: string | null;
             credentials_configured: boolean;
             token_last4: string | null;
+            quality_rating: string | null;
+            messaging_limit: string | null;
+            /** Format: date-time */
+            last_health_check_at: string | null;
+            /** Format: date-time */
+            token_expires_at: string | null;
+            credentials_revoked: boolean;
+            business_id: string | null;
+            /** @enum {string} */
+            connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+            onboarding: {
+                status: string;
+                method: string | null;
+                attempted_at: string | null;
+                last_error_code: string | null;
+            } | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        MetaRegisterPhoneDto: {
+            register_pin: string;
+        };
+        CreateChannelDto: {
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+            provider_account_id?: string;
+            waba_id?: string;
+            access_token?: string;
         };
         ChannelListDto: {
             data: {
@@ -6211,6 +6335,22 @@ export interface components {
                 default_ai_agent_id: string | null;
                 credentials_configured: boolean;
                 token_last4: string | null;
+                quality_rating: string | null;
+                messaging_limit: string | null;
+                /** Format: date-time */
+                last_health_check_at: string | null;
+                /** Format: date-time */
+                token_expires_at: string | null;
+                credentials_revoked: boolean;
+                business_id: string | null;
+                /** @enum {string} */
+                connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+                onboarding: {
+                    status: string;
+                    method: string | null;
+                    attempted_at: string | null;
+                    last_error_code: string | null;
+                } | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -8827,6 +8967,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlatformChannelsController_health_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformChannelHealthListDto"];
+                };
             };
         };
     };
@@ -12031,6 +12190,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    MetaOnboardingController_config_v1: {
+        parameters: {
+            query: {
+                product: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaSignupConfigDto"];
+                };
+            };
+        };
+    };
+    MetaOnboardingController_connect_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaEmbeddedSignupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    MetaChannelRegisterController_register_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaRegisterPhoneDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
                 };
             };
         };

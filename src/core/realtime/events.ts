@@ -327,6 +327,83 @@ export type ContactMergedEvent = {
   merged_contact_id: string;
 };
 
+// ---------------------------------------------------------------------------
+// Marketing — payloads espejo de axi-server
+// src/modules/marketing/application/marketing_events.ts
+//
+// Los seis llevan `simulated`: el router WS ya corta los simulados antes de
+// emitir, pero el flag viaja en el payload y el cliente lo ignora igual que el
+// resto de familias. Ningún payload trae colecciones anidadas: si la vista
+// necesita el detalle, re-consulta REST (misma regla que `crm.deal_*`).
+// ---------------------------------------------------------------------------
+
+export type CampaignStatus = Schemas["CampaignDto"]["status"];
+export type AutomationTriggerType = Schemas["AutomationDto"]["trigger_type"];
+export type OptOutSource = Schemas["OptOutsListDto"]["data"][number]["source"];
+
+/** Toda transición de campaña: launch, pause, resume, cancel, completed y el
+ * paso scheduled→running que hace el sweep. */
+export type MarketingCampaignStatusChangedEvent = {
+  company_id: string;
+  campaign_id: string;
+  status: CampaignStatus;
+  simulated: boolean;
+};
+
+/** Fin del fan-out. `pending` es lo que queda por despachar, no el total. */
+export type MarketingCampaignProgressEvent = {
+  company_id: string;
+  campaign_id: string;
+  audience_total: number;
+  pending: number;
+  simulated: boolean;
+};
+
+/** Cada decisión de una regla de recuperación: envió o descartó, con motivo. */
+export type MarketingAutomationTriggeredEvent = {
+  company_id: string;
+  automation_id: string;
+  execution_id: string;
+  contact_id: string;
+  conversation_id: string | null;
+  trigger_type: AutomationTriggerType;
+  status: "sent" | "skipped";
+  skip_reason: string | null;
+  simulated: boolean;
+};
+
+/** Baja registrada: por keyword del cliente o alta manual del operador. */
+export type MarketingOptOutCreatedEvent = {
+  company_id: string;
+  opt_out_id: string;
+  contact_id: string;
+  conversation_id: string | null;
+  source: OptOutSource;
+  keyword_text: string | null;
+  simulated: boolean;
+};
+
+/** Cupón aplicado a un pedido (el total del pedido cambia: llega `order.updated`). */
+export type MarketingPromotionRedeemedEvent = {
+  company_id: string;
+  promotion_id: string;
+  redemption_id: string;
+  contact_id: string;
+  order_id: string;
+  amount_applied_cents: number;
+  simulated: boolean;
+};
+
+/** El pedido se canceló y la redención se revirtió. */
+export type MarketingPromotionRevertedEvent = {
+  company_id: string;
+  promotion_id: string;
+  redemption_id: string;
+  contact_id: string;
+  order_id: string;
+  simulated: boolean;
+};
+
 export type ChannelQrCodeEvent = {
   channel_id: string;
   company_id: string;
@@ -397,6 +474,14 @@ export type InboxServerEvents = {
   "crm.import_completed": (payload: CrmImportCompletedEvent) => void;
   "contact.lifecycle_changed": (payload: ContactLifecycleChangedEvent) => void;
   "contact.merged": (payload: ContactMergedEvent) => void;
+  "marketing.campaign_status_changed": (
+    payload: MarketingCampaignStatusChangedEvent,
+  ) => void;
+  "marketing.campaign_progress": (payload: MarketingCampaignProgressEvent) => void;
+  "marketing.automation_triggered": (payload: MarketingAutomationTriggeredEvent) => void;
+  "marketing.opt_out_created": (payload: MarketingOptOutCreatedEvent) => void;
+  "marketing.promotion_redeemed": (payload: MarketingPromotionRedeemedEvent) => void;
+  "marketing.promotion_reverted": (payload: MarketingPromotionRevertedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;

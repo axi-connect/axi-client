@@ -24,6 +24,11 @@ const FAMILY: Record<string, TargetResolver> = {
   "crm.import_": () => "/crm/settings/imports",
   "contact.": (d) =>
     typeof d.contact_id === "string" ? `/crm/contacts/${d.contact_id}` : null,
+  // Marketing: la campaña abre su detalle; el resto de eventos del módulo
+  // (regla disparada, baja, canje) no tienen página propia y caen al resumen.
+  "marketing.campaign_": (d) =>
+    typeof d.campaign_id === "string" ? `/marketing/campaigns/${d.campaign_id}` : "/marketing",
+  "marketing.": () => "/marketing",
 }
 
 export function notificationTarget(type: string, data: unknown): string | null {
