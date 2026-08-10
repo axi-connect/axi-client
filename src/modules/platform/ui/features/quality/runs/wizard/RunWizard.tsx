@@ -24,7 +24,7 @@ import { useAgentsHealthQuery } from "../../../../../infrastructure/api/hooks/us
 import { useCreateRun } from "../../../../../infrastructure/api/hooks/use-quality-runs";
 import { useSuitesQuery } from "../../../../../infrastructure/api/hooks/use-quality-suites";
 import { useTenantsQuery } from "../../../../../infrastructure/api/hooks/use-tenants";
-import { StepIndicator } from "../../../../components/StepIndicator";
+import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import { ConfigStep } from "./ConfigStep";
 import { ReviewStep, type SubmitErrorInfo } from "./ReviewStep";
 import { buildCreateRunDTO, defaultRunConfigValues, type RunConfigValues } from "./run-config";

@@ -44,10 +44,13 @@ describe("mapNavigation", () => {
   });
 
   it("filtra los módulos sin UI y poda el grupo que se queda vacío", () => {
-    // /usage y /settings/channels están en UNIMPLEMENTED_NAV_PATHS.
+    // /usage y /settings/sales están en UNIMPLEMENTED_NAV_PATHS.
+    // Antes el testigo era /settings/channels: dejó de servir cuando F1 le dio
+    // página y salió del Set. Un testigo de este test tiene que ser un path que
+    // el backend siembra y el frontend NO implementa todavía.
     const tree = mapNavigation([
       dto("analytics", "/analytics", 10, [dto("usage", "/usage", 10)]),
-      dto("settings", null, 20, [dto("channels", "/settings/channels", 10)]),
+      dto("settings", null, 20, [dto("sales", "/settings/sales", 10)]),
     ]);
 
     // Analítica sobrevive (tiene ruta propia) pero pierde su único hijo.

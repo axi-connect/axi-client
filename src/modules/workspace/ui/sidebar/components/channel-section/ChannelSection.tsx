@@ -41,8 +41,8 @@ export default function ChannelSection() {
             <Button
               size="sm"
               variant="ghost"
-              title="Agregar canal nuevo"
-              onClick={() => router.push("/workspace/channels/create")}
+              title="Administrar canales"
+              onClick={() => router.push("/settings/channels")}
             >
               <CircleFadingPlus />
             </Button>
@@ -59,7 +59,7 @@ export default function ChannelSection() {
             loading={loading}
             channels={channels}
             onOpenDetail={openDetail}
-            onCreate={() => router.push("/workspace/channels/create")}
+            onCreate={() => router.push("/settings/channels")}
           />
         </SidebarMenu>
       </SidebarGroupContent>

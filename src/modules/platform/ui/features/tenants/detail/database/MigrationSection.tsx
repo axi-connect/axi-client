@@ -53,7 +53,7 @@ import {
 import { ConfirmTyped } from "../../../../components/ConfirmTyped";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { StatusBadge } from "../../../../components/StatusBadge";
-import { StepIndicator } from "../../../../components/StepIndicator";
+import { StepIndicator } from "@/shared/components/ui/step-indicator";
 
 function MigrationProgress({ migration }: { migration: DataMigration }) {
   const rows = useMemo(() => parseMigrationProgress(migration.progress), [migration.progress]);

@@ -20,6 +20,10 @@ type ChannelStore = {
   pairingByChannel: Record<string, WwebPairingState>
 
   fetchChannels: () => Promise<void>
+  /** Inserta o reemplaza un canal sin volver a pedir la lista completa. */
+  upsertChannel: (channel: ChannelDTO) => void
+  /** Lo quita del store tras un DELETE, para no esperar al refetch. */
+  removeChannel: (channelId: string) => void
   setChannelStatus: (channelId: string, status: ChannelStatus, phoneNumber?: string | null) => void
   setPairingState: (channelId: string, state: Partial<WwebPairingState>) => void
   clearPairingState: (channelId: string) => void
@@ -41,6 +45,29 @@ export const useChannelStore = create<ChannelStore>((set) => ({
     } finally {
       set({ loading: false })
     }
+  },
+
+  upsertChannel: (channel) => {
+    set((state) => {
+      const index = state.channels.findIndex((item) => item.id === channel.id)
+      if (index === -1) return { channels: [...state.channels, channel] }
+      const channels = [...state.channels]
+      channels[index] = channel
+      return { channels }
+    })
+  },
+
+  removeChannel: (channelId) => {
+    set((state) => {
+      const next = { ...state.pairingByChannel }
+      delete next[channelId]
+      return {
+        channels: state.channels.filter((item) => item.id !== channelId),
+        // El pairing del canal borrado no puede sobrevivirle: sin esto, un canal
+        // nuevo que reutilizara el id vería un QR fantasma
+        pairingByChannel: next,
+      }
+    })
   },
 
   setChannelStatus: (channelId, status, phoneNumber) => {

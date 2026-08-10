@@ -46,8 +46,7 @@ export const NAV_PATH_ALIASES: Record<string, string> = {
 
 /**
  * Paths de navegación del backend que aún no tienen UI (módulos pendientes:
- * usage, audit, channels, métodos de pago). Se filtran del sidebar
- * para no producir 404.
+ * usage, audit, métodos de pago). Se filtran del sidebar para no producir 404.
  *
  * `/settings/sales` estaba sembrado en el backend pero sin página en `app/`:
  * se pintaba en el sidebar y llevaba a un 404. Al filtrarlo desaparece del
@@ -57,7 +56,6 @@ export const UNIMPLEMENTED_NAV_PATHS = new Set([
   "/usage",
   "/settings/audit",
   "/settings/sales",
-  "/settings/channels",
 ]);
 
 /** Resuelve el path del backend a la ruta real del frontend (o null si no hay UI). */

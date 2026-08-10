@@ -808,6 +808,10 @@ diccionario real se escribe en F3.
 
 ### F1 — Fundaciones: página real, fin del 404, primitivos
 
+> **ENTREGADA 2026-08-09.** Verificada: `npx tsc --noEmit` limpio, `npm run build` verde,
+> **93 suites / 752 tests** en verde, eslint limpio en lo tocado. Desviaciones respecto a lo
+> planificado, todas al alza y con su motivo, en «Lo que se hizo distinto» al final de la fase.
+
 #### Objetivo y por qué
 
 Entregar la primera página real de canales y eliminar la deuda de las intercepting routes sin
@@ -996,6 +1000,55 @@ Comportamiento observable:
 | El registry acaba importando React dentro de `domain/` | El icono se guarda como identificador string y se resuelve en `ui/`. Es la violación de la regla 1 más fácil de cometer y la más fácil de ver en el diff |
 | Mover `StepIndicator` rompe una importación no detectada | Ningún test lo referencia (verificado), así que la red de seguridad es el compilador: `npx tsc --noEmit` es obligatorio, no opcional, en el criterio de cierre |
 | El deep-link `/workspace/channels/:id` deja de abrir el sheet y ahora navega a otra página | Es un **cambio de comportamiento deliberado**, no una regresión: hoy ese deep-link solo funciona en navegación blanda y en carga directa da 404. Debe anotarse como tal en la descripción del PR |
+
+#### Lo que se hizo distinto de lo planificado (F1, 2026-08-09)
+
+**Tres archivos nuevos que el inventario no listaba**, los tres para no duplicar:
+
+- `ui/components/ChannelProviderIcon.tsx` — el diccionario cerrado que resuelve el `icon_id`
+  del registry a un componente. El plan describía el mecanismo pero no le daba archivo.
+- `ui/components/WwebSessionActions.tsx` — el QR y las cuatro acciones de sesión de WhatsApp
+  Web, extraídas del `ChannelDetailSheet`. Sin esto, la página de detalle habría sido una
+  segunda copia de un ciclo de vida asíncrono que llega por WebSocket: cualquier cambio futuro
+  se aplicaría en una superficie y no en la otra, y el bug solo se vería en la que nadie miró.
+- Las utilidades de superficie del tratamiento de F0 (`.channel-surface`, `.brand-*`,
+  `.channel-logo-plate`, `.text-logo-*`, `@property --comet-angle`) viven en
+  `src/app/globals.css`, no en los componentes, porque el sistema de diseño pide que las mezclas
+  y degradados se definan una sola vez ahí. Con ellas entran tres tokens nuevos de capa 1
+  (`--logo-whatsapp`, `--logo-instagram`, `--logo-messenger`) en **familia aparte**: son colores
+  de terceros, no paleta de axi, y no cambian por tema.
+
+**El realtime se adelanta de F4.** `useChannelsRealtime()` se monta también en las dos vistas
+nuevas. Estaba planificado para F4, pero una página que muestra el estado del canal y nunca lo
+actualiza no informa: miente. El coste es cero porque `use-socket` lleva contador de referencias
+y ya tenía dos consumidores en producción.
+
+**El alta sigue funcionando en F1.** El plan decía qué NO entra (el wizard) pero no qué hace el
+botón mientras tanto. Abre el `ChannelForm` de siempre dentro de un `Modal`, que es exactamente
+lo que hacía la intercepting route borrada. Así F1 no quita capacidad a nadie, y en F3 el
+formulario se repliega a "Opciones avanzadas".
+
+**El detalle incluye el formulario de edición** (nombre + agente por defecto), que el sheet no
+tiene hoy. Es un `PATCH /channels/:id`, que ya estaba en la tabla de endpoints consumidos por
+F1. Ojo con un detalle real: `ChannelForm` **no trae botón de submit propio** — lo dispara el
+host con `requestSubmit()` sobre `#channels-form`. Un host que se olvide de poner el botón
+renderiza un formulario que no se puede guardar, y compila igual.
+
+**Redirect: opción 2, la recomendada.** `/workspace/channels/create` y
+`/workspace/channels/:id` van a `/settings/channels` y `/settings/channels/:id`. **El orden en
+el array importa**: Next devuelve la primera coincidencia, así que `create` va antes que `:id` o
+se trataría como el id de un canal. El array tiene ahora **nueve** entradas.
+
+**Un test se rompió, y era correcto que se rompiera.** `nav-tree.test.ts` usaba
+`/settings/channels` como testigo de "path sembrado en el backend sin UI en el frontend". Al
+darle página, el testigo dejó de serlo y el grupo `settings` sobrevivía a la poda. Cambiado a
+`/settings/sales`, con la nota de por qué. Es la misma familia del aviso ya conocido del
+proyecto: cambiar un valor rompe los fakes y los testigos que lo asumían.
+
+**Cuarta trampa del worktree**, además de las tres de §2.2: **`npm run build` falla aquí dentro
+si no existe `node_modules`**. El worktree no tiene dependencias propias y Next no resuelve las
+del repo padre por búsqueda ascendente como sí hacen `tsc`, `jest` y `eslint`. Se arregla con un
+enlace simbólico (`ln -s ../../../node_modules node_modules`), que está gitignorado.
 
 #### Qué NO entra en F1
 

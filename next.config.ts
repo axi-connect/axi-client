@@ -51,6 +51,13 @@ const nextConfig: NextConfig = {
       { source: "/login", destination: "/auth/login", permanent: true },
       { source: "/signup", destination: "/contacto", permanent: true },
       { source: "/legal", destination: "/legal/terminos", permanent: true },
+      // Canales: las rutas interceptadas del workspace (`@modal/(.)channels/*`)
+      // se borraron en F1 porque no tenían página subyacente y una recarga daba
+      // 404. Las URLs canónicas viven en `/settings/channels` (D4 del plan). El
+      // ORDEN importa: Next devuelve la primera coincidencia, así que `create`
+      // tiene que ir antes que `:id` o se trataría como un id de canal.
+      { source: "/workspace/channels/create", destination: "/settings/channels", permanent: true },
+      { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
     ];
   },
 
