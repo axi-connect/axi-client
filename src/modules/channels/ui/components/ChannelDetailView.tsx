@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Trash2 } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -19,8 +19,10 @@ import {
   getChannelById,
 } from "@/modules/channels/infrastructure/services/channels-service.adapter";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
+import { ChannelHealthCard } from "./ChannelHealthCard";
 import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
+import { ReconnectChannelDialog } from "./ReconnectChannelDialog";
 import { WwebSessionActions } from "./WwebSessionActions";
 
 /**
@@ -28,9 +30,11 @@ import { WwebSessionActions } from "./WwebSessionActions";
  * administra. El `ChannelDetailSheet` del workspace se conserva: ahí no
  * queremos sacar al operador de su vista para mirar el estado de un canal.
  *
- * F1 muestra lo mismo que el sheet: identidad, credenciales y sesión de
- * WhatsApp Web. La tarjeta de salud (calidad del número, límite de mensajería,
- * vigencia del acceso de Meta) llega en F4, cuando haya qué pintar en ella.
+ * F4 le añade la tarjeta de salud —calidad del número, límite de mensajería,
+ * vigencia del acceso de Meta— y la renovación de la conexión. **No hay botón de
+ * desconexión suave**: el backend no la implementa (su fase B10 quedó abierta), y
+ * prometer en la UI una semántica que el backend no tiene es peor que no
+ * ofrecerla. Las acciones son renovar y eliminar.
  */
 export function ChannelDetailView({ channelId }: { channelId: string }) {
   useChannelsRealtime();
@@ -42,6 +46,7 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   const removeChannel = useChannelStore((s) => s.removeChannel);
   const [fetched, setFetched] = useState<ChannelDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,20 +139,10 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
       </header>
 
       <section className="space-y-4 rounded-lg border border-border p-6">
-        <h2 className="text-base font-semibold">Datos del canal</h2>
-        <dl className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(13.75rem,1fr))]">
-          <Field label="Tipo" value={provider.label} />
-          <Field label="Teléfono" value={channel.display_phone_number ?? "—"} />
-          <Field label="Nombre verificado" value={channel.verified_name ?? "—"} />
-          <Field
-            label="Credenciales"
-            value={
-              channel.credentials_configured
-                ? `Configuradas${channel.token_last4 ? ` (…${channel.token_last4})` : ""}`
-                : "Sin configurar"
-            }
-          />
-        </dl>
+        <h2 className="text-base font-semibold">Estado del canal</h2>
+        {/* La MISMA tarjeta que el sheet del workspace: si las dos superficies se
+            ven distintas, la duplicación que F4 vino a matar volvió */}
+        <ChannelHealthCard channel={channel} />
       </section>
 
       {channel.kind === "whatsapp_web" && (
@@ -185,17 +180,34 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
 
       <section className="space-y-4 rounded-lg border border-border p-4">
         <div>
-          <h2 className="text-base font-semibold">Eliminar canal</h2>
+          <h2 className="text-base font-semibold">Acciones</h2>
           <p className="text-xs text-muted-foreground">
-            Al eliminarlo, este número deja de recibir mensajes en Axi y las conversaciones quedan
+            Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración.
+            Al eliminar, este número deja de recibir mensajes en Axi y las conversaciones quedan
             archivadas.
           </p>
         </div>
-        <Button variant="outline" className="text-destructive" onClick={confirmDelete}>
-          <Trash2 aria-hidden="true" className="size-4" />
-          Eliminar canal
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {channel.kind === "whatsapp_cloud" && (
+            <Button onClick={() => setReconnecting(true)}>
+              <RefreshCw aria-hidden="true" className="size-4" />
+              Renovar conexión
+            </Button>
+          )}
+          <Button variant="outline" className="text-destructive" onClick={confirmDelete}>
+            <Trash2 aria-hidden="true" className="size-4" />
+            Eliminar canal
+          </Button>
+        </div>
       </section>
+
+      {channel.kind === "whatsapp_cloud" && (
+        <ReconnectChannelDialog
+          channel={channel}
+          open={reconnecting}
+          onOpenChange={setReconnecting}
+        />
+      )}
     </div>
   );
 }
@@ -208,15 +220,6 @@ function BackLink() {
         Canales
       </Link>
     </Button>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium">{value}</dd>
-    </div>
   );
 }
 

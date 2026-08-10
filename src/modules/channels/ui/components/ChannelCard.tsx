@@ -5,6 +5,12 @@ import Link from "next/link";
 import { cn } from "@/core/lib/utils";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { channelProvider } from "@/modules/channels/domain/channel-providers";
+import {
+  readLastCheck,
+  readMessagingLimit,
+  readMetaAccess,
+  readQualityRating,
+} from "@/modules/channels/domain/channel-health";
 import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
 
@@ -45,14 +51,27 @@ export function ChannelCard({ channel }: { channel: ChannelDTO }) {
         <ChannelStatusBadge status={channel.status} />
       </div>
 
+      {/* Las mismas traducciones que la tarjeta de salud, desde `domain/`: ningún
+          enum de Meta llega a la pantalla ni aquí ni en el detalle */}
       <dl className="relative flex flex-wrap gap-x-6 gap-y-1.5">
+        {channel.kind === "whatsapp_cloud" ? (
+          <>
+            <Metric label="Calidad del número" value={readQualityRating(channel.quality_rating).label} />
+            <Metric label="Puedes iniciar" value={readMessagingLimit(channel.messaging_limit).label} />
+          </>
+        ) : (
+          <Metric
+            label="Sesión"
+            value={channel.status === "connected" ? "Vinculada al celular" : "Sin vincular"}
+          />
+        )}
         <Metric
-          label="Nombre verificado"
-          value={channel.verified_name ?? "Sin verificar"}
-        />
-        <Metric
-          label="Credenciales"
-          value={channel.credentials_configured ? "Configuradas" : "Sin configurar"}
+          label={faulted ? "Última comprobación" : "Acceso de Meta"}
+          value={
+            faulted
+              ? readLastCheck(channel.last_health_check_at)
+              : readMetaAccess(channel).label
+          }
         />
       </dl>
     </Link>

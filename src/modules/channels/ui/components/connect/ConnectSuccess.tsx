@@ -7,6 +7,7 @@ import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { channelProvider } from "@/modules/channels/domain/channel-providers";
+import { readOnboardingNotice } from "@/modules/channels/domain/channel-health";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
 import { ChannelProviderIcon } from "../ChannelProviderIcon";
 import { ChannelStatusBadge } from "../ChannelStatusBadge";
@@ -24,7 +25,9 @@ import { ChannelStatusBadge } from "../ChannelStatusBadge";
  */
 export function ConnectSuccess({ channel }: { channel: ChannelDTO }) {
   const provider = channelProvider(channel.kind);
-  const awaitingPayment = channel.onboarding?.status === "awaiting_payment_method";
+  // El copy de los sub-estados pendientes vive en `domain/channel-health`, una
+  // sola vez: aquí y en la tarjeta de salud tienen que decir lo mismo
+  const notice = readOnboardingNotice(channel.onboarding?.status);
 
   const submit = () => {
     const form = document.getElementById("channels-form");
@@ -67,15 +70,25 @@ export function ConnectSuccess({ channel }: { channel: ChannelDTO }) {
           </Button>
         </div>
 
-        {awaitingPayment && (
-          <div className="flex gap-3 rounded-md border border-info/40 bg-info/[0.08] p-4">
-            <Info aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-info" />
+        {notice !== null && (
+          <div
+            className={cn(
+              "flex gap-3 rounded-md border p-4",
+              notice.tone === "warning"
+                ? "border-warning/40 bg-warning/[0.09]"
+                : "border-info/40 bg-info/[0.08]",
+            )}
+          >
+            <Info
+              aria-hidden="true"
+              className={cn(
+                "mt-0.5 size-4.5 shrink-0",
+                notice.tone === "warning" ? "text-warning" : "text-info",
+              )}
+            />
             <div className="space-y-1.5">
-              <p className="font-semibold">Falta un paso que solo puedes hacer tú</p>
-              <p className="text-muted-foreground">
-                Añade un método de pago en el Administrador de WhatsApp de Meta. Sin él puedes
-                recibir y responder mensajes, pero no iniciar conversaciones nuevas.
-              </p>
+              <p className="font-semibold">{notice.title}</p>
+              <p className="text-muted-foreground">{notice.detail}</p>
             </div>
           </div>
         )}

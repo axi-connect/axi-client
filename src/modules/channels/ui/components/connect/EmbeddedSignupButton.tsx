@@ -50,11 +50,21 @@ export function EmbeddedSignupButton({
   channelName,
   onConnected,
   onManualCreated,
+  fallback,
+  intro,
 }: {
   provider: ChannelProvider;
   channelName: string;
   onConnected: (channel: ChannelDTO) => void;
-  onManualCreated: () => void;
+  /** Alta manual. Solo en el wizard: al reconectar no se crea nada. */
+  onManualCreated?: () => void;
+  /**
+   * Reemplaza el camino manual por otro. Lo usa la reconexión, donde la vía
+   * alternativa es ROTAR el token de un canal que ya existe, no crear uno nuevo.
+   */
+  fallback?: React.ReactNode;
+  /** Contexto que va sobre el botón. La reconexión avisa aquí del mismo número. */
+  intro?: React.ReactNode;
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { phase, error, channel, start, submitPin, submittingPin, reset } = useEmbeddedSignup({
@@ -81,6 +91,7 @@ export function EmbeddedSignupButton({
   return (
     <div className="space-y-5">
       <div className="space-y-5 rounded-lg border border-border p-4 md:p-6">
+        {intro}
         <div>{renderAction({ phase, buttonRef, start, reset })}</div>
 
         {/* Región viva para lo que está EN CURSO: `polite` no interrumpe al
@@ -99,11 +110,13 @@ export function EmbeddedSignupButton({
         </div>
       </div>
 
-      {/* El camino manual sube a aviso visible cuando el conector no cargó */}
-      <ManualCredentialsFallback
-        prominent={phase === "unavailable"}
-        onCreated={onManualCreated}
-      />
+      {/* El camino alternativo sube a aviso visible cuando el conector no cargó */}
+      {fallback ?? (
+        <ManualCredentialsFallback
+          prominent={phase === "unavailable"}
+          onCreated={onManualCreated ?? (() => undefined)}
+        />
+      )}
     </div>
   );
 }

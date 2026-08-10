@@ -1596,6 +1596,16 @@ envuelve, no se reescribe.
 
 ### F4 — Salud, reconexión y desconexión
 
+> **ENTREGADA 2026-08-09.** Verificada: `npx tsc --noEmit` limpio, **98 suites / 827 tests**
+> (19 nuevos de las traducciones), `npm run build` verde, eslint limpio.
+>
+> **El riesgo principal de la fase desapareció antes de empezarla.** El plan decía: "a día de hoy
+> el plan del backend **no compromete** ningún campo de salud en el `ChannelDto` que consume el
+> tenant", y lo marcaba como la dependencia más frágil. Al cerrar §4.3 resultó que el backend los
+> expone **todos**: `quality_rating`, `messaging_limit`, `last_health_check_at`,
+> `token_expires_at`, `credentials_revoked`, `business_id`, `connection_method` y el bloque
+> `onboarding`. F4 se implementó contra un contrato real, no contra renderizado defensivo.
+
 #### Objetivo y por qué
 
 Que el tenant se entere de que su canal está mal **antes** de que un cliente enfadado se lo
@@ -1751,6 +1761,53 @@ Comportamiento observable:
 | Montar el realtime en tres vistas más multiplica las conexiones | Contador de referencias verificado en `use-socket.ts`; ya funciona hoy con dos consumidores. Verificación explícita en el criterio de cierre |
 | Convertir las páginas delgadas en componentes de cliente para montar el hook | El hook se monta en las Views, que ya son `"use client"`. Una directiva `"use client"` nueva en un `page.tsx` es un hallazgo de revisión |
 | El rojo de calidad baja sale coral en lugar de `destructive` | `DESIGN-SYSTEM §2.1` documenta que `--color-destructive` apunta hoy a `--axi-brand-2`; hay que verificarlo visualmente, no confiar en el token |
+
+#### Lo que se hizo distinto de lo planificado (F4, 2026-08-09)
+
+**No hay botón «Desconectar».** Decisión tomada al inicio de esta ronda: la fase B10 del backend
+(desconexión suave) quedó abierta y sin implementar, y el propio plan lo condicionaba —"si el
+backend no ofrece una desconexión suave, el botón no existe". Las acciones son **Renovar conexión**
+y **Eliminar canal**. Cuando B10 exista, añadirlo es aditivo.
+
+**Dos campos del inventario no se muestran, porque no existen.** `name_status` y `platform_type`
+no están en `ChannelDto` (§4.3 lo confirmó), así que no se pintan. El plan ya lo anticipaba: "si no
+llega, no se muestra".
+
+**El riesgo del rojo coral ya estaba resuelto.** El plan advertía que `--color-destructive` apunta
+a `--axi-brand-2` y había que verificarlo a ojo. En `globals.css` hoy es
+`--color-destructive: var(--axi-destructive)`, así que la deuda de §2.1 está pagada y el rojo de
+calidad baja es el destructivo de verdad, distinto del coral de marca.
+
+**El realtime no se movió: ya estaba montado desde F1.** Adelantar ese cambio fue una desviación
+deliberada de F1 (una página que muestra el estado del canal y nunca lo actualiza miente), así que
+aquí no había nada que hacer. Se cumple igual la regla del plan: el hook vive en las Views, que ya
+son `"use client"`, y **ningún `page.tsx` lleva la directiva**.
+
+**El sheet del workspace NO ofrece renovar la conexión, y no es un olvido.** Renovar abre un
+`Modal`, y en este proyecto un `Modal` **no puede apilarse sobre un `DetailSheet`** (limitación
+conocida del proyecto). El sheet lleva un enlace "Ver todo el detalle" hacia
+`/settings/channels/[id]`, que es donde vive la acción.
+
+**La reconexión trae de vuelta a `updateChannelCredentials`.** El plan lo listaba en F3 como
+consumidor del fallback manual, pero ahí el camino manual **crea** un canal (`POST /channels`), no
+rota nada. La rotación de token pertenece a un canal que ya existe, así que vive en el camino
+alternativo del diálogo de reconexión. Con eso, las tres funciones que estaban muertas en el
+adapter —`updateChannelCredentials`, `getWwebPairingState`, `requestWwebPairingCode`— tienen
+consumidor real.
+
+**`EmbeddedSignupButton` ganó dos ranuras (`intro` y `fallback`)** para que la reconexión reutilice
+la MISMA máquina de estados, los mismos avisos, las mismas regiones vivas y el mismo manejo de
+foco, cambiando solo el contexto de arriba y la vía alternativa de abajo. La alternativa era una
+segunda copia del paso 3, que se habría desincronizado en el primer cambio.
+
+**El copy de los sub-estados vive una sola vez.** `readOnboardingNotice` lo sirve tanto a la
+tarjeta de salud como al paso 4 del wizard, que antes lo tenía escrito a mano. Dos textos para el
+mismo estado es la duplicación que esta fase vino a matar, no a crear.
+
+**Aviso de reconexión que el plan no pedía y hace falta**: el diálogo avisa de que hay que elegir
+**el mismo número** en el popup, y si el usuario elige otro lo dice en claro ("creamos un canal
+nuevo") comparando el `id` devuelto. El backend hace lo correcto en ambos casos; lo que faltaba era
+explicárselo al tenant en vez de dejarlo con dos canales sin entender por qué.
 
 #### Qué NO entra en F4
 

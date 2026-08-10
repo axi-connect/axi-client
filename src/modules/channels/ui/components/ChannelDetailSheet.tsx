@@ -1,20 +1,19 @@
 "use client"
 
+import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
-import { Trash2 } from "lucide-react"
+import { ArrowUpRight, Trash2 } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { useAlert } from "@/core/providers/alert-provider"
 import { errorMessage } from "@/core/lib/error-messages"
 import { DetailSheet } from "@/shared/components/features/detail-sheet"
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
-import {
-  CHANNEL_KIND_LABELS,
-  type ChannelDTO,
-} from "@/modules/channels/domain/channel"
+import { type ChannelDTO } from "@/modules/channels/domain/channel"
 import {
   deleteChannel,
   getChannelById,
 } from "@/modules/channels/infrastructure/services/channels-service.adapter"
+import { ChannelHealthCard } from "./ChannelHealthCard"
 import { ChannelStatusBadge } from "./ChannelStatusBadge"
 import { WwebSessionActions } from "./WwebSessionActions"
 
@@ -104,28 +103,10 @@ export function ChannelDetailSheet() {
             <ChannelStatusBadge status={channel.status} className="ml-auto" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 text-sm">
-            <div>
-              <div className="text-xs text-muted-foreground">Tipo</div>
-              <div>{CHANNEL_KIND_LABELS[channel.kind]}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Teléfono</div>
-              <div>{channel.display_phone_number ?? "—"}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Nombre verificado</div>
-              <div>{channel.verified_name ?? "—"}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Credenciales</div>
-              <div>
-                {channel.credentials_configured
-                  ? `Configuradas${channel.token_last4 ? ` (…${channel.token_last4})` : ""}`
-                  : "Sin configurar"}
-              </div>
-            </div>
-          </div>
+          {/* El bloque de datos estaba escrito a mano aquí: cada campo nuevo
+              había que añadirlo también en la página de detalle, y el primero en
+              olvidarse mostraba menos información sin que nadie se enterara */}
+          <ChannelHealthCard channel={channel} compact />
 
           {/* QR y acciones de sesión: la MISMA pieza que usa
               /settings/channels/[id], para que el ciclo de vinculación no viva
@@ -134,7 +115,16 @@ export function ChannelDetailSheet() {
             <WwebSessionActions channel={channel} pairing={pairing} />
           )}
 
-          <div className="border-t border-border pt-3">
+          <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+            {/* Renovar la conexión abre un Modal, y en este proyecto un Modal NO
+                puede apilarse sobre un DetailSheet: por eso esa acción vive en la
+                página de detalle y aquí solo hay un enlace hacia ella. No es un
+                olvido. */}
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/settings/channels/${channel.id}`}>
+                Ver todo el detalle <ArrowUpRight className="h-4 w-4" />
+              </Link>
+            </Button>
             <Button size="sm" variant="destructive" onClick={confirmDelete}>
               <Trash2 className="h-4 w-4" /> Eliminar canal
             </Button>
