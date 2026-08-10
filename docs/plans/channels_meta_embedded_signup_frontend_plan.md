@@ -1074,6 +1074,12 @@ limpieza de F5).
 
 ### F2 — Infraestructura de Embedded Signup (sin UI visible)
 
+> **ENTREGADA 2026-08-09.** Verificada: `schema.d.ts` regenerado y en sincronía con el
+> `openapi.json` del backend, `npx tsc --noEmit` limpio **sin ningún tipo local para respuestas
+> del backend**, **95 suites / 775 tests** (23 nuevos), `npm run build` verde y eslint limpio. El
+> tamaño del bundle de `/settings/channels` **no cambió** (5.51 kB antes y después), que es la
+> comprobación de que F2 no renderiza nada.
+
 #### Objetivo y por qué
 
 Construir las tres piezas que hacen posible el botón, sin renderizar todavía ningún botón: el
@@ -1302,6 +1308,53 @@ Comportamiento observable y verificable en revisión:
 | Un bloqueador de anuncios impide `connect.facebook.net` y la UI se queda colgada | Timeout de 15 s con error tipado que lleva a `unavailable`; F3 despliega el camino manual solo |
 | El PR se mergea con tipos escritos a mano porque B4 se retrasó | Está en el criterio de cierre como condición explícita: `api:types:check` debe pasar. Un PR de F2 con tipos locales **no está terminado** |
 | Se añade `Cross-Origin-Embedder-Policy: require-corp` "por seguridad" y se rompen los iframes | Prohibición documentada en el propio `next.config.ts`, junto al COOP |
+
+#### Lo que se hizo distinto de lo planificado (F2, 2026-08-09)
+
+Cuatro correcciones, todas por contrastar el plan contra el contrato real del backend:
+
+**1. Hay DIEZ fases, no nueve: falta `awaiting_pin` en la lista del plan.** La tabla de errores
+de esta fase decía que `POST /channels/meta/embedded-signup` devuelve **409
+`channels/meta_registration_required`** cuando falta registrar el número. **No es así.** El use
+case del backend (`registerIfNeeded`) no tumba la conexión por eso: devuelve **201 con
+`onboarding.status === "awaiting_registration"`**, con el comentario explícito de que "el canal ya
+recibe mensajes y puede responder dentro de la ventana". Esto es mejor de lo planificado, porque
+el 201 trae el `channel.id` con el que llamar al endpoint del PIN; con un 409 no habría id. El
+mockup aprobado de F0 ya dibujaba esa pantalla.
+
+**2. `getMetaSignupConfig` recibe `product`.** La prosa de F2 decía "sin cuerpo ni parámetros";
+§4.3 lo corrigió al cerrar el contrato: `product` es query param **obligatorio** y la respuesta
+trae un solo `config_id`. La configuración se pide al seleccionar el proveedor, no al montar la
+galería.
+
+**3. Si el `sessionInfo` no llega nunca, se explica el fallo en vez de enviar el POST.** El paso 4
+del plan decía "se envía con lo que haya (el backend puede resolver el `waba_id` desde el
+token)". El DTO real declara `waba_id` y `phone_number_id` como **obligatorios**, así que ese POST
+sería un 422 garantizado: cambiaríamos un error explicable por uno incomprensible. Tras los 8
+segundos de gracia se va a `error` con el código local `meta/session_info_missing` y un mensaje
+que dice qué hacer.
+
+**4. `popup_blocked` frente a `cancelled` es una HEURÍSTICA, y está documentada como tal.** El SDK
+de Facebook no distingue "el navegador bloqueó la ventana" de "el usuario la cerró": en ambos
+casos el callback llega sin `authResponse`. Se usa el umbral de **600 ms** desde el clic, porque
+un humano no autoriza ni cancela más rápido que eso. No es certeza y no debe presentarse como
+tal; lo que sí es cierto es que las dos salidas de la UI son distintas (permitir ventanas
+emergentes frente a volver a intentar), así que había que elegir.
+
+**Dos detalles de implementación que merecen quedar escritos:**
+
+- **El fallo del cargador del SDK NO se memoiza.** La promesa se cachea para que dos montajes
+  compartan una sola carga, pero un rechazo limpia la caché. Con el rechazo cacheado, el botón de
+  "volver a intentar" no funcionaría **nunca** sin recargar la página, y el caso normal es
+  precisamente ese: el usuario desactiva el bloqueador y reintenta.
+- **En el test del watchdog, los timers falsos se instalan ANTES de `start()`.** El watchdog se
+  programa dentro de `start`, así que instalarlos después deja un timer real que
+  `advanceTimersByTime` no puede adelantar: el test pasa en verde sin asertar nada. Se descubrió
+  al escribirlo, y es la clase de test verde-pero-vacío que da falsa confianza.
+
+**Cabeceras**: además del COOP obligatorio se añaden `Referrer-Policy` y
+`X-Content-Type-Options`, que son gratis y van en el mismo bloque, acotadas a las rutas que no
+son `/api/`. La CSP objetivo queda como comentario, no activa.
 
 #### Qué NO entra en F2
 
