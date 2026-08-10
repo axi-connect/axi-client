@@ -563,6 +563,38 @@ están cerradas (véase §4.3), así que cada dato del mockup se puede señalar 
 Estos ASCII no son decoración: son la referencia contra la que se revisan los PR siguientes.
 El original navegable e interactivo es `docs/design/mockups/channels-connect.html`.
 
+**Tratamiento de las tarjetas de canal** (revisado 2026-08-09 sobre una referencia que aportó
+el usuario). Las tarjetas del listado y las de la galería de proveedores comparten superficie, y
+tienen tres capas:
+
+1. **Resplandor de esquina** en el color oficial de la app, anclado detrás del logo y cayendo en
+   diagonal. Son dos radiales superpuestos: un halo corto de 96 px pegado al logo y un lavado
+   largo del 130% de la tarjeta. Están anclados a la **esquina**, no dibujados como un círculo de
+   tamaño fijo, para que se comporten igual con tarjetas de cualquier alto.
+2. **Cometa en el borde**: un cónico casi todo transparente con una cola corta y un núcleo claro,
+   recortado a la franja de 1 px del borde con dos máscaras que se excluyen. Gira animando
+   `--comet-angle`, registrada con `@property` porque un custom property sin tipo **no
+   interpola**. Aparece en hover, y en el proveedor seleccionado se queda encendido más despacio,
+   porque ahí es un estado y no un hover.
+3. **Placa del logo** teñida al 10% del color de la app con una línea de un pelo al 22%.
+
+Dos decisiones que no son estéticas:
+
+- **Un canal caído deja de presumir de marca.** `--ch-glow` pasa a `--axi-destructive`, así que
+  la tarjeta comunica el problema por forma y color, no solo por el texto del badge. Es la única
+  tarjeta cuyo resplandor no es el de su proveedor.
+- **Degradación silenciosa**: sin `@property` el ángulo no interpola y queda un arco fijo en el
+  borde, que sigue leyéndose como acento. Con `prefers-reduced-motion` se apagan la animación y
+  el desplazamiento en hover.
+
+> **Desviación consciente de `DESIGN-SYSTEM §7`.** La regla dice que el color del proveedor va
+> **solo en el icono**, nunca en superficies propias. Esto la incumple a propósito, por petición
+> explícita del usuario y con una referencia visual concreta. Se acota para que no haga daño: el
+> tinte se queda entre el 7% y el 34%, jamás compite con el coral de acción ni con los colores de
+> estado, y el color destructivo gana sobre el de marca cuando el canal está caído. Si en la
+> revisión de F1 se decide volver a la regla estricta, el cambio es una línea: `--ch-glow` pasa a
+> `var(--axi-brand)` para todas las tarjetas.
+
 **1 · `/settings/channels` vacío**
 
 ```
@@ -871,6 +903,19 @@ componente de React dentro de `domain/`. El registry guarda un **identificador d
 sidebar con `core/lib/icons.ts` según `DESIGN-SYSTEM §9.2`. Los iconos de marca vienen de
 `react-icons` (`FaWhatsapp`, `FaInstagram`, `FaFacebookMessenger`), que es lo que ya usa
 `ChannelList.tsx:7` y lo que `DESIGN-SYSTEM §7` autoriza para logos de terceros.
+
+**El mismo matiz vale para `brandColor`, y por una razón que muerde en Tailwind v4.** El
+tratamiento de tarjeta aprobado en F0 (resplandor de esquina y cometa en el borde, ambos en el
+color de la app) se apoya en una variable CSS `--ch-glow` que declara una clase por proveedor:
+`.brand-whatsapp`, `.brand-instagram`, `.brand-messenger`. El registry guarda **el nombre de esa
+clase**, de un conjunto cerrado — no un hex y tampoco un nombre de token que alguien pueda
+interpolar. Tailwind v4 extrae las clases estáticamente del fuente, así que un
+`` className={`bg-[var(${provider.colorVar})]`} `` no genera nada: es la misma trampa que
+`DESIGN-SYSTEM §4.4` documenta para los z-index. Clase de un conjunto cerrado o nada.
+
+Los colores oficiales viven en `globals.css` como una familia propia
+(`--logo-whatsapp`, `--logo-instagram`, `--logo-messenger`), separada de los primitivos de marca
+de axi para que nadie los confunda con la paleta de la aplicación.
 
 **Ubicación de las páginas**: dentro del grupo `(content)`. Son vistas **documentales**, así
 que **no llevan `data-app-view`** y **no ponen padding propio** (lo aporta el layout del

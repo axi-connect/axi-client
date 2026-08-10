@@ -306,13 +306,135 @@ select.input { height: 36px; }
 .divider { height: 1px; background: var(--color-border); border: 0; margin: 0; }
 
 /* Logos de proveedor: el color oficial vive SOLO en el icono */
-.logo { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: var(--radius-md); background: var(--color-muted); }
+.logo {
+  width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center;
+  border-radius: var(--radius-md);
+  /* La placa del logo se tiñe con el color de la app, muy bajo, y lleva una
+     línea de un pelo del mismo color: es lo que la separa de un cuadro gris */
+  background: color-mix(in srgb, var(--ch-glow, var(--foreground)) 10%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--ch-glow, var(--foreground)) 22%, transparent);
+}
 .logo svg { width: 24px; height: 24px; }
+.logo--whatsapp { --ch-glow: var(--logo-whatsapp); }
+.logo--instagram { --ch-glow: var(--logo-instagram); }
+.logo--messenger { --ch-glow: var(--logo-messenger); }
 .logo--whatsapp svg { color: var(--logo-whatsapp); }
 .logo--instagram svg { color: var(--logo-instagram); }
 .logo--messenger svg { color: var(--logo-messenger); }
 .logo--sm { width: 32px; height: 32px; flex-basis: 32px; }
 .logo--sm svg { width: 19px; height: 19px; }
+
+/* ==========================================================================
+   SUPERFICIE DE TARJETA DE CANAL — resplandor de la app + cometa en el borde
+
+   `--ch-glow` es el color oficial de la app de esa tarjeta. Lo declara la clase
+   `.brand-*` en la propia tarjeta, y de ahí lo heredan la placa del logo, el
+   borde en hover y las dos capas de abajo. Cambiar el color de un proveedor es
+   una línea.
+
+   Nota de sistema de diseño: `DESIGN-SYSTEM §7` dice que el color del proveedor
+   va SOLO en el icono. Esto se desvía a propósito, por petición explícita, y se
+   mantiene en el rango de tinte (10–26% en light, algo más en dark) para que
+   nunca compita con el coral de acción ni con los colores de estado.
+   ========================================================================== */
+@property --comet-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.brand-whatsapp  { --ch-glow: var(--logo-whatsapp); }
+.brand-instagram { --ch-glow: var(--logo-instagram); }
+.brand-messenger { --ch-glow: var(--logo-messenger); }
+/* Un canal caído deja de presumir de marca: el resplandor pasa a ser el del
+   estado, así que la tarjeta comunica el problema por forma y no solo por texto */
+.chcard--error   { --ch-glow: var(--axi-destructive); }
+
+.chcard, .provider {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.chcard:hover, .provider:hover { transform: translateY(-1px); }
+
+/* Capa 1 — el resplandor. Radial anclado arriba a la derecha, detrás del
+   contenido y por delante del fondo de la tarjeta (de ahí el z-index -1 dentro
+   de un contexto aislado). */
+.chcard::before, .provider::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Anclado a la esquina del logo, con el radio mayor que la tarjeta: el
+     degradado cae en diagonal y se comporta igual con tarjetas de cualquier
+     alto. Con un círculo de tamaño fijo el blob acababa en mitad del texto. */
+  background:
+    radial-gradient(
+      circle 96px at 34px 34px,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 34%, transparent) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      130% 120% at 0% 0%,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 20%, transparent) 0%,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 7%, transparent) 34%,
+      transparent 66%
+    );
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+/* Sobre negro el mismo tinte se ve la mitad: en dark sube */
+:root.dark .chcard::before, :root.dark .provider::before,
+#mockup-root.dark .chcard::before, #mockup-root.dark .provider::before { opacity: 0.95; }
+.chcard:hover::before, .provider:hover::before { opacity: 0.85; }
+:root.dark .chcard:hover::before, :root.dark .provider:hover::before,
+#mockup-root.dark .chcard:hover::before, #mockup-root.dark .provider:hover::before { opacity: 1; }
+
+/* Capa 2 — el cometa. Un cónico casi todo transparente con una cola corta y un
+   núcleo claro, recortado a la franja del borde con dos máscaras que se
+   excluyen. Gira animando `--comet-angle`, que existe como propiedad tipada
+   justo para poder interpolarse. */
+.chcard::after, .provider::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 232deg,
+    color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 55%, transparent) 300deg,
+    var(--ch-glow, var(--axi-brand)) 344deg,
+    color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 90%, var(--background)) 356deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.chcard:hover::after, .provider:hover::after, .provider--selected::after {
+  opacity: 1;
+  animation: comet 2.6s linear infinite;
+}
+/* El proveedor elegido lo mantiene encendido, más lento: es un estado, no un hover */
+.provider--selected::after { animation-duration: 5s; }
+@keyframes comet { to { --comet-angle: 360deg; } }
+
+/* Sin `@property` el ángulo no interpola: queda un arco fijo en el borde, que
+   sigue leyéndose como acento. La degradación es silenciosa a propósito. */
+@media (prefers-reduced-motion: reduce) {
+  .chcard::after, .provider::after { animation: none !important; }
+  .chcard:hover, .provider:hover { transform: none; }
+}
+
+/* El contenido va por encima de las dos capas */
+.chcard__top, .chcard__meta, .provider__body, .provider > .logo { position: relative; }
 
 /* ==========================================================================
    LISTA DE CANALES
@@ -323,7 +445,7 @@ select.input { height: 36px; }
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   background: var(--background); padding: 16px; cursor: pointer; width: 100%;
 }
-.chcard:hover { background: var(--color-accent); }
+.chcard:hover { border-color: color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 45%, var(--color-border)); }
 .chcard__top { display: flex; align-items: flex-start; gap: 12px; }
 .chcard__title { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
 .chcard__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; }
@@ -362,7 +484,7 @@ select.input { height: 36px; }
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   background: var(--background); padding: 16px; cursor: pointer; width: 100%;
 }
-.provider:hover { background: var(--color-accent); }
+.provider:hover { border-color: color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 45%, var(--color-border)); }
 .provider--selected { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
 .provider--soon { opacity: 0.72; }
 .provider__body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -532,7 +654,7 @@ select.input { height: 36px; }
 
             <div class="grid-cards">
               <!-- Canal 1: conectado -->
-              <button class="chcard" type="button" data-go="detail">
+              <button class="chcard brand-whatsapp" type="button" data-go="detail">
                 <div class="chcard__top">
                   <span class="logo logo--whatsapp">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
@@ -550,7 +672,7 @@ select.input { height: 36px; }
               </button>
 
               <!-- Canal 2: WhatsApp Web (QR) -->
-              <button class="chcard" type="button" data-go="detail">
+              <button class="chcard brand-whatsapp" type="button" data-go="detail">
                 <div class="chcard__top">
                   <span class="logo logo--whatsapp">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
@@ -567,7 +689,7 @@ select.input { height: 36px; }
               </button>
 
               <!-- Canal 3: error -->
-              <button class="chcard" type="button" data-go="detail">
+              <button class="chcard chcard--error" type="button" data-go="detail">
                 <div class="chcard__top">
                   <span class="logo logo--whatsapp">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
@@ -617,7 +739,7 @@ select.input { height: 36px; }
             </div>
 
             <div class="grid-cards">
-              <button class="provider provider--selected" type="button">
+              <button class="provider provider--selected brand-whatsapp" type="button">
                 <span class="logo logo--whatsapp">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
                 </span>
@@ -631,7 +753,7 @@ select.input { height: 36px; }
                 </span>
               </button>
 
-              <button class="provider" type="button">
+              <button class="provider brand-whatsapp" type="button">
                 <span class="logo logo--whatsapp">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></svg>
                 </span>
@@ -642,7 +764,7 @@ select.input { height: 36px; }
                 </span>
               </button>
 
-              <button class="provider provider--soon" type="button">
+              <button class="provider provider--soon brand-instagram" type="button">
                 <span class="logo logo--instagram">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
                 </span>
@@ -656,7 +778,7 @@ select.input { height: 36px; }
                 </span>
               </button>
 
-              <button class="provider provider--soon" type="button">
+              <button class="provider provider--soon brand-messenger" type="button">
                 <span class="logo logo--messenger">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.4 5.4 3.7 7.1V22l3.4-1.9c.9.2 1.9.4 2.9.4 5.5 0 10-4.1 10-9.3S17.5 2 12 2z"/><path d="M7 13.4l3-3.2 2.2 2.1 2.6-2.7-2.4 4.4-2.2-2.1z" fill="currentColor" stroke="none"/></svg>
                 </span>
