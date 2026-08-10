@@ -244,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/meta-apps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformMetaAppsController_list_v1"];
+        put?: never;
+        post: operations["PlatformMetaAppsController_upsert_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/auth/login": {
         parameters: {
             query?: never;
@@ -654,6 +670,182 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["UsageController_ack_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/meta/embedded-signup/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MetaOnboardingController_config_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/meta/embedded-signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaOnboardingController_connect_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/meta/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaChannelRegisterController_register_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_list_v1"];
+        put?: never;
+        post: operations["ChannelsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChannelsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ChannelsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ChannelsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ChannelsController_rotateCredentials_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WwebSessionController_start_v1"];
+        delete: operations["WwebSessionController_stop_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WwebSessionController_pairingState_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/qr.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WwebSessionController_pairingQrPng_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/pairing-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WwebSessionController_requestPairingCode_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/whatsapp-web/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WwebSessionController_logout_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1794,182 +1986,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["OrdersController_verifyPayment_v1"];
-        trace?: never;
-    };
-    "/api/v1/channels/meta/embedded-signup/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["MetaOnboardingController_config_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/meta/embedded-signup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["MetaOnboardingController_connect_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/meta/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["MetaChannelRegisterController_register_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ChannelsController_list_v1"];
-        put?: never;
-        post: operations["ChannelsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["ChannelsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete: operations["ChannelsController_remove_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["ChannelsController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["ChannelsController_rotateCredentials_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["WwebSessionController_start_v1"];
-        delete: operations["WwebSessionController_stop_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/qr": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["WwebSessionController_pairingState_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/qr.png": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["WwebSessionController_pairingQrPng_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/pairing-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["WwebSessionController_requestPairingCode_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["WwebSessionController_logout_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/payment-methods": {
@@ -3672,6 +3688,40 @@ export interface components {
                 silent: boolean;
             }[];
         };
+        PlatformMetaAppListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string | null;
+                app_id: string;
+                webhook_ref: string;
+                config_id_whatsapp: string | null;
+                config_id_instagram: string | null;
+                config_id_messenger: string | null;
+            }[];
+        };
+        UpsertPlatformMetaAppDto: {
+            /** Format: uuid */
+            company_id?: string | null;
+            app_id: string;
+            app_secret: string;
+            webhook_verify_token?: string | null;
+            config_id_whatsapp?: string | null;
+            config_id_instagram?: string | null;
+            config_id_messenger?: string | null;
+        };
+        PlatformMetaAppDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string | null;
+            app_id: string;
+            webhook_ref: string;
+            config_id_whatsapp: string | null;
+            config_id_instagram: string | null;
+            config_id_messenger: string | null;
+        };
         PlatformLoginDto: {
             /** Format: email */
             email: string;
@@ -4253,6 +4303,126 @@ export interface components {
                     is_cost_limit: boolean;
                 };
             }[];
+        };
+        MetaSignupConfigDto: {
+            enabled: boolean;
+            app_id: string | null;
+            config_id: string | null;
+            graph_api_version: string;
+            /** @enum {string} */
+            product: "whatsapp" | "instagram" | "messenger";
+        };
+        MetaEmbeddedSignupDto: {
+            code: string;
+            waba_id: string;
+            phone_number_id: string;
+            business_id?: string;
+            name?: string;
+            register_pin?: string;
+        };
+        ChannelDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
+            provider_account_id: string;
+            /** @enum {string} */
+            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+            display_phone_number: string | null;
+            verified_name: string | null;
+            waba_id: string | null;
+            default_ai_agent_id: string | null;
+            credentials_configured: boolean;
+            token_last4: string | null;
+            quality_rating: string | null;
+            messaging_limit: string | null;
+            /** Format: date-time */
+            last_health_check_at: string | null;
+            /** Format: date-time */
+            token_expires_at: string | null;
+            credentials_revoked: boolean;
+            business_id: string | null;
+            /** @enum {string} */
+            connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+            onboarding: {
+                status: string;
+                method: string | null;
+                attempted_at: string | null;
+                last_error_code: string | null;
+            } | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        MetaRegisterPhoneDto: {
+            register_pin: string;
+        };
+        CreateChannelDto: {
+            name: string;
+            /** @enum {string} */
+            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+            provider_account_id?: string;
+            waba_id?: string;
+            access_token?: string;
+        };
+        ChannelListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
+                provider_account_id: string;
+                /** @enum {string} */
+                status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+                display_phone_number: string | null;
+                verified_name: string | null;
+                waba_id: string | null;
+                default_ai_agent_id: string | null;
+                credentials_configured: boolean;
+                token_last4: string | null;
+                quality_rating: string | null;
+                messaging_limit: string | null;
+                /** Format: date-time */
+                last_health_check_at: string | null;
+                /** Format: date-time */
+                token_expires_at: string | null;
+                credentials_revoked: boolean;
+                business_id: string | null;
+                /** @enum {string} */
+                connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
+                onboarding: {
+                    status: string;
+                    method: string | null;
+                    attempted_at: string | null;
+                    last_error_code: string | null;
+                } | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        UpdateChannelDto: {
+            name?: string;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
+        };
+        UpdateChannelCredentialsDto: {
+            access_token: string;
+        };
+        WwebPairingStateDto: {
+            /** @enum {string} */
+            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
+            qr: string | null;
+            qr_image: string | null;
+            pairing_code: string | null;
+            phone_number: string | null;
+        };
+        WwebPairingCodeRequestDto: {
+            phone_number: string;
         };
         ScenariosPageDto: {
             data: {
@@ -6255,126 +6425,6 @@ export interface components {
             notes?: string;
             /** @default true */
             notify_customer: boolean;
-        };
-        MetaSignupConfigDto: {
-            enabled: boolean;
-            app_id: string | null;
-            config_id: string | null;
-            graph_api_version: string;
-            /** @enum {string} */
-            product: "whatsapp" | "instagram" | "messenger";
-        };
-        MetaEmbeddedSignupDto: {
-            code: string;
-            waba_id: string;
-            phone_number_id: string;
-            business_id?: string;
-            name?: string;
-            register_pin?: string;
-        };
-        ChannelDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
-            provider_account_id: string;
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            display_phone_number: string | null;
-            verified_name: string | null;
-            waba_id: string | null;
-            default_ai_agent_id: string | null;
-            credentials_configured: boolean;
-            token_last4: string | null;
-            quality_rating: string | null;
-            messaging_limit: string | null;
-            /** Format: date-time */
-            last_health_check_at: string | null;
-            /** Format: date-time */
-            token_expires_at: string | null;
-            credentials_revoked: boolean;
-            business_id: string | null;
-            /** @enum {string} */
-            connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
-            onboarding: {
-                status: string;
-                method: string | null;
-                attempted_at: string | null;
-                last_error_code: string | null;
-            } | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        MetaRegisterPhoneDto: {
-            register_pin: string;
-        };
-        CreateChannelDto: {
-            name: string;
-            /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
-            provider_account_id?: string;
-            waba_id?: string;
-            access_token?: string;
-        };
-        ChannelListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator";
-                provider_account_id: string;
-                /** @enum {string} */
-                status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-                display_phone_number: string | null;
-                verified_name: string | null;
-                waba_id: string | null;
-                default_ai_agent_id: string | null;
-                credentials_configured: boolean;
-                token_last4: string | null;
-                quality_rating: string | null;
-                messaging_limit: string | null;
-                /** Format: date-time */
-                last_health_check_at: string | null;
-                /** Format: date-time */
-                token_expires_at: string | null;
-                credentials_revoked: boolean;
-                business_id: string | null;
-                /** @enum {string} */
-                connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
-                onboarding: {
-                    status: string;
-                    method: string | null;
-                    attempted_at: string | null;
-                    last_error_code: string | null;
-                } | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-        };
-        UpdateChannelDto: {
-            name?: string;
-            /** Format: uuid */
-            default_ai_agent_id?: string | null;
-        };
-        UpdateChannelCredentialsDto: {
-            access_token: string;
-        };
-        WwebPairingStateDto: {
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            qr: string | null;
-            qr_image: string | null;
-            pairing_code: string | null;
-            phone_number: string | null;
-        };
-        WwebPairingCodeRequestDto: {
-            phone_number: string;
         };
         PaymentMethodsListDto: {
             data: {
@@ -8989,6 +9039,48 @@ export interface operations {
             };
         };
     };
+    PlatformMetaAppsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformMetaAppListDto"];
+                };
+            };
+        };
+    };
+    PlatformMetaAppsController_upsert_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertPlatformMetaAppDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformMetaAppDto"];
+                };
+            };
+        };
+    };
     PlatformAuthController_login_v1: {
         parameters: {
             query?: never;
@@ -9677,6 +9769,328 @@ export interface operations {
         requestBody?: never;
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MetaOnboardingController_config_v1: {
+        parameters: {
+            query: {
+                product: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaSignupConfigDto"];
+                };
+            };
+        };
+    };
+    MetaOnboardingController_connect_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaEmbeddedSignupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    MetaChannelRegisterController_register_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaRegisterPhoneDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelListDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateChannelDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChannelsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateChannelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_rotateCredentials_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateChannelCredentialsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    WwebSessionController_start_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_stop_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_pairingState_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WwebPairingStateDto"];
+                };
+            };
+        };
+    };
+    WwebSessionController_pairingQrPng_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PNG del código QR de vinculación */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_requestPairingCode_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WwebPairingCodeRequestDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WwebSessionController_logout_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12191,328 +12605,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OrderDto"];
                 };
-            };
-        };
-    };
-    MetaOnboardingController_config_v1: {
-        parameters: {
-            query: {
-                product: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MetaSignupConfigDto"];
-                };
-            };
-        };
-    };
-    MetaOnboardingController_connect_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MetaEmbeddedSignupDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    MetaChannelRegisterController_register_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MetaRegisterPhoneDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelListDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateChannelDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_byId_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_remove_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChannelsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateChannelDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    ChannelsController_rotateCredentials_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateChannelCredentialsDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChannelDto"];
-                };
-            };
-        };
-    };
-    WwebSessionController_start_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_stop_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_pairingState_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WwebPairingStateDto"];
-                };
-            };
-        };
-    };
-    WwebSessionController_pairingQrPng_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description PNG del código QR de vinculación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_requestPairingCode_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WwebPairingCodeRequestDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_logout_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
