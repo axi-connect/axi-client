@@ -120,9 +120,11 @@ describe("EmbeddedSignupButton", () => {
 
     expect(screen.getByRole("button", { name: /Conectar con Meta/i })).toBeDisabled();
     // Si la red corporativa bloquea el SDK, esconder el único camino que
-    // funciona detrás de un acordeón cerrado deja al cliente sin salida
-    const fallback = screen.getByText(/Conecta pegando tus credenciales de Meta/i);
-    expect(fallback.closest("details")).toHaveAttribute("open");
+    // funciona detrás de un acordeón deja al cliente sin salida: ahí el camino
+    // manual se pinta como PANEL, no como `details` que el usuario pueda cerrar
+    const heading = screen.getByRole("heading", { name: /Credenciales de Meta/i });
+    expect(heading).toBeInTheDocument();
+    expect(heading.closest("details")).toBeNull();
   });
 
   it("con el conector disponible el camino manual queda colapsado", () => {

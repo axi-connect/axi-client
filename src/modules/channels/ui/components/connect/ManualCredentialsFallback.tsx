@@ -2,7 +2,6 @@
 
 import { ChevronRight } from "lucide-react";
 
-import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
 
@@ -18,9 +17,12 @@ import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
  */
 export function ManualCredentialsFallback({
   prominent = false,
+  kind,
   onCreated,
 }: {
   prominent?: boolean;
+  /** Fija el proveedor: el wizard ya lo eligió en el paso 1 (F5). */
+  kind?: "whatsapp_cloud" | "instagram_dm" | "facebook_messenger";
   /** Sin argumento: `ChannelForm.onSuccess` no expone el canal creado y su
    *  lógica no se toca en esta fase. El host recarga la lista. */
   onCreated: () => void;
@@ -30,33 +32,40 @@ export function ManualCredentialsFallback({
     (form as HTMLFormElement | null)?.requestSubmit();
   };
 
+  const body = (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        {prominent
+          ? "Necesitas el identificador de la cuenta y un token permanente de tu app en el portal de desarrolladores de Meta."
+          : "Solo si ya creaste una app en el portal de desarrolladores de Meta y generaste un token permanente."}
+      </p>
+      {/* El formulario NO trae botón propio: lo dispara el host con
+          requestSubmit(), igual que el modal del listado */}
+      <ChannelForm fixedKind={kind} onSuccess={onCreated} />
+      <Button variant="outline" onClick={submit}>
+        Guardar credenciales
+      </Button>
+    </div>
+  );
+
+  // Cuando es el camino principal se pinta como panel, no como acordeón: dejar
+  // que el usuario colapse lo único que hay en la pantalla no es una opción útil.
+  if (prominent) {
+    return (
+      <section className="space-y-4 rounded-lg border border-border p-4 md:p-6">
+        <h2 className="text-base font-semibold">Credenciales de Meta</h2>
+        {body}
+      </section>
+    );
+  }
+
   return (
-    <details
-      open={prominent}
-      className={cn(
-        "rounded-lg border",
-        prominent ? "border-warning/40 bg-warning/[0.06]" : "border-border",
-      )}
-    >
+    <details className="rounded-lg border border-border">
       <summary className="flex cursor-pointer list-none items-center gap-2 p-4 font-medium [&::-webkit-details-marker]:hidden">
         <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />
-        {prominent
-          ? "Conecta pegando tus credenciales de Meta"
-          : "Ya tengo mis credenciales de Meta (avanzado)"}
+        Ya tengo mis credenciales de Meta (avanzado)
       </summary>
-      <div className="space-y-4 border-t border-border p-4">
-        <p className="text-sm text-muted-foreground">
-          {prominent
-            ? "Como no pudimos abrir el conector de Meta, esta es la vía que sí va a funcionar. Necesitas los datos de tu app en el portal de desarrolladores."
-            : "Solo si ya creaste una app en el portal de desarrolladores de Meta y generaste un token permanente."}
-        </p>
-        {/* El formulario NO trae botón propio: lo dispara el host con
-            requestSubmit(), igual que el modal del listado */}
-        <ChannelForm onSuccess={onCreated} />
-        <Button variant="outline" onClick={submit}>
-          Guardar credenciales
-        </Button>
-      </div>
+      <div className="border-t border-border p-4">{body}</div>
     </details>
   );
 }

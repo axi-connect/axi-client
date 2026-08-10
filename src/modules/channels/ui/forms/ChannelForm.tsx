@@ -33,33 +33,57 @@ import {
  *   `whatsapp_cloud` además `provider_account_id` + `access_token` (+ `waba_id`).
  * - Editar (`PATCH /channels/:id`): solo `name` y `default_ai_agent_id`
  *   (el vínculo canal ↔ agente IA).
- * Instagram/Messenger llegan en F8 del backend: deshabilitados.
+ * Instagram y Messenger se conectan igual, con el id de la cuenta o de la página
+ * y un token: sus adaptadores existen en el backend desde B9. Lo que todavía no
+ * existe para ellos es el alta por Embedded Signup, así que el wizard los manda
+ * por aquí (véase el registry).
  */
 const NONE_AGENT = "__none__"
 
 const channelFormSchema = z
   .object({
     name: z.string().trim().min(3, "Mínimo 3 caracteres"),
-    kind: z.enum(["whatsapp_cloud", "whatsapp_web"]),
+    kind: z.enum(["whatsapp_cloud", "whatsapp_web", "instagram_dm", "facebook_messenger"]),
     provider_account_id: z.string().trim().optional().or(z.literal("")),
     waba_id: z.string().trim().optional().or(z.literal("")),
     access_token: z.string().trim().optional().or(z.literal("")),
     default_ai_agent_id: z.string().optional(),
   })
   .superRefine((values, ctx) => {
-    if (values.kind === "whatsapp_cloud") {
+    // Todos los kinds con token exigen cuenta + token; solo wweb se conecta por
+    // pairing. El backend valida lo mismo (`TokenChannelKind`).
+    if (values.kind !== "whatsapp_web") {
       if (!values.provider_account_id) {
-        ctx.addIssue({ code: "custom", path: ["provider_account_id"], message: "Requerido para Cloud API (phone_number_id)" })
+        ctx.addIssue({ code: "custom", path: ["provider_account_id"], message: ACCOUNT_HINT[values.kind] })
       }
       if (!values.access_token) {
-        ctx.addIssue({ code: "custom", path: ["access_token"], message: "Requerido para Cloud API" })
+        ctx.addIssue({ code: "custom", path: ["access_token"], message: "Requerido para conectar con token" })
       }
     }
   })
 
 type ChannelFormValues = z.infer<typeof channelFormSchema>
 
-const CREATABLE_KINDS = ["whatsapp_web", "whatsapp_cloud"] as const
+const CREATABLE_KINDS = [
+  "whatsapp_web",
+  "whatsapp_cloud",
+  "instagram_dm",
+  "facebook_messenger",
+] as const
+
+/** Cómo se llama el identificador de la cuenta en cada proveedor. */
+const ACCOUNT_LABEL: Record<string, string> = {
+  whatsapp_cloud: "Phone Number ID",
+  instagram_dm: "ID de la cuenta de Instagram",
+  facebook_messenger: "ID de la página de Facebook",
+}
+
+/** Qué identificador pide cada proveedor. No es el mismo campo en todos. */
+const ACCOUNT_HINT: Record<string, string> = {
+  whatsapp_cloud: "Requerido para Cloud API (phone_number_id)",
+  instagram_dm: "Requerido para Instagram (id de la cuenta profesional)",
+  facebook_messenger: "Requerido para Messenger (id de la página)",
+}
 
 export type ChannelFormHost = {
   /** Canal existente → modo edición (name + agente por defecto). */
@@ -67,7 +91,20 @@ export type ChannelFormHost = {
   onSuccess?: () => void
 }
 
-export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuccess?: () => void }) {
+/**
+ * `fixedKind` lo usa el wizard: cuando el proveedor ya se eligió en el paso 1,
+ * volver a preguntarlo aquí es pedir dos veces lo mismo y deja abierta la puerta
+ * a que el usuario cree un canal de otro tipo del que dijo querer.
+ */
+export function ChannelForm({
+  host,
+  onSuccess,
+  fixedKind,
+}: {
+  host?: ChannelFormHost
+  onSuccess?: () => void
+  fixedKind?: (typeof CREATABLE_KINDS)[number]
+}) {
   const { showAlert } = useAlert()
   const isEdit = Boolean(host?.channel)
   const [agents, setAgents] = useState<Array<{ id: string; name: string }>>([])
@@ -78,7 +115,7 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
     resolver: zodResolver(channelFormSchema),
     defaultValues: {
       name: host?.channel?.name ?? "",
-      kind: host?.channel?.kind === "whatsapp_cloud" ? "whatsapp_cloud" : "whatsapp_web",
+      kind: fixedKind ?? (host?.channel?.kind === "whatsapp_cloud" ? "whatsapp_cloud" : "whatsapp_web"),
       provider_account_id: "",
       waba_id: "",
       access_token: "",
@@ -117,11 +154,14 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
         const created = await createChannel({
           name: values.name,
           kind: values.kind,
-          ...(values.kind === "whatsapp_cloud"
+          ...(values.kind !== "whatsapp_web"
             ? {
                 provider_account_id: values.provider_account_id,
                 access_token: values.access_token,
-                ...(values.waba_id ? { waba_id: values.waba_id } : {}),
+                // El WABA es un concepto de WhatsApp: IG y Messenger no tienen
+                ...(values.kind === "whatsapp_cloud" && values.waba_id
+                  ? { waba_id: values.waba_id }
+                  : {}),
               }
             : {}),
         })
@@ -157,7 +197,7 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
           )}
         />
 
-        {!isEdit && (
+        {!isEdit && fixedKind === undefined && (
           <FormField
             name="kind"
             control={form.control}
@@ -181,9 +221,6 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
                       {CHANNEL_KIND_LABELS[kindOption]}
                     </button>
                   ))}
-                  <span className="px-3 py-1.5 rounded-full border border-border text-sm text-muted-foreground opacity-60" title="Disponible próximamente">
-                    Instagram / Messenger (próximamente)
-                  </span>
                 </div>
                 <FormMessage />
               </FormItem>
@@ -191,14 +228,14 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
           />
         )}
 
-        {!isEdit && kind === "whatsapp_cloud" && (
+        {!isEdit && kind !== "whatsapp_web" && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
               name="provider_account_id"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number ID</FormLabel>
+                  <FormLabel>{ACCOUNT_LABEL[kind] ?? "Identificador de la cuenta"}</FormLabel>
                   <FormControl>
                     <Input placeholder="1234567890" {...field} value={field.value ?? ""} />
                   </FormControl>
@@ -206,19 +243,21 @@ export function ChannelForm({ host, onSuccess }: { host?: ChannelFormHost; onSuc
                 </FormItem>
               )}
             />
-            <FormField
-              name="waba_id"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>WABA ID (opcional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="9876543210" {...field} value={field.value ?? ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {kind === "whatsapp_cloud" && (
+              <FormField
+                name="waba_id"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WABA ID (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="9876543210" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               name="access_token"
               control={form.control}

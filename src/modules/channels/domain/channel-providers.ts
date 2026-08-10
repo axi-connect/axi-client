@@ -33,7 +33,17 @@ export type ChannelBrandClass =
   | "brand-messenger"
   | "brand-fault";
 
-export type ChannelAvailability = "available" | "coming_soon" | "internal";
+/**
+ * `manual_only` es la sustancia de F5: el canal **funciona de punta a punta** —el
+ * backend tiene su adaptador de envío y su router de webhook desde B9— pero su
+ * alta por Embedded Signup todavía no existe, porque la verificación de propiedad
+ * de esos productos usa `/me/accounts` y no el WABA, así que es otro caso de uso.
+ * Sin esa verificación, ofrecer el botón sería reabrir el agujero que B4 cerró.
+ *
+ * La diferencia con `coming_soon` importa: `coming_soon` no se puede elegir,
+ * `manual_only` sí, y va por el camino de credenciales.
+ */
+export type ChannelAvailability = "available" | "manual_only" | "coming_soon" | "internal";
 
 export type ChannelPrerequisite = {
   id: string;
@@ -94,6 +104,57 @@ const WHATSAPP_CLOUD_PREREQUISITES: readonly ChannelPrerequisite[] = [
   },
 ];
 
+/**
+ * Instagram y Messenger comparten dos cosas que WhatsApp no tiene: cuelgan de una
+ * página de Facebook, y **no tienen plantillas HSM**. Lo segundo es una limitación
+ * del producto de Meta, no un detalle de implementación, así que se declara aquí
+ * y se ve en el checklist: fuera de las 24 h no hay forma de retomar la
+ * conversación salvo con etiquetas de mensaje.
+ */
+const NO_HSM_PREREQUISITE: ChannelPrerequisite = {
+  id: "no_templates_outside_window",
+  label: "Sé que fuera de 24 horas no puedo retomar la conversación con una plantilla",
+  detail:
+    "A diferencia de WhatsApp, este canal no tiene plantillas aprobadas. Si pasan 24 horas desde el último mensaje del cliente, hay que esperar a que escriba de nuevo.",
+  critical: true,
+};
+
+const INSTAGRAM_PREREQUISITES: readonly ChannelPrerequisite[] = [
+  {
+    id: "professional_account",
+    label: "Mi cuenta de Instagram es profesional (de empresa o creador)",
+    detail:
+      "Las cuentas personales no reciben mensajes por API. El cambio se hace desde la app de Instagram, en Configuración → Tipo de cuenta.",
+  },
+  {
+    id: "linked_page",
+    label: "Está vinculada a la página de Facebook de mi negocio",
+    detail: "Los mensajes viajan a través de la página; sin el vínculo no llegan.",
+  },
+  {
+    id: "inbox_permission",
+    label: "Tengo activado el acceso a mensajes desde herramientas externas",
+    detail:
+      "En Instagram: Configuración → Privacidad → Mensajes → permitir el acceso a los mensajes.",
+  },
+  NO_HSM_PREREQUISITE,
+];
+
+const MESSENGER_PREREQUISITES: readonly ChannelPrerequisite[] = [
+  {
+    id: "page_admin",
+    label: "Soy administrador de la página de Facebook de mi negocio",
+    detail:
+      "Con un rol menor la conexión falla al final del proceso. Se comprueba en Configuración de la página → Roles.",
+  },
+  {
+    id: "page_published",
+    label: "La página está publicada y visible",
+    detail: "Una página despublicada no recibe mensajes.",
+  },
+  NO_HSM_PREREQUISITE,
+];
+
 const WHATSAPP_WEB_PREREQUISITES: readonly ChannelPrerequisite[] = [
   {
     id: "phone_powered_on",
@@ -141,14 +202,13 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     tagline: "Mensajes directos de tu cuenta profesional de Instagram.",
     icon_id: "instagram",
     brand_class: "brand-instagram",
+    // La estrategia OBJETIVO sigue siendo el botón. `availability` es lo que
+    // decide por dónde va hoy: en cuanto exista el caso de uso del backend, este
+    // descriptor cambia una palabra y el wizard empieza a ofrecer el popup.
     connect_strategy: "embedded_signup",
-    // F5. El backend tiene adaptador de envío y webhook, pero NO el alta por
-    // Embedded Signup: su verificación de propiedad usa `/me/accounts`, distinta
-    // de la de WhatsApp. Sin esa verificación, el alta por botón sería el
-    // agujero que B4 cerró.
-    availability: "coming_soon",
-    requirement_note: "Se conecta con el mismo botón",
-    prerequisites: [],
+    availability: "manual_only",
+    requirement_note: "Con el id de la cuenta y un token · el botón llega pronto",
+    prerequisites: INSTAGRAM_PREREQUISITES,
     meta_product: "instagram",
   },
   facebook_messenger: {
@@ -158,9 +218,9 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     icon_id: "messenger",
     brand_class: "brand-messenger",
     connect_strategy: "embedded_signup",
-    availability: "coming_soon",
-    requirement_note: "Se conecta con el mismo botón",
-    prerequisites: [],
+    availability: "manual_only",
+    requirement_note: "Con el id de la página y un token · el botón llega pronto",
+    prerequisites: MESSENGER_PREREQUISITES,
     meta_product: "messenger",
   },
   simulator: {
@@ -175,6 +235,15 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     prerequisites: [],
   },
 };
+
+/**
+ * Por dónde va el alta HOY, que no siempre es la estrategia objetivo del
+ * descriptor. Aquí, en `domain/`, y no como un `if` en la vista: es la decisión
+ * que F5 vino a hacer explícita.
+ */
+export function effectiveConnectStrategy(provider: ChannelProvider): ChannelConnectStrategy {
+  return provider.availability === "manual_only" ? "manual" : provider.connect_strategy;
+}
 
 /** Descriptor de un kind. Nunca devuelve `undefined`: el record es total. */
 export function channelProvider(kind: ChannelKind): ChannelProvider {

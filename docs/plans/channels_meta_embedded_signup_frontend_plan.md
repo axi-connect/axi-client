@@ -1821,6 +1821,21 @@ enlace del sidebar (F5).
 
 ### F5 — Instagram y Messenger sin rediseño
 
+> **ENTREGADA 2026-08-09.** Verificada: `npx tsc --noEmit` limpio, **98 suites / 830 tests**,
+> `npm run build` verde, eslint limpio.
+>
+> **Con un alcance distinto al planificado, y por un motivo de contrato.** El plan asumía que B9
+> entregaba también el alta por Embedded Signup de esos dos productos. No la entregó: B9 dio sus
+> **adaptadores de envío y sus routers de webhook**, que es lo que hace que el canal funcione, pero
+> la verificación de propiedad de Instagram y Messenger usa `/me/accounts` en vez del WABA, así que
+> su alta es otro caso de uso y **está pendiente en el backend**. Habilitar el botón para ellos
+> sería reabrir el agujero que B4 cerró para WhatsApp.
+>
+> Lo que se entrega, entonces: **Instagram y Messenger se conectan de verdad, por el camino de
+> credenciales**. No es la pastilla "próximamente" que había, y no es una conexión que no conecta
+> nada: el backend valida el token contra Graph al crear el canal, lo cifra y desde ese momento el
+> canal envía y recibe.
+
 #### Objetivo y por qué
 
 Demostrar que D3 se cumplió. Si el registry está bien diseñado, habilitar Instagram consiste
@@ -1900,6 +1915,46 @@ Comportamiento observable:
 | Se habilitan los proveedores antes de que B9 exista y el cliente conecta un canal mudo | Bloqueo explícito en §4.2. El daño de habilitar antes de tiempo es mayor que el de esperar |
 | El copy de Instagram promete lo mismo que WhatsApp y el cliente descubre que no hay plantillas | El checklist de esos proveedores lo declara explícitamente, igual que el ítem 5 del checklist de WhatsApp declara lo del método de pago |
 | El endpoint de configuración devuelve un `config_id` genérico y el popup abre contra el producto equivocado | La petición 4 de §4.3 se resuelve **antes** de empezar la fase. El fallo es silencioso: el popup abre y falla al final, con el usuario delante |
+
+#### Lo que se hizo distinto de lo planificado (F5, 2026-08-09)
+
+**`availability` gana un cuarto valor: `manual_only`.** Es la sustancia de la fase. `coming_soon`
+no se puede elegir; `manual_only` sí, y va por credenciales. Con él aparece
+`effectiveConnectStrategy(provider)`, que separa **la estrategia objetivo** del descriptor (que
+sigue siendo `embedded_signup` para los dos) de **por dónde va el alta hoy**. Cuando el backend
+tenga su caso de uso, se cambia una palabra en el registry y el wizard empieza a ofrecer el popup:
+eso es lo que D3 prometía y sigue en pie.
+
+**La métrica del diff no se cumplió: son nueve archivos, no cuatro.** El plan pedía explicar por
+qué en vez de disimularlo, así que aquí está el desglose:
+
+| Archivos | Por qué |
+|---|---|
+| `channel-providers.ts` + su test | La sustancia: `manual_only`, los prerrequisitos propios y `effectiveConnectStrategy`. Es donde el plan quería que cupiera todo |
+| `ChannelSection.tsx` | El enlace "Administrar canales", que el propio plan listaba como ítem aparte de F5 |
+| `ChannelsView.tsx`, `ChannelsEmptyState.tsx` | Dos líneas de copy: dejaban de prometer "pronto" |
+| `ProviderGallery.tsx`, `ConnectChannelView.tsx`, `ManualCredentialsFallback.tsx` | **La variabilidad que el registry NO capturó**: F1 modeló *qué mostrar* de un proveedor, pero no que un proveedor pudiera ser conectable **por un camino distinto de su estrategia objetivo**. En F1 no se podía saber, porque el plan daba por hecho que B9 traía el alta |
+| `ChannelForm.tsx` | El precio de la regla de F3 ("se envuelve, no se reescribe"): el formulario tenía cableado WhatsApp en tres sitios —los kinds creables, las etiquetas de los campos y una pastilla de "próximamente"— y esa deuda se paga aquí |
+
+Dicho sin adornos: **el registry acertó en el 80% y falló en un eje**, el de "disponible pero por
+otra vía". Queda modelado, y el siguiente proveedor no volverá a costar estos cuatro archivos.
+
+**`ChannelForm` acepta `fixedKind`.** Es exactamente la modificación que F3 se reservó como
+aceptable ("se limita a permitir que el `kind` venga fijado desde fuera"). Sin ella, el wizard
+preguntaría dos veces el proveedor y dejaría al usuario crear un canal de un tipo distinto del que
+dijo querer. Con ella, el formulario también deja de pedir el WABA a Instagram y Messenger —que no
+tienen— y nombra el identificador de cuenta como lo llama cada producto.
+
+**Los prerrequisitos de Instagram y Messenger declaran que NO tienen plantillas.** Es una
+limitación del producto de Meta, no un detalle de implementación: fuera de las 24 horas no hay forma
+de retomar la conversación. Va marcado como crítico y hay test, porque prometer lo mismo que
+WhatsApp es prometer algo que no existe.
+
+**El camino manual, cuando es el principal, se pinta como panel y no como acordeón.** Dejar que el
+usuario colapse lo único que hay en la pantalla no es una opción útil. El test lo asserta.
+
+**Lo que no cambió, que era el punto**: la máquina de estados, el cargador del SDK, la tarjeta de
+salud, el wizard como estructura y las rutas. Ni un archivo nuevo.
 
 #### Qué NO entra en F5
 

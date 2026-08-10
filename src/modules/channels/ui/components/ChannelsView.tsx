@@ -106,8 +106,8 @@ export function ChannelsView() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Instagram y Messenger llegan pronto. Escríbenos si necesitas varios números en un mismo
-        canal.
+        También puedes conectar Instagram y Messenger. Escríbenos si necesitas varios números en un
+        mismo canal.
       </p>
 
     </div>

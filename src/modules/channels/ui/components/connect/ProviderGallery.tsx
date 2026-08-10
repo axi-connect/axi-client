@@ -39,7 +39,10 @@ export function ProviderGallery({
       className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]"
     >
       {providers.map((provider) => {
+        // `manual_only` SÍ se puede elegir: el canal funciona, lo que falta es
+        // su alta por botón. Solo `coming_soon` queda inerte.
         const isSoon = provider.availability === "coming_soon";
+        const isManualOnly = provider.availability === "manual_only";
         const isSelected = selected?.kind === provider.kind;
 
         return (
@@ -83,6 +86,11 @@ export function ProviderGallery({
                 {isSoon && (
                   <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     Muy pronto
+                  </span>
+                )}
+                {isManualOnly && (
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    Requiere credenciales
                   </span>
                 )}
               </span>

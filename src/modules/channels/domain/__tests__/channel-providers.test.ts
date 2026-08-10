@@ -3,6 +3,7 @@ import {
   CHANNEL_PROVIDERS,
   channelProvider,
   connectableProviders,
+  effectiveConnectStrategy,
   type ChannelBrandClass,
   type ChannelIconId,
 } from "../channel-providers";
@@ -67,6 +68,46 @@ describe("registry de proveedores de canal", () => {
         expect(provider.meta_product).toBeDefined();
       }
     }
+  });
+
+  it("cada proveedor conectable declara SUS prerrequisitos, no los de WhatsApp", () => {
+    // Es la comprobación de que el registry gobierna de verdad y no hay un `if`
+    // escondido en el checklist: si Instagram mostrara los de WhatsApp, el
+    // usuario buscaría un número de teléfono que Instagram no tiene
+    for (const provider of connectableProviders()) {
+      expect(provider.prerequisites.length).toBeGreaterThan(0);
+    }
+    expect(channelProvider("instagram_dm").prerequisites.map((p) => p.id)).toContain(
+      "professional_account",
+    );
+    expect(channelProvider("facebook_messenger").prerequisites.map((p) => p.id)).toContain(
+      "page_admin",
+    );
+    expect(channelProvider("whatsapp_cloud").prerequisites.map((p) => p.id)).not.toContain(
+      "page_admin",
+    );
+  });
+
+  it("Instagram y Messenger avisan de que NO tienen plantillas fuera de 24 h", () => {
+    // Es una limitación del producto de Meta, no un detalle de implementación:
+    // prometer lo mismo que WhatsApp es prometer algo que no existe
+    for (const kind of ["instagram_dm", "facebook_messenger"] as const) {
+      const item = channelProvider(kind).prerequisites.find(
+        (p) => p.id === "no_templates_outside_window",
+      );
+      expect(item?.critical).toBe(true);
+    }
+  });
+
+  it("la estrategia EFECTIVA separa lo que se ofrece hoy de lo que es el objetivo", () => {
+    // El descriptor de Instagram declara `embedded_signup` como objetivo, pero su
+    // `availability: manual_only` es lo que decide por dónde va HOY: el backend
+    // tiene su adaptador de envío pero no su alta por botón. Cuando la tenga,
+    // cambia una palabra del registry y el wizard ofrece el popup.
+    expect(channelProvider("instagram_dm").connect_strategy).toBe("embedded_signup");
+    expect(effectiveConnectStrategy(channelProvider("instagram_dm"))).toBe("manual");
+    expect(effectiveConnectStrategy(channelProvider("whatsapp_cloud"))).toBe("embedded_signup");
+    expect(effectiveConnectStrategy(channelProvider("whatsapp_web"))).toBe("qr");
   });
 
   it("el prerrequisito que más altas rompe está marcado como crítico", () => {

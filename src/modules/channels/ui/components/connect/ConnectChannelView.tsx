@@ -9,8 +9,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
-import type { ChannelProvider } from "@/modules/channels/domain/channel-providers";
+import {
+  effectiveConnectStrategy,
+  type ChannelProvider,
+} from "@/modules/channels/domain/channel-providers";
 import { EmbeddedSignupButton } from "./EmbeddedSignupButton";
+import { ManualCredentialsFallback } from "./ManualCredentialsFallback";
 import { ConnectSuccess } from "./ConnectSuccess";
 import { PrerequisitesChecklist } from "./PrerequisitesChecklist";
 import { ProviderGallery } from "./ProviderGallery";
@@ -38,6 +42,35 @@ export function ConnectChannelView() {
     setConnected(channel);
     setStep(3);
   };
+
+  function renderConnectStep() {
+    if (provider === null) return null;
+    const strategy = effectiveConnectStrategy(provider);
+
+    if (strategy === "qr") {
+      return <QrPairingPanel channelName={channelName} onConnected={goToSuccess} />;
+    }
+    if (strategy === "manual") {
+      return (
+        <ManualCredentialsFallback
+          prominent
+          kind={provider.kind === "instagram_dm" ? "instagram_dm" : "facebook_messenger"}
+          onCreated={() => router.push("/settings/channels")}
+        />
+      );
+    }
+    return (
+      <EmbeddedSignupButton
+        provider={provider}
+        channelName={channelName}
+        onConnected={goToSuccess}
+        // El camino manual no expone el canal creado (`ChannelForm.onSuccess` no
+        // lo devuelve y su lógica no se toca), así que se cierra el wizard
+        // llevando al listado, que ya refresca desde el store
+        onManualCreated={() => router.push("/settings/channels")}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -89,21 +122,10 @@ export function ConnectChannelView() {
         <PrerequisitesChecklist provider={provider} onContinue={() => setStep(2)} />
       )}
 
-      {step === 2 &&
-        provider !== null &&
-        (provider.connect_strategy === "qr" ? (
-          <QrPairingPanel channelName={channelName} onConnected={goToSuccess} />
-        ) : (
-          <EmbeddedSignupButton
-            provider={provider}
-            channelName={channelName}
-            onConnected={goToSuccess}
-            // El camino manual no expone el canal creado (`ChannelForm.onSuccess`
-            // no lo devuelve y su lógica no se toca), así que se cierra el wizard
-            // llevando al listado, que ya refresca desde el store
-            onManualCreated={() => router.push("/settings/channels")}
-          />
-        ))}
+      {/* El paso 3 se elige por la estrategia EFECTIVA, que sale del registry: no
+          hay un `if (kind === ...)` en esta vista. Instagram y Messenger van por
+          credenciales hasta que el backend tenga su alta por botón. */}
+      {step === 2 && provider !== null && renderConnectStep()}
 
       {step === 3 && connected !== null && <ConnectSuccess channel={connected} />}
     </div>
@@ -114,7 +136,11 @@ function title(step: number, provider: ChannelProvider | null): string {
   if (step === 0) return "Conectar un canal";
   if (step === 1) return "Antes de empezar";
   if (step === 2) {
-    return provider?.connect_strategy === "qr" ? "Vincula tu WhatsApp" : "Conecta tu WhatsApp";
+    if (provider === null) return "Conecta tu canal";
+    const strategy = effectiveConnectStrategy(provider);
+    if (strategy === "qr") return "Vincula tu WhatsApp";
+    if (strategy === "manual") return `Conecta ${provider.label}`;
+    return "Conecta tu WhatsApp";
   }
   return "Todo listo";
 }
@@ -125,9 +151,13 @@ function subtitle(step: number, provider: ChannelProvider | null): string {
     return "Revisa estos puntos. Si algo falta, es mejor saberlo ahora que a mitad del proceso.";
   }
   if (step === 2) {
-    return provider?.connect_strategy === "qr"
-      ? "Escanea el código con la app de WhatsApp de tu celular."
-      : "Se abrirá una ventana de Meta. Autoriza ahí y nosotros hacemos el resto.";
+    if (provider === null) return "";
+    const strategy = effectiveConnectStrategy(provider);
+    if (strategy === "qr") return "Escanea el código con la app de WhatsApp de tu celular.";
+    if (strategy === "manual") {
+      return "Este canal todavía se conecta con las credenciales de tu app de Meta. El botón llega pronto.";
+    }
+    return "Se abrirá una ventana de Meta. Autoriza ahí y nosotros hacemos el resto.";
   }
   return "Tu canal quedó conectado y ya está recibiendo mensajes.";
 }

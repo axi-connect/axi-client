@@ -33,7 +33,7 @@ export function ChannelsEmptyState() {
         </Link>
       </Button>
       <p className="text-xs text-muted-foreground">
-        También puedes conectar WhatsApp escaneando un código QR.
+        También puedes conectar WhatsApp con código QR, Instagram o Messenger.
       </p>
     </div>
   );
