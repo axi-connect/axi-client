@@ -51,6 +51,53 @@ const nextConfig: NextConfig = {
       { source: "/login", destination: "/auth/login", permanent: true },
       { source: "/signup", destination: "/contacto", permanent: true },
       { source: "/legal", destination: "/legal/terminos", permanent: true },
+      // Canales: las rutas interceptadas del workspace (`@modal/(.)channels/*`)
+      // se borraron en F1 porque no tenían página subyacente y una recarga daba
+      // 404. Las URLs canónicas viven en `/settings/channels` (D4 del plan). El
+      // ORDEN importa: Next devuelve la primera coincidencia, así que `create`
+      // tiene que ir antes que `:id` o se trataría como un id de canal.
+      // F1 apuntaba `create` al listado porque el wizard no existía; F3 lo
+      // repunta a su destino real.
+      { source: "/workspace/channels/create", destination: "/settings/channels/connect", permanent: true },
+      { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
+    ];
+  },
+
+  /**
+   * Cabeceras de aislamiento de origen — F2 de canales Meta.
+   *
+   * **`Cross-Origin-Opener-Policy: same-origin-allow-popups` no es opcional.**
+   * El Embedded Signup de Meta abre un popup y devuelve el `code` por el callback
+   * de `FB.login`, que viaja a través de `window.opener`. Con el valor que uno
+   * pondría "por seguridad", `same-origin`, el popup PIERDE `window.opener` y ese
+   * callback **nunca se ejecuta**: el usuario ve la ventana de Meta completarse
+   * y la aplicación se queda colgada en "procesando", sin ningún error en consola
+   * ni en red. Se fija explícitamente para que nadie lo endurezca sin entender la
+   * consecuencia.
+   *
+   * **PROHIBIDO añadir `Cross-Origin-Embedder-Policy: require-corp`**: rompe los
+   * iframes del SDK de Facebook, que es cross-origin y no envía CORP.
+   *
+   * CSP objetivo para cuando el proyecto adopte una — hoy no hay ninguna, así que
+   * el SDK carga sin tocar nada. Cuando se añada, estos tres dominios son los que
+   * el flujo necesita, y omitir cualquiera lo rompe:
+   *
+   *   script-src  'self' https://connect.facebook.net
+   *   frame-src   'self' https://web.facebook.com https://www.facebook.com
+   *   connect-src 'self' https://graph.facebook.com https://www.facebook.com
+   */
+  async headers() {
+    return [
+      {
+        // Solo el panel privado: la capa pública no abre popups de Meta y no
+        // necesita relajar nada.
+        source: "/:path((?!api/).*)",
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
     ];
   },
 

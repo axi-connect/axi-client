@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import ChannelsList from "./ChannelList"
 import { useRouter } from "next/navigation"
 import { Button } from "@/shared/components/ui/button"
-import { Radio, CircleFadingPlus, RefreshCw } from "lucide-react"
+import { Radio, CircleFadingPlus, RefreshCw, Settings2 } from "lucide-react"
 import type { ChannelDTO } from "@/modules/channels/domain/channel"
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
 import {
@@ -41,13 +41,21 @@ export default function ChannelSection() {
             <Button
               size="sm"
               variant="ghost"
-              title="Agregar canal nuevo"
-              onClick={() => router.push("/workspace/channels/create")}
+              title="Conectar un canal nuevo"
+              onClick={() => router.push("/settings/channels/connect")}
             >
               <CircleFadingPlus />
             </Button>
             <Button size="sm" variant="ghost" title="Refrescar canales" onClick={() => void fetchChannels()}>
               <RefreshCw />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Administrar canales"
+              onClick={() => router.push("/settings/channels")}
+            >
+              <Settings2 />
             </Button>
           </div>
         </div>
@@ -59,7 +67,7 @@ export default function ChannelSection() {
             loading={loading}
             channels={channels}
             onOpenDetail={openDetail}
-            onCreate={() => router.push("/workspace/channels/create")}
+            onCreate={() => router.push("/settings/channels/connect")}
           />
         </SidebarMenu>
       </SidebarGroupContent>

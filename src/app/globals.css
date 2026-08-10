@@ -32,6 +32,13 @@
 
   /* Texto sobre superficies de color (primario y estados) */
   --axi-on-color: #ffffff;
+
+  /* Colores OFICIALES de proveedores de mensajería. Familia aparte a propósito:
+     no son paleta de axi y nunca deben mezclarse con los primitivos de marca.
+     No cambian por tema — son colores de terceros, no tokens semánticos. */
+  --logo-whatsapp: #25d366;
+  --logo-instagram: #e1306c;
+  --logo-messenger: #0084ff;
 }
 
 .dark {
@@ -184,6 +191,131 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background-image:
     radial-gradient(75% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand) 13%, transparent), transparent 72%),
     radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-brand) 8%, transparent), transparent 70%);
+}
+
+/* -------- Superficie de tarjeta de canal (F1 de canales Meta) -------- */
+
+/**
+ * Resplandor del proveedor + cometa en el borde. Aprobado en el mockup de F0
+ * (`docs/design/mockups/channels-connect.html`).
+ *
+ * `--ch-glow` es el color oficial de la app de esa tarjeta y lo declara una
+ * clase `.brand-*` de conjunto CERRADO. Tiene que ser una clase y no un token
+ * interpolado: Tailwind v4 extrae las clases estáticamente del fuente, así que
+ * `bg-[var(${x})]` no genera nada (misma trampa que los z-index, §4.4).
+ *
+ * Desviación consciente de DESIGN-SYSTEM §7, que reserva el color del proveedor
+ * para el icono: el tinte se queda entre el 7% y el 34% para no competir nunca
+ * con el coral de acción ni con los colores de estado, y `--axi-destructive`
+ * gana sobre el color de marca cuando el canal está caído. Volver a la regla
+ * estricta es cambiar el fallback de `--ch-glow` a `var(--axi-brand)`.
+ */
+@property --comet-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.brand-whatsapp { --ch-glow: var(--logo-whatsapp); }
+.brand-instagram { --ch-glow: var(--logo-instagram); }
+.brand-messenger { --ch-glow: var(--logo-messenger); }
+/* Un canal caído deja de presumir de marca: comunica el problema por color */
+.brand-fault { --ch-glow: var(--axi-destructive); }
+
+/* Glifo del proveedor: color oficial, y SOLO en el glifo (DESIGN-SYSTEM §7) */
+.text-logo-whatsapp { color: var(--logo-whatsapp); }
+.text-logo-instagram { color: var(--logo-instagram); }
+.text-logo-messenger { color: var(--logo-messenger); }
+
+/* Placa del logo: teñida al 10% del color de la app con línea de un pelo al 22%.
+   Como utilidad y no como valor arbitrario de Tailwind: un `color-mix` anidado
+   dentro de `bg-[...]` es frágil de extraer y el sistema de diseño pide que los
+   degradados y mezclas vivan una sola vez aquí. */
+.channel-logo-plate {
+  background-color: color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 10%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 22%, transparent);
+}
+
+.channel-surface {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.channel-surface:hover {
+  border-color: color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 45%, var(--color-border));
+  transform: translateY(-1px);
+}
+
+/* Capa 1 — resplandor anclado a la ESQUINA del logo, no un círculo de tamaño
+   fijo: así se comporta igual con tarjetas de cualquier alto. */
+.channel-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle 96px at 34px 34px,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 34%, transparent) 0%,
+      transparent 100%),
+    radial-gradient(130% 120% at 0% 0%,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 20%, transparent) 0%,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 7%, transparent) 34%,
+      transparent 66%);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+/* Sobre negro el mismo tinte se ve la mitad */
+.dark .channel-surface::before { opacity: 0.95; }
+.channel-surface:hover::before { opacity: 0.85; }
+.dark .channel-surface:hover::before { opacity: 1; }
+.channel-surface[data-selected="true"]::before { opacity: 0.95; }
+.dark .channel-surface[data-selected="true"]::before { opacity: 1; }
+
+/* Capa 2 — el cometa: cónico casi transparente con cola y núcleo, recortado a
+   la franja de 1px del borde con dos máscaras que se excluyen. Gira animando
+   `--comet-angle`, que existe como propiedad TIPADA justo para poder
+   interpolarse: un custom property sin `@property` no anima. */
+.channel-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 232deg,
+    color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 55%, transparent) 300deg,
+    var(--ch-glow, var(--axi-brand)) 344deg,
+    color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 90%, var(--background)) 356deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.channel-surface:hover::after,
+.channel-surface:focus-visible::after,
+.channel-surface[data-selected="true"]::after {
+  opacity: 1;
+  animation: channel-comet 2.6s linear infinite;
+}
+/* Seleccionado: encendido y más lento, porque es un estado y no un hover */
+.channel-surface[data-selected="true"]::after { animation-duration: 5s; }
+
+@keyframes channel-comet {
+  to { --comet-angle: 360deg; }
+}
+
+/* Sin `@property` el ángulo no interpola y queda un arco fijo en el borde, que
+   sigue leyéndose como acento. Degradación silenciosa a propósito. */
+@media (prefers-reduced-motion: reduce) {
+  .channel-surface::after { animation: none !important; }
+  .channel-surface:hover { transform: none; }
 }
 
 /* -------- Glass: material de superficies flotantes (DESIGN-SYSTEM §5) -------- */

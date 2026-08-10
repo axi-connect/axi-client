@@ -91,3 +91,47 @@ describe("applyServerValidation — paths con índices de array", () => {
     expect(setError).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Criterio de cierre de F3: cada `code` del onboarding de Meta produce un mensaje
+ * EN ESPAÑOL y SIN JERGA. Se comprueba aquí, con el diccionario, y no con
+ * capturas de pantalla: una captura envejece y este test falla el día que alguien
+ * añada un código sin su traducción.
+ */
+describe("errorMessage — onboarding de canales Meta (F3)", () => {
+  const META_CODES = [
+    "channels/meta_signup_disabled",
+    "channels/meta_code_expired",
+    "channels/meta_missing_scopes",
+    "channels/meta_account_mismatch",
+    "channels/onboarding_in_progress",
+    "channels/meta_registration_required",
+    "channels/meta_pin_invalid",
+    "channels/meta_payment_method_required",
+    "channels/provider_account_taken",
+  ];
+
+  it.each(META_CODES)("%s tiene traducción propia, no el detalle del backend", (code) => {
+    const message = errorMessage(httpError(code, "DETALLE CRUDO DEL BACKEND"));
+
+    expect(message).not.toBe("DETALLE CRUDO DEL BACKEND");
+    expect(message.length).toBeGreaterThan(30);
+  });
+
+  it.each(META_CODES)("%s no filtra jerga técnica al usuario", (code) => {
+    const message = errorMessage(httpError(code));
+
+    // El usuario no lee identificadores de Meta: eso vive en "Detalles técnicos"
+    // del paso 4, que existe para que soporte pida desplegarlo
+    expect(message).not.toMatch(/phone_number_id|waba|access_token|graph api|oauth/i);
+  });
+
+  it("el mensaje dice QUÉ HACER, no solo qué falló", () => {
+    // Un error que no ofrece salida deja al usuario mirando una pared
+    expect(errorMessage(httpError("channels/meta_code_expired"))).toMatch(/vuelve a intentarlo/i);
+    expect(errorMessage(httpError("channels/meta_pin_invalid"))).toMatch(/registraste en Meta/i);
+    expect(errorMessage(httpError("channels/meta_payment_method_required"))).toMatch(
+      /Administrador de WhatsApp/i,
+    );
+  });
+});

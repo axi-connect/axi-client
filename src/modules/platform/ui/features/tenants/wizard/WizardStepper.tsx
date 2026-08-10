@@ -3,4 +3,4 @@
  * (FE4 lo usa para las máquinas de estado de DB y migración). Este re-export
  * conserva el import estable del wizard.
  */
-export { StepIndicator as WizardStepper } from "../../../components/StepIndicator";
+export { StepIndicator as WizardStepper } from "@/shared/components/ui/step-indicator";

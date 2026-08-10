@@ -1,0 +1,1539 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup F0 — Conexión de canales Meta · Axi Connect</title>
+<!--
+  MOCKUP DE LA FASE F0 — gate de aprobación, NO es código de producción.
+
+  Plan: docs/plans/channels_meta_embedded_signup_frontend_plan.md (§5, fase F0)
+
+  Reglas que este archivo respeta a propósito:
+  · Autocontenido: sin red, sin CDN, sin servidor. Se abre con doble clic.
+  · Los tokens de la capa 1 son COPIA LITERAL de src/app/globals.css. Ningún
+    hex vive fuera del bloque de tokens: si un color no sale de un token, es
+    la señal de que el diseño no es implementable (DESIGN-SYSTEM §11).
+  · Cada dato de la tarjeta de salud se puede señalar a un campo real de
+    `ChannelDto` en axi-server/openapi/openapi.json. Nada inventado.
+  · Los mensajes de error salen de los códigos reales de
+    axi-server/src/core/shared/errors/error_code.ts.
+
+  Dos aproximaciones conscientes del mockup, que en producción se resuelven
+  con las piezas reales del repositorio:
+  · Tipografía: aquí cae al stack del sistema. En producción son Poppins
+    (cuerpo/UI) y Nexa (headings), montadas en app/layout.tsx.
+  · Logos de proveedor: aquí son glifos aproximados dibujados a mano. En
+    producción vienen de `react-icons` (FaWhatsapp, FaInstagram,
+    FaFacebookMessenger), que es lo que DESIGN-SYSTEM §7 autoriza para logos
+    de terceros. Los iconos de UI son de lucide-react.
+-->
+<style>
+/* ==========================================================================
+   CAPA 1 — PRIMITIVOS DE MARCA (copia literal de src/app/globals.css)
+   Único lugar de este archivo donde existen valores hex.
+   ========================================================================== */
+:root, #mockup-root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+
+  --axi-on-color: #ffffff;
+
+  /* Logos de terceros: color oficial, solo en el icono (DESIGN-SYSTEM §7) */
+  --logo-whatsapp: #25d366;
+  --logo-instagram: #e1306c;
+  --logo-messenger: #0084ff;
+}
+
+:root.dark, #mockup-root.dark {
+  /* Sin esto los controles NATIVOS (checkbox, select, scrollbar) se pintan
+     claros sobre el fondo oscuro. Aplica igual en producción: el repo usa
+     `<input type="checkbox">` nativo en ocho sitios. */
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  --axi-brand: #fb7185;
+  --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa;
+  --axi-amber: #fbbf24;
+  --axi-muted: #18181b;
+
+  --axi-success: #4ade80;
+  --axi-warning: #fbbf24;
+  --axi-destructive: #f87171;
+  --axi-info: #60a5fa;
+
+  --axi-on-color: #0a0a0a;
+}
+
+/* ==========================================================================
+   CAPA 2 — SEMÁNTICOS (derivan de la capa 1, sin hex nuevos)
+   ========================================================================== */
+:root, #mockup-root {
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-border-soft: color-mix(in srgb, var(--color-border) 50%, transparent);
+  --color-ring: var(--axi-brand);
+  --color-primary: var(--axi-brand);
+  --color-primary-foreground: var(--axi-on-color);
+  --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --color-muted: var(--axi-muted);
+  --color-muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --color-accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --color-input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+
+  --font-body: "Poppins", "Century Gothic", "URW Gothic", "Avenir Next", ui-sans-serif,
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-headings: "Nexa", var(--font-body);
+  --font-mono: ui-monospace, "Geist Mono", "SF Mono", Menlo, monospace;
+}
+:root.dark, #mockup-root.dark {
+  /* Acento con más presencia para contraste en dark (globals.css) */
+  --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Producción monta Poppins (cuerpo) y Nexa (headings) con next/font. Aquí no
+     se pueden empaquetar, así que la pila cae a caras de carácter geométrico
+     parecido: si el revisor tiene Poppins instalada, la fidelidad es exacta. */
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+#mockup-root { background: var(--background); color: var(--foreground); min-height: 100vh; }
+h1, h2, h3 { margin: 0; font-family: var(--font-headings); font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; border-radius: 4px; }
+
+.h1 { font-size: 30px; line-height: 1.2; }
+.h2 { font-size: 20px; line-height: 1.3; }
+.h3 { font-size: 16px; line-height: 1.4; }
+.caption { font-size: 12px; line-height: 1.4; color: var(--color-muted-foreground); }
+.muted { color: var(--color-muted-foreground); }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.nums { font-variant-numeric: tabular-nums; }
+.strong { font-weight: 600; }
+
+/* ==========================================================================
+   BANCO DE PRUEBAS DEL MOCKUP — deliberadamente NO parece producto
+   ========================================================================== */
+.harness {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-muted);
+  border-bottom: 1px dashed var(--color-border);
+  font-family: var(--font-mono); font-size: 11px;
+}
+.harness__tag {
+  padding: 2px 8px; border-radius: var(--radius-full, 9999px);
+  background: color-mix(in srgb, var(--axi-violet) 16%, var(--background));
+  color: var(--axi-violet); font-weight: 600; letter-spacing: 0.04em;
+}
+.harness select, .harness button {
+  border: 1px solid var(--color-input); background: var(--background);
+  color: var(--foreground); border-radius: var(--radius-sm);
+  padding: 4px 8px; font-family: inherit; font-size: 11px; cursor: pointer;
+}
+.harness__spacer { flex: 1 1 auto; }
+
+/* ==========================================================================
+   SHELL DE LA APP (aproximación del panel privado)
+   ========================================================================== */
+.app { display: flex; min-height: calc(100vh - 34px); }
+.sidebar {
+  width: 232px; flex: 0 0 232px;
+  border-right: 1px solid var(--color-border);
+  padding: 12px 8px; display: flex; flex-direction: column; gap: 2px;
+}
+@media (max-width: 860px) { .sidebar { display: none; } }
+.sidebar__brand {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px 14px; font-weight: 600;
+}
+.sidebar__brand-mark {
+  width: 22px; height: 22px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--axi-brand), var(--axi-amber) 55%, var(--axi-violet));
+}
+.navitem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: var(--radius-md);
+  color: var(--color-muted-foreground); font-size: 14px;
+}
+.navitem svg { width: 18px; height: 18px; flex: 0 0 18px; }
+.navitem--child { padding-left: 34px; }
+.navitem--ancestor { color: var(--foreground); font-weight: 500; }
+.navitem--ancestor svg { color: var(--axi-brand); }
+.navitem--active {
+  position: relative; background: var(--color-accent); color: var(--foreground); font-weight: 500;
+}
+.navitem--active::before {
+  content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 2px; height: 16px; border-radius: 9999px; background: var(--axi-brand);
+}
+
+.main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  position: sticky; top: 34px; z-index: 40;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--background) 65%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  border-bottom: 1px solid var(--color-border);
+}
+.topbar__crumbs { font-size: 13px; color: var(--color-muted-foreground); }
+.topbar__crumbs b { color: var(--foreground); font-weight: 500; }
+.bell {
+  margin-left: auto; width: 36px; height: 36px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border); background: transparent;
+  display: grid; place-items: center; color: var(--color-muted-foreground);
+}
+/* Vista documental: el layout del grupo (content) aporta ancho y gutters */
+.content { width: 100%; max-width: 1280px; margin: 0 auto; padding: 16px; }
+@media (min-width: 768px) { .content { padding: 24px; } }
+.stack { display: flex; flex-direction: column; gap: 24px; }
+.stack--tight { gap: 16px; }
+
+.pagehead { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+/* El `flex-basis` va SOLO dentro de .pagehead, que es un flex por filas. Suelto,
+   en la columna de .stack la base se aplicaba al ALTO y abría 320px de hueco
+   entre el título y el resto de la pantalla. */
+.pagehead > .pagehead__text { flex: 1 1 320px; }
+.pagehead__text { min-width: 0; }
+
+/* ==========================================================================
+   PRIMITIVOS
+   ========================================================================== */
+.card {
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--background); padding: 24px;
+}
+.card--pad-sm { padding: 16px; }
+.card--float { box-shadow: var(--shadow-float); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 36px; padding: 0 14px; border-radius: var(--radius-md);
+  border: 1px solid transparent; background: transparent; cursor: pointer;
+  font-size: 14px; font-weight: 500; white-space: nowrap;
+}
+.btn svg { width: 16px; height: 16px; }
+.btn--primary { background: var(--color-primary); color: var(--color-primary-foreground); }
+.btn--primary:hover { background: color-mix(in srgb, var(--color-primary) 88%, var(--foreground)); }
+.btn--secondary { background: var(--color-secondary); color: var(--foreground); }
+.btn--outline { border-color: var(--color-input); }
+.btn--outline:hover { background: var(--color-accent); }
+.btn--ghost { color: var(--color-muted-foreground); }
+.btn--ghost:hover { background: var(--color-accent); color: var(--foreground); }
+.btn--destructive { color: var(--axi-destructive); border-color: color-mix(in srgb, var(--axi-destructive) 40%, transparent); }
+.btn--destructive:hover { background: color-mix(in srgb, var(--axi-destructive) 10%, var(--background)); }
+.btn--lg { height: 44px; padding: 0 20px; font-size: 15px; }
+.btn--block { width: 100%; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 9px; border-radius: 9999px;
+  font-size: 12px; font-weight: 500; white-space: nowrap; flex: 0 0 auto;
+  background: var(--color-secondary); color: var(--color-muted-foreground);
+}
+.badge__dot { width: 6px; height: 6px; border-radius: 9999px; background: currentColor; }
+.badge--success { background: color-mix(in srgb, var(--axi-success) 14%, var(--background)); color: color-mix(in srgb, var(--axi-success) 78%, var(--foreground)); }
+.badge--warning { background: color-mix(in srgb, var(--axi-warning) 16%, var(--background)); color: color-mix(in srgb, var(--axi-warning) 78%, var(--foreground)); }
+.badge--danger  { background: color-mix(in srgb, var(--axi-destructive) 14%, var(--background)); color: color-mix(in srgb, var(--axi-destructive) 80%, var(--foreground)); }
+.badge--info    { background: color-mix(in srgb, var(--axi-info) 14%, var(--background)); color: color-mix(in srgb, var(--axi-info) 80%, var(--foreground)); }
+.badge--violet  { background: color-mix(in srgb, var(--axi-violet) 14%, var(--background)); color: color-mix(in srgb, var(--axi-violet) 82%, var(--foreground)); }
+
+.notice {
+  display: flex; gap: 12px; padding: 14px 16px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-muted);
+}
+.notice svg { width: 18px; height: 18px; flex: 0 0 18px; margin-top: 1px; }
+.notice__body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.notice--info    { border-color: color-mix(in srgb, var(--axi-info) 34%, transparent);        background: color-mix(in srgb, var(--axi-info) 8%, var(--background)); }
+.notice--info svg { color: var(--axi-info); }
+.notice--warning { border-color: color-mix(in srgb, var(--axi-warning) 40%, transparent);     background: color-mix(in srgb, var(--axi-warning) 9%, var(--background)); }
+.notice--warning svg { color: var(--axi-warning); }
+.notice--danger  { border-color: color-mix(in srgb, var(--axi-destructive) 38%, transparent); background: color-mix(in srgb, var(--axi-destructive) 8%, var(--background)); }
+.notice--danger svg { color: var(--axi-destructive); }
+.notice--success { border-color: color-mix(in srgb, var(--axi-success) 36%, transparent);     background: color-mix(in srgb, var(--axi-success) 9%, var(--background)); }
+.notice--success svg { color: var(--axi-success); }
+/* Sobre un fondo teñido el 70% del muted-foreground se queda corto para AA */
+.notice .caption { color: color-mix(in srgb, var(--foreground) 84%, transparent); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 13px; font-weight: 500; }
+.input {
+  height: 36px; padding: 0 12px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-input); background: var(--background); color: var(--foreground);
+  font: inherit; width: 100%;
+}
+.input:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 1px; }
+select.input { height: 36px; }
+
+.divider { height: 1px; background: var(--color-border); border: 0; margin: 0; }
+
+/* Logos de proveedor: el color oficial vive SOLO en el icono */
+.logo {
+  width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center;
+  border-radius: var(--radius-md);
+  /* La placa del logo se tiñe con el color de la app, muy bajo, y lleva una
+     línea de un pelo del mismo color: es lo que la separa de un cuadro gris */
+  background: color-mix(in srgb, var(--ch-glow, var(--foreground)) 10%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--ch-glow, var(--foreground)) 22%, transparent);
+}
+.logo svg { width: 24px; height: 24px; }
+.logo--whatsapp { --ch-glow: var(--logo-whatsapp); }
+.logo--instagram { --ch-glow: var(--logo-instagram); }
+.logo--messenger { --ch-glow: var(--logo-messenger); }
+.logo--whatsapp svg { color: var(--logo-whatsapp); }
+.logo--instagram svg { color: var(--logo-instagram); }
+.logo--messenger svg { color: var(--logo-messenger); }
+.logo--sm { width: 32px; height: 32px; flex-basis: 32px; }
+.logo--sm svg { width: 19px; height: 19px; }
+
+/* ==========================================================================
+   SUPERFICIE DE TARJETA DE CANAL — resplandor de la app + cometa en el borde
+
+   `--ch-glow` es el color oficial de la app de esa tarjeta. Lo declara la clase
+   `.brand-*` en la propia tarjeta, y de ahí lo heredan la placa del logo, el
+   borde en hover y las dos capas de abajo. Cambiar el color de un proveedor es
+   una línea.
+
+   Nota de sistema de diseño: `DESIGN-SYSTEM §7` dice que el color del proveedor
+   va SOLO en el icono. Esto se desvía a propósito, por petición explícita, y se
+   mantiene en el rango de tinte (10–26% en light, algo más en dark) para que
+   nunca compita con el coral de acción ni con los colores de estado.
+   ========================================================================== */
+@property --comet-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.brand-whatsapp  { --ch-glow: var(--logo-whatsapp); }
+.brand-instagram { --ch-glow: var(--logo-instagram); }
+.brand-messenger { --ch-glow: var(--logo-messenger); }
+/* Un canal caído deja de presumir de marca: el resplandor pasa a ser el del
+   estado, así que la tarjeta comunica el problema por forma y no solo por texto */
+.chcard--error   { --ch-glow: var(--axi-destructive); }
+
+.chcard, .provider {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.chcard:hover, .provider:hover { transform: translateY(-1px); }
+
+/* Capa 1 — el resplandor. Radial anclado arriba a la derecha, detrás del
+   contenido y por delante del fondo de la tarjeta (de ahí el z-index -1 dentro
+   de un contexto aislado). */
+.chcard::before, .provider::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Anclado a la esquina del logo, con el radio mayor que la tarjeta: el
+     degradado cae en diagonal y se comporta igual con tarjetas de cualquier
+     alto. Con un círculo de tamaño fijo el blob acababa en mitad del texto. */
+  background:
+    radial-gradient(
+      circle 96px at 34px 34px,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 34%, transparent) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      130% 120% at 0% 0%,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 20%, transparent) 0%,
+      color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 7%, transparent) 34%,
+      transparent 66%
+    );
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+/* Sobre negro el mismo tinte se ve la mitad: en dark sube */
+:root.dark .chcard::before, :root.dark .provider::before,
+#mockup-root.dark .chcard::before, #mockup-root.dark .provider::before { opacity: 0.95; }
+.chcard:hover::before, .provider:hover::before { opacity: 0.85; }
+:root.dark .chcard:hover::before, :root.dark .provider:hover::before,
+#mockup-root.dark .chcard:hover::before, #mockup-root.dark .provider:hover::before { opacity: 1; }
+
+/* Capa 2 — el cometa. Un cónico casi todo transparente con una cola corta y un
+   núcleo claro, recortado a la franja del borde con dos máscaras que se
+   excluyen. Gira animando `--comet-angle`, que existe como propiedad tipada
+   justo para poder interpolarse. */
+.chcard::after, .provider::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 232deg,
+    color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 55%, transparent) 300deg,
+    var(--ch-glow, var(--axi-brand)) 344deg,
+    color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 90%, var(--background)) 356deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.chcard:hover::after, .provider:hover::after, .provider--selected::after {
+  opacity: 1;
+  animation: comet 2.6s linear infinite;
+}
+/* El proveedor elegido lo mantiene encendido, más lento: es un estado, no un hover */
+.provider--selected::after { animation-duration: 5s; }
+@keyframes comet { to { --comet-angle: 360deg; } }
+
+/* Sin `@property` el ángulo no interpola: queda un arco fijo en el borde, que
+   sigue leyéndose como acento. La degradación es silenciosa a propósito. */
+@media (prefers-reduced-motion: reduce) {
+  .chcard::after, .provider::after { animation: none !important; }
+  .chcard:hover, .provider:hover { transform: none; }
+}
+
+/* El contenido va por encima de las dos capas */
+.chcard__top, .chcard__meta, .provider__body, .provider > .logo { position: relative; }
+
+/* ==========================================================================
+   LISTA DE CANALES
+   ========================================================================== */
+.grid-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.chcard {
+  display: flex; flex-direction: column; gap: 14px; text-align: left;
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--background); padding: 16px; cursor: pointer; width: 100%;
+}
+.chcard:hover { border-color: color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 45%, var(--color-border)); }
+.chcard__top { display: flex; align-items: flex-start; gap: 12px; }
+.chcard__title { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.chcard__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.metric { display: flex; flex-direction: column; }
+.metric__v { font-size: 13px; font-weight: 500; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 56px 24px; text-align: center;
+  border: 1px dashed var(--color-border); border-radius: var(--radius-lg);
+}
+.empty__icon {
+  width: 48px; height: 48px; border-radius: 9999px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--axi-brand) 10%, var(--background)); color: var(--axi-brand);
+}
+.empty__icon svg { width: 22px; height: 22px; }
+
+/* ==========================================================================
+   WIZARD
+   ========================================================================== */
+.stepper { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+.step { display: flex; align-items: center; gap: 8px; }
+.step__num {
+  width: 24px; height: 24px; border-radius: 9999px; display: grid; place-items: center;
+  font-size: 12px; font-weight: 600;
+  background: var(--color-secondary); color: var(--color-muted-foreground);
+}
+.step__label { font-size: 13px; color: var(--color-muted-foreground); }
+.step--done .step__num { background: color-mix(in srgb, var(--axi-success) 16%, var(--background)); color: color-mix(in srgb, var(--axi-success) 80%, var(--foreground)); }
+.step--current .step__num { background: var(--color-primary); color: var(--color-primary-foreground); }
+.step--current .step__label { color: var(--foreground); font-weight: 500; }
+.step__bar { width: 28px; height: 1px; background: var(--color-border); margin: 0 10px; }
+
+.provider {
+  display: flex; gap: 14px; align-items: flex-start; text-align: left;
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--background); padding: 16px; cursor: pointer; width: 100%;
+}
+.provider:hover { border-color: color-mix(in srgb, var(--ch-glow, var(--axi-brand)) 45%, var(--color-border)); }
+/* Sin anillo coral: competía con el cometa del borde. La selección se lee por el
+   cometa encendido, el resplandor más presente y una marca de verificación. */
+.provider--selected::before { opacity: 0.95; }
+:root.dark .provider--selected::before,
+#mockup-root.dark .provider--selected::before { opacity: 1; }
+.provider__check {
+  position: absolute; top: 12px; right: 12px;
+  width: 22px; height: 22px; border-radius: 9999px;
+  display: grid; place-items: center;
+  background: var(--ch-glow, var(--axi-brand));
+  color: var(--background);
+}
+.provider__check svg { width: 14px; height: 14px; }
+.provider--soon { opacity: 0.72; }
+.provider__body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.provider__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-right: 26px; }
+
+.checkrow { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; }
+.checkrow + .checkrow { border-top: 1px solid var(--color-border-soft); }
+.checkrow input[type="checkbox"] { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--color-primary); flex: 0 0 18px; }
+.checkrow__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.checkrow__body label { font-weight: 500; cursor: pointer; }
+
+.substeps { display: flex; flex-direction: column; gap: 2px; }
+.substep { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; color: var(--color-muted-foreground); }
+.substep__mark { width: 18px; height: 18px; flex: 0 0 18px; display: grid; place-items: center; }
+.substep__mark svg { width: 16px; height: 16px; }
+.substep--done { color: var(--foreground); }
+.substep--done .substep__mark { color: var(--axi-success); }
+.substep--active { color: var(--foreground); font-weight: 500; }
+.substep--active .substep__mark { color: var(--color-primary); }
+
+.spinner { width: 16px; height: 16px; border-radius: 9999px; border: 2px solid color-mix(in srgb, currentColor 25%, transparent); border-top-color: currentColor; animation: spin 0.7s linear infinite; }
+.spinner--lg { width: 20px; height: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+.pin { display: flex; gap: 8px; }
+.pin input {
+  width: 44px; height: 52px; text-align: center; font-size: 20px; font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  border: 1px solid var(--color-input); border-radius: var(--radius-md);
+  background: var(--background); color: var(--foreground);
+}
+.pin--error input { border-color: var(--axi-destructive); }
+
+/* ==========================================================================
+   DETALLE DEL CANAL
+   ========================================================================== */
+.kv { display: grid; gap: 20px 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.kv__k { font-size: 12px; color: var(--color-muted-foreground); }
+.kv__v { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.rowactions { display: flex; gap: 8px; flex-wrap: wrap; }
+.accordion { border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.accordion > summary {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 14px 16px; font-weight: 500; list-style: none;
+}
+.accordion > summary::-webkit-details-marker { display: none; }
+.accordion > summary svg { width: 16px; height: 16px; color: var(--color-muted-foreground); }
+.accordion[open] > summary { border-bottom: 1px solid var(--color-border); }
+.accordion[open] > summary svg { transform: rotate(90deg); }
+.accordion__body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.form-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+
+[hidden] { display: none !important; }
+.screen { display: none; }
+.screen--on { display: block; }
+</style>
+</head>
+<body>
+<div id="mockup-root">
+
+  <!-- ====================================================================
+       BANCO DE PRUEBAS — no forma parte del producto
+       ==================================================================== -->
+  <div class="harness">
+    <span class="harness__tag">MOCKUP F0</span>
+    <label for="screenSel">pantalla:</label>
+    <select id="screenSel">
+      <option value="list-empty">1 · Canales (vacío)</option>
+      <option value="list-full">2 · Canales (con canales)</option>
+      <option value="w1">3 · Conectar · paso 1 proveedor</option>
+      <option value="w2">4 · Conectar · paso 2 requisitos</option>
+      <option value="w3">5 · Conectar · paso 3 el botón</option>
+      <option value="wpin">6 · Conectar · PIN del número</option>
+      <option value="w4">7 · Conectar · listo</option>
+      <option value="detail">8 · Detalle del canal</option>
+    </select>
+    <span class="harness__spacer"></span>
+    <button id="themeBtn" type="button" aria-label="Cambiar entre tema claro y oscuro">tema: <span id="themeName">claro</span></button>
+  </div>
+
+  <div class="app">
+    <!-- ==================================================================
+         SIDEBAR (aproximación; jerarquía real en DESIGN-SYSTEM §9.2)
+         ================================================================== -->
+    <aside class="sidebar">
+      <div class="sidebar__brand"><span class="sidebar__brand-mark"></span> Axi Connect</div>
+      <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg> Inicio</div>
+      <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Conversaciones</div>
+      <div class="navitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-8 0v2M12 3a4 4 0 100 8 4 4 0 000-8z"/></svg> CRM</div>
+      <div class="navitem navitem--ancestor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.9 1.17V21a2 2 0 01-4 0v-.09A1.65 1.65 0 007 19.4a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a2 2 0 010-4h.09A1.65 1.65 0 006 8.6a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 0012 4.6V4a2 2 0 014 0v.09A1.65 1.65 0 0019.4 6a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0021 12"/></svg> Configuración</div>
+      <div class="navitem navitem--child">Empresa</div>
+      <div class="navitem navitem--child navitem--active">Canales</div>
+      <div class="navitem navitem--child">Usuarios</div>
+      <div class="navitem navitem--child">Roles</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar__crumbs">Configuración / <b id="crumb">Canales</b></div>
+        <button class="bell" type="button" aria-label="Notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>
+        </button>
+      </header>
+
+      <div class="content">
+
+        <!-- ==============================================================
+             PANTALLA 1 — /settings/channels vacío
+             ============================================================== -->
+        <section class="screen" data-screen="list-empty">
+          <div class="stack">
+            <div class="pagehead">
+              <div class="pagehead__text">
+                <h1 class="h1">Canales</h1>
+                <p class="muted">Conecta WhatsApp, Instagram o Messenger para atender a tus clientes desde Axi.</p>
+              </div>
+            </div>
+
+            <div class="empty">
+              <div class="empty__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 01-12 0zM12 18v4"/></svg>
+              </div>
+              <h2 class="h2">Todavía no tienes canales conectados</h2>
+              <p class="muted" style="max-width:44ch">
+                Conectar tu número de WhatsApp toma un par de minutos y no necesitas conocimientos
+                técnicos. Te acompañamos paso a paso.
+              </p>
+              <button class="btn btn--primary btn--lg" type="button" data-go="w1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Conectar un canal
+              </button>
+              <p class="caption">También puedes conectar WhatsApp escaneando un código QR.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 2 — /settings/channels poblado
+             ============================================================== -->
+        <section class="screen" data-screen="list-full">
+          <div class="stack">
+            <div class="pagehead">
+              <div class="pagehead__text">
+                <h1 class="h1">Canales</h1>
+                <p class="muted">Tienes 3 canales. Uno necesita tu atención.</p>
+              </div>
+              <button class="btn btn--primary" type="button" data-go="w1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Conectar canal
+              </button>
+            </div>
+
+            <!-- El canal en error va primero: es el que pide acción -->
+            <div class="notice notice--danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"/></svg>
+              <div class="notice__body">
+                <p class="strong">Cobranza dejó de enviar mensajes</p>
+                <p class="muted">Meta retiró el acceso de este canal, probablemente porque alguien lo revocó desde el Administrador comercial. Los mensajes que te escriben siguen llegando; no puedes responder hasta reconectarlo.</p>
+                <div class="rowactions">
+                  <button class="btn btn--outline" type="button" data-go="w3" style="background:var(--background)">Renovar conexión</button>
+                  <button class="btn btn--ghost" type="button" data-go="detail">Ver detalles</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-cards">
+              <!-- Canal 1: conectado -->
+              <button class="chcard brand-whatsapp" type="button" data-go="detail">
+                <div class="chcard__top">
+                  <span class="logo logo--whatsapp">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
+                  </span>
+                  <span class="chcard__title">
+                    <span class="strong">Ventas</span>
+                    <span class="caption">WhatsApp · +57 300 123 4567</span>
+                  </span>
+                  <span class="badge badge--success"><span class="badge__dot"></span>Conectado</span>
+                </div>
+                <div class="chcard__meta">
+                  <span class="metric"><span class="kv__k">Calidad del número</span><span class="metric__v">Alta</span></span>
+                  <span class="metric"><span class="kv__k">Puede iniciar</span><span class="metric__v nums">1.000 al día</span></span>
+                </div>
+              </button>
+
+              <!-- Canal 2: WhatsApp Web (QR) -->
+              <button class="chcard brand-whatsapp" type="button" data-go="detail">
+                <div class="chcard__top">
+                  <span class="logo logo--whatsapp">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
+                  </span>
+                  <span class="chcard__title">
+                    <span class="strong">Soporte</span>
+                    <span class="caption">WhatsApp con QR · +57 301 987 6543</span>
+                  </span>
+                  <span class="badge badge--success"><span class="badge__dot"></span>Conectado</span>
+                </div>
+                <div class="chcard__meta">
+                  <span class="metric"><span class="kv__k">Sesión</span><span class="metric__v">Vinculada al celular</span></span>
+                </div>
+              </button>
+
+              <!-- Canal 3: error -->
+              <button class="chcard chcard--error" type="button" data-go="detail">
+                <div class="chcard__top">
+                  <span class="logo logo--whatsapp">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
+                  </span>
+                  <span class="chcard__title">
+                    <span class="strong">Cobranza</span>
+                    <span class="caption">WhatsApp · +57 302 555 1212</span>
+                  </span>
+                  <span class="badge badge--danger"><span class="badge__dot"></span>Sin conexión</span>
+                </div>
+                <div class="chcard__meta">
+                  <span class="metric"><span class="kv__k">Calidad del número</span><span class="metric__v">Media</span></span>
+                  <span class="metric"><span class="kv__k">Última comprobación</span><span class="metric__v">hace 6 min</span></span>
+                </div>
+              </button>
+            </div>
+
+            <p class="caption">
+              Instagram y Messenger están disponibles para conectar. Escríbenos si necesitas
+              varios números en un mismo canal.
+            </p>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 3 — wizard paso 1
+             ============================================================== -->
+        <section class="screen" data-screen="w1">
+          <div class="stack">
+            <button class="btn btn--ghost" type="button" data-go="list-full" style="align-self:flex-start;padding-left:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Canales
+            </button>
+
+            <div class="pagehead__text">
+              <h1 class="h1">Conectar un canal</h1>
+              <p class="muted">Elige por dónde quieres atender a tus clientes.</p>
+            </div>
+
+            <div class="stepper">
+              <div class="step step--current"><span class="step__num">1</span><span class="step__label">Canal</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">2</span><span class="step__label">Requisitos</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">3</span><span class="step__label">Conexión</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">4</span><span class="step__label">Listo</span></div>
+            </div>
+
+            <div class="grid-cards">
+              <button class="provider provider--selected brand-whatsapp" type="button" aria-pressed="true">
+                <span class="provider__check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <span class="logo logo--whatsapp">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
+                </span>
+                <span class="provider__body">
+                  <span class="provider__head">
+                    <span class="strong">WhatsApp</span>
+                    <span class="badge badge--violet">Recomendado</span>
+                  </span>
+                  <span class="muted">El canal oficial de negocio. Tu número queda en la nube de Meta, sin depender de un celular encendido.</span>
+                  <span class="caption">Se conecta con un botón · unos 2 minutos</span>
+                </span>
+              </button>
+
+              <button class="provider brand-whatsapp" type="button">
+                <span class="logo logo--whatsapp">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></svg>
+                </span>
+                <span class="provider__body">
+                  <span class="provider__head"><span class="strong">WhatsApp con código QR</span></span>
+                  <span class="muted">Vinculas tu WhatsApp actual escaneando un código, como en WhatsApp Web. Útil para empezar rápido.</span>
+                  <span class="caption">Necesita un celular encendido y con internet</span>
+                </span>
+              </button>
+
+              <button class="provider provider--soon brand-instagram" type="button">
+                <span class="logo logo--instagram">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+                </span>
+                <span class="provider__body">
+                  <span class="provider__head">
+                    <span class="strong">Instagram</span>
+                    <span class="badge">Muy pronto</span>
+                  </span>
+                  <span class="muted">Mensajes directos de tu cuenta profesional de Instagram.</span>
+                  <span class="caption">Se conecta con el mismo botón</span>
+                </span>
+              </button>
+
+              <button class="provider provider--soon brand-messenger" type="button">
+                <span class="logo logo--messenger">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6.1 2 11.2c0 2.9 1.4 5.4 3.7 7.1V22l3.4-1.9c.9.2 1.9.4 2.9.4 5.5 0 10-4.1 10-9.3S17.5 2 12 2z"/><path d="M7 13.4l3-3.2 2.2 2.1 2.6-2.7-2.4 4.4-2.2-2.1z" fill="currentColor" stroke="none"/></svg>
+                </span>
+                <span class="provider__body">
+                  <span class="provider__head">
+                    <span class="strong">Messenger</span>
+                    <span class="badge">Muy pronto</span>
+                  </span>
+                  <span class="muted">Mensajes de la página de Facebook de tu negocio.</span>
+                  <span class="caption">Se conecta con el mismo botón</span>
+                </span>
+              </button>
+            </div>
+
+            <div class="rowactions">
+              <button class="btn btn--primary" type="button" data-go="w2">Continuar</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 4 — wizard paso 2 (requisitos)
+             ============================================================== -->
+        <section class="screen" data-screen="w2">
+          <div class="stack">
+            <button class="btn btn--ghost" type="button" data-go="w1" style="align-self:flex-start;padding-left:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Elegir otro canal
+            </button>
+
+            <div class="pagehead__text">
+              <h1 class="h1">Antes de empezar</h1>
+              <p class="muted">Revisa estos puntos. Si algo falta, es mejor saberlo ahora que a mitad del proceso.</p>
+            </div>
+
+            <div class="stepper">
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Canal</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--current"><span class="step__num">2</span><span class="step__label">Requisitos</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">3</span><span class="step__label">Conexión</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">4</span><span class="step__label">Listo</span></div>
+            </div>
+
+            <div class="card">
+              <div class="checkrow">
+                <input type="checkbox" id="req1" class="req" />
+                <span class="checkrow__body">
+                  <label for="req1">Puedo entrar a la cuenta de Facebook que administra mi negocio</label>
+                  <span class="muted">Es la cuenta con la que autorizarás la conexión. Si la maneja otra persona, pídele que haga este paso contigo.</span>
+                </span>
+              </div>
+
+              <div class="checkrow">
+                <input type="checkbox" id="req2" class="req" />
+                <span class="checkrow__body">
+                  <label for="req2">Tengo el número a mano y puedo recibir un SMS o una llamada</label>
+                  <span class="muted">Meta te enviará un código para confirmar que el número es tuyo.</span>
+                </span>
+              </div>
+
+              <div class="checkrow">
+                <input type="checkbox" id="req3" class="req" />
+                <span class="checkrow__body">
+                  <label for="req3">Ese número <b>no</b> está usándose en WhatsApp ni en WhatsApp Business</label>
+                  <div class="notice notice--warning" style="margin-top:6px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"/></svg>
+                    <div class="notice__body">
+                      <p>Al conectarlo, ese número <b>deja de funcionar en el celular</b>. Sus chats
+                      pasan a atenderse desde Axi y no se pueden recuperar en la app de WhatsApp.</p>
+                      <p class="caption">Es el punto donde más altas se caen. Si el número lo usa alguien a diario, considera conectar uno nuevo.</p>
+                    </div>
+                  </div>
+                </span>
+              </div>
+
+              <div class="checkrow">
+                <input type="checkbox" id="req4" class="req" />
+                <span class="checkrow__body">
+                  <label for="req4">Entiendo que Meta cobra los mensajes directamente a mi negocio</label>
+                  <span class="muted">Axi no revende mensajes: tú pones tu método de pago en Meta y ellos te facturan lo que uses. Puedes conectar ahora y añadirlo después.</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="rowactions">
+              <button class="btn btn--primary" id="reqNext" type="button" data-go="w3" aria-disabled="true">Continuar</button>
+              <button class="btn btn--ghost" type="button" id="reqHelpBtn" aria-expanded="false" aria-controls="reqHelp">Algo de esto no lo cumplo</button>
+            </div>
+
+            <div class="notice notice--info" id="reqHelp" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <div class="notice__body">
+                <p class="strong">No pasa nada, hay salida para cada caso</p>
+                <p class="muted"><b>El número ya está en WhatsApp:</b> puedes borrar esa cuenta desde la app del celular y volver aquí, o usar un número distinto.</p>
+                <p class="muted"><b>No administras la cuenta de Facebook del negocio:</b> pide que te den acceso como administrador, o que la persona que la maneja haga la conexión.</p>
+                <p class="muted"><b>Quieres probar sin comprometer tu número principal:</b> conecta primero con código QR y cámbiate al canal oficial más adelante.</p>
+                <div class="rowactions">
+                  <button class="btn btn--outline" type="button" data-go="w1">Conectar con código QR</button>
+                  <button class="btn btn--ghost" type="button">Hablar con soporte</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 5 — wizard paso 3 (el botón y sus nueve estados)
+             ============================================================== -->
+        <section class="screen" data-screen="w3">
+          <div class="stack">
+            <button class="btn btn--ghost" type="button" data-go="w2" style="align-self:flex-start;padding-left:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Requisitos
+            </button>
+
+            <div class="pagehead__text">
+              <h1 class="h1">Conecta tu WhatsApp</h1>
+              <p class="muted">Se abrirá una ventana de Meta. Autoriza ahí y nosotros hacemos el resto.</p>
+            </div>
+
+            <div class="stepper">
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Canal</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Requisitos</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--current"><span class="step__num">3</span><span class="step__label">Conexión</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">4</span><span class="step__label">Listo</span></div>
+            </div>
+
+            <!-- simulador de estados: banco de pruebas, no producto -->
+            <div class="harness" style="position:static;border-radius:var(--radius-md);border-style:dashed">
+              <span class="harness__tag">SIMULAR</span>
+              <label for="stateSel">estado:</label>
+              <select id="stateSel">
+                <option value="preparing">preparing — cargando el conector</option>
+                <option value="ready" selected>ready — listo para pulsar</option>
+                <option value="unavailable">unavailable — el conector no cargó</option>
+                <option value="popup_open">popup_open — autorizando en Meta</option>
+                <option value="popup_blocked">popup_blocked — el navegador bloqueó la ventana</option>
+                <option value="exchanging">exchanging — verificando y activando</option>
+                <option value="awaiting_pin">awaiting_pin — falta el PIN del número</option>
+                <option value="cancelled">cancelled — cerró la ventana</option>
+                <option value="error">error — falló con un código del backend</option>
+              </select>
+              <span id="errPickWrap" hidden>
+                <label for="errSel">código:</label>
+                <select id="errSel">
+                  <option value="meta_code_expired">channels/meta_code_expired</option>
+                  <option value="meta_missing_scopes">channels/meta_missing_scopes</option>
+                  <option value="meta_account_mismatch">channels/meta_account_mismatch</option>
+                  <option value="onboarding_in_progress">channels/onboarding_in_progress</option>
+                  <option value="meta_payment_method_required">channels/meta_payment_method_required</option>
+                  <option value="provider_account_taken">channels/provider_account_taken</option>
+                  <option value="meta_signup_disabled">channels/meta_signup_disabled</option>
+                </select>
+              </span>
+            </div>
+
+            <div class="card" style="display:flex;flex-direction:column;gap:20px">
+              <!-- El botón: un único estado visible a la vez -->
+              <div id="btnZone"></div>
+              <div id="stateZone"></div>
+            </div>
+
+            <details class="accordion">
+              <summary>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                Opciones avanzadas
+              </summary>
+              <div class="accordion__body">
+                <p class="muted">Si ya tienes credenciales de Meta y prefieres pegarlas a mano, puedes hacerlo aquí. No es el camino recomendado.</p>
+                <div class="form-grid">
+                  <div class="field"><span class="label">Nombre del canal</span><input class="input" placeholder="Ventas" /></div>
+                  <div class="field"><span class="label">Phone Number ID</span><input class="input mono" placeholder="123456789012345" /></div>
+                  <div class="field"><span class="label">WhatsApp Business Account ID</span><input class="input mono" placeholder="098765432109876" /></div>
+                  <div class="field"><span class="label">Token de acceso permanente</span><input class="input mono" type="password" placeholder="••••••••••••" /></div>
+                </div>
+                <div class="rowactions"><button class="btn btn--outline" type="button">Guardar credenciales</button></div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 6 — PIN del número
+             ============================================================== -->
+        <section class="screen" data-screen="wpin">
+          <div class="stack">
+            <div class="pagehead__text">
+              <h1 class="h1">Confirma el PIN del número</h1>
+              <p class="muted">Este número ya estaba dado de alta en Meta, así que necesitamos el PIN de seis dígitos que definiste entonces.</p>
+            </div>
+
+            <div class="stepper">
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Canal</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Requisitos</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--current"><span class="step__num">3</span><span class="step__label">Conexión</span></div>
+              <span class="step__bar"></span>
+              <div class="step"><span class="step__num">4</span><span class="step__label">Listo</span></div>
+            </div>
+
+            <div class="card" style="display:flex;flex-direction:column;gap:20px;max-width:560px">
+              <div class="notice notice--success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                <div class="notice__body"><p>Ya autorizaste en Meta y verificamos que el número <b>+57 300 123 4567</b> es tuyo. Falta este último paso.</p></div>
+              </div>
+
+              <div class="field">
+                <span class="label" id="pinLbl">PIN de seis dígitos</span>
+                <div class="pin" id="pinBox" role="group" aria-labelledby="pinLbl">
+                  <input inputmode="numeric" maxlength="1" aria-label="Dígito 1" />
+                  <input inputmode="numeric" maxlength="1" aria-label="Dígito 2" />
+                  <input inputmode="numeric" maxlength="1" aria-label="Dígito 3" />
+                  <input inputmode="numeric" maxlength="1" aria-label="Dígito 4" />
+                  <input inputmode="numeric" maxlength="1" aria-label="Dígito 5" />
+                  <input inputmode="numeric" maxlength="1" aria-label="Dígito 6" />
+                </div>
+                <span class="caption">Lo eligió quien dio de alta el número en Meta. Nosotros no lo tenemos ni lo guardamos.</span>
+              </div>
+
+              <div class="notice notice--danger" id="pinErr" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                <div class="notice__body">
+                  <p class="strong">El PIN no coincide</p>
+                  <p class="muted">Tiene que ser el mismo que registraste en Meta para este número. Si no lo recuerdas, puedes cambiarlo desde el Administrador de WhatsApp y volver aquí.</p>
+                  <p class="caption">Código de referencia: <span class="mono">channels/meta_pin_invalid</span></p>
+                </div>
+              </div>
+
+              <div class="rowactions">
+                <button class="btn btn--primary" type="button" data-go="w4">Confirmar y activar</button>
+                <button class="btn btn--ghost" type="button" data-go="list-full">Terminar más tarde</button>
+                <button class="btn btn--ghost" type="button" id="pinErrBtn">Simular PIN incorrecto</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 7 — éxito
+             ============================================================== -->
+        <section class="screen" data-screen="w4">
+          <div class="stack">
+            <div class="stepper">
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Canal</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Requisitos</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--done"><span class="step__num">✓</span><span class="step__label">Conexión</span></div>
+              <span class="step__bar"></span>
+              <div class="step step--current"><span class="step__num">4</span><span class="step__label">Listo</span></div>
+            </div>
+
+            <div class="card" style="display:flex;flex-direction:column;gap:20px">
+              <div style="display:flex;gap:14px;align-items:flex-start">
+                <span class="logo logo--whatsapp">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
+                </span>
+                <div style="min-width:0">
+                  <h2 class="h2">Tu WhatsApp ya está conectado</h2>
+                  <p class="muted">Desde ahora los mensajes que lleguen a <b>+57 300 123 4567</b> aparecen en Conversaciones.</p>
+                </div>
+                <span class="badge badge--success" style="margin-left:auto"><span class="badge__dot"></span>Conectado</span>
+              </div>
+
+              <hr class="divider" />
+
+              <div class="form-grid">
+                <div class="field">
+                  <label class="label" for="okName">Nombre del canal</label>
+                  <input class="input" id="okName" value="Ventas" />
+                  <span class="caption">Solo lo ven tus agentes, para distinguirlo de otros números.</span>
+                </div>
+                <div class="field">
+                  <label class="label" for="okAgent">Agente de IA que responde</label>
+                  <select class="input" id="okAgent">
+                    <option>Asesora de ventas</option>
+                    <option>Soporte técnico</option>
+                    <option>Sin agente — responden solo personas</option>
+                  </select>
+                  <span class="caption">Puedes cambiarlo cuando quieras.</span>
+                </div>
+              </div>
+
+              <div class="notice notice--info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <div class="notice__body">
+                  <p class="strong">Falta un paso que solo puedes hacer tú</p>
+                  <p class="muted">Añade un método de pago en el Administrador de WhatsApp de Meta. Sin él puedes recibir y responder mensajes, pero no iniciar conversaciones nuevas.</p>
+                </div>
+              </div>
+
+              <div class="rowactions">
+                <button class="btn btn--primary" type="button">Enviar un mensaje de prueba</button>
+                <button class="btn btn--outline" type="button" data-go="list-full">Ir a mis canales</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==============================================================
+             PANTALLA 8 — detalle del canal
+             ============================================================== -->
+        <section class="screen" data-screen="detail">
+          <div class="stack">
+            <button class="btn btn--ghost" type="button" data-go="list-full" style="align-self:flex-start;padding-left:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Canales
+            </button>
+
+            <!-- simulador: el mismo detalle en sano y en degradado -->
+            <div class="harness" style="position:static;border-radius:var(--radius-md);border-style:dashed">
+              <span class="harness__tag">SIMULAR</span>
+              <label for="healthSel">canal:</label>
+              <select id="healthSel">
+                <option value="ok" selected>sano — conectado y con acceso vigente</option>
+                <option value="bad">con problema — Meta retiró el acceso</option>
+              </select>
+            </div>
+
+            <div class="pagehead">
+              <span class="logo logo--whatsapp">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 2a8 8 0 110 16 8 8 0 01-4.2-1.2l-.4-.2-2.5.6.6-2.4-.2-.4A8 8 0 0112 4zm-3.3 4.2c-.2 0-.5.1-.7.3-.3.3-.8.9-.8 1.8 0 1 .7 2 1 2.4.4.4 1.6 2.3 3.9 3.1 1.9.7 2.3.6 2.7.5.5 0 1.4-.5 1.6-1.1.2-.6.2-1 .1-1.1l-1.5-.7c-.2-.1-.4 0-.5.2l-.6.7c-.1.2-.3.2-.5.1a6.4 6.4 0 01-1.9-1.2 7 7 0 01-1.3-1.7c-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.6-1.5c-.2-.4-.3-.3-.5-.3z"/></svg>
+              </span>
+              <div class="pagehead__text">
+                <h1 class="h1">Ventas</h1>
+                <p class="muted">WhatsApp · +57 300 123 4567 · Axi Demo</p>
+              </div>
+              <span class="badge badge--success" id="detailBadge"><span class="badge__dot"></span>Conectado</span>
+            </div>
+
+            <div class="notice notice--danger" id="detailAlert" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"/></svg>
+              <div class="notice__body">
+                <p class="strong">Meta retiró el acceso de este canal</p>
+                <p class="muted">Suele pasar cuando alguien revoca el permiso desde el Administrador comercial de Meta, o cuando se elimina la integración. Los mensajes entrantes siguen llegando; para responder hay que reconectar.</p>
+                <p class="caption">Detectado hace 6 minutos por la comprobación automática.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="stack stack--tight">
+                <h2 class="h3">Estado del canal</h2>
+                <div class="kv">
+                  <div>
+                    <div class="kv__k">Conexión</div>
+                    <div class="kv__v" id="hConn"><span class="badge badge--success"><span class="badge__dot"></span>Conectado</span></div>
+                  </div>
+                  <div>
+                    <div class="kv__k">Calidad del número</div>
+                    <div class="kv__v" id="hQual">Alta</div>
+                    <div class="caption">La califica Meta según cómo reaccionan quienes reciben tus mensajes.</div>
+                  </div>
+                  <div>
+                    <div class="kv__k">Conversaciones que puedes iniciar</div>
+                    <div class="kv__v nums">1.000 personas nuevas al día</div>
+                    <div class="caption">Sube solo si mantienes buena calidad.</div>
+                  </div>
+                  <div>
+                    <div class="kv__k">Acceso de Meta</div>
+                    <div class="kv__v" id="hToken">Vigente</div>
+                    <div class="caption" id="hTokenSub">Lo renovamos solos antes de que caduque.</div>
+                  </div>
+                  <div>
+                    <div class="kv__k">Última comprobación</div>
+                    <div class="kv__v">hace 12 minutos</div>
+                  </div>
+                  <div>
+                    <div class="kv__k">Forma de conexión</div>
+                    <div class="kv__v">Con un botón</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="notice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>
+              <div class="notice__body">
+                <p class="strong">La ventana de 24 horas</p>
+                <p class="muted">Cuando alguien te escribe, puedes responderle libremente durante 24 horas. Pasado ese tiempo, para retomar la conversación hay que usar una plantilla aprobada por Meta, y esos mensajes sí tienen costo.</p>
+                <p class="caption">Se cuenta por conversación, no por canal: cada cliente tiene su propia ventana.</p>
+              </div>
+            </div>
+
+            <div class="card card--pad-sm">
+              <div class="stack stack--tight">
+                <div>
+                  <h2 class="h3">Agente que responde</h2>
+                  <p class="caption">Quien atiende primero los mensajes de este canal.</p>
+                </div>
+                <div class="form-grid">
+                  <div class="field">
+                    <label class="label" for="dAgent">Agente de IA</label>
+                    <select class="input" id="dAgent">
+                      <option>Asesora de ventas</option>
+                      <option>Soporte técnico</option>
+                      <option>Sin agente — responden solo personas</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="dName">Nombre del canal</label>
+                    <input class="input" id="dName" value="Ventas" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <details class="accordion">
+              <summary>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                Opciones avanzadas
+              </summary>
+              <div class="accordion__body">
+                <p class="muted">Reemplazar las credenciales a mano. Solo si soporte te lo pide.</p>
+                <div class="form-grid">
+                  <div class="field"><span class="label">Phone Number ID</span><input class="input mono" value="555000111222" readonly /></div>
+                  <div class="field"><span class="label">WhatsApp Business Account ID</span><input class="input mono" value="waba-1" readonly /></div>
+                  <div class="field"><span class="label">Token actual</span><input class="input mono" value="•••• •••• 1234" readonly /></div>
+                  <div class="field"><span class="label">Token nuevo</span><input class="input mono" type="password" placeholder="••••••••••••" /></div>
+                </div>
+                <div class="rowactions"><button class="btn btn--outline" type="button">Reemplazar token</button></div>
+              </div>
+            </details>
+
+            <div class="card card--pad-sm">
+              <div class="stack stack--tight">
+                <div>
+                  <h2 class="h3">Acciones</h2>
+                  <p class="caption">Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración.</p>
+                </div>
+                <div class="rowactions">
+                  <button class="btn btn--primary" type="button" data-go="w3">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 22v-6h6"/><path d="M3.5 9a9 9 0 0114.6-3.4L21 8M20.5 15a9 9 0 01-14.6 3.4L3 16"/></svg>
+                    Renovar conexión
+                  </button>
+                  <button class="btn btn--destructive" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+                    Eliminar canal
+                  </button>
+                </div>
+                <p class="caption">Al eliminarlo, este número deja de recibir mensajes en Axi y las conversaciones quedan archivadas.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var root = document.getElementById("mockup-root");
+
+  /* ---------------------------------------------------------------- tema */
+  function applyTheme(dark) {
+    root.classList.toggle("dark", dark);
+    document.documentElement.classList.toggle("dark", dark);
+    document.getElementById("themeName").textContent = dark ? "oscuro" : "claro";
+  }
+  // Arranca en el tema del visor: `data-theme` si lo hay, si no la preferencia del SO
+  var hostTheme = document.documentElement.getAttribute("data-theme");
+  applyTheme(
+    hostTheme === "dark" ||
+      (hostTheme !== "light" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    applyTheme(!root.classList.contains("dark"));
+  });
+
+  /* ------------------------------------------------------------ pantallas */
+  var CRUMB = {
+    "list-empty": "Canales",
+    "list-full": "Canales",
+    w1: "Conectar canal",
+    w2: "Conectar canal",
+    w3: "Conectar canal",
+    wpin: "Conectar canal",
+    w4: "Conectar canal",
+    detail: "Ventas"
+  };
+  var sel = document.getElementById("screenSel");
+
+  function show(name) {
+    var found = false;
+    var all = document.querySelectorAll("[data-screen]");
+    for (var i = 0; i < all.length; i++) {
+      var on = all[i].getAttribute("data-screen") === name;
+      all[i].classList.toggle("screen--on", on);
+      if (on) found = true;
+    }
+    if (!found) return;
+    sel.value = name;
+    document.getElementById("crumb").textContent = CRUMB[name] || "Canales";
+    window.scrollTo({ top: 0 });
+  }
+  sel.addEventListener("change", function () { show(sel.value); });
+  // Atajo para la revisión: `…channels-connect.html#w3` abre esa pantalla.
+  // No sustituye a la navegación por clic, que es el criterio de cierre de F0.
+  window.addEventListener("hashchange", function () {
+    show(location.hash.replace("#", ""));
+  });
+  document.addEventListener("click", function (ev) {
+    var t = ev.target.closest ? ev.target.closest("[data-go]") : null;
+    if (t) { ev.preventDefault(); show(t.getAttribute("data-go")); }
+  });
+
+  /* ------------------------------------------- paso 2: requisitos y ayuda */
+  var reqs = document.querySelectorAll(".req");
+  var reqNext = document.getElementById("reqNext");
+  function syncReqs() {
+    var all = true;
+    for (var i = 0; i < reqs.length; i++) if (!reqs[i].checked) all = false;
+    reqNext.setAttribute("aria-disabled", all ? "false" : "true");
+  }
+  for (var i = 0; i < reqs.length; i++) reqs[i].addEventListener("change", syncReqs);
+  reqNext.addEventListener("click", function (ev) {
+    if (reqNext.getAttribute("aria-disabled") === "true") {
+      ev.stopImmediatePropagation();
+      ev.preventDefault();
+    }
+  }, true);
+  var helpBtn = document.getElementById("reqHelpBtn");
+  helpBtn.addEventListener("click", function () {
+    var box = document.getElementById("reqHelp");
+    var open = box.hasAttribute("hidden");
+    if (open) box.removeAttribute("hidden"); else box.setAttribute("hidden", "");
+    helpBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
+  /* ------------------------------- paso 3: los nueve estados del botón */
+  // Copy de los errores: cada entrada corresponde a un `code` REAL de
+  // axi-server/src/core/shared/errors/error_code.ts. En F3 esto vive en
+  // MESSAGES_BY_CODE (src/core/lib/error-messages.ts), no en un diccionario nuevo.
+  var ERRORS = {
+    meta_code_expired: {
+      title: "La autorización caducó",
+      body: "Es normal si la ventana estuvo abierta un rato. Vuelve a intentarlo: la segunda vez tarda menos de un minuto.",
+      cta: "Volver a intentar"
+    },
+    meta_missing_scopes: {
+      title: "Faltan permisos",
+      body: "No nos diste todos los accesos que Meta pide para gestionar tus mensajes. Al reintentar, acepta todas las casillas que te muestre.",
+      cta: "Volver a intentar"
+    },
+    meta_account_mismatch: {
+      title: "El número no pertenece a ese negocio",
+      body: "Autorizaste con una cuenta que no administra este número. Revisa que estés usando la cuenta de Facebook correcta de tu negocio.",
+      cta: "Volver a intentar"
+    },
+    onboarding_in_progress: {
+      title: "Ya hay una conexión en curso",
+      body: "Este número se está conectando ahora mismo, quizá en otra pestaña. Espera a que termine antes de intentarlo de nuevo.",
+      cta: "Actualizar"
+    },
+    meta_payment_method_required: {
+      title: "Meta pide un método de pago",
+      body: "Añádelo en el Administrador de WhatsApp de Meta y vuelve aquí. Es Meta quien te factura los mensajes; Axi no los revende.",
+      cta: "Ya lo agregué, reintentar"
+    },
+    provider_account_taken: {
+      title: "Ese número ya está conectado",
+      body: "Está en uso en otra cuenta de Axi. Si el número es tuyo, escríbenos y lo liberamos para que puedas conectarlo aquí.",
+      cta: "Hablar con soporte"
+    },
+    meta_signup_disabled: {
+      title: "La conexión con Meta no está disponible",
+      body: "Es un problema de nuestro lado, no tuyo. Inténtalo en unos minutos o usa el camino manual de Opciones avanzadas.",
+      cta: "Volver a intentar"
+    }
+  };
+
+  var ICON = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+    dot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>',
+    meta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>'
+  };
+
+  function substeps(active) {
+    var names = ["Autorizas en la ventana de Meta", "Verificamos que el número es tuyo", "Activamos el canal"];
+    var out = '<div class="substeps">';
+    for (var i = 0; i < names.length; i++) {
+      var cls = i < active ? "substep substep--done" : i === active ? "substep substep--active" : "substep";
+      var mark = i < active ? ICON.check : i === active ? '<span class="spinner"></span>' : ICON.dot;
+      out += '<div class="' + cls + '"><span class="substep__mark">' + mark + "</span>" + names[i] + "</div>";
+    }
+    return out + "</div>";
+  }
+
+  function notice(kind, icon, title, body, extra) {
+    return (
+      '<div class="notice notice--' + kind + '">' + icon +
+      '<div class="notice__body"><p class="strong">' + title + "</p>" +
+      '<p class="muted">' + body + "</p>" + (extra || "") + "</div></div>"
+    );
+  }
+
+  var connectBtn =
+    '<button class="btn btn--primary btn--lg" type="button">' + ICON.meta + " Conectar con Meta</button>";
+
+  var STATES = {
+    preparing: {
+      btn: '<button class="btn btn--primary btn--lg" type="button" disabled><span class="spinner spinner--lg"></span> Preparando la conexión…</button>',
+      zone: '<p class="caption">Un momento: estamos cargando el conector de Meta. El botón se activa en cuanto esté listo.</p>'
+    },
+    ready: {
+      btn: connectBtn,
+      zone:
+        '<p class="muted">Al pulsar se abre una ventana de Meta. <b>No la cierres</b> hasta que te diga que terminó.</p>' +
+        '<p class="caption" style="margin-top:8px">Necesitarás iniciar sesión con la cuenta de Facebook que administra tu negocio.</p>'
+    },
+    unavailable: {
+      btn: '<button class="btn btn--primary btn--lg" type="button" disabled>' + ICON.meta + " Conectar con Meta</button>",
+      zone: notice(
+        "warning", ICON.warn,
+        "No pudimos cargar el conector de Meta",
+        "Suele ser un bloqueador de anuncios o la red de tu empresa. Prueba desactivando el bloqueador en esta página, o conecta con el camino manual.",
+        '<div class="rowactions"><button class="btn btn--outline" type="button">Volver a intentar</button><button class="btn btn--ghost" type="button">Usar el camino manual</button></div>'
+      )
+    },
+    popup_open: {
+      btn: '<button class="btn btn--primary btn--lg" type="button" disabled><span class="spinner spinner--lg"></span> Esperando a Meta…</button>',
+      zone:
+        '<p class="muted">Completa la autorización en la ventana que se abrió. Si no la ves, revisa detrás de esta.</p>' +
+        substeps(0) +
+        '<p class="caption">Puedes cancelar cerrando esa ventana; no se conectará nada.</p>'
+    },
+    popup_blocked: {
+      btn: connectBtn,
+      zone: notice(
+        "warning", ICON.warn,
+        "Tu navegador bloqueó la ventana de Meta",
+        "Busca el aviso de ventanas emergentes en la barra de direcciones y permítelas para esta página. Después vuelve a pulsar el botón.",
+        '<p class="caption">En Chrome es un icono a la derecha de la dirección; en Safari, en Preferencias → Sitios web.</p>'
+      )
+    },
+    exchanging: {
+      btn: '<button class="btn btn--primary btn--lg" type="button" disabled><span class="spinner spinner--lg"></span> Activando el canal…</button>',
+      zone:
+        '<p class="muted">Autorización recibida. Ya no necesitas la ventana de Meta.</p>' +
+        substeps(2) +
+        '<p class="caption">Esto tarda unos segundos. No cierres esta página.</p>'
+    },
+    awaiting_pin: {
+      btn: '<button class="btn btn--primary btn--lg" type="button" data-go="wpin">Continuar con el PIN</button>',
+      zone: notice(
+        "info", ICON.info,
+        "Este número ya estaba dado de alta en Meta",
+        "Para terminar necesitamos el PIN de seis dígitos que se definió cuando se registró. Lo pedimos en el siguiente paso.",
+        '<p class="caption">Código de referencia: <span class="mono">channels/meta_registration_required</span></p>'
+      )
+    },
+    cancelled: {
+      btn: connectBtn,
+      zone: notice(
+        "info", ICON.info,
+        "Cerraste la ventana antes de terminar",
+        "No se conectó nada y no se guardó ningún dato. Puedes volver a intentarlo cuando quieras.",
+        ""
+      )
+    },
+    error: { btn: connectBtn, zone: "" }
+  };
+
+  var stateSel = document.getElementById("stateSel");
+  var errSel = document.getElementById("errSel");
+  var errWrap = document.getElementById("errPickWrap");
+
+  function renderState() {
+    var name = stateSel.value;
+    var st = STATES[name];
+    if (name === "error") {
+      errWrap.removeAttribute("hidden");
+      var e = ERRORS[errSel.value];
+      st = {
+        btn: '<button class="btn btn--primary btn--lg" type="button">' + ICON.meta + " " + e.cta + "</button>",
+        zone: notice("danger", ICON.x, e.title, e.body,
+          '<p class="caption">Código de referencia: <span class="mono">channels/' + errSel.value + "</span></p>")
+      };
+    } else {
+      errWrap.setAttribute("hidden", "");
+    }
+    document.getElementById("btnZone").innerHTML = st.btn;
+    document.getElementById("stateZone").innerHTML = st.zone;
+  }
+  stateSel.addEventListener("change", renderState);
+  errSel.addEventListener("change", renderState);
+
+  /* --------------------------------------------------------- PIN erróneo */
+  var pinErrBtn = document.getElementById("pinErrBtn");
+  pinErrBtn.addEventListener("click", function () {
+    var box = document.getElementById("pinErr");
+    var on = box.hasAttribute("hidden");
+    if (on) box.removeAttribute("hidden"); else box.setAttribute("hidden", "");
+    document.getElementById("pinBox").classList.toggle("pin--error", on);
+    pinErrBtn.textContent = on ? "Quitar el error" : "Simular PIN incorrecto";
+  });
+  // Avance automático entre dígitos, como en producción
+  var pinInputs = document.querySelectorAll("#pinBox input");
+  for (var p = 0; p < pinInputs.length; p++) {
+    (function (idx) {
+      pinInputs[idx].addEventListener("input", function () {
+        if (pinInputs[idx].value && idx < pinInputs.length - 1) pinInputs[idx + 1].focus();
+      });
+    })(p);
+  }
+
+  /* ------------------------------------------- detalle: sano vs degradado */
+  var healthSel = document.getElementById("healthSel");
+  healthSel.addEventListener("change", function () {
+    var bad = healthSel.value === "bad";
+    var alert = document.getElementById("detailAlert");
+    if (bad) alert.removeAttribute("hidden"); else alert.setAttribute("hidden", "");
+    document.getElementById("detailBadge").className = "badge " + (bad ? "badge--danger" : "badge--success");
+    document.getElementById("detailBadge").innerHTML =
+      '<span class="badge__dot"></span>' + (bad ? "Sin conexión" : "Conectado");
+    document.getElementById("hConn").innerHTML =
+      '<span class="badge ' + (bad ? "badge--danger" : "badge--success") +
+      '"><span class="badge__dot"></span>' + (bad ? "Sin conexión" : "Conectado") + "</span>";
+    document.getElementById("hQual").textContent = bad ? "Media" : "Alta";
+    document.getElementById("hToken").textContent = bad ? "Revocado por Meta" : "Vigente";
+    document.getElementById("hTokenSub").textContent = bad
+      ? "Hay que autorizar de nuevo para poder responder."
+      : "Lo renovamos solos antes de que caduque.";
+  });
+
+  /* -------------------------------------------------------------- arranque */
+  renderState();
+  syncReqs();
+  show(location.hash ? location.hash.replace("#", "") : "list-empty");
+  if (!document.querySelector(".screen--on")) show("list-empty");
+})();
+</script>
+</body>
+</html>

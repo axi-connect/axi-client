@@ -12,7 +12,7 @@ import { useChannelsRealtime } from "@/modules/channels/infrastructure/hooks/use
  * (QR y estados en vivo) y el panel de detalle de canal. El namespace
  * `/inbox` lo monta el módulo inbox en sus vistas.
  */
-export default function WorkspacesLayout({ children, modal }: { children: ReactNode; modal: ReactNode }) {
+export default function WorkspacesLayout({ children }: { children: ReactNode }) {
   useChannelsRealtime()
 
   // En <lg el sidebar de canales no cabe junto a la lista + conversación:
@@ -61,10 +61,7 @@ export default function WorkspacesLayout({ children, modal }: { children: ReactN
           reparto flex, y contra un padre de altura `auto` un porcentaje
           resuelve a `auto` — DESIGN-SYSTEM §4.2. Es `flex` para que la vista de
           dentro pueda repartir con `flex-1` en vez de volver a porcentajes. */}
-      <div className="flex min-w-0 min-h-0 flex-1 overflow-hidden">
-        {children}
-        {modal}
-      </div>
+      <div className="flex min-w-0 min-h-0 flex-1 overflow-hidden">{children}</div>
       <ChannelDetailSheet />
     </div>
   )

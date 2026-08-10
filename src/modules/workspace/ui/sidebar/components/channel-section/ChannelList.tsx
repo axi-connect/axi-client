@@ -10,8 +10,10 @@ import {
   CHANNEL_STATUS_LABELS,
   type ChannelDTO,
   type ChannelKind,
-  type ChannelStatus,
 } from "@/modules/channels/domain/channel"
+// El punto de estado tiene una sola definición, en el slice channels: este mapa
+// vivía duplicado carácter a carácter aquí y en el ChannelDetailSheet
+import { channelStatusDotClass } from "@/modules/channels/ui/components/ChannelStatusBadge"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
 import {
   SidebarMenuAction,
@@ -19,14 +21,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from "@/shared/components/layout/sidebar/core"
-
-const STATUS_COLORS: Record<ChannelStatus, string> = {
-  pending_setup: "bg-muted-foreground",
-  connecting: "bg-warning animate-pulse",
-  connected: "bg-success",
-  disconnected: "bg-muted-foreground",
-  error: "bg-destructive",
-}
 
 const KIND_ICONS: Record<ChannelKind, React.ComponentType<{ size?: number }>> = {
   whatsapp_cloud: FaWhatsapp,
@@ -82,7 +76,7 @@ function ChannelItem({
         <Tooltip>
           <TooltipTrigger asChild>
             <span
-              className={cn(STATUS_COLORS[channel.status], "size-2 rounded-full transition-colors ring-2 ring-background")}
+              className={cn(channelStatusDotClass(channel.status), "size-2 rounded-full transition-colors ring-2 ring-background")}
               aria-hidden="true"
             />
           </TooltipTrigger>
