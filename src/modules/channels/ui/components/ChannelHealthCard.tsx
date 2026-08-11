@@ -46,6 +46,14 @@ export function ChannelHealthCard({
   className?: string;
 }) {
   const isCloud = channel.kind === "whatsapp_cloud";
+  /**
+   * Instagram y Messenger **no tienen teléfono**, y su adaptador reutiliza
+   * `display_phone_number` para guardar el usuario público de la cuenta. Etiquetar
+   * ese campo como «Teléfono» mostraba «Sin datos» en un dato que nunca va a
+   * existir, y escondía el que sí está. La etiqueta la decide el kind.
+   */
+  const hasPhone = isCloud || channel.kind === "whatsapp_web";
+  const accountLabel = hasPhone ? "Teléfono" : "Cuenta";
   const quality = readQualityRating(channel.quality_rating);
   const limit = readMessagingLimit(channel.messaging_limit);
   const access = readMetaAccess(channel);
@@ -83,7 +91,17 @@ export function ChannelHealthCard({
             : "gap-5 [grid-template-columns:repeat(auto-fit,minmax(13.75rem,1fr))]",
         )}
       >
-        <Reading label="Teléfono" reading={{ label: channel.display_phone_number ?? "Sin datos", tone: "neutral" }} plain />
+        <Reading
+          label={accountLabel}
+          reading={{
+            label:
+              channel.display_phone_number === null || channel.display_phone_number === ""
+                ? "Sin datos"
+                : channel.display_phone_number,
+            tone: "neutral",
+          }}
+          plain
+        />
         <Reading
           label="Nombre verificado"
           reading={{ label: channel.verified_name ?? "Sin datos", tone: "neutral" }}

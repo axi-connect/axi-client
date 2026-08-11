@@ -54,17 +54,22 @@ export function ChannelCard({ channel }: { channel: ChannelDTO }) {
       {/* Las mismas traducciones que la tarjeta de salud, desde `domain/`: ningún
           enum de Meta llega a la pantalla ni aquí ni en el detalle */}
       <dl className="relative flex flex-wrap gap-x-6 gap-y-1.5">
+        {/* Tres ramas, no dos. La versión anterior mandaba TODO lo que no era
+            `whatsapp_cloud` a la métrica de sesión, así que Instagram, Messenger
+            y el simulador anunciaban estar «Vinculada al celular» — un concepto
+            que solo existe en WhatsApp Web. Un canal que miente sobre cómo está
+            conectado es peor que un canal que no dice nada. */}
         {channel.kind === "whatsapp_cloud" ? (
           <>
             <Metric label="Calidad del número" value={readQualityRating(channel.quality_rating).label} />
             <Metric label="Puedes iniciar" value={readMessagingLimit(channel.messaging_limit).label} />
           </>
-        ) : (
+        ) : channel.kind === "whatsapp_web" ? (
           <Metric
             label="Sesión"
             value={channel.status === "connected" ? "Vinculada al celular" : "Sin vincular"}
           />
-        )}
+        ) : null}
         <Metric
           label={faulted ? "Última comprobación" : "Acceso de Meta"}
           value={
