@@ -52,6 +52,7 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://api.axi-connect.co' }}
             NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'https://api.axi-connect.co' }}
             NEXT_PUBLIC_STORAGE_URL=${{ vars.NEXT_PUBLIC_STORAGE_URL || 'https://storage.axi-connect.co' }}
+            NEXT_PUBLIC_SALES_WHATSAPP=${{ vars.NEXT_PUBLIC_SALES_WHATSAPP || '573224970950' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

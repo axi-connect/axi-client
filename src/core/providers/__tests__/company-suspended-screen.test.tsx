@@ -12,8 +12,13 @@ describe("CompanySuspendedScreen (polimórfica por variante)", () => {
     render(<CompanySuspendedScreen variant="trial_expired" />)
     expect(screen.getByRole("alert")).toHaveTextContent("Tu prueba terminó")
     expect(screen.getByRole("alert")).toHaveTextContent("tus datos siguen intactos")
-    // Sin NEXT_PUBLIC_SALES_WHATSAPP el CTA comercial no aparece; el botón
-    // de re-login queda siempre disponible como salida
+    // El CTA comercial sale del número configurado en NEXT_PUBLIC_SALES_WHATSAPP,
+    // que es obligatorio (jest.env.ts lo fija); el botón de re-login queda
+    // siempre disponible como salida
+    expect(screen.getByRole("link", { name: /hablar con ventas/i })).toHaveAttribute(
+      "href",
+      expect.stringContaining("https://wa.me/573224970950?text="),
+    )
     expect(screen.getByRole("button", { name: /iniciar sesión/i })).toBeInTheDocument()
   })
 })

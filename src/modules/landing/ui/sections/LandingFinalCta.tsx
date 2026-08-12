@@ -1,12 +1,12 @@
 import { FaWhatsapp } from "react-icons/fa";
 
+import { salesWhatsAppUrl } from "@/core/config/env";
 import { Button } from "@/shared/components/ui/button";
 import { BrandGradientCanvas } from "@/modules/landing/ui/components/BrandGradientCanvas";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { AgentMascot } from "@/modules/landing/ui/components/mockups/AgentMascot";
 import { DemoLeadForm } from "@/modules/landing/ui/forms/DemoLeadForm";
 import {
-  buildWaLink,
   FINAL_CTA,
   LANDING_ANCHORS,
   WA_MESSAGES,
@@ -69,7 +69,7 @@ export default function LandingFinalCta() {
                 size="lg"
                 className="bg-success text-success-foreground hover:bg-success/90 h-12 justify-center gap-2.5 text-base"
               >
-                <a href={buildWaLink(WA_MESSAGES.finalCta)} target="_blank" rel="noopener noreferrer">
+                <a href={salesWhatsAppUrl(WA_MESSAGES.finalCta)} target="_blank" rel="noopener noreferrer">
                   <FaWhatsapp aria-hidden className="size-5" />
                   {whatsappCard.cta}
                 </a>

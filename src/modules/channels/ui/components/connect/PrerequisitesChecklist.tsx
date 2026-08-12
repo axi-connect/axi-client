@@ -123,15 +123,13 @@ export function PrerequisitesChecklist({
             </span>{" "}
             conecta primero con código QR y cámbiate al canal oficial más adelante.
           </p>
-          {supportUrl !== null && (
-            <Button asChild variant="outline" size="sm" className="bg-background">
-              {/* axi vende por el canal que predica */}
-              <a href={supportUrl} target="_blank" rel="noopener noreferrer">
-                <MessageCircle aria-hidden="true" className="size-4" />
-                Hablar con soporte por WhatsApp
-              </a>
-            </Button>
-          )}
+          <Button asChild variant="outline" size="sm" className="bg-background">
+            {/* axi vende por el canal que predica */}
+            <a href={supportUrl} target="_blank" rel="noopener noreferrer">
+              <MessageCircle aria-hidden="true" className="size-4" />
+              Hablar con soporte por WhatsApp
+            </a>
+          </Button>
         </div>
       )}
     </div>

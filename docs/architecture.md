@@ -481,10 +481,18 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3000   # backend axi-server (API bajo /api/v1)
 NEXT_PUBLIC_WS_BASE_URL=http://localhost:3000    # WebSocket (namespaces /inbox y /channels)
-NEXT_PUBLIC_SALES_WHATSAPP=573001234567          # WhatsApp comercial de axi (solo dígitos, con indicativo);
-                                                 #   CTA del trial (banner de vencimiento y pantalla de prueba
-                                                 #   finalizada). Sin valor, el CTA simplemente no se muestra
+NEXT_PUBLIC_SALES_WHATSAPP=573224970950          # WhatsApp comercial de axi. OBLIGATORIA: sin ella el build
+                                                 #   aborta (§13.1). Dígitos con indicativo; un celular
+                                                 #   colombiano sin indicativo se completa solo
 ```
+
+**§13.1 — El WhatsApp comercial tiene un único punto de definición.** `core/config/env.ts` expone `SALES_WHATSAPP` (normalizado), `salesWhatsAppUrl(message?)` y `formatSalesWhatsApp()`; **nadie más construye un `wa.me` ni escribe el número**. De ahí cuelgan los seis puntos donde aparece: hero y CTA final de la landing, enlace y texto de `/contacto`, `TrialCountdownBanner`, `CompanySuspendedScreen` y el `PrerequisitesChecklist` de canales.
+
+Se resuelve en carga del módulo y **lanza si la variable falta**, en vez de degradar a cadena vacía. La razón es que las `NEXT_PUBLIC_*` se hornean en el bundle en tiempo de build: una variable ausente no produce error en ningún sitio, solo deja la app desplegada sin ningún CTA de ventas y sin señal alguna. Consecuencias operativas de ese contrato:
+
+- El `Dockerfile` declara su `ARG`/`ENV` y `.github/workflows/deploy.yml` pasa el build arg (con default sobreescribible por una Variable del repositorio). Si se añade otro pipeline, tiene que pasarla.
+- `jest.env.ts` (en `setupFiles`, antes que `setupFilesAfterEnv`) la fija para la suite: `env.ts` entra transitivamente por `core/services/http.ts` en casi cualquier test.
+- La normalización acepta `+`, espacios, guiones y paréntesis, y aplica la regla Colombia-first de `axi-server/src/core/system/kernel/phone.ts` (10 dígitos que empiezan por `3` ⇒ se antepone `57`).
 
 Registrar el origin del frontend (p.ej. `http://localhost:3001`) en `CORS_ORIGINS` del backend.
 

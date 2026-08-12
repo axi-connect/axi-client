@@ -12,16 +12,16 @@
  *   [A VALIDAR]   — permisos de marca, precios definitivos, canales IG/MSN.
  */
 
+import { formatSalesWhatsApp, salesWhatsAppUrl } from "@/core/config/env";
+
 /* ────────────────────────────── WhatsApp ────────────────────────────── */
 
-/** Número real del agente de Axi (confirmado en la plantilla v2). */
-export const WHATSAPP_AGENT_NUMBER = "573224970950";
-
-/** Deep link de WhatsApp con mensaje prellenado. */
-export function buildWaLink(text: string): string {
-  return `https://wa.me/${WHATSAPP_AGENT_NUMBER}?text=${encodeURIComponent(text)}`;
-}
-
+/**
+ * El NÚMERO no vive aquí: es configuración, no copy. Sale de
+ * `NEXT_PUBLIC_SALES_WHATSAPP` vía `core/config/env.ts`, que es el único sitio
+ * donde se cambia y del que cuelgan también los CTA del panel privado. Lo que
+ * sí vive aquí son los mensajes prellenados, que son copy de la landing.
+ */
 export const WA_MESSAGES = {
   hero: "Hola, quiero ver Axi Connect funcionando con mi negocio.",
   finalCta: "Hola, quiero ver Axi Connect funcionando con mi negocio.",
@@ -846,7 +846,7 @@ export const FINAL_CTA = {
 export const CONTACT = {
   title: "Axi Connect",
   details: [
-    { label: "WhatsApp", value: "+57 322 497 0950", href: `https://wa.me/${WHATSAPP_AGENT_NUMBER}` },
+    { label: "WhatsApp", value: formatSalesWhatsApp(), href: salesWhatsAppUrl() },
     { label: "Ubicación", value: "Colombia", href: undefined },
   ].filter((detail) => detail.value.length > 0) as readonly {
     label: string;

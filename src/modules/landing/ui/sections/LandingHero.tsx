@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
+import { salesWhatsAppUrl } from "@/core/config/env";
 import { fade } from "@/core/styles/motion";
 import { Button } from "@/shared/components/ui/button";
 import { BrandGradientCanvas } from "@/modules/landing/ui/components/BrandGradientCanvas";
@@ -10,7 +11,6 @@ import { AgentMascot } from "@/modules/landing/ui/components/mockups/AgentMascot
 import { ChatConversation } from "@/modules/landing/ui/components/mockups/ChatConversation";
 import { SalePaidCard } from "@/modules/landing/ui/components/mockups/SalePaidCard";
 import {
-  buildWaLink,
   HERO,
   HERO_CHAT,
   LANDING_ANCHORS,
@@ -65,7 +65,7 @@ export default function LandingHero() {
               <a href={`#${LANDING_ANCHORS.demo}`}>{HERO.ctaPrimary}</a>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-7 text-base backdrop-blur-sm">
-              <a href={buildWaLink(WA_MESSAGES.hero)} target="_blank" rel="noopener noreferrer">
+              <a href={salesWhatsAppUrl(WA_MESSAGES.hero)} target="_blank" rel="noopener noreferrer">
                 {HERO.ctaSecondary}
               </a>
             </Button>

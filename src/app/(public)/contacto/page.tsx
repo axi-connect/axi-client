@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 
+import { salesWhatsAppUrl } from "@/core/config/env";
 import { Button } from "@/shared/components/ui/button";
 import { DemoLeadForm } from "@/modules/landing/ui/forms/DemoLeadForm";
 import {
   CONTACT,
   FINAL_CTA,
   WA_MESSAGES,
-  buildWaLink,
 } from "@/modules/landing/ui/content/landing.content";
 
 /**
@@ -72,7 +72,7 @@ export default function ContactoPage() {
               </p>
               <Button asChild size="lg" variant="outline" className="mt-6 h-12 w-full text-base">
                 <a
-                  href={buildWaLink(WA_MESSAGES.finalCta)}
+                  href={salesWhatsAppUrl(WA_MESSAGES.finalCta)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

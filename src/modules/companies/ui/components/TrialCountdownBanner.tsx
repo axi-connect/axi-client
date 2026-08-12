@@ -37,13 +37,11 @@ export function TrialCountdownBanner() {
         <TriangleAlert aria-hidden="true" className="size-4 shrink-0 text-warning" />
         {message} Activa tu plan para no perder el acceso.
       </p>
-      {cta ? (
-        <Button size="sm" variant="outline" asChild>
-          <a href={cta} target="_blank" rel="noopener noreferrer">
-            Hablar con ventas
-          </a>
-        </Button>
-      ) : null}
+      <Button size="sm" variant="outline" asChild>
+        <a href={cta} target="_blank" rel="noopener noreferrer">
+          Hablar con ventas
+        </a>
+      </Button>
     </div>
   )
 }

@@ -35,9 +35,13 @@ FROM base AS builder
 ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_WS_BASE_URL
 ARG NEXT_PUBLIC_STORAGE_URL
+# Obligatoria: sin ella `npm run build` aborta (core/config/env.ts). Antes
+# faltaba aquí, y la imagen salía sin ningún CTA de ventas sin avisar.
+ARG NEXT_PUBLIC_SALES_WHATSAPP
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
     NEXT_PUBLIC_WS_BASE_URL=${NEXT_PUBLIC_WS_BASE_URL} \
     NEXT_PUBLIC_STORAGE_URL=${NEXT_PUBLIC_STORAGE_URL} \
+    NEXT_PUBLIC_SALES_WHATSAPP=${NEXT_PUBLIC_SALES_WHATSAPP} \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production \
     NODE_OPTIONS=--max-old-space-size=3072

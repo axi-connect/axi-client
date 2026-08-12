@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle } from "lucide-react";
 
+import { salesWhatsAppUrl } from "@/core/config/env";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -27,7 +28,6 @@ import {
 } from "@/modules/landing/ui/forms/config/demo-lead.config";
 import {
   buildDemoLeadWaText,
-  buildWaLink,
   FINAL_CTA,
 } from "@/modules/landing/ui/content/landing.content";
 
@@ -61,7 +61,7 @@ export function DemoLeadForm() {
       whatsapp: values.whatsapp,
       volumeLabel: monthlyConversationLabel(values.monthly_conversations),
     });
-    window.open(buildWaLink(waText), "_blank", "noopener");
+    window.open(salesWhatsAppUrl(waText), "_blank", "noopener");
     setSubmitted(true);
     requestAnimationFrame(() => successRef.current?.focus());
   });
