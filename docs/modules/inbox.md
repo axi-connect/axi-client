@@ -103,6 +103,19 @@ src/modules/inbox/
   `Nota de voz.ogg`, `Documento.pdf`). Lo usan el lightbox, `DocumentCard`, las burbujas de
   imagen/vídeo y el panel de adjuntos.
 
+- **Mensajes interactivos** (`ui/components/interactive/`). El backend envía botones, menús de
+  lista y CTA de URL (`content_type: "interactive"`, opciones en `payload.interactive`); el inbox
+  los **muestra, no los opera**: las opciones se pintan como `<div>`, nunca como `<button>`, porque
+  tocarlas mandaría al backend una respuesta que el cliente no dio. `InteractiveMessage` es un
+  dispatcher por `kind` calcado de `MediaAttachment`, y el payload se valida en runtime con
+  `extractInteractivePayload` — uno inválido devuelve `null` y la burbuja cae a texto plano, nunca
+  queda muda. El componente **espeja la degradación del backend**: con descripciones o más de 3
+  opciones se anuncia como menú, que es lo que el canal pinta de verdad.
+  En la burbuja **entrante**, `InteractiveReplyChip` distingue el toque del texto tecleado
+  (`payload.interactive_reply.source`): "Sí" escrito y "Sí" elegido entre dos botones no significan
+  lo mismo al auditar una confirmación, y `numeric` delata que el cliente respondió con un número a
+  una lista degradada a texto en WhatsApp Web.
+
 ### B.3 Deuda abierta del slice
 
 - `bumpConversation` y `onHandoffEvent` re-consultan lista + counts en **cada** mensaje, sin
