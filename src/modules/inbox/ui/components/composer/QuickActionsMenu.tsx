@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { FileText, Loader2, MessageSquareText, SendHorizonal, Settings2, Zap } from "lucide-react"
+import { FileText, Loader2, MessageSquareText, MousePointerClick, SendHorizonal, Settings2, Zap } from "lucide-react"
 import { errorMessage } from "@/core/lib/error-messages"
 import { formatBytes } from "@/core/lib/format"
 import { useAlert } from "@/core/providers/alert-provider"
@@ -18,8 +18,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/shared/components/ui/command"
+import type { InteractivePayload } from "@/modules/inbox/domain/inbox"
+import { InteractiveMessage } from "@/modules/inbox/ui/components/interactive"
 import type {
   QuickActionDTO,
+  QuickActionInteractive,
   QuickActionType,
 } from "@/modules/quick-actions/domain/quick-action"
 import { useQuickActionsStore } from "@/modules/quick-actions/infrastructure/stores/quick-actions.store"
@@ -28,14 +31,21 @@ const GROUP_TITLES: Record<QuickActionType, string> = {
   media_resource: "Recursos",
   canned_response: "Respuestas rápidas",
   whatsapp_template: "Plantillas",
+  interactive: "Interactivos",
 }
 
-const GROUP_ORDER: QuickActionType[] = ["media_resource", "canned_response", "whatsapp_template"]
+const GROUP_ORDER: QuickActionType[] = [
+  "media_resource",
+  "canned_response",
+  "interactive",
+  "whatsapp_template",
+]
 
 const TYPE_ICONS: Record<QuickActionType, typeof FileText> = {
   media_resource: FileText,
   canned_response: MessageSquareText,
   whatsapp_template: SendHorizonal,
+  interactive: MousePointerClick,
 }
 
 /** Preview del contenido que se enviará (modal de confirmación, W4). */
@@ -43,6 +53,24 @@ function ActionPreview({ action }: { action: QuickActionDTO }) {
   if (action.type === "canned_response") {
     return (
       <p className="whitespace-pre-wrap rounded-lg bg-muted px-3 py-2 text-sm">{action.body}</p>
+    )
+  }
+  if (action.type === "interactive") {
+    const config = action.interactive_payload as QuickActionInteractive | null
+    if (!config) {
+      return (
+        <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+          Esta acción no tiene el mensaje configurado.
+        </p>
+      )
+    }
+    // Se reutiliza el MISMO componente que pinta el hilo: la vista previa
+    // enseña exactamente lo que verá el cliente, no una aproximación
+    return (
+      <div className="rounded-lg bg-muted px-3 py-2 text-sm">
+        {config.body}
+        <InteractiveMessage interactive={toPreviewPayload(config)} outbound={false} />
+      </div>
     )
   }
   if (action.type === "whatsapp_template") {
@@ -68,6 +96,25 @@ function ActionPreview({ action }: { action: QuickActionDTO }) {
       )}
     </div>
   )
+}
+
+/**
+ * Config del tenant → forma canónica para la vista previa. Los ids reales los
+ * deriva el backend al enviar; aquí basta el índice, porque la previsualización
+ * solo pinta títulos y detalles.
+ */
+function toPreviewPayload(config: QuickActionInteractive): InteractivePayload {
+  if (config.kind === "cta_url") return config
+  return {
+    kind: "options",
+    body: config.body,
+    ...(config.menu_label ? { menu_label: config.menu_label } : {}),
+    options: config.options.map((option, index) => ({
+      id: String(index),
+      title: option.title,
+      ...(option.description ? { description: option.description } : {}),
+    })),
+  }
 }
 
 /**

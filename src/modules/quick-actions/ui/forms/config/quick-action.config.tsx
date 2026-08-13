@@ -9,9 +9,11 @@ import {
   type CreateQuickActionDTO,
   type QuickActionAssetDTO,
   type QuickActionDTO,
+  type QuickActionInteractive,
   type QuickActionType,
   type UpdateQuickActionDTO,
 } from "@/modules/quick-actions/domain/quick-action"
+import { InteractiveBuilder } from "@/modules/quick-actions/ui/forms/InteractiveBuilder"
 import { ResourceUploader } from "@/modules/quick-actions/ui/forms/ResourceUploader"
 
 /**
@@ -22,7 +24,7 @@ import { ResourceUploader } from "@/modules/quick-actions/ui/forms/ResourceUploa
 export const quickActionFormSchema = z
   .object({
     name: z.string().trim().min(1, "Nombre requerido").max(120),
-    type: z.enum(["media_resource", "canned_response", "whatsapp_template"]),
+    type: z.enum(["media_resource", "canned_response", "whatsapp_template", "interactive"]),
     description: z
       .string()
       .trim()
@@ -34,6 +36,7 @@ export const quickActionFormSchema = z
     enabled: z.boolean(),
     ai_enabled: z.boolean(),
     assets: z.array(z.custom<QuickActionAssetDTO>()),
+    interactive: z.custom<QuickActionInteractive>().nullable(),
   })
   .superRefine((values, ctx) => {
     if (values.type === "canned_response" && !values.body) {
@@ -50,6 +53,10 @@ export const quickActionFormSchema = z
     if (values.type === "media_resource" && values.assets.length === 0) {
       ctx.addIssue({ code: "custom", path: ["assets"], message: "Sube al menos un archivo" })
     }
+    if (values.type === "interactive") {
+      const issue = interactiveIssue(values.interactive)
+      if (issue) ctx.addIssue({ code: "custom", path: ["interactive"], message: issue })
+    }
   })
 
 export type QuickActionFormValues = z.infer<typeof quickActionFormSchema>
@@ -64,6 +71,29 @@ export const defaultQuickActionFormValues: QuickActionFormValues = {
   enabled: true,
   ai_enabled: true,
   assets: [],
+  interactive: null,
+}
+
+/**
+ * Espejo de los checks del backend (`quickActionInteractiveSchema`). Se valida
+ * aquí para dar el error en el campo y no como un 422 opaco; la autoridad
+ * sigue siendo el servidor.
+ */
+function interactiveIssue(config: QuickActionInteractive | null): string | null {
+  if (!config) return "Configura el mensaje interactivo"
+  if (!config.body.trim()) return "El mensaje es requerido"
+  if (config.kind === "cta_url") {
+    if (!config.label.trim()) return "El texto del botón es requerido"
+    if (!/^https?:\/\//.test(config.url)) return "El enlace debe empezar por http:// o https://"
+    return null
+  }
+  const titles = config.options.map((option) => option.title.trim())
+  if (titles.length < 2) return "Añade al menos dos opciones"
+  if (titles.some((title) => !title)) return "Todas las opciones necesitan un título"
+  if (new Set(titles.map((t) => t.toLowerCase())).size !== titles.length) {
+    return "Las opciones no pueden repetirse"
+  }
+  return null
 }
 
 export function quickActionToFormValues(dto: QuickActionDTO): QuickActionFormValues {
@@ -77,6 +107,7 @@ export function quickActionToFormValues(dto: QuickActionDTO): QuickActionFormVal
     enabled: dto.enabled,
     ai_enabled: dto.ai_enabled,
     assets: dto.assets,
+    interactive: (dto.interactive_payload as QuickActionInteractive | null) ?? null,
   }
 }
 
@@ -144,6 +175,21 @@ export function buildQuickActionFormFields(options: {
       colSpan: { base: 1, md: 2 },
       isVisible: (values) => values.type === "canned_response",
     }),
+    createCustomField<QuickActionFormValues>(
+      "interactive",
+      ({ value, setValue, getError }) => (
+        <InteractiveBuilder
+          value={(value as QuickActionInteractive | null) ?? null}
+          onChange={(next) => setValue("interactive", next)}
+          error={getError()}
+        />
+      ),
+      {
+        label: "Mensaje interactivo",
+        colSpan: { base: 1, md: 2 },
+        isVisible: (values) => values.type === "interactive",
+      },
+    ),
     createInputField<QuickActionFormValues>("template_name", {
       label: "Nombre de la plantilla",
       placeholder: "seguimiento_pedido",
@@ -182,7 +228,13 @@ export function buildQuickActionFormFields(options: {
           Disponible para agentes IA
         </label>
       ),
-      { label: "", isVisible: (values) => values.type === "media_resource" },
+      {
+        label: "",
+        isVisible: (values) =>
+          values.type === "media_resource" ||
+          values.type === "canned_response" ||
+          values.type === "interactive",
+      },
     ),
   ] as const
 }
@@ -195,6 +247,8 @@ export function toCreateQuickActionDTO(values: QuickActionFormValues): CreateQui
     body: values.body || undefined,
     template_name: values.template_name || undefined,
     template_language: values.template_language || undefined,
+    interactive:
+      values.type === "interactive" ? (values.interactive ?? undefined) : undefined,
     enabled: values.enabled,
     ai_enabled: values.ai_enabled,
     asset_ids:
@@ -211,6 +265,7 @@ export function toUpdateQuickActionDTO(values: QuickActionFormValues): UpdateQui
     body: dto.body,
     template_name: dto.template_name,
     template_language: dto.template_language,
+    interactive: dto.interactive,
     enabled: dto.enabled,
     ai_enabled: dto.ai_enabled,
     asset_ids: dto.asset_ids,

@@ -18,6 +18,8 @@ export interface CreateQuickActionDTO {
   template_name?: string;
   template_language?: string;
   template_components?: unknown[];
+  /** type=interactive: el set de opciones; los ids los deriva el backend */
+  interactive?: QuickActionInteractive;
   enabled?: boolean;
   ai_enabled?: boolean;
   asset_ids?: string[];
@@ -39,12 +41,32 @@ export const QUICK_ACTION_TYPE_LABELS: Record<QuickActionType, string> = {
   media_resource: "Recurso",
   canned_response: "Respuesta",
   whatsapp_template: "Plantilla",
+  interactive: "Interactivo",
 };
 
 export const QUICK_ACTION_TYPE_DESCRIPTIONS: Record<QuickActionType, string> = {
   media_resource: "Envía archivos precargados (PDF, imágenes) con un mensaje opcional",
   canned_response: "Envía un texto predefinido",
   whatsapp_template: "Envía una plantilla HSM aprobada de Meta",
+  interactive: "Envía botones o un menú de opciones que el cliente toca",
+};
+
+/**
+ * Mensaje interactivo configurado por el tenant (F5). El tipo se DERIVA del
+ * contrato generado: los topes de Meta tienen una sola fuente de verdad.
+ * El tenant escribe títulos y elige qué hace cada opción — **los ids los
+ * deriva el backend**, así renombrar una opción no deja ids huérfanos.
+ */
+export type QuickActionInteractive = NonNullable<Schemas["CreateQuickActionDto"]["interactive"]>;
+export type QuickActionInteractiveOptions = Extract<QuickActionInteractive, { kind: "options" }>;
+export type QuickActionOption = QuickActionInteractiveOptions["options"][number];
+export type QuickActionOptionAction = NonNullable<QuickActionOption["action"]>;
+
+/** Qué pasa cuando el cliente toca la opción. */
+export const QUICK_ACTION_OPTION_ACTION_LABELS: Record<QuickActionOptionAction, string> = {
+  reply: "Continuar con el agente",
+  human_handoff: "Pasar a un asesor",
+  close: "Cerrar la conversación",
 };
 
 /** Fila que consume la DataTable de settings (type alias: exige DataRow). */
