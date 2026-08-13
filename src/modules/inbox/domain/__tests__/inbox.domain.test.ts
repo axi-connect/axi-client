@@ -2,6 +2,8 @@ import {
   attachmentCategory,
   attachmentDisplayName,
   extractCatalogSku,
+  extractInteractivePayload,
+  extractInteractiveReply,
   extractLocationPayload,
   extractTranscription,
   isAttachmentMessage,
@@ -376,5 +378,75 @@ describe("isNotablePriority", () => {
     ["low", false],
   ] as const)("%s → %s", (priority, expected) => {
     expect(isNotablePriority(priority)).toBe(expected)
+  })
+})
+
+describe("extractInteractivePayload", () => {
+  it("lee un set de opciones con su etiqueta de menú", () => {
+    expect(
+      extractInteractivePayload({
+        interactive: {
+          kind: "options",
+          body: "Elige",
+          menu_label: "Ver horarios",
+          options: [{ id: "slot:a", title: "vie 14", description: "10:00" }],
+        },
+      }),
+    ).toEqual({
+      kind: "options",
+      body: "Elige",
+      menu_label: "Ver horarios",
+      options: [{ id: "slot:a", title: "vie 14", description: "10:00" }],
+    })
+  })
+
+  it("lee un cta_url", () => {
+    expect(
+      extractInteractivePayload({
+        interactive: { kind: "cta_url", body: "Paga", label: "Pagar", url: "https://x.co" },
+      }),
+    ).toEqual({ kind: "cta_url", body: "Paga", label: "Pagar", url: "https://x.co" })
+  })
+
+  it("descarta las opciones malformadas y conserva las buenas", () => {
+    const parsed = extractInteractivePayload({
+      interactive: {
+        kind: "options",
+        body: "Elige",
+        options: [{ id: "a", title: "Uno" }, { id: 42 }, null, { title: "Sin id" }],
+      },
+    })
+    expect(parsed).toMatchObject({ options: [{ id: "a", title: "Uno" }] })
+  })
+
+  it.each([
+    ["null", null],
+    ["sin interactive", { media: {} }],
+    ["sin body", { interactive: { kind: "options", options: [{ id: "a", title: "b" }] } }],
+    ["kind desconocido", { interactive: { kind: "flow", body: "x" } }],
+    ["options no array", { interactive: { kind: "options", body: "x", options: "roto" } }],
+    ["todas las opciones inválidas", { interactive: { kind: "options", body: "x", options: [1] } }],
+    ["cta sin url", { interactive: { kind: "cta_url", body: "x", label: "y" } }],
+  ])("devuelve null con %s (la burbuja cae a texto)", (_label, payload) => {
+    expect(extractInteractivePayload(payload)).toBeNull()
+  })
+})
+
+describe("extractInteractiveReply", () => {
+  it("lee la respuesta normalizada por la ingesta", () => {
+    expect(
+      extractInteractiveReply({
+        interactive_reply: { id: "opt:si", title: "Sí", source: "button" },
+      }),
+    ).toEqual({ id: "opt:si", title: "Sí", source: "button" })
+  })
+
+  it.each([
+    ["null", null],
+    ["sin la clave", { interactive: {} }],
+    ["source desconocido", { interactive_reply: { id: "a", title: "b", source: "telepatia" } }],
+    ["sin título", { interactive_reply: { id: "a", source: "button" } }],
+  ])("devuelve null con %s", (_label, payload) => {
+    expect(extractInteractiveReply(payload)).toBeNull()
   })
 })

@@ -5982,11 +5982,12 @@ export interface components {
                 name: string;
                 description: string;
                 /** @enum {string} */
-                type: "media_resource" | "canned_response" | "whatsapp_template";
+                type: "media_resource" | "canned_response" | "whatsapp_template" | "interactive";
                 body: string | null;
                 template_name: string | null;
                 template_language: string | null;
                 template_components: unknown;
+                interactive_payload: unknown;
                 enabled: boolean;
                 ai_enabled: boolean;
                 assets: {
@@ -6018,11 +6019,12 @@ export interface components {
             name: string;
             description: string;
             /** @enum {string} */
-            type: "media_resource" | "canned_response" | "whatsapp_template";
+            type: "media_resource" | "canned_response" | "whatsapp_template" | "interactive";
             body: string | null;
             template_name: string | null;
             template_language: string | null;
             template_components: unknown;
+            interactive_payload: unknown;
             enabled: boolean;
             ai_enabled: boolean;
             assets: {
@@ -6046,11 +6048,33 @@ export interface components {
             name: string;
             description: string;
             /** @enum {string} */
-            type: "media_resource" | "canned_response" | "whatsapp_template";
+            type: "media_resource" | "canned_response" | "whatsapp_template" | "interactive";
             body?: string;
             template_name?: string;
             template_language?: string;
             template_components?: unknown[];
+            interactive?: {
+                /** @enum {string} */
+                kind: "options";
+                body: string;
+                options: {
+                    title: string;
+                    description?: string;
+                    /**
+                     * @default reply
+                     * @enum {string}
+                     */
+                    action: "reply" | "human_handoff" | "close";
+                }[];
+                menu_label?: string;
+            } | {
+                /** @enum {string} */
+                kind: "cta_url";
+                body: string;
+                label: string;
+                /** Format: uri */
+                url: string;
+            };
             enabled?: boolean;
             ai_enabled?: boolean;
             asset_ids?: string[];
@@ -6062,6 +6086,28 @@ export interface components {
             template_name?: string | null;
             template_language?: string | null;
             template_components?: unknown[] | null;
+            interactive?: {
+                /** @enum {string} */
+                kind: "options";
+                body: string;
+                options: {
+                    title: string;
+                    description?: string;
+                    /**
+                     * @default reply
+                     * @enum {string}
+                     */
+                    action: "reply" | "human_handoff" | "close";
+                }[];
+                menu_label?: string;
+            } | {
+                /** @enum {string} */
+                kind: "cta_url";
+                body: string;
+                label: string;
+                /** Format: uri */
+                url: string;
+            };
             enabled?: boolean;
             ai_enabled?: boolean;
             asset_ids?: string[];
@@ -8154,7 +8200,7 @@ export interface components {
         };
         SendMessageDto: {
             /** @enum {string} */
-            type: "text" | "template" | "media" | "quick_action";
+            type: "text" | "template" | "media" | "quick_action" | "interactive";
             body?: string;
             name?: string;
             language?: string;
@@ -8164,6 +8210,24 @@ export interface components {
             caption?: string;
             /** Format: uuid */
             quick_action_id?: string;
+            interactive?: {
+                /** @enum {string} */
+                kind: "options";
+                body: string;
+                options: {
+                    id: string;
+                    title: string;
+                    description?: string;
+                }[];
+                menu_label?: string;
+            } | {
+                /** @enum {string} */
+                kind: "cta_url";
+                body: string;
+                label: string;
+                /** Format: uri */
+                url: string;
+            };
         };
         EnqueuedMessageDto: {
             /** Format: uuid */
@@ -12144,7 +12208,7 @@ export interface operations {
     QuickActionsController_list_v1: {
         parameters: {
             query?: {
-                type?: "media_resource" | "canned_response" | "whatsapp_template";
+                type?: "media_resource" | "canned_response" | "whatsapp_template" | "interactive";
                 enabled?: string;
                 search?: string;
                 page?: number;

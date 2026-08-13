@@ -117,6 +117,80 @@ export function extractTranscription(payload: unknown): AudioTranscription | nul
 }
 
 /**
+ * Mensajes interactivos (§9.1 del backend): botones, menú de lista o CTA de
+ * URL. El tipo se DERIVA del contrato generado en vez de re-declararse — los
+ * topes de Meta (13 opciones, títulos de 24, cuerpo de 1024) tienen una sola
+ * fuente de verdad, y es el backend.
+ */
+export type InteractivePayload = NonNullable<SendMessageDTO["interactive"]>;
+export type InteractiveOptions = Extract<InteractivePayload, { kind: "options" }>;
+export type InteractiveOption = InteractiveOptions["options"][number];
+
+/**
+ * Respuesta del cliente a un interactivo, normalizada por la ingesta
+ * (`payload.interactive_reply`). No viaja en el OpenAPI porque `payload` es
+ * `unknown` en el contrato: se valida en runtime como el resto de parsers.
+ */
+export interface InteractiveReply {
+  id: string;
+  title: string;
+  source: "button" | "list" | "quick_reply" | "numeric";
+}
+
+const INTERACTIVE_REPLY_SOURCES = new Set(["button", "list", "quick_reply", "numeric"]);
+
+/** Etiqueta de cómo eligió el cliente — la lee el chip de la burbuja entrante. */
+export const INTERACTIVE_REPLY_LABELS: Record<InteractiveReply["source"], string> = {
+  button: "Botón",
+  list: "Menú",
+  quick_reply: "Respuesta rápida",
+  numeric: "Respondió con el número",
+};
+
+/**
+ * Lee `payload.interactive` de un mensaje saliente. Mismo patrón defensivo que
+ * `extractLocationPayload`: el payload es `unknown` y un JSONB viejo o
+ * corrupto no debe romper el hilo — devuelve `null` y la burbuja cae a texto.
+ */
+export function extractInteractivePayload(payload: unknown): InteractivePayload | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const interactive = (payload as { interactive?: unknown }).interactive;
+  if (typeof interactive !== "object" || interactive === null) return null;
+  const record = interactive as Record<string, unknown>;
+  if (typeof record.body !== "string" || record.body.length === 0) return null;
+
+  if (record.kind === "cta_url") {
+    if (typeof record.label !== "string" || typeof record.url !== "string") return null;
+    return { kind: "cta_url", body: record.body, label: record.label, url: record.url };
+  }
+  if (record.kind !== "options" || !Array.isArray(record.options)) return null;
+  const options = record.options.flatMap((raw): InteractiveOption[] => {
+    if (typeof raw !== "object" || raw === null) return [];
+    const { id, title, description } = raw as Record<string, unknown>;
+    if (typeof id !== "string" || typeof title !== "string") return [];
+    return [{ id, title, ...(typeof description === "string" ? { description } : {}) }];
+  });
+  if (options.length === 0) return null;
+  return {
+    kind: "options",
+    body: record.body,
+    options,
+    ...(typeof record.menu_label === "string" ? { menu_label: record.menu_label } : {}),
+  };
+}
+
+/** Lee `payload.interactive_reply` de un mensaje entrante. */
+export function extractInteractiveReply(payload: unknown): InteractiveReply | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const reply = (payload as { interactive_reply?: unknown }).interactive_reply;
+  if (typeof reply !== "object" || reply === null) return null;
+  const { id, title, source } = reply as Record<string, unknown>;
+  if (typeof id !== "string" || typeof title !== "string") return null;
+  if (typeof source !== "string" || !INTERACTIVE_REPLY_SOURCES.has(source)) return null;
+  return { id, title, source: source as InteractiveReply["source"] };
+}
+
+/**
  * Lee `payload.media.catalog_sku` de un mensaje de imagen (F16): presente
  * cuando la foto la envió la IA desde el catálogo (`send_product_images`).
  * El payload es `unknown` en el contrato; se valida en runtime igual que

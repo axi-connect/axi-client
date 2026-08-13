@@ -115,3 +115,144 @@ describe("MessageBubble — render por content_type (F9)", () => {
     expect(screen.getByText("Conversación escalada")).toBeInTheDocument()
   })
 })
+
+describe("MessageBubble — mensajes interactivos", () => {
+  const OPTIONS = {
+    kind: "options",
+    body: "¿Confirmas el pedido?",
+    options: [
+      { id: "opt:si", title: "Sí, confirmar" },
+      { id: "opt:no", title: "No" },
+    ],
+  }
+
+  it("saliente: pinta el cuerpo Y las opciones (antes se perdían)", () => {
+    // Sin esta rama el mensaje salía como una burbuja con el literal
+    // "INTERACTIVE" y los botones desaparecían del historial
+    render(
+      <MessageBubble
+        message={makeMessage({
+          direction: "outbound",
+          sender_type: "ai_agent",
+          content_type: "interactive",
+          body: "¿Confirmas el pedido?",
+          payload: { interactive: OPTIONS },
+        })}
+        conversationId="c1"
+      />,
+    )
+    expect(screen.getByText("¿Confirmas el pedido?")).toBeInTheDocument()
+    expect(screen.getByText("Sí, confirmar")).toBeInTheDocument()
+    expect(screen.getByText("No")).toBeInTheDocument()
+    expect(screen.queryByText("interactive")).not.toBeInTheDocument()
+  })
+
+  it("las opciones son vista, no control: nada tocable que responda por el cliente", () => {
+    render(
+      <MessageBubble
+        message={makeMessage({
+          direction: "outbound",
+          content_type: "interactive",
+          body: "¿Confirmas?",
+          payload: { interactive: OPTIONS },
+        })}
+        conversationId="c1"
+      />,
+    )
+    expect(screen.queryByRole("button", { name: "Sí, confirmar" })).not.toBeInTheDocument()
+  })
+
+  it("con descripciones se anuncia como menú y las muestra", () => {
+    render(
+      <MessageBubble
+        message={makeMessage({
+          direction: "outbound",
+          content_type: "interactive",
+          body: "Elige un producto",
+          payload: {
+            interactive: {
+              kind: "options",
+              body: "Elige un producto",
+              menu_label: "Ver productos",
+              options: [
+                { id: "sku:A", title: "Camiseta", description: "$35.000 COP" },
+                { id: "sku:B", title: "Buzo", description: "$89.000 COP" },
+              ],
+            },
+          },
+        })}
+        conversationId="c1"
+      />,
+    )
+    expect(screen.getByText("Ver productos")).toBeInTheDocument()
+    expect(screen.getByText("$35.000 COP")).toBeInTheDocument()
+  })
+
+  it("cta_url: enlace real que abre en pestaña nueva", () => {
+    render(
+      <MessageBubble
+        message={makeMessage({
+          direction: "outbound",
+          content_type: "interactive",
+          body: "Paga en línea",
+          payload: {
+            interactive: {
+              kind: "cta_url",
+              body: "Paga en línea",
+              label: "Pagar",
+              url: "https://pagos.example.com/1",
+            },
+          },
+        })}
+        conversationId="c1"
+      />,
+    )
+    const link = screen.getByRole("link", { name: /Pagar/ })
+    expect(link).toHaveAttribute("href", "https://pagos.example.com/1")
+    expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"))
+  })
+
+  it("payload inválido: cae a texto plano, la burbuja nunca queda muda", () => {
+    render(
+      <MessageBubble
+        message={makeMessage({
+          direction: "outbound",
+          content_type: "interactive",
+          body: "Elige",
+          payload: { interactive: { kind: "options", body: "Elige", options: "roto" } },
+        })}
+        conversationId="c1"
+      />,
+    )
+    expect(screen.getByText("Elige")).toBeInTheDocument()
+  })
+
+  it("entrante: chip que distingue el toque de un texto tecleado", () => {
+    render(
+      <MessageBubble
+        message={makeMessage({
+          body: "Sí, confirmar",
+          payload: { interactive_reply: { id: "opt:si", title: "Sí, confirmar", source: "button" } },
+        })}
+        conversationId="c1"
+      />,
+    )
+    expect(screen.getByText("Botón")).toBeInTheDocument()
+    expect(screen.getByText("Sí, confirmar")).toBeInTheDocument()
+  })
+
+  it("entrante numérico: explica que respondió a una lista degradada", () => {
+    render(
+      <MessageBubble
+        message={makeMessage({
+          body: "2",
+          payload: {
+            interactive_reply: { id: "slot:x", title: "vie 14 a las 10:00", source: "numeric" },
+          },
+        })}
+        conversationId="c1"
+      />,
+    )
+    expect(screen.getByText("Respondió con el número")).toBeInTheDocument()
+  })
+})

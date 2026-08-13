@@ -2,7 +2,13 @@
 
 import { cn } from "@/core/lib/utils"
 import { AlertCircle, Bot, Check, CheckCheck, Clock, RotateCw, User } from "lucide-react"
-import { isMediaContentType, type UiMessage } from "@/modules/inbox/domain/inbox"
+import {
+  extractInteractivePayload,
+  extractInteractiveReply,
+  isMediaContentType,
+  type UiMessage,
+} from "@/modules/inbox/domain/inbox"
+import { InteractiveMessage, InteractiveReplyChip } from "./interactive"
 import { MediaAttachment } from "./media"
 
 /**
@@ -40,6 +46,12 @@ export function MessageBubble({
   const failed = message.delivery === "failed" || message.status === "failed"
   const media = isMediaContentType(message.content_type)
   const sticker = message.content_type === "sticker"
+  // Interactivo (§9.1): el cuerpo del mensaje ES el texto de la burbuja y las
+  // opciones cuelgan debajo. Un payload inválido devuelve null y la burbuja
+  // cae a texto plano — nunca se queda muda.
+  const interactive = extractInteractivePayload(message.payload)
+  // Entrante: el cliente tocó una opción en vez de escribir
+  const reply = extractInteractiveReply(message.payload)
   // Imagen/video/sticker: media al borde de la burbuja; el texto va con padding propio
   const edgeToEdge = sticker || message.content_type === "image" || message.content_type === "video"
 
@@ -73,8 +85,12 @@ export function MessageBubble({
       >
         {media ? (
           <MediaAttachment message={message} conversationId={conversationId} outbound={outbound} />
+        ) : reply ? (
+          <InteractiveReplyChip reply={reply} outbound={outbound} />
         ) : (
-          message.content_type !== "text" && (
+          // Sin rama propia, un content_type nuevo se pinta con su nombre
+          // crudo: es feo pero honesto, y es lo que delata que falta soporte
+          message.content_type !== "text" && !interactive && (
             <div className={cn("mb-1 text-[10px] uppercase tracking-wide", outbound ? "text-white/70" : "text-muted-foreground")}>
               {message.content_type}
             </div>
@@ -85,6 +101,7 @@ export function MessageBubble({
             {media ? message.body : (message.body ?? "(sin contenido)")}
           </p>
         )}
+        {interactive && <InteractiveMessage interactive={interactive} outbound={outbound} />}
         <div
           className={cn(
             "mt-1 flex items-center justify-end gap-1 text-[10px]",
