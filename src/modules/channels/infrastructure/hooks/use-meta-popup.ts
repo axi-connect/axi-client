@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MetaProduct, MetaSignupConfigDTO } from "@/modules/channels/domain/meta-signup";
 import { FacebookSdkError } from "@/modules/channels/domain/meta-signup";
 import {
+  getFacebookSdk,
   loadFacebookSdk,
-  type FacebookSdk,
   type FbLoginResponse,
 } from "@/modules/channels/infrastructure/services/facebook-sdk";
 import { getMetaSignupConfig } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
@@ -95,7 +95,8 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
   const [config, setConfig] = useState<MetaSignupConfigDTO | null>(null);
   const [error, setError] = useState<MetaPopupError | null>(null);
 
-  const sdkRef = useRef<FacebookSdk | null>(null);
+  /** Solo marca que la carga terminó. El objeto se lee del global al usarlo. */
+  const loadedRef = useRef(false);
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedAtRef = useRef<number>(0);
 
@@ -133,12 +134,12 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       try {
         const sdk = await loadFacebookSdk(configResult.app_id, configResult.graph_api_version);
         if (cancelled) return;
-        sdkRef.current = sdk;
+        loadedRef.current = sdk !== null;
         setStatus("ready");
         setError(null);
       } catch (err) {
         if (cancelled) return;
-        sdkRef.current = null;
+        loadedRef.current = false;
         setStatus("unavailable");
         setError({
           code: err instanceof FacebookSdkError ? `sdk/${err.reason}` : "sdk/unknown",
@@ -156,13 +157,13 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
 
   const open = useCallback(
     (handlers: { beforeOpen?: () => void; onResult: (result: MetaPopupResult) => void }) => {
-      const sdk = sdkRef.current;
+      // Se lee AQUÍ, no de una referencia guardada: ver `getFacebookSdk`
+      const sdk = getFacebookSdk();
       const configId = config?.config_id ?? null;
 
       logSignup("open() llamado", {
         sdk_cargado: sdk !== null,
-        // Si esto es false, `sdk.login` NO es el FB.login que funciona en consola
-        sdk_es_window_FB: sdk === (window as { FB?: unknown }).FB,
+        carga_completada: loadedRef.current,
         config_id: configId,
         tipo_config_id: typeof configId,
         app_id: config?.app_id ?? null,

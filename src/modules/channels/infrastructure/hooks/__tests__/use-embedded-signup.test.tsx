@@ -34,9 +34,12 @@ const login = jest.fn((cb: (response: FbLoginResponse) => void, options: FbLogin
   loginOptions = options;
 });
 const loadFacebookSdk = jest.fn();
+/** El SDK VIVO. Se lee en cada llamada porque Facebook reemplaza window.FB. */
+const getFacebookSdk = jest.fn();
 
 jest.mock("../../services/facebook-sdk", () => ({
   loadFacebookSdk: (appId: string | null, version: string) => loadFacebookSdk(appId, version),
+  getFacebookSdk: () => getFacebookSdk(),
 }));
 
 const upsertChannel = jest.fn();
@@ -88,6 +91,7 @@ describe("useEmbeddedSignup", () => {
     loginOptions = null;
     getMetaSignupConfig.mockResolvedValue(CONFIG);
     loadFacebookSdk.mockResolvedValue({ init: jest.fn(), login });
+    getFacebookSdk.mockReturnValue({ init: jest.fn(), login });
     completeMetaSignup.mockResolvedValue(CHANNEL);
   });
 
@@ -116,6 +120,23 @@ describe("useEmbeddedSignup", () => {
 
     await waitFor(() => expect(view.result.current.phase).toBe("unavailable"));
     expect(view.result.current.error?.code).toBe("sdk/unknown");
+  });
+
+  it("usa el SDK VIVO, no el que resolvió la carga", async () => {
+    // El bug de producción: Facebook REEMPLAZA window.FB durante su
+    // inicialización. Con la referencia capturada, `login` seguía existiendo,
+    // se llamaba, volvía sin lanzar y no abría nada — sin error ni en consola.
+    // Desde la consola sí funcionaba, porque ahí se lee el global actual.
+    const loginDelObjetoViejo = jest.fn();
+    loadFacebookSdk.mockResolvedValue({ init: jest.fn(), login: loginDelObjetoViejo });
+    const view = await mountReady();
+
+    act(() => {
+      view.result.current.start();
+    });
+
+    expect(loginDelObjetoViejo).not.toHaveBeenCalled();
+    expect(login).toHaveBeenCalledTimes(1);
   });
 
   it("`start` invoca FB.login con los extras que Meta exige", async () => {
@@ -295,6 +316,8 @@ describe("useEmbeddedSignup", () => {
     // se arma después de esa guarda, la pantalla se quedaba así para siempre:
     // sin popup, sin error, sin consola y sin timeout.
     loadFacebookSdk.mockRejectedValueOnce(new Error("bloqueado"));
+    // Si el SDK no cargó, el global tampoco existe
+    getFacebookSdk.mockReturnValue(null);
     const view = renderHook(() => useEmbeddedSignup({ product: "whatsapp" }));
     await waitFor(() => expect(view.result.current.phase).toBe("unavailable"));
 

@@ -156,6 +156,22 @@ function baseInitOptions(appId: string, graphApiVersion: string) {
   };
 }
 
+/**
+ * El SDK **vivo**, leído del global en el momento de usarlo.
+ *
+ * No se puede guardar el objeto que devuelve `loadFacebookSdk`: el SDK de
+ * Facebook REEMPLAZA `window.FB` durante su inicialización, y una referencia
+ * capturada antes queda huérfana. Su `login` sigue existiendo y sigue siendo
+ * una función, pero al invocarla **no hace nada**: no abre el popup, no lanza y
+ * no devuelve error. Es el fallo más silencioso posible, y costó una tarde de
+ * producción encontrarlo — desde la consola funcionaba, porque ahí se lee el
+ * global actual.
+ */
+export function getFacebookSdk(): FacebookSdk | null {
+  if (typeof window === "undefined") return null;
+  return window.FB ?? null;
+}
+
 /** Solo para tests: olvida la promesa memoizada. */
 export function resetFacebookSdkForTests(): void {
   pending = null;
