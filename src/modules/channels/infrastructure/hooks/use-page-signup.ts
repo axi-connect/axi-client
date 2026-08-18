@@ -131,6 +131,14 @@ export function usePageSignup({
           });
           return;
         }
+        if (result.outcome === "config_ignored") {
+          fail({
+            code: "meta/config_not_applied",
+            message:
+              "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
+          });
+          return;
+        }
         if (result.outcome === "blocked") {
           setPhase("popup_blocked");
           return;

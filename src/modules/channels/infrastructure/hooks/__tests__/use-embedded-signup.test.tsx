@@ -202,6 +202,26 @@ describe("useEmbeddedSignup", () => {
     expect(completeMetaSignup).not.toHaveBeenCalled();
   });
 
+  it("un token en vez de `code` se explica, no se disfraza de cancelación", async () => {
+    // Pasa cuando Meta ignora el config_id porque no es de esa app. La
+    // heurística de tiempo lo tomaría por cancelación y el usuario reintentaría
+    // eternamente un fallo de configuración.
+    const view = await mountReady();
+    act(() => {
+      view.result.current.start();
+    });
+    act(() => {
+      loginCallback?.({
+        status: "connected",
+        authResponse: { accessToken: "EAAVz-token-de-usuario" },
+      });
+    });
+
+    await waitFor(() => expect(view.result.current.phase).toBe("error"));
+    expect(view.result.current.error?.code).toBe("meta/config_not_applied");
+    expect(completeMetaSignup).not.toHaveBeenCalled();
+  });
+
   it("un callback sin `code` inmediato se interpreta como popup bloqueado", async () => {
     const view = await mountReady();
     act(() => view.result.current.start());

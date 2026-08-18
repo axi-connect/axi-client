@@ -42,6 +42,14 @@ export type MetaPopupResult =
   | { outcome: "blocked" }
   | { outcome: "cancelled" }
   /**
+   * Meta devolvió un token de usuario en vez del `code`, que es lo que pasa
+   * cuando **ignora el `config_id`** — normalmente porque esa configuración no
+   * pertenece a la app del `app_id`. Tiene salida propia porque la heurística
+   * de tiempo lo tomaría por una cancelación, y decirle al usuario "cancelaste"
+   * ante un error de configuración lo manda a reintentar para siempre.
+   */
+  | { outcome: "config_ignored" }
+  /**
    * El SDK o el `config_id` no estaban al pulsar. **Siempre se reporta**, nunca
    * se vuelve en silencio: el flujo ya pintó "esperando a Meta" antes de
    * llamar, así que rendirse sin avisar deja la pantalla colgada para siempre
@@ -163,6 +171,19 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         const code = response.authResponse?.code;
         if (typeof code === "string" && code !== "") {
           handlers.onResult({ outcome: "code", code });
+          return;
+        }
+
+        // Autorizó y volvió con TOKEN en vez de code: el `config_id` no se
+        // aplicó. Sin este caso, la heurística de abajo lo llamaría
+        // "cancelaste" y el usuario reintentaría eternamente un fallo de
+        // configuración.
+        if (response.authResponse?.accessToken !== undefined) {
+          console.warn(
+            "[meta-signup] Meta devolvió un access token en vez del code: el config_id no se aplicó",
+            { config_id: configId, app_id: config?.app_id },
+          );
+          handlers.onResult({ outcome: "config_ignored" });
           return;
         }
 

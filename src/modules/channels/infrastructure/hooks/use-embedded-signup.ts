@@ -268,6 +268,14 @@ export function useEmbeddedSignup({
           });
           return;
         }
+        if (result.outcome === "config_ignored") {
+          settle("error", {
+            code: "meta/config_not_applied",
+            message:
+              "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
+          });
+          return;
+        }
         if (result.outcome === "blocked") {
           settle("popup_blocked", null);
           return;
