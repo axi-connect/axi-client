@@ -34,13 +34,11 @@ import { PageAssetPicker } from "./PageAssetPicker";
  */
 export function PageSignupButton({
   provider,
-  channelName,
   onConnected,
   onManualCreated,
   intro,
 }: {
   provider: ChannelProvider;
-  channelName: string;
   onConnected: (channel: ChannelDTO) => void;
   onManualCreated?: () => void;
   intro?: React.ReactNode;
@@ -49,7 +47,6 @@ export function PageSignupButton({
   const product = provider.meta_product === "instagram" ? "instagram" : "messenger";
   const { phase, error, assets, connecting, start, choose, reset } = usePageSignup({
     product,
-    channelName,
     onConnected,
   });
 

@@ -32,7 +32,6 @@ export type PageAsset = Schemas["MetaPageAssetsDto"]["assets"][number];
 
 export type UsePageSignupOptions = {
   product: "instagram" | "messenger";
-  channelName?: string;
   onConnected?: (channel: ChannelDTO) => void;
 };
 
@@ -48,11 +47,7 @@ export type UsePageSignupResult = {
   reset: () => void;
 };
 
-export function usePageSignup({
-  product,
-  channelName,
-  onConnected,
-}: UsePageSignupOptions): UsePageSignupResult {
+export function usePageSignup({ product, onConnected }: UsePageSignupOptions): UsePageSignupResult {
   const popup = useMetaPopup(product);
   const { open: openPopup, clearWatchdog } = popup;
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
@@ -165,12 +160,12 @@ export function usePageSignup({
       setConnecting(true);
       void (async () => {
         try {
+          // Sin `name`: el backend nombra el canal con la página o la cuenta que
+          // se acaba de elegir, que es más preciso que cualquier cosa que el
+          // usuario pudiera teclear antes de ver la lista
           const created = await connectMetaPageChannel({
             session_id: sessionId,
             asset_id: assetId,
-            ...(channelName !== undefined && channelName.trim() !== ""
-              ? { name: channelName.trim() }
-              : {}),
           });
           upsertChannel(created);
           if (!mountedRef.current) return;
@@ -188,7 +183,7 @@ export function usePageSignup({
         }
       })();
     },
-    [channelName, connecting, fail, onConnected, upsertChannel],
+    [connecting, fail, onConnected, upsertChannel],
   );
 
   const reset = useCallback(() => {

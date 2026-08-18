@@ -57,7 +57,11 @@ export function EmbeddedSignupButton({
   intro,
 }: {
   provider: ChannelProvider;
-  channelName: string;
+  /**
+   * Solo lo manda la RECONEXIÓN, para conservar el nombre que el canal ya tiene.
+   * El wizard no lo pide: el alta nombra el canal y el paso 4 permite renombrar.
+   */
+  channelName?: string;
   onConnected: (channel: ChannelDTO) => void;
   /** Alta manual. Solo en el wizard: al reconectar no se crea nada. */
   onManualCreated?: () => void;
