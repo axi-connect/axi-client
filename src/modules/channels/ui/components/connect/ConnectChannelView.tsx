@@ -14,6 +14,7 @@ import {
   type ChannelProvider,
 } from "@/modules/channels/domain/channel-providers";
 import { EmbeddedSignupButton } from "./EmbeddedSignupButton";
+import { PageSignupButton } from "./PageSignupButton";
 import { ManualCredentialsFallback } from "./ManualCredentialsFallback";
 import { ConnectSuccess } from "./ConnectSuccess";
 import { PrerequisitesChecklist } from "./PrerequisitesChecklist";
@@ -59,15 +60,31 @@ export function ConnectChannelView() {
         />
       );
     }
+    // El camino manual no expone el canal creado (`ChannelForm.onSuccess` no lo
+    // devuelve y su lógica no se toca), así que se cierra el wizard llevando al
+    // listado, que ya refresca desde el store
+    const onManualCreated = () => router.push("/settings/channels");
+
+    // Dos botones y no uno con dos flujos dentro: el popup de WhatsApp devuelve
+    // los identificadores y el de páginas no, así que este último añade un paso
+    // —elegir activo— que allí no existe, y no tiene el PIN que aquel sí pide.
+    if (provider.meta_product === "instagram" || provider.meta_product === "messenger") {
+      return (
+        <PageSignupButton
+          provider={provider}
+          channelName={channelName}
+          onConnected={goToSuccess}
+          onManualCreated={onManualCreated}
+        />
+      );
+    }
+
     return (
       <EmbeddedSignupButton
         provider={provider}
         channelName={channelName}
         onConnected={goToSuccess}
-        // El camino manual no expone el canal creado (`ChannelForm.onSuccess` no
-        // lo devuelve y su lógica no se toca), así que se cierra el wizard
-        // llevando al listado, que ya refresca desde el store
-        onManualCreated={() => router.push("/settings/channels")}
+        onManualCreated={onManualCreated}
       />
     );
   }

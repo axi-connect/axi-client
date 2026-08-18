@@ -43,6 +43,11 @@ export type EmbeddedSignupPhase =
   | "popup_open"
   | "popup_blocked"
   | "exchanging"
+  /**
+   * Solo en el alta por páginas (F7): el negocio autorizó varias y tiene que
+   * elegir. WhatsApp nunca pasa por aquí — su popup ya devuelve el número.
+   */
+  | "choosing_asset"
   | "awaiting_pin"
   | "success"
   | "cancelled"

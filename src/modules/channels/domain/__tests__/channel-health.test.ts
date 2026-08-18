@@ -1,5 +1,6 @@
 import type { ChannelDTO } from "../channel";
 import {
+  readChannelActions,
   readConnectionMethod,
   readLastCheck,
   readMessagingLimit,
@@ -179,3 +180,75 @@ describe("readLastCheck", () => {
     expect(readLastCheck("2026-08-07T12:00:00.000Z", NOW)).toBe("hace 2 días");
   });
 });
+
+describe("readChannelActions — las acciones del detalle (F6)", () => {
+  function channel(overrides: Partial<ChannelDTO> = {}): ChannelDTO {
+    return {
+      id: "11111111-1111-4111-8111-111111111111",
+      name: "Ventas",
+      kind: "whatsapp_cloud",
+      provider_account_id: "111",
+      status: "connected",
+      display_phone_number: null,
+      verified_name: null,
+      waba_id: null,
+      default_ai_agent_id: null,
+      credentials_configured: true,
+      token_last4: null,
+      quality_rating: null,
+      messaging_limit: null,
+      last_health_check_at: null,
+      token_expires_at: null,
+      credentials_revoked: false,
+      disconnected_at: null,
+      business_id: null,
+      connection_method: "embedded_signup",
+      onboarding: null,
+      created_at: "2026-08-01T00:00:00.000Z",
+      updated_at: "2026-08-01T00:00:00.000Z",
+      ...overrides,
+    } as ChannelDTO;
+  }
+
+  it("un canal activo ofrece desconectar y promete que no se pierde nada", () => {
+    const actions = readChannelActions(channel());
+
+    expect(actions.can_disconnect).toBe(true);
+    expect(actions.can_reconnect).toBe(false);
+    // Sin esta promesa explícita, nadie pulsa un botón que suena a apagar
+    expect(actions.hint).toContain("sin borrarlo");
+  });
+
+  it("whatsapp_web NO ofrece desconectar: ya tiene «Cerrar sesión»", () => {
+    // Dos botones para la misma acción es peor que uno
+    expect(readChannelActions(channel({ kind: "whatsapp_web" })).can_disconnect).toBe(false);
+  });
+
+  it("desconectado por el tenant: lo dice con fecha, no como una avería", () => {
+    const actions = readChannelActions(
+      channel({ status: "disconnected", disconnected_at: "2026-08-03T10:00:00.000Z" }),
+      new Date("2026-08-18T00:00:00.000Z"),
+    );
+
+    expect(actions.can_disconnect).toBe(false);
+    expect(actions.can_reconnect).toBe(true);
+    expect(actions.hint).toContain("Lo desconectaste el 3 de agosto");
+  });
+
+  it("revocado por Meta: mensaje distinto, porque es una situación distinta", () => {
+    const actions = readChannelActions(
+      channel({ status: "disconnected", credentials_revoked: true }),
+    );
+
+    expect(actions.hint).toContain("Meta revocó el acceso");
+    expect(actions.hint).not.toContain("Lo desconectaste");
+  });
+
+  it("un canal viejo sin fecha no inventa una", () => {
+    // Los canales anteriores a B10 no tienen `disconnected_at`
+    const actions = readChannelActions(channel({ status: "disconnected" }));
+
+    expect(actions.hint).toContain("está desconectado");
+    expect(actions.hint).not.toContain("Invalid Date");
+  });
+})

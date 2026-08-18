@@ -107,15 +107,22 @@ describe("registry de proveedores de canal", () => {
     }
   });
 
-  it("la estrategia EFECTIVA separa lo que se ofrece hoy de lo que es el objetivo", () => {
-    // El descriptor de Instagram declara `embedded_signup` como objetivo, pero su
-    // `availability: manual_only` es lo que decide por dónde va HOY: el backend
-    // tiene su adaptador de envío pero no su alta por botón. Cuando la tenga,
-    // cambia una palabra del registry y el wizard ofrece el popup.
-    expect(channelProvider("instagram_dm").connect_strategy).toBe("embedded_signup");
-    expect(effectiveConnectStrategy(channelProvider("instagram_dm"))).toBe("manual");
-    expect(effectiveConnectStrategy(channelProvider("whatsapp_cloud"))).toBe("embedded_signup");
+  it("los tres canales Meta se conectan por botón (F7)", () => {
+    // Instagram y Messenger iban por credenciales mientras el backend no tenía
+    // su alta. Con B11 dentro, el registry cambió una palabra y el wizard ofrece
+    // el popup — que es exactamente el desacoplamiento que el descriptor busca.
+    for (const kind of ["whatsapp_cloud", "instagram_dm", "facebook_messenger"] as const) {
+      expect(effectiveConnectStrategy(channelProvider(kind))).toBe("embedded_signup");
+    }
     expect(effectiveConnectStrategy(channelProvider("whatsapp_web"))).toBe("qr");
+  });
+
+  it("declarar `available` no promete lo que el entorno no pueda cumplir", () => {
+    // Si falta el config_id del producto, el backend responde enabled:false y la
+    // interfaz cae sola al camino manual. Por eso `available` es seguro aquí: la
+    // capacidad la decide el despliegue, no el registry.
+    expect(channelProvider("instagram_dm").meta_product).toBe("instagram");
+    expect(channelProvider("facebook_messenger").meta_product).toBe("messenger");
   });
 
   it("el prerrequisito que más altas rompe está marcado como crítico", () => {

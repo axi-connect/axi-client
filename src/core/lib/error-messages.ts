@@ -66,6 +66,10 @@ const MESSAGES_BY_CODE: Record<string, string> = {
     "Ese número ya estaba dado de alta en Meta: necesitamos el PIN de seis dígitos que se definió entonces",
   "channels/meta_pin_invalid":
     "El PIN no coincide. Tiene que ser el mismo que registraste en Meta para ese número",
+  "channels/meta_no_assets":
+    "Autorizaste en Meta pero no seleccionaste ninguna página. Vuelve a abrir la ventana y marca la que quieres conectar",
+  "channels/meta_signup_session_expired":
+    "La conexión tardó demasiado y caducó. Vuelve a abrir la ventana de Meta: es rápido",
   "channels/meta_payment_method_required":
     "Meta pide un método de pago para ese número. Añádelo en el Administrador de WhatsApp y vuelve a intentarlo",
   "channels/invalid_credentials": "Las credenciales del canal no son válidas",

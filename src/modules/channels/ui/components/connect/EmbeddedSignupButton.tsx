@@ -37,8 +37,11 @@ import { MetaPinForm } from "./MetaPinForm";
  *   cierra, el foco estaba en una ventana que ya no existe: sin esto, quien
  *   navega con teclado se queda sin punto de partida.
  */
-const IN_PROGRESS: readonly EmbeddedSignupPhase[] = ["preparing", "popup_open", "exchanging"];
-const TERMINAL: readonly EmbeddedSignupPhase[] = [
+/** Exportadas para que el botón de páginas (F7) muestre los MISMOS avisos:
+ *  dos copias divergirían y el usuario vería mensajes distintos ante el mismo
+ *  fallo según el canal. */
+export const IN_PROGRESS: readonly EmbeddedSignupPhase[] = ["preparing", "popup_open", "exchanging"];
+export const TERMINAL: readonly EmbeddedSignupPhase[] = [
   "cancelled",
   "error",
   "popup_blocked",
@@ -181,7 +184,7 @@ function renderAction({
   );
 }
 
-function renderProgress(phase: EmbeddedSignupPhase) {
+export function renderProgress(phase: EmbeddedSignupPhase) {
   if (phase === "preparing") {
     return (
       <p className="text-xs text-muted-foreground">
@@ -281,7 +284,7 @@ function Notice({
   );
 }
 
-function PopupBlockedNotice() {
+export function PopupBlockedNotice() {
   return (
     <Notice
       tone="warning"
@@ -300,7 +303,7 @@ function PopupBlockedNotice() {
   );
 }
 
-function CancelledNotice() {
+export function CancelledNotice() {
   return (
     <Notice
       tone="info"
@@ -314,7 +317,7 @@ function CancelledNotice() {
   );
 }
 
-function ErrorNotice({ error }: { error: EmbeddedSignupError | null }) {
+export function ErrorNotice({ error }: { error: EmbeddedSignupError | null }) {
   return (
     <Notice
       tone="danger"
@@ -335,7 +338,7 @@ function ErrorNotice({ error }: { error: EmbeddedSignupError | null }) {
   );
 }
 
-function UnavailableNotice({ error }: { error: EmbeddedSignupError | null }) {
+export function UnavailableNotice({ error }: { error: EmbeddedSignupError | null }) {
   return (
     <Notice
       tone="warning"

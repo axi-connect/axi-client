@@ -211,12 +211,13 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     tagline: "Mensajes directos de tu cuenta profesional de Instagram.",
     icon_id: "instagram",
     brand_class: "brand-instagram",
-    // La estrategia OBJETIVO sigue siendo el botón. `availability` es lo que
-    // decide por dónde va hoy: en cuanto exista el caso de uso del backend, este
-    // descriptor cambia una palabra y el wizard empieza a ofrecer el popup.
     connect_strategy: "embedded_signup",
-    availability: "manual_only",
-    requirement_note: "Con el id de la cuenta y un token · el botón llega pronto",
+    // B11/F7 dentro: el alta por botón existe. Si falta el `config_id` del
+    // producto en el entorno, el backend responde `enabled: false` y la interfaz
+    // cae sola al camino manual — poner `available` no promete nada que el
+    // despliegue no pueda cumplir.
+    availability: "available",
+    requirement_note: "Eliges tu cuenta desde Meta, sin pegar tokens",
     prerequisites: INSTAGRAM_PREREQUISITES,
     meta_product: "instagram",
   },
@@ -227,8 +228,8 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     icon_id: "messenger",
     brand_class: "brand-messenger",
     connect_strategy: "embedded_signup",
-    availability: "manual_only",
-    requirement_note: "Con el id de la página y un token · el botón llega pronto",
+    availability: "available",
+    requirement_note: "Eliges tu página desde Meta, sin pegar tokens",
     prerequisites: MESSENGER_PREREQUISITES,
     meta_product: "messenger",
   },

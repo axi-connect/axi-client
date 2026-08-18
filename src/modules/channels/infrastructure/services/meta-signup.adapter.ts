@@ -1,4 +1,5 @@
 import { isHttpError } from "@/core/api/problem";
+import type { Schemas } from "@/core/api/types";
 import { http } from "@/core/services/http";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import type {
@@ -81,4 +82,25 @@ export function registerMetaPhoneNumber(
   return http.post<ChannelDTO>(`/channels/${channelId}/meta/register`, {
     register_pin: registerPin,
   });
+}
+
+/**
+ * Paso 1 del alta por páginas (F7): canjea el `code` y devuelve los activos que
+ * el negocio autorizó. Es `POST` y no `GET` porque consume el code —de un solo
+ * uso— y crea la sesión en el servidor.
+ */
+export function listMetaPageAssets(payload: {
+  code: string;
+  product: "instagram" | "messenger";
+}): Promise<Schemas["MetaPageAssetsDto"]> {
+  return http.post<Schemas["MetaPageAssetsDto"]>("/channels/meta/page-signup/assets", payload);
+}
+
+/** Paso 2: conecta el activo elegido. El `asset_id` se valida contra la sesión. */
+export function connectMetaPageChannel(payload: {
+  session_id: string;
+  asset_id: string;
+  name?: string;
+}): Promise<ChannelDTO> {
+  return http.post<ChannelDTO>("/channels/meta/page-signup", payload);
 }

@@ -30,6 +30,14 @@ export function updateChannelCredentials(id: string, accessToken: string): Promi
   return http.put<ChannelDTO>(`/channels/${id}/credentials`, { access_token: accessToken });
 }
 
+/**
+ * Desconexión suave (B10): deja de recibir y de enviar, pero **conserva el
+ * canal, su historial y su configuración**. Reconectar recupera el mismo canal.
+ */
+export function disconnectChannel(id: string): Promise<ChannelDTO> {
+  return http.post<ChannelDTO>(`/channels/${id}/disconnect`, {});
+}
+
 export function deleteChannel(id: string): Promise<void> {
   return http.delete(`/channels/${id}`);
 }

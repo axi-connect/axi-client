@@ -220,3 +220,72 @@ export function readLastCheck(value: string | null | undefined, now: Date = new 
 function daysBetween(from: Date, to: Date): number {
   return Math.floor((to.getTime() - from.getTime()) / 86_400_000);
 }
+
+/** Qué acciones ofrece el detalle del canal, y por qué. */
+export type ChannelActions = {
+  can_disconnect: boolean;
+  can_reconnect: boolean;
+  /** Copia de la sección: cambia según quién dejó el canal así. */
+  hint: string;
+};
+
+const ACTIVE_HINT =
+  "Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración. " +
+  "Desconectar detiene el canal sin borrarlo. Al eliminar, este número deja de recibir " +
+  "mensajes en Axi y las conversaciones quedan archivadas.";
+
+/**
+ * Decide las acciones del detalle (F6).
+ *
+ * Vive en `domain` y no en el componente porque las tres reglas son de
+ * producto, no de presentación, y las tres son fáciles de romper sin notarlo:
+ *
+ * - **`whatsapp_web` no ofrece «Desconectar»**: su panel de sesión ya tiene
+ *   «Cerrar sesión», y dos botones para la misma acción es peor que uno.
+ * - **Desconectar no es eliminar**: es reversible, así que la copia promete
+ *   explícitamente que se conserva el historial. Sin esa frase, nadie lo pulsa.
+ * - **Quién desconectó cambia el mensaje**: `credentials_revoked` lo escribe
+ *   SOLO Meta y `disconnected_at` SOLO el tenant. Sin separarlos, una
+ *   revocación y una pausa voluntaria dirían lo mismo, y son cosas muy
+ *   distintas para quien lo lee.
+ */
+export function readChannelActions(channel: ChannelDTO, now: Date = new Date()): ChannelActions {
+  const disconnected = channel.status === "disconnected";
+  const isCloud = channel.kind === "whatsapp_cloud";
+
+  if (!disconnected) {
+    return {
+      can_disconnect: channel.kind !== "whatsapp_web",
+      can_reconnect: false,
+      hint: ACTIVE_HINT,
+    };
+  }
+
+  if (channel.credentials_revoked) {
+    return {
+      can_disconnect: false,
+      can_reconnect: isCloud,
+      hint: "Meta revocó el acceso a este canal. Vuelve a conectarlo para seguir recibiendo mensajes.",
+    };
+  }
+
+  return {
+    can_disconnect: false,
+    can_reconnect: isCloud,
+    hint: disconnectedHint(channel.disconnected_at ?? null, now),
+  };
+}
+
+function disconnectedHint(disconnectedAt: string | null, now: Date): string {
+  if (disconnectedAt === null) {
+    return "Este canal está desconectado. Vuelve a conectarlo cuando quieras: conservas el historial.";
+  }
+  const date = new Date(disconnectedAt);
+  const sameYear = date.getFullYear() === now.getFullYear();
+  const when = date.toLocaleDateString("es-CO", {
+    day: "numeric",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+  return `Lo desconectaste el ${when}. Conservas el historial y la configuración: vuelve a conectarlo cuando quieras.`;
+}

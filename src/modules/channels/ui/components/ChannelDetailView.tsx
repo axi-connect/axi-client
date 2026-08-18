@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, PlugZap, Power, RefreshCw, Trash2 } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -12,10 +12,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { channelProvider } from "@/modules/channels/domain/channel-providers";
+import { readChannelActions } from "@/modules/channels/domain/channel-health";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
 import { useChannelsRealtime } from "@/modules/channels/infrastructure/hooks/use-channels-realtime";
 import {
   deleteChannel,
+  disconnectChannel,
   getChannelById,
 } from "@/modules/channels/infrastructure/services/channels-service.adapter";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
@@ -67,6 +69,54 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   const live = liveChannels.find((item) => item.id === channelId);
   const channel = live ?? fetched;
   const pairing = pairingByChannel[channelId];
+  // La decisión vive en `domain` (F6): son reglas de producto, no de pintado
+  const actions = channel === null ? null : readChannelActions(channel);
+
+  /**
+   * Desconectar NO es eliminar, y la copia lo dice explícitamente: es lo único
+   * que separa un botón reversible de uno que la gente teme pulsar.
+   */
+  const confirmDisconnect = () => {
+    if (!channel) return;
+    showModal({
+      title: "Desconectar canal",
+      description:
+        `“${channel.name}” dejará de recibir y enviar mensajes. ` +
+        "Conservas el historial de conversaciones y toda la configuración, " +
+        "y puedes volver a conectarlo cuando quieras.",
+      className: "sm:max-w-md",
+      actions: [
+        { label: "Cancelar", variant: "outline", asClose: true, id: "channel-disconnect-cancel" },
+        {
+          // `outline` y no `destructive`: es reversible, y pintarlo como el
+          // borrado sería mentir sobre lo que hace
+          label: "Desconectar",
+          variant: "outline",
+          asClose: false,
+          id: "channel-disconnect-confirm",
+          onClick: async () => {
+            try {
+              const updated = await disconnectChannel(channel.id);
+              setFetched(updated);
+              closeModal();
+              showAlert({
+                tone: "success",
+                title: "Canal desconectado",
+                open: true,
+                autoCloseMs: 3500,
+              });
+            } catch (err) {
+              showAlert({
+                tone: "error",
+                title: errorMessage(err, "No se pudo desconectar el canal"),
+                open: true,
+              });
+            }
+          },
+        },
+      ],
+    });
+  };
 
   const confirmDelete = () => {
     if (!channel) return;
@@ -181,17 +231,25 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
       <section className="space-y-4 rounded-lg border border-border p-4">
         <div>
           <h2 className="text-base font-semibold">Acciones</h2>
-          <p className="text-xs text-muted-foreground">
-            Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración.
-            Al eliminar, este número deja de recibir mensajes en Axi y las conversaciones quedan
-            archivadas.
-          </p>
+          <p className="text-xs text-muted-foreground">{actions?.hint}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {channel.kind === "whatsapp_cloud" && (
             <Button onClick={() => setReconnecting(true)}>
               <RefreshCw aria-hidden="true" className="size-4" />
               Renovar conexión
+            </Button>
+          )}
+          {actions?.can_disconnect === true && (
+            <Button variant="outline" onClick={confirmDisconnect}>
+              <Power aria-hidden="true" className="size-4" />
+              Desconectar
+            </Button>
+          )}
+          {actions?.can_reconnect === true && (
+            <Button onClick={() => setReconnecting(true)}>
+              <PlugZap aria-hidden="true" className="size-4" />
+              Reconectar
             </Button>
           )}
           <Button variant="outline" className="text-destructive" onClick={confirmDelete}>

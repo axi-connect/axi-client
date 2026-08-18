@@ -708,6 +708,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/channels/meta/page-signup/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaOnboardingController_pageAssets_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/meta/page-signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaOnboardingController_connectPage_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/channels/{id}/meta/register": {
         parameters: {
             query?: never;
@@ -766,6 +798,22 @@ export interface paths {
         get?: never;
         put: operations["ChannelsController_rotateCredentials_v1"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/channels/{id}/disconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChannelsController_disconnect_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4342,6 +4390,8 @@ export interface components {
             /** Format: date-time */
             token_expires_at: string | null;
             credentials_revoked: boolean;
+            /** Format: date-time */
+            disconnected_at: string | null;
             business_id: string | null;
             /** @enum {string} */
             connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
@@ -4355,6 +4405,28 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        MetaPageSignupAssetsDto: {
+            code: string;
+            /** @enum {string} */
+            product: "instagram" | "messenger";
+        };
+        MetaPageAssetsDto: {
+            session_id: string;
+            /** @enum {string} */
+            product: "instagram" | "messenger";
+            assets: {
+                asset_id: string;
+                name: string;
+                username: string | null;
+                already_connected: boolean;
+                unavailable: boolean;
+            }[];
+        };
+        MetaPageSignupDto: {
+            session_id: string;
+            asset_id: string;
+            name?: string;
         };
         MetaRegisterPhoneDto: {
             register_pin: string;
@@ -4390,6 +4462,8 @@ export interface components {
                 /** Format: date-time */
                 token_expires_at: string | null;
                 credentials_revoked: boolean;
+                /** Format: date-time */
+                disconnected_at: string | null;
                 business_id: string | null;
                 /** @enum {string} */
                 connection_method: "manual_token" | "embedded_signup" | "qr_pairing";
@@ -9884,6 +9958,52 @@ export interface operations {
             };
         };
     };
+    MetaOnboardingController_pageAssets_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaPageSignupAssetsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetaPageAssetsDto"];
+                };
+            };
+        };
+    };
+    MetaOnboardingController_connectPage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaPageSignupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
     MetaChannelRegisterController_register_v1: {
         parameters: {
             query?: never;
@@ -10030,6 +10150,27 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateChannelCredentialsDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    ChannelsController_disconnect_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

@@ -6,7 +6,6 @@ import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import {
-  FacebookSdkError,
   isTrustedMetaOrigin,
   parseWaSignupMessage,
   type EmbeddedSignupPhase,
@@ -16,16 +15,12 @@ import {
   type MetaSignupConfigDTO,
 } from "@/modules/channels/domain/meta-signup";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
-import {
-  loadFacebookSdk,
-  type FacebookSdk,
-  type FbLoginResponse,
-} from "@/modules/channels/infrastructure/services/facebook-sdk";
+
 import {
   completeMetaSignup,
-  getMetaSignupConfig,
   registerMetaPhoneNumber,
 } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
+import { useMetaPopup, type MetaPopupError } from "./use-meta-popup";
 
 /**
  * Máquina de estados del Embedded Signup (F2). Sin UI: F3 la consume.
@@ -47,15 +42,9 @@ import {
  */
 
 const SESSION_INFO_GRACE_MS = 8_000;
-const ABANDON_WATCHDOG_MS = 180_000;
-/** Un humano no autoriza ni cancela en menos de esto: por debajo, fue el navegador. */
-const POPUP_BLOCKED_THRESHOLD_MS = 600;
 
-export type EmbeddedSignupError = {
-  /** `code` RFC 7807 del backend, o un código local del cliente. */
-  code: string;
-  message: string;
-};
+/** Alias: el error es el mismo que el de la base compartida (F7). */
+export type EmbeddedSignupError = MetaPopupError;
 
 export type UseEmbeddedSignupOptions = {
   product: MetaProduct;
@@ -87,13 +76,14 @@ export function useEmbeddedSignup({
 }: UseEmbeddedSignupOptions): UseEmbeddedSignupResult {
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
 
+  const popup = useMetaPopup(product);
+  const { open: openPopup, clearWatchdog } = popup;
+
   const [phase, setPhase] = useState<EmbeddedSignupPhase>("preparing");
-  const [config, setConfig] = useState<MetaSignupConfigDTO | null>(null);
   const [error, setError] = useState<EmbeddedSignupError | null>(null);
   const [channel, setChannel] = useState<ChannelDTO | null>(null);
   const [submittingPin, setSubmittingPin] = useState(false);
 
-  const sdkRef = useRef<FacebookSdk | null>(null);
   const codeRef = useRef<string | null>(null);
   const sessionRef = useRef<{
     phone_number_id: string;
@@ -102,8 +92,6 @@ export function useEmbeddedSignup({
   } | null>(null);
   const listenerRef = useRef<((event: MessageEvent) => void) | null>(null);
   const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startedAtRef = useRef<number>(0);
   const settledRef = useRef(false);
   /** Evita `setState` sobre un componente desmontado tras un POST en vuelo. */
   const mountedRef = useRef(true);
@@ -117,67 +105,39 @@ export function useEmbeddedSignup({
       clearTimeout(graceTimerRef.current);
       graceTimerRef.current = null;
     }
-    if (watchdogRef.current !== null) {
-      clearTimeout(watchdogRef.current);
-      watchdogRef.current = null;
-    }
+    clearWatchdog();
     codeRef.current = null;
     sessionRef.current = null;
-  }, []);
+    // Depende del callback ESTABLE, no del objeto que devuelve el hook: ese es
+    // nuevo en cada render, y con él `clearAttempt` cambiaría de identidad,
+    // re-disparando el efecto que lo usa y borrando listeners a cada render
+  }, [clearWatchdog]);
 
-  // ---------------------------------------------------------------- montaje
+  // Montaje y desmontaje, y NADA más: la limpieza va aquí y en el finally de
+  // cada intento. Sin esto, tres intentos dejan tres listeners vivos.
   useEffect(() => {
     mountedRef.current = true;
-    let cancelled = false;
-
-    // SDK y configuración en paralelo: son independientes y en serie duplicarían
-    // el tiempo que el botón pasa deshabilitado
-    void (async () => {
-      const configResult = await getMetaSignupConfig(product).catch((err: unknown) => {
-        console.warn("[meta-signup] La configuración falló:", err);
-        return null;
-      });
-      if (cancelled) return;
-
-      // `null` = capacidad ausente (flag apagado o colisión de rutas). No es un
-      // error: es el disparador del camino manual.
-      if (configResult === null || !configResult.enabled) {
-        setPhase("unavailable");
-        setError({
-          code: "channels/meta_signup_disabled",
-          message: "La conexión automática con Meta no está disponible ahora mismo.",
-        });
-        return;
-      }
-      setConfig(configResult);
-
-      try {
-        const sdk = await loadFacebookSdk(configResult.app_id, configResult.graph_api_version);
-        if (cancelled) return;
-        sdkRef.current = sdk;
-        setPhase("ready");
-        setError(null);
-      } catch (err) {
-        if (cancelled) return;
-        sdkRef.current = null;
-        setPhase("unavailable");
-        setError({
-          code: err instanceof FacebookSdkError ? `sdk/${err.reason}` : "sdk/unknown",
-          message:
-            "No pudimos cargar el conector de Meta. Suele ser un bloqueador de anuncios o la red de tu empresa.",
-        });
-      }
-    })();
-
     return () => {
-      cancelled = true;
       mountedRef.current = false;
-      // Limpieza en el cleanup del efecto ADEMÁS de en el finally de cada
-      // intento: sin esto, tres intentos dejan tres listeners vivos y el cuarto
-      // POST se dispara por triplicado.
       clearAttempt();
     };
-  }, [product, clearAttempt]);
+  }, [clearAttempt]);
+
+  /**
+   * La fase espeja el estado de la base mientras no hay intento en curso. Una
+   * vez arranca el popup, la máquina de este flujo manda.
+   */
+  useEffect(() => {
+    if (popup.status === "preparing") return;
+    setPhase((current) =>
+      current === "preparing" || current === "unavailable"
+        ? popup.status === "ready"
+          ? "ready"
+          : "unavailable"
+        : current,
+    );
+    if (popup.error !== null) setError(popup.error);
+  }, [popup.status, popup.error]);
 
   // ------------------------------------------------------------ resolución
   const settle = useCallback(
@@ -253,76 +213,68 @@ export function useEmbeddedSignup({
    * el clic del usuario y `FB.login` no puede haber ni un `await`.
    */
   const start = useCallback(() => {
-    const sdk = sdkRef.current;
-    const configId = config?.config_id ?? null;
-    if (sdk === null || configId === null) {
-      setPhase("unavailable");
-      return;
-    }
-
     clearAttempt();
     settledRef.current = false;
     setChannel(null);
     setError(null);
     setPhase("popup_open");
-    startedAtRef.current = Date.now();
 
-    // El listener va ANTES de FB.login: el popup puede mandar su FINISH antes de
-    // que el callback del SDK dispare, y ese mensaje no se puede perder.
-    const listener = (event: MessageEvent) => {
-      if (!isTrustedMetaOrigin(event.origin)) return;
-      const message = parseWaSignupMessage(event.data);
-      if (message === null) return;
+    openPopup({
+      // El listener va ANTES de FB.login: el popup puede mandar su FINISH antes
+      // de que el callback del SDK dispare, y ese mensaje no se puede perder.
+      beforeOpen: () => {
+        const listener = (event: MessageEvent) => {
+          if (!isTrustedMetaOrigin(event.origin)) return;
+          const message = parseWaSignupMessage(event.data);
+          if (message === null) return;
 
-      if (message.event === "FINISH") {
-        const data = message.data ?? {};
-        if (
-          typeof data.phone_number_id === "string" &&
-          typeof data.waba_id === "string"
-        ) {
-          sessionRef.current = {
-            phone_number_id: data.phone_number_id,
-            waba_id: data.waba_id,
-            ...(typeof data.business_id === "string" ? { business_id: data.business_id } : {}),
-          };
-          tryComplete();
+          if (message.event === "FINISH") {
+            const data = message.data ?? {};
+            if (typeof data.phone_number_id === "string" && typeof data.waba_id === "string") {
+              sessionRef.current = {
+                phone_number_id: data.phone_number_id,
+                waba_id: data.waba_id,
+                ...(typeof data.business_id === "string"
+                  ? { business_id: data.business_id }
+                  : {}),
+              };
+              tryComplete();
+            }
+            return;
+          }
+
+          if (message.event === "CANCEL") {
+            settle("cancelled", null);
+            return;
+          }
+
+          if (message.event === "ERROR") {
+            settle("error", {
+              code: "meta/popup_error",
+              message:
+                message.data?.error_message ??
+                "Meta reportó un problema durante la autorización. Vuelve a intentarlo.",
+            });
+          }
+        };
+        listenerRef.current = listener;
+        window.addEventListener("message", listener);
+      },
+      onResult: (result) => {
+        if (result.outcome === "blocked") {
+          settle("popup_blocked", null);
+          return;
         }
-        return;
-      }
+        if (result.outcome === "cancelled") {
+          settle("cancelled", null);
+          return;
+        }
 
-      if (message.event === "CANCEL") {
-        settle("cancelled", null);
-        return;
-      }
-
-      if (message.event === "ERROR") {
-        settle("error", {
-          code: "meta/popup_error",
-          message:
-            message.data?.error_message ??
-            "Meta reportó un problema durante la autorización. Vuelve a intentarlo.",
-        });
-      }
-    };
-    listenerRef.current = listener;
-    window.addEventListener("message", listener);
-
-    // Abandono: tres minutos sin ninguna señal. Sin esto la UI se queda en
-    // "esperando a Meta" para siempre si el usuario cierra el popup de una forma
-    // que no emite CANCEL.
-    watchdogRef.current = setTimeout(() => {
-      settle("cancelled", null);
-    }, ABANDON_WATCHDOG_MS);
-
-    const callback = (response: FbLoginResponse) => {
-      const code = response.authResponse?.code;
-      if (typeof code === "string" && code !== "") {
-        codeRef.current = code;
+        codeRef.current = result.code;
         // Si el `sessionInfo` ya llegó, `tryComplete` envía ahora mismo. Si no,
         // se le dan 8 segundos: `waba_id` y `phone_number_id` son OBLIGATORIOS
-        // en el DTO, así que sin ellos no hay POST posible. El plan asumía que
-        // el backend podría resolverlos desde el token, y el contrato real dice
-        // que no; preferimos un error explicado a un 422 garantizado.
+        // en el DTO, así que sin ellos no hay POST posible. Preferimos un error
+        // explicado a un 422 garantizado.
         graceTimerRef.current = setTimeout(() => {
           if (sessionRef.current === null) {
             console.warn(
@@ -338,30 +290,9 @@ export function useEmbeddedSignup({
           void submit();
         }, SESSION_INFO_GRACE_MS);
         tryComplete();
-        return;
-      }
-
-      // Sin `code` puede ser cancelación o popup bloqueado, y el SDK no los
-      // distingue. Heurística: un humano no autoriza ni cancela en menos de
-      // 600 ms, así que por debajo de ese umbral fue el navegador.
-      const elapsed = Date.now() - startedAtRef.current;
-      settle(elapsed < POPUP_BLOCKED_THRESHOLD_MS ? "popup_blocked" : "cancelled", null);
-    };
-
-    try {
-      sdk.login(callback, {
-        config_id: configId,
-        response_type: "code",
-        override_default_response_type: true,
-        // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
-        // en JSON en vez de en el formato antiguo
-        extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
-      });
-    } catch (err) {
-      console.warn("[meta-signup] FB.login lanzó de forma síncrona:", err);
-      settle("popup_blocked", null);
-    }
-  }, [clearAttempt, config, settle, submit, tryComplete]);
+      },
+    });
+  }, [clearAttempt, openPopup, settle, submit, tryComplete]);
 
   // -------------------------------------------------------------- PIN (409)
   const submitPin = useCallback(
@@ -394,12 +325,12 @@ export function useEmbeddedSignup({
     settledRef.current = false;
     setChannel(null);
     setError(null);
-    setPhase(sdkRef.current !== null && config?.config_id ? "ready" : "unavailable");
-  }, [clearAttempt, config]);
+    setPhase(popup.ready ? "ready" : "unavailable");
+  }, [clearAttempt, popup.ready]);
 
   return {
     phase,
-    config,
+    config: popup.config,
     error,
     channel,
     onboardingStatus: (channel?.onboarding?.status as MetaOnboardingStatus | undefined) ?? null,
