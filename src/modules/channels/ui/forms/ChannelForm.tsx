@@ -1,8 +1,8 @@
 "use client"
 
 import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { useEffect, useState } from "react"
+import { useForm, type FieldErrors } from "react-hook-form"
+import { useEffect, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { cn } from "@/core/lib/utils"
 import { Input } from "@/shared/components/ui/input"
@@ -10,6 +10,7 @@ import { useAlert } from "@/core/providers/alert-provider"
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages"
 import { listAgents } from "@/modules/agents/infrastructure/services/agent-service.adapter"
 import { createChannel, updateChannel } from "@/modules/channels/infrastructure/services/channels-service.adapter"
+import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
 import { CHANNEL_KIND_LABELS, type ChannelDTO } from "@/modules/channels/domain/channel"
 import {
   Form,
@@ -40,16 +41,31 @@ import {
  */
 const NONE_AGENT = "__none__"
 
-const channelFormSchema = z
-  .object({
-    name: z.string().trim().min(3, "Mínimo 3 caracteres"),
-    kind: z.enum(["whatsapp_cloud", "whatsapp_web", "instagram_dm", "facebook_messenger"]),
-    provider_account_id: z.string().trim().optional().or(z.literal("")),
-    waba_id: z.string().trim().optional().or(z.literal("")),
-    access_token: z.string().trim().optional().or(z.literal("")),
-    default_ai_agent_id: z.string().optional(),
-  })
-  .superRefine((values, ctx) => {
+const channelFormFields = z.object({
+  name: z.string().trim().min(3, "Mínimo 3 caracteres"),
+  kind: z.enum(["whatsapp_cloud", "whatsapp_web", "instagram_dm", "facebook_messenger"]),
+  provider_account_id: z.string().trim().optional().or(z.literal("")),
+  waba_id: z.string().trim().optional().or(z.literal("")),
+  access_token: z.string().trim().optional().or(z.literal("")),
+  default_ai_agent_id: z.string().optional(),
+})
+
+type ChannelFormValues = z.infer<typeof channelFormFields>
+
+/**
+ * El esquema DEPENDE del modo, y no es un lujo: en edición los campos de
+ * credenciales **no se pintan** (`!isEdit &&` más abajo), así que llegan vacíos
+ * al validador. Con la regla siempre activa, "Guardar cambios" fallaba la
+ * validación de `provider_account_id` y `access_token`, `handleSubmit` nunca
+ * corría y —como esos `FormMessage` tampoco estaban montados— el usuario no veía
+ * absolutamente nada: ni PATCH, ni alerta, ni error. Un campo que no se muestra
+ * no se puede exigir.
+ */
+function makeChannelFormSchema(isEdit: boolean) {
+  return channelFormFields.superRefine((values, ctx) => {
+    // Editar solo toca `name` y `default_ai_agent_id`: las credenciales se rotan
+    // por `PUT /channels/:id/credentials`, no por aquí.
+    if (isEdit) return
     // Todos los kinds con token exigen cuenta + token; solo wweb se conecta por
     // pairing. El backend valida lo mismo (`TokenChannelKind`).
     if (values.kind !== "whatsapp_web") {
@@ -61,8 +77,7 @@ const channelFormSchema = z
       }
     }
   })
-
-type ChannelFormValues = z.infer<typeof channelFormSchema>
+}
 
 /**
  * Kinds que se pueden CREAR desde la interfaz.
@@ -91,6 +106,16 @@ function toEditableKind(kind: string | undefined): EditableKind | undefined {
   return EDITABLE_KINDS.find((candidate) => candidate === kind)
 }
 
+/** Etiqueta legible por campo, para decir qué falta sin jerga de esquema. */
+const FIELD_LABEL: Record<string, string> = {
+  name: "Nombre del canal",
+  kind: "Tipo de canal",
+  provider_account_id: "Identificador de la cuenta",
+  waba_id: "WABA ID",
+  access_token: "Access token",
+  default_ai_agent_id: "Agente IA por defecto",
+}
+
 /** Cómo se llama el identificador de la cuenta en cada proveedor. */
 const ACCOUNT_LABEL: Record<string, string> = {
   whatsapp_cloud: "Phone Number ID",
@@ -108,7 +133,8 @@ const ACCOUNT_HINT: Record<string, string> = {
 export type ChannelFormHost = {
   /** Canal existente → modo edición (name + agente por defecto). */
   channel?: ChannelDTO | null
-  onSuccess?: () => void
+  /** Recibe el canal ya actualizado en edición; en alta, el recién creado. */
+  onSuccess?: (channel: ChannelDTO) => void
 }
 
 /**
@@ -122,17 +148,19 @@ export function ChannelForm({
   fixedKind,
 }: {
   host?: ChannelFormHost
-  onSuccess?: () => void
+  onSuccess?: (channel: ChannelDTO) => void
   fixedKind?: (typeof CREATABLE_KINDS)[number]
 }) {
   const { showAlert } = useAlert()
+  const upsertChannel = useChannelStore((s) => s.upsertChannel)
   const isEdit = Boolean(host?.channel)
   const [agents, setAgents] = useState<Array<{ id: string; name: string }>>([])
   const [submitting, setSubmitting] = useState(false)
   const handleSuccess = onSuccess ?? host?.onSuccess
 
+  const schema = useMemo(() => makeChannelFormSchema(isEdit), [isEdit])
   const form = useForm<ChannelFormValues>({
-    resolver: zodResolver(channelFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: host?.channel?.name ?? "",
       kind: fixedKind ?? toEditableKind(host?.channel?.kind) ?? "whatsapp_cloud",
@@ -163,13 +191,21 @@ export function ChannelForm({
     setSubmitting(true)
     try {
       if (isEdit && host?.channel) {
-        await updateChannel(host.channel.id, {
+        const updated = await updateChannel(host.channel.id, {
           name: values.name,
           default_ai_agent_id: values.default_ai_agent_id && values.default_ai_agent_id !== NONE_AGENT
             ? values.default_ai_agent_id
             : null,
         })
+        // Al store: el detalle pinta su cabecera desde ahí (`live ?? fetched`),
+        // así que sin esto el PATCH pasaba y el nombre seguía siendo el viejo
+        // hasta recargar — indistinguible de "no hizo nada"
+        upsertChannel(updated)
+        // Los valores vuelven a ser los guardados: si no, el formulario queda
+        // "sucio" y el siguiente guardado reenvía lo mismo
+        form.reset({ ...values, name: updated.name })
         showAlert({ tone: "success", title: "Canal actualizado", open: true, autoCloseMs: 3500 })
+        handleSuccess?.(updated)
       } else {
         const created = await createChannel({
           name: values.name,
@@ -190,8 +226,8 @@ export function ChannelForm({
           await updateChannel(created.id, { default_ai_agent_id: values.default_ai_agent_id })
         }
         showAlert({ tone: "success", title: "Canal creado", open: true, autoCloseMs: 3500 })
+        handleSuccess?.(created)
       }
-      handleSuccess?.()
     } catch (err) {
       if (applyServerValidation(err, form)) return
       showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar el canal"), open: true })
@@ -200,9 +236,24 @@ export function ChannelForm({
     }
   }
 
+  /**
+   * Red de seguridad: si la validación falla en un campo que NO está pintado, su
+   * `FormMessage` no existe y el botón parece inerte. Antes de este handler eso
+   * fue exactamente el bug de la edición. Que nunca vuelva a callarse.
+   */
+  const handleInvalid = (errors: FieldErrors<ChannelFormValues>) => {
+    const fields = Object.keys(errors).map((key) => FIELD_LABEL[key] ?? key)
+    showAlert({
+      tone: "error",
+      title: "Revisa el formulario antes de guardar",
+      description: fields.length > 0 ? `Falta corregir: ${fields.join(", ")}.` : undefined,
+      open: true,
+    })
+  }
+
   return (
     <Form {...form}>
-      <form id="channels-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form id="channels-form" onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="space-y-4">
         <FormField
           name="name"
           control={form.control}
