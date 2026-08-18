@@ -124,6 +124,13 @@ export function usePageSignup({
     openPopup({
       onResult: (result) => {
         clearWatchdog();
+        if (result.outcome === "unavailable") {
+          fail({
+            code: "channels/meta_signup_disabled",
+            message: "La conexión automática con Meta no está disponible ahora mismo.",
+          });
+          return;
+        }
         if (result.outcome === "blocked") {
           setPhase("popup_blocked");
           return;
@@ -135,7 +142,7 @@ export function usePageSignup({
         void exchange(result.code);
       },
     });
-  }, [clearWatchdog, exchange, openPopup]);
+  }, [clearWatchdog, exchange, fail, openPopup]);
 
   /**
    * Paso 2. El `asset_id` viaja opaco: el servidor lo valida contra la sesión,

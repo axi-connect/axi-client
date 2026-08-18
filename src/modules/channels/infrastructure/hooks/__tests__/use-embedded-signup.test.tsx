@@ -269,6 +269,24 @@ describe("useEmbeddedSignup", () => {
     await waitFor(() => expect(view.result.current.phase).toBe("unavailable"));
   });
 
+  it("pulsar sin SDK listo NO deja la pantalla colgada en «esperando a Meta»", async () => {
+    // Regresión real de F7: al extraer `useMetaPopup`, la guarda pasó a correr
+    // DESPUÉS de pintar `popup_open` y se rendía en silencio. Como el watchdog
+    // se arma después de esa guarda, la pantalla se quedaba así para siempre:
+    // sin popup, sin error, sin consola y sin timeout.
+    loadFacebookSdk.mockRejectedValueOnce(new Error("bloqueado"));
+    const view = renderHook(() => useEmbeddedSignup({ product: "whatsapp" }));
+    await waitFor(() => expect(view.result.current.phase).toBe("unavailable"));
+
+    act(() => {
+      view.result.current.start();
+    });
+
+    await waitFor(() => expect(view.result.current.phase).toBe("unavailable"));
+    expect(view.result.current.phase).not.toBe("popup_open");
+    expect(view.result.current.error?.code).toBe("channels/meta_signup_disabled");
+  });
+
   it("tres montajes y desmontajes NO acumulan listeners de `message`", async () => {
     // Es el bug que produce POST duplicados: cada intento deja su listener vivo
     // y el siguiente `code` dispara tantos POST como intentos hubo

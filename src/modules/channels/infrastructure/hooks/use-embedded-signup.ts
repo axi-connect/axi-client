@@ -261,6 +261,13 @@ export function useEmbeddedSignup({
         window.addEventListener("message", listener);
       },
       onResult: (result) => {
+        if (result.outcome === "unavailable") {
+          settle("unavailable", {
+            code: "channels/meta_signup_disabled",
+            message: "La conexión automática con Meta no está disponible ahora mismo.",
+          });
+          return;
+        }
         if (result.outcome === "blocked") {
           settle("popup_blocked", null);
           return;

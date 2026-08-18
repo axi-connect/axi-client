@@ -40,7 +40,14 @@ export type MetaPopupError = {
 export type MetaPopupResult =
   | { outcome: "code"; code: string }
   | { outcome: "blocked" }
-  | { outcome: "cancelled" };
+  | { outcome: "cancelled" }
+  /**
+   * El SDK o el `config_id` no estaban al pulsar. **Siempre se reporta**, nunca
+   * se vuelve en silencio: el flujo ya pintó "esperando a Meta" antes de
+   * llamar, así que rendirse sin avisar deja la pantalla colgada para siempre
+   * —y sin watchdog, porque este se arma después de esta guarda—.
+   */
+  | { outcome: "unavailable" };
 
 export type UseMetaPopupResult = {
   status: MetaPopupStatus;
@@ -132,7 +139,12 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       const sdk = sdkRef.current;
       const configId = config?.config_id ?? null;
       if (sdk === null || configId === null) {
+        console.warn("[meta-signup] Se pulsó conectar sin SDK o sin config_id", {
+          sdk_loaded: sdk !== null,
+          config_id: configId,
+        });
         setStatus("unavailable");
+        handlers.onResult({ outcome: "unavailable" });
         return;
       }
 
