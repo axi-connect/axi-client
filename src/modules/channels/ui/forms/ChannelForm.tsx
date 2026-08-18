@@ -64,12 +64,32 @@ const channelFormSchema = z
 
 type ChannelFormValues = z.infer<typeof channelFormSchema>
 
-const CREATABLE_KINDS = [
-  "whatsapp_web",
+/**
+ * Kinds que se pueden CREAR desde la interfaz.
+ *
+ * `whatsapp_web` queda fuera a propósito: vincular por QR usa un cliente no
+ * oficial de WhatsApp, que las condiciones de la plataforma de Meta no
+ * permiten, y ofrecerlo junto al alta de la Cloud API es un riesgo durante el
+ * App Review y después. Los canales QR existentes se siguen EDITANDO con este
+ * mismo formulario (el enum de validación sí lo acepta); lo que desaparece es
+ * el alta.
+ */
+const CREATABLE_KINDS = ["whatsapp_cloud", "instagram_dm", "facebook_messenger"] as const
+
+/** Kinds que el formulario sabe EDITAR: incluye los QR ya existentes. */
+const EDITABLE_KINDS = [
   "whatsapp_cloud",
+  "whatsapp_web",
   "instagram_dm",
   "facebook_messenger",
 ] as const
+
+type EditableKind = (typeof EDITABLE_KINDS)[number]
+
+/** `simulator` no se edita aquí: lo gobierna el módulo de calidad. */
+function toEditableKind(kind: string | undefined): EditableKind | undefined {
+  return EDITABLE_KINDS.find((candidate) => candidate === kind)
+}
 
 /** Cómo se llama el identificador de la cuenta en cada proveedor. */
 const ACCOUNT_LABEL: Record<string, string> = {
@@ -115,7 +135,7 @@ export function ChannelForm({
     resolver: zodResolver(channelFormSchema),
     defaultValues: {
       name: host?.channel?.name ?? "",
-      kind: fixedKind ?? (host?.channel?.kind === "whatsapp_cloud" ? "whatsapp_cloud" : "whatsapp_web"),
+      kind: fixedKind ?? toEditableKind(host?.channel?.kind) ?? "whatsapp_cloud",
       provider_account_id: "",
       waba_id: "",
       access_token: "",

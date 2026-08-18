@@ -192,7 +192,16 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
     icon_id: "qr",
     brand_class: "brand-whatsapp",
     connect_strategy: "qr",
-    availability: "available",
+    // `internal` y no `available`: vincular por QR usa un cliente NO oficial de
+    // WhatsApp, que las condiciones de la plataforma de Meta no permiten.
+    // Ofrecerlo en la misma pantalla desde la que se conecta la Cloud API es un
+    // riesgo real durante el App Review —el revisor graba y navega el producto—
+    // y también después.
+    //
+    // No se borra: los canales QR ya conectados siguen operando y visibles en
+    // la lista. Lo que desaparece es la OPCIÓN DE ALTA, que además concuerda
+    // con cómo se habilita de verdad (por base de datos, no por autoservicio).
+    availability: "internal",
     requirement_note: "Necesita un celular encendido y con internet",
     prerequisites: WHATSAPP_WEB_PREREQUISITES,
   },

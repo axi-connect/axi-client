@@ -54,6 +54,14 @@ describe("registry de proveedores de canal", () => {
     expect(connectable[0].kind).toBe("whatsapp_cloud");
   });
 
+  it("no ofrece el alta por QR: usa un cliente no oficial de WhatsApp", () => {
+    // Vincular por QR usa un cliente NO oficial, que las condiciones de la
+    // plataforma de Meta no permiten. Ofrecerlo en la misma pantalla desde la
+    // que se conecta la Cloud API es un riesgo durante el App Review y después.
+    // Los canales ya conectados siguen operando: lo que desaparece es el alta.
+    expect(connectableProviders().map((provider) => provider.kind)).not.toContain("whatsapp_web");
+  });
+
   it("solo un proveedor va marcado como recomendado", () => {
     const recommended = Object.values(CHANNEL_PROVIDERS).filter((p) => p.recommended === true);
     expect(recommended).toHaveLength(1);
