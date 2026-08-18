@@ -25,6 +25,18 @@ import { getMetaSignupConfig } from "@/modules/channels/infrastructure/services/
  * no, así que esa parte es de cada flujo.
  */
 
+/**
+ * Traza del intento de conexión.
+ *
+ * Siempre activa y en `info`, no detrás de un flag: el modo de fallo de este
+ * flujo es **no hacer nada** —sin popup, sin error, sin excepción— y sin estas
+ * líneas es indistinguible desde fuera. Son unas pocas por clic, solo durante
+ * un intento, nunca en render.
+ */
+export function logSignup(step: string, fields: Record<string, unknown> = {}): void {
+  console.info(`[meta-signup] ${step}`, fields);
+}
+
 const ABANDON_WATCHDOG_MS = 180_000;
 /** Un humano no autoriza ni cancela en menos de esto: por debajo, fue el navegador. */
 const POPUP_BLOCKED_THRESHOLD_MS = 600;
@@ -146,6 +158,18 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
     (handlers: { beforeOpen?: () => void; onResult: (result: MetaPopupResult) => void }) => {
       const sdk = sdkRef.current;
       const configId = config?.config_id ?? null;
+
+      logSignup("open() llamado", {
+        sdk_cargado: sdk !== null,
+        // Si esto es false, `sdk.login` NO es el FB.login que funciona en consola
+        sdk_es_window_FB: sdk === (window as { FB?: unknown }).FB,
+        config_id: configId,
+        tipo_config_id: typeof configId,
+        app_id: config?.app_id ?? null,
+        graph_api_version: config?.graph_api_version ?? null,
+        enabled: config?.enabled ?? null,
+      });
+
       if (sdk === null || configId === null) {
         console.warn("[meta-signup] Se pulsó conectar sin SDK o sin config_id", {
           sdk_loaded: sdk !== null,
@@ -157,7 +181,15 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       }
 
       startedAtRef.current = Date.now();
-      handlers.beforeOpen?.();
+      try {
+        handlers.beforeOpen?.();
+        logSignup("beforeOpen ok (listener registrado)");
+      } catch (err) {
+        // Si esto lanzara, el clic moriría aquí y `FB.login` nunca correría
+        logSignup("beforeOpen LANZÓ", { error: String(err) });
+        handlers.onResult({ outcome: "cancelled" });
+        return;
+      }
 
       // Abandono: tres minutos sin ninguna señal. Sin esto la UI se queda en
       // "esperando a Meta" para siempre si el usuario cierra el popup de una
@@ -168,6 +200,12 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       }, ABANDON_WATCHDOG_MS);
 
       const callback = (response: FbLoginResponse) => {
+        logSignup("callback de FB.login", {
+          status: response.status,
+          tiene_code: typeof response.authResponse?.code === "string",
+          tiene_access_token: response.authResponse?.accessToken !== undefined,
+          ms_transcurridos: Date.now() - startedAtRef.current,
+        });
         const code = response.authResponse?.code;
         if (typeof code === "string" && code !== "") {
           handlers.onResult({ outcome: "code", code });
@@ -196,17 +234,24 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         });
       };
 
+      const options = {
+        config_id: configId,
+        response_type: "code" as const,
+        override_default_response_type: true,
+        // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
+        // en JSON en vez de en el formato antiguo
+        extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+      };
+
+      logSignup("llamando a FB.login", { options, tipo_login: typeof sdk.login });
       try {
-        sdk.login(callback, {
-          config_id: configId,
-          response_type: "code",
-          override_default_response_type: true,
-          // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
-          // en JSON en vez de en el formato antiguo
-          extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
-        });
+        sdk.login(callback, options);
+        // Si esta línea sale y NO aparece "callback de FB.login" después, el SDK
+        // aceptó la llamada y no abrió nada: el problema está del lado de Meta
+        // (dominio del SDK, modo de la app, rol de la cuenta)
+        logSignup("FB.login volvió sin lanzar");
       } catch (err) {
-        console.warn("[meta-signup] FB.login lanzó de forma síncrona:", err);
+        logSignup("FB.login LANZÓ de forma síncrona", { error: String(err) });
         handlers.onResult({ outcome: "blocked" });
       }
     },

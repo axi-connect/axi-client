@@ -12,7 +12,7 @@ import {
   connectMetaPageChannel,
   listMetaPageAssets,
 } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
-import { useMetaPopup, type MetaPopupError } from "./use-meta-popup";
+import { logSignup, useMetaPopup, type MetaPopupError } from "./use-meta-popup";
 
 /**
  * Alta por botón de Instagram y Messenger (F7).
@@ -114,6 +114,7 @@ export function usePageSignup({
   );
 
   const start = useCallback(() => {
+    logSignup("start() — clic recibido (páginas)", { product });
     clearWatchdog();
     setChannel(null);
     setAssets([]);
@@ -150,7 +151,7 @@ export function usePageSignup({
         void exchange(result.code);
       },
     });
-  }, [clearWatchdog, exchange, fail, openPopup]);
+  }, [clearWatchdog, exchange, fail, openPopup, product]);
 
   /**
    * Paso 2. El `asset_id` viaja opaco: el servidor lo valida contra la sesión,
