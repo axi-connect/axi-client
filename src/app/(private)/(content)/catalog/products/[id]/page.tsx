@@ -105,6 +105,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     [productType],
   );
 
+  // F17: producto espejado de una integración — los campos gobernados se
+  // muestran como valores de lectura (ocultar, no deshabilitar) y la fuente es
+  // `locked_fields`, que lo sirve el BACKEND (regla 4 del contrato: derivarlo
+  // aquí significaría que un cambio de política desbloquea campos en silencio).
+  const locked = useMemo(() => new Set(product?.locked_fields ?? []), [product?.locked_fields]);
+  const governed = product?.governed_by_connection_id != null;
+
   const handleToggleActive = async () => {
     if (!product || toggling) return;
     try {
@@ -177,12 +184,29 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <FormSkeleton fields={8} showHeader={false} />
       ) : (
         <>
+          {governed && (
+            <div className="rounded-2xl border border-border bg-secondary/40 p-4">
+              <p className="text-sm">
+                <span className="font-medium">Este producto lo gobierna tu tienda conectada.</span>{" "}
+                <span className="text-muted-foreground">
+                  Nombre, precio, stock e imágenes se actualizan solos desde Shopify; editarlos
+                  allá es la forma de cambiarlos aquí. La conexión se administra en{" "}
+                </span>
+                <Link href="/settings/integrations" className="underline underline-offset-2">
+                  Integraciones
+                </Link>
+                .
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
             <ProductDetailHeader
               product={product}
               catalogName={catalogName}
               categoryName={categoryName}
-              canManage={canManage}
+              // `status` gobernado: activar/desactivar/eliminar lo decide el sync
+              canManage={canManage && !locked.has("status")}
               toggling={toggling}
               onToggleActive={() => void handleToggleActive()}
               onDelete={() => setDeleteOpen(true)}
@@ -192,7 +216,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
             <ProductBaseSection
               product={product}
-              canManage={canManage}
+              // Con canManage=false la sección ya pinta valores de lectura, que
+              // es exactamente el tratamiento del plan (ocultar, no deshabilitar)
+              canManage={canManage && !locked.has("name") && !locked.has("price")}
               onSaved={setProduct}
               setAlert={setAlert}
             />
@@ -201,7 +227,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
             <ProductPhotosSection
               product={product}
-              canManage={canManage}
+              canManage={canManage && !locked.has("images")}
               onSaved={setProduct}
               setAlert={setAlert}
             />
@@ -212,7 +238,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <ProductAttributesSection
                 product={product}
                 productType={productType}
-                canManage={canManage}
+                canManage={canManage && !governed}
                 highlightRequired={highlightRequired}
                 onSaved={setProduct}
                 setAlert={setAlert}
@@ -224,8 +250,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <VariantsTable
               product={product}
               axes={variantAxes}
-              canManage={canManage}
-              canAdjustStock={canAdjustStock}
+              canManage={canManage && !locked.has("variants")}
+              // El popover de ajuste queda OCULTO para espejados en vez de
+              // fallar con 409: el stock lo dicta la tienda
+              canAdjustStock={canAdjustStock && !locked.has("stock")}
               onRefetch={load}
               onStockAdjusted={handleStockAdjusted}
               setAlert={setAlert}

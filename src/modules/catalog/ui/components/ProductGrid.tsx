@@ -35,6 +35,8 @@ export function ProductGrid({ rows }: { rows: ProductRow[] }) {
             />
             <div className="absolute left-2 top-2 flex flex-wrap gap-1">
               {row.kind === "service" && <Badge variant="secondary">{PRODUCT_KIND_LABELS.service}</Badge>}
+              {/* F17: badge de origen — este producto lo gobierna la tienda conectada */}
+              {row.governed && <Badge variant="secondary">Shopify</Badge>}
               {!row.is_active && <Badge variant="secondary">Inactivo</Badge>}
               {row.stock_state === "out" && <Badge variant="destructive">Agotado</Badge>}
             </div>

@@ -340,6 +340,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/tenants/{id}/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["TenantIntegrationsController_update_v1"];
+        trace?: never;
+    };
     "/api/v1/platform/audit-logs": {
         parameters: {
             query?: never;
@@ -2034,6 +2050,134 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["OrdersController_verifyPayment_v1"];
+        trace?: never;
+    };
+    "/api/v1/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_list_v1"];
+        put?: never;
+        post: operations["IntegrationsController_connect_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_providers_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["IntegrationsController_disconnect_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["IntegrationsController_rotate_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_locations_v1"];
+        put: operations["IntegrationsController_setLocations_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_collections_v1"];
+        put: operations["IntegrationsController_setCollections_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IntegrationsController_sync_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_runs_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/payment-methods": {
@@ -3854,6 +3998,18 @@ export interface components {
             /** Format: date-time */
             trial_ends_at: string;
         };
+        UpdateTenantIntegrationsDto: {
+            /** @enum {string|null} */
+            catalog_governed_by: "shopify" | null;
+            /** @enum {string|null} */
+            orders_governed_by: "shopify" | null;
+        };
+        TenantIntegrationsDto: {
+            /** @enum {string|null} */
+            catalog_governed_by: "shopify" | null;
+            /** @enum {string|null} */
+            orders_governed_by: "shopify" | null;
+        };
         AuditLogListDto: {
             data: {
                 id: string;
@@ -5507,6 +5663,8 @@ export interface components {
                 metadata: {
                     [key: string]: unknown;
                 } | null;
+                governed_by_connection_id: string | null;
+                locked_fields: ("name" | "description" | "price" | "status" | "category" | "variants" | "stock" | "images")[];
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -5588,6 +5746,8 @@ export interface components {
             metadata: {
                 [key: string]: unknown;
             } | null;
+            governed_by_connection_id: string | null;
+            locked_fields: ("name" | "description" | "price" | "status" | "category" | "variants" | "stock" | "images")[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -6208,6 +6368,10 @@ export interface components {
                     enabled: boolean;
                     body: string;
                 };
+                checkout_link: {
+                    enabled: boolean;
+                    body: string;
+                };
             };
             usage_hint: {
                 any_enabled: boolean;
@@ -6233,6 +6397,10 @@ export interface components {
                     body: string;
                 };
                 payment_rejected: {
+                    enabled: boolean;
+                    body: string;
+                };
+                checkout_link: {
                     enabled: boolean;
                     body: string;
                 };
@@ -6545,6 +6713,169 @@ export interface components {
             notes?: string;
             /** @default true */
             notify_customer: boolean;
+        };
+        IntegrationsListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                provider: "shopify" | "mercado_pago" | "generic_webhook";
+                external_account: string;
+                account_label: string | null;
+                /** @enum {string} */
+                status: "pending_setup" | "connected" | "error" | "disconnected";
+                capabilities: string[];
+                credential_mode: string;
+                granted_scopes: string[];
+                credentials_configured: boolean;
+                token_last4: string | null;
+                api_version: string;
+                last_error: string | null;
+                /** Format: date-time */
+                last_synced_at: string | null;
+                /** Format: date-time */
+                connected_at: string | null;
+                counts: {
+                    locations_counting: number;
+                    collections_selected: number;
+                };
+            }[];
+            governance: {
+                /** @enum {string} */
+                catalog: "local" | "provider_active" | "provider_declared_not_connected";
+                /** @enum {string} */
+                orders: "local" | "provider_active" | "provider_declared_not_connected";
+            };
+        };
+        ProvidersListDto: {
+            items: {
+                /** @enum {string} */
+                provider: "shopify" | "mercado_pago" | "generic_webhook";
+                capabilities: string[];
+                required_scopes: string[];
+            }[];
+        };
+        IntegrationDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            provider: "shopify" | "mercado_pago" | "generic_webhook";
+            external_account: string;
+            account_label: string | null;
+            /** @enum {string} */
+            status: "pending_setup" | "connected" | "error" | "disconnected";
+            capabilities: string[];
+            credential_mode: string;
+            granted_scopes: string[];
+            credentials_configured: boolean;
+            token_last4: string | null;
+            api_version: string;
+            last_error: string | null;
+            /** Format: date-time */
+            last_synced_at: string | null;
+            /** Format: date-time */
+            connected_at: string | null;
+            counts: {
+                locations_counting: number;
+                collections_selected: number;
+            };
+        };
+        ConnectIntegrationDto: {
+            /** @enum {string} */
+            provider: "shopify" | "mercado_pago" | "generic_webhook";
+            external_account: string;
+            credentials: {
+                /** @enum {string} */
+                mode: "access_token";
+                access_token: string;
+                api_secret: string;
+            } | {
+                /** @enum {string} */
+                mode: "client_credentials";
+                client_id: string;
+                client_secret: string;
+            };
+        };
+        RotateCredentialsDto: {
+            credentials: {
+                /** @enum {string} */
+                mode: "access_token";
+                access_token: string;
+                api_secret: string;
+            } | {
+                /** @enum {string} */
+                mode: "client_credentials";
+                client_id: string;
+                client_secret: string;
+            };
+        };
+        IntegrationLocationsDto: {
+            items: {
+                external_location_id: string;
+                name: string;
+                is_active: boolean;
+                counts_stock: boolean;
+            }[];
+        };
+        UpdateLocationsDto: {
+            counting: string[];
+        };
+        IntegrationCollectionsDto: {
+            items: {
+                external_collection_id: string;
+                handle: string | null;
+                title: string;
+                products_count: number | null;
+                is_selected: boolean;
+                priority: number;
+                looks_campaign: boolean;
+            }[];
+        };
+        UpdateCollectionsDto: {
+            selected: string[];
+        };
+        StartSyncDto: {
+            /**
+             * @default backfill
+             * @enum {string}
+             */
+            kind: "backfill" | "reconcile";
+        };
+        SyncAcceptedDto: {
+            /** Format: uuid */
+            run_id: string;
+        };
+        SyncRunsListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                kind: string;
+                trigger: string;
+                /** @enum {string} */
+                status: "queued" | "running" | "completed" | "partial" | "failed";
+                /** @enum {string} */
+                phase: "en_cola" | "exportando" | "aplicando" | "terminado" | "con_errores" | "fallido";
+                counters: {
+                    products_seen: number;
+                    products_created: number;
+                    products_updated: number;
+                    products_skipped: number;
+                    variants_synced: number;
+                    images_queued: number;
+                    deactivated_count: number;
+                    error_count: number;
+                };
+                products_total: number | null;
+                error_code: string | null;
+                error: string | null;
+                errors: unknown;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
         };
         PaymentMethodsListDto: {
             data: {
@@ -9349,6 +9680,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrialStartedDto"];
+                };
+            };
+        };
+    };
+    TenantIntegrationsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTenantIntegrationsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantIntegrationsDto"];
                 };
             };
         };
@@ -12809,6 +13165,268 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationsListDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_connect_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectIntegrationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_providers_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvidersListDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_disconnect_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationsController_rotate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateCredentialsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationsController_locations_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationLocationsDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_setLocations_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLocationsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationLocationsDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_collections_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationCollectionsDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_setCollections_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCollectionsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationCollectionsDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_sync_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartSyncDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncAcceptedDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_runs_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncRunsListDto"];
                 };
             };
         };
