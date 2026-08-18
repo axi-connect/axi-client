@@ -235,13 +235,21 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         });
       };
 
+      // Los `extras` son del Embedded Signup de WhatsApp y de nadie más: activan
+      // el flujo de alta de WABA. Instagram y Messenger usan Facebook Login for
+      // Business a secas —su ejemplo oficial son tres parámetros y ninguno más—,
+      // y al recibirlos Meta abría el diálogo y lo reventaba contra su pantalla
+      // genérica de "Sorry, something went wrong", sin error ni código que
+      // devolver. Por eso van condicionados al producto y no fijos en la base.
       const options = {
         config_id: configId,
         response_type: "code" as const,
         override_default_response_type: true,
         // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
         // en JSON en vez de en el formato antiguo
-        extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+        ...(product === "whatsapp"
+          ? { extras: { setup: {}, featureType: "", sessionInfoVersion: "3" } }
+          : {}),
       };
 
       logSignup("llamando a FB.login", { options, tipo_login: typeof sdk.login });
@@ -256,7 +264,7 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         handlers.onResult({ outcome: "blocked" });
       }
     },
-    [clearWatchdog, config],
+    [clearWatchdog, config, product],
   );
 
   return {

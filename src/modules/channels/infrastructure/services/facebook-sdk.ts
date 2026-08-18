@@ -28,7 +28,13 @@ export type FbLoginOptions = {
   config_id: string;
   response_type: "code";
   override_default_response_type: boolean;
-  extras: { setup: Record<string, unknown>; featureType: string; sessionInfoVersion: string };
+  /**
+   * **Exclusivo del Embedded Signup de WhatsApp.** Opcional porque el resto de
+   * configuraciones de Facebook Login for Business —Instagram y Messenger— no
+   * lo aceptan: mandárselo hace que el diálogo de Meta reviente con su pantalla
+   * genérica de "Sorry, something went wrong".
+   */
+  extras?: { setup: Record<string, unknown>; featureType: string; sessionInfoVersion: string };
 };
 
 export type FacebookSdk = {
