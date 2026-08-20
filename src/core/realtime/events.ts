@@ -383,6 +383,44 @@ export type MarketingOptOutCreatedEvent = {
   simulated: boolean;
 };
 
+/**
+ * Axel, el director de mercadeo (módulo cmo). El briefing del día quedó listo.
+ *
+ * `proposals_created` es lo que alimenta el badge del sidebar, y `headline` lo
+ * que hace que la notificación diga algo: un aviso de "tienes un informe nuevo"
+ * se ignora a la segunda vez.
+ */
+export type CmoBriefingReadyEvent = {
+  company_id: string;
+  briefing_id: string;
+  /** Día LOCAL del negocio (YYYY-MM-DD), no un instante UTC. */
+  date_local: string;
+  proposals_created: number;
+  headline: string;
+};
+
+/** Axel dejó una propuesta nueva: el tablero la inserta sin recargar. */
+export type CmoProposalCreatedEvent = {
+  company_id: string;
+  proposal_id: string;
+  kind: string;
+  title: string;
+  source: "briefing" | "signal" | "chat";
+  expires_at: string | null;
+};
+
+/**
+ * Una propuesta se decidió. Llega también cuando la decidió OTRA pestaña o
+ * OTRO usuario: es lo que evita que dos personas aprueben la misma campaña
+ * mirando dos pantallas distintas.
+ */
+export type CmoProposalDecidedEvent = {
+  company_id: string;
+  proposal_id: string;
+  status: "approved" | "rejected" | "expired" | "superseded";
+  decided_by_user_id: string | null;
+};
+
 /** Cupón aplicado a un pedido (el total del pedido cambia: llega `order.updated`). */
 export type MarketingPromotionRedeemedEvent = {
   company_id: string;
@@ -482,6 +520,9 @@ export type InboxServerEvents = {
   "marketing.opt_out_created": (payload: MarketingOptOutCreatedEvent) => void;
   "marketing.promotion_redeemed": (payload: MarketingPromotionRedeemedEvent) => void;
   "marketing.promotion_reverted": (payload: MarketingPromotionRevertedEvent) => void;
+  "cmo.briefing_ready": (payload: CmoBriefingReadyEvent) => void;
+  "cmo.proposal_created": (payload: CmoProposalCreatedEvent) => void;
+  "cmo.proposal_decided": (payload: CmoProposalDecidedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;

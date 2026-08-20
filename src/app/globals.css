@@ -590,3 +590,135 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   border-radius: 9999px;
   background-clip: content-box;
 }
+
+/* ==========================================================================
+   MÓDULO CMO — Axel, el director de mercadeo
+   ==========================================================================
+   Dos utilidades y ninguna es nueva de raíz: el orbe reutiliza el ANILLO COMETA
+   de `.channel-surface::after` (misma `@property --comet-angle`, §canales F1) y
+   el campo ambiental reutiliza el lenguaje de `.bg-brand-ambient` — elipses
+   ancladas a esquina, en `srgb`, con el techo de tinte del sistema.
+
+   Se declaran aquí y no como valores arbitrarios de Tailwind por la misma razón
+   que el cometa de canales: un `color-mix` anidado dentro de `bg-[...]` es
+   frágil de extraer, y el sistema pide que los degradados vivan una sola vez.
+   ========================================================================== */
+
+/* Halo difuso detrás del orbe. Violeta porque violeta = IA en todo el panel. */
+.axel-orb-glow {
+  position: absolute;
+  inset: -26px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(6px);
+}
+
+/* El cometa: cónico con cola y núcleo, recortado a la franja del borde con dos
+   máscaras que se excluyen. Gira animando `--comet-angle`, que ya existe como
+   propiedad TIPADA arriba (sin `@property` un custom property no interpola).
+   Tricolor del isotipo: es el ÚNICO momento hero del módulo (DESIGN §3.2). */
+.axel-orb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: axel-comet 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes axel-comet {
+  to {
+    --comet-angle: 360deg;
+  }
+}
+
+/* Axel pensando. Existe porque NO hay streaming: un turno tarda decenas de
+   segundos y sin señal de vida el usuario cree que se colgó. Solo `transform`,
+   así que no provoca layout ni repaint del texto. */
+.axel-orb--busy {
+  animation: axel-breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes axel-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+/* Campo ambiental de la columna del chat: tres halos suaves respetando el techo
+   de tinte del sistema (7–13%), más un dot-grid con máscara radial que da
+   sensación de consola sin ensuciar el texto. */
+.axel-field {
+  position: relative;
+  isolation: isolate;
+}
+
+.axel-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  background-image:
+    radial-gradient(
+      70% 100% at 12% -6%,
+      color-mix(in srgb, var(--axi-brand) 13%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      64% 96% at 92% 4%,
+      color-mix(in srgb, var(--axi-violet) 11%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      50% 70% at 50% 108%,
+      color-mix(in srgb, var(--axi-amber) 7%, transparent),
+      transparent 72%
+    );
+}
+
+.axel-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--foreground) 12%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  opacity: 0.28;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axel-orb::after,
+  .axel-orb--busy {
+    animation: none;
+  }
+}
