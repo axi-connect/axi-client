@@ -22,7 +22,7 @@ jest.mock("@/modules/channels/ui/forms/ChannelForm", () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { EmbeddedSignupButton } = require("../EmbeddedSignupButton") as typeof import("../EmbeddedSignupButton");
+const { EmbeddedSignupButton, CancelledNotice } = require("../EmbeddedSignupButton") as typeof import("../EmbeddedSignupButton");
 
 function phaseState(phase: EmbeddedSignupPhase, error: UseEmbeddedSignupResult["error"] = null) {
   return {
@@ -97,6 +97,21 @@ describe("EmbeddedSignupButton", () => {
     renderPhase("cancelled");
 
     expect(screen.getByText(/No se conectó nada y no se guardó ningún dato/i)).toBeInTheDocument();
+    // WhatsApp NO especula con un fallo de Meta: su popup manda CANCEL y ERROR
+    // por postMessage, así que aquí una cancelación es una cancelación
+    expect(screen.queryByText(/Sorry, something went wrong/i)).not.toBeInTheDocument();
+  });
+
+  it("en Instagram y Messenger, `cancelled` no culpa al usuario", () => {
+    // El popup de páginas no manda postMessage: si Meta revienta contra su
+    // pantalla genérica, la heurística de los 600 ms lo llama cancelación. Decir
+    // "cerraste la ventana" ante un fallo de permisos es el bucle de reintento
+    // infinito que este aviso existe para cortar.
+    render(<CancelledNotice mayBeMetaError />);
+
+    expect(screen.getByText(/No recibimos la autorización de Meta/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sorry, something went wrong/i)).toBeInTheDocument();
+    expect(screen.getByText(/falta un permiso en la configuración de Meta/i)).toBeInTheDocument();
   });
 
   it("`error` muestra el mensaje traducido y el código como referencia", () => {

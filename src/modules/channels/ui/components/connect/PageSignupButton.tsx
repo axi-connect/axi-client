@@ -79,7 +79,10 @@ export function PageSignupButton({
 
         <div role="alert" aria-live="assertive" className="space-y-4">
           {phase === "popup_blocked" && <PopupBlockedNotice />}
-          {phase === "cancelled" && <CancelledNotice />}
+          {/* `mayBeMetaError`: aquí el popup no manda `postMessage`, así que una
+              cancelación y un fallo de Meta son indistinguibles — ver el
+              docblock de `CancelledNotice`. */}
+          {phase === "cancelled" && <CancelledNotice mayBeMetaError />}
           {phase === "error" && <ErrorNotice error={error} />}
           {phase === "unavailable" && <UnavailableNotice error={error} />}
         </div>

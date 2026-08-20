@@ -307,15 +307,48 @@ export function PopupBlockedNotice() {
   );
 }
 
-export function CancelledNotice() {
+/**
+ * `cancelled` no significa lo mismo en los dos flujos, y de ahí el prop.
+ *
+ * El popup de WhatsApp **habla**: manda `CANCEL` o `ERROR` por `postMessage`, así
+ * que un fallo de Meta llega como fase `error` y aquí solo caben cierres de
+ * verdad. El de Instagram y Messenger no manda nada, así que cuando Meta revienta
+ * contra su pantalla genérica —"Sorry, something went wrong"— `FB.login` vuelve
+ * sin `code` y la heurística de los 600 ms de `useMetaPopup` lo clasifica como
+ * cancelación. Decirle "cerraste la ventana" a quien acaba de ver un error de
+ * Meta lo manda a reintentar un fallo de configuración para siempre: es el mismo
+ * bucle que `config_ignored` evita en la otra rama.
+ */
+export function CancelledNotice({ mayBeMetaError = false }: { mayBeMetaError?: boolean }) {
+  if (!mayBeMetaError) {
+    return (
+      <Notice
+        tone="info"
+        icon={<Info aria-hidden="true" className="size-4.5" />}
+        title="Cerraste la ventana antes de terminar"
+      >
+        <p className="text-muted-foreground">
+          No se conectó nada y no se guardó ningún dato. Puedes volver a intentarlo cuando quieras.
+        </p>
+      </Notice>
+    );
+  }
+
   return (
     <Notice
       tone="info"
       icon={<Info aria-hidden="true" className="size-4.5" />}
-      title="Cerraste la ventana antes de terminar"
+      title="No recibimos la autorización de Meta"
     >
       <p className="text-muted-foreground">
-        No se conectó nada y no se guardó ningún dato. Puedes volver a intentarlo cuando quieras.
+        No se conectó nada y no se guardó ningún dato. Si cerraste la ventana antes de terminar,
+        vuelve a intentarlo.
+      </p>
+      <p className="text-muted-foreground">
+        Pero si en esa ventana viste un error de Meta —<em>Sorry, something went wrong</em>—,
+        reintentar no va a cambiar nada: falta un permiso en la configuración de Meta y hay que
+        arreglarlo del lado de la aplicación. Avísanos, o conecta el canal con tus credenciales
+        mientras tanto.
       </p>
     </Notice>
   );
