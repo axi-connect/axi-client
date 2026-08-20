@@ -57,7 +57,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "channels/meta_code_expired":
     "La autorización caducó. Es normal si la ventana estuvo abierta un rato: vuelve a intentarlo y tardará menos de un minuto",
   "channels/meta_missing_scopes":
-    "No nos diste todos los accesos que Meta pide. Al volver a intentarlo, acepta todas las casillas que te muestre",
+    "Meta no concedió todos los permisos que este canal necesita. No es algo que se arregle volviendo a aceptar: hay que añadirlos a la configuración de inicio de sesión de la app de Meta",
   "channels/meta_account_mismatch":
     "El número que elegiste no pertenece al negocio con el que autorizaste. Revisa que sea la cuenta correcta de tu empresa",
   "channels/onboarding_in_progress":
@@ -213,10 +213,26 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "client/network": "No fue posible contactar al servidor",
 };
 
+/**
+ * Códigos cuyo `detail` del backend AÑADE algo que ningún texto fijo puede tener,
+ * y que por eso se concatena a la traducción en vez de descartarse.
+ *
+ * Hoy solo uno: `meta_missing_scopes` nombra los permisos que faltan, y sin esos
+ * nombres el mensaje no es accionable —quien lo lee no sabe qué añadir a la
+ * configuración de Meta—. Es una lista blanca a propósito: pegar el detalle de
+ * todos los códigos duplicaría el mensaje en los demás.
+ */
+const CODES_WITH_USEFUL_DETAIL = new Set(["channels/meta_missing_scopes"]);
+
 export function errorMessage(error: unknown, fallback = "Ocurrió un error inesperado"): string {
   if (isHttpError(error)) {
     const known = MESSAGES_BY_CODE[error.code];
-    if (known) return known;
+    if (known) {
+      const detail = error.problem?.detail;
+      return CODES_WITH_USEFUL_DETAIL.has(error.code) && detail !== undefined && detail !== ""
+        ? `${known}. ${detail}`
+        : known;
+    }
     if (error.status === 429) {
       const wait = error.retryAfterSeconds ? ` Reintenta en ${error.retryAfterSeconds}s.` : "";
       return `Demasiadas peticiones.${wait}`;
