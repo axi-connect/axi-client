@@ -55,7 +55,14 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 FROM base AS runner
 
-ENV NODE_ENV=production \
+# Sella la imagen con su commit. NO es una NEXT_PUBLIC_* a propósito: no hace
+# falta hornearla en el bundle, la lee `/api/version` en el servidor. Existe para
+# que el deploy pueda exigir que la versión en servicio sea la publicada — sin
+# esto, un swap que no ocurre es indistinguible de uno que sí, y la comprobación
+# (que solo miraba que la portada diera 200) sale verde igual.
+ARG BUILD_SHA=unknown
+ENV BUILD_SHA=$BUILD_SHA \
+    NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3001 \
     HOSTNAME=0.0.0.0
