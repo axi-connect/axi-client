@@ -35,7 +35,7 @@ Ambos repos del producto están indexados:
 - **`get_architecture(aspects=[...])`** — estructura, `boundaries`, `hotspots` y `clusters` (detección de comunidades Leiden: revela los módulos de facto, que a menudo cruzan el layout de carpetas).
 - Mantenimiento: **`index_repository`**, **`index_status`**, **`detect_changes`**, **`get_graph_schema`**, **`list_projects`**, **`manage_adr`**.
 
-Cada repo tiene además un **ADR persistido en el grafo** (`manage_adr(mode='get')`) con sus decisiones e invariantes. Leerlo antes de un cambio arquitectónico.
+Cada repo tiene además un **ADR versionado**: `docs/adr.md` en este repo y `axi-server/docs/rules/adr.md` en el backend, con decisiones, invariantes y los gotchas del grafo. **El archivo es la fuente de verdad**; la copia del grafo (`manage_adr(mode='get')`) es derivada. Leerlo antes de un cambio arquitectónico.
 
 ### 0.2 Mantener el índice fresco
 
@@ -49,16 +49,16 @@ index_repository(repo_path="/home/davela/dev/axi/axi-client", mode="full", persi
 
 El artefacto `.codebase-memory/graph.db.zst` está en **`.gitignore`**: cada dev indexa en local (toma segundos). No se versiona.
 
-> ⚠️ **Re-indexar BORRA el ADR del grafo.** Tras `index_repository`, `adr_present` vuelve a `false` y `manage_adr(mode='get')` queda vacío. Si el ADR tiene información que no está en este documento, cópiala antes de re-indexar y vuelve a escribirla después.
+> ⚠️ **Re-indexar BORRA el ADR del grafo.** Tras `index_repository`, `adr_present` vuelve a `false` y `manage_adr(mode='get')` queda vacío. No se pierde nada: el ADR vive versionado en **`docs/adr.md`**. Recarga el grafo desde el archivo con `manage_adr(project="home-davela-dev-axi-axi-client", mode="update", content=<contenido de docs/adr.md>)`.
 
 ### 0.3 Gotchas de este grafo (verificados)
 
-- **Los nodos `Route` NO son los endpoints del backend.** Los 265 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
-- **Las llamadas reales al API son aristas `HTTP_CALLS`** (285). Filtra `callee STARTS WITH 'http.'` para quedarte con las **219 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
+- **Los nodos `Route` NO son los endpoints del backend.** Los 332 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
+- **Las llamadas reales al API son aristas `HTTP_CALLS`** (371). Filtra `callee STARTS WITH 'http.'` para quedarte con las **293 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
 - Los `url_path` de esas aristas son **relativos al prefijo `/api/v1`** (p.ej. `/orders/:id/cancel`), porque así los expresa `HttpClient` (§7.1).
 - **No existen aristas cross-repo automáticas con `axi-server`**: `index_repository(mode='cross-repo-intelligence')` devuelve 0 y es un límite estructural, no un error de configuración — el BFF proxy interpone la indirección y el backend no expone nodos `Route` reales. **Puente manual:** toma el `url_path` del frontend y busca en el backend el `@Controller` cuyo prefijo coincida (`MATCH (c:Class) WHERE c.decorators CONTAINS 'Controller'`). La fuente de verdad del contrato sigue siendo `axi-server/openapi/openapi.json`.
-- **Los contadores de `boundaries` de `get_architecture` tienen ruido de resolución.** Incluyen invocaciones de *props callback* (`onSubmit`, `isVisible`, `fetcher`, `onDelete`) que van de `shared` a `modules` **por diseño** — es la inversión de control de los componentes dirigidos por configuración (§12) — y falsos positivos por nombres genéricos (el `fetch` de `HttpClient` resuelto contra el `fetch` de un store, el `render` de Testing Library). **Antes de declarar una violación de las reglas de §3.3, confírmalo con aristas `IMPORTS`, no con `CALLS`.** En el índice actual hay **0 aristas `IMPORTS` de `core`/`shared` → `modules`**: la regla se sostiene.
-- Hotspots de fan-in de este repo: `cn` (284), `errorMessage` (143), `showAlert` (99), `useAlert` (73), `HttpClient.post`/`get` (33/26). Tocarlos tiene alcance amplio.
+- **Los contadores de `boundaries` de `get_architecture` tienen ruido de resolución.** Incluyen invocaciones de *props callback* (`onSubmit`, `isVisible`, `fetcher`, `onDelete`) que van de `shared` a `modules` **por diseño** — es la inversión de control de los componentes dirigidos por configuración (§12) — y falsos positivos por nombres genéricos (el `fetch` de `HttpClient` resuelto contra el `fetch` de un store, el `render` de Testing Library). **Antes de declarar una violación de las reglas de §3.3, confírmalo con aristas `IMPORTS`, no con `CALLS`.** En el índice actual hay **0 aristas `IMPORTS` desde `core/` y 1 desde `shared/`**, y esa única es un falso positivo verificado (`SiteHero.tsx` hace `import Image from 'next/image'` y el resolutor lo apunta a un test de `modules/catalog`): la regla se sostiene.
+- Hotspots de fan-in de este repo: `cn` (327), `errorMessage` (189), `showAlert` (131), `useAlert` (98), `HttpClient.post`/`get` (42/34). Tocarlos tiene alcance amplio.
 
 ---
 
