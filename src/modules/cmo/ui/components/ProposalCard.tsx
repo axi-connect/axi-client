@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Sparkles, Tag, Users } from "lucide-react";
+import { ArrowRight, Bot, Check, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Sparkles, Tag, Users } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { ProposalDTO, ProposalKind } from "@/modules/cmo/domain/cmo";
@@ -10,6 +10,7 @@ import {
   isUrgent,
   proposalKindLabel,
   proposalSourceLabel,
+  proposalStatusLabel,
 } from "@/modules/cmo/domain/proposal-labels";
 
 const KIND_ICONS: Record<ProposalKind, typeof Flame> = {
@@ -20,6 +21,15 @@ const KIND_ICONS: Record<ProposalKind, typeof Flame> = {
   segment: Users,
   agent_tuning: Bot,
   insight: Lightbulb,
+};
+
+/**
+ * El tono del estado, una vez decidida. Verde solo para aprobada: es la única
+ * que dejó algo encendido. Descartada, vencida y reemplazada son neutras — no
+ * son fallos y pintarlas de rojo diría que algo salió mal.
+ */
+const STATUS_TONE: Record<string, string> = {
+  approved: "border-success/40 text-success",
 };
 
 /** El acento del chip por tipo. Semántico: ámbar urge, azul revisa, violeta IA. */
@@ -73,6 +83,10 @@ export function ProposalCard({
   const Icon = KIND_ICONS[proposal.kind] ?? Lightbulb;
   const expiry = expiryLabel(proposal.expires_at);
   const urgent = isUrgent(proposal.expires_at);
+  /* Ya decidida: se queda en el hilo como registro de lo que Axel armó, pero
+     baja de tono. Sigue pidiendo una decisión que ya se tomó sería mentir, y el
+     violeta de la acción tiene que quedar libre para lo que sí falta decidir. */
+  const settled = proposal.status !== "pending";
 
   if (compact) {
     return (
@@ -108,14 +122,18 @@ export function ProposalCard({
     <article
       className={cn(
         "axel-comet-card flex flex-col gap-3 overflow-hidden rounded-lg p-4",
-        "border border-accent-violet/30 bg-accent-violet/5",
-        fresh && "axel-comet-card--new",
+        settled
+          ? "border border-border bg-secondary/40"
+          : "border border-accent-violet/30 bg-accent-violet/5",
+        fresh && !settled && "axel-comet-card--new",
       )}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_110px_at_22px_18px,color-mix(in_srgb,var(--axi-violet)_18%,transparent),transparent)]"
-      />
+      {settled ? null : (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_110px_at_22px_18px,color-mix(in_srgb,var(--axi-violet)_18%,transparent),transparent)]"
+        />
+      )}
       {stamped ? (
         <p className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground/70">
           <Sparkles className="size-3 text-accent-violet" aria-hidden="true" />
@@ -133,7 +151,20 @@ export function ProposalCard({
           <Icon className="size-3" aria-hidden="true" />
           {proposalKindLabel(proposal.kind)}
         </span>
-        {expiry !== null ? (
+        {settled ? (
+          <span
+            className={cn(
+              "ml-auto inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1",
+              "text-[10.5px] font-semibold whitespace-nowrap",
+              STATUS_TONE[proposal.status] ?? "border-border text-muted-foreground",
+            )}
+          >
+            {proposal.status === "approved" ? (
+              <Check className="size-3" aria-hidden="true" />
+            ) : null}
+            {proposalStatusLabel(proposal.status)}
+          </span>
+        ) : expiry !== null ? (
           <span
             className={cn(
               "ml-auto inline-flex items-center gap-1.5 text-[10.5px] font-semibold",
@@ -149,7 +180,12 @@ export function ProposalCard({
       <div>
         <h3 className="font-heading text-base leading-snug font-bold">{proposal.title}</h3>
         {proposal.headline !== null ? (
-          <p className="font-heading mt-1 text-sm font-bold text-accent-violet tabular-nums">
+          <p
+            className={cn(
+              "font-heading mt-1 text-sm font-bold tabular-nums",
+              settled ? "text-muted-foreground" : "text-accent-violet",
+            )}
+          >
             {proposal.headline}
           </p>
         ) : null}
@@ -161,14 +197,19 @@ export function ProposalCard({
         <Link
           href={`/cmo/proposals/${proposal.id}`}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-md bg-accent-violet px-3 py-1.5",
-            "text-xs font-semibold text-primary-foreground transition-[filter] hover:brightness-110",
+            "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold",
+            settled
+              ? "border border-border text-muted-foreground transition-colors hover:border-accent-violet/40 hover:text-accent-violet"
+              : "bg-accent-violet text-primary-foreground transition-[filter] hover:brightness-110",
           )}
         >
-          Revisar
+          {settled ? "Ver qué quedó" : "Revisar"}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
-        {proposal.artifacts.length > 0 ? (
+        {/* Cuántos borradores esperan, solo mientras esperan. Al aprobar, lo que
+            quedó encendido y lo que falló lo dice el detalle: aquí sería una
+            afirmación sin comprobar. */}
+        {!settled && proposal.artifacts.length > 0 ? (
           <span className="text-[10.5px] text-muted-foreground/70">
             {proposal.artifacts.length}{" "}
             {proposal.artifacts.length === 1 ? "borrador listo" : "borradores listos"}, apagados

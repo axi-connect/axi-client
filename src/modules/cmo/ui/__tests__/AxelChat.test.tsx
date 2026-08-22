@@ -13,6 +13,8 @@ import { AxelChat } from "../components/AxelChat";
 
 const mockState = {
   thread: { id: "t1", messages: [] as UiMessage[], thinking: false },
+  settled: {} as Record<string, ProposalDTO | null>,
+  resolveSettled: jest.fn(),
   ask: jest.fn(),
   retryLast: jest.fn(),
   newThread: jest.fn(),
@@ -52,8 +54,15 @@ function proposal(over: Partial<ProposalDTO> = {}): ProposalDTO {
   } as ProposalDTO;
 }
 
-function view(over: { messages?: UiMessage[]; proposals?: ProposalDTO[] } = {}) {
+function view(
+  over: {
+    messages?: UiMessage[];
+    proposals?: ProposalDTO[];
+    settled?: Record<string, ProposalDTO | null>;
+  } = {},
+) {
   mockState.thread = { id: "t1", messages: over.messages ?? [], thinking: false };
+  mockState.settled = over.settled ?? {};
   return render(
     <AxelChat
       ownerName="Owner"
@@ -106,6 +115,45 @@ describe("la propuesta que nace en la conversación", () => {
       proposals: [proposal()],
     });
     expect(screen.getAllByRole("article")[1]?.className).not.toContain("axel-comet-card--new");
+  });
+
+  it("una vez decidida se queda en el hilo, con su estado y sin pedir decisión", () => {
+    view({
+      messages: [message({ id: "local-2", proposal_id: "prop-1" })],
+      // El tablero solo lista lo que falta decidir: la aprobada llega por `settled`.
+      proposals: [],
+      settled: { "prop-1": proposal({ status: "approved" }) },
+    });
+
+    const card = screen.getByRole("article");
+    expect(within(card).getByText("Aprobada")).toBeInTheDocument();
+    expect(within(card).getByText("Ver qué quedó")).toBeInTheDocument();
+    expect(within(card).queryByText("Revisar")).not.toBeInTheDocument();
+    // Baja de tono: el violeta queda para lo que sí falta decidir.
+    expect(card.className).toContain("bg-secondary/40");
+    expect(card.className).not.toContain("axel-comet-card--new");
+  });
+
+  it("la que ya no está no deja tarjeta ni la vuelve a pedir", () => {
+    view({
+      messages: [message({ id: "local-2", proposal_id: "prop-1" })],
+      proposals: [],
+      settled: { "prop-1": null },
+    });
+
+    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+    expect(mockState.resolveSettled).not.toHaveBeenCalled();
+  });
+
+  it("pide la que falta una sola vez", () => {
+    view({
+      messages: [message({ id: "local-2", proposal_id: "prop-1" })],
+      proposals: [],
+      settled: {},
+    });
+
+    expect(mockState.resolveSettled).toHaveBeenCalledTimes(1);
+    expect(mockState.resolveSettled).toHaveBeenCalledWith("prop-1");
   });
 
   it("la del informe del día sigue arriba: no nació de ningún mensaje", () => {

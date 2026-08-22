@@ -75,6 +75,8 @@ export function AxelChat({
   canManage,
 }: AxelChatProps) {
   const thread = useCmoStore((state) => state.thread);
+  const settled = useCmoStore((state) => state.settled);
+  const resolveSettled = useCmoStore((state) => state.resolveSettled);
   const ask = useCmoStore((state) => state.ask);
   const retryLast = useCmoStore((state) => state.retryLast);
   const newThread = useCmoStore((state) => state.newThread);
@@ -120,6 +122,15 @@ export function AxelChat({
       ),
     [thread.messages],
   );
+
+  /* Una propuesta decidida sale del tablero, y con ella salía de la
+     conversación: el mensaje de Axel se quedaba sin rastro de lo que armó. Se
+     pide por id para poder seguir pintándola con su estado. */
+  useEffect(() => {
+    for (const id of anchored) {
+      if (!byId.has(id) && !(id in settled)) void resolveSettled(id);
+    }
+  }, [anchored, byId, settled, resolveSettled]);
 
   const inThread = proposals
     .filter((proposal) => !anchored.has(proposal.id))
@@ -218,7 +229,9 @@ export function AxelChat({
                     const proposal =
                       message.proposal_id === null
                         ? undefined
-                        : byId.get(message.proposal_id);
+                        : (byId.get(message.proposal_id) ??
+                          settled[message.proposal_id] ??
+                          undefined);
                     return (
                       <Fragment key={message.id}>
                         <MessageBubble message={message} onRetry={retryLast} />

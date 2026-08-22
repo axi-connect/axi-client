@@ -19,6 +19,7 @@ import {
   createThread,
   getCmoSettings,
   getLatestBriefing,
+  getProposal,
   getTranscript,
   listProposals,
   listThreads,
@@ -87,6 +88,19 @@ interface CmoState {
   blocker: CmoBlocker;
   /** Propuestas nuevas llegadas por WS que el usuario aún no ha visto. */
   unseen: number;
+  /**
+   * Propuestas del hilo que ya NO están en el tablero, por id.
+   *
+   * El tablero solo lista lo que falta decidir, así que al aprobar o descartar
+   * una propuesta desaparecía de la conversación y el mensaje de Axel se quedaba
+   * sin rastro de lo que había armado. Aquí se guardan las decididas para poder
+   * seguir pintándolas CON su estado, y se resuelven una a una por id — también
+   * al recargar un hilo viejo, donde la propuesta ya venía decidida.
+   *
+   * `null` significa «se preguntó y ya no está» (venció y se purgó, o falló la
+   * consulta): la marca evita volver a pedirla en cada render.
+   */
+  settled: Record<string, ProposalDTO | null>;
 
   load: () => Promise<void>;
   reloadProposals: () => Promise<void>;
@@ -100,6 +114,8 @@ interface CmoState {
     saveAsDirective: boolean,
   ) => Promise<{ directive_created: boolean }>;
   markSeen: () => void;
+  /** Resuelve una propuesta del hilo que el tablero ya no lista. Idempotente. */
+  resolveSettled: (proposalId: string) => Promise<void>;
   onBriefingReady: (event: CmoBriefingReadyEvent) => void;
   onProposalCreated: (event: CmoProposalCreatedEvent) => void;
   onProposalDecided: (event: CmoProposalDecidedEvent) => void;
@@ -118,6 +134,9 @@ function blockerFor(error: unknown): CmoBlocker {
 let localId = 0;
 const nextLocalId = (): string => `local-${String((localId += 1))}`;
 
+/** Ids de propuesta decidida que se están pidiendo ahora mismo. */
+const inFlight = new Set<string>();
+
 export const useCmoStore = create<CmoState>((set, get) => ({
   settings: idle(),
   briefing: idle(),
@@ -125,6 +144,7 @@ export const useCmoStore = create<CmoState>((set, get) => ({
   thread: { id: null, messages: [], thinking: false },
   blocker: null,
   unseen: 0,
+  settled: {},
 
   /**
    * Carga inicial de la pantalla. Las tres peticiones van en paralelo y **cada
@@ -310,6 +330,33 @@ export const useCmoStore = create<CmoState>((set, get) => ({
 
   markSeen: () => {
     set({ unseen: 0 });
+  },
+
+  /**
+   * Trae una propuesta que el tablero ya no lista, para que la conversación no
+   * pierda lo que Axel armó cuando el dueño la decide.
+   *
+   * Dedupe en dos capas: la marca en `settled` (incluido el `null` de «ya no
+   * está») corta las repeticiones entre renders, y el conjunto de peticiones en
+   * vuelo corta las simultáneas — el efecto que la llama se dispara por cada
+   * cambio del hilo y dos mensajes de la misma propuesta la pedirían dos veces.
+   */
+  resolveSettled: async (proposalId: string) => {
+    const state = get();
+    if (proposalId in state.settled) return;
+    if ((state.proposals.data ?? []).some((item) => item.id === proposalId)) return;
+    if (inFlight.has(proposalId)) return;
+    inFlight.add(proposalId);
+    try {
+      const proposal = await getProposal(proposalId);
+      set((current) => ({ settled: { ...current.settled, [proposalId]: proposal } }));
+    } catch {
+      // Una propuesta que no se puede traer no es un error de la pantalla: el
+      // hilo se lee igual. Se marca para no volver a pedirla en cada render.
+      set((current) => ({ settled: { ...current.settled, [proposalId]: null } }));
+    } finally {
+      inFlight.delete(proposalId);
+    }
   },
 
   onBriefingReady: () => {
