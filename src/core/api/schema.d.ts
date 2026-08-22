@@ -8701,6 +8701,11 @@ export interface components {
              * @description Hilo a continuar. Ausente: sigue el más reciente o abre uno nuevo.
              */
             thread_id?: string;
+            /**
+             * Format: uuid
+             * @description Id del turno propuesto por el cliente, para atar los eventos en vivo (cmo.turn_*) a esta petición antes de que responda. Ausente: lo genera el servidor.
+             */
+            client_turn_id?: string;
         };
         CmoReplyDto: {
             /** Format: uuid */
@@ -8713,6 +8718,8 @@ export interface components {
             }[];
             /** Format: uuid */
             proposal_id: string | null;
+            /** Format: uuid */
+            turn_id: string;
         };
         CmoThreadListDto: {
             data: {
