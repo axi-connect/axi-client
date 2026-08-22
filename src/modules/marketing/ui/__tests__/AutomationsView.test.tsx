@@ -19,9 +19,21 @@ jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({ hasPermission: () => true }),
 }));
 
+/* El enlace profundo desde el chat de Axel (`?automation=<id>`) lee el router de
+   App Router, que en jsdom no está montado. `mockParams` es mutable a propósito:
+   así un escenario puede llegar «desde el chat» y el resto no. */
+let mockParams = new URLSearchParams();
+const mockReplace = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/marketing/automations",
+  useSearchParams: () => mockParams,
+}));
+
 const showModal = jest.fn();
+const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert: jest.fn(), showModal, closeModal: jest.fn() }),
+  useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
 }));
 
 jest.mock("@/modules/marketing/infrastructure/services/automations-service.adapter", () => ({
@@ -207,6 +219,39 @@ describe("reglas con actividad", () => {
   it("bloquea deal_stalled sin plantilla de Meta y explica por qué antes del clic", () => {
     expect(screen.getByText(/plantilla aprobada por Meta/)).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Regla Rescate de negociación" })).toBeDisabled();
+  });
+});
+
+/* El destino de «Ver la regla» en el chat de Axel. El disparador tiene que salir
+   de la regla misma: por enlace no hay grupo desde el que se hizo clic. */
+describe("llegando desde el chat de Axel", () => {
+  afterEach(() => {
+    mockParams = new URLSearchParams();
+  });
+
+  it("abre la regla que trae el enlace con su disparador", async () => {
+    mockParams = new URLSearchParams("automation=a9");
+    api.listAutomations.mockResolvedValue([
+      rule({ id: "a9", name: "Regla de Axel", trigger_type: "conversation_inactive", enabled: false }),
+    ]);
+    api.getAutomationMetrics.mockResolvedValue(SIN_DISPAROS);
+    render(<AutomationsView />);
+
+    expect(await screen.findByText("Editar regla")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Regla de Axel")).toBeInTheDocument();
+  });
+
+  it("dice que ya no está en vez de abrir un panel vacío", async () => {
+    mockParams = new URLSearchParams("automation=borrada");
+    api.listAutomations.mockResolvedValue([rule({ id: "a1", name: "Carrito con cupón" })]);
+    api.getAutomationMetrics.mockResolvedValue(SIN_DISPAROS);
+    render(<AutomationsView />);
+
+    await screen.findByText("Carrito con cupón");
+    expect(showAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Esa regla ya no está" }),
+    );
+    expect(screen.queryByText("Editar regla")).not.toBeInTheDocument();
   });
 });
 
