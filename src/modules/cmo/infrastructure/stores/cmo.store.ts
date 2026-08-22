@@ -239,13 +239,18 @@ export const useCmoStore = create<CmoState>((set, get) => ({
               body: reply.reply,
               created_at: new Date().toISOString(),
               tool_calls: reply.tool_calls,
-              proposal_id: null,
+              // La propuesta que Axel armó EN este turno viaja en la respuesta,
+              // así que la tarjeta se pinta pegada a su mensaje sin esperar una
+              // recarga. Al recargar sale del transcript por el mismo campo.
+              proposal_id: reply.proposal_id,
             },
           ],
         },
       }));
       // Una respuesta puede haber creado una propuesta: se recarga el tablero
       // en vez de esperar el WS, que puede no llegar si el socket está caído.
+      // La tarjeta del hilo necesita la propuesta COMPLETA (titular, cifra,
+      // vencimiento) y el POST solo trae su id.
       void get().reloadProposals();
     } catch (error) {
       const blocker = blockerFor(error);

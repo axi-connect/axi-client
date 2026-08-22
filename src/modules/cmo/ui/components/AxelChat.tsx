@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, ArrowUp, BarChart3, Flame, Lock, Megaphone, Plus, RotateCcw, Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
@@ -89,10 +89,15 @@ export function AxelChat({
   // respuesta aparece fuera de la vista y parece que no pasó nada. Con el hilo
   // vacío NO se hace: arrastraría el hero fuera de la pantalla al entrar, que es
   // justo lo primero que hay que leer.
+  //
+  // `proposals.length` está en las dependencias a propósito: la tarjeta de la
+  // propuesta llega DESPUÉS del mensaje (el POST solo trae su id y el tablero se
+  // recarga aparte), así que sin este segundo desplazamiento aparecería fuera de
+  // la vista justo lo que hay que decidir.
   useEffect(() => {
     if (!hasMessages) return;
     bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [hasMessages, thread.messages.length, thread.thinking]);
+  }, [hasMessages, thread.messages.length, thread.thinking, proposals.length]);
 
   const submit = (text: string) => {
     if (text.trim() === "" || thread.thinking) return;
@@ -101,8 +106,26 @@ export function AxelChat({
     void ask(text);
   };
 
-  const inThread = proposals.slice(0, PROPOSALS_IN_THREAD);
-  const restInRail = proposals.length - inThread.length;
+  const byId = useMemo(() => new Map(proposals.map((item) => [item.id, item])), [proposals]);
+
+  /* Las propuestas que nacieron EN la conversación se pintan pegadas al mensaje
+     que las anuncia, así que no pueden repetirse en el bloque de arriba. Ese
+     bloque es el del informe del día: lo que Axel trajo por su cuenta. */
+  const anchored = useMemo(
+    () =>
+      new Set(
+        thread.messages
+          .map((message) => message.proposal_id)
+          .filter((id): id is string => id !== null),
+      ),
+    [thread.messages],
+  );
+
+  const inThread = proposals
+    .filter((proposal) => !anchored.has(proposal.id))
+    .slice(0, PROPOSALS_IN_THREAD);
+  const shown = inThread.length + [...anchored].filter((id) => byId.has(id)).length;
+  const restInRail = proposals.length - shown;
   // Los arranques solo mientras no haya conversación. Cuando ya hay propuestas en
   // el hilo bajan a una fila de píldoras: como tarjetas grandes empujarían las
   // propuestas fuera de la pantalla, que es lo único que hay que decidir hoy.
@@ -191,9 +214,29 @@ export function AxelChat({
 
               {hasMessages || thread.thinking ? (
                 <div className="mt-6 flex flex-col gap-4">
-                  {thread.messages.map((message) => (
-                    <MessageBubble key={message.id} message={message} onRetry={retryLast} />
-                  ))}
+                  {thread.messages.map((message) => {
+                    const proposal =
+                      message.proposal_id === null
+                        ? undefined
+                        : byId.get(message.proposal_id);
+                    return (
+                      <Fragment key={message.id}>
+                        <MessageBubble message={message} onRetry={retryLast} />
+                        {/* La propuesta va DEBAJO del mensaje que la anuncia, no
+                            al principio del hilo: con veinte mensajes de
+                            conversación, arriba nadie la ve. `fresh` solo en los
+                            mensajes de esta sesión (id local): al recargar, la
+                            misma tarjeta no debe volver a anunciarse. */}
+                        {proposal !== undefined ? (
+                          <ProposalCard
+                            proposal={proposal}
+                            stamped
+                            fresh={message.id.startsWith("local-")}
+                          />
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
                   {thread.thinking ? <AxelThinking /> : null}
                 </div>
               ) : null}

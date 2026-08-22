@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AlertTriangle, ArrowUpRight, BarChart3, BookOpen, Check, Clock, X } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { cn } from "@/core/lib/utils";
+import { artifactHref, artifactLinkLabel } from "@/modules/cmo/domain/artifact-links";
 import { readArtifacts, type ApprovalResultDTO, type ProposalDTO } from "@/modules/cmo/domain/cmo";
 import {
   artifactAction,
@@ -141,7 +143,10 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex-none border-b border-border p-5">
+      {/* `pr-14`: el botón de cerrar del sheet es `absolute top-4 right-4 size-8`,
+          así que sin reservarle el hueco se sienta ENCIMA de lo que caiga a la
+          derecha de esta fila — el vencimiento («Vence en 15 días») o el estado. */}
+      <header className="flex-none border-b border-border p-5 pr-14">
         <div className="flex items-center gap-2.5">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-accent-violet/30 bg-background px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase text-accent-violet">
             {proposalKindLabel(proposal.kind)}
@@ -214,24 +219,48 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
 
         {artifacts.length > 0 ? (
           <Block icon={BookOpen} label="Lo que ya está armado, apagado">
-            {artifacts.map((artifact, index) => (
-              <div
-                key={`${artifact.type}-${String(index)}`}
-                className="flex flex-col gap-2 rounded-md border border-border p-3"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[12.5px] font-semibold">
-                    {artifactLabel(artifact.type)} · {artifact.label}
-                  </span>
-                  <span className="ml-auto rounded-full border border-warning/35 px-2 py-0.5 text-[10.5px] font-semibold text-warning">
+            {artifacts.map((artifact, index) => {
+              const href = artifactHref(artifact);
+              return (
+                <div
+                  key={`${artifact.type}-${String(index)}`}
+                  className="flex flex-col gap-2.5 rounded-md border border-border p-3"
+                >
+                  {/* Cada dato en su renglón. Antes el tipo, el nombre y la
+                      acción compartían una sola fila con `ml-auto`, y en cuanto
+                      el nombre del borrador era largo la píldora se encogía y
+                      partía su texto en dos líneas apretadas. La jerarquía la
+                      hacen el peso y el tamaño (DESIGN-SYSTEM §3.2), no el
+                      reparto horizontal. */}
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground">
+                        {artifactLabel(artifact.type)}
+                      </p>
+                      <p className="mt-1 text-[12.5px] leading-snug font-semibold">
+                        {artifact.label}
+                      </p>
+                    </div>
+                    {href !== null ? (
+                      <Link
+                        href={href}
+                        className="inline-flex flex-none items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-accent-violet/40 hover:text-accent-violet"
+                      >
+                        {artifactLinkLabel(artifact.type)}
+                        <ArrowUpRight className="size-3" aria-hidden="true" />
+                      </Link>
+                    ) : null}
+                  </div>
+                  <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-warning">
+                    <span className="size-1.5 flex-none rounded-full bg-warning" aria-hidden="true" />
                     {artifactAction(artifact.type)}
-                  </span>
+                  </p>
+                  {artifact.before !== null && artifact.after !== null ? (
+                    <PlaybookDiff before={artifact.before} after={artifact.after} />
+                  ) : null}
                 </div>
-                {artifact.before !== null && artifact.after !== null ? (
-                  <PlaybookDiff before={artifact.before} after={artifact.after} />
-                ) : null}
-              </div>
-            ))}
+              );
+            })}
           </Block>
         ) : null}
 

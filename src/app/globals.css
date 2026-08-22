@@ -715,6 +715,94 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   }
 }
 
+/* ==========================================================================
+   LA TARJETA DE PROPUESTA DEL HILO — relieve y cometa
+   --------------------------------------------------------------------------
+   La propuesta que Axel arma DENTRO de la conversación es la unidad de producto
+   del módulo, y aparece en medio de un hilo de texto: sin relieve propio se lee
+   como un párrafo más y el dueño la pasa de largo.
+
+   El relieve son tres capas y ninguna estrena color: un realce violeta en el
+   borde superior (la luz), una sombra proyectada teñida hacia abajo (el peso) y
+   el anillo cónico recortado al borde, con la MISMA técnica de `.axel-orb::after`
+   — dos máscaras que se excluyen sobre `@property --comet-angle`.
+
+   El anillo solo gira mientras la tarjeta es NUEVA: tres vueltas y se apaga
+   solo, sin temporizador en JavaScript. Un anillo permanente en cada tarjeta
+   convertiría el único momento hero del módulo en ruido de fondo.
+   ========================================================================== */
+.axel-comet-card {
+  position: relative;
+  isolation: isolate;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--axi-violet) 24%, transparent),
+    0 14px 34px -16px color-mix(in srgb, var(--axi-violet) 34%, transparent),
+    var(--shadow-float);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease;
+}
+
+/* El levantamiento al pasar por encima: `perspective` en la propia transform
+   para que el giro sea volumétrico y no un escalado plano. */
+.axel-comet-card:hover {
+  transform: perspective(1100px) translateY(-2px) rotateX(1.1deg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--axi-violet) 30%, transparent),
+    0 22px 46px -18px color-mix(in srgb, var(--axi-violet) 40%, transparent),
+    var(--shadow-overlay);
+}
+
+/* Entrada: la tarjeta se endereza como un panel físico que cae en su sitio. Es
+   la señal de que ACABA de llegar, y por eso solo la lleva la variante nueva. */
+.axel-comet-card--new {
+  animation: axel-card-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes axel-card-in {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(-7deg) translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+
+.axel-comet-card--new::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 214deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 296deg,
+    var(--axi-brand) 338deg,
+    var(--axi-amber) 351deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* Tres vueltas y se apaga. El desvanecido arranca en la última para que no
+     desaparezca de golpe. */
+  animation:
+    axel-comet 4.6s linear 3,
+    axel-ring-out 1.2s ease 12.6s forwards;
+  pointer-events: none;
+}
+
+@keyframes axel-ring-out {
+  to {
+    opacity: 0;
+  }
+}
+
 /* Axel pensando. Existe porque NO hay streaming: un turno tarda decenas de
    segundos y sin señal de vida el usuario cree que se colgó. Solo `transform`,
    así que no provoca layout ni repaint del texto. */
@@ -784,7 +872,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 @media (prefers-reduced-motion: reduce) {
   .axel-orb::after,
   .axel-orb-spill,
-  .axel-orb--busy {
+  .axel-orb--busy,
+  .axel-comet-card--new,
+  .axel-comet-card--new::after {
     animation: none;
   }
 }

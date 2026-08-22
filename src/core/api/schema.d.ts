@@ -8711,6 +8711,8 @@ export interface components {
                 ms: number;
                 productive: boolean;
             }[];
+            /** Format: uuid */
+            proposal_id: string | null;
         };
         CmoThreadListDto: {
             data: {

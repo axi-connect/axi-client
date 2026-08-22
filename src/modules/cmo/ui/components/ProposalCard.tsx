@@ -43,6 +43,15 @@ interface ProposalCardProps {
    * por su cuenta o si la armó porque se la pidieron.
    */
   stamped?: boolean;
+  /**
+   * La propuesta ACABA de nacer en este turno de la conversación.
+   *
+   * Enciende el anillo cometa y la entrada en relieve: es la señal de que hay
+   * algo nuevo que decidir, y hace falta porque la tarjeta aterriza al final de
+   * un hilo de texto donde, sin relieve, se lee como un párrafo más. El anillo
+   * se apaga solo a las tres vueltas (`.axel-comet-card--new` en globals.css).
+   */
+  fresh?: boolean;
 }
 
 /**
@@ -55,7 +64,12 @@ interface ProposalCardProps {
  * El vencimiento se pinta con color de alarma solo dentro de las 48 horas. Si
  * todo urgiera, nada urgiría: es el mismo principio del tope de propuestas.
  */
-export function ProposalCard({ proposal, compact = false, stamped = false }: ProposalCardProps) {
+export function ProposalCard({
+  proposal,
+  compact = false,
+  stamped = false,
+  fresh = false,
+}: ProposalCardProps) {
   const Icon = KIND_ICONS[proposal.kind] ?? Lightbulb;
   const expiry = expiryLabel(proposal.expires_at);
   const urgent = isUrgent(proposal.expires_at);
@@ -91,7 +105,13 @@ export function ProposalCard({ proposal, compact = false, stamped = false }: Pro
   }
 
   return (
-    <article className="relative isolate flex flex-col gap-3 overflow-hidden rounded-lg border border-accent-violet/30 bg-accent-violet/5 p-4 shadow-float">
+    <article
+      className={cn(
+        "axel-comet-card flex flex-col gap-3 overflow-hidden rounded-lg p-4",
+        "border border-accent-violet/30 bg-accent-violet/5",
+        fresh && "axel-comet-card--new",
+      )}
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_110px_at_22px_18px,color-mix(in_srgb,var(--axi-violet)_18%,transparent),transparent)]"
