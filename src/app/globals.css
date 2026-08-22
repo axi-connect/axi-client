@@ -618,14 +618,79 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   filter: blur(6px);
 }
 
+/* El retrato de Axel dentro del orbe (`/images/mascots/cmo-orb.webp`, el mismo
+   render del personaje recortado en cuadrado sobre la cabeza). El disco es
+   `overflow:hidden`, así que la imagen se recorta al círculo. */
+.axel-orb-face {
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/* Vignette violeta pegada al borde interior del retrato. No es decoración: es lo
+   que funde la foto con el anillo para que el cometa no parezca un aro puesto
+   encima de un avatar recortado. `screen` sobre un render oscuro lee como luz. */
+.axel-orb-veil {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      transparent 44%,
+      color-mix(in srgb, var(--axi-violet) 20%, transparent) 84%,
+      color-mix(in srgb, var(--axi-violet) 40%, transparent) 100%
+    ),
+    radial-gradient(
+      circle at 50% 116%,
+      color-mix(in srgb, var(--axi-brand) 24%, transparent),
+      transparent 62%
+    );
+}
+
+/* Derrame del cometa sobre el retrato: el MISMO cónico, difuminado y recortado a
+   la corona interior. Lleva animación propia con idéntica duración y curva
+   porque `--comet-angle` está declarada `inherits: false` (arriba, con el cometa
+   de canales) y un hijo no puede heredar el ángulo animado del padre: la
+   sincronía se consigue con dos animaciones en fase, no heredando el valor. */
+.axel-orb-spill {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(4px);
+  mix-blend-mode: screen;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 54%, #000 90%);
+  mask-image: radial-gradient(circle, transparent 54%, #000 90%);
+  animation: axel-comet 5.5s linear infinite;
+}
+
+/* Cuando Axel piensa el derrame se aviva: el cometa se nota más sin añadir otra
+   animación al DOM. */
+.axel-orb--busy .axel-orb-spill {
+  opacity: 0.72;
+}
+
 /* El cometa: cónico con cola y núcleo, recortado a la franja del borde con dos
    máscaras que se excluyen. Gira animando `--comet-angle`, que ya existe como
    propiedad TIPADA arriba (sin `@property` un custom property no interpola).
-   Tricolor del isotipo: es el ÚNICO momento hero del módulo (DESIGN §3.2). */
+   Tricolor del isotipo: es el ÚNICO momento hero del módulo (DESIGN §3.2).
+   `z-index: 2` lo deja por encima del retrato y del derrame. */
 .axel-orb::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 2;
   border-radius: inherit;
   padding: 1.5px;
   background: conic-gradient(
@@ -718,6 +783,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 @media (prefers-reduced-motion: reduce) {
   .axel-orb::after,
+  .axel-orb-spill,
   .axel-orb--busy {
     animation: none;
   }

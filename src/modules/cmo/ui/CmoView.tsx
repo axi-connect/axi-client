@@ -8,10 +8,7 @@ import { cn } from "@/core/lib/utils";
 import { useCmoSocket } from "@/modules/cmo/infrastructure/realtime/use-cmo-socket";
 import { useCmoStore } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { AxelChat } from "./components/AxelChat";
-import { BriefingHero } from "./components/BriefingHero";
-import { CmoBlockedState } from "./components/CmoBlockedState";
 import { CmoBoardRail } from "./components/CmoBoardRail";
-import { ProposalCard } from "./components/ProposalCard";
 
 /**
  * El despacho de Axel.
@@ -20,6 +17,13 @@ import { ProposalCard } from "./components/ProposalCard";
  * tablero degradado a un rail derecho. No es una preferencia estética — la tesis
  * del módulo es que la disrupción está en la conversación, y por eso las
  * propuestas se leen DENTRO del hilo, no en una pantalla aparte.
+ *
+ * **Un solo campo.** `axel-field` vive aquí, en el `<main>`, y no en el chat: su
+ * fondo (los tres halos y el dot-grid) tiene que quedar detrás del hero, del
+ * hilo y del composer a la vez. Cuando el campo empezaba debajo del briefing, la
+ * banda de arriba heredaba el degradado `muted` de la superficie del panel y
+ * aparecía una costura horizontal de 1px que partía la pantalla en dos. El único
+ * corte de superficie legítimo de esta vista es el `border-l` del rail.
  *
  * Vista full-bleed con scroller propio (fuera del grupo `(content)`), igual que
  * el inbox: el chat necesita anclar su composer abajo y el rail su propio scroll.
@@ -45,58 +49,45 @@ export function CmoView() {
   const enabled = settings.data?.enabled ?? true;
 
   /**
-   * El bloqueo gana sobre todo lo demás. Se comprueba con `settings` cargados o
-   * con el blocker que devolvió un intento real: mostrar el chat a un tenant
-   * apagado solo produce un error al primer mensaje, y eso es peor que decirlo
-   * de entrada.
+   * El bloqueo gana sobre el hilo, pero NO se lleva la pantalla: se pinta dentro
+   * del mismo campo y con el mismo rail. Antes devolvía temprano y esa pantalla
+   * quedaba sin fondo, como si fuera de otro módulo. Se resuelve con `settings`
+   * cargados o con el blocker que devolvió un intento real: mostrar el chat a un
+   * tenant apagado solo produce un error al primer mensaje.
    */
-  if (blocker !== null) {
-    return <CmoBlockedState blocker={blocker} canManage={canManage} />;
-  }
-  if (settings.status === "ready" && !enabled) {
-    return <CmoBlockedState blocker="disabled" canManage={canManage} />;
-  }
+  const blocked = blocker ?? (settings.status === "ready" && !enabled ? "disabled" : null);
 
   const briefingHour = settings.data?.briefing_hour ?? 8;
   const pending = proposals.data ?? [];
 
+  const rail = (
+    <CmoBoardRail
+      proposals={proposals.data}
+      briefing={briefing.data ?? null}
+      loading={proposals.status === "loading"}
+      briefingLoading={briefing.status === "loading"}
+      error={proposals.error}
+      onRetry={() => {
+        void reloadProposals();
+      }}
+    />
+  );
+
   return (
     <div className="flex min-h-0 flex-1" data-app-view>
-      <main className="flex min-w-0 flex-1 flex-col">
-        {/* El briefing y las propuestas van ENCIMA del chat y con el mismo ancho
-            de columna: se leen como lo primero que Axel te dice hoy, no como un
-            panel aparte que compite con la conversación. */}
-        <div className="flex-none border-b border-border px-6 pt-5 pb-4">
-          <div className="mx-auto flex w-full max-w-[640px] flex-col gap-3">
-            <BriefingHero
-              briefing={briefing.data ?? null}
-              loading={briefing.status === "loading"}
-              briefingHour={briefingHour}
-            />
-            {pending.length > 0 ? (
-              <div className="flex flex-col gap-2.5">
-                {pending.slice(0, 2).map((proposal) => (
-                  <ProposalCard key={proposal.id} proposal={proposal} />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <AxelChat ownerName={firstName(user?.name ?? null)} />
+      <main className="axel-field flex min-w-0 flex-1 flex-col">
+        <AxelChat
+          ownerName={firstName(user?.name ?? null)}
+          briefing={briefing.data ?? null}
+          briefingLoading={briefing.status === "loading"}
+          briefingHour={briefingHour}
+          proposals={pending}
+          blocked={blocked}
+          canManage={canManage}
+        />
       </main>
 
-      <div className="hidden xl:flex">
-        <CmoBoardRail
-          proposals={proposals.data}
-          briefing={briefing.data ?? null}
-          loading={proposals.status === "loading"}
-          error={proposals.error}
-          onRetry={() => {
-            void reloadProposals();
-          }}
-        />
-      </div>
+      <div className="hidden xl:flex">{rail}</div>
 
       {/* Bajo xl el rail entra como panel superpuesto: el tablero no puede
           desaparecer sin dejar forma de llegar a las propuestas. */}
@@ -114,17 +105,7 @@ export function CmoView() {
         <LayoutPanelLeft className="size-5" aria-hidden="true" />
       </button>
       {railOpen ? (
-        <div className="fixed inset-y-0 right-0 z-50 flex shadow-overlay xl:hidden">
-          <CmoBoardRail
-            proposals={proposals.data}
-            briefing={briefing.data ?? null}
-            loading={proposals.status === "loading"}
-            error={proposals.error}
-            onRetry={() => {
-              void reloadProposals();
-            }}
-          />
-        </div>
+        <div className="fixed inset-y-0 right-0 z-50 flex shadow-overlay xl:hidden">{rail}</div>
       ) : null}
     </div>
   );

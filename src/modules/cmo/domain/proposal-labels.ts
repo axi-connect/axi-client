@@ -109,6 +109,44 @@ export function isUrgent(expiresAt: string | null, now: Date = new Date()): bool
   return target.getTime() - now.getTime() <= 48 * 3_600_000;
 }
 
+/**
+ * De dónde salió una propuesta, para el sello que lleva en el hilo.
+ *
+ * Importa porque el hilo mezcla dos cosas que llegaron por caminos distintos: lo
+ * que Axel dejó por su cuenta (su informe diario o una señal que saltó) y lo que
+ * armó porque el dueño se lo pidió en la conversación. Sin el sello, una tarjeta
+ * que apareció sola parece respuesta a algo que el dueño nunca preguntó.
+ */
+export function proposalSourceLabel(source: string): string {
+  switch (source) {
+    case "briefing":
+      return "Del informe del día";
+    case "signal":
+      return "Lo vi y te avisé";
+    case "chat":
+      return "De lo que me pediste";
+    default:
+      return source;
+  }
+}
+
+/**
+ * El día de un briefing, en palabras.
+ *
+ * `date_local` es el día LOCAL del negocio (`YYYY-MM-DD`), no un instante: se
+ * formatea partiendo la cadena y **nunca** con `new Date(cadena)`, porque eso la
+ * interpreta como UTC y restaría un día en cualquier zona al oeste de Greenwich
+ * — y este módulo es para Colombia.
+ */
+export function briefingDayLabel(dateLocal: string): string {
+  const [year, month, day] = dateLocal.split("-").map(Number);
+  if (year === undefined || month === undefined || day === undefined) return dateLocal;
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) return dateLocal;
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long" }).format(
+    new Date(year, month - 1, day),
+  );
+}
+
 const ARTIFACT_LABELS: Record<string, string> = {
   campaign: "Campaña",
   automation: "Regla de recuperación",

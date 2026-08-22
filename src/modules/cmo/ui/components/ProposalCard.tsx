@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Tag, Users } from "lucide-react";
+import { ArrowRight, Bot, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Sparkles, Tag, Users } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { ProposalDTO, ProposalKind } from "@/modules/cmo/domain/cmo";
-import { expiryLabel, isUrgent, proposalKindLabel } from "@/modules/cmo/domain/proposal-labels";
+import {
+  expiryLabel,
+  isUrgent,
+  proposalKindLabel,
+  proposalSourceLabel,
+} from "@/modules/cmo/domain/proposal-labels";
 
 const KIND_ICONS: Record<ProposalKind, typeof Flame> = {
   campaign: Megaphone,
@@ -32,6 +37,12 @@ interface ProposalCardProps {
   proposal: ProposalDTO;
   /** Variante compacta para el rail; la ancha va dentro del hilo. */
   compact?: boolean;
+  /**
+   * Sello de origen para la variante ancha. Solo tiene sentido dentro del hilo:
+   * ahí la tarjeta convive con la conversación y hay que decir si Axel la trajo
+   * por su cuenta o si la armó porque se la pidieron.
+   */
+  stamped?: boolean;
 }
 
 /**
@@ -44,7 +55,7 @@ interface ProposalCardProps {
  * El vencimiento se pinta con color de alarma solo dentro de las 48 horas. Si
  * todo urgiera, nada urgiría: es el mismo principio del tope de propuestas.
  */
-export function ProposalCard({ proposal, compact = false }: ProposalCardProps) {
+export function ProposalCard({ proposal, compact = false, stamped = false }: ProposalCardProps) {
   const Icon = KIND_ICONS[proposal.kind] ?? Lightbulb;
   const expiry = expiryLabel(proposal.expires_at);
   const urgent = isUrgent(proposal.expires_at);
@@ -80,11 +91,17 @@ export function ProposalCard({ proposal, compact = false }: ProposalCardProps) {
   }
 
   return (
-    <article className="relative isolate flex flex-col gap-3 overflow-hidden rounded-lg border border-accent-violet/30 bg-accent-violet/5 p-4">
+    <article className="relative isolate flex flex-col gap-3 overflow-hidden rounded-lg border border-accent-violet/30 bg-accent-violet/5 p-4 shadow-float">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_110px_at_22px_18px,color-mix(in_srgb,var(--axi-violet)_18%,transparent),transparent)]"
       />
+      {stamped ? (
+        <p className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground/70">
+          <Sparkles className="size-3 text-accent-violet" aria-hidden="true" />
+          Axel · {proposalSourceLabel(proposal.source)}
+        </p>
+      ) : null}
       <div className="flex items-center gap-2.5">
         <span
           className={cn(

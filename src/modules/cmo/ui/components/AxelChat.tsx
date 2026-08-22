@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowUp, BarChart3, Flame, Megaphone, Plus, RotateCcw, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUp, BarChart3, Flame, Lock, Megaphone, Plus, RotateCcw, Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import { useCmoStore, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
+import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
+import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { Button } from "@/shared/components/ui/button";
-import { AxelOrb } from "./AxelOrb";
+import { BriefingHero } from "./BriefingHero";
+import { CmoBlockedState } from "./CmoBlockedState";
+import { ProposalCard } from "./ProposalCard";
 import { AxelThinking } from "./AxelThinking";
 
 /**
@@ -28,18 +31,49 @@ const STARTERS = [
   },
 ] as const;
 
+/** Cuántas propuestas entran al hilo. El resto vive en el rail. */
+const PROPOSALS_IN_THREAD = 2;
+
+interface AxelChatProps {
+  ownerName: string | null;
+  briefing: BriefingDTO | null;
+  briefingLoading: boolean;
+  briefingHour: number;
+  /** Propuestas por decidir, ya filtradas por el store. */
+  proposals: ProposalDTO[];
+  /** Cuando Axel no está disponible, esto ocupa el lugar del hilo. */
+  blocked: NonNullable<CmoBlocker> | null;
+  canManage: boolean;
+}
+
 /**
- * La conversación con Axel — la columna vertebral de la pantalla.
+ * El despacho entero: hero, hilo y composer sobre **un solo campo**.
  *
- * Dos decisiones que vienen del diseño y no del componente:
+ * Este componente es el dueño del reparto vertical de la vista, y por eso
+ * también del bloqueo: antes `CmoView` devolvía `CmoBlockedState` por su cuenta
+ * y esa pantalla se quedaba fuera del campo, sin fondo, como si fuera de otro
+ * módulo. Ahora todo lo que ocupa el centro pasa por aquí.
  *
+ * Tres decisiones que vienen del diseño y no del componente:
+ *
+ * - **El hero no desaparece al conversar.** Va al principio del scroller, así que
+ *   se va solo al hacer scroll. Antes se cambiaba por el hilo con un ternario, y
+ *   eso hacía que el briefing del día se perdiera en cuanto escribías algo.
  * - **El mensaje propio se pinta antes de la respuesta.** El turno tarda
  *   decenas de segundos; sin eco inmediato el usuario escribe dos veces.
  * - **Un turno que falla no pierde el texto.** La burbuja se queda con el
  *   mensaje y un botón de reintentar: volver a teclear una pregunta larga
  *   porque la red falló es la peor forma de perder a alguien.
  */
-export function AxelChat({ ownerName }: { ownerName: string | null }) {
+export function AxelChat({
+  ownerName,
+  briefing,
+  briefingLoading,
+  briefingHour,
+  proposals,
+  blocked,
+  canManage,
+}: AxelChatProps) {
   const thread = useCmoStore((state) => state.thread);
   const ask = useCmoStore((state) => state.ask);
   const retryLast = useCmoStore((state) => state.retryLast);
@@ -49,11 +83,16 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const hasMessages = thread.messages.length > 0;
+
   // Autoscroll al fondo en cada mensaje nuevo y al empezar a pensar: si no, la
-  // respuesta aparece fuera de la vista y parece que no pasó nada.
+  // respuesta aparece fuera de la vista y parece que no pasó nada. Con el hilo
+  // vacío NO se hace: arrastraría el hero fuera de la pantalla al entrar, que es
+  // justo lo primero que hay que leer.
   useEffect(() => {
+    if (!hasMessages) return;
     bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [thread.messages.length, thread.thinking]);
+  }, [hasMessages, thread.messages.length, thread.thinking]);
 
   const submit = (text: string) => {
     if (text.trim() === "" || thread.thinking) return;
@@ -62,57 +101,103 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
     void ask(text);
   };
 
-  const isEmpty = thread.messages.length === 0;
+  const inThread = proposals.slice(0, PROPOSALS_IN_THREAD);
+  const restInRail = proposals.length - inThread.length;
+  // Los arranques solo mientras no haya conversación. Cuando ya hay propuestas en
+  // el hilo bajan a una fila de píldoras: como tarjetas grandes empujarían las
+  // propuestas fuera de la pantalla, que es lo único que hay que decidir hoy.
+  const starters = hasMessages ? "none" : inThread.length > 0 ? "compact" : "cards";
 
   return (
-    <div className="axel-field flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto px-6 pt-8 pb-2" data-app-scroll>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="sidebar-scroll flex-1 overflow-y-auto px-6 pt-8 pb-2">
         <div className="mx-auto flex w-full max-w-[640px] flex-col">
-          {isEmpty ? (
-            <div className="flex flex-col items-center text-center">
-              <AxelOrb busy={thread.thinking} />
-              <p className="mt-5 text-[13px] text-muted-foreground">
-                {ownerName === null ? "Buen día" : `Buen día, ${ownerName}`}
-              </p>
-              <h1 className="font-heading mt-1.5 max-w-[17ch] text-[34px] leading-[1.18] font-extralight tracking-tight text-foreground/30">
-                Soy Axel, tu <b className="font-bold text-foreground">director de mercadeo</b>.
-              </h1>
-              <p className="mt-3.5 max-w-[46ch] text-[13px] text-muted-foreground">
-                Miro tus números todos los días y te dejo propuestas listas para decidir.
-                Nada se envía a un cliente sin que tú lo apruebes.
-              </p>
-
-              <div className="mt-8 grid w-full gap-2.5 sm:grid-cols-3">
-                {STARTERS.map((starter) => (
-                  <button
-                    key={starter.label}
-                    type="button"
-                    onClick={() => {
-                      submit(starter.prompt);
-                    }}
-                    disabled={thread.thinking}
-                    className={cn(
-                      "group flex flex-col gap-2 rounded-lg border border-border p-3.5 text-left",
-                      "bg-background/80 backdrop-blur transition-all",
-                      "hover:-translate-y-0.5 hover:border-accent-violet/30 hover:shadow-float",
-                      "disabled:pointer-events-none disabled:opacity-50",
-                    )}
-                  >
-                    <span className="grid size-[30px] place-items-center rounded-full border border-border/60 bg-secondary text-muted-foreground group-hover:border-accent-violet/30 group-hover:bg-accent-violet/10 group-hover:text-accent-violet">
-                      <starter.icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <span className="font-heading text-[13.5px] font-bold">{starter.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+          {blocked !== null ? (
+            <CmoBlockedState blocker={blocked} canManage={canManage} />
           ) : (
-            <div className="flex flex-col gap-4">
-              {thread.messages.map((message) => (
-                <MessageBubble key={message.id} message={message} onRetry={retryLast} />
-              ))}
-              {thread.thinking ? <AxelThinking /> : null}
-            </div>
+            <>
+              <BriefingHero
+                briefing={briefing}
+                loading={briefingLoading}
+                briefingHour={briefingHour}
+                ownerName={ownerName}
+                proposalCount={proposals.length}
+                busy={thread.thinking}
+              />
+
+              {starters === "cards" ? (
+                <div className="mt-8 grid w-full gap-2.5 sm:grid-cols-3">
+                  {STARTERS.map((starter) => (
+                    <button
+                      key={starter.label}
+                      type="button"
+                      onClick={() => {
+                        submit(starter.prompt);
+                      }}
+                      disabled={thread.thinking}
+                      className={cn(
+                        "group flex flex-col gap-2 rounded-lg border border-border p-3.5 text-left",
+                        "bg-background/80 backdrop-blur transition-all",
+                        "hover:-translate-y-0.5 hover:border-accent-violet/30 hover:shadow-float",
+                        "disabled:pointer-events-none disabled:opacity-50",
+                      )}
+                    >
+                      <span className="grid size-[30px] place-items-center rounded-full border border-border/60 bg-secondary text-muted-foreground group-hover:border-accent-violet/30 group-hover:bg-accent-violet/10 group-hover:text-accent-violet">
+                        <starter.icon className="size-4" aria-hidden="true" />
+                      </span>
+                      <span className="font-heading text-[13.5px] font-bold">{starter.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {starters === "compact" ? (
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {STARTERS.map((starter) => (
+                    <button
+                      key={starter.label}
+                      type="button"
+                      onClick={() => {
+                        submit(starter.prompt);
+                      }}
+                      disabled={thread.thinking}
+                      className={cn(
+                        "rounded-full border border-border bg-background/80 px-3.5 py-1.5",
+                        "text-xs text-muted-foreground backdrop-blur transition-all",
+                        "hover:-translate-y-px hover:border-accent-violet/30 hover:text-foreground",
+                        "disabled:pointer-events-none disabled:opacity-50",
+                      )}
+                    >
+                      {starter.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {inThread.length > 0 ? (
+                <div className="mt-7 flex flex-col gap-3">
+                  {inThread.map((proposal) => (
+                    <ProposalCard key={proposal.id} proposal={proposal} stamped />
+                  ))}
+                  {restInRail > 0 ? (
+                    <p className="text-center text-[10.5px] text-muted-foreground/70">
+                      {restInRail === 1
+                        ? "Hay 1 propuesta más en el tablero."
+                        : `Hay ${String(restInRail)} propuestas más en el tablero.`}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {hasMessages || thread.thinking ? (
+                <div className="mt-6 flex flex-col gap-4">
+                  {thread.messages.map((message) => (
+                    <MessageBubble key={message.id} message={message} onRetry={retryLast} />
+                  ))}
+                  {thread.thinking ? <AxelThinking /> : null}
+                </div>
+              ) : null}
+            </>
           )}
           <div ref={bottomRef} className="h-2" />
         </div>
@@ -128,6 +213,7 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
             className={cn(
               "rounded-xl border border-border bg-background/90 p-3.5 shadow-float backdrop-blur",
               "focus-within:border-accent-violet/30",
+              blocked !== null && "opacity-55",
             )}
           >
             <textarea
@@ -148,7 +234,7 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
               rows={1}
               placeholder="Pregúntale a Axel o dile qué armar…"
               aria-label="Mensaje para Axel"
-              disabled={thread.thinking}
+              disabled={thread.thinking || blocked !== null}
               className="max-h-[120px] min-h-[42px] w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
             />
             <div className="mt-1 flex items-center gap-2">
@@ -159,7 +245,7 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
                 onClick={() => {
                   void newThread();
                 }}
-                disabled={thread.thinking || isEmpty}
+                disabled={thread.thinking || !hasMessages || blocked !== null}
               >
                 <Plus className="size-3.5" aria-hidden="true" />
                 Nueva
@@ -167,7 +253,7 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
               <Button
                 type="submit"
                 size="icon"
-                disabled={draft.trim() === "" || thread.thinking}
+                disabled={draft.trim() === "" || thread.thinking || blocked !== null}
                 className="bg-brand-gradient ml-auto size-9 rounded-full text-primary-foreground"
                 aria-label="Enviar"
               >
@@ -175,10 +261,20 @@ export function AxelChat({ ownerName }: { ownerName: string | null }) {
               </Button>
             </div>
           </form>
-          <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[10.5px] text-muted-foreground/70">
-            <Sparkles className="size-3" aria-hidden="true" />
-            Axel propone; tú apruebas. Nunca envía nada por su cuenta.
-          </p>
+
+          {blocked === null ? (
+            <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[10.5px] text-muted-foreground/70">
+              <Sparkles className="size-3" aria-hidden="true" />
+              Axel propone; tú apruebas. Nunca envía nada por su cuenta.
+            </p>
+          ) : (
+            <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-[10.5px] text-muted-foreground/70">
+              <Lock className="size-3 flex-none" aria-hidden="true" />
+              {blocked === "quota"
+                ? "Sin análisis disponibles. El chat vuelve al empezar el próximo ciclo."
+                : "Axel está apagado. Enciéndelo en sus ajustes para volver a conversar."}
+            </p>
+          )}
         </div>
       </div>
     </div>

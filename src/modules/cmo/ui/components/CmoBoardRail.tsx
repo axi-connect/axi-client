@@ -5,7 +5,7 @@ import { BookOpen, Inbox, Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
-import { toneClasses } from "@/modules/cmo/domain/proposal-labels";
+import { briefingDayLabel, toneClasses } from "@/modules/cmo/domain/proposal-labels";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ProposalCard } from "./ProposalCard";
 
@@ -13,6 +13,12 @@ interface CmoBoardRailProps {
   proposals: ProposalDTO[] | null;
   briefing: BriefingDTO | null;
   loading: boolean;
+  /**
+   * Carga del briefing, aparte de la de las propuestas: los cuatro fetch del
+   * store fallan y terminan por separado, y decir «todavía no ha revisado tu
+   * negocio» mientras la respuesta viaja sería afirmar algo que no se sabe.
+   */
+  briefingLoading: boolean;
   error: string | null;
   onRetry: () => void;
 }
@@ -32,6 +38,7 @@ export function CmoBoardRail({
   proposals,
   briefing,
   loading,
+  briefingLoading,
   error,
   onRetry,
 }: CmoBoardRailProps) {
@@ -81,39 +88,63 @@ export function CmoBoardRail({
             )}
           </div>
         </section>
+      </div>
 
-        {briefing !== null && briefing.highlights.length > 0 ? (
-          <section className="overflow-hidden rounded-lg border border-border bg-background">
-            <header className="flex items-center gap-2 px-3.5 pt-3">
-              <Sparkles className="size-3.5 text-accent-violet" aria-hidden="true" />
-              <h2 className="font-heading text-[12.5px] font-bold">Cómo va el negocio</h2>
-            </header>
-            <div className="flex flex-col gap-2 p-3.5">
-              {briefing.highlights.map((highlight) => (
-                <div
-                  key={`${highlight.label}-${highlight.detail}`}
-                  className="flex items-baseline gap-2 text-xs"
-                >
-                  <span className="flex-1 text-muted-foreground">{highlight.label}</span>
+      {/* LA LECTURA DE AXEL — el detalle del briefing, anclado al pie y fuera del
+          scroll del rail. Aquí bajaron los `highlights` que antes se pintaban dos
+          veces: en la tarjeta del briefing y en una sección de este mismo rail.
+          El titular del día vive en el hero; esto es la letra pequeña. */}
+      <div className="flex-none border-t border-border p-3.5">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-3.5 text-accent-violet" aria-hidden="true" />
+          <h2 className="text-[11px] font-bold tracking-wide text-accent-violet">
+            La lectura de Axel
+          </h2>
+          {briefing !== null ? (
+            <span className="ml-auto text-[10px] text-muted-foreground/70">
+              {briefingDayLabel(briefing.date_local)}
+            </span>
+          ) : null}
+        </div>
+
+        {briefing === null && briefingLoading ? (
+          <div className="mt-2 flex flex-col gap-2">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+        ) : briefing === null ? (
+          <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground">
+            Todavía no ha revisado tu negocio. Cuando salga su primer informe, aquí queda el
+            resumen del día.
+          </p>
+        ) : (
+          <>
+            <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground">
+              {briefing.summary}
+            </p>
+            {briefing.highlights.length > 0 ? (
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {briefing.highlights.map((highlight) => (
                   <span
+                    key={`${highlight.label}-${highlight.detail}`}
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+                      "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5",
+                      "text-[10.5px] font-medium",
                       toneClasses(highlight.tone),
                     )}
                   >
-                    {highlight.detail}
+                    {highlight.label}
+                    <span className="tabular-nums opacity-80">{highlight.detail}</span>
                   </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </div>
+                ))}
+              </div>
+            ) : null}
+          </>
+        )}
 
-      <div className="flex-none border-t border-border p-3.5">
         <Link
           href="/cmo/settings"
-          className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="mt-3 flex items-center gap-2 border-t border-border/50 pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <BookOpen className="size-3.5" aria-hidden="true" />
           Tus directrices y ajustes

@@ -1,9 +1,11 @@
 import {
   artifactAction,
+  briefingDayLabel,
   expiryLabel,
   isActionable,
   isUrgent,
   proposalKindLabel,
+  proposalSourceLabel,
   proposalStatusLabel,
 } from "../proposal-labels";
 import { readArtifacts } from "../cmo";
@@ -168,5 +170,37 @@ describe("readArtifacts", () => {
 
   it("un label ausente no deja la fila en blanco", () => {
     expect(readArtifacts([{ type: "promotion", id: "p" }])[0]?.label).toBe("Sin nombre");
+  });
+});
+
+describe("proposalSourceLabel", () => {
+  it("distingue lo que Axel trajo solo de lo que le pidieron", () => {
+    // Es el sello de la tarjeta dentro del hilo: sin él, una propuesta que
+    // apareció sola parece la respuesta a algo que el dueño nunca preguntó.
+    expect(proposalSourceLabel("briefing")).toBe("Del informe del día");
+    expect(proposalSourceLabel("signal")).toBe("Lo vi y te avisé");
+    expect(proposalSourceLabel("chat")).toBe("De lo que me pediste");
+  });
+
+  it("un origen nuevo del backend se muestra crudo", () => {
+    expect(proposalSourceLabel("cron_del_futuro")).toBe("cron_del_futuro");
+  });
+});
+
+describe("briefingDayLabel", () => {
+  it("formatea el día local del negocio", () => {
+    expect(briefingDayLabel("2026-08-21")).toBe("21 de agosto");
+  });
+
+  it("NO interpreta la fecha como UTC: el 1 del mes no se convierte en el 31 anterior", () => {
+    // `new Date("2026-08-01")` es medianoche UTC, que en Bogotá (UTC-5) cae el
+    // 31 de julio. De ahí que la cadena se parta a mano en vez de pasarla al
+    // constructor: el briefing es de un DÍA local, no de un instante.
+    expect(briefingDayLabel("2026-08-01")).toBe("1 de agosto");
+  });
+
+  it("una fecha ilegible se devuelve tal cual en vez de pintar 'Invalid Date'", () => {
+    expect(briefingDayLabel("ayer")).toBe("ayer");
+    expect(briefingDayLabel("2026-08")).toBe("2026-08");
   });
 });
