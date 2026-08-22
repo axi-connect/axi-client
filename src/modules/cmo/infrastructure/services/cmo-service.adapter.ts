@@ -31,8 +31,18 @@ import type {
 
 // ------------------------------------------------------------------ chat
 
-export function sendMessage(dto: SendMessageDTO): Promise<CmoReplyDTO> {
-  return http.post<CmoReplyDTO>("/cmo/messages", dto);
+/**
+ * El turno de Axel. Tarda decenas de segundos y consume cuota, así que NO se
+ * reintenta solo (un reintento automático gastaría dos análisis del plan).
+ *
+ * `signal` es obligatorio de facto: sin él, un POST colgado se queda colgado
+ * para siempre y el chat se queda pensando sin final. El presupuesto lo fija el
+ * llamador —algo por encima de los 90 s del servidor— y si vence, el turno se da
+ * por perdido en la interfaz aunque el servidor lo termine: la respuesta llega
+ * igual por `cmo.turn_completed`, que se emite ya persistida.
+ */
+export function sendMessage(dto: SendMessageDTO, signal?: AbortSignal): Promise<CmoReplyDTO> {
+  return http.post<CmoReplyDTO>("/cmo/messages", dto, { signal });
 }
 
 export async function listThreads(): Promise<CmoThreadDTO[]> {

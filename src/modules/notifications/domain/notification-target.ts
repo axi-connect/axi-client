@@ -29,6 +29,12 @@ const FAMILY: Record<string, TargetResolver> = {
   "marketing.campaign_": (d) =>
     typeof d.campaign_id === "string" ? `/marketing/campaigns/${d.campaign_id}` : "/marketing",
   "marketing.": () => "/marketing",
+  /* Axel. El backend YA escribe la notificación del briefing
+     (`notification_writer.subscriber`), pero sin resolver el clic solo la
+     marcaba leída: el dueño recibía «Axel te dejó 2 propuestas» y se quedaba
+     donde estaba. Si trae la propuesta, se abre su detalle; si no, el despacho. */
+  "cmo.": (d) =>
+    typeof d.proposal_id === "string" ? `/cmo/proposals/${d.proposal_id}` : "/cmo",
 }
 
 export function notificationTarget(type: string, data: unknown): string | null {

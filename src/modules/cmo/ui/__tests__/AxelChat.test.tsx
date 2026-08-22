@@ -13,6 +13,13 @@ import { AxelChat } from "../components/AxelChat";
 
 const mockState = {
   thread: { id: "t1", messages: [] as UiMessage[], thinking: false },
+  live: null as {
+    turn_id: string;
+    iteration: number;
+    text: string;
+    steps: { name: string; label: string; done: boolean; ms: number | null; productive: boolean | null }[];
+    seq: number;
+  } | null,
   settled: {} as Record<string, ProposalDTO | null>,
   resolveSettled: jest.fn(),
   ask: jest.fn(),
@@ -59,10 +66,17 @@ function view(
     messages?: UiMessage[];
     proposals?: ProposalDTO[];
     settled?: Record<string, ProposalDTO | null>;
+    thinking?: boolean;
+    live?: typeof mockState.live;
   } = {},
 ) {
-  mockState.thread = { id: "t1", messages: over.messages ?? [], thinking: false };
+  mockState.thread = {
+    id: "t1",
+    messages: over.messages ?? [],
+    thinking: over.thinking ?? false,
+  };
   mockState.settled = over.settled ?? {};
+  mockState.live = over.live ?? null;
   return render(
     <AxelChat
       ownerName="Owner"
@@ -78,6 +92,70 @@ function view(
 
 afterEach(() => {
   jest.clearAllMocks();
+});
+
+/* Los dos modos de «Axel trabajando». El respaldo existe porque un turno tarda
+   decenas de segundos: sin señal de vida el dueño recarga y pierde el análisis. */
+describe("mientras Axel trabaja", () => {
+  const step = (over: Partial<{ label: string; done: boolean; ms: number | null }> = {}) => ({
+    name: "get_leaks",
+    label: "Buscando por dónde se te va la plata",
+    done: false,
+    ms: null,
+    productive: null,
+    ...over,
+  });
+
+  it("con pasos reales los muestra con su duración, sin frases inventadas", () => {
+    view({
+      messages: [message({ id: "local-1", role: "owner", body: "¿Cómo vamos?" })],
+      thinking: true,
+      live: {
+        turn_id: "t",
+        iteration: 0,
+        text: "",
+        steps: [
+          step({ label: "Leyendo tu embudo y tus ventas", done: true, ms: 420 }),
+          step(),
+        ],
+        seq: 3,
+      },
+    });
+
+    expect(screen.getByText("Leyendo tu embudo y tus ventas")).toBeInTheDocument();
+    expect(screen.getByText("420 ms")).toBeInTheDocument();
+    expect(screen.getByText(/1 lectura hasta ahora/)).toBeInTheDocument();
+    expect(screen.queryByText(/Revisando tus números/)).not.toBeInTheDocument();
+  });
+
+  it("sin socket cae a las frases: un skeleton mudo se lee como «se colgó»", () => {
+    view({
+      messages: [message({ id: "local-1", role: "owner", body: "¿Cómo vamos?" })],
+      thinking: true,
+      live: null,
+    });
+
+    expect(screen.getByText(/Revisando tus números/)).toBeInTheDocument();
+  });
+
+  it("cuando empieza a escribir, el texto reemplaza a los pasos", () => {
+    view({
+      messages: [message({ id: "local-1", role: "owner", body: "¿Cómo vamos?" })],
+      thinking: true,
+      live: {
+        turn_id: "t",
+        iteration: 1,
+        text: "Vas mejor en plata",
+        steps: [step({ done: true, ms: 310 })],
+        seq: 5,
+      },
+    });
+
+    expect(screen.getByText(/Vas mejor en plata/)).toBeInTheDocument();
+    expect(screen.getByText("escribiendo…")).toBeInTheDocument();
+    // Los pasos ya no compiten con la respuesta: lo que importa es lo que dice.
+    expect(screen.queryByText("310 ms")).not.toBeInTheDocument();
+  });
 });
 
 describe("la propuesta que nace en la conversación", () => {

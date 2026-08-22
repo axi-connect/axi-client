@@ -75,6 +75,7 @@ export function AxelChat({
   canManage,
 }: AxelChatProps) {
   const thread = useCmoStore((state) => state.thread);
+  const live = useCmoStore((state) => state.live);
   const settled = useCmoStore((state) => state.settled);
   const resolveSettled = useCmoStore((state) => state.resolveSettled);
   const ask = useCmoStore((state) => state.ask);
@@ -99,7 +100,9 @@ export function AxelChat({
   useEffect(() => {
     if (!hasMessages) return;
     bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [hasMessages, thread.messages.length, thread.thinking, proposals.length]);
+    // `live?.text.length` mantiene el hilo pegado al fondo mientras Axel escribe:
+    // sin esto el texto crecería por debajo del borde visible.
+  }, [hasMessages, thread.messages.length, thread.thinking, proposals.length, live?.text.length]);
 
   const submit = (text: string) => {
     if (text.trim() === "" || thread.thinking) return;
@@ -250,7 +253,14 @@ export function AxelChat({
                       </Fragment>
                     );
                   })}
-                  {thread.thinking ? <AxelThinking /> : null}
+                  {/* Mientras Axel trabaja se ven sus PASOS; en cuanto empieza
+                      a escribir, el texto los reemplaza: a partir de ahí lo que
+                      importa es lo que dice, no de dónde lo saca. */}
+                  {thread.thinking && live?.text ? (
+                    <StreamingBubble text={live.text} />
+                  ) : thread.thinking ? (
+                    <AxelThinking steps={live?.steps ?? []} />
+                  ) : null}
                 </div>
               ) : null}
             </>
@@ -332,6 +342,39 @@ export function AxelChat({
             </p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * La respuesta de Axel mientras se escribe.
+ *
+ * Es una burbuja aparte y no la de siempre a propósito: este texto NO está
+ * guardado en ninguna parte todavía y no tiene id, hora ni traza. Cuando el
+ * turno cierra, el mensaje de verdad la reemplaza — con su marca de tiempo y sus
+ * fuentes consultadas.
+ */
+function StreamingBubble({ text }: { text: string }) {
+  return (
+    <div
+      className="self-stretch overflow-hidden rounded-lg border border-border bg-background shadow-float"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="flex items-center gap-2 px-4 pt-3">
+        <Sparkles className="size-3 text-accent-violet" aria-hidden="true" />
+        <span className="text-[11px] font-semibold">Axel</span>
+        <span className="text-[10.5px] text-muted-foreground/70">escribiendo…</span>
+      </div>
+      <div className="px-4 pt-2 pb-3.5 text-[13.5px] leading-relaxed whitespace-pre-line text-muted-foreground">
+        {text}
+        {/* El cursor va DENTRO del párrafo para que siga a la última palabra en
+            vez de quedarse anclado a una esquina. */}
+        <span
+          aria-hidden="true"
+          className="ml-0.5 inline-block h-[1em] w-0.5 translate-y-[0.15em] animate-pulse bg-accent-violet align-baseline"
+        />
       </div>
     </div>
   );

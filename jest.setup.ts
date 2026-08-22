@@ -85,3 +85,47 @@ Element.prototype.releasePointerCapture ??= function releasePointerCapture() {}
 Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
   return false
 }
+
+/**
+ * `crypto.randomUUID` no existe en el `crypto` de jsdom (sí en los navegadores
+ * objetivo, que lo exponen en contexto seguro — HTTPS y localhost). El store del
+ * CMO lo usa para proponer el id del turno antes de enviarlo, así que sin esto
+ * el test del turno en vivo revienta en la primera línea.
+ *
+ * No es un uuid criptográfico: es un identificador de correlación de una
+ * petición, y en el test solo tiene que ser único y tener forma de uuid.
+ */
+if (typeof globalThis.crypto?.randomUUID !== "function") {
+  let counter = 0
+  Object.defineProperty(globalThis.crypto, "randomUUID", {
+    configurable: true,
+    value: () => {
+      counter += 1
+      const tail = String(counter).padStart(12, "0")
+      return `00000000-0000-4000-8000-${tail}` as `${string}-${string}-${string}-${string}-${string}`
+    },
+  })
+}
+
+/**
+ * `AbortSignal.timeout` tampoco está en el jsdom que trae jest-environment-jsdom
+ * (llegó en jsdom 21; el entorno de jest fija uno anterior). Los navegadores
+ * objetivo lo tienen desde 2022 y el store lo usa para el presupuesto del turno.
+ *
+ * La réplica es fiel en lo que importa: aborta al vencer con `TimeoutError`. El
+ * temporizador va `unref`ado donde se pueda para que un test no quede colgado
+ * esperando 100 segundos.
+ */
+if (typeof AbortSignal.timeout !== "function") {
+  Object.defineProperty(AbortSignal, "timeout", {
+    configurable: true,
+    value: (ms: number) => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => {
+        controller.abort(new DOMException("The operation timed out.", "TimeoutError"))
+      }, ms)
+      ;(timer as unknown as { unref?: () => void }).unref?.()
+      return controller.signal
+    },
+  })
+}

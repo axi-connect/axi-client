@@ -6,6 +6,11 @@ import type {
   CmoBriefingReadyEvent,
   CmoProposalCreatedEvent,
   CmoProposalDecidedEvent,
+  CmoTurnCompletedEvent,
+  CmoTurnDeltaEvent,
+  CmoTurnFailedEvent,
+  CmoTurnStartedEvent,
+  CmoTurnStepEvent,
 } from "@/core/realtime/events";
 import type {
   ApprovalResultDTO,
@@ -75,6 +80,39 @@ export interface UiMessage {
  */
 export type CmoBlocker = "disabled" | "quota" | null;
 
+/** Una herramienta de Axel, mientras corre o ya terminada. */
+export interface LiveStep {
+  name: string;
+  label: string;
+  done: boolean;
+  ms: number | null;
+  productive: boolean | null;
+}
+
+/**
+ * El turno que está ocurriendo AHORA.
+ *
+ * Existe porque no hay de dónde releerlo: un turno a medio escribir no está en
+ * ningún endpoint. Tres reglas gobiernan su ciclo de vida:
+ *
+ * 1. **La verdad final es el POST.** Cuando responde, su cuerpo reemplaza el
+ *    texto acumulado; los deltas solo existen para que el dueño vea avance.
+ * 2. **El orden se comprueba, no se supone.** `seq` descarta lo repetido y lo
+ *    que llegue tarde; Socket.IO conserva el orden por conexión, pero un evento
+ *    duplicado por una reconexión pintaría texto dos veces.
+ * 3. **El texto es por iteración.** Al ver una vuelta mayor se descarta lo
+ *    anterior: era el preámbulo de una llamada a herramienta, no la respuesta.
+ */
+export interface LiveTurn {
+  turn_id: string;
+  /** Vuelta del loop a la que pertenece el texto acumulado. */
+  iteration: number;
+  text: string;
+  steps: LiveStep[];
+  /** Último `seq` aceptado: la puerta contra duplicados y desorden. */
+  seq: number;
+}
+
 interface CmoState {
   settings: Section<CmoSettingsDTO>;
   briefing: Section<BriefingDTO | null>;
@@ -86,6 +124,8 @@ interface CmoState {
     thinking: boolean;
   };
   blocker: CmoBlocker;
+  /** El turno en curso, contado en vivo. `null` cuando no hay ninguno. */
+  live: LiveTurn | null;
   /** Propuestas nuevas llegadas por WS que el usuario aún no ha visto. */
   unseen: number;
   /**
@@ -119,6 +159,11 @@ interface CmoState {
   onBriefingReady: (event: CmoBriefingReadyEvent) => void;
   onProposalCreated: (event: CmoProposalCreatedEvent) => void;
   onProposalDecided: (event: CmoProposalDecidedEvent) => void;
+  onTurnStarted: (event: CmoTurnStartedEvent) => void;
+  onTurnStep: (event: CmoTurnStepEvent) => void;
+  onTurnDelta: (event: CmoTurnDeltaEvent) => void;
+  onTurnCompleted: (event: CmoTurnCompletedEvent) => void;
+  onTurnFailed: (event: CmoTurnFailedEvent) => void;
 }
 
 /** Codes del backend que significan "Axel no está disponible", no "falló". */
@@ -137,12 +182,22 @@ const nextLocalId = (): string => `local-${String((localId += 1))}`;
 /** Ids de propuesta decidida que se están pidiendo ahora mismo. */
 const inFlight = new Set<string>();
 
+/**
+ * Presupuesto del POST del turno, con holgura sobre los 90 s del servidor.
+ *
+ * No es un timeout de red al uso: el servidor corta el turno por su cuenta, así
+ * que si a los 100 s no ha respondido el problema está en el camino. Sin esto un
+ * POST colgado deja el chat pensando indefinidamente, que es peor que un error.
+ */
+const TURN_BUDGET_MS = 100_000;
+
 export const useCmoStore = create<CmoState>((set, get) => ({
   settings: idle(),
   briefing: idle(),
   proposals: idle(),
   thread: { id: null, messages: [], thinking: false },
   blocker: null,
+  live: null,
   unseen: 0,
   settled: {},
 
@@ -231,6 +286,11 @@ export const useCmoStore = create<CmoState>((set, get) => ({
       proposal_id: null,
       pending: true,
     };
+    /* El id del turno lo propone el CLIENTE: los eventos en vivo empiezan a
+       llegar en el primer segundo y el POST puede tardar noventa, así que sin
+       proponerlo no habría con qué atarlos — y dos pestañas del mismo dueño no
+       podrían distinguir de quién es cada turno. */
+    const turnId = crypto.randomUUID();
     set((state) => ({
       thread: {
         ...state.thread,
@@ -238,44 +298,95 @@ export const useCmoStore = create<CmoState>((set, get) => ({
         thinking: true,
       },
       blocker: null,
+      live: { turn_id: turnId, iteration: 0, text: "", steps: [], seq: 0 },
     }));
 
+    /* Presupuesto explícito. El servidor corta el turno a los 90 s; si a los 100
+       no ha respondido, el problema está en el camino (un proxy inverso que
+       cerró la conexión) y seguir esperando deja el chat pensando para siempre.
+       La respuesta no se pierde: `cmo.turn_completed` la trae ya persistida. */
+    const budget = AbortSignal.timeout(TURN_BUDGET_MS);
+
     try {
-      const reply = await sendMessage({
-        message: trimmed,
-        thread_id: get().thread.id ?? undefined,
-      });
-      set((state) => ({
-        thread: {
-          id: reply.thread_id,
-          thinking: false,
-          messages: [
-            ...state.thread.messages.map((item) =>
-              item.id === optimistic.id ? { ...item, pending: false } : item,
-            ),
-            {
-              id: nextLocalId(),
-              role: "axel" as const,
-              body: reply.reply,
-              created_at: new Date().toISOString(),
-              tool_calls: reply.tool_calls,
-              // La propuesta que Axel armó EN este turno viaja en la respuesta,
-              // así que la tarjeta se pinta pegada a su mensaje sin esperar una
-              // recarga. Al recargar sale del transcript por el mismo campo.
-              proposal_id: reply.proposal_id,
-            },
-          ],
+      const reply = await sendMessage(
+        {
+          message: trimmed,
+          thread_id: get().thread.id ?? undefined,
+          client_turn_id: turnId,
         },
-      }));
+        budget,
+      );
+      /* Reconciliación, y siempre a favor del POST.
+         Si el cierre por WS llegó primero (`live` ya es null), el mensaje está
+         en el hilo pero con lo que traía el evento: el cuerpo y la propuesta,
+         sin la traza de herramientas, que solo viene aquí. Se COMPLETA en su
+         sitio en vez de añadir otro — insertarlo dos veces era el riesgo real
+         de tener dos caminos hacia el mismo mensaje. */
+      const closedByWs = get().live === null;
+      set((state) => {
+        const messages = state.thread.messages.map((item) =>
+          item.id === optimistic.id ? { ...item, pending: false } : item,
+        );
+        const answer: UiMessage = {
+          id: nextLocalId(),
+          role: "axel",
+          body: reply.reply,
+          created_at: new Date().toISOString(),
+          tool_calls: reply.tool_calls,
+          // La propuesta que Axel armó EN este turno viaja en la respuesta,
+          // así que la tarjeta se pinta pegada a su mensaje sin esperar una
+          // recarga. Al recargar sale del transcript por el mismo campo.
+          proposal_id: reply.proposal_id,
+        };
+        const last = messages.at(-1);
+        return {
+          thread: {
+            id: reply.thread_id,
+            thinking: false,
+            messages:
+              closedByWs && last?.role === "axel"
+                ? messages.map((item, at) =>
+                    at === messages.length - 1
+                      ? {
+                          ...item,
+                          body: reply.reply,
+                          tool_calls: reply.tool_calls,
+                          proposal_id: reply.proposal_id,
+                        }
+                      : item,
+                  )
+                : [...messages, answer],
+          },
+          // El texto en vivo cumplió su función: la verdad es este cuerpo.
+          live: null,
+        };
+      });
       // Una respuesta puede haber creado una propuesta: se recarga el tablero
       // en vez de esperar el WS, que puede no llegar si el socket está caído.
       // La tarjeta del hilo necesita la propuesta COMPLETA (titular, cifra,
       // vencimiento) y el POST solo trae su id.
       void get().reloadProposals();
     } catch (error) {
+      /* Rescate: si el turno ya cerró por WS, la respuesta está persistida y
+         `onTurnCompleted` la insertó. Que el POST fallara después de eso —una
+         conexión cortada, el presupuesto vencido— no es un fallo del análisis, y
+         marcarlo como error invitaría a reintentar y a pagar otro. */
+      if (get().live === null && get().thread.messages.at(-1)?.role === "axel") {
+        set((state) => ({
+          thread: {
+            ...state.thread,
+            thinking: false,
+            messages: state.thread.messages.map((item) =>
+              item.id === optimistic.id ? { ...item, pending: false } : item,
+            ),
+          },
+        }));
+        return;
+      }
       const blocker = blockerFor(error);
       set((state) => ({
         blocker,
+        live: null,
         thread: {
           ...state.thread,
           thinking: false,
@@ -390,7 +501,120 @@ export const useCmoStore = create<CmoState>((set, get) => ({
           : ready(state.proposals.data.filter((item) => item.id !== event.proposal_id)),
     }));
   },
+
+  /* ------------------------------------------------------------ turno en vivo
+     Los cinco handlers comparten una puerta: `accept`. Ignora lo que no sea del
+     turno que esta pestaña abrió, y lo que llegue con `seq` repetido o menor —
+     sin eso, una reconexión que reentregue eventos pintaría el texto dos veces.
+
+     Los turnos de OTRAS pestañas del mismo dueño se ignoran a propósito. La
+     tentación es pintarlos («que se vea en todas»), pero los eventos no llevan
+     la pregunta: se vería la respuesta de Axel colgando de la nada. La otra
+     pestaña ya lo está mostrando, y esta se pone al día al recargar. */
+
+  onTurnStarted: (event) => {
+    // Confirmación de que el servidor aceptó el turno y el socket está vivo. No
+    // crea estado: el turno lo abre `ask`, que es quien conoce la pregunta.
+    if (get().live?.turn_id !== event.turn_id) return;
+    set((state) => ({ thread: { ...state.thread, thinking: true } }));
+  },
+
+  onTurnStep: (event) => {
+    const live = accept(get(), event);
+    if (live === null) return;
+    // El mismo paso llega dos veces: al arrancar y al terminar. La segunda
+    // COMPLETA la primera en su sitio, no añade una fila nueva.
+    const index = live.steps.findIndex((step) => step.name === event.name && !step.done);
+    const step: LiveStep = {
+      name: event.name,
+      label: event.label,
+      done: event.state === "done",
+      ms: event.ms,
+      productive: event.productive,
+    };
+    const steps =
+      index === -1
+        ? [...live.steps, step]
+        : live.steps.map((item, at) => (at === index ? step : item));
+    set({ live: { ...live, seq: event.seq, steps } });
+  },
+
+  onTurnDelta: (event) => {
+    const live = accept(get(), event);
+    if (live === null) return;
+    // Iteración nueva: lo anterior era el preámbulo de una llamada a
+    // herramienta, no la respuesta. Se descarta en vez de concatenarse.
+    const fresh = event.iteration !== live.iteration;
+    set({
+      live: {
+        ...live,
+        seq: event.seq,
+        iteration: event.iteration,
+        text: fresh ? event.text : live.text + event.text,
+      },
+    });
+  },
+
+  onTurnCompleted: (event) => {
+    const live = accept(get(), event);
+    if (live === null) return;
+    const state = get();
+    // Ya está en el hilo (lo insertó el POST de esta pestaña): solo hay que
+    // apagar el estado en vivo.
+    const already = state.thread.messages.some((item) => item.id === event.message_id);
+    set({
+      live: null,
+      thread: {
+        ...state.thread,
+        thinking: false,
+        messages: already
+          ? state.thread.messages
+          : [
+              ...state.thread.messages,
+              {
+                id: event.message_id,
+                role: "axel" as const,
+                body: event.body,
+                created_at: new Date().toISOString(),
+                tool_calls: null,
+                proposal_id: event.proposal_id,
+              },
+            ],
+      },
+    });
+    if (event.proposal_id !== null) void get().reloadProposals();
+  },
+
+  onTurnFailed: (event) => {
+    const live = accept(get(), event);
+    if (live === null) return;
+    set({
+      live: null,
+      blocker:
+        event.code === "cmo/disabled"
+          ? "disabled"
+          : event.code === "cmo/quota_exhausted"
+            ? "quota"
+            : get().blocker,
+      thread: { ...get().thread, thinking: false },
+    });
+  },
 }));
+
+/**
+ * La puerta de los eventos en vivo: devuelve el turno al que aplicar el evento,
+ * o `null` si hay que ignorarlo.
+ *
+ * Rechaza lo que no es del turno abierto por esta pestaña y lo que llega
+ * desordenado o repetido. Socket.IO conserva el orden por conexión, pero una
+ * reconexión puede reentregar: sin el `seq` el texto se duplicaría.
+ */
+function accept(state: CmoState, event: { turn_id: string; seq: number }): LiveTurn | null {
+  const live = state.live;
+  if (live === null || live.turn_id !== event.turn_id) return null;
+  if (event.seq <= live.seq) return null;
+  return live;
+}
 
 function toUiMessage(message: CmoMessageDTO): UiMessage {
   return {

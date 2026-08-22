@@ -421,6 +421,62 @@ export type CmoProposalDecidedEvent = {
   decided_by_user_id: string | null;
 };
 
+/**
+ * El turno de Axel, contado mientras ocurre (sala `user_{id}`).
+ *
+ * Aquí el WS **sí sincroniza**, y es la excepción declarada al «el WS avisa, no
+ * sincroniza» del resto del módulo: no hay ningún endpoint del que releer un
+ * turno a medio escribir. La verdad final sigue siendo el cuerpo del POST — o el
+ * `cmo.turn_completed`, que la trae ya persistida cuando la conexión se cortó.
+ *
+ * Campos comunes a los cinco: `turn_id` ata los eventos a la petición (el
+ * cliente lo propone antes de enviarla, porque los eventos llegan en el primer
+ * segundo y la respuesta puede tardar noventa) y `seq` da el orden, para
+ * descartar lo repetido y lo que llegue tarde.
+ */
+type CmoTurnEventBase = {
+  company_id: string;
+  thread_id: string;
+  turn_id: string;
+  seq: number;
+};
+
+export type CmoTurnStartedEvent = CmoTurnEventBase;
+
+/** Una herramienta de Axel arrancó o terminó. La etiqueta la escribe el servidor. */
+export type CmoTurnStepEvent = CmoTurnEventBase & {
+  name: string;
+  label: string;
+  state: "running" | "done";
+  ms: number | null;
+  productive: boolean | null;
+};
+
+/**
+ * Texto de la respuesta, ya COALESCIDO en el servidor (no un evento por token).
+ *
+ * `iteration` es la vuelta del loop de la que sale: si el modelo escribió algo
+ * antes de llamar a una herramienta, ese texto era un preámbulo y no la
+ * respuesta, así que al ver una iteración mayor hay que descartar lo acumulado.
+ */
+export type CmoTurnDeltaEvent = CmoTurnEventBase & {
+  iteration: number;
+  text: string;
+};
+
+/** El turno cerró y ya está PERSISTIDO: esto rescata la respuesta si el POST murió. */
+export type CmoTurnCompletedEvent = CmoTurnEventBase & {
+  message_id: string;
+  body: string;
+  proposal_id: string | null;
+  tool_calls: number;
+};
+
+/** El turno falló. `code` es el del error tipado del backend. */
+export type CmoTurnFailedEvent = CmoTurnEventBase & {
+  code: string;
+};
+
 /** Cupón aplicado a un pedido (el total del pedido cambia: llega `order.updated`). */
 export type MarketingPromotionRedeemedEvent = {
   company_id: string;
@@ -523,6 +579,11 @@ export type InboxServerEvents = {
   "cmo.briefing_ready": (payload: CmoBriefingReadyEvent) => void;
   "cmo.proposal_created": (payload: CmoProposalCreatedEvent) => void;
   "cmo.proposal_decided": (payload: CmoProposalDecidedEvent) => void;
+  "cmo.turn_started": (payload: CmoTurnStartedEvent) => void;
+  "cmo.turn_step": (payload: CmoTurnStepEvent) => void;
+  "cmo.turn_delta": (payload: CmoTurnDeltaEvent) => void;
+  "cmo.turn_completed": (payload: CmoTurnCompletedEvent) => void;
+  "cmo.turn_failed": (payload: CmoTurnFailedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;

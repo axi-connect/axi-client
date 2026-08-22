@@ -10,11 +10,16 @@ import { useCmoStore } from "@/modules/cmo/infrastructure/stores/cmo.store";
  * room `company_{id}`, automático al conectar). Solo server→client: preguntar,
  * aprobar y rechazar van por REST.
  *
- * **El WS avisa, no sincroniza.** Ningún evento trae el estado completo: el
- * store recarga del servidor lo que cambió. Es deliberado — un briefing es un
- * texto largo y una propuesta lleva evidencia y artefactos; enviarlos por socket
- * duplicaría el contrato y abriría la puerta a que la pantalla y la base
- * discrepen sin que nada lo detecte.
+ * **El WS avisa, no sincroniza** — con UNA excepción declarada. Los eventos de
+ * tablero (briefing y propuestas) no traen el estado completo: el store recarga
+ * del servidor lo que cambió, porque un briefing es un texto largo y una
+ * propuesta lleva evidencia y artefactos, y duplicar eso por socket abriría la
+ * puerta a que la pantalla y la base discrepen sin que nada lo detecte.
+ *
+ * Los `cmo.turn_*` SÍ sincronizan, y no hay alternativa: no existe ningún
+ * endpoint del que releer un turno a medio escribir. La verdad final sigue
+ * siendo el cuerpo del POST; el cierre trae la respuesta ya persistida solo para
+ * poder rescatarla cuando esa conexión se cortó.
  *
  * En la RECONEXIÓN se recarga todo: los eventos emitidos mientras el socket
  * estuvo caído se perdieron, y aquí eso significaría un dueño mirando una
@@ -35,6 +40,26 @@ export function useCmoSocket() {
 
   useSocketEvent(socket, "cmo.proposal_decided", (payload) => {
     store.getState().onProposalDecided(payload);
+  });
+
+  useSocketEvent(socket, "cmo.turn_started", (payload) => {
+    store.getState().onTurnStarted(payload);
+  });
+
+  useSocketEvent(socket, "cmo.turn_step", (payload) => {
+    store.getState().onTurnStep(payload);
+  });
+
+  useSocketEvent(socket, "cmo.turn_delta", (payload) => {
+    store.getState().onTurnDelta(payload);
+  });
+
+  useSocketEvent(socket, "cmo.turn_completed", (payload) => {
+    store.getState().onTurnCompleted(payload);
+  });
+
+  useSocketEvent(socket, "cmo.turn_failed", (payload) => {
+    store.getState().onTurnFailed(payload);
   });
 
   useEffect(() => {
