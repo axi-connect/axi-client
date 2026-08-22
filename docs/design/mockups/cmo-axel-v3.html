@@ -28,6 +28,16 @@
     detalle vive en «La lectura de Axel», anclada al pie del rail (como el v2).
   · V2 — Las propuestas llegan DENTRO del hilo (la tesis del módulo es la
     disrupción en la conversación) y el rail conserva la lista compacta.
+  · V4 — EL TURNO EN VIVO (adición de esta ronda). El chat deja de ser un
+    skeleton mudo con frases inventadas: se ven los PASOS REALES que ejecuta el
+    runtime (con su etiqueta humana y su duración) y el texto de Axel LLEGA
+    ESCRIBIÉNDOSE. Estados `live`, `stream` y `rich`.
+  · V4 — La respuesta de Axel tiene FORMATO: el subconjunto de markdown que el
+    renderer propio interpreta (`##`, `**`, `*`, `` ` ``, listas `-` y `1.`,
+    `>` citas) mapeado a la tipografía del design system. Nada de HTML.
+  · V4 — La propuesta que Axel arma EN LA CONVERSACIÓN queda anclada a su turno,
+    con sus artefactos como ENLACES a la pantalla real del borrador.
+
   · V3 — Este mockup dibuja el SHELL REAL: AppSidebar del tenant + PrivateHeader
     sticky. Desaparecen la topbar de pestañas y el rail izquierdo de 56px que el
     v2 inventaba y que la app no tiene.
@@ -53,6 +63,23 @@
   · Nexa (headings, 200/700) es fuente local del repo; aquí cae a Outfit, del
     mismo registro geométrico y con el mismo par de pesos. Poppins sí es la real.
   · Los iconos son un sprite con los paths de lucide-react, el set del proyecto.
+  · El turno en vivo se SIMULA con `setInterval`/`setTimeout`. En producción son
+    eventos de Socket.IO (`cmo.turn_step`, `cmo.turn_delta`, `cmo.turn_completed`)
+    COALESCIDOS en el servidor: un evento cada 120 ms o cada 64 caracteres, no
+    uno por token. El mockup imita ese grano, no el de un token.
+  · Las duraciones de los pasos (420 ms, 310 ms…) son plausibles, no medidas.
+    En la app viajan en el evento; aquí están escritas a mano.
+
+  DECISIÓN PENDIENTE — GRAFICAR DENTRO DE LA BURBUJA
+  Las barras de embudo y las rejillas de métricas que aparecen en las respuestas
+  guionadas vienen del v2 y son HTML escrito a mano. El renderer de markdown NO
+  las puede producir: de un texto solo salen títulos, párrafos, listas, citas,
+  negritas y código. Para que Axel grafique de verdad hace falta que el servidor
+  ADJUNTE el dato estructurado del turno (por ejemplo el resultado de
+  `get_business_pulse`) y que el cliente lo pinte con un componente, no con
+  texto. Eso no está en el plan aprobado de esta ronda: queda como la pregunta
+  del gate. Mientras no se decida, lo que la implementación producirá es el
+  bloque de texto con formato del estado `rich`, no las barras.
   · El selector «Estado» de la cabecera es andamio del mockup: sirve para saltar
     a los estados que no se alcanzan por clic (cuota agotada). La navegación por
     clic sigue siendo el criterio de cierre.
@@ -493,7 +520,58 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
   display: flex; flex-direction: column; gap: 11px;
   overflow: hidden;
 }
-.propcard.solo { margin: 0; align-self: stretch; box-shadow: var(--shadow-float); }
+.propcard.solo { margin: 0; align-self: stretch; }
+
+/* ---- RELIEVE Y COMETA de la tarjeta del hilo ----
+   La propuesta aterriza en medio de un hilo de texto: sin relieve propio se lee
+   como un párrafo más. Son tres capas y ninguna estrena color — realce violeta
+   arriba (la luz), sombra teñida abajo (el peso) y el anillo cónico recortado al
+   borde con la MISMA técnica del orbe (dos máscaras que se excluyen sobre
+   `@property --comet-angle`).
+
+   El anillo solo gira mientras la tarjeta es NUEVA: tres vueltas y se apaga
+   solo, sin temporizador. Un anillo permanente en cada tarjeta convertiría el
+   único momento hero del módulo en ruido. */
+.propcard.solo {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--ai) 24%, transparent),
+    0 14px 34px -16px color-mix(in srgb, var(--ai) 34%, transparent),
+    var(--shadow-float);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+}
+.propcard.solo:hover {
+  transform: perspective(1100px) translateY(-2px) rotateX(1.1deg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--ai) 30%, transparent),
+    0 22px 46px -18px color-mix(in srgb, var(--ai) 40%, transparent),
+    var(--shadow-overlay);
+}
+
+/* Entrada: se endereza como un panel físico que cae en su sitio. */
+.propcard.fresh { animation: card-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes card-in {
+  from { opacity: 0; transform: perspective(1000px) rotateX(-7deg) translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1); }
+}
+
+.propcard.fresh::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit;
+  padding: 1.5px; pointer-events: none;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 214deg,
+    color-mix(in srgb, var(--ai) 45%, transparent) 296deg,
+    var(--axi-brand) 338deg,
+    var(--axi-amber) 351deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: comet 4.6s linear 3, ring-out 1.2s ease 12.6s forwards;
+}
+@keyframes ring-out { to { opacity: 0; } }
 .propcard::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(circle 110px at 22px 18px, color-mix(in srgb, var(--ai) 18%, transparent) 0%, transparent 100%);
@@ -519,6 +597,62 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
 .tline:nth-child(3) { width: 58%; animation-delay: 0.28s; }
 @keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .tnote { font-size: 11px; color: var(--ghost-fg); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+
+/* ---- turno EN VIVO: los pasos que el runtime ejecuta de verdad ----
+   Sustituye al skeleton mudo. Cada fila es un `cmo.turn_step`: la etiqueta la
+   emite el servidor (una sola fuente, `tool_labels.ts`), no el cliente. */
+.steps { display: flex; flex-direction: column; gap: 1px; }
+.step { display: flex; align-items: center; gap: 9px; font-size: 12px; padding: 5px 0; color: var(--muted-fg); }
+.step .ico { flex: none; width: 14px; height: 14px; }
+.step.run { color: var(--foreground); }
+.step.run .ico { color: var(--ai); animation: spin 900ms linear infinite; }
+.step.done .ico { color: var(--axi-success); }
+.step.wait { color: var(--ghost-fg); }
+.step.wait .ico { color: var(--ghost-fg); }
+.stepms { margin-left: auto; font-size: 10.5px; color: var(--ghost-fg); font-variant-numeric: tabular-nums; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* el pie del turno: los pasos colapsados una vez terminó */
+.axelfoot { border-top: 1px solid var(--hairline); padding: 8px 15px 10px; font-size: 10.5px; color: var(--ghost-fg); display: flex; align-items: center; gap: 6px; }
+
+/* el cursor del texto llegando */
+.caret { display: inline-block; width: 2px; height: 1.02em; vertical-align: -0.16em; margin-left: 1px; background: var(--ai); animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---- el subconjunto de markdown que el renderer interpreta ----
+   Nada de HTML: el parser produce un AST y el componente mapea cada nodo a la
+   tipografía de DESIGN-SYSTEM §3. Lo no reconocido se pinta como texto. */
+.axelbody .mdh { font-family: var(--font-head); font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; color: var(--foreground); margin: 14px 0 6px; }
+.axelbody > .mdh:first-child { margin-top: 0; }
+.axelbody .mdp { margin: 0 0 10px; }
+.axelbody .mdp:last-child { margin-bottom: 0; }
+.axelbody .mdq { margin: 12px 0; padding: 9px 13px; border-left: 2px solid var(--ai-line); background: color-mix(in srgb, var(--ai) 5%, transparent); border-radius: 0 var(--radius-md) var(--radius-md) 0; color: var(--foreground); }
+.axelbody .mdlist { margin: 0 0 10px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+/* El marcador va POSICIONADO, no como ítem flex. Con `display:flex` + `gap` en
+   el <li>, cada <strong> del texto se convierte en un ítem flex y el gap le mete
+   9px a cada lado: las cifras aparecían separadas de la coma que las sigue. El
+   flujo en línea del texto tiene que quedar intacto. */
+.axelbody .mdlist li { position: relative; padding-left: 19px; }
+.axelbody .mdlist li::before {
+  content: attr(data-marker);
+  position: absolute; left: 0; top: 0;
+  color: var(--ai); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.axelbody .mdcode { font-family: var(--font-mono); font-size: 11.5px; padding: 1px 5px; border-radius: 6px; background: var(--surface-2); color: var(--foreground); }
+.axelbody em { font-style: italic; }
+/* tabular-nums SOLO en columnas de cifras (rejillas de métricas, embudo). En
+   prosa el ancho fijo del último dígito se lee como un espacio antes del signo
+   de puntuación — DESIGN-SYSTEM §3.2 lo reserva a tablas y métricas. */
+
+/* ---- artefactos como ENLACES a la pantalla real del borrador ----
+   El href lo construye el cliente desde el `id` del artefacto; el modelo NUNCA
+   escribe una URL (escribir URLs es alucinar ids). Sin `id` no hay enlace. */
+.arts { display: flex; flex-wrap: wrap; gap: 6px; }
+.artlink { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--muted-fg); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; background: var(--background); }
+.artlink:hover { color: var(--ai); border-color: var(--ai-line); background: color-mix(in srgb, var(--ai) 6%, var(--background)); }
+.artlink .ico { color: var(--ghost-fg); }
+.artlink:hover .ico { color: var(--ai); }
+.artlink.mute { opacity: 0.5; }
 
 /* ---- composer: hermano flex-none del scroller, dentro del MISMO campo ---- */
 .dock { flex: none; padding: 12px 24px 20px; }
@@ -791,6 +925,8 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
   <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
@@ -864,7 +1000,10 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
         <select id="screenSel" aria-label="Estado de la pantalla">
           <option value="nobrief">Sin briefing todavía</option>
           <option value="brief">Con briefing y propuestas</option>
-          <option value="thinking">Axel pensando</option>
+          <option value="thinking">Axel pensando (sin socket)</option>
+          <option value="live">Turno en vivo · pasos reales</option>
+          <option value="stream">Turno en vivo · texto llegando</option>
+          <option value="rich">Respuesta con formato y propuesta</option>
           <option value="quota">Cuota agotada</option>
           <option value="settings">Ajustes y directrices</option>
         </select>
@@ -885,7 +1024,7 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
           <div class="scroller" id="scroller">
 
             <!-- ---------- vista principal (chat) ---------- -->
-            <div class="column" id="chatColumn" data-on="nobrief brief thinking quota">
+            <div class="column" id="chatColumn" data-on="nobrief brief thinking live stream rich quota">
 
               <!-- hero: el briefing destilado, sin tarjeta ni banda -->
               <div class="stage" id="stage">
@@ -914,7 +1053,7 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
                 </div>
 
                 <!-- con briefing: el titular ES el summary del backend -->
-                <div data-on="brief">
+                <div data-on="brief live stream rich">
                   <h1 class="summary">Hoy tienes $2.840.000 en carritos sin cerrar y el cierre cayó 1,9 puntos.</h1>
                   <p class="subline">Te dejé <b>2 propuestas</b> listas para decidir. Están abajo y en el tablero.</p>
                 </div>
@@ -998,6 +1137,135 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
                     <div class="tnote">
                       <svg class="ico ico-sm"><use href="#i-scan"/></svg>
                       <span id="phase">Leyendo tu embudo de los últimos 30 días…</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- EN VIVO: los pasos que el runtime ejecuta DE VERDAD.
+                     Cada fila es un `cmo.turn_step`; la etiqueta la emite el
+                     servidor (`tool_labels.ts`), no la inventa el cliente. El
+                     skeleton mudo con frases rotando queda como RESPALDO para
+                     cuando no llegó ningún paso (socket caído) — es el estado
+                     `thinking` de arriba. -->
+                <div data-on="live" style="display:contents">
+                  <div class="me">¿Cómo vamos este mes?</div>
+                  <div class="thinking">
+                    <div class="steps">
+                      <div class="step done">
+                        <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                        Leyendo tu embudo y tus ventas
+                        <span class="stepms">420 ms</span>
+                      </div>
+                      <div class="step done">
+                        <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                        Buscando por dónde se te va la plata
+                        <span class="stepms">310 ms</span>
+                      </div>
+                      <div class="step run">
+                        <svg class="ico ico-sm"><use href="#i-loader"/></svg>
+                        Mirando quién está por recomprar
+                      </div>
+                      <div class="step wait">
+                        <svg class="ico ico-sm"><use href="#i-circle"/></svg>
+                        Revisando tus campañas y tus reglas
+                      </div>
+                    </div>
+                    <div class="tnote">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      Axel está trabajando · 2 lecturas hasta ahora
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TEXTO LLEGANDO: `cmo.turn_delta`, ya coalescido en el
+                     servidor (120 ms / 64 caracteres). Los pasos colapsan al
+                     pie en cuanto empieza a escribir: lo que importa pasa a
+                     ser el texto. -->
+                <div data-on="stream" style="display:contents">
+                  <div class="me">¿Cómo vamos este mes?</div>
+                  <div class="axel">
+                    <div class="axelhead">
+                      <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
+                      <span class="axellabel">Diagnóstico</span>
+                      <span class="axelstamp">escribiendo…</span>
+                    </div>
+                    <div class="axelbody">
+                      <div class="mdh">Vas mejor en plata y peor en cierre</div>
+                      <p class="mdp">Pagaron <strong>$18.420.000</strong> este mes,
+                        un <strong>11,4%</strong> más que el pasado. Pero de 312 conversaciones
+                        cerraste 38: eso es un <strong>12,2%</strong>, cuando antes cerrabas el
+                        14,1% con menos tráf<span class="caret"></span></p>
+                    </div>
+                    <div class="axelfoot">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      Consultó 4 fuentes de tus datos
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RESPUESTA COMPLETA: el subconjunto de markdown renderizado
+                     con la tipografía del design system, y la propuesta que
+                     Axel armó EN ESTA CONVERSACIÓN anclada a su turno (hoy se
+                     pierde al recargar porque nadie escribe
+                     `cmo_message.proposal_id`). -->
+                <div data-on="rich" style="display:contents">
+                  <div class="me">Ármame algo para recuperar lo que se está perdiendo</div>
+                  <div class="axel">
+                    <div class="axelhead">
+                      <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
+                      <span class="axellabel">Propuesta armada</span>
+                      <span class="axelstamp">9:41 a.m.</span>
+                    </div>
+                    <div class="axelbody">
+                      <div class="mdh">La fuga grande son los carritos</div>
+                      <p class="mdp">Tienes <strong>22 carritos abandonados</strong> por
+                        <strong>$8.129.000</strong>, y la regla de recuperación existe
+                        pero está <em>apagada</em>. Es la única fuga donde ya tienes el mecanismo
+                        montado: encenderla no cuesta trabajo, cuesta una decisión.</p>
+                      <ul class="mdlist">
+                        <li data-marker="—">30 conversaciones con intención se quedaron sin respuesta.</li>
+                        <li data-marker="—">17 oportunidades estancadas por <strong>$8.510.000</strong>, sin ninguna regla que las persiga.</li>
+                        <li data-marker="—">La tasa de cierre cayó de <strong>47,5%</strong> a <strong>18,2%</strong>.</li>
+                      </ul>
+                      <div class="mdq">Empieza por los carritos. Te dejé la regla, la promoción y el
+                        mensaje en borrador y apagados: si los apruebas, salen; si no, no pasa nada.</div>
+                      <p class="mdp">El descuento quedó en <strong>15%</strong> porque tu directriz
+                        dice que nunca más de ahí, y el segmento lo guardé como
+                        <code class="mdcode">carritos_7d</code>.</p>
+                    </div>
+                    <div class="axelfoot">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      Consultó 6 fuentes de tus datos
+                    </div>
+                  </div>
+
+                  <div class="propcard solo fresh">
+                    <div class="propfrom">
+                      <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+                      Axel · de esta conversación
+                    </div>
+                    <div class="proptop">
+                      <span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>
+                      <span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> 3 días</span>
+                    </div>
+                    <div>
+                      <div class="proptitle">Persigue los 22 carritos con urgencia real</div>
+                      <div class="prophead">$8.129.000 en juego</div>
+                    </div>
+                    <div class="arts">
+                      <a class="artlink" href="#" data-toast="Abre /marketing/promotions?promotion=… con el editor ya abierto">
+                        <svg class="ico ico-sm"><use href="#i-tag"/></svg> Ver la promoción
+                      </a>
+                      <a class="artlink" href="#" data-toast="Abre /marketing/automations?automation=… con el editor ya abierto">
+                        <svg class="ico ico-sm"><use href="#i-bot"/></svg> Ver la regla
+                      </a>
+                      <a class="artlink" href="#" data-toast="Abre /marketing/settings/templates?template=…">
+                        <svg class="ico ico-sm"><use href="#i-msg"/></svg> Ver el mensaje
+                      </a>
+                    </div>
+                    <div class="propfoot">
+                      <button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>
+                      <span class="propmeta">1 regla · 1 promoción · 1 plantilla, ya en borrador</span>
                     </div>
                   </div>
                 </div>
@@ -1119,17 +1387,18 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
           </div>
 
           <!-- composer: hermano flex-none, MISMO campo, misma columna de 640 -->
-          <div class="dock" data-on="nobrief brief thinking quota">
+          <div class="dock" data-on="nobrief brief thinking live stream rich quota">
             <div class="dockinner">
               <form class="composer" id="chatForm">
                 <textarea id="chatInput" rows="1" placeholder="Pregúntale a Axel o dile qué armar…" aria-label="Mensaje para Axel"></textarea>
                 <div class="tools">
                   <button class="tool" type="button" data-toast="Adjuntar es andamio del mockup"><svg class="ico ico-sm"><use href="#i-paperclip"/></svg> Adjuntar</button>
+                  <button class="tool on" type="button" id="wsToggle" title="Andamio del mockup: apaga el socket para ver la degradación"><svg class="ico ico-sm"><use href="#i-panel"/></svg> <span id="wsLabel">Socket en vivo</span></button>
                   <button class="tool on" type="button" data-toast="Axel siempre responde con tus datos reales"><svg class="ico ico-sm"><use href="#i-scan"/></svg> Con mis datos</button>
                   <button class="send" type="submit" aria-label="Enviar"><svg class="ico ico-sm"><use href="#i-up"/></svg></button>
                 </div>
               </form>
-              <div class="dockmeta" data-on="nobrief brief thinking">
+              <div class="dockmeta" data-on="nobrief brief thinking live stream rich">
                 <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
                 Axel propone; tú apruebas. Nunca envía nada por su cuenta. · <span class="num">18 de 30</span> análisis este ciclo
               </div>
@@ -1142,7 +1411,7 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
         </main>
 
         <!-- =============== RAIL: EL TABLERO =============== -->
-        <aside class="railR" id="railR" aria-label="Tablero del negocio" data-on="nobrief brief thinking quota">
+        <aside class="railR" id="railR" aria-label="Tablero del negocio" data-on="nobrief brief thinking live stream rich quota">
           <div class="railscroll">
 
             <section class="card">
@@ -1271,12 +1540,12 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
                 <div class="empty" data-on="nobrief" id="railEmpty">
                   <svg class="ico ico-sm"><use href="#i-check"/></svg> Estás al día. Nada pendiente de decidir.
                 </div>
-                <a class="qrow" href="#" data-open="s1" data-on="brief thinking quota">
+                <a class="qrow" href="#" data-open="s1" data-on="brief thinking live stream rich quota">
                   <svg class="ico" style="color:var(--axi-amber)"><use href="#i-flame"/></svg>
                   <span class="n">Perseguir 34 carritos</span>
                   <span class="pill off">Vence hoy</span>
                 </a>
-                <a class="qrow" href="#" data-open="s1" data-on="brief thinking quota">
+                <a class="qrow" href="#" data-open="s1" data-on="brief thinking live stream rich quota">
                   <svg class="ico" style="color:var(--axi-info)"><use href="#i-bot"/></svg>
                   <span class="n">Ajustar el guion de Bella</span>
                   <span class="pill">6 días</span>
@@ -1313,7 +1582,7 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
               <div class="insighthead">
                 <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
                 <span class="insightlabel">La lectura de Axel</span>
-                <span class="insightstamp" data-on="brief thinking quota">hoy, 4:00 p.m.</span>
+                <span class="insightstamp" data-on="brief thinking live stream rich quota">hoy, 4:00 p.m.</span>
               </div>
 
               <!-- sin briefing: el rail también dice la verdad, sin adornos -->
@@ -1323,7 +1592,7 @@ body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
               </p>
 
               <!-- con briefing: el summary + los chips de highlights -->
-              <div data-on="brief thinking quota" style="display:contents">
+              <div data-on="brief thinking live stream rich quota" style="display:contents">
                 <p class="insighttext">
                   Hoy tienes <b>$2.840.000</b> en carritos sin cerrar y el cierre cayó
                   <b>1,9 puntos</b>. La quincena cae el domingo 30: en tus dos quincenas
@@ -1490,6 +1759,11 @@ Vence en 24 horas. ¿Te lo despacho?</div>
   var sel = $("screenSel");
   var phaseTimer = null;
 
+  /* Estados en los que Axel está trabajando. `thinking` es el RESPALDO (no
+     llegó ningún paso porque el socket está caído); `live` y `stream` son el
+     turno en vivo de verdad. */
+  var BUSY = ["thinking", "live", "stream"];
+
   var PHASES = [
     "Leyendo tu embudo de los últimos 30 días…",
     "Revisando pedidos, pagos y carritos…",
@@ -1504,7 +1778,11 @@ Vence en 24 horas. ¿Te lo despacho?</div>
     });
 
     // el orbe respira solo mientras Axel piensa
-    orb.classList.toggle("busy", name === "thinking");
+    // el orbe respira mientras Axel trabaja: pensando (sin socket), leyendo
+    // sus fuentes o escribiendo la respuesta
+    orb.classList.toggle("busy", BUSY.indexOf(name) !== -1);
+    // las frases inventadas SOLO en el estado de respaldo: si llegan pasos
+    // reales, inventar una fase sería mentir con más pasos a la vista
     rotatePhases(name === "thinking");
 
     // el composer se apaga con la cuota agotada
@@ -1626,6 +1904,37 @@ Vence en 24 horas. ¿Te lo despacho?</div>
     return el;
   }
 
+  /* La misma tarjeta, pero con el cuerpo VACÍO para llenarlo con los deltas. La
+     marca de tiempo dice «escribiendo…» hasta que el turno cierra: poner la hora
+     de un mensaje que todavía se está escribiendo es mentir sobre su estado. */
+  function axelShell(label) {
+    var el = axelCard(label, "");
+    el.querySelector(".axelstamp").textContent = "escribiendo…";
+    return el;
+  }
+
+  /* El cierre del turno (`cmo.turn_completed`): la hora real, los pasos
+     colapsados al pie, y la propuesta anclada COMO HERMANA en el hilo — no
+     dentro de la burbuja: es su propia tarjeta, con sus enlaces. */
+  function closeCard(el, sources, extraHtml) {
+    el.querySelector(".axelstamp").textContent = stamp();
+    var foot = document.createElement("div");
+    foot.className = "axelfoot";
+    foot.innerHTML = '<svg class="ico ico-sm"><use href="#i-scan"/></svg><span></span>';
+    foot.querySelector("span").textContent =
+      "Consultó " + sources + (sources === 1 ? " fuente" : " fuentes") + " de tus datos";
+    el.appendChild(foot);
+    if (extraHtml) {
+      var holder = document.createElement("div");
+      holder.className = "msgin";
+      holder.style.display = "contents";
+      holder.innerHTML = extraHtml;
+      thread.appendChild(holder);
+      wireOpeners(holder);
+    }
+    toBottom();
+  }
+
   function thinkingBox(note) {
     orb.classList.add("busy");
     var el = document.createElement("div");
@@ -1639,6 +1948,104 @@ Vence en 24 horas. ¿Te lo despacho?</div>
     return el;
   }
 
+  /* ---------------- el turno EN VIVO ----------------
+     Dos piezas que en la app son eventos de Socket.IO y aquí son temporizadores:
+
+     · `liveBox` pinta los pasos del turno. Cada fila es un `cmo.turn_step`: el
+       nombre humano lo emite el SERVIDOR (`tool_labels.ts`), porque el cliente
+       no debe mantener un diccionario paralelo de las catorce herramientas.
+     · `revealInto` imita `cmo.turn_delta`. El grano NO es el token: el servidor
+       coalesce en 120 ms / 64 caracteres, así que aquí el texto se parte en
+       trozos de ese tamaño en vez de letra por letra. Un delta por token serían
+       ~350 publicaciones de Redis por respuesta.
+
+     El skeleton mudo (`thinkingBox`) sigue existiendo y es el respaldo honesto:
+     si el socket está caído no llega ningún paso y hay que decir algo. */
+
+  var CHUNK = 64;   // el mismo tope que CMO_STREAM_FLUSH_CHARS en el servidor
+  var TICK = 110;   // ~ CMO_STREAM_FLUSH_MS, redondeado para que se vea calmado
+
+  function liveBox(steps) {
+    orb.classList.add("busy");
+    var el = document.createElement("div");
+    el.className = "thinking msgin";
+    el.innerHTML = '<div class="steps"></div><div class="tnote">' +
+      '<svg class="ico ico-sm"><use href="#i-scan"/></svg><span></span></div>';
+    var list = el.querySelector(".steps");
+    steps.forEach(function (step) {
+      var row = document.createElement("div");
+      row.className = "step wait";
+      row.innerHTML = '<svg class="ico ico-sm"><use href="#i-circle"/></svg>' +
+        '<span class="steplabel"></span><span class="stepms"></span>';
+      row.querySelector(".steplabel").textContent = step.label;
+      list.appendChild(row);
+    });
+    thread.appendChild(el);
+    toBottom();
+
+    var note = el.querySelector(".tnote span");
+    function mark(i, state) {
+      var row = list.children[i];
+      if (!row) return;
+      row.className = "step " + state;
+      row.querySelector("use").setAttribute("href", state === "done" ? "#i-check" : state === "run" ? "#i-loader" : "#i-circle");
+      if (state === "done") row.querySelector(".stepms").textContent = String(steps[i].ms) + " ms";
+      var done = list.querySelectorAll(".step.done").length;
+      note.textContent = done === 0
+        ? "Axel está trabajando"
+        : "Axel está trabajando · " + done + (done === 1 ? " lectura" : " lecturas") + " hasta ahora";
+      toBottom();
+    }
+
+    return { el: el, mark: mark };
+  }
+
+  function runSteps(box, steps, done) {
+    var i = 0;
+    (function next() {
+      if (i >= steps.length) { done(); return; }
+      box.mark(i, "run");
+      var at = i;
+      setTimeout(function () { box.mark(at, "done"); i++; next(); }, steps[at].ms + 380);
+    })();
+  }
+
+  /* Parte el HTML en la lista de trozos que se van revelando. Los nodos de
+     texto largos se cortan por palabras en tramos de CHUNK; los elementos
+     (negritas, barras del embudo) entran de una pieza, porque un delta jamás
+     parte un nodo del DOM: parte el TEXTO que luego el parser convierte. */
+  function chunksOf(html) {
+    var tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    var out = [];
+    Array.prototype.slice.call(tmp.childNodes).forEach(function (node) {
+      if (node.nodeType !== 3) { out.push(node); return; }
+      var words = node.nodeValue.split(/(\s+)/);
+      var buf = "";
+      words.forEach(function (w) {
+        if ((buf + w).length > CHUNK && buf !== "") { out.push(document.createTextNode(buf)); buf = w; }
+        else buf += w;
+      });
+      if (buf !== "") out.push(document.createTextNode(buf));
+    });
+    return out;
+  }
+
+  function revealInto(container, html, done) {
+    var nodes = chunksOf(html);
+    var caret = document.createElement("span");
+    caret.className = "caret";
+    container.appendChild(caret);
+    var i = 0;
+    (function next() {
+      if (i >= nodes.length) { caret.remove(); done(); return; }
+      container.insertBefore(nodes[i], caret);
+      i++;
+      toBottom();
+      setTimeout(next, TICK);
+    })();
+  }
+
   /* ---------------- respuestas guionadas ---------------- */
   var funnelHtml =
     '<div class="funnel">' +
@@ -1648,19 +2055,43 @@ Vence en 24 horas. ¿Te lo despacho?</div>
     '<div class="frow"><span class="flabel">Pagaron</span><span class="ftrack"><span class="fbar" style="width:12%"></span></span><span class="fnum">38</span></div>' +
     '</div>';
 
+  /* Los pasos que Axel ejecuta de verdad en cada tipo de pregunta. Los nombres
+     son los de `tool_labels.ts` en el servidor; las duraciones son plausibles,
+     no medidas. */
+  var STEPS_PULSE = [
+    { label: "Leyendo tu embudo y tus ventas", ms: 420 },
+    { label: "Buscando por dónde se te va la plata", ms: 310 },
+    { label: "Revisando cómo va atendiendo tu agente", ms: 240 }
+  ];
+  var STEPS_HOT = [
+    { label: "Leyendo tu embudo y tus ventas", ms: 380 },
+    { label: "Ordenando tus contactos más calientes", ms: 290 },
+    { label: "Mirando quién está por recomprar", ms: 260 }
+  ];
+  var STEPS_BUILD = [
+    { label: "Leyendo tu embudo y tus ventas", ms: 420 },
+    { label: "Buscando por dónde se te va la plata", ms: 300 },
+    { label: "Revisando tus campañas y tus reglas", ms: 210 },
+    { label: "Midiendo a cuánta gente alcanzas", ms: 340 },
+    { label: "Dejando la promoción en borrador", ms: 180 },
+    { label: "Dejando la campaña en borrador", ms: 260 }
+  ];
+
   var answers = {
     how: {
-      note: "Leyendo tu embudo de los últimos 30 días…",
-      delay: 1000,
-      label: "Diagnóstico listo",
+      label: "Diagnóstico",
+      steps: STEPS_PULSE,
       body:
-        'Vas mejor en plata y peor en cierre. <strong>$18.420.000</strong> pagados, ' +
-        '<span class="vpill">+11,4%</span> contra el mes pasado. Pero de 312 conversaciones ' +
-        'cerraste 38: <strong>12,2%</strong>, cuando antes cerrabas <span class="vpill">14,1%</span> ' +
-        'con menos tráfico.<br><br>' +
-        'El escalón que se te rompió está entre cotizar y pedir: cotizaste 128 y solo 60 se ' +
-        'volvieron pedido. No necesitas más gente escribiendo, necesitas cerrar la que ya escribe.' +
+        '<div class="mdh">Vas mejor en plata y peor en cierre</div>' +
+        '<p class="mdp">Pagaron <strong>$18.420.000</strong> este mes, un ' +
+        '<strong>11,4%</strong> más que el pasado. Pero de 312 conversaciones cerraste 38: ' +
+        'eso es un <strong>12,2%</strong>, cuando antes cerrabas el <strong>14,1%</strong> con ' +
+        'menos tráfico.</p>' +
+        '<p class="mdp">El escalón que se te rompió está entre cotizar y pedir: cotizaste 128 y ' +
+        'solo 60 se volvieron pedido.</p>' +
         funnelHtml +
+        '<div class="mdq">No necesitas más gente escribiendo: necesitas cerrar la que ya te ' +
+        'escribe. Empieza por las 68 cotizaciones que no llegaron a pedido.</div>' +
         '<div class="metrics">' +
           '<div class="metric bad"><div class="metriclabel">Fuga del embudo</div><div class="metricval">68 · 53%</div></div>' +
           '<div class="metric good"><div class="metriclabel">Resueltas por la IA</div><div class="metricval">90,1%</div></div>' +
@@ -1668,23 +2099,30 @@ Vence en 24 horas. ¿Te lo despacho?</div>
         '</div>'
     },
     hot: {
-      note: "Ordenando contactos por puntaje y última actividad…",
-      delay: 1150,
       label: "Tres para hoy",
+      steps: STEPS_HOT,
       body:
-        'Tres que yo llamaría hoy mismo:<br><br>' +
-        '<strong>Marcela Rojas</strong> <span class="vpill">92</span> — cotizó $340.000 hace dos días y no cerró. Ya te compró tres veces.<br>' +
-        '<strong>Diana Castaño</strong> <span class="vpill">88</span> — hizo el pedido y no confirmó el pago. Lleva 4 días.<br>' +
-        '<strong>Luz Elena Parra</strong> <span class="vpill">84</span> — cuatro compras, la última hace 71 días. Su ciclo es de 45: ya se le acabó el producto.<br><br>' +
-        'Marcela y Yesenia tienen carrito abierto <strong>ahora</strong>. Si enciendes la regla de carritos, las toca hoy.',
+        '<div class="mdh">Tres que yo llamaría hoy mismo</div>' +
+        '<ul class="mdlist">' +
+          '<li data-marker="1."><strong>Marcela Rojas</strong> — cotizó <strong>$340.000</strong> hace dos días y no cerró. Ya te compró tres veces.</li>' +
+          '<li data-marker="2."><strong>Diana Castaño</strong> — hizo el pedido y no confirmó el pago. Lleva 4 días.</li>' +
+          '<li data-marker="3."><strong>Luz Elena Parra</strong> — cuatro compras, la última hace 71 días. Su ciclo es de 45: ya se le acabó el producto.</li>' +
+        '</ul>' +
+        '<p class="mdp">Marcela y Yesenia tienen carrito abierto <em>ahora</em>. Si enciendes la ' +
+        'regla de carritos, las toca hoy sin que tengas que escribirles.</p>',
       extra:
-        '<div class="propcard">' +
+        '<div class="propcard solo fresh">' +
+          '<div class="propfrom"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg> Axel · de esta conversación</div>' +
           '<div class="proptop">' +
             '<span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>' +
             '<span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Vence hoy</span>' +
           '</div>' +
           '<div><div class="proptitle">Persigue los 34 carritos que dejaste morir</div>' +
           '<div class="prophead">$2.840.000 en juego</div></div>' +
+          '<div class="arts">' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/automations?automation=… con el editor ya abierto"><svg class="ico ico-sm"><use href="#i-bot"/></svg> Ver la regla</a>' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/promotions?promotion=… con el editor ya abierto"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Ver la promoción</a>' +
+          '</div>' +
           '<div class="propfoot">' +
             '<button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>' +
             '<span class="propmeta">1 regla · 1 promoción · 1 plantilla, ya en borrador</span>' +
@@ -1692,17 +2130,21 @@ Vence en 24 horas. ¿Te lo despacho?</div>
         '</div>'
     },
     amor: {
-      note: "Cruzando tu base con el calendario comercial…",
-      delay: 1700,
-      label: "Campaña armada",
+      label: "Propuesta armada",
+      steps: STEPS_BUILD,
       body:
-        'Amor y Amistad es el <strong>sábado 19 de septiembre</strong>, y la plantilla de Meta tarda ' +
-        'hasta 48 horas en aprobarse: esto se decide esta semana o no sale.<br><br>' +
-        'Armé la campaña para las <strong>142 clientas</strong> que ya te compraron pero no vuelven ' +
-        'hace más de 60 días. Descuento del <span class="vpill">15%</span> — tu directriz dice que ' +
-        'nunca más de ahí, así que lo dejé justo en el techo. Todo queda en borrador y apagado.',
+        '<div class="mdh">Amor y Amistad se decide esta semana</div>' +
+        '<p class="mdp">La fecha es el <strong>sábado 19 de septiembre</strong> y la plantilla de ' +
+        'Meta tarda hasta 48 horas en aprobarse: esto se decide ahora o no sale.</p>' +
+        '<p class="mdp">Armé la campaña para las <strong>142 clientas</strong> que ya ' +
+        'te compraron pero no vuelven hace más de 60 días. El descuento quedó en ' +
+        '<strong>15%</strong> porque tu directriz dice que nunca más de ahí, así que lo dejé justo ' +
+        'en el techo. El segmento lo guardé como <code class="mdcode">no_vuelven_60d</code>.</p>' +
+        '<div class="mdq">Todo queda en borrador y apagado. Si lo apruebas sale; si no, no pasa ' +
+        'nada y nadie recibe un mensaje.</div>',
       extra:
-        '<div class="propcard">' +
+        '<div class="propcard solo fresh">' +
+          '<div class="propfrom"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg> Axel · de esta conversación</div>' +
           '<div class="proptop">' +
             '<span class="kind cam"><svg class="ico ico-sm"><use href="#i-megaphone"/></svg> Campaña</span>' +
             '<span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Decide antes del 12 de sep</span>' +
@@ -1713,6 +2155,12 @@ Vence en 24 horas. ¿Te lo despacho?</div>
             '<div class="metric"><div class="metriclabel">Alcanzables</div><div class="metricval">142</div></div>' +
             '<div class="metric"><div class="metriclabel">Costo de envío</div><div class="metricval">$9.900</div></div>' +
             '<div class="metric bad"><div class="metriclabel">Margen que cedes</div><div class="metricval">15%</div></div>' +
+          '</div>' +
+          '<div class="arts">' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/campaigns/&lt;id&gt; — la campaña sí tiene ruta propia"><svg class="ico ico-sm"><use href="#i-megaphone"/></svg> Ver la campaña</a>' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/promotions?promotion=… con el editor ya abierto"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Ver la promoción</a>' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/settings/templates?template=…"><svg class="ico ico-sm"><use href="#i-msg"/></svg> Ver el mensaje</a>' +
+            '<span class="artlink mute" title="Ninguna herramienta emite segmentos con id: sin id no hay enlace"><svg class="ico ico-sm"><use href="#i-users"/></svg> Segmento</span>' +
           '</div>' +
           '<div class="propfoot">' +
             '<button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>' +
@@ -1730,24 +2178,56 @@ Vence en 24 horas. ¿Te lo despacho?</div>
   };
 
   var fallback = {
-    note: "Buscando en lo que tengo guionado…",
-    delay: 750,
     label: "Alcance del mockup",
+    steps: [{ label: "Buscando en lo que tengo guionado", ms: 220 }],
     body:
-      'En el mockup solo tengo tres respuestas guionadas. Pregúntame <strong>cómo vamos</strong>, ' +
-      'por tus <strong>clientas más calientes</strong>, o pídeme que te <strong>arme algo para ' +
-      'Amor y Amistad</strong>.'
+      '<p class="mdp">En el mockup solo tengo tres respuestas guionadas. Pregúntame ' +
+      '<strong>cómo vamos</strong>, por tus <strong>clientas más calientes</strong>, o pídeme ' +
+      'que te <strong>arme algo para Amor y Amistad</strong>.</p>'
   };
+
+  /* El turno completo, en el orden en que el dueño lo ve:
+     pasos reales → el texto llegando → el cierre con la propuesta anclada.
+     En la app son `cmo.turn_step`, `cmo.turn_delta` y `cmo.turn_completed`. */
+  /* Andamio: apagar el socket es la única forma de JUZGAR la degradación. Con el
+     socket caído no llega ningún paso ni ningún delta, así que el chat vuelve
+     exactamente a lo que hay hoy — skeleton con la fase rotando y la respuesta
+     de golpe al resolver el POST. Es el respaldo, no un modo distinto. */
+  var wsLive = true;
+  $("wsToggle").addEventListener("click", function () {
+    wsLive = !wsLive;
+    this.classList.toggle("on", wsLive);
+    $("wsLabel").textContent = wsLive ? "Socket en vivo" : "Socket caído";
+    toast(wsLive ? "Socket en vivo: pasos y texto en vivo" : "Socket caído: el chat cae al POST síncrono", "ai");
+  });
 
   function respond(key) {
     var a = answers[key] || fallback;
-    var t = thinkingBox(a.note);
-    setTimeout(function () {
-      t.remove();
-      orb.classList.remove("busy");
-      axelCard(a.label, a.body, a.extra);
-      if (a.after) a.after();
-    }, a.delay);
+
+    if (!wsLive) {
+      // sin socket: skeleton mudo con la fase rotando y todo de golpe al final
+      var t = thinkingBox(PHASES[0]);
+      var total = a.steps.reduce(function (sum, st) { return sum + st.ms + 380; }, 0);
+      setTimeout(function () {
+        t.remove();
+        orb.classList.remove("busy");
+        var full = axelCard(a.label, a.body);
+        closeCard(full, a.steps.length, a.extra);
+        if (a.after) a.after();
+      }, total);
+      return;
+    }
+
+    var box = liveBox(a.steps);
+    runSteps(box, a.steps, function () {
+      box.el.remove();
+      var card = axelShell(a.label);
+      revealInto(card.querySelector(".axelbody"), a.body, function () {
+        orb.classList.remove("busy");
+        closeCard(card, a.steps.length, a.extra);
+        if (a.after) a.after();
+      });
+    });
   }
 
   document.querySelectorAll(".cap, .starter").forEach(function (c) {
@@ -1772,7 +2252,8 @@ Vence en 24 horas. ¿Te lo despacho?</div>
     if (body.getAttribute("data-screen") === "quota") { toast("Sin análisis disponibles este ciclo"); return; }
     var v = input.value.trim();
     if (!v) return;
-    if (body.getAttribute("data-screen") === "thinking") paintScreen("brief");
+    // los estados guionados son fotos fijas: al escribir se vuelve al hilo vivo
+    if (["thinking", "live", "stream", "rich"].indexOf(body.getAttribute("data-screen")) !== -1) paintScreen("brief");
     mine(v);
     input.value = "";
     input.style.height = "auto";
@@ -1881,7 +2362,7 @@ Vence en 24 horas. ¿Te lo despacho?</div>
   });
 
   /* ---------------- arranque (hash como atajo, no como navegación) ---------------- */
-  var VALID = ["nobrief", "brief", "thinking", "quota", "settings"];
+  var VALID = ["nobrief", "brief", "thinking", "live", "stream", "rich", "quota", "settings"];
   var initial = window.location.hash.replace("#", "");
   paintScreen(VALID.indexOf(initial) === -1 ? "nobrief" : initial);
 })();
