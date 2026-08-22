@@ -187,6 +187,23 @@ describe("reglas con actividad", () => {
     expect(api.updateAutomation).not.toHaveBeenCalled();
   });
 
+  it("el menú de acciones deja llegar a eliminar y pide confirmación", () => {
+    // El menú era un `<details>` dentro de una tarjeta `overflow-hidden`: se
+    // abría y el panel quedaba recortado entero, así que "Eliminar regla"
+    // existía en el DOM pero no había forma de verlo ni de pulsarlo. Esto fija
+    // que el ítem NO esté montado con el menú cerrado y que al abrirlo lleve al
+    // mismo modal de confirmación.
+    expect(screen.queryByRole("menuitem", { name: /Eliminar regla/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Más acciones de Carrito con cupón" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Eliminar regla/ }));
+
+    expect(showModal).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "¿Eliminar «Carrito con cupón»?" }),
+    );
+    expect(api.deleteAutomation).not.toHaveBeenCalled();
+  });
+
   it("bloquea deal_stalled sin plantilla de Meta y explica por qué antes del clic", () => {
     expect(screen.getByText(/plantilla aprobada por Meta/)).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Regla Rescate de negociación" })).toBeDisabled();

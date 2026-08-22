@@ -1,10 +1,16 @@
 "use client";
 
-import { AlertTriangle, MoreHorizontal } from "lucide-react";
+import { AlertTriangle, MoreHorizontal, Trash2 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 import type {
   AutomationDTO,
   AutomationMetricsDTO,
@@ -218,23 +224,33 @@ export function AutomationCard({
             <Button size="sm" variant="outline" onClick={onEdit}>
               Editar
             </Button>
-            <details className="relative">
-              <summary
-                className="inline-flex size-8 cursor-pointer list-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&::-webkit-details-marker]:hidden"
-                aria-label={`Más acciones de ${automation.name}`}
-              >
-                <MoreHorizontal className="size-4" aria-hidden="true" />
-              </summary>
-              <div className="glass absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-lg p-1">
+            {/* Abre HACIA ARRIBA a propósito. El disparador vive en la última fila
+                de una tarjeta con `overflow-hidden`, así que un panel desplegado
+                hacia abajo quedaba recortado ENTERO y "Eliminar regla" era
+                invisible: el menú se abría y no se veía nada. Hacia arriba cae
+                dentro de la caja de la tarjeta. El `<details>` que había antes
+                tampoco se cerraba al hacer clic fuera ni con Escape; el
+                DropdownMenu compartido sí, y trae navegación con flechas. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="w-full rounded-md px-2.5 py-1.5 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                  aria-label={`Más acciones de ${automation.name}`}
+                  className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <MoreHorizontal className="size-4" aria-hidden="true" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" className="w-44">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 text-destructive"
                   onClick={onDelete}
                 >
+                  <Trash2 aria-hidden="true" className="size-4" />
                   Eliminar regla
-                </button>
-              </div>
-            </details>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
       </div>
