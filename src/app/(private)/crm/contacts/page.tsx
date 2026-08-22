@@ -88,7 +88,7 @@ export default function CrmContactsPage() {
   const isEmpty = !loading && total === 0 && !searchValue && !hasFilters;
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Contactos</h2>

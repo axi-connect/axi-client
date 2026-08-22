@@ -1,0 +1,478 @@
+<title>Copiloto del contacto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+<style>
+  /* Tokens copiados de axi-client/src/app/globals.css — el mockup no inventa
+     paleta: usa la del producto. Nexa es una fuente local del repo, así que
+     aquí los headings caen a Poppins 700 (su fallback declarado). */
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+    --brand: #e65759;
+    --violet: #7c3aed;
+    --amber: #f0a431;
+    --muted: #f4f4f5;
+    --muted-foreground: #6b6b74;
+    --border: #e4e4e7;
+    --card: #ffffff;
+    --success: #16a34a;
+    --warning: #d97706;
+    --info: #2563eb;
+    --destructive: #dc2626;
+    --on-color: #ffffff;
+    --surface: linear-gradient(to bottom right, #fafafa, #f4f4f5);
+    --skeleton: color-mix(in srgb, var(--violet) 15%, transparent);
+    --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: #0a0a0a;
+      --foreground: #ededed;
+      --brand: #fb7185;
+      --violet: #a78bfa;
+      --amber: #fbbf24;
+      --muted: #18181b;
+      --muted-foreground: #a1a1aa;
+      --border: #27272a;
+      --card: #0f0f11;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --info: #60a5fa;
+      --destructive: #f87171;
+      --on-color: #0a0a0a;
+      --surface: linear-gradient(to bottom right, #131316, #18181b);
+      --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --brand: #fb7185;
+    --violet: #a78bfa;
+    --amber: #fbbf24;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --border: #27272a;
+    --card: #0f0f11;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --info: #60a5fa;
+    --destructive: #f87171;
+    --on-color: #0a0a0a;
+    --surface: linear-gradient(to bottom right, #131316, #18181b);
+    --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .5);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: "Poppins", Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; }
+
+  /* ---- Barra de revisión: NO es parte del producto, es el chrome del mockup */
+  .review-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    padding: 10px 20px; border-bottom: 1px dashed var(--border);
+    background: var(--muted); font-size: 12px;
+  }
+  .review-bar strong { font-weight: 600; }
+  .review-bar .spacer { flex: 1; }
+  .review-note { color: var(--muted-foreground); }
+  .ctl {
+    font: inherit; font-size: 12px; cursor: pointer;
+    padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--card); color: var(--foreground);
+  }
+  .ctl:hover { border-color: var(--violet); }
+  .ctl[aria-pressed="true"] { border-color: var(--violet); color: var(--violet); font-weight: 500; }
+  .ctl:focus-visible, button:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+  /* ---- Superficie del panel privado */
+  .surface { background: var(--surface); padding: 24px 16px 64px; }
+  .page { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+  }
+  @media (min-width: 768px) { .card { padding: 24px; } }
+
+  /* Cabecera del contacto (contexto, atenuada a propósito) */
+  .contact-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .avatar {
+    width: 48px; height: 48px; border-radius: 999px; flex-shrink: 0;
+    display: grid; place-items: center; font-weight: 600; font-size: 16px;
+    background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand);
+  }
+  .contact-head h1 { font-size: 20px; }
+  .contact-sub { color: var(--muted-foreground); font-size: 13px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 10px; font-size: 12px; color: var(--muted-foreground);
+  }
+
+  /* ---- EL PANEL DEL COPILOTO --------------------------------------------- */
+  .copilot {
+    border: 1px solid color-mix(in srgb, var(--violet) 30%, transparent);
+    background: color-mix(in srgb, var(--violet) 5%, var(--card));
+    border-radius: 16px; padding: 16px;
+  }
+  @media (min-width: 768px) { .copilot { padding: 24px; } }
+
+  .copilot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .copilot-title { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+  .spark { color: var(--violet); font-size: 15px; line-height: 1; }
+  .copilot-meta { font-size: 12px; color: var(--muted-foreground); }
+
+  .blocks { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+
+  .block {
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--card); overflow: hidden;
+  }
+  .block-head {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+  .block-name { font-weight: 500; font-size: 13px; }
+  .block-head .spacer { flex: 1; }
+  .stamp {
+    font-size: 11px; color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+  .block-body { padding: 0 14px 14px; }
+  .block[data-state="idle"] .block-body { color: var(--muted-foreground); }
+
+  /* Badges de estado */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 500;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .badge-high { background: color-mix(in srgb, var(--warning) 14%, transparent); color: var(--warning); }
+  .badge-medium { background: color-mix(in srgb, var(--info) 12%, transparent); color: var(--info); }
+  .badge-low { background: var(--muted); color: var(--muted-foreground); border-color: var(--border); }
+  .badge-cache { background: transparent; color: var(--muted-foreground); border-color: var(--border); }
+
+  /* Acciones de bloque */
+  .icon-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font: inherit; font-size: 12px; cursor: pointer;
+    background: transparent; border: 0; border-radius: 999px;
+    padding: 4px 9px; color: var(--muted-foreground);
+  }
+  .icon-btn:hover:not(:disabled) { background: var(--muted); color: var(--foreground); }
+  .icon-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .icon-btn svg { width: 13px; height: 13px; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 7px;
+    font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+    background: var(--violet); color: var(--on-color);
+    border: 0; border-radius: 999px; padding: 7px 16px;
+  }
+  .btn-primary:hover { background: color-mix(in srgb, var(--violet) 88%, black); }
+  .btn-outline {
+    display: inline-flex; align-items: center; gap: 7px;
+    font: inherit; font-size: 13px; cursor: pointer;
+    background: transparent; color: var(--foreground);
+    border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px;
+  }
+  .btn-outline:hover { border-color: var(--violet); color: var(--violet); }
+
+  .idle-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .idle-row p { margin: 0; font-size: 13px; }
+
+  /* Contenido generado */
+  .prose { margin: 0; font-size: 13.5px; }
+  .highlights { margin: 10px 0 0; padding-left: 18px; color: var(--muted-foreground); font-size: 13px; }
+  .highlights li { margin-bottom: 3px; }
+  .action-line { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .action-line .prose { font-weight: 500; }
+  .rationale { margin: 8px 0 0; color: var(--muted-foreground); font-size: 13px; }
+  blockquote {
+    margin: 0; padding: 12px 14px; font-size: 13.5px; font-style: italic;
+    border: 1px solid color-mix(in srgb, var(--violet) 22%, transparent);
+    border-radius: 10px; background: color-mix(in srgb, var(--violet) 4%, var(--background));
+  }
+  .draft-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* Cargando */
+  .sk { height: 13px; border-radius: 6px; background: var(--skeleton); }
+  .sk + .sk { margin-top: 9px; }
+  .loading-label { font-size: 12px; color: var(--violet); display: flex; align-items: center; gap: 7px; margin-bottom: 11px; }
+  .pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+  /* Error inline: lo que hoy solo salía como toast */
+  .error-box {
+    display: flex; align-items: flex-start; gap: 11px;
+    border: 1px solid color-mix(in srgb, var(--destructive) 35%, transparent);
+    background: color-mix(in srgb, var(--destructive) 7%, transparent);
+    border-radius: 10px; padding: 11px 13px;
+  }
+  .error-box svg { width: 15px; height: 15px; color: var(--destructive); flex-shrink: 0; margin-top: 1px; }
+  .error-text { font-size: 13px; }
+  .error-text strong { display: block; font-weight: 500; }
+  .error-text span { color: var(--muted-foreground); font-size: 12.5px; }
+  .error-box .btn-outline { margin-top: 9px; }
+
+  /* Grid inferior: lo que queda en dos columnas */
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .ring { display: flex; align-items: center; gap: 18px; margin-top: 12px; }
+  .ring-num { font-size: 26px; font-weight: 700; color: var(--success); font-variant-numeric: tabular-nums; }
+  .steps { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted-foreground); }
+  .steps b { color: var(--foreground); font-weight: 500; }
+  .tags { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+  .tag {
+    border-radius: 999px; padding: 3px 11px; font-size: 12px;
+    background: var(--muted); border: 1px solid var(--border);
+  }
+  h2.section { font-size: 15px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+
+<div class="review-bar">
+  <strong>Mockup — Fase A</strong>
+  <span class="review-note">Copiloto del contacto, a ancho completo. Los tres bloques conviven: generar uno no borra los otros.</span>
+  <span class="spacer"></span>
+  <button class="ctl" id="fail-toggle" aria-pressed="false">Simular fallo del modelo</button>
+  <button class="ctl" id="theme-toggle">Tema: sistema</button>
+  <button class="ctl" id="reset">Reiniciar</button>
+</div>
+
+<div class="surface">
+  <div class="page">
+
+    <!-- Cabecera del contacto: contexto, no es lo que se está diseñando -->
+    <div class="card contact-head">
+      <div class="avatar">JR</div>
+      <div style="flex:1; min-width: 180px;">
+        <h1>Juan Camilo Restrepo</h1>
+        <div class="contact-sub">+57 310 555 0142 · Bogotá · Cliente desde marzo</div>
+      </div>
+      <span class="chip">Mayorista</span>
+      <span class="chip">Dueño: Laura M.</span>
+    </div>
+
+    <!-- ================= EL PANEL ================= -->
+    <section class="copilot" aria-labelledby="copilot-title">
+      <div class="copilot-head">
+        <h2 class="copilot-title" id="copilot-title">
+          <span class="spark" aria-hidden="true">&#10022;</span> Copiloto del vendedor
+        </h2>
+        <span class="copilot-meta">Cada consulta usa la IA de tu plan · se reutiliza 10 minutos</span>
+      </div>
+
+      <div class="blocks" id="blocks"></div>
+    </section>
+
+    <!-- Lo que queda en el grid de dos columnas -->
+    <div class="grid">
+      <div class="card">
+        <h2 class="section">Score del embudo</h2>
+        <div class="ring">
+          <div class="ring-num">72</div>
+          <div class="steps">
+            <span><b>&#10003; Contactó</b> · escribió por WhatsApp</span>
+            <span><b>&#10003; Cotizó</b> · pidió precio de 20 unidades</span>
+            <span>Pidió &middot; pendiente</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="section">Etiquetas</h2>
+        <div class="tags">
+          <span class="tag">mayorista</span>
+          <span class="tag">bogotá</span>
+          <span class="tag">pago contra entrega</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const ICON = {
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>'
+  };
+
+  // Los tres bloques del copiloto. `cached` viene del backend: true = respuesta
+  // reutilizada (no costó tokens) y regenerar sí puede traer algo nuevo.
+  const DEFS = [
+    { id: 'summary', name: 'Resumen de la relación',
+      hint: 'Quién es, qué ha comprado y qué quedó pendiente.' },
+    { id: 'action', name: 'Siguiente acción',
+      hint: 'La jugada comercial más valiosa ahora mismo, con su motivo.' },
+    { id: 'draft', name: 'Borrador de seguimiento',
+      hint: 'Un mensaje de WhatsApp listo para revisar y enviar.' }
+  ];
+
+  const CONTENT = {
+    summary: {
+      summary: 'Cliente recurrente desde marzo con 3 pedidos entregados por $2.850.000 en total. Compra sobre todo termos y vasos para revender en su papelería del centro. El último pedido se entregó el 4 de agosto sin novedades.',
+      highlights: [
+        'Siempre paga contra entrega — nunca ha pedido crédito',
+        'Pidió cotización de 20 termos el 18 de agosto y no ha respondido',
+        'Responde rápido en la mañana, casi nunca después de las 6 p.m.'
+      ]
+    },
+    action: {
+      action: 'Llamarlo hoy para cerrar la cotización de 20 termos.',
+      rationale: 'Pidió el precio hace 4 días, abrió el mensaje y no contestó. Es su ciclo habitual de recompra (cada 5 semanas) y ya se cumplieron 6, así que la demora no es falta de interés sino olvido.',
+      urgency: 'high'
+    },
+    draft: {
+      message: 'Hola Juan Camilo, ¿cómo va todo? Te escribo por la cotización de los 20 termos que me pediste la semana pasada. Te la puedo dejar al mismo precio de tu último pedido y despacharla mañana mismo. ¿Te sirve que la separe?'
+    }
+  };
+
+  // Estado inicial: dos bloques ya generados (uno de caché, uno recién hecho)
+  // y el tercero sin usar. Así se ven los dos comportamientos de "Regenerar".
+  const INITIAL = {
+    summary: { status: 'ready', minutesAgo: 6, cached: true },
+    action: { status: 'ready', minutesAgo: 0, cached: false },
+    draft: { status: 'idle' }
+  };
+
+  let state = structuredClone(INITIAL);
+  let failNext = false;
+  const timers = [];
+
+  const URGENCY = { high: ['badge-high', 'Urgencia alta'], medium: ['badge-medium', 'Urgencia media'], low: ['badge-low', 'Urgencia baja'] };
+
+  function stampText(s) {
+    if (s.minutesAgo === 0) return 'recién generada';
+    if (s.minutesAgo === 1) return 'hace 1 minuto';
+    return 'hace ' + s.minutesAgo + ' minutos';
+  }
+
+  function bodyFor(def, s) {
+    if (s.status === 'idle') {
+      return '<div class="idle-row"><p>' + def.hint + '</p>' +
+        '<button class="btn-primary" data-gen="' + def.id + '">' +
+        '<span aria-hidden="true">&#10022;</span> Generar</button></div>';
+    }
+    if (s.status === 'loading') {
+      return '<div class="loading-label pulse"><span aria-hidden="true">&#10022;</span> Generando…</div>' +
+        '<div class="sk pulse" style="width:100%"></div><div class="sk pulse" style="width:88%"></div>' +
+        '<div class="sk pulse" style="width:64%"></div>';
+    }
+    if (s.status === 'error') {
+      return '<div class="error-box"><span aria-hidden="true">' + ICON.warn + '</span><div class="error-text">' +
+        '<strong>El copiloto no pudo responder</strong>' +
+        '<span>' + s.message + '</span>' +
+        '<button class="btn-outline" data-gen="' + def.id + '">Reintentar</button>' +
+        '</div></div>';
+    }
+    // ready
+    if (def.id === 'summary') {
+      const c = CONTENT.summary;
+      return '<p class="prose">' + c.summary + '</p><ul class="highlights">' +
+        c.highlights.map(h => '<li>' + h + '</li>').join('') + '</ul>';
+    }
+    if (def.id === 'action') {
+      const c = CONTENT.action;
+      return '<div class="action-line"><p class="prose">' + c.action + '</p></div>' +
+        '<p class="rationale"><b>Por qué:</b> ' + c.rationale + '</p>';
+    }
+    return '<blockquote>' + CONTENT.draft.message + '</blockquote>' +
+      '<div class="draft-actions">' +
+      '<button class="btn-outline" data-copy="draft">' + ICON.copy + ' Copiar borrador</button>' +
+      '<button class="btn-outline" data-copy="draft">' + ICON.send + ' Abrir en el chat</button>' +
+      '</div>';
+  }
+
+  function headActions(def, s) {
+    if (s.status !== 'ready') return '';
+    let out = '';
+    if (def.id === 'action') {
+      const [cls, label] = URGENCY[CONTENT.action.urgency];
+      out += '<span class="badge ' + cls + '">' + label + '</span>';
+    }
+    out += '<span class="spacer"></span>';
+    if (s.cached) out += '<span class="badge badge-cache">de caché · sin costo</span>';
+    out += '<span class="stamp">' + stampText(s) + '</span>';
+    out += '<button class="icon-btn" data-copy="' + def.id + '">' + ICON.copy + ' Copiar</button>';
+    // El motivo de que no se pueda regenerar va VISIBLE, no en un title.
+    if (s.cached) {
+      out += '<button class="icon-btn" data-gen="' + def.id + '">' + ICON.redo + ' Regenerar</button>';
+    } else {
+      out += '<button class="icon-btn" disabled>' + ICON.redo + ' Regenerar</button>' +
+        '<span class="stamp">se reutiliza 10 min</span>';
+    }
+    return out;
+  }
+
+  function render() {
+    document.getElementById('blocks').innerHTML = DEFS.map(def => {
+      const s = state[def.id];
+      return '<article class="block" data-state="' + s.status + '">' +
+        '<div class="block-head"><span class="block-name">' + def.name + '</span>' +
+        (s.status === 'ready' ? '' : '<span class="spacer"></span>') +
+        headActions(def, s) + '</div>' +
+        '<div class="block-body">' + bodyFor(def, s) + '</div>' +
+        '</article>';
+    }).join('');
+  }
+
+  function generate(id) {
+    state[id] = { status: 'loading' };
+    render();
+    timers.push(setTimeout(() => {
+      state[id] = failNext
+        ? { status: 'error', message: 'El modelo devolvió una respuesta que no se pudo leer. Vuelve a intentarlo.' }
+        : { status: 'ready', minutesAgo: 0, cached: false };
+      render();
+    }, 1100));
+  }
+
+  document.addEventListener('click', (e) => {
+    const gen = e.target.closest('[data-gen]');
+    if (gen) { generate(gen.dataset.gen); return; }
+    const copy = e.target.closest('[data-copy]');
+    if (copy) {
+      const original = copy.innerHTML;
+      copy.innerHTML = '&#10003; Copiado';
+      setTimeout(() => { copy.innerHTML = original; }, 1400);
+    }
+  });
+
+  document.getElementById('fail-toggle').addEventListener('click', (e) => {
+    failNext = !failNext;
+    e.currentTarget.setAttribute('aria-pressed', String(failNext));
+    e.currentTarget.textContent = failNext ? 'Fallo activado — genera algo' : 'Simular fallo del modelo';
+  });
+
+  const MODES = ['system', 'light', 'dark'];
+  const LABEL = { system: 'sistema', light: 'claro', dark: 'oscuro' };
+  let mode = 0;
+  document.getElementById('theme-toggle').addEventListener('click', (e) => {
+    mode = (mode + 1) % 3;
+    const m = MODES[mode];
+    if (m === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', m);
+    e.currentTarget.textContent = 'Tema: ' + LABEL[m];
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    timers.forEach(clearTimeout);
+    state = structuredClone(INITIAL);
+    render();
+  });
+
+  render();
+</script>

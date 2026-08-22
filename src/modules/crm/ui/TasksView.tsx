@@ -197,7 +197,7 @@ export function TasksView() {
   const totalPages = Math.max(1, Math.ceil(total / TASKS_PAGE_SIZE));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Tareas</h2>

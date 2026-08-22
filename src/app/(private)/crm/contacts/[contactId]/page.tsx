@@ -86,14 +86,14 @@ export default function Contact360Page({
 
   if (!bundle) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <BrandLoader label="Cargando contacto" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 p-4 md:p-6">
+    <div className="space-y-4">
       <Contact360Header contact={bundle.contact} profile={bundle.profile} users={bundle.users} />
 
       <div className="grid gap-4 lg:grid-cols-2">
