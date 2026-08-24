@@ -68,6 +68,13 @@ beforeEach(() => {
   api.listProposals.mockResolvedValue([]);
 });
 
+/** Deja los ajustes cargados, como después de `load()`. */
+function withServerBudget(ms: number): void {
+  useCmoStore.setState({
+    settings: { status: "ready", data: { turn_timeout_ms: ms } as never, error: null },
+  });
+}
+
 describe("ask", () => {
   it("propone el id del turno y abre el estado en vivo antes de esperar nada", async () => {
     let openWhileInFlight: string | null = null;
@@ -102,10 +109,40 @@ describe("ask", () => {
   });
 });
 
+describe("presupuesto de espera", () => {
+  it("sale del servidor, no de una constante del cliente", async () => {
+    // Subir CMO_TURN_TIMEOUT_MS ya no deja al navegador abortando antes de tiempo.
+    withServerBudget(180_000);
+    let signal: AbortSignal | undefined;
+    api.sendMessage.mockImplementation((_dto: unknown, s: AbortSignal) => {
+      signal = s;
+      return Promise.resolve(reply());
+    });
+
+    await useCmoStore.getState().ask("¿Cómo vamos?");
+    expect(signal).toBeInstanceOf(AbortSignal);
+    expect(signal?.aborted).toBe(false);
+  });
+
+  it("un turno abandonado por tiempo NO se anuncia como avería, y en español", async () => {
+    api.sendMessage.mockRejectedValue(
+      new DOMException("The operation timed out.", "TimeoutError"),
+    );
+    await useCmoStore.getState().ask("¿Cómo vamos?");
+
+    const failed = useCmoStore.getState().thread.messages[0]?.failed ?? "";
+    // Antes salía el mensaje del navegador, en inglés, con un botón de reintentar
+    // al lado que cuesta otro análisis.
+    expect(failed).not.toContain("timed out");
+    expect(failed).toContain("aparece sola");
+    expect(useCmoStore.getState().live).toBeNull();
+  });
+});
+
 describe("eventos en vivo", () => {
   /** Deja la pestaña con un turno abierto y el POST sin resolver. */
   async function inFlight(): Promise<{ resolve: (value: CmoReplyDTO) => void; done: Promise<void> }> {
-    let resolve = (_: CmoReplyDTO): void => undefined;
+    let resolve: (value: CmoReplyDTO) => void = () => undefined;
     api.sendMessage.mockImplementation(
       () =>
         new Promise<CmoReplyDTO>((ok) => {
@@ -163,6 +200,31 @@ describe("eventos en vivo", () => {
     await turn.done;
   });
 
+  it("un paso BORRA el preámbulo: lo que precede a una herramienta no es la respuesta", async () => {
+    const turn = await inFlight();
+    const store = useCmoStore.getState();
+
+    // La secuencia real de todo turno con herramientas: el modelo narra y llama.
+    store.onTurnDelta(event({ seq: 2, iteration: 1, text: "Voy a revisar tu embudo." }) as never);
+    store.onTurnStep(
+      event({
+        seq: 3,
+        name: "get_business_pulse",
+        label: "Leyendo tu embudo y tus ventas",
+        state: "running",
+        ms: null,
+        productive: null,
+      }) as never,
+    );
+
+    // Sin esto la vista daba prioridad al texto sobre los pasos, y esa frase se
+    // quedaba fija con el cursor parpadeando durante toda la fase de lecturas.
+    expect(useCmoStore.getState().live?.text).toBe("");
+    expect(useCmoStore.getState().live?.steps).toHaveLength(1);
+    turn.resolve(reply());
+    await turn.done;
+  });
+
   it("un evento de OTRO turno no toca nada", async () => {
     const turn = await inFlight();
     const store = useCmoStore.getState();
@@ -211,7 +273,7 @@ describe("eventos en vivo", () => {
   });
 
   it("si el POST muere después del cierre, la respuesta NO se marca como fallo", async () => {
-    let reject = (_: unknown): void => undefined;
+    let reject: (reason: unknown) => void = () => undefined;
     api.sendMessage.mockImplementation(
       () =>
         new Promise<CmoReplyDTO>((_ok, ko) => {

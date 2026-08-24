@@ -97,6 +97,12 @@ Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
  */
 if (typeof globalThis.crypto?.randomUUID !== "function") {
   let counter = 0
+  // `crypto` mismo puede no existir. Antes se llamaba a `defineProperty` sobre
+  // `undefined`, que revienta y se lleva por delante TODO el setup — un fallo
+  // que no habla de lo que falta.
+  if (globalThis.crypto === undefined) {
+    Object.defineProperty(globalThis, "crypto", { configurable: true, value: {} })
+  }
   Object.defineProperty(globalThis.crypto, "randomUUID", {
     configurable: true,
     value: () => {

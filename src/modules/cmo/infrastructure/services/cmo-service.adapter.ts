@@ -5,6 +5,7 @@ import type {
   CmoMessageDTO,
   CmoReplyDTO,
   CmoSettingsDTO,
+  CmoSettingsInputDTO,
   CmoThreadDTO,
   CreateDirectiveDTO,
   DirectiveDTO,
@@ -132,7 +133,15 @@ export function getCmoSettings(): Promise<CmoSettingsDTO> {
   return http.get<CmoSettingsDTO>("/cmo/settings");
 }
 
-/** PUT de sección COMPLETA: el backend reemplaza, no hace merge parcial. */
+/**
+ * PUT de sección COMPLETA: el backend reemplaza, no hace merge parcial.
+ *
+ * El cuerpo es la forma EDITABLE y el `turn_timeout_ms` de la vista se queda
+ * fuera: el schema del backend es `.strict()` y un campo de solo lectura en el
+ * cuerpo devolvería un 400. La respuesta sí es la vista completa.
+ */
 export function saveCmoSettings(dto: CmoSettingsDTO): Promise<CmoSettingsDTO> {
-  return http.put<CmoSettingsDTO>("/cmo/settings", dto);
+  const { turn_timeout_ms, ...editable } = dto;
+  void turn_timeout_ms;
+  return http.put<CmoSettingsDTO>("/cmo/settings", editable satisfies CmoSettingsInputDTO);
 }

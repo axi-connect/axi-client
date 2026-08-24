@@ -8872,6 +8872,21 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        CmoSettingsViewDto: {
+            enabled: boolean;
+            briefing_hour: number;
+            proposal_cap: number;
+            limits: {
+                max_discount_percent: number;
+                max_audience: number;
+                allowed_channel_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram" | "messenger")[];
+            };
+            notify: {
+                in_app: boolean;
+            };
+            /** @description Presupuesto de tiempo del turno en el servidor, en ms. Solo lectura. */
+            turn_timeout_ms: number;
+        };
         CmoSettingsDto: {
             enabled: boolean;
             briefing_hour: number;
@@ -16169,7 +16184,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CmoSettingsDto"];
+                    "application/json": components["schemas"]["CmoSettingsViewDto"];
                 };
             };
         };
@@ -16192,7 +16207,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CmoSettingsDto"];
+                    "application/json": components["schemas"]["CmoSettingsViewDto"];
                 };
             };
         };

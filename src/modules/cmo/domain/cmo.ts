@@ -14,7 +14,13 @@ export type CmoMessageDTO = Schemas["CmoTranscriptDto"]["data"][number];
 export type ProposalDTO = Schemas["ProposalListDto"]["data"][number];
 export type BriefingDTO = Schemas["BriefingListDto"]["data"][number];
 export type DirectiveDTO = Schemas["DirectiveListDto"]["data"][number];
-export type CmoSettingsDTO = Schemas["CmoSettingsDto"];
+/**
+ * Lo que devuelve el GET: los ajustes MÁS los hechos de plataforma que el cliente
+ * no puede cambiar (hoy, el presupuesto de tiempo del turno).
+ */
+export type CmoSettingsDTO = Schemas["CmoSettingsViewDto"];
+/** La forma EDITABLE, que es la que acepta el PUT como cuerpo. */
+export type CmoSettingsInputDTO = Schemas["CmoSettingsDto"];
 export type ApprovalResultDTO = Schemas["ApprovalResultDto"];
 
 export type ProposalKind = ProposalDTO["kind"];

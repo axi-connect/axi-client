@@ -183,13 +183,41 @@ const nextLocalId = (): string => `local-${String((localId += 1))}`;
 const inFlight = new Set<string>();
 
 /**
- * Presupuesto del POST del turno, con holgura sobre los 90 s del servidor.
+ * Cuánto se espera el POST del turno, DERIVADO del presupuesto del servidor.
  *
  * No es un timeout de red al uso: el servidor corta el turno por su cuenta, así
- * que si a los 100 s no ha respondido el problema está en el camino. Sin esto un
- * POST colgado deja el chat pensando indefinidamente, que es peor que un error.
+ * que si pasa su presupuesto más el margen, el problema está en el camino. Sin
+ * esto un POST colgado deja el chat pensando indefinidamente, que es peor que un
+ * error.
+ *
+ * El número LO DICE EL SERVIDOR (`turn_timeout_ms` en `GET /cmo/settings`).
+ * Cuando era una constante de aquí, subir `CMO_TURN_TIMEOUT_MS` hacía que el
+ * navegador diera por fallido un turno que seguía vivo, y nada ataba los dos
+ * valores. El respaldo cubre el caso de que los ajustes no hayan cargado.
  */
-const TURN_BUDGET_MS = 100_000;
+const TURN_MARGIN_MS = 10_000;
+const TURN_BUDGET_FALLBACK_MS = 100_000;
+
+function turnBudgetMs(state: CmoState): number {
+  const fromServer = state.settings.data?.turn_timeout_ms;
+  return fromServer === undefined ? TURN_BUDGET_FALLBACK_MS : fromServer + TURN_MARGIN_MS;
+}
+
+/**
+ * Un turno que se abandona por tiempo no es un fallo del análisis.
+ *
+ * El aborto llega como `DOMException`, que no es `HttpError` pero SÍ es `Error`,
+ * así que `errorMessage` caía a su `message` y la burbuja mostraba «The operation
+ * timed out.» en inglés, con un botón de reintentar al lado que cuesta otro
+ * análisis. Y muy probablemente el turno terminó en el servidor: si el socket
+ * está vivo, su respuesta aparece sola.
+ */
+function isTimeout(error: unknown): boolean {
+  return error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+}
+
+const TIMEOUT_MESSAGE =
+  "Axel tardó más de lo normal y dejamos de esperar. Si alcanzó a terminar, su respuesta aparece sola: no hace falta repetir la pregunta.";
 
 export const useCmoStore = create<CmoState>((set, get) => ({
   settings: idle(),
@@ -305,7 +333,7 @@ export const useCmoStore = create<CmoState>((set, get) => ({
        no ha respondido, el problema está en el camino (un proxy inverso que
        cerró la conexión) y seguir esperando deja el chat pensando para siempre.
        La respuesta no se pierde: `cmo.turn_completed` la trae ya persistida. */
-    const budget = AbortSignal.timeout(TURN_BUDGET_MS);
+    const budget = AbortSignal.timeout(turnBudgetMs(get()));
 
     try {
       const reply = await sendMessage(
@@ -392,7 +420,11 @@ export const useCmoStore = create<CmoState>((set, get) => ({
           thinking: false,
           messages: state.thread.messages.map((item) =>
             item.id === optimistic.id
-              ? { ...item, pending: false, failed: errorMessage(error) }
+              ? {
+                  ...item,
+                  pending: false,
+                  failed: isTimeout(error) ? TIMEOUT_MESSAGE : errorMessage(error),
+                }
               : item,
           ),
         },
@@ -536,7 +568,15 @@ export const useCmoStore = create<CmoState>((set, get) => ({
       index === -1
         ? [...live.steps, step]
         : live.steps.map((item, at) => (at === index ? step : item));
-    set({ live: { ...live, seq: event.seq, steps } });
+    /* El texto acumulado se DESCARTA al llegar un paso.
+       Todo lo que el modelo escribe antes de llamar a una herramienta es un
+       preámbulo («Voy a revisar tu embudo…»), no la respuesta. Conservarlo tenía
+       una consecuencia que solo se ve en un turno real: la vista da prioridad al
+       texto sobre los pasos, así que esa frase se quedaba fija con el cursor
+       parpadeando y los pasos desaparecían durante TODA la fase de lecturas —los
+       30 a 90 segundos que son casi el turno entero—. El cursor, además,
+       afirmaba que estaba escribiendo cuando no lo estaba. */
+    set({ live: { ...live, seq: event.seq, steps, text: "" } });
   },
 
   onTurnDelta: (event) => {

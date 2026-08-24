@@ -48,7 +48,13 @@ export function useDeepLinkTarget<T extends { id: string }>(
 
   const clear = () => {
     if (id === null) return;
-    router.replace(pathname, { scroll: false });
+    // Se quita SOLO este parámetro. Reemplazar por el pathname a secas se
+    // llevaba cualquier otro que hubiera en la URL —un filtro, una pestaña— y el
+    // día que una de estas vistas gane uno, cerrar el panel lo borraría.
+    const rest = new URLSearchParams(params.toString());
+    rest.delete(param);
+    const query = rest.toString();
+    router.replace(query === "" ? pathname : `${pathname}?${query}`, { scroll: false });
   };
 
   return { id, clear };
