@@ -113,6 +113,18 @@ Orden sugerido de profundización: **F6 `/productos`** (la de mayor superficie y
 
 ## F2 — Navbar (`SiteHeader.tsx`)
 
+> ⚠️ **SUPERADO el 2026-08-24 por `navigation_standardization_plan.md`.** Lo que
+> sigue describe el saneamiento de F2, que se ejecutó y sigue siendo la razón de
+> ser de los destinos actuales — pero **la decisión de no instalar
+> `navigation-menu` de Radix quedó revertida**: el nav es ahora un mega-menú
+> sobre ese primitivo, con tres paneles (Producto, Soluciones, Integraciones) y
+> `/precios`, `/casos` e `/integraciones` como páginas propias. Se conservó
+> íntegro lo que F2 ganó: apertura por hover **y** por click/teclado, cierre con
+> `Escape`, `glass-overlay` en el panel, CTA sensible a la sesión con
+> `splash.start()`, badge «Pronto» y bloqueo de scroll en móvil (ahora lo aporta
+> el `Sheet`). El redirect `/precios → /#planes` se retiró de `next.config.ts`.
+
+
 **Archivo:** `src/shared/components/layout/site/SiteHeader.tsx` (304 líneas). Se conserva la estructura, el gradiente del logo, el comportamiento de scroll con `.glass` y las animaciones — solo cambian destinos, accesibilidad y opacidad del material.
 
 ### Qué está mal hoy
