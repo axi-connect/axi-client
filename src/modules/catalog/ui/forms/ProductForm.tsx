@@ -8,7 +8,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Separator } from "@/shared/components/ui/separator";
-import { cn } from "@/core/lib/utils";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { flattenCategoryTree } from "@/modules/catalog/domain/category";
 import { PRODUCT_KIND_LABELS, type ProductDTO, type ProductKind } from "@/modules/catalog/domain/product";
@@ -41,40 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-
-/** Toggle segmentado de dos opciones (kind, modo de variantes). */
-function SegmentedControl<TValue extends string>({
-  value,
-  onChange,
-  options,
-  ariaLabel,
-}: {
-  value: TValue;
-  onChange: (value: TValue) => void;
-  options: Array<{ value: TValue; label: string; description?: string }>;
-  ariaLabel: string;
-}) {
-  return (
-    <div className="inline-flex rounded-xl border border-border p-1" role="group" aria-label={ariaLabel}>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={value === option.value}
-          className={cn(
-            "rounded-lg px-4 py-1.5 text-sm transition-colors",
-            value === option.value
-              ? "bg-accent font-medium text-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -154,9 +120,10 @@ export function ProductForm({ onCreated, setAlert }: ProductFormProps) {
                 <FormControl>
                   <SegmentedControl<ProductKind>
                     value={field.value}
-                    onChange={field.onChange}
-                    ariaLabel="Tipo de producto"
-                    options={[
+                    onValueChange={field.onChange}
+                    label="Tipo de producto"
+                    surface="inline"
+                    items={[
                       { value: "product", label: PRODUCT_KIND_LABELS.product },
                       { value: "service", label: PRODUCT_KIND_LABELS.service },
                     ]}
@@ -448,9 +415,10 @@ export function ProductForm({ onCreated, setAlert }: ProductFormProps) {
                 <FormControl>
                   <SegmentedControl<ProductFormValues["variant_mode"]>
                     value={field.value}
-                    onChange={field.onChange}
-                    ariaLabel="Modo de variantes"
-                    options={[
+                    onValueChange={field.onChange}
+                    label="Modo de variantes"
+                    surface="inline"
+                    items={[
                       { value: "simple", label: isService ? "Servicio simple" : "Producto simple" },
                       { value: "variants", label: "Con variantes" },
                     ]}

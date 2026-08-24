@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { cn } from "@/core/lib/utils";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { ContactPicker } from "@/modules/crm/public";
 import type { ChannelDTO } from "@/modules/channels/public";
 import {
@@ -270,29 +271,16 @@ export function buildReminderFormFields(opts: {
     createCustomField<ReminderFormValues>(
       "mode",
       ({ value, setValue }) => (
-        <div
-          role="tablist"
-          aria-label="Modo de envío"
-          className="inline-flex items-center rounded-full border border-border bg-secondary/60 p-1"
-        >
-          {MODE_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="tab"
-              aria-selected={value === option.value}
-              onClick={() => setValue("mode", option.value)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                value === option.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          // `CustomFieldRenderArgs.value` es el valor del propio campo y llega
+          // como `unknown`: se estrecha aquí, en el borde del formulario.
+          value={value as ReminderFormValues["mode"]}
+          onValueChange={(mode) => setValue("mode", mode)}
+          label="Modo de envío"
+          size="sm"
+          surface="inline"
+          items={MODE_OPTIONS}
+        />
       ),
       {
         label: "¿Cuándo se envía?",

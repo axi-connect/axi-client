@@ -1,29 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/core/lib/utils";
+import { KanbanSquare, ListChecks, Settings, Users } from "lucide-react";
+
 import { useAuth } from "@/shared/auth/auth.hooks";
+import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
 /**
- * Cabecera + sub-navegación persistente de la sección full-bleed `/crm`
- * (patrón CatalogNav: pills con underline, activo por prefijo de ruta).
- * Los ítems se activan por fase: Pipeline (F3), Tareas (F4) y
- * Configuración (F5, gate `crm:manage`) se añaden a NAV_ITEMS al implementarse.
+ * Cabecera + sub-navegación persistente de la sección full-bleed `/crm`.
+ *
+ * El filtro por permiso se queda aquí, no en `NavTabs`: el gate RBAC es del
+ * módulo dueño de la sección, y así el componente de navegación no depende del
+ * `AuthProvider` (y se puede testear sin montarlo).
  */
-const NAV_ITEMS: ReadonlyArray<{
-  href: string;
-  label: string;
-  permission?: string;
-}> = [
-  { href: "/crm/contacts", label: "Contactos" },
-  { href: "/crm/pipeline", label: "Pipeline" },
-  { href: "/crm/tasks", label: "Tareas" },
-  { href: "/crm/settings", label: "Configuración", permission: "crm:manage" },
+const NAV_ITEMS: ReadonlyArray<NavTabItem & { permission?: string }> = [
+  { href: "/crm/contacts", label: "Contactos", icon: Users },
+  { href: "/crm/pipeline", label: "Pipeline", icon: KanbanSquare },
+  { href: "/crm/tasks", label: "Tareas", icon: ListChecks },
+  { href: "/crm/settings", label: "Configuración", icon: Settings, permission: "crm:manage" },
 ];
 
 export function CrmNav() {
-  const pathname = usePathname();
   const { hasPermission } = useAuth();
 
   const items = NAV_ITEMS.filter(
@@ -31,33 +27,10 @@ export function CrmNav() {
   );
 
   return (
-    <header className="shrink-0 border-b border-border px-4 md:px-6">
-      <div className="flex items-end gap-6">
-        <h1 className="pb-2.5 font-heading text-lg font-bold tracking-tight">CRM</h1>
-        <nav aria-label="Secciones del CRM" className="-mb-px min-w-0">
-          <ul className="flex items-center gap-1 overflow-x-auto">
-            {items.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "inline-flex items-center whitespace-nowrap rounded-t-lg border-b-2 px-4 py-2.5 text-sm transition-colors",
-                      isActive
-                        ? "border-primary font-medium text-brand"
-                        : "border-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+    <header className="border-border shrink-0 border-b px-4 py-2.5 md:px-6">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <h1 className="font-heading text-lg font-bold tracking-tight">CRM</h1>
+        <NavTabs items={items} label="Secciones del CRM" />
       </div>
     </header>
   );

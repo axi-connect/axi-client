@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { cn } from "@/core/lib/utils"
 import {
+  Bot,
   Camera,
   FileText,
   Film,
@@ -11,10 +12,13 @@ import {
   Mic,
   PanelLeft,
   Sticker,
+  Timer,
+  UserRound,
   type LucideIcon,
 } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
+import { SegmentedControl } from "@/shared/components/ui/segmented"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import {
@@ -25,6 +29,14 @@ import {
   type InboxTab,
   type MediaContentKind,
 } from "@/modules/inbox/domain/inbox"
+
+/** Icono por filtro del inbox: en el rail estrecho es lo único visible. */
+const INBOX_TAB_ICONS: Record<InboxTab, LucideIcon> = {
+  queued: Timer,
+  mine: UserRound,
+  ai: Bot,
+  all_open: InboxIcon,
+}
 
 /** Icono por tipo de media en el preview (W6 del plan, patrón WhatsApp). */
 const PREVIEW_ICONS: Record<MediaContentKind, LucideIcon> = {
@@ -127,26 +139,27 @@ export function InboxList({ className }: { className?: string }) {
             <PanelLeft className="size-4" />
           </Button>
         </div>
-        <div className="mt-2 flex gap-1" role="tablist" aria-label="Filtros del inbox">
-          {(Object.keys(INBOX_TAB_LABELS) as InboxTab[]).map((tabOption) => {
-            const count = tabCount(tabOption, counts)
-            return (
-              <button
-                key={tabOption}
-                role="tab"
-                aria-selected={tab === tabOption}
-                onClick={() => setTab(tabOption)}
-                className={cn(
-                  "flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors",
-                  tab === tabOption ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground/70 hover:bg-accent",
-                )}
-              >
-                {INBOX_TAB_LABELS[tabOption]}
-                {count !== null && count > 0 && <span className="font-semibold">{count}</span>}
-              </button>
-            )
+        {/* Filtros del inbox: eligen qué se lista, no abren panel ⇒ radiogroup.
+            En un rail de 288px las etiquetas no caben todas, así que solo el
+            filtro activo muestra la suya. */}
+        <SegmentedControl
+          value={tab}
+          onValueChange={setTab}
+          label="Filtros del inbox"
+          size="sm"
+          surface="inline"
+          labels="active"
+          className="mt-2 w-full"
+          items={(Object.keys(INBOX_TAB_LABELS) as InboxTab[]).map((tabOption) => {
+            const count = tabCount(tabOption, counts);
+            return {
+              value: tabOption,
+              label: INBOX_TAB_LABELS[tabOption],
+              icon: INBOX_TAB_ICONS[tabOption],
+              count: count !== null && count > 0 ? count : null,
+            };
           })}
-        </div>
+        />
       </div>
 
       <div className="sidebar-scroll flex-1 space-y-1 overflow-y-auto p-2">

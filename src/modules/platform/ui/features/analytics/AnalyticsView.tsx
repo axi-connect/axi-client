@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Activity, BellOff } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
   Select,
   SelectContent,
@@ -116,16 +117,19 @@ function AlertsTab() {
 
   return (
     <div className="space-y-4">
-      <Tabs value={status} onValueChange={(value) => setStatus(value as AlertStatus)}>
-        <TabsList>
-          {ALERT_STATUSES.map((option) => (
-            <TabsTrigger key={option.value} value={option.value}>
-              {option.label}
-              {option.value === status && data ? ` (${data.meta.total})` : ""}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      {/* Es un FILTRO, no una pestaña: no tiene panel propio, así que va como
+          radiogroup. Antes declaraba `role="tab"` sin `tabpanel`, que anuncia al
+          lector de pantalla una pestaña cuyo contenido no existe. */}
+      <SegmentedControl
+        value={status}
+        onValueChange={(value) => setStatus(value)}
+        label="Estado de las alertas"
+        items={ALERT_STATUSES.map((option) => ({
+          value: option.value,
+          label: option.label,
+          count: option.value === status && data ? data.meta.total : null,
+        }))}
+      />
 
       {data?.meta.degraded && <DegradedBanner />}
 

@@ -9,8 +9,8 @@ import {
   List,
   Plus,
 } from "lucide-react";
-import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
+import { SegmentedControl, type SegmentedItem } from "@/shared/components/ui/segmented";
 import {
   Select,
   SelectContent,
@@ -24,47 +24,13 @@ import {
 } from "@/modules/scheduling/domain/appointment";
 import type { CalendarViewKind } from "@/modules/scheduling/domain/calendar-range";
 
-const VIEW_OPTIONS: Array<{ value: CalendarViewKind; label: string; icon: React.ReactNode }> = [
-  { value: "month", label: "Mes", icon: <CalendarDays aria-hidden className="size-3.5" /> },
-  { value: "week", label: "Semana", icon: <CalendarRange aria-hidden className="size-3.5" /> },
-  { value: "day", label: "Día", icon: <Clock aria-hidden className="size-3.5" /> },
-  { value: "list", label: "Lista", icon: <List aria-hidden className="size-3.5" /> },
+/** Conmutador Mes/Semana/Día/Lista. */
+const VIEW_ITEMS: readonly SegmentedItem<CalendarViewKind>[] = [
+  { value: "month", label: "Mes", icon: CalendarDays },
+  { value: "week", label: "Semana", icon: CalendarRange },
+  { value: "day", label: "Día", icon: Clock },
+  { value: "list", label: "Lista", icon: List },
 ];
-
-/** Conmutador Mes/Semana/Día/Lista (patrón SegmentedToggle del pipeline). */
-function ViewToggle({
-  view,
-  onChange,
-}: {
-  view: CalendarViewKind;
-  onChange: (view: CalendarViewKind) => void;
-}) {
-  return (
-    <div
-      role="tablist"
-      aria-label="Vista del calendario"
-      className="flex items-center rounded-full border border-border bg-secondary/60 p-1"
-    >
-      {VIEW_OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          role="tab"
-          aria-selected={view === option.value}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            view === option.value
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => onChange(option.value)}
-        >
-          {option.icon}
-          <span className="hidden sm:inline">{option.label}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
 
 export function CalendarToolbar({
   title,
@@ -150,7 +116,15 @@ export function CalendarToolbar({
             ))}
           </SelectContent>
         </Select>
-        <ViewToggle view={view} onChange={onViewChange} />
+        <SegmentedControl
+        value={view}
+        onValueChange={onViewChange}
+        label="Vista del calendario"
+        items={VIEW_ITEMS}
+        // En la barra del calendario compiten con el rango y los filtros: por
+        // debajo de `md` solo la vista activa muestra su nombre.
+        labels="auto"
+      />
         {canManage && (
           <Button size="sm" onClick={onCreate}>
             <Plus aria-hidden className="size-4" />

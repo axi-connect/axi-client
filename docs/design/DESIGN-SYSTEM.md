@@ -288,6 +288,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
+| Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
 
 Patrones de estado obligatorios en toda vista: **cargando** (§9.1), **vacío** (icono + frase + acción sugerida), **error** (`errorMessage(err)` + reintento).
@@ -327,6 +328,57 @@ El menú del tenant es un árbol de hasta 3 niveles (contrato y piezas en arquit
 - **El control de plegado vive en la cabecera del sidebar** (`SidebarCollapseButton`), no solo en el header de página: es donde está lo que controla, y colapsado queda centrado bajo el isotipo porque es el único camino de vuelta. **Icono y `aria-label` cambian con el estado** (`PanelLeftClose` / «Colapsar menú» ↔ `PanelLeftOpen` / «Expandir menú»); un control de plegado que se pinta igual en ambos estados no dice en qué estado está. El tooltip incluye el atajo (`⌘B` o `Ctrl+B` según plataforma). En móvil el sidebar es un `Sheet` con su cierre nativo oculto, así que ahí el mismo botón es el cierre (`X`, «Cerrar menú»). El `SidebarTrigger` del header de página **se conserva**: con el sheet cerrado no hay sidebar donde alojar nada.
 - **Modo icono no pierde funciones, las reencaja.** La cabecera usa `px-2` en modo icono (48 − 16 = 32px, el ancho del isotipo, alineado con las filas del menú); con el `px-3` de expandido la caja interior quedaba en 24px y el logo se desbordaba. Y el control de tema pasa a su variante `compact` (un icono + `Popover` con las tres opciones) en vez de ocultarse: el segmentado mide ~84px y no cabe en el rail, pero ocultarlo dejaba el tema inaccesible hasta volver a expandir. Regla general: **en el rail se cambia la presentación, no se elimina el control**.
 - **Sin secciones con etiqueta:** la agrupación la dan exclusivamente los padres colapsables. No se mezclan dos mecanismos de agrupación en el mismo menú.
+
+---
+
+### 9.3 Pestañas, sub-navegación y segmentados — una pastilla, tres semánticas
+
+Todas las pestañas del panel comparten **un solo recetario visual**
+(`shared/components/ui/segmented.tsx`) y **tres semánticas distintas**. Antes
+había tres lenguajes para la misma idea, repartidos en 23 copias: subrayado en
+las navegaciones de sección, rectángulo gris de shadcn en los `Tabs` de Radix y
+pill coral en once copias de un `SegmentedToggle` pegado a mano.
+
+| Si el control… | Es | Componente | Semántica |
+|---|---|---|---|
+| cambia de **ruta** | navegación | `NavTabs` (`layout/nav-tabs.tsx`) | `<nav>` + `<ul>` + `Link` + `aria-current="page"` |
+| cambia de **vista con panel** en la misma página | pestañas | `Tabs` (`variant="pill"`, por defecto) | `role="tab"` + `tabpanel` (Radix) |
+| **elige entre opciones, sin panel** | filtro | `SegmentedControl` | `role="radiogroup"` + `aria-checked` + roving tabindex |
+
+**La semántica no es decorativa.** Once de las copias declaraban `role="tab"`
+sin `tabpanel`: eso anuncia al lector de pantalla una pestaña cuyo contenido no
+existe. Regla: **si no hay panel, no es una pestaña.** Y si cambia de URL,
+tampoco: es navegación.
+
+**El activo es `bg-accent` + `text-accent-foreground` + icono `text-brand`**, no
+coral sólido. Razón dura: blanco sobre `--axi-brand` da ~3.1:1 y **no pasa AA**
+para texto pequeño, y estas etiquetas miden 12–13px. Es además el mismo
+tratamiento del ítem activo del sidebar (§9.2), así que el producto entero
+navega con un solo lenguaje.
+
+**Etiquetas (`labels`)**: `always` (todas), `active` (solo la del activo, el
+resto queda como icono) y `auto` — `active` por debajo de `md` y `always` a
+partir de ahí. La etiqueta oculta **colapsa su caja, nunca sale del DOM**: el
+lector de pantalla sigue leyéndola.
+
+**La pastilla se posiciona midiendo el DOM**, no el estado de React: busca
+`[data-state="active"]`, `[data-active="true"]` o `[aria-current="page"]` con un
+`MutationObserver` + `ResizeObserver`, y escribe `transform`/`width`
+directamente en el nodo. Tres consecuencias buscadas: sirve para las tres
+familias sin duplicar cuál es el ítem activo (Radix escribe `data-state` sin
+avisar a React), medir no re-renderiza la barra, y solo se animan propiedades de
+compositor. Se anula con `motion-reduce:` desde CSS, sin JS.
+
+**Tamaños y superficies:** `size="default"` en barras de cabecera, `sm` dentro
+de una card; `surface="raised"` cuando la barra flota sobre el contenido,
+`inline` cuando ya vive dentro de una superficie elevada (para no elevar dos
+veces). Cuando no cabe, la barra scrollea **dentro de sí misma**: el body de la
+vista nunca scrollea en horizontal (§4.2).
+
+**Fuera de este sistema** quedan a propósito los `aria-pressed` que no eligen
+entre opciones excluyentes: el rail vertical del inbox, los popovers de ajuste,
+la galería de proveedores y el constructor de recurrencia. Son interruptores, no
+pestañas.
 
 ---
 

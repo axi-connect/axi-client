@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LayoutGrid, List, Plus, Sparkles } from "lucide-react";
-import { cn } from "@/core/lib/utils";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { PipelineSummaryDialog } from "@/modules/crm/ui/components/PipelineSummaryDialog";
@@ -23,44 +23,6 @@ const PERIOD_LABELS: Record<DealStatsPeriod, string> = {
   "30d": "30 días",
   "90d": "90 días",
 };
-
-function SegmentedToggle({
-  view,
-  onChange,
-}: {
-  view: CrmView;
-  onChange: (view: CrmView) => void;
-}) {
-  const options: Array<{ value: CrmView; label: string; icon: React.ReactNode }> = [
-    { value: "board", label: "Tablero", icon: <LayoutGrid aria-hidden className="size-3.5" /> },
-    { value: "table", label: "Tabla", icon: <List aria-hidden className="size-3.5" /> },
-  ];
-  return (
-    <div
-      role="tablist"
-      aria-label="Vista del pipeline"
-      className="flex items-center rounded-full border border-border bg-secondary/60 p-1"
-    >
-      {options.map((option) => (
-        <button
-          key={option.value}
-          role="tab"
-          aria-selected={view === option.value}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            view === option.value
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => onChange(option.value)}
-        >
-          {option.icon}
-          {option.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /**
  * Cabecera del pipeline: selector de pipeline (persistido en localStorage),
@@ -121,7 +83,15 @@ export function PipelineHeader({ canOperate }: { canOperate: boolean }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <SegmentedToggle view={view} onChange={setView} />
+        <SegmentedControl
+          value={view}
+          onValueChange={setView}
+          label="Vista del pipeline"
+          items={[
+            { value: "board" as CrmView, label: "Tablero", icon: LayoutGrid },
+            { value: "table" as CrmView, label: "Tabla", icon: List },
+          ]}
+        />
         {hasPermission("crm:copilot") && pipelineId !== null && (
           <Button
             variant="outline"

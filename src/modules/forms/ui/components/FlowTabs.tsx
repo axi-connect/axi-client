@@ -28,15 +28,13 @@ export function FlowTabs({
   return (
     <Tabs value={flow} onValueChange={(value) => onFlowChange(value as FormFlow)}>
       {/*
-        `w-max` en la lista y sin `truncate` en el trigger: los títulos se leen
-        completos siempre. El contenedor scrollea por su cuenta en pantallas
-        estrechas — el body de la página nunca scrollea en horizontal
-        (DESIGN-SYSTEM §4.2).
+        El aspecto pill y el scroll horizontal cuando no cabe los aporta ya
+        `TabsList` (DESIGN-SYSTEM §9.3): esta vista tenía su propia versión a
+        mano, que fue el origen del recetario compartido.
       */}
-      <div className="-mx-1 overflow-x-auto px-1 py-1">
-        <TabsList className="h-10 w-max rounded-full p-1">
+      <TabsList>
           {FORM_FLOWS.map((candidate) => (
-            <TabsTrigger key={candidate} value={candidate} className="rounded-full px-4">
+            <TabsTrigger key={candidate} value={candidate}>
               <span>{FLOW_LABELS[candidate]}</span>
               <span
                 className={cn(
@@ -54,8 +52,7 @@ export function FlowTabs({
               )}
             </TabsTrigger>
           ))}
-        </TabsList>
-      </div>
+      </TabsList>
     </Tabs>
   );
 }
