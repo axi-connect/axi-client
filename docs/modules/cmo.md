@@ -174,7 +174,9 @@ día en vez de esconderlo semanas.
 
 ## Contrato con el backend
 
-14 endpoints bajo `/api/v1/cmo`. Los tres que conviene tener presentes:
+17 endpoints bajo `/api/v1/cmo` (la auditoría 2026-08-24 corrigió el conteo y retiró
+`allowed_channel_kinds` del contrato de settings: era un tope que nada comparaba). Los tres que
+conviene tener presentes:
 
 - `POST /cmo/messages` — **tarda decenas de segundos y consume cuota**. No es
   cacheable ni reintentable automáticamente: un reintento gasta dos análisis del
@@ -186,3 +188,36 @@ día en vez de esconderlo semanas.
 
 Permisos: `cmo:read` (mirar), `cmo:chat` (conversar — consume cuota),
 `cmo:approve` (aprobar, rechazar, dictar directrices y cambiar ajustes).
+
+## Notas de la auditoría 2026-08-24
+
+- El error del briefing SE MUESTRA (hero y rail, con reintento): un fallo de red no puede
+  pintarse como «tenant sin briefing». `reloadBriefing` vive en el store.
+- `errorMessage` conoce los 10 códigos `cmo/*`.
+- `/cmo/settings` tiene el control de `briefing_hour` (siempre estuvo en el contrato) y el
+  rechazo de una propuesta acepta motivo libre («Otro motivo»).
+- El hilo es `role="log"` (el mensaje final se anuncia a lectores de pantalla); el borrador en
+  streaming NO lleva `aria-live` (re-anunciaba todo en cada delta). Autoscroll con guarda de
+  intención vía `useAutoScroll` de core.
+- `unseen` se cablea al botón flotante del tablero bajo `xl` y `markSeen` al abrirlo.
+- La recarga en reconexión del socket usa un ref de «ya conectó alguna vez»: la versión
+  anterior nunca podía disparar (F19).
+- La pregunta desplazada del hilo dice «Pregunta anterior», no «Ya respondida»: la posición no
+  sabe si se respondió.
+
+## Nota de la auditoría 2026-08-24
+
+Cambios de contrato y de comportamiento que esta KB debe reflejar:
+
+- `settings.limits` ya NO trae `allowed_channel_kinds`: era un tope muerto (no se
+  comparaba en ningún sitio) y se retiró del contrato (H11).
+- La pantalla de ajustes ahora edita también la **hora del briefing** (F16) y el
+  rechazo acepta **motivo libre** además de los tres sugeridos (F14).
+- El error de carga del briefing se muestra con reintento (F1): `briefing.error`
+  del store deja de ser una rebanada muerta, igual que `unseen`/`markSeen`, que
+  alimentan el badge del botón flotante del tablero bajo `xl` (F8).
+- El hilo es `role="log"`: la respuesta final de Axel se anuncia a lectores de
+  pantalla; el borrador en streaming ya no lleva `aria-live` (A1/A2).
+- La recarga en reconexión del socket funcionaba solo en teoría (F19): la
+  condición era imposible; ahora un ref «ya conectó alguna vez» la dispara.
+- `errorMessage` conoce los 10 códigos `cmo/*` (H17).

@@ -8895,7 +8895,6 @@ export interface components {
             limits: {
                 max_discount_percent: number;
                 max_audience: number;
-                allowed_channel_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram" | "messenger")[];
             };
             notify: {
                 in_app: boolean;
@@ -8910,7 +8909,6 @@ export interface components {
             limits: {
                 max_discount_percent: number;
                 max_audience: number;
-                allowed_channel_kinds: ("whatsapp_cloud" | "whatsapp_web" | "instagram" | "messenger")[];
             };
             notify: {
                 in_app: boolean;
