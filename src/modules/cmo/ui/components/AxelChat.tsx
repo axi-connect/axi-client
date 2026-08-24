@@ -7,6 +7,7 @@ import { cn } from "@/core/lib/utils";
 import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
 import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { Button } from "@/shared/components/ui/button";
+import { AxelMarkdown } from "./AxelMarkdown";
 import { BriefingHero } from "./BriefingHero";
 import { CmoBlockedState } from "./CmoBlockedState";
 import { ProposalCard } from "./ProposalCard";
@@ -367,15 +368,12 @@ function StreamingBubble({ text }: { text: string }) {
         <span className="text-[11px] font-semibold">Axel</span>
         <span className="text-[10.5px] text-muted-foreground/70">escribiendo…</span>
       </div>
-      <div className="px-4 pt-2 pb-3.5 text-[13.5px] leading-relaxed whitespace-pre-line text-muted-foreground">
-        {text}
-        {/* El cursor va DENTRO del párrafo para que siga a la última palabra en
-            vez de quedarse anclado a una esquina. */}
-        <span
-          aria-hidden="true"
-          className="ml-0.5 inline-block h-[1em] w-0.5 translate-y-[0.15em] animate-pulse bg-accent-violet align-baseline"
-        />
-      </div>
+      {/* El mismo renderer que el mensaje final, sobre el texto parcial: un `**`
+          a medio cerrar se ve como asteriscos por un instante y se resuelve con
+          el siguiente delta. Esperar a que el bloque cierre para pintarlo daría
+          saltos peores. El cursor va DENTRO del último bloque, siguiendo a la
+          última palabra. */}
+      <AxelMarkdown text={text} caret className="px-4 pt-2 pb-3.5 text-muted-foreground" />
     </div>
   );
 }
@@ -387,7 +385,10 @@ function MessageBubble({ message, onRetry }: { message: UiMessage; onRetry: () =
         <div
           className={cn(
             "max-w-[84%] rounded-lg rounded-br-sm border border-border bg-background px-3.5 py-2.5",
-            "text-[13.5px] leading-relaxed shadow-float",
+            // El texto del dueño se pinta LITERAL, sin interpretar formato: es lo
+            // que escribió. `pre-wrap` porque sus saltos de línea se colapsaban,
+            // y una pregunta de tres renglones aparecía en uno.
+            "text-[13.5px] leading-relaxed whitespace-pre-wrap shadow-float",
             message.pending === true && "opacity-60",
             message.failed !== undefined && "border-destructive/40",
           )}
@@ -431,9 +432,7 @@ function MessageBubble({ message, onRetry }: { message: UiMessage; onRetry: () =
         <Sparkles className="size-3.5 text-accent-violet" aria-hidden="true" />
         <span className="text-[11.5px] font-bold tracking-wide text-accent-violet">Axel</span>
       </div>
-      <div className="px-4 pt-2 pb-3.5 text-[13.5px] leading-relaxed whitespace-pre-line text-muted-foreground">
-        {message.body}
-      </div>
+      <AxelMarkdown text={message.body} className="px-4 pt-2 pb-3.5 text-muted-foreground" />
       {message.tool_calls !== null && message.tool_calls.length > 0 ? (
         <div className="border-t border-border/50 px-4 py-2">
           <p className="text-[10.5px] text-muted-foreground/70">

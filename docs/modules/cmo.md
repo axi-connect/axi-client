@@ -45,7 +45,8 @@ El mockup era una demo guionada. Estos se decidieron al implementar:
 |---|---|---|
 | **Sin briefing** (tenant recién activado) | «Axel todavía no ha revisado tu negocio. Su primer informe llega mañana a las 8» + invitación a preguntarle ya | Es un estado **normal**, no un vacío que disimular. Un "sin datos" dejaría al dueño pensando que algo se rompió |
 | **Cuota agotada** (`cmo/quota_exhausted`) | Pantalla propia + aviso explícito en verde de que **los agentes siguen atendiendo** | Es la promesa central del diseño de la cuota. Si la pantalla no la repite, el dueño asume lo contrario |
-| **Axel pensando** (no hay streaming) | Skeleton + **fase rotando** cada 6 s («Revisando tus números…», «Cruzando el calendario…») | Un turno tarda decenas de segundos. Un skeleton mudo se lee como "se colgó" y el usuario recarga, perdiendo el análisis ya pagado. Las frases describen lo que el runtime hace de verdad; ninguna afirma un resultado |
+| **Axel trabajando** (turno en vivo) | Los **pasos reales** del turno con su duración (`cmo.turn_step`), y en cuanto empieza a escribir, el texto reemplazándolos (`cmo.turn_delta`) | Un turno tarda decenas de segundos. Las etiquetas las emite el servidor (`tool_labels.ts`): una sola fuente para las catorce herramientas |
+| **Axel trabajando sin socket** (respaldo) | Skeleton + **fase rotando** cada 6 s («Revisando tus números…», «Cruzando el calendario…») | Sin pasos que mostrar, un skeleton mudo se lee como "se colgó" y el usuario recarga, perdiendo el análisis ya pagado. Ninguna frase afirma un resultado. Es el respaldo, no el modo normal |
 
 ## Reglas del slice
 
@@ -54,10 +55,25 @@ corrección va al backend y se regenera con `npm run api:types`. Durante F5 eso
 destapó cinco endpoints sin tipo de respuesta y un `POST /threads` que declaraba
 el tipo de la lista mientras devolvía un id — todo corregido en el servidor.
 
-**El WS avisa, no sincroniza.** Ningún `cmo.*` trae el estado completo: el store
-recarga del servidor lo que cambió. Enviar un briefing por socket duplicaría el
-contrato. En la **reconexión se recarga todo**, porque los eventos perdidos
-dejarían la bandeja mostrando propuestas que ya no existen.
+**El WS avisa, no sincroniza — con UNA excepción.** Los eventos de tablero
+(`cmo.briefing_ready`, `proposal_created`, `proposal_decided`) no traen el estado
+completo: el store recarga del servidor lo que cambió, porque enviar un briefing
+por socket duplicaría el contrato. En la **reconexión se recarga todo**, porque
+los eventos perdidos dejarían la bandeja mostrando propuestas que ya no existen.
+
+Los `cmo.turn_*` SÍ sincronizan, y no hay alternativa: no existe ningún endpoint
+del que releer un turno a medio escribir. La verdad final sigue siendo el cuerpo
+del POST — si el cierre por WS llega primero, el POST **completa** el mensaje en
+su sitio con la traza de herramientas en vez de añadir otro. Y ese mismo cierre
+es el rescate cuando la conexión del POST muere: la respuesta ya está persistida,
+así que no se marca como fallo ni se invita a pagar otro análisis.
+
+**El formato de la respuesta es un subconjunto cerrado.** `domain/axel-markdown.ts`
+interpreta `**negrita**`, `*cursiva*`, `` `código` ``, listas `-` y `1.`, `##`
+títulos y `>` citas; lo que no reconoce se pinta como texto. No se genera HTML en
+ningún punto —el parser devuelve datos y React construye los elementos— y el
+prompt del servidor le declara al modelo exactamente ese subconjunto, así que lo
+que escribe y lo que se pinta no pueden divergir.
 
 **Cada sección falla por su cuenta.** `load()` lanza las peticiones en paralelo
 con `.catch` individual, no con `Promise.all`: si el briefing revienta, el
