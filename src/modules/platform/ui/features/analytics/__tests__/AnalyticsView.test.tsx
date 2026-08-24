@@ -92,7 +92,10 @@ describe("AnalyticsView", () => {
     expect(lastAlertsCall.status).toBe("triggered");
     expect(screen.getByText("failure_rate>10")).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("tab", { name: /resueltas/i }));
+    // El filtro de estado es un radiogroup, no unas pestañas: no tiene panel
+    // propio (la tabla de abajo es la misma), así que `role="tab"` prometía un
+    // `tabpanel` inexistente. Cambió con la unificación de pestañas del panel.
+    fireEvent.click(screen.getByRole("radio", { name: /resueltas/i }));
     expect(lastAlertsCall.status).toBe("resolved");
     expect(screen.getByText(/no hay alertas resueltas/i)).toBeInTheDocument();
 

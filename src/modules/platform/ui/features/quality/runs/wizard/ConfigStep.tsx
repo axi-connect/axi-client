@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
   SERVER_MAX_CONCURRENCY,
   STRESS_BUDGET_S,
@@ -75,12 +75,18 @@ export function ConfigStep({ values, onChange, onBack, onNext }: ConfigStepProps
 
   return (
     <div className="space-y-5">
-      <Tabs value={values.kind} onValueChange={(kind) => patch({ kind: kind as RunKind })}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="qa">QA — escenarios con juez</TabsTrigger>
-          <TabsTrigger value="stress">Estrés — carga sintética</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* Elección de tipo de ejecución: no hay panel por pestaña —el formulario
+          de abajo cambia—, así que es un radiogroup, no unas pestañas. */}
+      <SegmentedControl
+        value={values.kind}
+        onValueChange={(kind) => patch({ kind })}
+        label="Tipo de ejecución"
+        className="w-full [&>button]:flex-1"
+        items={[
+          { value: "qa" as RunKind, label: "QA — escenarios con juez" },
+          { value: "stress" as RunKind, label: "Estrés — carga sintética" },
+        ]}
+      />
 
       {values.kind === "qa" ? (
         <div className="space-y-4">

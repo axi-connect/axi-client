@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BellOff, BellRing, RotateCcw, Sparkles } from "lucide-react";
-import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -11,6 +10,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Switch } from "@/shared/components/ui/switch";
 import { ContactPicker } from "@/modules/crm/public";
 import {
@@ -133,28 +133,13 @@ export function RemindersView() {
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 p-4 md:gap-4 md:p-6">
       {/* Toolbar de filtros */}
       <div className="flex flex-wrap items-center gap-2 md:gap-3">
-        <div
-          role="tablist"
-          aria-label="Filtro de estado"
-          className="flex items-center rounded-full border border-border bg-secondary/60 p-1"
-        >
-          {STATE_FILTER_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              role="tab"
-              aria-selected={stateFilter === option.value}
-              onClick={() => setStateFilter(option.value)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                stateFilter === option.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          value={stateFilter}
+          onValueChange={setStateFilter}
+          label="Filtro de estado"
+          size="sm"
+          items={STATE_FILTER_OPTIONS}
+        />
         <div className="w-64">
           <ContactPicker value={contactFilter} onChange={setContactFilter} />
         </div>

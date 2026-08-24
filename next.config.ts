@@ -30,10 +30,9 @@ const nextConfig: NextConfig = {
    * Redirects de la capa pública (docs/plans/public-gtm-plan.md §F1).
    *
    * Dos familias:
-   *  1. Rutas que la navegación anuncia pero que NO son página propia: los
-   *     precios viven en la sección `#planes` de la home y la demo en
-   *     /contacto. Se redirige en lugar de duplicar contenido (y de partir el
-   *     SEO en dos URLs que compiten).
+   *  1. Rutas que la navegación anuncia pero que NO son página propia: la
+   *     demo vive en /contacto. Se redirige en lugar de duplicar contenido (y
+   *     de partir el SEO en dos URLs que compiten).
    *  2. Rutas heredadas de la plantilla original del sitio, que quedaron
    *     enlazadas desde material externo y desde el propio navbar antiguo.
    *
@@ -42,7 +41,9 @@ const nextConfig: NextConfig = {
    */
   async redirects() {
     return [
-      { source: "/precios", destination: "/#planes", permanent: true },
+      // `/precios` YA NO redirige: es página propia desde el rediseño del nav
+      // (docs/plans/navigation_standardization_plan.md). Dejar el redirect aquí
+      // haría inalcanzable la página, porque el redirect gana a la ruta.
       { source: "/demo", destination: "/contacto", permanent: true },
       // Legacy de la plantilla: rutas en inglés y de un registro que no existe
       // (el alta de empresas es asistida, ver knowledge-base §15.1).

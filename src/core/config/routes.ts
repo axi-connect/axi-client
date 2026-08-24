@@ -13,7 +13,11 @@ export const PUBLIC_PATHS = [
   "/soluciones",
   "/contacto",
   "/legal",
-  "/precios", // redirige a /#planes (next.config.ts)
+  // Páginas de conversión del mega-menú (docs/plans/navigation_standardization_plan.md).
+  // `/precios` dejó de ser un redirect a /#planes: ahora es página propia.
+  "/precios",
+  "/casos",
+  "/integraciones",
   "/demo", // redirige a /contacto (next.config.ts)
   "/marketplace",
   "/auth",

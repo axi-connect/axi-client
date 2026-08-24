@@ -72,9 +72,13 @@ export function NotificationPanel({ onNavigate }: NotificationPanelProps) {
       <Separator />
       <Tabs value={tab} onValueChange={(value) => setTab(value as NotificationsTab)} className="gap-0">
         <div className="px-3 pt-2 pb-1">
+          {/* `w-full` + `flex-1`: en un panel de 320px las dos pestañas se
+              reparten el ancho en vez de dejar un hueco a la derecha. */}
           <TabsList className="w-full">
-            <TabsTrigger value="all">Todas</TabsTrigger>
-            <TabsTrigger value="unread">
+            <TabsTrigger value="all" className="flex-1">
+              Todas
+            </TabsTrigger>
+            <TabsTrigger value="unread" className="flex-1">
               No leídas{unreadCount > 0 ? ` (${unreadCount > 99 ? "99+" : unreadCount})` : ""}
             </TabsTrigger>
           </TabsList>

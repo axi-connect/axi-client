@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { fade } from "@/core/styles/motion";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -67,30 +68,21 @@ export function AlertsTab() {
 
   return (
     <div className="space-y-4">
-      <div role="group" aria-label="Estado de las alertas" className="flex items-center gap-1">
-        {STATUSES.map((status) => {
-          const active = status === alertsStatus;
-          return (
-            <button
-              key={status}
-              type="button"
-              aria-pressed={active}
-              onClick={() => void loadAlerts(status)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active
-                  ? "border-transparent bg-secondary text-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {ALERT_STATUS_LABELS[status]}
-              {status === "triggered" && triggeredCount !== null && triggeredCount > 0 && (
-                <span className="ml-1 tabular-nums">({triggeredCount})</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <SegmentedControl
+        value={alertsStatus}
+        onValueChange={(status) => void loadAlerts(status)}
+        label="Estado de las alertas"
+        size="sm"
+        surface="inline"
+        items={STATUSES.map((status) => ({
+          value: status,
+          label: ALERT_STATUS_LABELS[status],
+          count:
+            status === "triggered" && triggeredCount !== null && triggeredCount > 0
+              ? triggeredCount
+              : null,
+        }))}
+      />
 
       {alerts.status === "error" ? (
         <div className="rounded-2xl border border-border bg-background p-5">
