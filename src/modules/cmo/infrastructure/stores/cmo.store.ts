@@ -16,6 +16,7 @@ import type {
   ApprovalResultDTO,
   BriefingDTO,
   CmoMessageDTO,
+  CmoQuestionDTO,
   CmoSettingsDTO,
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
@@ -67,6 +68,14 @@ export interface UiMessage {
   created_at: string;
   tool_calls: CmoMessageDTO["tool_calls"];
   proposal_id: string | null;
+  /**
+   * La pregunta con opciones que este mensaje dejó abierta, o `null`.
+   *
+   * Solo la del ÚLTIMO mensaje del hilo está viva; las anteriores se pintan
+   * inertes. Esa regla no necesita ninguna columna extra ni casar el texto de la
+   * respuesta con la opción elegida: la posición en el hilo ya lo dice todo.
+   */
+  question: CmoQuestionDTO | null;
   /** true = escrito localmente, todavía no confirmado por el servidor. */
   pending?: boolean;
   /** Mensaje de error si el turno falló: la burbuja lo muestra con reintento. */
@@ -145,6 +154,17 @@ interface CmoState {
   load: () => Promise<void>;
   reloadProposals: () => Promise<void>;
   ask: (message: string) => Promise<void>;
+  /**
+   * Responder a una pregunta con opciones tocando una.
+   *
+   * Delega en `ask` con el `label` tal cual, así que el mensaje que aparece en el
+   * hilo es exactamente lo que el dueño eligió y el turno cuesta lo mismo que si
+   * lo hubiera escrito. El clic no añade costo: quita tecleo.
+   *
+   * Es una acción propia y no una llamada directa a `ask` desde la UI para que
+   * el componente de las opciones no tenga que conocer el compositor.
+   */
+  answer: (label: string) => Promise<void>;
   retryLast: () => Promise<void>;
   newThread: () => Promise<void>;
   approve: (proposalId: string) => Promise<ApprovalResultDTO>;
@@ -312,6 +332,7 @@ export const useCmoStore = create<CmoState>((set, get) => ({
       created_at: new Date().toISOString(),
       tool_calls: null,
       proposal_id: null,
+      question: null,
       pending: true,
     };
     /* El id del turno lo propone el CLIENTE: los eventos en vivo empiezan a
@@ -365,6 +386,7 @@ export const useCmoStore = create<CmoState>((set, get) => ({
           // así que la tarjeta se pinta pegada a su mensaje sin esperar una
           // recarga. Al recargar sale del transcript por el mismo campo.
           proposal_id: reply.proposal_id,
+          question: reply.question,
         };
         const last = messages.at(-1);
         return {
@@ -380,6 +402,7 @@ export const useCmoStore = create<CmoState>((set, get) => ({
                           body: reply.reply,
                           tool_calls: reply.tool_calls,
                           proposal_id: reply.proposal_id,
+                          question: reply.question,
                         }
                       : item,
                   )
@@ -433,6 +456,10 @@ export const useCmoStore = create<CmoState>((set, get) => ({
   },
 
   /** Reintenta el último mensaje propio que falló, sin reescribirlo. */
+  answer: async (label: string) => {
+    await get().ask(label);
+  },
+
   retryLast: async () => {
     const failedMessage = [...get().thread.messages]
       .reverse()
@@ -618,6 +645,7 @@ export const useCmoStore = create<CmoState>((set, get) => ({
                 created_at: new Date().toISOString(),
                 tool_calls: null,
                 proposal_id: event.proposal_id,
+                question: event.question,
               },
             ],
       },
@@ -664,5 +692,6 @@ function toUiMessage(message: CmoMessageDTO): UiMessage {
     created_at: message.created_at,
     tool_calls: message.tool_calls,
     proposal_id: message.proposal_id,
+    question: message.question,
   };
 }

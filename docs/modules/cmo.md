@@ -68,6 +68,39 @@ su sitio con la traza de herramientas en vez de añadir otro. Y ese mismo cierre
 es el rescate cuando la conexión del POST muere: la respuesta ya está persistida,
 así que no se marca como fallo ni se invita a pagar otro análisis.
 
+**Axel pregunta con botones, y preguntar TERMINA el turno.** La tool
+`ask_owner` deja una pregunta con dos a cuatro opciones cerradas y es la primera
+del módulo que corta el bucle del runtime: una vuelta más al modelo después de
+preguntar solo produce «quedo atento a tu respuesta» y cuesta otra llamada de un
+turno que ya no tiene nada que hacer. Cinco decisiones que sostienen la feature:
+
+- **Es un dato, no sintaxis de texto.** Viaja en `question` (respuesta del POST,
+  transcript y cierre en vivo), nunca como un marcador dentro del cuerpo. La
+  regla 6 del prompt enumera exhaustivamente el formato que el cliente sabe
+  pintar y hay un test que vigila que siga cerrado; un marcador más sería una
+  sintaxis que puede llegar a medias y leerse cruda.
+- **Una sola cadena por opción.** Con `label` y `reply` separados el modelo
+  tendría dos textos que mantener coherentes, y son dos textos que se
+  desincronizan. Al tocar una opción se envía su `label` tal cual, así que el
+  hilo dice exactamente lo que el dueño eligió.
+- **Solo la pregunta del ÚLTIMO mensaje está viva.** Las anteriores se pintan
+  inertes. Esa regla no necesita columna extra ni casar el texto de la respuesta
+  con la opción tocada: la posición en el hilo ya lo dice, y con varias vivas el
+  dueño podría contestar a una decisión de hace diez mensajes cuya conversación
+  ya cambió de rumbo.
+- **Un clic envía, y cuesta un análisis.** El mismo que si lo hubiera escrito: el
+  clic no añade costo, quita tecleo. «Otra cosa…» no envía — enfoca el
+  compositor, porque mandarle un «otra cosa» literal no le diría nada.
+- **Preguntar a mitad de armar algo no es dejar borradores huérfanos.** El aviso
+  de propuesta huérfana se suprime cuando hay pregunta abierta: sin esa guarda el
+  mensaje remataría con «no alcancé a armar la propuesta», que suena a avería y
+  es falso — le falta una decisión, no presupuesto.
+
+Y viaja en el payload de `cmo.turn_completed`, **sin evento propio**: solo existe
+al cerrar el turno, así que un `cmo.turn_question` sería un segundo camino hacia
+el mismo hecho — el riesgo que la reconciliación del cliente ya tuvo que resolver
+una vez con el mensaje duplicado.
+
 **El formato de la respuesta es un subconjunto cerrado.** `domain/axel-markdown.ts`
 interpreta `**negrita**`, `*cursiva*`, `` `código` ``, listas `-` y `1.`, `##`
 títulos y `>` citas; lo que no reconoce se pinta como texto. No se genera HTML en

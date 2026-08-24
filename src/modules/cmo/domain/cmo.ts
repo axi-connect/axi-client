@@ -30,6 +30,18 @@ export type BriefingHighlight = BriefingDTO["highlights"][number];
 export type BriefingTone = BriefingHighlight["tone"];
 export type ProposalEvidence = ProposalDTO["evidence"][number];
 
+/**
+ * La pregunta con opciones que Axel deja abierta al cerrar un turno.
+ *
+ * Sale de `CmoMessageDTO` y no de `CmoReplyDTO` a propósito, aunque las dos
+ * declaran la misma forma: el transcript es la fuente que sobrevive a una
+ * recarga, así que si alguna vez divergen, la que manda es la que se puede
+ * releer. `NonNullable` porque el campo es nullable en el contrato y lo que se
+ * quiere nombrar es la pregunta, no su ausencia.
+ */
+export type CmoQuestionDTO = NonNullable<CmoMessageDTO["question"]>;
+export type CmoQuestionOption = CmoQuestionDTO["options"][number];
+
 /** Payload de `POST /cmo/messages`. */
 export type SendMessageDTO = Schemas["CmoSendMessageDto"];
 /** Payload de `POST /cmo/proposals/:id/reject`. */

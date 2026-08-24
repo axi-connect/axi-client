@@ -434,6 +434,20 @@ export type CmoProposalDecidedEvent = {
  * segundo y la respuesta puede tardar noventa) y `seq` da el orden, para
  * descartar lo repetido y lo que llegue tarde.
  */
+/**
+ * La forma de la pregunta con opciones, replicada aquí a propósito.
+ *
+ * `core/` no importa de `modules/` (arquitectura §3.3 regla 7), así que este
+ * archivo no puede tomar `CmoQuestionDTO` del slice. La forma es la del contrato
+ * y el que manda sigue siendo el OpenAPI: el store del CMO usa el tipo generado
+ * y esto solo tipa el sobre del socket.
+ */
+type CmoQuestionDTO = {
+  question: string;
+  options: { label: string; hint: string | null }[];
+  allow_free_text: boolean;
+};
+
 type CmoTurnEventBase = {
   company_id: string;
   thread_id: string;
@@ -470,6 +484,17 @@ export type CmoTurnCompletedEvent = CmoTurnEventBase & {
   body: string;
   proposal_id: string | null;
   tool_calls: number;
+  /**
+   * La pregunta con opciones que Axel dejó abierta, o `null`.
+   *
+   * Viaja DENTRO del cierre y no en un evento propio porque solo existe al
+   * terminar el turno: un `cmo.turn_question` sería un segundo camino hacia el
+   * mismo hecho. Y tiene que venir aquí — un turno rescatado por WS (el POST se
+   * cortó) pintaría la pregunta sin sus botones si no.
+   *
+   * Cuando no es `null`, `body` puede llegar vacío: la pregunta ES el mensaje.
+   */
+  question: CmoQuestionDTO | null;
 };
 
 /** El turno falló. `code` es el del error tipado del backend. */

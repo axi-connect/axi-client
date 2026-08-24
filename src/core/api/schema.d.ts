@@ -8720,6 +8720,14 @@ export interface components {
             proposal_id: string | null;
             /** Format: uuid */
             turn_id: string;
+            question: {
+                question: string;
+                options: {
+                    label: string;
+                    hint: string | null;
+                }[];
+                allow_free_text: boolean;
+            } | null;
         };
         CmoThreadListDto: {
             data: {
@@ -8755,6 +8763,14 @@ export interface components {
                 }[] | null;
                 /** Format: uuid */
                 proposal_id: string | null;
+                question: {
+                    question: string;
+                    options: {
+                        label: string;
+                        hint: string | null;
+                    }[];
+                    allow_free_text: boolean;
+                } | null;
                 created_at: string;
             }[];
         };

@@ -36,6 +36,7 @@ function reply(over: Partial<CmoReplyDTO> = {}): CmoReplyDTO {
     tool_calls: [{ name: "get_business_pulse", ms: 420, productive: true }],
     proposal_id: null,
     turn_id: "turn-server",
+    question: null,
     ...over,
   };
 }
@@ -311,5 +312,76 @@ describe("eventos en vivo", () => {
     expect(useCmoStore.getState().live).toBeNull();
     turn.resolve(reply());
     await turn.done;
+  });
+
+  /* La pregunta con opciones llega por los MISMOS dos caminos que la propuesta:
+     el cuerpo del POST y el cierre por WS. Lo que se prueba es que llegue por
+     los dos, porque si solo viaja en uno, el turno rescatado (el POST se cortó)
+     pintaría la pregunta sin sus botones — o al revés. */
+  describe("la pregunta con opciones", () => {
+    const QUESTION = {
+      question: "¿A quién le apuntamos?",
+      options: [{ label: "Los que no volvieron", hint: "240 contactos" }],
+      allow_free_text: true,
+    };
+
+    it("llega en el cuerpo del POST y queda en el mensaje", async () => {
+      const turn = await inFlight();
+      turn.resolve(reply({ reply: "", question: QUESTION }));
+      await turn.done;
+
+      const last = useCmoStore.getState().thread.messages.at(-1);
+      expect(last?.question).toEqual(QUESTION);
+      // Con pregunta, el cuerpo vacío es lo normal: la pregunta ES el mensaje.
+      expect(last?.body).toBe("");
+    });
+
+    it("llega también por el cierre en vivo, cuando el POST no vuelve", async () => {
+      const turn = await inFlight();
+
+      useCmoStore.getState().onTurnCompleted(
+        event({
+          seq: 4,
+          message_id: "m-real",
+          body: "",
+          proposal_id: null,
+          tool_calls: 2,
+          question: QUESTION,
+        }) as never,
+      );
+
+      expect(useCmoStore.getState().thread.messages.at(-1)?.question).toEqual(QUESTION);
+      turn.resolve(reply({ reply: "", question: QUESTION }));
+      await turn.done;
+      // Y tras completar en su sitio sigue habiendo UN mensaje con la pregunta.
+      const messages = useCmoStore.getState().thread.messages;
+      expect(messages).toHaveLength(2);
+      expect(messages.at(-1)?.question).toEqual(QUESTION);
+    });
+
+    it("responder manda el texto de la opción como un turno normal", async () => {
+      const turn = await inFlight();
+      turn.resolve(reply({ reply: "", question: QUESTION }));
+      await turn.done;
+
+      api.sendMessage.mockResolvedValue(reply({ reply: "Listo." }));
+      await useCmoStore.getState().answer("Los que no volvieron");
+
+      expect(api.sendMessage).toHaveBeenLastCalledWith(
+        expect.objectContaining({ message: "Los que no volvieron" }),
+        expect.anything(),
+      );
+      // Y aparece en el hilo como lo que es: un mensaje del dueño.
+      const own = useCmoStore.getState().thread.messages.filter((m) => m.role === "owner");
+      expect(own.at(-1)?.body).toBe("Los que no volvieron");
+    });
+
+    it("un turno normal no deja pregunta colgando", async () => {
+      const turn = await inFlight();
+      turn.resolve(reply());
+      await turn.done;
+
+      expect(useCmoStore.getState().thread.messages.at(-1)?.question).toBeNull();
+    });
   });
 });

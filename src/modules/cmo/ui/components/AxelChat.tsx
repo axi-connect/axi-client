@@ -9,6 +9,7 @@ import { useTypewriterPlaceholder } from "@/modules/cmo/infrastructure/hooks/use
 import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { Button } from "@/shared/components/ui/button";
 import { AxelMarkdown } from "./AxelMarkdown";
+import { AxelQuestion } from "./AxelQuestion";
 import { BriefingHero } from "./BriefingHero";
 import { CmoBlockedState } from "./CmoBlockedState";
 import { ProposalCard } from "./ProposalCard";
@@ -114,6 +115,7 @@ export function AxelChat({
   const settled = useCmoStore((state) => state.settled);
   const resolveSettled = useCmoStore((state) => state.resolveSettled);
   const ask = useCmoStore((state) => state.ask);
+  const answer = useCmoStore((state) => state.answer);
   const retryLast = useCmoStore((state) => state.retryLast);
   const newThread = useCmoStore((state) => state.newThread);
 
@@ -122,6 +124,11 @@ export function AxelChat({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const hasMessages = thread.messages.length > 0;
+  /* Qué pregunta se puede responder. Solo la del último mensaje: con varias
+     vivas el dueño podría contestar a una de hace diez mensajes cuya
+     conversación ya cambió de rumbo. La posición en el hilo es toda la verdad
+     que hace falta — sin columnas extra ni casar textos de respuesta. */
+  const lastMessageId = thread.messages.at(-1)?.id ?? null;
 
   /* El compositor teclea ejemplos mientras está en reposo. Se apaga en cuanto
      hay algo escrito, mientras Axel trabaja y con Axel bloqueado: en esos tres
@@ -286,7 +293,18 @@ export function AxelChat({
                           undefined);
                     return (
                       <Fragment key={message.id}>
-                        <MessageBubble message={message} onRetry={retryLast} />
+                        <MessageBubble
+                          message={message}
+                          onRetry={retryLast}
+                          questionLive={message.id === lastMessageId}
+                          busy={thread.thinking}
+                          onPick={(label) => {
+                            void answer(label);
+                          }}
+                          onWriteInstead={() => {
+                            textareaRef.current?.focus();
+                          }}
+                        />
                         {/* La propuesta va DEBAJO del mensaje que la anuncia, no
                             al principio del hilo: con veinte mensajes de
                             conversación, arriba nadie la ve. `fresh` solo en los
@@ -460,7 +478,22 @@ function StreamingBubble({ text }: { text: string }) {
   );
 }
 
-function MessageBubble({ message, onRetry }: { message: UiMessage; onRetry: () => void }) {
+function MessageBubble({
+  message,
+  onRetry,
+  questionLive,
+  busy,
+  onPick,
+  onWriteInstead,
+}: {
+  message: UiMessage;
+  onRetry: () => void;
+  /** true = es el último mensaje del hilo, así que su pregunta se puede tocar. */
+  questionLive: boolean;
+  busy: boolean;
+  onPick: (label: string) => void;
+  onWriteInstead: () => void;
+}) {
   if (message.role === "owner") {
     return (
       <div className="flex flex-col items-end gap-1.5">
@@ -514,7 +547,22 @@ function MessageBubble({ message, onRetry }: { message: UiMessage; onRetry: () =
         <Sparkles className="size-3.5 text-accent-violet" aria-hidden="true" />
         <span className="text-[11.5px] font-bold tracking-wide text-accent-violet">Axel</span>
       </div>
-      <AxelMarkdown text={message.body} className="px-4 pt-2 pb-3.5 text-muted-foreground" />
+      {/* Con pregunta, el cuerpo PUEDE venir vacío: el prompt le pide a Axel que
+          no la repita en prosa, así que en esos turnos la pregunta es el mensaje.
+          Sin esta guarda el renderer pintaría un hueco de padding sobre las
+          opciones. */}
+      {message.body === "" ? null : (
+        <AxelMarkdown text={message.body} className="px-4 pt-2 pb-3.5 text-muted-foreground" />
+      )}
+      {message.question === null ? null : (
+        <AxelQuestion
+          question={message.question}
+          live={questionLive}
+          busy={busy}
+          onPick={onPick}
+          onWriteInstead={onWriteInstead}
+        />
+      )}
       {message.tool_calls !== null && message.tool_calls.length > 0 ? (
         <div className="border-t border-border/50 px-4 py-2">
           <p className="text-[10.5px] text-muted-foreground/70">

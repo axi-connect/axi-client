@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 
 import type { ProposalDTO } from "@/modules/cmo/domain/cmo";
 import type { UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
@@ -23,6 +23,7 @@ const mockState = {
   settled: {} as Record<string, ProposalDTO | null>,
   resolveSettled: jest.fn(),
   ask: jest.fn(),
+  answer: jest.fn(),
   retryLast: jest.fn(),
   newThread: jest.fn(),
 };
@@ -39,6 +40,7 @@ function message(over: Partial<UiMessage>): UiMessage {
     created_at: "2026-08-22T14:00:00.000Z",
     tool_calls: null,
     proposal_id: null,
+    question: null,
     ...over,
   };
 }
@@ -297,5 +299,60 @@ describe("la pantalla de inicio", () => {
 
     expect(screen.queryByText("Empieza por aquí")).toBeNull();
     expect(screen.queryByRole("button", { name: /Ármame algo/ })).toBeNull();
+  });
+});
+
+/* La pregunta con opciones dentro del hilo. Lo que importa no es que se pinte:
+   es que solo se pueda responder la ÚLTIMA, porque contestar a una de hace diez
+   mensajes mandaría a Axel una decisión sobre una conversación que ya cambió. */
+describe("la pregunta con opciones en el hilo", () => {
+  const QUESTION = {
+    question: "¿A quién le apuntamos?",
+    options: [{ label: "Los que no volvieron", hint: null }],
+    allow_free_text: false,
+  };
+
+  it("va DENTRO de la burbuja de Axel, no como un bloque suelto", () => {
+    view({ messages: [message({ question: QUESTION })] });
+
+    const option = screen.getByRole("button", { name: /Los que no volvieron/ });
+    /* La burbuja es el ancestro del rótulo «Axel»: su fila de identidad. Se
+       ancla ahí y no en el texto del cuerpo porque `closest("div")` sobre el
+       cuerpo devuelve el envoltorio del renderer de markdown, que está DENTRO de
+       la burbuja y no la representa. */
+    const bubble = screen.getByText("Axel").closest("div")?.parentElement;
+    expect(bubble).not.toBeNull();
+    expect(bubble?.contains(option)).toBe(true);
+  });
+
+  it("solo la del ÚLTIMO mensaje se puede tocar", () => {
+    view({
+      messages: [
+        message({ id: "m1", body: "Primera", question: QUESTION }),
+        message({ id: "m2", body: "Segunda" }),
+      ],
+    });
+
+    expect(screen.getByRole("button", { name: /Los que no volvieron/ })).toBeDisabled();
+    expect(screen.getByText("Ya respondida")).toBeVisible();
+  });
+
+  it("tocar una opción responde con su texto", () => {
+    view({ messages: [message({ question: QUESTION })] });
+
+    act(() => {
+      fireEvent.click(screen.getByRole("button", { name: /Los que no volvieron/ }));
+    });
+
+    expect(mockState.answer).toHaveBeenCalledWith("Los que no volvieron");
+  });
+
+  it("un turno que solo pregunta no deja una burbuja con un hueco", () => {
+    // El prompt le pide a Axel que no repita la pregunta en prosa, así que el
+    // cuerpo vacío es lo NORMAL aquí: la pregunta es el mensaje.
+    view({ messages: [message({ body: "", question: QUESTION })] });
+
+    expect(screen.getByText("¿A quién le apuntamos?")).toBeVisible();
+    expect(screen.getByRole("button", { name: /Los que no volvieron/ })).toBeEnabled();
   });
 });
