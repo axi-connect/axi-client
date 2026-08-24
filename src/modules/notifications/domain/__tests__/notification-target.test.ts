@@ -48,6 +48,15 @@ describe("notificationTarget", () => {
     expect(notificationTarget("contact.lifecycle_changed", {})).toBeNull()
   })
 
+  it("lleva al despacho de Axel, y a la propuesta si la notificación la trae", () => {
+    // Sin esto el dueño recibía «Axel te dejó 2 propuestas» y el clic no lo
+    // movía de donde estaba.
+    expect(notificationTarget("cmo.briefing_ready", { proposals_created: 2 })).toBe("/cmo")
+    expect(notificationTarget("cmo.proposal_created", { proposal_id: "p1" })).toBe(
+      "/cmo/proposals/p1",
+    )
+  })
+
   it("devuelve null para tipos desconocidos y data no-objeto", () => {
     expect(notificationTarget("usage.threshold", { metric: "messages" })).toBeNull()
     expect(notificationTarget("conversation.queued", null)).toBeNull()

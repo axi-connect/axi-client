@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MessageSquare, Plus, ShieldCheck, ShoppingCart, Target, Zap } from "lucide-react";
+import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -89,6 +90,23 @@ export function AutomationsView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /* Llegar desde el chat de Axel: `?automation=<id>` abre esa regla. El
+     disparador sale de la propia regla, no del grupo desde el que se hizo clic:
+     por enlace no hay grupo del que sacarlo. */
+  const deepLink = useDeepLinkTarget("automation", automations, {
+    onFound: (automation) => {
+      setEditing({ automation, trigger: automation.trigger_type });
+    },
+    onMissing: () => {
+      showAlert({
+        tone: "warning",
+        title: "Esa regla ya no está",
+        description: "Se eliminó o alguien de tu equipo la cambió.",
+        open: true,
+      });
+    },
+  });
 
   // Solo las promociones VIVAS pueden asignarse: ofrecer una vencida crearía
   // una regla que se salta sola con `promotion_inactive`.
@@ -316,7 +334,11 @@ export function AutomationsView() {
 
       <DetailSheet
         open={editing !== null}
-        onOpenChange={(open) => !open && setEditing(null)}
+        onOpenChange={(open) => {
+          if (open) return;
+          setEditing(null);
+          deepLink.clear();
+        }}
         size="xl"
         title={editing?.automation ? "Editar regla" : "Nueva regla"}
         subtitle="Las reglas nacen apagadas: encenderla es un paso aparte."
@@ -351,6 +373,7 @@ export function AutomationsView() {
                   : [...prev, saved];
               });
               setEditing(null);
+              deepLink.clear();
             }}
           />
         )}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, MoreHorizontal, Plus } from "lucide-react";
+import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -59,6 +60,21 @@ export function TemplatesView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /* Llegar desde el chat de Axel: `?template=<id>` abre ese mensaje. */
+  const deepLink = useDeepLinkTarget("template", templates, {
+    onFound: (template) => {
+      setEditing({ template });
+    },
+    onMissing: () => {
+      showAlert({
+        tone: "warning",
+        title: "Ese mensaje ya no está",
+        description: "Se eliminó o alguien de tu equipo lo cambió.",
+        open: true,
+      });
+    },
+  });
 
   const sorted = useMemo(
     () =>
@@ -230,7 +246,10 @@ export function TemplatesView() {
 
       <TemplateSheet
         state={editing}
-        onClose={() => setEditing(null)}
+        onClose={() => {
+          setEditing(null);
+          deepLink.clear();
+        }}
         onSaved={(saved) => {
           setTemplates((prev) => {
             if (!prev) return [saved];
@@ -239,6 +258,7 @@ export function TemplatesView() {
               : [saved, ...prev];
           });
           setEditing(null);
+          deepLink.clear();
         }}
       />
     </div>

@@ -3348,6 +3348,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cmo/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmoController_send_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoController_list_v1"];
+        put?: never;
+        post: operations["CmoController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/threads/{thread_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoController_transcript_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/threads/{thread_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmoController_archive_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoBoardController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/proposals/{proposal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoBoardController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/proposals/{proposal_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmoBoardController_reject_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/briefings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoBoardController_listBriefings_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/briefings/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoBoardController_latest_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/directives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoDirectivesController_list_v1"];
+        put?: never;
+        post: operations["CmoDirectivesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/directives/{directive_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["CmoDirectivesController_deactivate_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/directives/{directive_id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmoDirectivesController_reactivate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CmoSettingsController_get_v1"];
+        put: operations["CmoSettingsController_put_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduling/reminders": {
         parameters: {
             query?: never;
@@ -3438,6 +3646,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["CampaignLifecycleController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cmo/proposals/{proposal_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CmoApprovalController_approve_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3874,7 +4098,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -3898,7 +4122,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4037,7 +4261,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -4072,7 +4296,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4099,7 +4323,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4126,7 +4350,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -4156,7 +4380,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4278,7 +4502,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 used: number;
                 limit: {
                     value: number;
@@ -4310,7 +4534,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -4342,7 +4566,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -8469,6 +8693,227 @@ export interface components {
             opportunities: string[];
             cached: boolean;
         };
+        CmoSendMessageDto: {
+            /** @description Lo que el dueño le pregunta o le pide a Axel */
+            message: string;
+            /**
+             * Format: uuid
+             * @description Hilo a continuar. Ausente: sigue el más reciente o abre uno nuevo.
+             */
+            thread_id?: string;
+            /**
+             * Format: uuid
+             * @description Id del turno propuesto por el cliente, para atar los eventos en vivo (cmo.turn_*) a esta petición antes de que responda. Ausente: lo genera el servidor.
+             */
+            client_turn_id?: string;
+        };
+        CmoReplyDto: {
+            /** Format: uuid */
+            thread_id: string;
+            reply: string;
+            tool_calls: {
+                name: string;
+                ms: number;
+                productive: boolean;
+            }[];
+            /** Format: uuid */
+            proposal_id: string | null;
+            /** Format: uuid */
+            turn_id: string;
+            question: {
+                question: string;
+                options: {
+                    label: string;
+                    hint: string | null;
+                }[];
+                allow_free_text: boolean;
+            } | null;
+        };
+        CmoThreadListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                title: string | null;
+                last_message_at: string;
+                created_at: string;
+            }[];
+        };
+        CmoThreadCreatedDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                title: string | null;
+                last_message_at: string;
+                created_at: string;
+            };
+        };
+        CmoTranscriptDto: {
+            /** Format: uuid */
+            thread_id: string;
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                role: "owner" | "axel" | "system";
+                body: string;
+                tool_calls: {
+                    name: string;
+                    ms: number;
+                    productive: boolean;
+                }[] | null;
+                /** Format: uuid */
+                proposal_id: string | null;
+                question: {
+                    question: string;
+                    options: {
+                        label: string;
+                        hint: string | null;
+                    }[];
+                    allow_free_text: boolean;
+                } | null;
+                created_at: string;
+            }[];
+        };
+        ProposalListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight";
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "expired" | "superseded";
+                title: string;
+                headline: string | null;
+                rationale: string;
+                evidence: {
+                    label: string;
+                    value: string;
+                    source: string;
+                }[];
+                risks: string[];
+                artifacts: unknown[];
+                /** @enum {string} */
+                source: "briefing" | "signal" | "chat";
+                expires_at: string | null;
+                decided_at: string | null;
+                reject_reason: string | null;
+                created_at: string;
+            }[];
+        };
+        ProposalDetailDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight";
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "expired" | "superseded";
+                title: string;
+                headline: string | null;
+                rationale: string;
+                evidence: {
+                    label: string;
+                    value: string;
+                    source: string;
+                }[];
+                risks: string[];
+                artifacts: unknown[];
+                /** @enum {string} */
+                source: "briefing" | "signal" | "chat";
+                expires_at: string | null;
+                decided_at: string | null;
+                reject_reason: string | null;
+                created_at: string;
+            } | null;
+        };
+        RejectProposalDto: {
+            /** @description Por qué no. Es lo que puede convertirse en directriz. */
+            reason?: string;
+            /** @description true: anota el motivo como regla permanente para que no se repita */
+            save_as_directive?: boolean;
+        };
+        RejectResultDto: {
+            directive_created: boolean;
+        };
+        BriefingListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                date_local: string;
+                summary: string;
+                highlights: {
+                    label: string;
+                    /** @enum {string} */
+                    tone: "up" | "down" | "warn" | "neutral";
+                    detail: string;
+                }[];
+                proposal_ids: string[];
+                created_at: string;
+            }[];
+        };
+        BriefingLatestDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                date_local: string;
+                summary: string;
+                highlights: {
+                    label: string;
+                    /** @enum {string} */
+                    tone: "up" | "down" | "warn" | "neutral";
+                    detail: string;
+                }[];
+                proposal_ids: string[];
+                created_at: string;
+            } | null;
+        };
+        DirectiveListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                body: string;
+                /** @enum {string} */
+                origin: "chat" | "rejection" | "system";
+                /** Format: uuid */
+                source_proposal_id: string | null;
+                is_active: boolean;
+                created_at: string;
+            }[];
+        };
+        CreateDirectiveDto: {
+            /** @description La regla en las palabras del dueño, en una frase */
+            body: string;
+        };
+        CmoCreatedIdDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        CmoSettingsViewDto: {
+            enabled: boolean;
+            briefing_hour: number;
+            proposal_cap: number;
+            limits: {
+                max_discount_percent: number;
+                max_audience: number;
+            };
+            notify: {
+                in_app: boolean;
+            };
+            /** @description Presupuesto de tiempo del turno en el servidor, en ms. Solo lectura. */
+            turn_timeout_ms: number;
+        };
+        CmoSettingsDto: {
+            enabled: boolean;
+            briefing_hour: number;
+            proposal_cap: number;
+            limits: {
+                max_discount_percent: number;
+                max_audience: number;
+            };
+            notify: {
+                in_app: boolean;
+            };
+        };
         RemindersListDto: {
             data: {
                 /** Format: uuid */
@@ -8537,6 +8982,18 @@ export interface components {
         LaunchResultDto: {
             /** @enum {string} */
             status: "scheduled" | "running";
+        };
+        ApprovalResultDto: {
+            applied: {
+                type: string;
+                id: string | null;
+                label: string;
+            }[];
+            failed: {
+                type: string;
+                label: string;
+                reason: string;
+            }[];
         };
         NotificationsListDto: {
             data: {
@@ -9828,7 +10285,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -9852,7 +10309,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -15439,6 +15896,336 @@ export interface operations {
             };
         };
     };
+    CmoController_send_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CmoSendMessageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoReplyDto"];
+                };
+            };
+        };
+    };
+    CmoController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoThreadListDto"];
+                };
+            };
+        };
+    };
+    CmoController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoThreadCreatedDto"];
+                };
+            };
+        };
+    };
+    CmoController_transcript_v1: {
+        parameters: {
+            query: {
+                limit: string;
+            };
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoTranscriptDto"];
+                };
+            };
+        };
+    };
+    CmoController_archive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                thread_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CmoBoardController_list_v1: {
+        parameters: {
+            query: {
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalListDto"];
+                };
+            };
+        };
+    };
+    CmoBoardController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDetailDto"];
+                };
+            };
+        };
+    };
+    CmoBoardController_reject_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectProposalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectResultDto"];
+                };
+            };
+        };
+    };
+    CmoBoardController_listBriefings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefingListDto"];
+                };
+            };
+        };
+    };
+    CmoBoardController_latest_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefingLatestDto"];
+                };
+            };
+        };
+    };
+    CmoDirectivesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectiveListDto"];
+                };
+            };
+        };
+    };
+    CmoDirectivesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDirectiveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoCreatedIdDto"];
+                };
+            };
+        };
+    };
+    CmoDirectivesController_deactivate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                directive_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CmoDirectivesController_reactivate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                directive_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CmoSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoSettingsViewDto"];
+                };
+            };
+        };
+    };
+    CmoSettingsController_put_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CmoSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmoSettingsViewDto"];
+                };
+            };
+        };
+    };
     RemindersController_list_v1: {
         parameters: {
             query?: {
@@ -15624,6 +16411,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    CmoApprovalController_approve_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalResultDto"];
+                };
             };
         };
     };
