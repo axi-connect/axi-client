@@ -75,6 +75,26 @@ ningún punto —el parser devuelve datos y React construye los elementos— y e
 prompt del servidor le declara al modelo exactamente ese subconjunto, así que lo
 que escribe y lo que se pinta no pueden divergir.
 
+**El primer contacto se lee en cinco segundos, y el rediseño fue casi todo
+resta.** Eran tres párrafos centrados con pesos parecidos —quién es, qué hace,
+cuándo llega su informe— y uno de ellos repetía la nota que ya vive bajo el
+compositor. Ahora hay una jerarquía explícita y cada escalón se ve distinto del
+anterior: identidad (h1) → qué hace (una línea) → cuándo (un chip) → «Empieza por
+aquí» con tres tarjetas que dicen QUÉ hacen, no solo cómo se llaman. La promesa
+de que nada se envía sin aprobar aparece **una** vez, pegada al botón de enviar,
+que es donde el dueño duda. Hay un test que cuenta esa aparición.
+
+**El compositor teclea lo que se le puede pedir.** `useTypewriterPlaceholder`
+escribe seis ejemplos en el `placeholder` y los rota. Escribe **directo al DOM
+por el ref**, sin estado: un `useState` por carácter serían veinticinco renders
+del árbol entero del chat por frase para animar un atributo que React no
+necesita conocer. La contrapartida es una invariante: el `placeholder` del JSX
+tiene que seguir siendo una constante, porque una prop dinámica volvería a
+parchear el atributo en cada render y borraría la frase a medias. Está
+documentada en el hook y hay un test que la vigila. Se para con foco, con texto
+escrito, con la pestaña oculta y con `prefers-reduced-motion` — que deja una
+frase entera, no el texto genérico.
+
 **Cada sección falla por su cuenta.** `load()` lanza las peticiones en paralelo
 con `.catch` individual, no con `Promise.all`: si el briefing revienta, el
 tablero y el chat siguen funcionando.
@@ -101,9 +121,21 @@ día en vez de esconderlo semanas.
   cometa. No es un efecto nuevo — es `@property --comet-angle` con la receta de
   `.channel-surface::after`, ya aprobada en el mockup de canales.
 - Utilidades del módulo en `globals.css`: `.axel-orb`, `.axel-orb-glow`,
-  `.axel-orb--busy`, `.axel-field`. Se declaran ahí y no como valores
-  arbitrarios de Tailwind por la misma razón que el cometa de canales: un
-  `color-mix` anidado en `bg-[...]` es frágil de extraer.
+  `.axel-orb--busy`, `.axel-field`, `.axel-composer-glow`. Se declaran ahí y no
+  como valores arbitrarios de Tailwind por la misma razón que el cometa de
+  canales: un `color-mix` anidado en `bg-[...]` es frágil de extraer.
+- **El campo es la única superficie del panel que se mueve, y son DOS
+  desviaciones declaradas del sistema de diseño.** El tinte llega al 26% cuando
+  el techo es el 14% (DESIGN-SYSTEM §2.3), y la aurora deriva en bucle cuando la
+  regla dice que nada se mueve en loop en el workspace (§6). Las dos están
+  concedidas explícitamente allí, con su motivo y su condición. Lo que las hace
+  sostenibles: 72 s por vuelta, únicamente `transform` sobre una capa sin texto,
+  `alternate` para que no salte, y todo apagado con `prefers-reduced-motion`.
+  **Esto es un permiso para esta pantalla, no un patrón a copiar.**
+- **El compositor es la fuente de luz.** El cuarto halo del campo cae detrás de
+  él y `.axel-composer-glow` añade un foco corto y pegado. Sin el segundo, el
+  halo de fondo queda demasiado difuso a esa altura y el input vuelve a leerse
+  como una caja apoyada abajo.
 - El icono del sidebar es `sparkles` y hay que tenerlo en el diccionario CERRADO
   de `core/lib/icons.ts` — sin la entrada, el ítem cae a `Circle`.
 

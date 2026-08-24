@@ -245,3 +245,57 @@ describe("la propuesta que nace en la conversación", () => {
     expect(card.compareDocumentPosition(bubble) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
+
+/* El primer contacto. Era tres párrafos centrados con pesos parecidos y sin
+   orden de lectura, y uno de ellos repetía la nota del compositor. Lo que se
+   prueba aquí es la ESTRUCTURA: que haya un primer paso declarado, que cada
+   tarjeta diga qué hace, y que la promesa de «nada se envía» aparezca una vez. */
+describe("la pantalla de inicio", () => {
+  it("declara un primer paso sobre las sugerencias", () => {
+    view();
+
+    const eyebrow = screen.getByText("Empieza por aquí");
+    const cards = screen.getByRole("button", { name: /¿Cómo vamos\?/ });
+    expect(
+      eyebrow.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("cada sugerencia dice QUÉ hace, no solo cómo se llama", () => {
+    view();
+
+    // El nombre accesible del botón junta label + hint: es exactamente lo que
+    // oye un lector de pantalla, y por eso se comprueba sobre él.
+    // `[\s\S]*` y no la bandera `s`: el target del tsconfig de la app es previo
+    // a es2018 y `dotAll` no compila, aunque el de jest sí lo acepte.
+    expect(
+      screen.getByRole("button", { name: /Ármame algo[\s\S]*Una campaña o una promo/ }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /¿Cómo vamos\?[\s\S]*Embudo, ventas y qué cambió/ }),
+    ).toBeVisible();
+  });
+
+  it("la promesa de que nada se envía solo aparece UNA vez", () => {
+    view();
+
+    // Estaba en el hero Y bajo el compositor. Su sitio es el segundo: pegada al
+    // botón de enviar, que es donde el dueño duda.
+    expect(screen.getAllByText(/nunca envía nada por su cuenta/i)).toHaveLength(1);
+    expect(screen.queryByText(/Nada se envía a un cliente sin que tú lo apruebes/)).toBeNull();
+  });
+
+  it("la hora del primer informe se lee como dato de servicio, no como propuesta", () => {
+    view();
+
+    expect(screen.getByText(/Primer informe/)).toBeVisible();
+    expect(screen.getByText("4:00 p.m.")).toBeVisible();
+  });
+
+  it("las sugerencias se van al conversar, y con ellas su encabezado", () => {
+    view({ messages: [message({})] });
+
+    expect(screen.queryByText("Empieza por aquí")).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ármame algo/ })).toBeNull();
+  });
+});

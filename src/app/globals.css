@@ -596,8 +596,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    ==========================================================================
    Dos utilidades y ninguna es nueva de raíz: el orbe reutiliza el ANILLO COMETA
    de `.channel-surface::after` (misma `@property --comet-angle`, §canales F1) y
-   el campo ambiental reutiliza el lenguaje de `.bg-brand-ambient` — elipses
-   ancladas a esquina, en `srgb`, con el techo de tinte del sistema.
+   el campo ambiental parte del lenguaje de `.bg-brand-ambient` — elipses
+   ancladas a esquina, en `srgb` — pero LO ROMPE a propósito: ver §EL CAMPO.
 
    Se declaran aquí y no como valores arbitrarios de Tailwind por la misma razón
    que el cometa de canales: un `color-mix` anidado dentro de `bg-[...]` es
@@ -820,39 +820,125 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   }
 }
 
-/* Campo ambiental de la columna del chat: tres halos suaves respetando el techo
-   de tinte del sistema (7–13%), más un dot-grid con máscara radial que da
-   sensación de consola sin ensuciar el texto. */
+/* ==========================================================================
+   EL CAMPO DEL DESPACHO — aurora con deriva
+   --------------------------------------------------------------------------
+   El fondo de la conversación con Axel. Va en el `<main>` de `CmoView`, nunca
+   en el chat: tiene que quedar detrás del hero, del hilo Y del compositor a la
+   vez, y cuando empezaba debajo del briefing aparecía una costura de 1px que
+   partía la pantalla en dos.
+
+   Tres capas y cada una tiene un trabajo:
+
+     .axel-field           color base + grano fino tileado   ← quieto, cobertura total
+     .axel-field::before   los cuatro halos                  ← LA CAPA QUE DERIVA
+     .axel-field::after    dot-grid con viñeta               ← quieto
+
+   Cuatro decisiones que explican la forma que tiene:
+
+   1. **El color base vive en el ELEMENTO, no en la capa de halos.** Antes
+      estaban juntos, y eso impedía usar `opacity` sobre los halos como perilla
+      de intensidad por tema (habría atenuado también el fondo). Separados,
+      `--axel-veil` sube el tinte en oscuro sin duplicar la estructura — el
+      mismo truco que `.dark .channel-surface::before`. Y hay una segunda razón,
+      dura: la capa que se mueve NO puede llevar el fondo, porque al desplazarse
+      dejaría fondo desnudo detrás.
+
+   2. **`inset: -20%` es lo que hace posible la deriva.** Con `inset: 0`
+      cualquier `translate` descubriría el borde de la capa. Sobredimensionada al
+      140%, se mueve dentro de su propio margen y nunca asoma un canto. Por eso
+      los halos se anclan entre el 14% y el 86%: ése es el tramo VISIBLE de la
+      capa agrandada, no del contenedor.
+
+   3. **El tinte rompe el techo del sistema, a sabiendas.** El techo es el 14%
+      de `--color-accent` y aquí se llega al 26%. Es la misma desviación ya
+      sancionada en `.channel-surface` (7–34%) y por el mismo criterio: el tinte
+      no compite con el coral de acción ni con los colores de estado, y esta es
+      la única superficie del panel que existe para sentirse habitada. Queda
+      declarada en DESIGN-SYSTEM §6 y en `docs/modules/cmo.md`.
+
+   4. **La deriva es una desviación declarada de DESIGN-SYSTEM §6**, que dice
+      que nada se mueve en loop en el workspace. Se acepta SOLO aquí y con tres
+      condiciones que la hacen inocua: 72 s por vuelta (nadie la ve moverse, se
+      nota al volver), únicamente `transform` (compositor: ni layout ni repaint
+      del texto) y `alternate`, para que no dé un salto al reiniciar el ciclo.
+      Se apaga entera con `prefers-reduced-motion`.
+   ========================================================================== */
 .axel-field {
   position: relative;
   isolation: isolate;
+
+  /* Intensidad de los halos. Sobre negro el mismo `color-mix` se ve la mitad,
+     así que en oscuro va al máximo y en claro se atenúa. */
+  --axel-veil: 0.8;
+
+  background-color: color-mix(in srgb, var(--foreground) 3%, var(--background));
+  /* Grano. Es la mitad de la sensación de superficie física y cuesta un solo
+     paint: un tile de `feTurbulence` en data URI, sin `filter` sobre el árbol.
+     El ruido es gris (saturate 0) y con alfa variable, así que aclara sobre
+     negro y oscurece sobre blanco — sirve para los dos temas con un solo
+     asset. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.dark .axel-field {
+  --axel-veil: 1;
 }
 
 .axel-field::before {
   content: "";
   position: absolute;
-  inset: 0;
+  /* 140% de la caja: el margen del que come la deriva (decisión 2). */
+  inset: -20%;
   z-index: -2;
   pointer-events: none;
-  background-color: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  opacity: var(--axel-veil);
+  will-change: transform;
+  /* El cuarto halo (abajo-centro) es nuevo y no es decoración: cae justo detrás
+     del compositor, y es lo que hace que el input se lea como la fuente de luz
+     de la pantalla en vez de una caja pegada abajo. */
   background-image:
     radial-gradient(
-      70% 100% at 12% -6%,
-      color-mix(in srgb, var(--axi-brand) 13%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      64% 96% at 92% 4%,
-      color-mix(in srgb, var(--axi-violet) 11%, transparent),
+      42% 38% at 16% 14%,
+      color-mix(in srgb, var(--axi-brand) 26%, transparent),
       transparent 68%
     ),
     radial-gradient(
-      50% 70% at 50% 108%,
-      color-mix(in srgb, var(--axi-amber) 7%, transparent),
-      transparent 72%
+      40% 36% at 84% 17%,
+      color-mix(in srgb, var(--axi-violet) 24%, transparent),
+      transparent 66%
+    ),
+    radial-gradient(
+      34% 30% at 70% 62%,
+      color-mix(in srgb, var(--axi-amber) 15%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      44% 34% at 50% 86%,
+      color-mix(in srgb, var(--axi-violet) 20%, transparent),
+      transparent 68%
     );
+  animation: axel-drift 72s ease-in-out infinite alternate;
 }
 
+/* Desplazamientos de dos puntos porcentuales sobre un margen de veinte: la capa
+   nunca se queda corta. `scale` en el mismo paso para que el movimiento no se
+   lea como un deslizamiento lateral sino como una masa que respira. */
+@keyframes axel-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2.2%, 1.6%, 0) scale(1.045);
+  }
+  100% {
+    transform: translate3d(1.8%, -1.4%, 0) scale(1.02);
+  }
+}
+
+/* Dot-grid con máscara radial: da sensación de consola sin ensuciar el texto,
+   porque se desvanece justo donde empieza a leerse. */
 .axel-field::after {
   content: "";
   position: absolute;
@@ -866,7 +952,38 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background-size: 22px 22px;
   -webkit-mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
   mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
-  opacity: 0.28;
+  opacity: 0.34;
+}
+
+/* Resplandor propio del compositor, encima del campo y debajo del formulario.
+   Existe porque el halo de la capa de fondo queda MUY difuso a esa altura: este
+   segundo foco, pegado y con blur corto, es el que de verdad hace que el input
+   parezca encendido. Se aplica al bloque `flex-none` que ya envuelve al form.
+
+   No lleva animación: la deriva del campo ya aporta el movimiento, y dos cosas
+   moviéndose a distinto ritmo en la misma pantalla se leen como un fallo. */
+.axel-composer-glow {
+  position: relative;
+  isolation: isolate;
+  --axel-composer-tint: 26%;
+}
+
+.dark .axel-composer-glow {
+  --axel-composer-tint: 34%;
+}
+
+.axel-composer-glow::before {
+  content: "";
+  position: absolute;
+  inset: -30% -8% -70%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    58% 100% at 50% 100%,
+    color-mix(in srgb, var(--axi-violet) var(--axel-composer-tint), transparent),
+    transparent 72%
+  );
+  filter: blur(10px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -874,7 +991,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .axel-orb-spill,
   .axel-orb--busy,
   .axel-comet-card--new,
-  .axel-comet-card--new::after {
+  .axel-comet-card--new::after,
+  /* La aurora se queda quieta y completa: el degradado sigue ahí, solo deja de
+     derivar. Es la desviación de §6 devolviéndose sola. */
+  .axel-field::before {
     animation: none;
   }
 }

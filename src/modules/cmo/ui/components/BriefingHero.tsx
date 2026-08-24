@@ -40,6 +40,14 @@ interface BriefingHeroProps {
  * acaba de encender a Axel y todavía no ha tenido su primer análisis. Ese estado
  * es **normal**, no un error, así que dice qué va a pasar y cuándo en una línea
  * discreta — no en una tarjeta que compita con el chat.
+ *
+ * **Se lee en cinco segundos, y por eso el rediseño fue casi todo resta.** El
+ * primer contacto eran tres párrafos centrados con pesos parecidos: quién es,
+ * qué hace, y cuándo llega su informe. Nada ordenaba la lectura y la segunda
+ * frase duplicaba la nota del compositor. Ahora hay una jerarquía explícita —
+ * identidad (h1) → qué hace (una línea) → cuándo (un chip) → «empieza por aquí»
+ * con las tarjetas, que las pone `AxelChat` — y cada escalón se ve distinto del
+ * anterior.
  */
 export function BriefingHero({
   briefing,
@@ -67,19 +75,24 @@ export function BriefingHero({
         </div>
       ) : briefing === null ? (
         <>
-          <h1 className="font-heading mt-1.5 max-w-[18ch] text-[34px] leading-[1.18] font-extralight tracking-tight text-foreground/30">
+          <h1 className="font-heading mt-1.5 max-w-[18ch] text-[34px] leading-[1.18] font-extralight tracking-tight text-balance text-foreground/30">
             Soy Axel, tu <b className="font-bold text-foreground">director de mercadeo</b>
           </h1>
-          <p className="mt-3.5 max-w-[46ch] text-[13px] text-muted-foreground">
-            Miro tus números todos los días y te dejo propuestas listas para decidir.
-            Nada se envía a un cliente sin que tú lo apruebes.
+          {/* UNA línea. Antes eran dos frases, y la segunda («nada se envía a un
+              cliente sin que tú lo apruebes») decía exactamente lo mismo que la
+              nota que ya vive bajo el compositor. Ese es su sitio: pegada al
+              botón de enviar, donde importa. Aquí sobraba. */}
+          <p className="mt-3 max-w-[34ch] text-[13px] text-balance text-muted-foreground">
+            Miro tus números cada día y te dejo propuestas listas para decidir.
           </p>
-          <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground/80">
-            <Clock className="size-3.5 text-accent-violet" aria-hidden="true" />
+          {/* La hora del primer informe pasa de párrafo a CHIP. El dato es de
+              servicio —cuándo empieza a trabajar solo—, no propuesta de valor, y
+              como párrafo centrado competía en peso con la frase de arriba. */}
+          <p className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11.5px] text-muted-foreground backdrop-blur">
+            <Clock className="size-3.5 flex-none text-accent-violet" aria-hidden="true" />
             <span>
-              Mi primer informe llega mañana a las{" "}
-              <b className="font-semibold text-muted-foreground">{formatHour(briefingHour)}</b>. Si
-              no quieres esperar, pregúntame ahora.
+              Primer informe · mañana a las{" "}
+              <b className="font-semibold text-foreground">{formatHour(briefingHour)}</b>
             </span>
           </p>
         </>

@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowUp, BarChart3, Flame, Lock, Megaphone, Plus, Rotate
 
 import { cn } from "@/core/lib/utils";
 import type { BriefingDTO, ProposalDTO } from "@/modules/cmo/domain/cmo";
+import { useTypewriterPlaceholder } from "@/modules/cmo/infrastructure/hooks/use-typewriter-placeholder";
 import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { Button } from "@/shared/components/ui/button";
 import { AxelMarkdown } from "./AxelMarkdown";
@@ -17,19 +18,52 @@ import { AxelThinking } from "./AxelThinking";
  * Sugerencias del estado vacío. Son las tres cosas que Axel hace de verdad, en
  * el orden en que un dueño las pediría: primero entender, luego a quién tocar,
  * luego qué armar. Cada una es una frase que él mismo diría — no un comando.
+ *
+ * El `hint` no es decoración: una tarjeta que solo dice «Ármame algo» obliga a
+ * adivinar qué va a pasar al tocarla. Tres o cuatro palabras debajo convierten
+ * tres botones en un menú que se entiende sin probarlo.
  */
 const STARTERS = [
-  { icon: BarChart3, label: "¿Cómo vamos?", prompt: "¿Cómo vamos este mes?" },
+  {
+    icon: BarChart3,
+    label: "¿Cómo vamos?",
+    hint: "Embudo, ventas y qué cambió",
+    prompt: "¿Cómo vamos este mes?",
+  },
   {
     icon: Flame,
     label: "Clientes calientes",
+    hint: "Quién está por comprar",
     prompt: "¿Quiénes son mis clientes más calientes y por qué?",
   },
   {
     icon: Megaphone,
     label: "Ármame algo",
+    hint: "Una campaña o una promo",
     prompt: "Ármame una campaña para lo que veas más urgente.",
   },
+] as const;
+
+/** Texto de reposo del compositor: SSR, sin JavaScript y cada pausa del efecto. */
+const PLACEHOLDER_IDLE = "Pregúntale a Axel o dile qué armar…";
+
+/**
+ * Lo que el compositor teclea solo. **Constante de módulo, no un literal en el
+ * render**: `useTypewriterPlaceholder` la lleva en las dependencias de su efecto
+ * y una referencia nueva por render reiniciaría la frase antes de terminarla.
+ *
+ * Las seis cubren capacidades DISTINTAS —y tres que las tarjetas de arranque no
+ * mencionan (recompra, calidad del agente, calendario)— porque el compositor es
+ * lo único que sigue sugiriendo cuando el hilo ya tiene conversación y las
+ * tarjetas se han ido.
+ */
+const PLACEHOLDER_PHRASES = [
+  "¿Cómo vamos este mes?",
+  "¿Quiénes están por recomprar?",
+  "Ármame una promo para el fin de semana",
+  "¿Por dónde se me está yendo la plata?",
+  "¿Cómo va atendiendo mi agente?",
+  "¿Qué fecha comercial viene?",
 ] as const;
 
 /** Cuántas propuestas entran al hilo. El resto vive en el rail. */
@@ -88,6 +122,15 @@ export function AxelChat({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const hasMessages = thread.messages.length > 0;
+
+  /* El compositor teclea ejemplos mientras está en reposo. Se apaga en cuanto
+     hay algo escrito, mientras Axel trabaja y con Axel bloqueado: en esos tres
+     casos el campo ya está diciendo algo, o no acepta nada. */
+  useTypewriterPlaceholder(textareaRef, {
+    phrases: PLACEHOLDER_PHRASES,
+    fallback: PLACEHOLDER_IDLE,
+    enabled: draft === "" && !thread.thinking && blocked === null,
+  });
 
   // Autoscroll al fondo en cada mensaje nuevo y al empezar a pensar: si no, la
   // respuesta aparece fuera de la vista y parece que no pasó nada. Con el hilo
@@ -163,8 +206,10 @@ export function AxelChat({
                 busy={thread.thinking}
               />
 
+              {starters === "none" ? null : <StarterEyebrow />}
+
               {starters === "cards" ? (
-                <div className="mt-8 grid w-full gap-2.5 sm:grid-cols-3">
+                <div className="mt-4 grid w-full gap-2.5 sm:grid-cols-3">
                   {STARTERS.map((starter) => (
                     <button
                       key={starter.label}
@@ -174,23 +219,26 @@ export function AxelChat({
                       }}
                       disabled={thread.thinking}
                       className={cn(
-                        "group flex flex-col gap-2 rounded-lg border border-border p-3.5 text-left",
+                        "group flex flex-col gap-1.5 rounded-lg border border-border p-3.5 text-left",
                         "bg-background/80 backdrop-blur transition-all",
                         "hover:-translate-y-0.5 hover:border-accent-violet/30 hover:shadow-float",
                         "disabled:pointer-events-none disabled:opacity-50",
                       )}
                     >
-                      <span className="grid size-[30px] place-items-center rounded-full border border-border/60 bg-secondary text-muted-foreground group-hover:border-accent-violet/30 group-hover:bg-accent-violet/10 group-hover:text-accent-violet">
+                      <span className="mb-0.5 grid size-[30px] place-items-center rounded-full border border-border/60 bg-secondary text-muted-foreground group-hover:border-accent-violet/30 group-hover:bg-accent-violet/10 group-hover:text-accent-violet">
                         <starter.icon className="size-4" aria-hidden="true" />
                       </span>
                       <span className="font-heading text-[13.5px] font-bold">{starter.label}</span>
+                      <span className="text-[11px] leading-snug text-muted-foreground">
+                        {starter.hint}
+                      </span>
                     </button>
                   ))}
                 </div>
               ) : null}
 
               {starters === "compact" ? (
-                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
                   {STARTERS.map((starter) => (
                     <button
                       key={starter.label}
@@ -270,7 +318,10 @@ export function AxelChat({
         </div>
       </div>
 
-      <div className="flex-none px-6 pt-3 pb-5">
+      {/* `axel-composer-glow`: el bloom violeta que hace que el input lea como la
+          fuente de luz de la pantalla. Va aquí y no en el form porque tiene que
+          derramarse por fuera de sus bordes. */}
+      <div className="axel-composer-glow flex-none px-6 pt-3 pb-5">
         <div className="mx-auto w-full max-w-[640px]">
           <form
             onSubmit={(event) => {
@@ -299,7 +350,10 @@ export function AxelChat({
                 }
               }}
               rows={1}
-              placeholder="Pregúntale a Axel o dile qué armar…"
+              /* CONSTANTE a propósito: es la invariante de
+                 `useTypewriterPlaceholder`. Una prop dinámica aquí haría que
+                 cada render de React pisara la frase a medio teclear. */
+              placeholder={PLACEHOLDER_IDLE}
               aria-label="Mensaje para Axel"
               disabled={thread.thinking || blocked !== null}
               className="max-h-[120px] min-h-[42px] w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
@@ -344,6 +398,34 @@ export function AxelChat({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * «Empieza por aquí» sobre las sugerencias.
+ *
+ * Es la pieza que le faltaba al inicio. Sin ella había tres botones sueltos
+ * flotando bajo un párrafo; con ella hay un primer paso declarado, que es lo que
+ * un dueño que entra por primera vez necesita que alguien le diga.
+ *
+ * Las dos reglas son decorativas y se anuncian como tales; el texto no, porque
+ * también ordena la lectura para quien usa un lector de pantalla.
+ */
+function StarterEyebrow() {
+  return (
+    <div className="mt-8 flex items-center gap-3">
+      <span
+        aria-hidden="true"
+        className="h-px flex-1 bg-gradient-to-r from-transparent to-border"
+      />
+      <span className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground/70 uppercase">
+        Empieza por aquí
+      </span>
+      <span
+        aria-hidden="true"
+        className="h-px flex-1 bg-gradient-to-l from-transparent to-border"
+      />
     </div>
   );
 }
