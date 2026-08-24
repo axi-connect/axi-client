@@ -18,11 +18,13 @@ import { IntegrationCard } from "./IntegrationCard";
 import { IntegrationProviderIcon } from "./IntegrationProviderIcon";
 
 /**
- * `/settings/integrations` — hermana de `/settings/channels` (F17 PR7).
+ * `/settings/integrations` — hermana de `/settings/channels` (F17 PR7, galería
+ * alineada al patrón de canales en F10).
  *
  * Dos secciones: lo CONECTADO (tarjetas con superficie de marca) y lo
  * DISPONIBLE (galería de proveedores, con los `coming_soon` visibles e
- * inertes: comunicar la hoja de ruta es información comercial útil).
+ * inertes pero con su superficie de marca: comunicar la hoja de ruta es
+ * información comercial útil y la vitrina se ve como producto, no como hueco).
  */
 export function IntegrationsView() {
   const items = useIntegrationsStore((s) => s.items);
@@ -91,7 +93,7 @@ export function IntegrationsView() {
       ) : (
         <>
           {items.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
               {items.map((integration) => (
                 <IntegrationCard key={integration.id} integration={integration} />
               ))}
@@ -100,10 +102,16 @@ export function IntegrationsView() {
 
           {available.length > 0 && (
             <section className="space-y-3">
-              {items.length > 0 && (
+              {/* Sin conexiones, la galería ES la página: el encabezado invita
+                  en vez de catalogar */}
+              {items.length > 0 ? (
                 <h2 className="text-sm font-medium text-muted-foreground">Disponibles</h2>
+              ) : (
+                <h2 className="text-sm font-medium text-muted-foreground">
+                  Conecta tu primera integración
+                </h2>
               )}
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
                 {available.map((provider) => (
                   <AvailableProviderCard key={provider.kind} provider={provider} />
                 ))}
@@ -125,7 +133,19 @@ function AvailableProviderCard({ provider }: { provider: IntegrationProviderDesc
       <div className="relative flex items-start gap-3">
         <IntegrationProviderIcon iconId={provider.icon_id} />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="font-semibold">{provider.label}</span>
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold">{provider.label}</span>
+            {provider.recommended === true && (
+              <span className="rounded-full bg-accent-violet/12 px-2 py-0.5 text-xs font-medium text-accent-violet">
+                Recomendado
+              </span>
+            )}
+            {comingSoon && (
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                Muy pronto
+              </span>
+            )}
+          </span>
           {provider.requirement_note !== undefined && (
             <span className="text-xs text-muted-foreground">{provider.requirement_note}</span>
           )}
@@ -149,10 +169,15 @@ function AvailableProviderCard({ provider }: { provider: IntegrationProviderDesc
   );
 
   if (comingSoon) {
+    // Inerte pero CON superficie de marca (patrón ProviderGallery de canales):
+    // la hoja de ruta se ve como producto, no como un hueco punteado.
     return (
       <div
         aria-disabled="true"
-        className="flex w-full flex-col gap-3.5 rounded-lg border border-dashed border-border bg-background p-4 opacity-70"
+        className={cn(
+          "channel-surface flex w-full flex-col gap-3.5 rounded-lg border border-border bg-background p-4 opacity-70",
+          provider.brand_class,
+        )}
       >
         {body}
       </div>
@@ -180,11 +205,30 @@ function governanceProblem(catalog: GovernanceState, orders: GovernanceState): s
   return `La plataforma declaró que ${parts.join(" y ")} los gobierna un proveedor externo, pero su conexión no está operativa.`;
 }
 
+/** Esqueleto ESTRUCTURAL: la silueta de las tarjetas que van a aparecer
+ * (placa + dos líneas + chips), tantas como proveedores visibles. */
 function IntegrationsGridSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {Array.from({ length: 2 }).map((_, index) => (
-        <Skeleton key={index} className="h-40 rounded-lg" />
+    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
+      {visibleProviders().map((provider) => (
+        <div
+          key={provider.kind}
+          className="flex w-full flex-col gap-3.5 rounded-lg border border-border bg-background p-4"
+        >
+          <div className="flex items-start gap-3">
+            <Skeleton className="size-10 rounded-md" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-44 max-w-full" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-full" />
+          <div className="flex flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+        </div>
       ))}
     </div>
   );
