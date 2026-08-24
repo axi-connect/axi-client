@@ -1,5 +1,5 @@
 import { Webhook } from "lucide-react";
-import { FaShopify } from "react-icons/fa";
+import { FaHubspot, FaSalesforce, FaShopify } from "react-icons/fa";
 import { SiMercadopago } from "react-icons/si";
 
 import { cn } from "@/core/lib/utils";
@@ -16,12 +16,16 @@ const ICONS: Record<IntegrationIconId, React.ComponentType<{ className?: string 
   shopify: FaShopify,
   mercado_pago: SiMercadopago,
   webhook: Webhook,
+  salesforce: FaSalesforce,
+  hubspot: FaHubspot,
 };
 
 const GLYPH_COLOR: Record<IntegrationIconId, string> = {
   shopify: "text-logo-shopify",
   mercado_pago: "text-logo-mercadopago",
   webhook: "text-muted-foreground",
+  salesforce: "text-logo-salesforce",
+  hubspot: "text-logo-hubspot",
 };
 
 export function IntegrationProviderIcon({

@@ -24,6 +24,15 @@ export function connectIntegration(dto: ConnectIntegrationDTO): Promise<Integrat
   return http.post<IntegrationDTO>("/integrations", dto);
 }
 
+/**
+ * Alta por OAuth (PR8): pide la URL de autorización y la vista navega hacia el
+ * proveedor. Hoy ningún proveedor `oauth` está `available`, así que el camino
+ * queda inerte detrás de las tarjetas `coming_soon`.
+ */
+export function startIntegrationOAuth(kind: string): Promise<{ authorize_url: string }> {
+  return http.post<{ authorize_url: string }>(`/integrations/oauth/${kind}/authorize`);
+}
+
 /** Rotación del token: también es la vía de recuperación tras un `error`. */
 export function rotateIntegrationCredentials(
   id: string,

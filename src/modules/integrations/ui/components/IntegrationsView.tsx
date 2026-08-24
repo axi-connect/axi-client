@@ -35,7 +35,7 @@ export function IntegrationsView() {
     void fetchIntegrations();
   }, [fetchIntegrations]);
 
-  const connectedProviders = new Set(items.map((item) => item.provider));
+  const connectedProviders = new Set<string>(items.map((item) => item.provider));
   const available = visibleProviders().filter(
     (provider) => !connectedProviders.has(provider.kind),
   );
