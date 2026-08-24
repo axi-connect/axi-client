@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 import { ProposalDetail } from "./ProposalDetail";
@@ -25,6 +25,18 @@ export function ProposalSheetRoute({
   closeBehavior?: "back" | "push";
 }) {
   const router = useRouter();
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Gestión de foco mínima de un diálogo no modal (A3 de la auditoría): al
+  // abrir, el foco entra al panel (el botón de cerrar); al desmontar, vuelve a
+  // donde estaba — sin esto un usuario de teclado quedaba perdido en el fondo.
+  useEffect(() => {
+    const before = document.activeElement;
+    closeRef.current?.focus();
+    return () => {
+      if (before instanceof HTMLElement) before.focus();
+    };
+  }, []);
 
   const close = () => {
     if (closeBehavior === "back") router.back();
@@ -52,6 +64,7 @@ export function ProposalSheetRoute({
       className="relative flex w-full max-w-[580px] flex-none flex-col border-l border-border bg-background shadow-overlay"
     >
       <button
+        ref={closeRef}
         type="button"
         onClick={close}
         aria-label="Cerrar"

@@ -63,10 +63,6 @@ export async function getTranscript(threadId: string): Promise<CmoMessageDTO[]> 
   return data;
 }
 
-export function archiveThread(threadId: string): Promise<void> {
-  return http.post<void>(`/cmo/threads/${threadId}/archive`, {});
-}
-
 // -------------------------------------------------------------- propuestas
 
 export async function listProposals(status?: ProposalStatus): Promise<ProposalDTO[]> {
@@ -95,11 +91,6 @@ export function rejectProposal(
 }
 
 // --------------------------------------------------------------- briefings
-
-export async function listBriefings(): Promise<BriefingDTO[]> {
-  const { data } = await http.get<{ data: BriefingDTO[] }>("/cmo/briefings");
-  return data;
-}
 
 /** `null` cuando el tenant todavía no ha tenido su primer briefing. */
 export async function getLatestBriefing(): Promise<BriefingDTO | null> {

@@ -111,7 +111,7 @@ function Phases() {
 
   return (
     <>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" aria-hidden="true">
         <div className="h-2 animate-pulse rounded-full bg-accent-violet/15" />
         <div className="h-2 w-4/5 animate-pulse rounded-full bg-accent-violet/15 [animation-delay:140ms]" />
         <div className="h-2 w-3/5 animate-pulse rounded-full bg-accent-violet/15 [animation-delay:280ms]" />

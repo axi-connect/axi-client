@@ -178,3 +178,13 @@ export function artifactAction(type: string): string {
       return "Ya está creado, apagado";
   }
 }
+
+/**
+ * Hora del día en es-CO («4:00 p.m.»). Vive aquí y no en cada componente:
+ * estaba duplicada byte a byte en el hero y en los ajustes (F14).
+ */
+export function formatHour(hour: number): string {
+  const suffix = hour < 12 ? "a.m." : "p.m.";
+  const twelve = hour % 12 === 0 ? 12 : hour % 12;
+  return `${String(twelve)}:00 ${suffix}`;
+}

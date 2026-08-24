@@ -28,7 +28,7 @@ const KIND_ICONS: Record<ProposalKind, typeof Flame> = {
  * que dejó algo encendido. Descartada, vencida y reemplazada son neutras — no
  * son fallos y pintarlas de rojo diría que algo salió mal.
  */
-const STATUS_TONE: Record<string, string> = {
+const STATUS_TONE: Partial<Record<ProposalDTO["status"], string>> = {
   approved: "border-success/40 text-success",
 };
 
@@ -120,6 +120,7 @@ export function ProposalCard({
 
   return (
     <article
+      aria-label={proposal.title}
       className={cn(
         "axel-comet-card flex flex-col gap-3 overflow-hidden rounded-lg p-4",
         settled
@@ -129,10 +130,9 @@ export function ProposalCard({
       )}
     >
       {settled ? null : (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_110px_at_22px_18px,color-mix(in_srgb,var(--axi-violet)_18%,transparent),transparent)]"
-        />
+        // Utilidad de globals.css: un color-mix anidado dentro de bg-[...] es
+        // exactamente el patrón que el KB del slice prohíbe (F11).
+        <div aria-hidden="true" className="axel-card-halo pointer-events-none absolute inset-0 -z-10" />
       )}
       {stamped ? (
         <p className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground/70">

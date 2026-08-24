@@ -84,6 +84,8 @@ function view(
       ownerName="Owner"
       briefing={null}
       briefingLoading={false}
+      briefingError={null}
+      onRetryBriefing={() => undefined}
       briefingHour={16}
       proposals={over.proposals ?? []}
       blocked={null}
@@ -334,7 +336,7 @@ describe("la pregunta con opciones en el hilo", () => {
     });
 
     expect(screen.getByRole("button", { name: /Los que no volvieron/ })).toBeDisabled();
-    expect(screen.getByText("Ya respondida")).toBeVisible();
+    expect(screen.getByText("Pregunta anterior")).toBeVisible();
   });
 
   it("tocar una opción responde con su texto", () => {

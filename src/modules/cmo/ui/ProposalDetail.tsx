@@ -32,6 +32,9 @@ const REJECT_REASONS = [
   "Prefiero que mi equipo los contacte uno por uno.",
 ] as const;
 
+/** El motivo propio: el DTO siempre aceptó texto libre, la vista no (F14). */
+const OTHER_REASON = "__other__";
+
 /**
  * El detalle de una propuesta: donde el dueño decide.
  *
@@ -52,21 +55,28 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
 
   const [proposal, setProposal] = useState<ProposalDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryAt, setRetryAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ApprovalResultDTO | null>(null);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState<string>(REJECT_REASONS[0]);
+  const [customReason, setCustomReason] = useState("");
   const [asDirective, setAsDirective] = useState(true);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    setLoadError(null);
     void getProposal(proposalId)
       .then((data) => {
         if (alive) setProposal(data);
       })
       .catch((error: unknown) => {
-        if (alive) showAlert({ tone: "error", title: errorMessage(error) });
+        // Un fallo de RED no es «la propuesta ya no está»: pintaba la pantalla
+        // de purgada ante un 500 (F4 de la auditoría). El null del backend
+        // sigue siendo el caso normal de vencida/decidida.
+        if (alive) setLoadError(errorMessage(error));
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -74,7 +84,7 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
     return () => {
       alive = false;
     };
-  }, [proposalId, showAlert]);
+  }, [proposalId, retryAt]);
 
   if (loading) {
     return (
@@ -82,6 +92,26 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
         <Skeleton className="h-6 w-2/3" />
         <Skeleton className="h-4 w-1/3" />
         <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  if (loadError !== null) {
+    return (
+      <div className="p-6 text-center">
+        <AlertTriangle className="mx-auto size-8 text-warning" aria-hidden="true" />
+        <p className="mt-3 text-sm font-semibold">No se pudo cargar la propuesta</p>
+        <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={() => {
+            setRetryAt((at) => at + 1);
+          }}
+        >
+          Reintentar
+        </Button>
       </div>
     );
   }
@@ -121,10 +151,16 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
     }
   };
 
+  const effectiveReason = reason === OTHER_REASON ? customReason.trim() : reason;
+
   const onReject = async () => {
     setBusy(true);
     try {
-      const outcome = await reject(proposal.id, reason, asDirective);
+      const outcome = await reject(
+        proposal.id,
+        effectiveReason === "" ? undefined : effectiveReason,
+        asDirective,
+      );
       showAlert({
         tone: "success",
         title: outcome.directive_created ? "Anotado como directriz" : "Propuesta descartada",
@@ -282,6 +318,33 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
                   {option}
                 </label>
               ))}
+              <label className="flex items-start gap-2.5 text-[12.5px]">
+                <input
+                  type="radio"
+                  name="reject-reason"
+                  checked={reason === OTHER_REASON}
+                  onChange={() => {
+                    setReason(OTHER_REASON);
+                  }}
+                  className="mt-0.5 accent-accent-violet"
+                />
+                <span className="min-w-0 flex-1">
+                  Otro motivo
+                  {reason === OTHER_REASON ? (
+                    <input
+                      value={customReason}
+                      onChange={(event) => {
+                        setCustomReason(event.target.value);
+                      }}
+                      maxLength={300}
+                      autoFocus
+                      placeholder="Escríbelo como una regla: es lo que Axel va a recordar."
+                      aria-label="Motivo propio del rechazo"
+                      className="mt-1.5 w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-[12.5px] outline-none focus:border-accent-violet"
+                    />
+                  ) : null}
+                </span>
+              </label>
             </div>
             <label className="flex items-center gap-2 text-[11.5px] text-accent-violet">
               <input
@@ -305,7 +368,7 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={busy}
+                disabled={busy || (reason === OTHER_REASON && customReason.trim().length < 8)}
                 onClick={() => {
                   void onReject();
                 }}

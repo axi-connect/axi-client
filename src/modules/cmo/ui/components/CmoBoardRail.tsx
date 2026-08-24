@@ -19,6 +19,10 @@ interface CmoBoardRailProps {
    * negocio» mientras la respuesta viaja sería afirmar algo que no se sabe.
    */
   briefingLoading: boolean;
+  /** Fallo al cargar el briefing: decir «todavía no ha revisado tu negocio»
+   *  ante un 500 era una afirmación falsa (F1). */
+  briefingError: string | null;
+  onRetryBriefing: () => void;
   error: string | null;
   onRetry: () => void;
 }
@@ -39,6 +43,8 @@ export function CmoBoardRail({
   briefing,
   loading,
   briefingLoading,
+  briefingError,
+  onRetryBriefing,
   error,
   onRetry,
 }: CmoBoardRailProps) {
@@ -107,7 +113,18 @@ export function CmoBoardRail({
           ) : null}
         </div>
 
-        {briefing === null && briefingLoading ? (
+        {briefing === null && briefingError !== null ? (
+          <div className="mt-2 text-[11.5px]">
+            <p className="text-destructive">{briefingError}</p>
+            <button
+              type="button"
+              onClick={onRetryBriefing}
+              className="mt-1 font-semibold underline underline-offset-2"
+            >
+              Reintentar
+            </button>
+          </div>
+        ) : briefing === null && briefingLoading ? (
           <div className="mt-2 flex flex-col gap-2">
             <Skeleton className="h-3 w-full" />
             <Skeleton className="h-3 w-3/4" />

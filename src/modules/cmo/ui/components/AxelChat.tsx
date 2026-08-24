@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+
+import { useAutoScroll } from "@/core/hooks/use-auto-scroll";
 import { AlertTriangle, ArrowUp, BarChart3, Flame, Lock, Megaphone, Plus, RotateCcw, Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
@@ -70,10 +72,17 @@ const PLACEHOLDER_PHRASES = [
 /** Cuántas propuestas entran al hilo. El resto vive en el rail. */
 const PROPOSALS_IN_THREAD = 2;
 
+/** Altura máxima del compositor, en px: una sola fuente para la clase y el JS. */
+const COMPOSER_MAX_PX = 120;
+
 interface AxelChatProps {
   ownerName: string | null;
   briefing: BriefingDTO | null;
   briefingLoading: boolean;
+  /** Error al cargar el briefing: sin él, un 500 se pintaba como «tenant sin
+   *  briefing» — una afirmación falsa (F1 de la auditoría). */
+  briefingError: string | null;
+  onRetryBriefing: () => void;
   briefingHour: number;
   /** Propuestas por decidir, ya filtradas por el store. */
   proposals: ProposalDTO[];
@@ -105,6 +114,8 @@ export function AxelChat({
   ownerName,
   briefing,
   briefingLoading,
+  briefingError,
+  onRetryBriefing,
   briefingHour,
   proposals,
   blocked,
@@ -120,7 +131,6 @@ export function AxelChat({
   const newThread = useCmoStore((state) => state.newThread);
 
   const [draft, setDraft] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const hasMessages = thread.messages.length > 0;
@@ -139,21 +149,17 @@ export function AxelChat({
     enabled: draft === "" && !thread.thinking && blocked === null,
   });
 
-  // Autoscroll al fondo en cada mensaje nuevo y al empezar a pensar: si no, la
-  // respuesta aparece fuera de la vista y parece que no pasó nada. Con el hilo
-  // vacío NO se hace: arrastraría el hero fuera de la pantalla al entrar, que es
-  // justo lo primero que hay que leer.
-  //
-  // `proposals.length` está en las dependencias a propósito: la tarjeta de la
-  // propuesta llega DESPUÉS del mensaje (el POST solo trae su id y el tablero se
-  // recarga aparte), así que sin este segundo desplazamiento aparecería fuera de
-  // la vista justo lo que hay que decidir.
-  useEffect(() => {
-    if (!hasMessages) return;
-    bottomRef.current?.scrollIntoView({ block: "end" });
-    // `live?.text.length` mantiene el hilo pegado al fondo mientras Axel escribe:
-    // sin esto el texto crecería por debajo del borde visible.
-  }, [hasMessages, thread.messages.length, thread.thinking, proposals.length, live?.text.length]);
+  // Autoscroll CON guarda de intención (F5 de la auditoría): pegado al fondo
+  // sigue el texto que llega; si el usuario subió a leer un mensaje anterior,
+  // no se le arrastra. `stickOnMount: false` porque con el hilo vacío el primer
+  // scroll se llevaría el hero fuera de pantalla, que es lo primero que hay que
+  // leer. `proposals.length` está en las dependencias a propósito: la tarjeta
+  // llega DESPUÉS del mensaje (el POST solo trae su id) y hay que mostrarla.
+  const { containerRef, bottomRef } = useAutoScroll<HTMLDivElement>({
+    deps: [hasMessages, thread.messages.length, thread.thinking, proposals.length, live?.text.length],
+    stickOnMount: false,
+    behavior: "auto",
+  });
 
   const submit = (text: string) => {
     if (text.trim() === "" || thread.thinking) return;
@@ -198,7 +204,7 @@ export function AxelChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="sidebar-scroll flex-1 overflow-y-auto px-6 pt-8 pb-2">
+      <div ref={containerRef} className="sidebar-scroll flex-1 overflow-y-auto px-6 pt-8 pb-2">
         <div className="mx-auto flex w-full max-w-[640px] flex-col">
           {blocked !== null ? (
             <CmoBlockedState blocker={blocked} canManage={canManage} />
@@ -207,6 +213,8 @@ export function AxelChat({
               <BriefingHero
                 briefing={briefing}
                 loading={briefingLoading}
+                error={briefingError}
+                onRetry={onRetryBriefing}
                 briefingHour={briefingHour}
                 ownerName={ownerName}
                 proposalCount={proposals.length}
@@ -284,6 +292,16 @@ export function AxelChat({
 
               {hasMessages || thread.thinking ? (
                 <div className="mt-6 flex flex-col gap-4">
+                  {/* role="log": el mensaje FINAL de Axel se inserta aquí y el
+                      lector de pantalla lo anuncia. Antes lo único vivo era el
+                      borrador en streaming, y la respuesta definitiva no se
+                      anunciaba nunca (A1). El borrador queda FUERA del log para
+                      no re-anunciar el texto completo en cada delta (A2). */}
+                  <div
+                    role="log"
+                    aria-label="Conversación con Axel"
+                    className="flex flex-col gap-4"
+                  >
                   {thread.messages.map((message) => {
                     const proposal =
                       message.proposal_id === null
@@ -320,6 +338,7 @@ export function AxelChat({
                       </Fragment>
                     );
                   })}
+                  </div>
                   {/* Mientras Axel trabaja se ven sus PASOS; en cuanto empieza
                       a escribir, el texto los reemplaza: a partir de ahí lo que
                       importa es lo que dice, no de dónde lo saca. */}
@@ -359,7 +378,7 @@ export function AxelChat({
                 setDraft(event.target.value);
                 const el = event.target;
                 el.style.height = "auto";
-                el.style.height = `${String(Math.min(el.scrollHeight, 120))}px`;
+                el.style.height = `${String(Math.min(el.scrollHeight, COMPOSER_MAX_PX))}px`;
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
@@ -374,7 +393,8 @@ export function AxelChat({
               placeholder={PLACEHOLDER_IDLE}
               aria-label="Mensaje para Axel"
               disabled={thread.thinking || blocked !== null}
-              className="max-h-[120px] min-h-[42px] w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
+              style={{ maxHeight: COMPOSER_MAX_PX }}
+              className="min-h-[42px] w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
             />
             <div className="mt-1 flex items-center gap-2">
               <Button
@@ -460,7 +480,9 @@ function StreamingBubble({ text }: { text: string }) {
   return (
     <div
       className="self-stretch overflow-hidden rounded-lg border border-border bg-background shadow-float"
-      aria-live="polite"
+      // Sin aria-live a propósito: el contenedor del hilo (role="log") anuncia
+      // la respuesta FINAL completa; anunciar además cada delta re-leería el
+      // texto entero una y otra vez (A2).
       aria-busy="true"
     >
       <div className="flex items-center gap-2 px-4 pt-3">

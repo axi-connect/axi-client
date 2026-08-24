@@ -753,6 +753,17 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     var(--shadow-overlay);
 }
 
+/* Halo violeta de la esquina de la tarjeta pendiente. Vive aquí y no como un
+   bg-[radial-gradient(...color-mix...)] inline: un color-mix anidado dentro de
+   una clase arbitraria es frágil de extraer y el KB del slice lo prohíbe. */
+.axel-card-halo {
+  background: radial-gradient(
+    circle 110px at 22px 18px,
+    color-mix(in srgb, var(--axi-violet) 18%, transparent),
+    transparent
+  );
+}
+
 /* Entrada: la tarjeta se endereza como un panel físico que cae en su sitio. Es
    la señal de que ACABA de llegar, y por eso solo la lleva la variante nueva. */
 .axel-comet-card--new {

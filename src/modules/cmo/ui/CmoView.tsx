@@ -36,8 +36,24 @@ export function CmoView() {
   const blocker = useCmoStore((state) => state.blocker);
   const load = useCmoStore((state) => state.load);
   const reloadProposals = useCmoStore((state) => state.reloadProposals);
+  const reloadBriefing = useCmoStore((state) => state.reloadBriefing);
+  const unseen = useCmoStore((state) => state.unseen);
+  const markSeen = useCmoStore((state) => state.markSeen);
 
   const [railOpen, setRailOpen] = useState(false);
+
+  // Escape cierra el panel superpuesto del tablero: es la expectativa de todo
+  // overlay (A4 de la auditoría).
+  useEffect(() => {
+    if (!railOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setRailOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [railOpen]);
 
   useCmoSocket();
 
@@ -66,6 +82,10 @@ export function CmoView() {
       briefing={briefing.data ?? null}
       loading={proposals.status === "loading"}
       briefingLoading={briefing.status === "loading"}
+      briefingError={briefing.status === "error" ? briefing.error : null}
+      onRetryBriefing={() => {
+        void reloadBriefing();
+      }}
       error={proposals.error}
       onRetry={() => {
         void reloadProposals();
@@ -80,6 +100,10 @@ export function CmoView() {
           ownerName={firstName(user?.name ?? null)}
           briefing={briefing.data ?? null}
           briefingLoading={briefing.status === "loading"}
+          briefingError={briefing.status === "error" ? briefing.error : null}
+          onRetryBriefing={() => {
+            void reloadBriefing();
+          }}
           briefingHour={briefingHour}
           proposals={pending}
           blocked={blocked}
@@ -94,18 +118,42 @@ export function CmoView() {
       <button
         type="button"
         onClick={() => {
-          setRailOpen((open) => !open);
+          setRailOpen((open) => {
+            if (!open) markSeen();
+            return !open;
+          });
         }}
-        aria-label="Mostrar el tablero"
+        aria-label={railOpen ? "Ocultar el tablero" : "Mostrar el tablero"}
+        aria-expanded={railOpen}
+        aria-controls="cmo-rail-overlay"
         className={cn(
           "fixed right-4 bottom-4 z-50 grid size-11 place-items-center rounded-full xl:hidden",
           "border border-border bg-background shadow-overlay",
         )}
       >
         <LayoutPanelLeft className="size-5" aria-hidden="true" />
+        {/* Propuestas nuevas llegadas por WS sin ver: con el rail escondido bajo
+            xl, era la única señal que faltaba (la rebanada existía y nadie la
+            leía — F8 de la auditoría). */}
+        {!railOpen && unseen > 0 ? (
+          <span
+            className="absolute -top-1 -right-1 grid min-w-[18px] place-items-center rounded-full bg-accent-violet px-1 text-[10px] font-bold text-primary-foreground tabular-nums"
+            aria-label={`${String(unseen)} propuestas nuevas`}
+          >
+            {unseen > 9 ? "9+" : unseen}
+          </span>
+        ) : null}
       </button>
       {railOpen ? (
-        <div className="fixed inset-y-0 right-0 z-50 flex shadow-overlay xl:hidden">{rail}</div>
+        <div
+          id="cmo-rail-overlay"
+          role="dialog"
+          aria-modal="false"
+          aria-label="Tablero de Axel"
+          className="fixed inset-y-0 right-0 z-50 flex shadow-overlay xl:hidden"
+        >
+          {rail}
+        </div>
       ) : null}
     </div>
   );

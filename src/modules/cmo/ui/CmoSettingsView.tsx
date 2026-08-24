@@ -7,6 +7,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { cn } from "@/core/lib/utils";
 import type { CmoSettingsDTO, DirectiveDTO } from "@/modules/cmo/domain/cmo";
+import { formatHour } from "@/modules/cmo/domain/proposal-labels";
 import {
   createDirective,
   deactivateDirective,
@@ -18,6 +19,10 @@ import {
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+
+/** Espejo del mínimo del backend (createDirectiveSchema.min(8)): con menos, el
+ * botón se deshabilita y el placeholder ya sugiere una frase completa. */
+const MIN_DIRECTIVE_CHARS = 8;
 
 /** Origen de la directriz, en palabras del dueño. */
 const ORIGIN_LABELS: Record<string, string> = {
@@ -42,19 +47,28 @@ export function CmoSettingsView() {
 
   const [settings, setSettings] = useState<CmoSettingsDTO | null>(null);
   const [directives, setDirectives] = useState<DirectiveDTO[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    void Promise.all([getCmoSettings(), listDirectives()])
-      .then(([loadedSettings, loadedDirectives]) => {
-        setSettings(loadedSettings);
-        setDirectives(loadedDirectives);
-      })
+  // Cada carga falla POR SU CUENTA (patrón del resto del módulo): con
+  // Promise.all + showAlert la vista se quedaba en skeleton para siempre ante
+  // el primer error, sin reintento (F3 de la auditoría).
+  const load = () => {
+    setLoadError(null);
+    void getCmoSettings()
+      .then(setSettings)
       .catch((error: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(error) });
+        setLoadError(errorMessage(error));
       });
-  }, [showAlert]);
+    void listDirectives()
+      .then(setDirectives)
+      .catch((error: unknown) => {
+        setLoadError(errorMessage(error));
+      });
+  };
+
+  useEffect(load, []);
 
   const patch = async (next: CmoSettingsDTO) => {
     setBusy(true);
@@ -72,7 +86,7 @@ export function CmoSettingsView() {
 
   const addDirective = async () => {
     const body = draft.trim();
-    if (body.length < 8) return;
+    if (body.length < MIN_DIRECTIVE_CHARS) return;
     setBusy(true);
     try {
       await createDirective({ body });
@@ -97,6 +111,18 @@ export function CmoSettingsView() {
       setBusy(false);
     }
   };
+
+  if (loadError !== null && (settings === null || directives === null)) {
+    return (
+      <div className="rounded-lg border border-border bg-background p-6 text-sm">
+        <p className="text-destructive">{loadError}</p>
+        <Button variant="outline" size="sm" className="mt-3" onClick={load}>
+          <RotateCcw className="size-3.5" aria-hidden="true" />
+          Reintentar
+        </Button>
+      </div>
+    );
+  }
 
   if (settings === null || directives === null) {
     return (
@@ -132,6 +158,28 @@ export function CmoSettingsView() {
             {settings.enabled ? "Apagar" : "Encender"}
           </Button>
         </div>
+        {/* La hora del briefing SIEMPRE fue editable en el contrato y el
+            runbook manda cambiarla aquí — pero la vista no tenía el control
+            (F16 de la auditoría). */}
+        <label className="mt-4 flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Hora del informe diario</span>
+          <select
+            value={settings.briefing_hour}
+            disabled={!canManage || busy}
+            onChange={(event) => {
+              void patch({ ...settings, briefing_hour: Number(event.target.value) });
+            }}
+            aria-label="Hora del informe diario"
+            className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:border-accent-violet disabled:opacity-60"
+          >
+            {Array.from({ length: 24 }, (_, hour) => (
+              <option key={hour} value={hour}>
+                {formatHour(hour)}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-foreground">hora local de tu negocio</span>
+        </label>
       </section>
 
       <section className="rounded-lg border border-border bg-background p-5">
@@ -203,7 +251,7 @@ export function CmoSettingsView() {
               className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-accent-violet"
             />
             <Button
-              disabled={busy || draft.trim().length < 8}
+              disabled={busy || draft.trim().length < MIN_DIRECTIVE_CHARS}
               onClick={() => {
                 void addDirective();
               }}
@@ -317,8 +365,3 @@ function NumberField({
   );
 }
 
-function formatHour(hour: number): string {
-  const suffix = hour < 12 ? "a.m." : "p.m.";
-  const twelve = hour % 12 === 0 ? 12 : hour % 12;
-  return `${String(twelve)}:00 ${suffix}`;
-}

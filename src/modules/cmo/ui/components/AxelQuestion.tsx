@@ -60,7 +60,7 @@ export function AxelQuestion({
         )}
       >
         <CornerDownRight className="size-3 flex-none" aria-hidden="true" />
-        {live ? "Elige una" : "Ya respondida"}
+        {live ? "Elige una" : "Pregunta anterior"}
       </p>
 
       <p className="mb-2.5 text-[13.5px] leading-snug font-semibold text-foreground">

@@ -1,16 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, RotateCcw } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { BriefingDTO } from "@/modules/cmo/domain/cmo";
+import { formatHour } from "@/modules/cmo/domain/proposal-labels";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { AxelOrb } from "./AxelOrb";
 
 interface BriefingHeroProps {
   briefing: BriefingDTO | null;
   loading: boolean;
+  /** Fallo al CARGAR el briefing. Es un estado propio: pintarlo como «primer
+   *  contacto» afirmaba que el tenant no tenía informe cuando lo que pasó fue
+   *  un error de red (F1 de la auditoría). */
+  error: string | null;
+  onRetry: () => void;
   /** Hora local a la que corre el briefing, de los ajustes del tenant. */
   briefingHour: number;
   ownerName: string | null;
@@ -52,6 +58,8 @@ interface BriefingHeroProps {
 export function BriefingHero({
   briefing,
   loading,
+  error,
+  onRetry,
   briefingHour,
   ownerName,
   proposalCount,
@@ -68,7 +76,22 @@ export function BriefingHero({
         {today === null ? null : ` · ${today}`}
       </p>
 
-      {loading && briefing === null ? (
+      {error !== null && briefing === null ? (
+        <>
+          <p className="mt-4 max-w-[40ch] text-[13px] text-balance text-muted-foreground">
+            No pude cargar el informe de hoy. El chat funciona igual; el informe se puede
+            reintentar.
+          </p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11.5px] font-semibold text-foreground backdrop-blur transition-colors hover:border-accent-violet/40"
+          >
+            <RotateCcw className="size-3" aria-hidden="true" />
+            Reintentar
+          </button>
+        </>
+      ) : loading && briefing === null ? (
         <div className="mt-4 flex w-full max-w-[26ch] flex-col items-center gap-3">
           <Skeleton className="h-7 w-full" />
           <Skeleton className="h-7 w-4/5" />
@@ -141,8 +164,3 @@ function useTodayLabel(): string | null {
   return label;
 }
 
-function formatHour(hour: number): string {
-  const suffix = hour < 12 ? "a.m." : "p.m.";
-  const twelve = hour % 12 === 0 ? 12 : hour % 12;
-  return `${String(twelve)}:00 ${suffix}`;
-}

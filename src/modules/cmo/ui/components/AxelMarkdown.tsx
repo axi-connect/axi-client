@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 
 import { cn } from "@/core/lib/utils";
 import {
@@ -36,7 +36,10 @@ export function AxelMarkdown({
   caret?: boolean;
   className?: string;
 }) {
-  const blocks = parseAxelText(text);
+  // Memo por texto: durante el streaming este componente re-renderiza en cada
+  // delta sobre el texto ACUMULADO, y re-parsear todo cada vez era O(n²) en el
+  // camino más caliente de la vista (F6 de la auditoría).
+  const blocks = useMemo(() => parseAxelText(text), [text]);
   return (
     <div className={cn("text-[13.5px] leading-relaxed", className)}>
       {blocks.map((block, index) => (

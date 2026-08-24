@@ -153,6 +153,8 @@ interface CmoState {
 
   load: () => Promise<void>;
   reloadProposals: () => Promise<void>;
+  /** Reintenta SOLO el briefing: el hero muestra su error con este botón. */
+  reloadBriefing: () => Promise<void>;
   ask: (message: string) => Promise<void>;
   /**
    * Responder a una pregunta con opciones tocando una.
@@ -199,9 +201,6 @@ function blockerFor(error: unknown): CmoBlocker {
 let localId = 0;
 const nextLocalId = (): string => `local-${String((localId += 1))}`;
 
-/** Ids de propuesta decidida que se están pidiendo ahora mismo. */
-const inFlight = new Set<string>();
-
 /**
  * Cuánto se espera el POST del turno, DERIVADO del presupuesto del servidor.
  *
@@ -239,7 +238,13 @@ function isTimeout(error: unknown): boolean {
 const TIMEOUT_MESSAGE =
   "Axel tardó más de lo normal y dejamos de esperar. Si alcanzó a terminar, su respuesta aparece sola: no hace falta repetir la pregunta.";
 
-export const useCmoStore = create<CmoState>((set, get) => ({
+export const useCmoStore = create<CmoState>((set, get) => {
+  /** Ids de propuesta decidida que se están pidiendo ahora mismo. Vive en el
+   *  closure del store (no a nivel de módulo): un Set global sobrevivía a HMR
+   *  y a los resets entre tests (F10 de la auditoría). */
+  const inFlight = new Set<string>();
+
+  return {
   settings: idle(),
   briefing: idle(),
   proposals: idle(),
@@ -309,6 +314,15 @@ export const useCmoStore = create<CmoState>((set, get) => ({
       set({ proposals: ready(await listProposals()) });
     } catch (error) {
       set((state) => ({ proposals: failed(state.proposals, errorMessage(error)) }));
+    }
+  },
+
+  reloadBriefing: async () => {
+    set((state) => ({ briefing: loading(state.briefing) }));
+    try {
+      set({ briefing: ready(await getLatestBriefing()) });
+    } catch (error) {
+      set((state) => ({ briefing: failed(state.briefing, errorMessage(error)) }));
     }
   },
 
@@ -455,11 +469,11 @@ export const useCmoStore = create<CmoState>((set, get) => ({
     }
   },
 
-  /** Reintenta el último mensaje propio que falló, sin reescribirlo. */
   answer: async (label: string) => {
     await get().ask(label);
   },
 
+  /** Reintenta el último mensaje propio que falló, sin reescribirlo. */
   retryLast: async () => {
     const failedMessage = [...get().thread.messages]
       .reverse()
@@ -477,7 +491,13 @@ export const useCmoStore = create<CmoState>((set, get) => ({
   newThread: async () => {
     try {
       const thread = await createThread();
-      set({ thread: { id: thread.id, messages: [], thinking: false }, blocker: null });
+      // `settled` se poda aquí: acumulaba las decididas de TODOS los hilos y
+      // un hilo nuevo no ancla ninguna (F10).
+      set({
+        thread: { id: thread.id, messages: [], thinking: false },
+        blocker: null,
+        settled: {},
+      });
     } catch (error) {
       set({ blocker: blockerFor(error) });
     }
@@ -573,9 +593,16 @@ export const useCmoStore = create<CmoState>((set, get) => ({
 
   onTurnStarted: (event) => {
     // Confirmación de que el servidor aceptó el turno y el socket está vivo. No
-    // crea estado: el turno lo abre `ask`, que es quien conoce la pregunta.
-    if (get().live?.turn_id !== event.turn_id) return;
-    set((state) => ({ thread: { ...state.thread, thinking: true } }));
+    // crea estado (el turno lo abre `ask`, que es quien conoce la pregunta),
+    // pero SÍ pasa por la puerta y registra su seq: era el único de los cinco
+    // handlers fuera de ella, y un evento reentregado con su seq habría pasado
+    // el filtro de los siguientes (F7 de la auditoría).
+    const live = accept(get(), event);
+    if (live === null) return;
+    set((state) => ({
+      live: { ...live, seq: event.seq },
+      thread: { ...state.thread, thinking: true },
+    }));
   },
 
   onTurnStep: (event) => {
@@ -626,8 +653,10 @@ export const useCmoStore = create<CmoState>((set, get) => ({
     const live = accept(get(), event);
     if (live === null) return;
     const state = get();
-    // Ya está en el hilo (lo insertó el POST de esta pestaña): solo hay que
-    // apagar el estado en vivo.
+    // Defensa pura: en el flujo de UNA pestaña esta condición no puede darse
+    // (el POST inserta con id local y un cierre reentregado no pasa `accept`).
+    // Se conserva porque insertar dos veces el mismo mensaje es el fallo más
+    // caro de esta pantalla, y el costo del chequeo es nulo (F9).
     const already = state.thread.messages.some((item) => item.id === event.message_id);
     set({
       live: null,
@@ -667,7 +696,8 @@ export const useCmoStore = create<CmoState>((set, get) => ({
       thread: { ...get().thread, thinking: false },
     });
   },
-}));
+  };
+});
 
 /**
  * La puerta de los eventos en vivo: devuelve el turno al que aplicar el evento,

@@ -75,7 +75,7 @@ describe("la pregunta con opciones de Axel", () => {
     }
     // Y se sigue leyendo: es parte del hilo, y explica qué se decidió.
     expect(screen.getByText("¿A quién le apuntamos con la campaña?")).toBeVisible();
-    expect(screen.getByText("Ya respondida")).toBeVisible();
+    expect(screen.getByText("Pregunta anterior")).toBeVisible();
   });
 
   it("mientras Axel trabaja no se puede responder", () => {

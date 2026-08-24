@@ -48,6 +48,21 @@ const MESSAGES_BY_CODE: Record<string, string> = {
     "La clave propia de ElevenLabs es exclusiva del plan Enterprise",
   "ai/tts_credential_context": "La credencial de voz solo puede gestionarse desde el panel del negocio",
   "ai/voice_not_in_catalog": "Esa voz no está en el catálogo: elige una de la lista",
+  // CMO (Axel). Los 10 códigos tipados del slice: sin esta tabla se pintaba el
+  // `detail` crudo del backend en la burbuja del chat y en los toasts (H17).
+  "cmo/disabled": "Axel está apagado para esta empresa. Enciéndelo en sus ajustes",
+  "cmo/quota_exhausted":
+    "Se agotaron los análisis de Axel de este ciclo. Tus agentes siguen atendiendo con normalidad",
+  "cmo/stream_incomplete": "La respuesta de Axel se cortó antes de terminar. Vuelve a preguntarle",
+  "cmo/thread_not_found": "Esa conversación con Axel ya no está disponible",
+  "cmo/directive_not_found": "Esa directriz ya no existe",
+  "cmo/directive_limit_reached":
+    "Ya tienes 20 directrices activas, que es el tope. Desactiva alguna antes de agregar otra",
+  "cmo/directive_duplicate": "Ya tienes una directriz activa con ese mismo texto",
+  "cmo/proposal_not_found": "Esta propuesta ya no está: venció o alguien la decidió",
+  "cmo/proposal_not_pending": "La propuesta ya fue decidida por alguien de tu equipo",
+  "cmo/proposal_nothing_to_apply":
+    "Este es un hallazgo, no una acción: no hay nada que encender. Puedes descartarlo",
   "channels/provider_account_taken": "Ese número/cuenta ya está conectado en otro canal",
   // Embedded Signup de Meta (F3). Cada mensaje dice QUÉ HACER, no qué falló, y
   // ninguno usa jerga: el usuario no lee `phone_number_id`, `WABA`, `token` ni
