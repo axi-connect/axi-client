@@ -8,12 +8,14 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { detailTabsFor, type IntegrationDetailTabId } from "@/modules/integrations/domain/detail-tabs";
 import type { IntegrationDTO } from "@/modules/integrations/domain/integration";
 import { integrationProvider } from "@/modules/integrations/domain/integration-providers";
 import { getIntegrationById } from "@/modules/integrations/infrastructure/services/integrations-service.adapter";
 import { IntegrationProviderIcon } from "../IntegrationProviderIcon";
 import { IntegrationStatusBadge } from "../IntegrationStatusBadge";
 import { CollectionsTab } from "./CollectionsTab";
+import { ContactosTab } from "./ContactosTab";
 import { EstadoTab } from "./EstadoTab";
 import { LocationsTab } from "./LocationsTab";
 import { OrdersTab } from "./OrdersTab";
@@ -21,10 +23,46 @@ import { RunsTab } from "./RunsTab";
 
 /**
  * `/settings/integrations/[id]` — la integración conectada, con pestañas
- * (contrato del plan F17 PR7): Estado · Ubicaciones · Categorías · Pedidos ·
- * Historial. Cada pestaña carga lo suyo al montarse: ubicaciones y colecciones
- * llaman al proveedor REAL y no deben pagarse al abrir el detalle.
+ * DERIVADAS de sus capacidades (F9): `detailTabsFor` decide cuáles y este
+ * registry cerrado decide cómo se pintan. Cada pestaña carga lo suyo al
+ * montarse: ubicaciones y colecciones llaman al proveedor REAL y no deben
+ * pagarse al abrir el detalle.
  */
+type TabContext = {
+  integration: IntegrationDTO;
+  refetch: () => Promise<void>;
+};
+
+const TAB_REGISTRY: Record<
+  IntegrationDetailTabId,
+  { label: string; render: (ctx: TabContext) => React.ReactNode }
+> = {
+  estado: {
+    label: "Estado",
+    render: (ctx) => <EstadoTab integration={ctx.integration} onChanged={ctx.refetch} />,
+  },
+  ubicaciones: {
+    label: "Ubicaciones",
+    render: (ctx) => <LocationsTab integrationId={ctx.integration.id} onChanged={ctx.refetch} />,
+  },
+  categorias: {
+    label: "Categorías",
+    render: (ctx) => <CollectionsTab integrationId={ctx.integration.id} onChanged={ctx.refetch} />,
+  },
+  pedidos: {
+    label: "Pedidos",
+    render: () => <OrdersTab />,
+  },
+  contactos: {
+    label: "Contactos",
+    render: () => <ContactosTab />,
+  },
+  historial: {
+    label: "Historial",
+    render: (ctx) => <RunsTab integrationId={ctx.integration.id} />,
+  },
+};
+
 export function IntegrationDetailView({ integrationId }: { integrationId: string }) {
   const [integration, setIntegration] = useState<IntegrationDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +97,8 @@ export function IntegrationDetailView({ integrationId }: { integrationId: string
   }
 
   const provider = integrationProvider(integration.provider);
+  const tabs = detailTabsFor(provider, integration);
+  const ctx: TabContext = { integration, refetch };
 
   return (
     <div className="space-y-6">
@@ -82,28 +122,18 @@ export function IntegrationDetailView({ integrationId }: { integrationId: string
 
       <Tabs defaultValue="estado">
         <TabsList>
-          <TabsTrigger value="estado">Estado</TabsTrigger>
-          <TabsTrigger value="ubicaciones">Ubicaciones</TabsTrigger>
-          <TabsTrigger value="categorias">Categorías</TabsTrigger>
-          <TabsTrigger value="pedidos">Pedidos</TabsTrigger>
-          <TabsTrigger value="historial">Historial</TabsTrigger>
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab} value={tab}>
+              {TAB_REGISTRY[tab].label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="estado" className="pt-4">
-          <EstadoTab integration={integration} onChanged={refetch} />
-        </TabsContent>
-        <TabsContent value="ubicaciones" className="pt-4">
-          <LocationsTab integrationId={integration.id} onChanged={refetch} />
-        </TabsContent>
-        <TabsContent value="categorias" className="pt-4">
-          <CollectionsTab integrationId={integration.id} onChanged={refetch} />
-        </TabsContent>
-        <TabsContent value="pedidos" className="pt-4">
-          <OrdersTab />
-        </TabsContent>
-        <TabsContent value="historial" className="pt-4">
-          <RunsTab integrationId={integration.id} />
-        </TabsContent>
+        {tabs.map((tab) => (
+          <TabsContent key={tab} value={tab} className="pt-4">
+            {TAB_REGISTRY[tab].render(ctx)}
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );

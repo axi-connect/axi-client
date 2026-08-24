@@ -18,17 +18,28 @@ import { Input } from "@/shared/components/ui/input";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { IntegrationDTO } from "@/modules/integrations/domain/integration";
 import {
+  buildRotatePayload,
+  integrationProvider,
+  type AccessTokenConnectConfig,
+  type IntegrationProviderDescriptor,
+} from "@/modules/integrations/domain/integration-providers";
+import {
   disconnectIntegration,
   rotateIntegrationCredentials,
   startIntegrationSync,
 } from "@/modules/integrations/infrastructure/services/integrations-service.adapter";
 import { useIntegrationsStore } from "@/modules/integrations/infrastructure/stores/integrations.store";
+import { OAuthConnectPanel } from "../connect/OAuthConnectPanel";
 
 /**
  * Pestaña Estado: salud de la conexión + las tres acciones de gestión.
  * Rotar credenciales es también la vía de RECUPERACIÓN: tras un
  * `app/uninstalled` o un token revocado, un token nuevo válido vuelve a dejar
  * la conexión en `connected` y re-suscribe los webhooks.
+ *
+ * Desde F9 la acción de recuperación depende de la estrategia del registry:
+ * `access_token` rota credenciales con los campos del descriptor;
+ * `oauth` reconecta re-autorizando desde el proveedor.
  */
 export function EstadoTab({
   integration,
@@ -43,6 +54,9 @@ export function EstadoTab({
   const [notice, setNotice] = useState<string | null>(null);
   const [rotateOpen, setRotateOpen] = useState(false);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
+
+  const provider = integrationProvider(integration.provider);
+  const rotateConfig = provider.connect.strategy === "access_token" ? provider.connect : null;
 
   const sync = async () => {
     setSyncing(true);
@@ -119,7 +133,7 @@ export function EstadoTab({
         </Button>
         <Button variant="outline" onClick={() => setRotateOpen(true)}>
           <KeyRound aria-hidden="true" className="size-4" />
-          Rotar credenciales
+          {rotateConfig !== null ? "Rotar credenciales" : `Reconectar con ${provider.label}`}
         </Button>
         <Button
           variant="outline"
@@ -131,12 +145,29 @@ export function EstadoTab({
         </Button>
       </div>
 
-      <RotateCredentialsDialog
-        integrationId={integration.id}
-        open={rotateOpen}
-        onOpenChange={setRotateOpen}
-        onRotated={onChanged}
-      />
+      {rotateConfig !== null ? (
+        <RotateCredentialsDialog
+          integrationId={integration.id}
+          provider={provider}
+          config={rotateConfig}
+          open={rotateOpen}
+          onOpenChange={setRotateOpen}
+          onRotated={onChanged}
+        />
+      ) : (
+        <Dialog open={rotateOpen} onOpenChange={setRotateOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reconectar con {provider.label}</DialogTitle>
+              <DialogDescription>
+                Vuelves a autorizar el acceso desde tu {provider.noun.singular} de{" "}
+                {provider.label}: es la vía de recuperación cuando el permiso se revocó o expiró.
+              </DialogDescription>
+            </DialogHeader>
+            <OAuthConnectPanel provider={provider} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog open={disconnectOpen} onOpenChange={setDisconnectOpen}>
         <DialogContent>
@@ -144,8 +175,8 @@ export function EstadoTab({
             <DialogTitle>¿Desconectar esta integración?</DialogTitle>
             <DialogDescription>
               Tu catálogo espejado NO se borra: los productos quedan congelados con su último
-              estado y vuelven a ser editables. Los avisos de la tienda dejan de llegar. Puedes
-              volver a conectarla cuando quieras.
+              estado y vuelven a ser editables. Los avisos de tu {provider.noun.singular} dejan de
+              llegar. Puedes volver a conectarla cuando quieras.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -170,33 +201,40 @@ export function EstadoTab({
   );
 }
 
+/**
+ * Rotación por credenciales: los campos salen del MISMO descriptor que el alta
+ * (F9) — sin `external_account_field`, porque la cuenta remota no cambia al
+ * rotar. El payload lo arma `buildRotatePayload`, igual que el wizard.
+ */
 function RotateCredentialsDialog({
   integrationId,
+  provider,
+  config,
   open,
   onOpenChange,
   onRotated,
 }: {
   integrationId: string;
+  provider: IntegrationProviderDescriptor;
+  config: AccessTokenConnectConfig;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRotated: () => Promise<void>;
 }) {
-  const [accessToken, setAccessToken] = useState("");
-  const [apiSecret, setApiSecret] = useState("");
+  const [values, setValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const canSubmit = config.credential_fields.every(
+    (field) => (values[field.id] ?? "").trim().length > 0,
+  );
 
   const submit = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      await rotateIntegrationCredentials(integrationId, {
-        mode: "access_token",
-        access_token: accessToken.trim(),
-        api_secret: apiSecret.trim(),
-      });
-      setAccessToken("");
-      setApiSecret("");
+      await rotateIntegrationCredentials(integrationId, buildRotatePayload(config, values));
+      setValues({});
       onOpenChange(false);
       await onRotated();
     } catch (err) {
@@ -212,47 +250,36 @@ function RotateCredentialsDialog({
         <DialogHeader>
           <DialogTitle>Rotar credenciales</DialogTitle>
           <DialogDescription>
-            Se validan contra tu tienda antes de guardarse: si algo falla, las anteriores siguen
-            funcionando. Es también la vía para reconectar si desinstalaste la app en Shopify.
+            Se validan contra tu {provider.noun.singular} antes de guardarse: si algo falla, las
+            anteriores siguen funcionando. Es también la vía para reconectar si desinstalaste la
+            app en {provider.label}.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label htmlFor="rotate-token" className="text-sm font-medium">
-              Token de acceso nuevo
-            </label>
-            <Input
-              id="rotate-token"
-              type="password"
-              value={accessToken}
-              placeholder="shpat_…"
-              autoComplete="off"
-              onChange={(event) => setAccessToken(event.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="rotate-secret" className="text-sm font-medium">
-              Clave secreta de API
-            </label>
-            <Input
-              id="rotate-secret"
-              type="password"
-              value={apiSecret}
-              placeholder="shpss_…"
-              autoComplete="off"
-              onChange={(event) => setApiSecret(event.target.value)}
-            />
-          </div>
+          {config.credential_fields.map((field) => (
+            <div key={field.id} className="space-y-1.5">
+              <label htmlFor={`rotate-${field.id}`} className="text-sm font-medium">
+                {field.label}
+              </label>
+              <Input
+                id={`rotate-${field.id}`}
+                type={field.secret === true ? "password" : "text"}
+                value={values[field.id] ?? ""}
+                placeholder={field.placeholder}
+                autoComplete="off"
+                onChange={(event) =>
+                  setValues((prev) => ({ ...prev, [field.id]: event.target.value }))
+                }
+              />
+            </div>
+          ))}
           {error !== null && <p className="text-sm text-destructive">{error}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button
-            disabled={accessToken.trim() === "" || apiSecret.trim() === "" || submitting}
-            onClick={() => void submit()}
-          >
+          <Button disabled={!canSubmit || submitting} onClick={() => void submit()}>
             {submitting && <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />}
             Guardar
           </Button>
