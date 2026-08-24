@@ -28,7 +28,12 @@ import { useCmoStore } from "@/modules/cmo/infrastructure/stores/cmo.store";
 export function useCmoSocket() {
   const { socket, connected } = useSocket("inbox");
   const store = useCmoStore;
-  const wasConnectedRef = useRef(false);
+  /** true desde la PRIMERA conexión, y no se resetea al caer: es lo que
+   *  distingue «reconecté» de «conecté por primera vez». La versión anterior
+   *  (`wasConnectedRef = connected` al final del efecto) exigía dos ticks
+   *  conectados consecutivos — imposible en un true→false→true — así que la
+   *  recarga de reconexión NUNCA disparaba (F19, lo destapó su test). */
+  const everConnectedRef = useRef(false);
 
   useSocketEvent(socket, "cmo.briefing_ready", (payload) => {
     store.getState().onBriefingReady(payload);
@@ -63,9 +68,9 @@ export function useCmoSocket() {
   });
 
   useEffect(() => {
-    if (connected && wasConnectedRef.current) {
+    if (connected && everConnectedRef.current) {
       void store.getState().load();
     }
-    wasConnectedRef.current = connected;
+    if (connected) everConnectedRef.current = true;
   }, [connected, store]);
 }
