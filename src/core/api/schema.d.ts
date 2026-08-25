@@ -2052,6 +2052,22 @@ export interface paths {
         patch: operations["OrdersController_verifyPayment_v1"];
         trace?: never;
     };
+    "/api/v1/integrations/oauth/{provider}/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IntegrationsController_startOauth_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/integrations": {
         parameters: {
             query?: never;
@@ -2178,6 +2194,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_subscriptions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["IntegrationsController_updateSubscription_v1"];
         trace?: never;
     };
     "/api/v1/payment-methods": {
@@ -6714,12 +6746,15 @@ export interface components {
             /** @default true */
             notify_customer: boolean;
         };
+        OauthAuthorizeDto: {
+            authorize_url: string;
+        };
         IntegrationsListDto: {
             items: {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                provider: "shopify" | "mercado_pago" | "generic_webhook";
+                provider: "shopify" | "mercado_pago" | "generic_webhook" | "salesforce";
                 external_account: string;
                 account_label: string | null;
                 /** @enum {string} */
@@ -6750,16 +6785,26 @@ export interface components {
         ProvidersListDto: {
             items: {
                 /** @enum {string} */
-                provider: "shopify" | "mercado_pago" | "generic_webhook";
+                provider: "shopify" | "mercado_pago" | "generic_webhook" | "salesforce";
                 capabilities: string[];
                 required_scopes: string[];
+                events: {
+                    event_name: string;
+                    /** @enum {string} */
+                    direction: "outbound" | "inbound";
+                    capability: string;
+                    default_enabled: boolean;
+                }[];
+                sync_model: {
+                    [key: string]: "mirror" | "two_way";
+                };
             }[];
         };
         IntegrationDto: {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            provider: "shopify" | "mercado_pago" | "generic_webhook";
+            provider: "shopify" | "mercado_pago" | "generic_webhook" | "salesforce";
             external_account: string;
             account_label: string | null;
             /** @enum {string} */
@@ -6782,7 +6827,7 @@ export interface components {
         };
         ConnectIntegrationDto: {
             /** @enum {string} */
-            provider: "shopify" | "mercado_pago" | "generic_webhook";
+            provider: "shopify" | "mercado_pago" | "generic_webhook" | "salesforce";
             external_account: string;
             credentials: {
                 /** @enum {string} */
@@ -6876,6 +6921,20 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             }[];
+        };
+        EventSubscriptionsListDto: {
+            items: {
+                event_name: string;
+                /** @enum {string} */
+                direction: "outbound" | "inbound";
+                enabled: boolean;
+            }[];
+        };
+        UpdateEventSubscriptionDto: {
+            event_name: string;
+            /** @enum {string} */
+            direction: "outbound" | "inbound";
+            enabled: boolean;
         };
         PaymentMethodsListDto: {
             data: {
@@ -13169,6 +13228,27 @@ export interface operations {
             };
         };
     };
+    IntegrationsController_startOauth_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthAuthorizeDto"];
+                };
+            };
+        };
+    };
     IntegrationsController_list_v1: {
         parameters: {
             query?: never;
@@ -13428,6 +13508,50 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SyncRunsListDto"];
                 };
+            };
+        };
+    };
+    IntegrationsController_subscriptions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventSubscriptionsListDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_updateSubscription_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEventSubscriptionDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
