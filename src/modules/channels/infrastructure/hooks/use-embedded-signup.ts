@@ -20,7 +20,7 @@ import {
   completeMetaSignup,
   registerMetaPhoneNumber,
 } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
-import { useMetaPopup, type MetaPopupError } from "./use-meta-popup";
+import { logSignup, useMetaPopup, type MetaPopupError } from "./use-meta-popup";
 
 /**
  * Máquina de estados del Embedded Signup (F2). Sin UI: F3 la consume.
@@ -95,6 +95,8 @@ export function useEmbeddedSignup({
   const settledRef = useRef(false);
   /** Evita `setState` sobre un componente desmontado tras un POST en vuelo. */
   const mountedRef = useRef(true);
+  /** Solo para la traza: meter `phase` en las deps recrearía `start` en cada cambio. */
+  const phaseRef = useRef<EmbeddedSignupPhase>("preparing");
 
   const clearAttempt = useCallback(() => {
     if (listenerRef.current !== null) {
@@ -140,6 +142,10 @@ export function useEmbeddedSignup({
   }, [popup.status, popup.error]);
 
   // ------------------------------------------------------------ resolución
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
   const settle = useCallback(
     (next: EmbeddedSignupPhase, failure: EmbeddedSignupError | null) => {
       if (settledRef.current) return;
@@ -213,6 +219,7 @@ export function useEmbeddedSignup({
    * el clic del usuario y `FB.login` no puede haber ni un `await`.
    */
   const start = useCallback(() => {
+    logSignup("start() — clic recibido (WhatsApp)", { fase_previa: phaseRef.current });
     clearAttempt();
     settledRef.current = false;
     setChannel(null);
@@ -261,6 +268,21 @@ export function useEmbeddedSignup({
         window.addEventListener("message", listener);
       },
       onResult: (result) => {
+        if (result.outcome === "unavailable") {
+          settle("unavailable", {
+            code: "channels/meta_signup_disabled",
+            message: "La conexión automática con Meta no está disponible ahora mismo.",
+          });
+          return;
+        }
+        if (result.outcome === "config_ignored") {
+          settle("error", {
+            code: "meta/config_not_applied",
+            message:
+              "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
+          });
+          return;
+        }
         if (result.outcome === "blocked") {
           settle("popup_blocked", null);
           return;

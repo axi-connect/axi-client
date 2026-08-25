@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Clock, Plus, Search, Ticket } from "lucide-react";
+import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -83,6 +84,25 @@ export function PromotionsView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /* Llegar desde el chat de Axel: `?promotion=<id>` abre ese borrador. Se pone
+     el filtro en «todas» a propósito — lo que Axel deja nace APAGADO, y con el
+     filtro por defecto («activas») el dueño cerraría el panel y no vería la fila
+     de la promoción que acaba de revisar. */
+  const deepLink = useDeepLinkTarget("promotion", promotions, {
+    onFound: (promotion) => {
+      setStateFilter("all");
+      setEditing({ promotion });
+    },
+    onMissing: () => {
+      showAlert({
+        tone: "warning",
+        title: "Esa promoción ya no está",
+        description: "Se eliminó o alguien de tu equipo la cambió.",
+        open: true,
+      });
+    },
+  });
 
 
   const visible = useMemo(() => {
@@ -333,7 +353,13 @@ export function PromotionsView() {
 
       <DetailSheet
         open={editing !== null}
-        onOpenChange={(open) => !open && setEditing(null)}
+        onOpenChange={(open) => {
+          if (open) return;
+          setEditing(null);
+          // el enlace ya se consumió: si el parámetro se queda, recargar la
+          // pantalla volvería a abrir el panel
+          deepLink.clear();
+        }}
         size="lg"
         title={editing?.promotion ? "Editar promoción" : "Nueva promoción"}
         subtitle="El descuento lo calcula el sistema y lo aplica al pedido; nunca el agente."
@@ -368,6 +394,7 @@ export function PromotionsView() {
                   : [saved, ...prev];
               });
               setEditing(null);
+              deepLink.clear();
             }}
           />
         )}

@@ -18,6 +18,7 @@ import {
   Plug,
   Puzzle,
   ScrollText,
+  Sparkles,
   Settings,
   Shield,
   ShoppingBag,
@@ -57,6 +58,9 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   puzzle: Puzzle,
   scroll: ScrollText,
   settings: Settings,
+  // Axel, el director de mercadeo (módulo cmo). El seeder del backend lo pide
+  // por este nombre; sin la entrada el ítem del sidebar caería a `Circle`.
+  sparkles: Sparkles,
   shield: Shield,
   "shopping-bag": ShoppingBag,
   "shopping-cart": ShoppingCart,

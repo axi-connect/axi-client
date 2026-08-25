@@ -34,13 +34,11 @@ import { PageAssetPicker } from "./PageAssetPicker";
  */
 export function PageSignupButton({
   provider,
-  channelName,
   onConnected,
   onManualCreated,
   intro,
 }: {
   provider: ChannelProvider;
-  channelName: string;
   onConnected: (channel: ChannelDTO) => void;
   onManualCreated?: () => void;
   intro?: React.ReactNode;
@@ -49,7 +47,6 @@ export function PageSignupButton({
   const product = provider.meta_product === "instagram" ? "instagram" : "messenger";
   const { phase, error, assets, connecting, start, choose, reset } = usePageSignup({
     product,
-    channelName,
     onConnected,
   });
 
@@ -82,7 +79,10 @@ export function PageSignupButton({
 
         <div role="alert" aria-live="assertive" className="space-y-4">
           {phase === "popup_blocked" && <PopupBlockedNotice />}
-          {phase === "cancelled" && <CancelledNotice />}
+          {/* `mayBeMetaError`: aquí el popup no manda `postMessage`, así que una
+              cancelación y un fallo de Meta son indistinguibles — ver el
+              docblock de `CancelledNotice`. */}
+          {phase === "cancelled" && <CancelledNotice mayBeMetaError />}
           {phase === "error" && <ErrorNotice error={error} />}
           {phase === "unavailable" && <UnavailableNotice error={error} />}
         </div>

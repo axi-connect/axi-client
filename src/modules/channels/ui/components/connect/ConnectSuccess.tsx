@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Check, ChevronRight, Info } from "lucide-react";
 
@@ -23,7 +24,10 @@ import { ChannelStatusBadge } from "../ChannelStatusBadge";
  * acordeón "Detalles técnicos", que existe para que soporte pueda pedirle al
  * cliente que lo despliegue.
  */
-export function ConnectSuccess({ channel }: { channel: ChannelDTO }) {
+export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) {
+  // El formulario de abajo renombra y asigna agente: sin este estado, guardar
+  // actualizaba el servidor y esta pantalla seguía enseñando el nombre viejo
+  const [channel, setChannel] = useState<ChannelDTO>(connected);
   const provider = channelProvider(channel.kind);
   // El copy de los sub-estados pendientes vive en `domain/channel-health`, una
   // sola vez: aquí y en la tarjeta de salud tienen que decir lo mismo
@@ -48,7 +52,7 @@ export function ConnectSuccess({ channel }: { channel: ChannelDTO }) {
             <h2 className="text-xl font-semibold tracking-tight">
               {provider.kind === "whatsapp_web"
                 ? "Tu WhatsApp quedó vinculado"
-                : "Tu WhatsApp ya está conectado"}
+                : `Tu ${provider.label} ya está conectado`}
             </h2>
             <p className="text-muted-foreground">
               Desde ahora los mensajes que lleguen a{" "}
@@ -63,7 +67,7 @@ export function ConnectSuccess({ channel }: { channel: ChannelDTO }) {
 
         <hr className="border-border" />
 
-        <ChannelForm host={{ channel }} />
+        <ChannelForm host={{ channel, onSuccess: setChannel }} />
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={submit}>
             Guardar cambios
@@ -99,8 +103,9 @@ export function ConnectSuccess({ channel }: { channel: ChannelDTO }) {
         <div className="space-y-1">
           <p className="font-semibold">Pruébalo ahora</p>
           <p className="text-muted-foreground">
-            Escríbele a ese número desde otro teléfono: el mensaje aparecerá en Conversaciones en
-            unos segundos.
+            {channel.display_phone_number
+              ? "Escríbele a ese número desde otro teléfono: el mensaje aparecerá en Conversaciones en unos segundos."
+              : "Mándale un mensaje desde otra cuenta: aparecerá en Conversaciones en unos segundos."}
           </p>
         </div>
       </div>

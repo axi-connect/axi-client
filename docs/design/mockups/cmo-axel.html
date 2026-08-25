@@ -1,0 +1,1650 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Consola CMO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&family=Outfit:wght@200;300;400;600;700;800&display=swap">
+
+<!--
+  MOCKUP F0 — módulo CMO (Axel, director de mercadeo).
+  Gate de aprobación. NO es código de producción.
+  Plan: axi-server/docs/plans/cmo_module_plan.md
+
+  DISTRIBUCIÓN (v2, sobre la referencia aprobada por el usuario):
+  el chat es la columna vertebral y ocupa el centro; el orbe de Axel encabeza
+  la columna; el tablero se degrada a un rail derecho de tarjetas apiladas con
+  sparklines; a la izquierda un rail de iconos. La pestaña se llama CMO — Axel
+  es el nombre del agente, no el del módulo.
+
+  Reglas que este archivo respeta a propósito:
+  · Los primitivos de la CAPA 1 son COPIA LITERAL de axi-client/src/app/globals.css.
+    Ningún hex vive fuera de ese bloque (DESIGN-SYSTEM §11).
+  · El ANILLO COMETA y el CAMPO AMBIENTAL no son invento de este mockup: son
+    `@property --comet-angle` + `.channel-surface::after` y `.bg-brand-ambient`,
+    ya aprobados en docs/design/mockups/channels-connect.html. Se respetan sus
+    topes de tinte (7%–34%).
+  · Un solo momento cromático hero: el orbe con el gradiente tricolor del
+    isotipo. El coral queda para la acción primaria; el violeta para IA; los
+    colores de estado no cuentan como acento (DESIGN §3.2).
+  · Cada cifra se puede señalar a una fuente real: /analytics/funnel,
+    /orders/stats, crm_contact_profile.score, marketing_campaign_recipient,
+    analytics_evaluation_issue.
+
+  Aproximaciones conscientes:
+  · Nexa (headings, pesos 200/700) es fuente local del repo; aquí cae a Outfit,
+    geométrica y del mismo registro, con el mismo par de pesos. Poppins sí es la real.
+  · Los iconos son un sprite con los paths de lucide-react, el set del proyecto.
+-->
+
+<style>
+/* ==========================================================================
+   CAPA 1 — PRIMITIVOS DE MARCA (copia literal de src/app/globals.css)
+   Único lugar de este archivo donde existen valores hex.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+
+  --axi-on-color: #ffffff;
+}
+
+/* El estado "sistema" no estampa nada: solo prefers-color-scheme separa los
+   temas. El guard :not([data-theme="light"]) deja ganar la elección explícita. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --axi-brand: #fb7185;
+    --axi-brand-2: #df4f4f;
+    --axi-violet: #a78bfa;
+    --axi-amber: #fbbf24;
+    --axi-muted: #18181b;
+    --axi-success: #4ade80;
+    --axi-warning: #fbbf24;
+    --axi-destructive: #f87171;
+    --axi-info: #60a5fa;
+    --axi-on-color: #0a0a0a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --axi-brand: #fb7185;
+  --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa;
+  --axi-amber: #fbbf24;
+  --axi-muted: #18181b;
+  --axi-success: #4ade80;
+  --axi-warning: #fbbf24;
+  --axi-destructive: #f87171;
+  --axi-info: #60a5fa;
+  --axi-on-color: #0a0a0a;
+}
+
+/* ==========================================================================
+   CAPA 2 — TOKENS SEMÁNTICOS (derivan de la capa 1; sin hex nuevos)
+   ========================================================================== */
+:root {
+  --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft: color-mix(in srgb, var(--border) 50%, transparent);
+  --hairline: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --muted-fg: color-mix(in srgb, var(--foreground) 62%, transparent);
+  --faint-fg: color-mix(in srgb, var(--foreground) 44%, transparent);
+  --ghost-fg: color-mix(in srgb, var(--foreground) 30%, transparent);
+  --surface: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  --surface-2: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  --elevated: var(--background);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+  --shadow-lift: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 28px rgb(0 0 0 / 0.08);
+
+  --font-body: "Poppins", Helvetica, Arial, sans-serif;
+  --font-head: "Nexa", "Outfit", "Poppins", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ai: var(--axi-violet);
+  --ai-tint: color-mix(in srgb, var(--axi-violet) 6%, var(--background));
+  --ai-line: color-mix(in srgb, var(--axi-violet) 28%, transparent);
+}
+
+/* Propiedad TIPADA: un custom property sin @property no interpola.
+   Copiada de globals.css — es la que hace girar el cometa. */
+@property --comet-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ==========================================================================
+   CAPA 3 — BASE
+   ========================================================================== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-head); margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+.num { font-variant-numeric: tabular-nums; }
+.ico { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ico-lg { width: 20px; height: 20px; }
+.ico-xl { width: 26px; height: 26px; stroke-width: 1.6; }
+.ico-sm { width: 13px; height: 13px; }
+.spacer { margin-left: auto; }
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   SHELL
+   ========================================================================== */
+.app { display: flex; flex-direction: column; height: 100vh; height: 100svh; }
+
+/* ---- barra de pestañas superior ---- */
+.topbar {
+  flex: none; height: 54px;
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  position: relative; z-index: 20;
+}
+.brandrow { display: flex; align-items: center; gap: 9px; padding-right: 8px; }
+.mark { width: 24px; height: 24px; border-radius: 8px; flex: none; background-image: linear-gradient(140deg, var(--axi-brand), var(--axi-amber) 55%, var(--axi-violet)); }
+.brandname { font-family: var(--font-head); font-weight: 800; font-size: 14px; letter-spacing: -0.02em; }
+
+.tabs { display: flex; align-items: center; gap: 2px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 999px; padding: 3px; }
+.tab { font-size: 12.5px; font-weight: 500; color: var(--muted-fg); padding: 6px 14px; border-radius: 999px; white-space: nowrap; transition: color 140ms ease, background 140ms ease; }
+.tab:hover { color: var(--foreground); }
+.tab.on { background: var(--background); color: var(--foreground); font-weight: 600; box-shadow: var(--shadow-float); }
+.tab.on .ico { color: var(--ai); }
+.tab .ico { vertical-align: -2px; margin-right: 5px; }
+
+.toplink { font-size: 12.5px; color: var(--muted-fg); text-decoration: none; padding: 6px 10px; border-radius: var(--radius-md); }
+.toplink:hover { color: var(--foreground); background: var(--surface-2); }
+.iconbtn { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; color: var(--muted-fg); border: 1px solid transparent; }
+.iconbtn:hover { background: var(--surface-2); color: var(--foreground); border-color: var(--hairline); }
+.avatar { width: 30px; height: 30px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: var(--muted-fg); }
+
+/* ---- cuerpo de tres columnas ---- */
+.body { flex: 1; min-height: 0; display: flex; }
+
+/* rail izquierdo de iconos */
+.railL {
+  width: 56px; flex: none;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 0; gap: 6px;
+}
+.railbtn { width: 34px; height: 34px; border-radius: var(--radius-md); display: grid; place-items: center; color: var(--faint-fg); position: relative; }
+.railbtn:hover { background: var(--surface-2); color: var(--foreground); }
+.railbtn.primary { background: var(--foreground); color: var(--background); }
+.railbtn.primary:hover { filter: brightness(1.15); background: var(--foreground); }
+.railbtn.on { color: var(--ai); background: color-mix(in srgb, var(--ai) 11%, var(--background)); }
+.raildot { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 999px; background: var(--axi-brand); border: 1.5px solid var(--surface); }
+.railsep { width: 20px; height: 1px; background: var(--border); margin: 6px 0; }
+
+/* ==========================================================================
+   CENTRO — la conversación es la columna vertebral
+   ========================================================================== */
+.center { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; isolation: isolate; }
+
+/* Campo ambiental: mismo lenguaje que .bg-brand-ambient (elipses ancladas a
+   esquina, srgb, tinte ≤13%) + un dot-grid al 3.5% que da la sensación de
+   consola sin ruido. */
+.center::before {
+  content: "";
+  position: absolute; inset: 0; z-index: -2;
+  background-color: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  background-image:
+    radial-gradient(70% 100% at 12% -6%, color-mix(in srgb, var(--axi-brand) 13%, transparent), transparent 70%),
+    radial-gradient(64% 96% at 92% 4%, color-mix(in srgb, var(--axi-violet) 11%, transparent), transparent 68%),
+    radial-gradient(50% 70% at 50% 108%, color-mix(in srgb, var(--axi-amber) 7%, transparent), transparent 72%);
+  pointer-events: none;
+}
+.center::after {
+  content: "";
+  position: absolute; inset: 0; z-index: -1;
+  background-image: radial-gradient(color-mix(in srgb, var(--foreground) 12%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.scroller { flex: 1; min-height: 0; overflow-y: auto; padding: 30px 24px 8px; }
+.column { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; }
+
+/* ---- el orbe de Axel ---- */
+.stage { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; }
+.orbwrap { position: relative; width: 84px; height: 84px; margin-bottom: 20px; }
+.orbglow {
+  position: absolute; inset: -26px; border-radius: 999px; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%, transparent 68%);
+  filter: blur(6px);
+}
+.orb {
+  position: absolute; inset: 0; border-radius: 999px;
+  display: grid; place-items: center;
+  background: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lift);
+  color: var(--ai);
+  isolation: isolate;
+}
+/* Anillo cometa — receta de .channel-surface::after: cónico con cola y núcleo
+   recortado a la franja de 1.5px con dos máscaras que se excluyen. */
+.orb::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: comet 5.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes comet { to { --comet-angle: 360deg; } }
+.orb.busy { animation: breathe 1.4s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+
+.hello { font-size: 13px; color: var(--faint-fg); font-weight: 400; letter-spacing: 0.01em; }
+.headline {
+  font-family: var(--font-head);
+  font-size: 34px; line-height: 1.18; font-weight: 200;
+  color: var(--ghost-fg);
+  letter-spacing: -0.03em;
+  margin-top: 6px;
+  max-width: 17ch;
+}
+.headline b { font-weight: 700; color: var(--foreground); }
+.headline .money { font-variant-numeric: tabular-nums; }
+.subline { font-size: 13px; color: var(--muted-fg); margin-top: 14px; max-width: 46ch; }
+
+/* ---- tarjetas de capacidad (estado vacío) ---- */
+.caps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; margin-top: 34px; }
+.cap {
+  text-align: left; padding: 14px 14px 15px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; gap: 8px;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.cap:hover { transform: translateY(-2px); border-color: var(--ai-line); box-shadow: var(--shadow-lift); }
+.capico { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--hairline); color: var(--muted-fg); }
+.cap:hover .capico { color: var(--ai); border-color: var(--ai-line); background: color-mix(in srgb, var(--ai) 9%, var(--background)); }
+.capname { font-family: var(--font-head); font-size: 13.5px; font-weight: 700; }
+.capdesc { font-size: 11.5px; color: var(--faint-fg); line-height: 1.45; }
+
+/* ---- hilo ---- */
+.thread { display: flex; flex-direction: column; gap: 16px; margin-top: 30px; }
+.msgin { animation: rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.me {
+  align-self: flex-end; max-width: 84%;
+  font-size: 13.5px; line-height: 1.55;
+  padding: 11px 15px;
+  border-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-sm);
+  background: var(--background); border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+}
+
+.axel {
+  align-self: stretch;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--elevated);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+.axelhead { display: flex; align-items: center; gap: 8px; padding: 11px 15px 0; }
+.axellabel { font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--ai); }
+.axelstamp { margin-left: auto; font-size: 10.5px; color: var(--ghost-fg); }
+.axelbody { padding: 9px 15px 14px; font-size: 13.5px; line-height: 1.62; color: var(--muted-fg); }
+.axelbody strong { color: var(--foreground); font-weight: 600; }
+.vpill { display: inline-block; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--foreground); background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 1px 6px; font-size: 12.5px; }
+
+/* mini tarjetas de resultado dentro de un mensaje */
+.metrics { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+.metric { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; background: var(--surface); min-width: 108px; }
+.metriclabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ghost-fg); font-weight: 600; }
+.metricval { font-family: var(--font-head); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.metric.bad .metricval { color: var(--axi-warning); }
+.metric.good .metricval { color: var(--axi-success); }
+
+/* embudo dentro de un mensaje */
+.funnel { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.frow { display: flex; align-items: center; gap: 10px; font-size: 11.5px; }
+.flabel { width: 92px; flex: none; color: var(--faint-fg); }
+.ftrack { flex: 1; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.fbar { display: block; height: 100%; border-radius: 999px; background-image: linear-gradient(to right, var(--ai), color-mix(in srgb, var(--ai) 55%, var(--axi-brand))); transform-origin: left; animation: grow 620ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.fnum { width: 34px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--foreground); }
+
+/* tarjeta de propuesta dentro del hilo */
+.propcard {
+  margin: 13px 15px 15px; position: relative; isolation: isolate;
+  border: 1px solid var(--ai-line); border-radius: var(--radius-lg);
+  background: var(--ai-tint);
+  padding: 14px 15px;
+  display: flex; flex-direction: column; gap: 11px;
+  overflow: hidden;
+}
+.propcard::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle 110px at 22px 18px, color-mix(in srgb, var(--ai) 18%, transparent) 0%, transparent 100%);
+}
+.proptop { display: flex; align-items: center; gap: 9px; }
+.kind { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); color: var(--muted-fg); }
+.kind.rec { color: var(--axi-amber); border-color: color-mix(in srgb, var(--axi-amber) 42%, transparent); }
+.kind.tun { color: var(--axi-info); border-color: color-mix(in srgb, var(--axi-info) 42%, transparent); }
+.kind.cam { color: var(--ai); border-color: var(--ai-line); }
+.expiry { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--axi-warning); display: inline-flex; align-items: center; gap: 5px; }
+.expiry.calm { color: var(--ghost-fg); }
+.proptitle { font-family: var(--font-head); font-size: 16.5px; font-weight: 700; line-height: 1.3; }
+.prophead { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--ai); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.propwhy { font-size: 12.5px; color: var(--muted-fg); line-height: 1.55; }
+.propfoot { display: flex; align-items: center; gap: 9px; }
+.propmeta { font-size: 10.5px; color: var(--ghost-fg); }
+
+/* pensando */
+.thinking { align-self: stretch; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--elevated); box-shadow: var(--shadow-float); padding: 14px 15px; display: flex; flex-direction: column; gap: 8px; }
+.tline { height: 9px; border-radius: 999px; background: color-mix(in srgb, var(--ai) 16%, transparent); animation: shimmer 1.25s ease-in-out infinite; }
+.tline:nth-child(2) { width: 84%; animation-delay: 0.14s; }
+.tline:nth-child(3) { width: 58%; animation-delay: 0.28s; }
+@keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.tnote { font-size: 11px; color: var(--ghost-fg); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+
+/* ---- composer ---- */
+.dock { flex: none; padding: 12px 24px 20px; }
+.dockinner { width: 100%; max-width: 640px; margin: 0 auto; }
+.composer {
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: var(--shadow-lift);
+  padding: 13px 14px 10px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.composer:focus-within { border-color: var(--ai-line); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai) 10%, transparent), var(--shadow-lift); }
+.composer textarea { width: 100%; border: 0; outline: 0; background: none; resize: none; font-size: 14px; line-height: 1.5; min-height: 42px; max-height: 120px; }
+.composer textarea::placeholder { color: var(--ghost-fg); }
+.tools { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+.tool { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--muted-fg); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
+.tool:hover { color: var(--foreground); background: var(--surface-2); }
+.tool.on { color: var(--ai); border-color: var(--ai-line); background: color-mix(in srgb, var(--ai) 8%, var(--background)); }
+.send { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; margin-left: auto; color: var(--axi-on-color); background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); box-shadow: var(--shadow-float); transition: transform 110ms ease, filter 140ms ease; }
+.send:hover { filter: brightness(1.07); }
+.send:active { transform: scale(0.94); }
+.dockmeta { display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 10px; font-size: 10.5px; color: var(--ghost-fg); }
+
+/* ==========================================================================
+   RAIL DERECHO — el tablero, degradado a tarjetas apiladas
+   ========================================================================== */
+.railR {
+  width: 316px; flex: none;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.railscroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
+.railpin { flex: none; border-top: 1px solid var(--border); padding: 14px; }
+
+.card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); overflow: hidden; }
+.cardhead { display: flex; align-items: center; gap: 8px; padding: 12px 13px 0; }
+.cardtitle { font-family: var(--font-head); font-size: 12.5px; font-weight: 700; letter-spacing: -0.01em; }
+.cardbody { padding: 11px 13px 13px; display: flex; flex-direction: column; gap: 11px; }
+
+.livechip { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 7px 11px; background: var(--surface); }
+.livedot { position: relative; width: 7px; height: 7px; border-radius: 999px; background: var(--axi-success); flex: none; }
+.livedot::after { content: ""; position: absolute; inset: -4px; border-radius: 999px; border: 1px solid var(--axi-success); animation: ping 1.9s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+.livechip .spacer + .num { font-size: 11px; color: var(--faint-fg); }
+
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meterrow { display: flex; align-items: baseline; gap: 8px; }
+.meterlabel { font-size: 11.5px; color: var(--faint-fg); }
+.metervalue { margin-left: auto; font-family: var(--font-head); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mtrack { height: 7px; border-radius: 999px; background: var(--surface-2); overflow: hidden; display: flex; gap: 2px; }
+.mseg { flex: 1; background: var(--surface-2); border-radius: 1px; }
+.mseg.fill { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber)); }
+.mseg.fill.ai { background-image: linear-gradient(to right, var(--ai), color-mix(in srgb, var(--ai) 50%, var(--axi-brand))); }
+.metersub { font-size: 10.5px; color: var(--ghost-fg); }
+
+/* señal con sparkline */
+.signal { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 11px 12px 9px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; transition: border-color 150ms ease, transform 150ms ease; }
+.signal:hover { border-color: var(--ai-line); transform: translateY(-1px); }
+.sigtop { display: flex; align-items: flex-start; gap: 8px; }
+.signame { font-size: 12.5px; font-weight: 600; }
+.sigsub { font-size: 10.5px; color: var(--ghost-fg); margin-top: 1px; }
+.sigright { margin-left: auto; text-align: right; flex: none; }
+.sigval { font-family: var(--font-head); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 999px; padding: 2px 7px; }
+.badge.urgent { color: var(--axi-on-color); background: var(--axi-warning); }
+.badge.chance { color: var(--axi-on-color); background: var(--axi-success); }
+.badge.watch { color: var(--axi-on-color); background: var(--axi-info); }
+.spark { display: block; width: 100%; height: 34px; overflow: visible; }
+.spark .sbars { fill: color-mix(in srgb, var(--axi-amber) 32%, transparent); }
+.spark .sbar-hot { fill: var(--axi-amber); }
+.spark .sfill { fill: url(#gRe); }
+.spark .sline { fill: none; stroke: var(--axi-success); stroke-width: 1.6; stroke-linejoin: round; }
+.spark .stip { fill: var(--axi-success); }
+.spark .s0 { stop-color: var(--axi-success); stop-opacity: 0.34; }
+.spark .s1 { stop-color: var(--axi-success); stop-opacity: 0; }
+
+
+.insight { display: flex; flex-direction: column; gap: 7px; }
+.insighthead { display: flex; align-items: center; gap: 7px; }
+.insightlabel { font-size: 11px; font-weight: 700; letter-spacing: 0.03em; color: var(--ai); }
+.insighttext { font-size: 11.5px; line-height: 1.55; color: var(--muted-fg); }
+.insighttext b { color: var(--foreground); font-weight: 600; }
+
+.qrow { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); text-decoration: none; color: inherit; }
+.qrow:hover { border-color: var(--ai-line); background: var(--ai-tint); }
+.qrow .n { flex: 1; font-size: 12px; font-weight: 600; }
+.qrow .v { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.pill { font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--border); color: var(--muted-fg); white-space: nowrap; }
+.pill.off { color: var(--axi-warning); border-color: color-mix(in srgb, var(--axi-warning) 36%, transparent); }
+.pill.on { color: var(--axi-success); border-color: color-mix(in srgb, var(--axi-success) 36%, transparent); }
+
+/* ==========================================================================
+   BOTONES
+   ========================================================================== */
+.btn { display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-md); padding: 7px 13px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--border); background: var(--background); color: var(--foreground); transition: transform 100ms ease, background 130ms ease, filter 130ms ease; }
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); color: var(--axi-on-color); border-color: transparent; }
+.btn-primary:hover { filter: brightness(1.06); background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); }
+.btn-ai { background: var(--ai); color: var(--axi-on-color); border-color: transparent; }
+.btn-ai:hover { background: var(--ai); filter: brightness(1.07); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-ghost { border-color: transparent; color: var(--muted-fg); }
+.btn-ghost:hover { color: var(--foreground); background: var(--surface-2); }
+.count { font-size: 10.5px; font-weight: 700; background: var(--surface-2); border: 1px solid var(--hairline); color: var(--muted-fg); border-radius: 999px; padding: 0 6px; }
+
+/* ==========================================================================
+   SHEET DE PROPUESTA
+   ========================================================================== */
+.backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.46); opacity: 0; pointer-events: none; transition: opacity 200ms ease; z-index: 50; backdrop-filter: blur(2px); }
+.backdrop.open { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 580px; max-width: 100vw;
+  background: var(--background);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-overlay);
+  transform: translateX(100%);
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 60; display: flex; flex-direction: column;
+}
+.sheet.open { transform: none; }
+.sheethead { flex: none; padding: 18px 22px 16px; border-bottom: 1px solid var(--border); position: relative; isolation: isolate; overflow: hidden; }
+.sheethead::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(70% 150% at 6% 0%, color-mix(in srgb, var(--ai) 12%, transparent), transparent 70%); pointer-events: none; }
+.sheettitle { font-size: 21px; line-height: 1.25; }
+.sheetbody { flex: 1; overflow-y: auto; padding: 18px 22px 26px; display: flex; flex-direction: column; gap: 18px; }
+.sheetfoot { flex: none; padding: 13px 22px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 9px; background: var(--surface); }
+
+.block { display: flex; flex-direction: column; gap: 9px; }
+.blocklabel { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ghost-fg); display: flex; align-items: center; gap: 7px; }
+.evid { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.evidrow { display: flex; align-items: baseline; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border-soft); font-size: 12.5px; }
+.evidrow:last-child { border-bottom: 0; }
+.evidrow .k { flex: 1; color: var(--muted-fg); }
+.evidrow .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.plan { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px 14px; background: var(--surface); display: flex; flex-direction: column; gap: 9px; }
+.planrow { display: flex; gap: 10px; font-size: 12.5px; }
+.planrow .k { width: 122px; flex: none; color: var(--ghost-fg); }
+.planrow .v { flex: 1; }
+
+.risk { display: flex; gap: 9px; font-size: 12.5px; color: var(--muted-fg); line-height: 1.55; }
+.risk .ico { color: var(--axi-warning); margin-top: 3px; }
+
+.artifact { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; text-decoration: none; color: inherit; }
+.artifact:hover { border-color: var(--ai-line); background: var(--ai-tint); }
+.artifact .n { flex: 1; font-size: 12.5px; font-weight: 600; }
+
+.msgbox { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 13px; background: var(--surface); font-size: 12.5px; line-height: 1.62; white-space: pre-line; }
+.varmark { color: var(--ai); font-weight: 600; }
+
+.diff { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; font-size: 12.5px; line-height: 1.6; }
+.diffrow { padding: 10px 13px; display: flex; gap: 10px; }
+.diffrow + .diffrow { border-top: 1px solid var(--border-soft); }
+.diffrow .tagcol { flex: none; width: 50px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding-top: 3px; }
+.diff .before { background: color-mix(in srgb, var(--axi-destructive) 6%, var(--background)); }
+.diff .before .tagcol { color: var(--axi-destructive); }
+.diff .after { background: color-mix(in srgb, var(--axi-success) 6%, var(--background)); }
+.diff .after .tagcol { color: var(--axi-success); }
+
+.decided { border: 1px solid color-mix(in srgb, var(--axi-success) 42%, transparent); background: color-mix(in srgb, var(--axi-success) 8%, var(--background)); border-radius: var(--radius-md); padding: 13px 14px; display: flex; gap: 10px; font-size: 12.5px; line-height: 1.55; }
+.decided .ico { color: var(--axi-success); margin-top: 1px; }
+
+.rejectbox { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px 14px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); }
+.reasons { display: flex; flex-direction: column; gap: 8px; }
+.reason { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; cursor: pointer; line-height: 1.5; }
+.reason input { margin: 3px 0 0; accent-color: var(--ai); }
+.dirnote { font-size: 11.5px; color: var(--ai); display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.dirnote input { accent-color: var(--ai); }
+
+/* ==========================================================================
+   MODAL DIRECTRICES
+   ========================================================================== */
+.modal { position: fixed; z-index: 61; top: 50%; left: 50%; transform: translate(-50%, -47%) scale(0.98); width: 520px; max-width: calc(100vw - 32px); max-height: 82vh; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-overlay); opacity: 0; pointer-events: none; transition: opacity 180ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1); display: flex; flex-direction: column; }
+.modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+.modalhead { padding: 17px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 11px; }
+.modalbody { padding: 16px 20px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.dir { display: flex; gap: 11px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 11px 13px; }
+.dir .ico { color: var(--ai); margin-top: 2px; }
+.dirtext { flex: 1; font-size: 12.5px; line-height: 1.55; }
+.dirorigin { font-size: 10.5px; color: var(--ghost-fg); margin-top: 4px; }
+.dir.fresh { animation: rise 400ms ease both; border-color: var(--ai-line); background: var(--ai-tint); }
+
+/* ==========================================================================
+   TOASTS
+   ========================================================================== */
+.toasts { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast { display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 500; padding: 10px 16px; border-radius: 999px; background: color-mix(in srgb, var(--background) 80%, transparent); backdrop-filter: blur(16px) saturate(160%); border: 1px solid var(--border); box-shadow: var(--shadow-overlay); animation: rise 280ms ease both; }
+.toast .ico { color: var(--axi-success); }
+.toast.ai .ico { color: var(--ai); }
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1240px) {
+  .railR { width: 272px; }
+  .caps { grid-template-columns: 1fr; }
+}
+@media (max-width: 1040px) {
+  .railR { display: none; }
+  .railtoggle { display: inline-flex !important; }
+  body[data-rail="on"] .railR { display: flex; position: absolute; top: 54px; right: 0; bottom: 0; width: 300px; z-index: 30; box-shadow: var(--shadow-overlay); }
+  .body { position: relative; }
+}
+@media (max-width: 780px) {
+  .railL { display: none; }
+  .tabs .tabtext { display: none; }
+  .tab { padding: 6px 10px; }
+  .headline { font-size: 27px; }
+  .scroller { padding: 22px 14px 8px; }
+  .dock { padding: 10px 14px 16px; }
+  .sheet { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-5.14-1.32a.5.5 0 0 1 0-.96L8.5 10.44A2 2 0 0 0 9.94 9L11.5 3.87a.5.5 0 0 1 .96 0L14.06 9a2 2 0 0 0 1.44 1.44l5.14 1.34a.5.5 0 0 1 0 .96l-5.14 1.32A2 2 0 0 0 14.06 15.5l-1.6 5.13a.5.5 0 0 1-.96 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16v-5M12 16V8M17 16v-3"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59a2 2 0 0 0-1.42-.59H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.83 8.83a2 2 0 0 0 2.82 0l7.18-7.18a2 2 0 0 0 0-2.82Z"/><circle cx="6.5" cy="6.5" r="1.5"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M13.23 1.85 3.4 11.68a5.57 5.57 0 0 0 7.88 7.88l8.42-8.42a3.71 3.71 0 0 0-5.25-5.25l-8.42 8.43a1.86 1.86 0 0 0 2.63 2.62l7.72-7.71"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ===================== BARRA DE PESTAÑAS ===================== -->
+  <header class="topbar">
+    <div class="brandrow">
+      <div class="mark"></div>
+      <span class="brandname">axi&nbsp;connect</span>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab on" role="tab" aria-selected="true">
+        <svg class="ico ico-sm"><use href="#i-sparkles"/></svg><span class="tabtext">CMO</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false"><span class="tabtext">Tablero</span></button>
+      <button class="tab" role="tab" aria-selected="false"><span class="tabtext">Mercadeo</span></button>
+      <button class="tab" role="tab" aria-selected="false"><span class="tabtext">Clientes</span></button>
+      <button class="tab" role="tab" aria-selected="false"><span class="tabtext">Analíticas</span></button>
+    </nav>
+
+    <div class="spacer"></div>
+    <button class="btn btn-sm" id="openDirectives">
+      <svg class="ico ico-sm"><use href="#i-book"/></svg> Directrices <span class="count" id="dirCount">3</span>
+    </button>
+    <button class="iconbtn railtoggle" id="railToggle" style="display:none" aria-label="Mostrar tablero">
+      <svg class="ico"><use href="#i-panel"/></svg>
+    </button>
+    <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema"><svg class="ico"><use href="#i-moon"/></svg></button>
+    <button class="iconbtn" aria-label="Notificaciones"><svg class="ico"><use href="#i-bell"/></svg></button>
+    <div class="avatar" title="Bella Piel">BP</div>
+  </header>
+
+  <div class="body">
+    <!-- ===================== RAIL IZQUIERDO ===================== -->
+    <aside class="railL">
+      <button class="railbtn primary" id="newChat" aria-label="Nueva conversación" title="Nueva conversación">
+        <svg class="ico"><use href="#i-plus"/></svg>
+      </button>
+      <button class="railbtn on" aria-label="Conversación" title="Conversación con Axel"><svg class="ico"><use href="#i-msg"/></svg></button>
+      <button class="railbtn" aria-label="Propuestas" title="Propuestas" id="railProps">
+        <svg class="ico"><use href="#i-inbox"/></svg><span class="raildot"></span>
+      </button>
+      <button class="railbtn" aria-label="Directrices" title="Directrices" id="railDir"><svg class="ico"><use href="#i-book"/></svg></button>
+      <div class="railsep"></div>
+      <button class="railbtn" aria-label="Historial" title="Historial de briefings"><svg class="ico"><use href="#i-history"/></svg></button>
+      <div class="spacer"></div>
+      <button class="railbtn" aria-label="Ajustes de Axel" title="Ajustes de Axel"><svg class="ico"><use href="#i-sliders"/></svg></button>
+    </aside>
+
+    <!-- ===================== CENTRO: LA CONVERSACIÓN ===================== -->
+    <main class="center">
+      <div class="scroller" id="scroller">
+        <div class="column">
+
+          <!-- orbe + saludo -->
+          <div class="stage">
+            <div class="orbwrap">
+              <div class="orbglow"></div>
+              <div class="orb" id="orb"><svg class="ico ico-xl"><use href="#i-sparkles"/></svg></div>
+            </div>
+            <p class="hello">Buen día, Catalina · jueves 20 de agosto</p>
+            <h1 class="headline">Hoy hay <b class="money">$2,84 M</b> sin cerrar.</h1>
+            <p class="subline">
+              Soy Axel, tu director de mercadeo. Ya revisé tus últimos 30 días y te dejé
+              <b>dos propuestas</b> listas para decidir.
+            </p>
+          </div>
+
+          <!-- estado vacío: tres capacidades -->
+          <div class="caps" id="caps">
+            <button class="cap" data-q="how">
+              <span class="capico"><svg class="ico"><use href="#i-chart"/></svg></span>
+              <span class="capname">¿Cómo vamos?</span>
+              <span class="capdesc">Ventas, cierre y en qué escalón del embudo se te va la plata.</span>
+            </button>
+            <button class="cap" data-q="hot">
+              <span class="capico"><svg class="ico"><use href="#i-flame"/></svg></span>
+              <span class="capname">Clientas calientes</span>
+              <span class="capdesc">Quién está a punto de comprar y por qué lo sé.</span>
+            </button>
+            <button class="cap" data-q="amor">
+              <span class="capico"><svg class="ico"><use href="#i-megaphone"/></svg></span>
+              <span class="capname">Ármame una campaña</span>
+              <span class="capdesc">Audiencia, promoción y mensaje en borrador, listos para lanzar.</span>
+            </button>
+          </div>
+
+          <!-- hilo -->
+          <div class="thread" id="thread"></div>
+        </div>
+      </div>
+
+      <!-- composer -->
+      <div class="dock">
+        <div class="dockinner">
+          <form class="composer" id="chatForm">
+            <textarea id="chatInput" rows="1" placeholder="Pregúntale a Axel o dile qué armar…" aria-label="Mensaje para Axel"></textarea>
+            <div class="tools">
+              <button class="tool" type="button"><svg class="ico ico-sm"><use href="#i-paperclip"/></svg> Adjuntar</button>
+              <button class="tool on" type="button"><svg class="ico ico-sm"><use href="#i-scan"/></svg> Con mis datos</button>
+              <button class="send" type="submit" aria-label="Enviar">
+                <svg class="ico ico-sm"><use href="#i-up"/></svg>
+              </button>
+            </div>
+          </form>
+          <div class="dockmeta">
+            <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+            Axel propone; tú apruebas. Nunca envía nada por su cuenta. · 18 de 30 análisis este ciclo
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===================== RAIL DERECHO: EL TABLERO ===================== -->
+    <aside class="railR" id="railR" aria-label="Tablero del negocio">
+      <div class="railscroll">
+
+        <!-- estado del negocio -->
+        <section class="card">
+          <div class="cardhead">
+            <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-target"/></svg>
+            <h2 class="cardtitle">Estado del negocio</h2>
+          </div>
+          <div class="cardbody">
+            <div class="livechip">
+              <span class="livedot"></span> Vigilancia activa
+              <span class="spacer"></span>
+              <span class="num">hace 12 min</span>
+            </div>
+
+            <div class="meter">
+              <div class="meterrow">
+                <span class="meterlabel">Ventas pagadas · 30 d</span>
+                <span class="metervalue">$18,42 M</span>
+              </div>
+              <div class="mtrack" aria-hidden="true">
+                <span class="mseg fill"></span><span class="mseg fill"></span><span class="mseg fill"></span>
+                <span class="mseg fill"></span><span class="mseg fill"></span><span class="mseg fill"></span>
+                <span class="mseg fill"></span><span class="mseg"></span><span class="mseg"></span><span class="mseg"></span>
+              </div>
+              <div class="metersub">+11,4% contra el mes pasado · meta $26 M</div>
+            </div>
+
+            <div class="meter">
+              <div class="meterrow">
+                <span class="meterlabel">Tasa de cierre</span>
+                <span class="metervalue">12,2%</span>
+              </div>
+              <div class="mtrack" aria-hidden="true">
+                <span class="mseg fill ai"></span><span class="mseg fill ai"></span><span class="mseg fill ai"></span>
+                <span class="mseg"></span><span class="mseg"></span><span class="mseg"></span>
+                <span class="mseg"></span><span class="mseg"></span><span class="mseg"></span><span class="mseg"></span>
+              </div>
+              <div class="metersub">Bajó 1,9 puntos · el mes pasado cerrabas 14,1%</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- señales prioritarias -->
+        <section class="card">
+          <div class="cardhead">
+            <svg class="ico ico-sm" style="color:var(--axi-amber)"><use href="#i-alert"/></svg>
+            <h2 class="cardtitle">Señales prioritarias</h2>
+          </div>
+          <div class="cardbody">
+
+            <div class="signal">
+              <div class="sigtop">
+                <div>
+                  <div class="signame">Carritos sin cerrar</div>
+                  <div class="sigsub">Últimos 7 días · sin regla activa</div>
+                </div>
+                <div class="sigright">
+                  <div class="sigval">$2,84 M</div>
+                  <span class="badge urgent">Urgente</span>
+                </div>
+              </div>
+              <!-- sparkline de barras: carritos por día, la última destacada -->
+              <svg class="spark" viewBox="0 0 160 34" preserveAspectRatio="none" aria-label="Carritos abandonados por día, en aumento">
+                <g class="sbars">
+                  <rect x="0" y="20" width="8" height="14" rx="1.5"/>
+                  <rect x="11" y="17" width="8" height="17" rx="1.5"/>
+                  <rect x="22" y="22" width="8" height="12" rx="1.5"/>
+                  <rect x="33" y="15" width="8" height="19" rx="1.5"/>
+                  <rect x="44" y="18" width="8" height="16" rx="1.5"/>
+                  <rect x="55" y="12" width="8" height="22" rx="1.5"/>
+                  <rect x="66" y="14" width="8" height="20" rx="1.5"/>
+                  <rect x="77" y="9" width="8" height="25" rx="1.5"/>
+                  <rect x="88" y="11" width="8" height="23" rx="1.5"/>
+                  <rect x="99" y="7" width="8" height="27" rx="1.5"/>
+                  <rect x="110" y="10" width="8" height="24" rx="1.5"/>
+                  <rect x="121" y="5" width="8" height="29" rx="1.5"/>
+                  <rect x="132" y="8" width="8" height="26" rx="1.5"/>
+                </g>
+                <rect class="sbar-hot" x="143" y="2" width="8" height="32" rx="1.5"/>
+              </svg>
+            </div>
+
+            <div class="signal">
+              <div class="sigtop">
+                <div>
+                  <div class="signame">Recompra vencida</div>
+                  <div class="sigsub">Pasaron su ciclo de 45 días</div>
+                </div>
+                <div class="sigright">
+                  <div class="sigval num">18</div>
+                  <span class="badge chance">Oportunidad</span>
+                </div>
+              </div>
+              <!-- sparkline de área: clientas que pasan su ciclo, acumulándose -->
+              <svg class="spark" viewBox="0 0 160 34" preserveAspectRatio="none" aria-label="Clientas que pasaron su ciclo de recompra, acumulándose">
+                <defs>
+                  <linearGradient id="gRe" x1="0" y1="0" x2="0" y2="1">
+                    <stop class="s0" offset="0%"/>
+                    <stop class="s1" offset="100%"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 28 L20 26 L40 27 L60 22 L80 20 L100 15 L120 14 L140 9 L160 6 L160 34 L0 34 Z" class="sfill"/>
+                <path d="M0 28 L20 26 L40 27 L60 22 L80 20 L100 15 L120 14 L140 9 L160 6" class="sline"/>
+                <circle class="stip" cx="158" cy="6" r="2.6"/>
+              </svg>
+            </div>
+
+            <div class="signal">
+              <div class="sigtop">
+                <div>
+                  <div class="signame">Bella pierde con "agotado"</div>
+                  <div class="sigsub">No ofrece alternativa · 9 no volvieron</div>
+                </div>
+                <div class="sigright">
+                  <div class="sigval num">14</div>
+                  <span class="badge watch">Revisar</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- propuestas abiertas -->
+        <section class="card">
+          <div class="cardhead">
+            <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-inbox"/></svg>
+            <h2 class="cardtitle">Propuestas abiertas</h2>
+            <span class="count spacer" id="propCount">2</span>
+          </div>
+          <div class="cardbody" id="railProposals">
+            <a class="qrow" href="#" data-open="s1">
+              <svg class="ico" style="color:var(--axi-amber)"><use href="#i-flame"/></svg>
+              <span class="n">Perseguir 34 carritos</span>
+              <span class="pill off">Vence hoy</span>
+            </a>
+            <a class="qrow" href="#" data-open="s2">
+              <svg class="ico" style="color:var(--axi-info)"><use href="#i-bot"/></svg>
+              <span class="n">Ajustar el guion de Bella</span>
+              <span class="pill">6 días</span>
+            </a>
+            <a class="qrow hidden" href="#" data-open="s3" id="railP3">
+              <svg class="ico" style="color:var(--ai)"><use href="#i-megaphone"/></svg>
+              <span class="n">Amor y Amistad · 142</span>
+              <span class="pill">12 de sep</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- lo que está en vuelo -->
+        <section class="card">
+          <div class="cardhead">
+            <svg class="ico ico-sm" style="color:var(--axi-success)"><use href="#i-megaphone"/></svg>
+            <h2 class="cardtitle">En vuelo</h2>
+          </div>
+          <div class="cardbody">
+            <a class="qrow" href="#">
+              <span class="n">Rebajas de agosto<br><span style="font-weight:400;font-size:10.5px;color:var(--ghost-fg)">208 enviados · 12 compraron</span></span>
+              <span class="v">$1,24 M</span>
+            </a>
+            <a class="qrow" href="#">
+              <span class="n">Inactiva 72 h<br><span style="font-weight:400;font-size:10.5px;color:var(--ghost-fg)">23 disparos · 5 volvieron</span></span>
+              <span class="pill on">Activa</span>
+            </a>
+          </div>
+        </section>
+      </div>
+
+      <!-- lectura de Axel, anclada abajo -->
+      <div class="railpin">
+        <div class="insight">
+          <div class="insighthead">
+            <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
+            <span class="insightlabel">La lectura de Axel</span>
+          </div>
+          <p class="insighttext">
+            La quincena cae el <b>domingo 30</b>. En tus dos quincenas anteriores las ventas
+            subieron <b>34%</b> el fin de semana, y las dos veces llegaste sin nada preparado.
+            Esta semana decide los carritos: es lo único que alcanza a rendir antes del domingo.
+          </p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ===================== BACKDROP ===================== -->
+<div class="backdrop" id="backdrop"></div>
+
+<!-- ===================== SHEET 1 · RECUPERACIÓN ===================== -->
+<aside class="sheet" id="s1" role="dialog" aria-modal="true" aria-label="Propuesta de recuperación">
+  <div class="sheethead">
+    <div class="proptop" style="margin-bottom:11px">
+      <span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>
+      <span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Vence hoy</span>
+      <button class="iconbtn" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    </div>
+    <h2 class="sheettitle">Persigue los 34 carritos que dejaste morir</h2>
+    <p class="prophead" style="font-size:16px">$2.840.000 en juego</p>
+  </div>
+
+  <div class="sheetbody">
+    <div class="decided hidden" id="s1done">
+      <svg class="ico ico-lg"><use href="#i-check"/></svg>
+      <div><strong>Encendida.</strong> La regla queda activa desde ahora y toca los carritos que cumplan 3 horas. Te cuento el resultado en el briefing de mañana.</div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-chart"/></svg> Por qué ahora</div>
+      <div class="evid">
+        <div class="evidrow"><span class="k">Carritos en borrador, últimos 7 días</span><span class="v num">34</span></div>
+        <div class="evidrow"><span class="k">Valor total de esos carritos</span><span class="v num">$2.840.000</span></div>
+        <div class="evidrow"><span class="k">Ticket promedio del carrito</span><span class="v num">$83.500</span></div>
+        <div class="evidrow"><span class="k">Clientas con compra previa</span><span class="v num">11 de 34</span></div>
+        <div class="evidrow"><span class="k">Reglas de carrito abandonado activas</span><span class="v">ninguna</span></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--ghost-fg)">
+        Sale de tus pedidos en borrador y del historial de compra de cada contacto. Ningún dato estimado.
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-right"/></svg> Qué va a pasar si apruebas</div>
+      <div class="plan">
+        <div class="planrow"><span class="k">Regla</span><span class="v">Carrito abandonado — 3 horas</span></div>
+        <div class="planrow"><span class="k">A quién toca</span><span class="v">Carritos en borrador con más de 3 horas y sin pago</span></div>
+        <div class="planrow"><span class="k">Promoción</span><span class="v">Flete gratis por 24 horas ($12.000)</span></div>
+        <div class="planrow"><span class="k">Tope</span><span class="v">1 mensaje por clienta cada 24 horas</span></div>
+        <div class="planrow"><span class="k">Canal</span><span class="v">WhatsApp, dentro de la ventana de 24 horas</span></div>
+        <div class="planrow"><span class="k">Costo de envío</span><span class="v">$0 · la conversación ya está abierta</span></div>
+      </div>
+      <div class="msgbox">Hola <span class="varmark">{nombre}</span>, vi que dejaste tu pedido a medias 🙂
+Te dejo el <b>envío gratis</b> si lo cierras hoy: <span class="varmark">{cupon}</span>
+Vence en 24 horas. ¿Te lo despacho?</div>
+      <p style="font-size:11.5px;color:var(--ai);display:flex;gap:7px;align-items:flex-start">
+        <svg class="ico ico-sm" style="margin-top:2px"><use href="#i-book"/></svg>
+        Elegí flete gratis y no descuento porque tú me lo pediste en una directriz. El cupón lo genera y lo vence el sistema, no el mensaje.
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-alert"/></svg> Qué puede salir mal</div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Vas a regalar el flete también en carritos que igual iban a cerrar. Con tu ticket promedio son $12.000 sobre $83.500: un 14% del pedido.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>4 de las 34 ya recibieron un mensaje esta semana. El tope diario las deja fuera hoy y las toca mañana.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Si una clienta está hablando con alguien de tu equipo, la regla no la interrumpe.</span></div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Lo que ya te dejé armado, apagado</div>
+      <a class="artifact" href="#"><svg class="ico" style="color:var(--axi-amber)"><use href="#i-flame"/></svg><span class="n">Regla · Carrito abandonado — 3 horas</span><span class="pill off">Apagada</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-tag"/></svg><span class="n">Promoción · Flete gratis 24 h</span><span class="pill off">Apagada</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-msg"/></svg><span class="n">Plantilla · Carrito 3 h</span><span class="pill">Borrador</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+    </div>
+
+    <div class="rejectbox hidden" id="s1reject">
+      <strong style="font-size:13px">¿Por qué no?</strong>
+      <div class="reasons">
+        <label class="reason"><input type="radio" name="r1" checked> No quiero regalar el flete en esta temporada.</label>
+        <label class="reason"><input type="radio" name="r1"> 3 horas es muy pronto, la clienta se siente perseguida.</label>
+        <label class="reason"><input type="radio" name="r1"> Prefiero que mi equipo los llame uno por uno.</label>
+      </div>
+      <label class="dirnote">
+        <input type="checkbox" checked>
+        <svg class="ico ico-sm"><use href="#i-book"/></svg>
+        Guardar como directriz para que no me lo vuelvas a proponer
+      </label>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" data-confirm-reject="1">Rechazar</button>
+        <button class="btn btn-ghost btn-sm" data-cancel-reject="1">Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheetfoot" id="s1foot">
+    <button class="btn btn-primary" data-approve="1"><svg class="ico ico-sm"><use href="#i-check"/></svg> Aprobar y encender</button>
+    <button class="btn" data-adjust>Ajustar antes</button>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" data-reject="1">No, gracias</button>
+  </div>
+</aside>
+
+<!-- ===================== SHEET 2 · AJUSTE DEL AGENTE ===================== -->
+<aside class="sheet" id="s2" role="dialog" aria-modal="true" aria-label="Propuesta de ajuste del agente">
+  <div class="sheethead">
+    <div class="proptop" style="margin-bottom:11px">
+      <span class="kind tun"><svg class="ico ico-sm"><use href="#i-bot"/></svg> Cómo vende tu agente</span>
+      <span class="expiry calm"><svg class="ico ico-sm"><use href="#i-clock"/></svg> 6 días</span>
+      <button class="iconbtn" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    </div>
+    <h2 class="sheettitle">Bella pierde la venta cuando algo está agotado</h2>
+    <p class="prophead" style="font-size:16px">14 conversaciones · 9 no volvieron</p>
+  </div>
+
+  <div class="sheetbody">
+    <div class="decided hidden" id="s2done">
+      <svg class="ico ico-lg"><use href="#i-check"/></svg>
+      <div><strong>Aplicado a Bella.</strong> Rige desde la próxima conversación. Voy a mirar la calidad los siguientes 7 días y si empeora te aviso para devolverlo.</div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-chart"/></svg> Por qué ahora</div>
+      <div class="evid">
+        <div class="evidrow"><span class="k">Conversaciones con "agotado" en 30 días</span><span class="v num">14</span></div>
+        <div class="evidrow"><span class="k">De esas, no volvieron a escribir</span><span class="v num">9</span></div>
+        <div class="evidrow"><span class="k">Problema en el ranking de calidad</span><span class="v">1.º de 6</span></div>
+        <div class="evidrow"><span class="k">Tenías alternativa en bodega</span><span class="v num">12 de 14</span></div>
+        <div class="evidrow"><span class="k">Agente</span><span class="v">Bella · vendedora</span></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--ghost-fg)">
+        Lo detectó el evaluador de calidad, que revisa conversaciones con una rúbrica. Es el juicio de una IA, no una cifra de ventas: sirve para corregir.
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-book"/></svg> El cambio, línea por línea</div>
+      <p style="font-size:12px;color:var(--muted-fg)">Guion de ventas de Bella · sección «Cuando no hay stock»</p>
+      <div class="diff">
+        <div class="diffrow before">
+          <span class="tagcol">Hoy</span>
+          <span>Si el producto está agotado, informa a la clienta y ofrece avisarle cuando llegue.</span>
+        </div>
+        <div class="diffrow after">
+          <span class="tagcol">Nuevo</span>
+          <span>Si el producto está agotado, dilo y <b>en el mismo mensaje</b> ofrece dos alternativas concretas del catálogo con su precio, y pregunta cuál le sirve. Solo si ninguna le sirve, ofrece avisarle cuando llegue.</span>
+        </div>
+      </div>
+      <p style="font-size:11.5px;color:var(--ghost-fg)">
+        No toco precios ni inventario: Bella consulta el catálogo real y los precios los pone el sistema, como siempre.
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-alert"/></svg> Qué puede salir mal</div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Aplica a todas las conversaciones desde el próximo mensaje, no solo a las de agotados.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Ofrecer alternativa puede sentirse insistente si la clienta ya dijo que no quiere nada más.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Guardo el texto anterior: devolverlo es un clic.</span></div>
+    </div>
+
+    <div class="rejectbox hidden" id="s2reject">
+      <strong style="font-size:13px">¿Por qué no?</strong>
+      <div class="reasons">
+        <label class="reason"><input type="radio" name="r2" checked> No quiero que insista con otros productos, prefiero que respete el "no".</label>
+        <label class="reason"><input type="radio" name="r2"> Prefiero revisar yo el guion antes de que alguien lo cambie.</label>
+      </div>
+      <label class="dirnote">
+        <input type="checkbox" checked>
+        <svg class="ico ico-sm"><use href="#i-book"/></svg>
+        Guardar como directriz
+      </label>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" data-confirm-reject="2">Rechazar</button>
+        <button class="btn btn-ghost btn-sm" data-cancel-reject="2">Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheetfoot" id="s2foot">
+    <button class="btn btn-primary" data-approve="2"><svg class="ico ico-sm"><use href="#i-check"/></svg> Aprobar el cambio</button>
+    <button class="btn" data-adjust>Ajustar antes</button>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" data-reject="2">No, gracias</button>
+  </div>
+</aside>
+
+<!-- ===================== SHEET 3 · CAMPAÑA ===================== -->
+<aside class="sheet" id="s3" role="dialog" aria-modal="true" aria-label="Propuesta de campaña">
+  <div class="sheethead">
+    <div class="proptop" style="margin-bottom:11px">
+      <span class="kind cam"><svg class="ico ico-sm"><use href="#i-megaphone"/></svg> Campaña</span>
+      <span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Decide antes del 12 de sep</span>
+      <button class="iconbtn" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    </div>
+    <h2 class="sheettitle">Amor y Amistad para las que no vuelven</h2>
+    <p class="prophead" style="font-size:16px">142 clientas · $16,7 M de potencial</p>
+  </div>
+
+  <div class="sheetbody">
+    <div class="decided hidden" id="s3done">
+      <svg class="ico ico-lg"><use href="#i-check"/></svg>
+      <div><strong>Programada para el 15 de septiembre, 10:00 a.m.</strong> Mandé la plantilla a aprobación de Meta. Si no la aprueban antes del 14 te aviso y la campaña no sale.</div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-chart"/></svg> Por qué ahora</div>
+      <div class="evid">
+        <div class="evidrow"><span class="k">Compraron antes y llevan más de 60 días sin comprar</span><span class="v num">168</span></div>
+        <div class="evidrow"><span class="k">Alcanzables (sin baja, sin tope, con canal)</span><span class="v num">142</span></div>
+        <div class="evidrow"><span class="k">Ticket promedio de ese grupo</span><span class="v num">$118.000</span></div>
+        <div class="evidrow"><span class="k">Amor y Amistad</span><span class="v">sábado 19 de sep</span></div>
+        <div class="evidrow"><span class="k">Campañas armadas para esa fecha</span><span class="v">ninguna</span></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-right"/></svg> Qué va a pasar si apruebas</div>
+      <div class="plan">
+        <div class="planrow"><span class="k">Audiencia</span><span class="v">Segmento «Compraron y no vuelven» · 142 contactos</span></div>
+        <div class="planrow"><span class="k">Promoción</span><span class="v">15% de descuento · mínimo $120.000 · vigencia 48 horas</span></div>
+        <div class="planrow"><span class="k">Envío</span><span class="v">Martes 15 de septiembre, 10:00 a.m.</span></div>
+        <div class="planrow"><span class="k">Canal</span><span class="v">WhatsApp · plantilla aprobada por Meta (fuera de ventana)</span></div>
+        <div class="planrow"><span class="k">Costo de envío</span><span class="v num">≈ $9.900 en plantillas</span></div>
+        <div class="planrow"><span class="k">Excluidas</span><span class="v">26 · 9 se dieron de baja, 17 recibieron algo hace poco</span></div>
+      </div>
+      <div class="msgbox">Hola <span class="varmark">{nombre}</span>, llegó Amor y Amistad 💜
+Te guardé un <b>15% de descuento</b> en toda la línea facial, y también sirve
+si es para regalo. Código <span class="varmark">{cupon}</span>, válido 48 horas.
+¿Te muestro lo más pedido?</div>
+      <p style="font-size:11.5px;color:var(--ai);display:flex;gap:7px;align-items:flex-start">
+        <svg class="ico ico-sm" style="margin-top:2px"><use href="#i-book"/></svg>
+        Tu directriz dice que nunca pase del 15%. Lo dejé exactamente en 15%.
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-alert"/></svg> Qué puede salir mal</div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>La plantilla necesita aprobación de Meta y tarda entre 24 y 48 horas. Si no la aprueban, la campaña no sale y no se manda nada.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>El 15% sobre un ticket de $118.000 son $17.700 por venta. Si cierran 20, son $354.000 de margen.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Es un mensaje a 142 personas que no te escriben desde hace meses: espera algunas bajas. Hoy vas en 0,4%, muy sano.</span></div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Lo que ya te dejé armado, apagado</div>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-users"/></svg><span class="n">Segmento · Compraron y no vuelven (142)</span><span class="pill">Guardado</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-megaphone"/></svg><span class="n">Campaña · Amor y Amistad 2026</span><span class="pill off">Borrador</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-tag"/></svg><span class="n">Promoción · 15% Amor y Amistad</span><span class="pill off">Apagada</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-msg"/></svg><span class="n">Plantilla Meta · amor_amistad_2026</span><span class="pill">Sin enviar a revisión</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+    </div>
+  </div>
+
+  <div class="sheetfoot" id="s3foot">
+    <button class="btn btn-primary" data-approve="3"><svg class="ico ico-sm"><use href="#i-check"/></svg> Aprobar y programar</button>
+    <button class="btn" data-adjust>Ajustar antes</button>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" data-close>Después</button>
+  </div>
+</aside>
+
+<!-- ===================== MODAL DIRECTRICES ===================== -->
+<div class="modal" id="dirModal" role="dialog" aria-modal="true" aria-label="Directrices">
+  <div class="modalhead">
+    <svg class="ico ico-lg" style="color:var(--ai)"><use href="#i-book"/></svg>
+    <div>
+      <h3 style="font-size:15px">Tus directrices</h3>
+      <p style="font-size:11.5px;color:var(--muted-fg)">Axel las respeta y las cita cuando descarta una idea</p>
+    </div>
+    <button class="iconbtn spacer" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="modalbody" id="dirList">
+    <div class="dir">
+      <svg class="ico"><use href="#i-book"/></svg>
+      <div class="dirtext">Nunca ofrezcas descuentos por encima del 15%.
+        <div class="dirorigin">Se la dictaste en el chat · 2 de agosto</div>
+      </div>
+    </div>
+    <div class="dir">
+      <svg class="ico"><use href="#i-book"/></svg>
+      <div class="dirtext">Prefiero regalar el flete antes que descontar el producto.
+        <div class="dirorigin">Se la dictaste en el chat · 9 de agosto</div>
+      </div>
+    </div>
+    <div class="dir">
+      <svg class="ico"><use href="#i-book"/></svg>
+      <div class="dirtext">No escribas a la base de clientas los lunes antes del mediodía.
+        <div class="dirorigin">Salió de una propuesta que rechazaste · 11 de agosto</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------------- tema ---------------- */
+  var root = document.documentElement;
+  var themeBtn = $("themeBtn");
+  function isDark() {
+    var stamped = root.getAttribute("data-theme");
+    if (stamped) return stamped === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function paintTheme() {
+    themeBtn.innerHTML = '<svg class="ico"><use href="#' + (isDark() ? "i-sun" : "i-moon") + '"/></svg>';
+  }
+  themeBtn.addEventListener("click", function () {
+    root.setAttribute("data-theme", isDark() ? "light" : "dark");
+    paintTheme();
+  });
+  paintTheme();
+
+  /* ---------------- pestañas (solo visual en el mockup) ---------------- */
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (x) {
+        x.classList.remove("on"); x.setAttribute("aria-selected", "false");
+      });
+      t.classList.add("on"); t.setAttribute("aria-selected", "true");
+      if (!t.querySelector('use[href="#i-sparkles"]')) {
+        toast("En el mockup solo está construida la pestaña CMO", "ai");
+        setTimeout(function () {
+          document.querySelectorAll(".tab").forEach(function (x) {
+            x.classList.remove("on"); x.setAttribute("aria-selected", "false");
+          });
+          var cmo = document.querySelector(".tab");
+          cmo.classList.add("on"); cmo.setAttribute("aria-selected", "true");
+        }, 900);
+      }
+    });
+  });
+
+  /* ---------------- rail en pantallas angostas ---------------- */
+  $("railToggle").addEventListener("click", function () {
+    document.body.setAttribute("data-rail",
+      document.body.getAttribute("data-rail") === "on" ? "off" : "on");
+  });
+
+  /* ---------------- toasts ---------------- */
+  var toasts = $("toasts");
+  function toast(text, kind) {
+    var el = document.createElement("div");
+    el.className = "toast" + (kind === "ai" ? " ai" : "");
+    el.innerHTML = '<svg class="ico"><use href="#' + (kind === "ai" ? "i-sparkles" : "i-check") + '"/></svg><span></span>';
+    el.querySelector("span").textContent = text;
+    toasts.appendChild(el);
+    setTimeout(function () { el.remove(); }, 4200);
+  }
+
+  /* ---------------- overlays ---------------- */
+  var backdrop = $("backdrop");
+  function closeAll() {
+    document.querySelectorAll(".sheet.open, .modal.open").forEach(function (n) { n.classList.remove("open"); });
+    backdrop.classList.remove("open");
+  }
+  function openPanel(node) {
+    closeAll();
+    node.classList.add("open");
+    backdrop.classList.add("open");
+  }
+  backdrop.addEventListener("click", closeAll);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+  document.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", closeAll); });
+
+  function wireOpeners(scope) {
+    scope.querySelectorAll("[data-open]").forEach(function (b) {
+      if (b.dataset.wired) return;
+      b.dataset.wired = "1";
+      b.addEventListener("click", function (e) {
+        e.preventDefault();
+        openPanel($(b.dataset.open));
+      });
+    });
+  }
+  wireOpeners(document);
+
+  $("openDirectives").addEventListener("click", function () { openPanel($("dirModal")); });
+  $("railDir").addEventListener("click", function () { openPanel($("dirModal")); });
+  $("railProps").addEventListener("click", function () {
+    document.querySelector("#railProposals").scrollIntoView({ behavior: "smooth", block: "center" });
+    toast("Las propuestas abiertas viven en el tablero de la derecha", "ai");
+  });
+
+  document.querySelectorAll("[data-adjust]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      toast("Abriría el borrador en su propia pantalla para que lo edites", "ai");
+    });
+  });
+
+  /* ---------------- contadores ---------------- */
+  function refreshCounts() {
+    var n = document.querySelectorAll("#railProposals .qrow:not(.hidden):not(.settled)").length;
+    $("propCount").textContent = String(n);
+    var dot = document.querySelector(".raildot");
+    dot.style.display = n > 0 ? "" : "none";
+  }
+
+  /* ---------------- hilo ---------------- */
+  var scroller = $("scroller");
+  var thread = $("thread");
+  var caps = $("caps");
+  var orb = $("orb");
+
+  function stamp() {
+    var d = new Date();
+    var h = d.getHours(), m = String(d.getMinutes()).padStart(2, "0");
+    var ap = h >= 12 ? "p.m." : "a.m.";
+    h = h % 12 || 12;
+    return h + ":" + m + " " + ap;
+  }
+  function toBottom() { scroller.scrollTop = scroller.scrollHeight; }
+
+  function mine(text) {
+    caps.classList.add("hidden");
+    var el = document.createElement("div");
+    el.className = "me msgin";
+    el.textContent = text;
+    thread.appendChild(el);
+    toBottom();
+  }
+
+  function axelCard(label, bodyHtml, extraHtml) {
+    var el = document.createElement("div");
+    el.className = "axel msgin";
+    el.innerHTML =
+      '<div class="axelhead">' +
+        '<svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>' +
+        '<span class="axellabel">' + label + '</span>' +
+        '<span class="axelstamp">' + stamp() + '</span>' +
+      '</div>' +
+      '<div class="axelbody">' + bodyHtml + '</div>' +
+      (extraHtml || "");
+    thread.appendChild(el);
+    wireOpeners(el);
+    toBottom();
+    return el;
+  }
+
+  function thinking(note) {
+    orb.classList.add("busy");
+    var el = document.createElement("div");
+    el.className = "thinking msgin";
+    el.innerHTML =
+      '<div class="tline"></div><div class="tline"></div><div class="tline"></div>' +
+      '<div class="tnote"><svg class="ico ico-sm"><use href="#i-scan"/></svg><span></span></div>';
+    el.querySelector(".tnote span").textContent = note;
+    thread.appendChild(el);
+    toBottom();
+    return el;
+  }
+
+  /* ---------------- respuestas guionadas ---------------- */
+  var funnelHtml =
+    '<div class="funnel">' +
+    '<div class="frow"><span class="flabel">Escribieron</span><span class="ftrack"><span class="fbar" style="width:100%"></span></span><span class="fnum">312</span></div>' +
+    '<div class="frow"><span class="flabel">Cotizaron</span><span class="ftrack"><span class="fbar" style="width:41%"></span></span><span class="fnum">128</span></div>' +
+    '<div class="frow"><span class="flabel">Pidieron</span><span class="ftrack"><span class="fbar" style="width:19%"></span></span><span class="fnum">60</span></div>' +
+    '<div class="frow"><span class="flabel">Pagaron</span><span class="ftrack"><span class="fbar" style="width:12%"></span></span><span class="fnum">38</span></div>' +
+    '</div>';
+
+  var answers = {
+    how: {
+      note: "Leyendo tu embudo de los últimos 30 días…",
+      delay: 1000,
+      label: "Diagnóstico listo",
+      body:
+        'Vas mejor en plata y peor en cierre. <strong>$18.420.000</strong> pagados, ' +
+        '<span class="vpill">+11,4%</span> contra el mes pasado. Pero de 312 conversaciones ' +
+        'cerraste 38: <strong>12,2%</strong>, cuando antes cerrabas <span class="vpill">14,1%</span> ' +
+        'con menos tráfico.<br><br>' +
+        'El escalón que se te rompió está entre cotizar y pedir: cotizaste 128 y solo 60 se ' +
+        'volvieron pedido. No necesitas más gente escribiendo, necesitas cerrar la que ya escribe.' +
+        funnelHtml +
+        '<div class="metrics">' +
+          '<div class="metric bad"><div class="metriclabel">Fuga del embudo</div><div class="metricval">68 · 53%</div></div>' +
+          '<div class="metric good"><div class="metriclabel">Resueltas por la IA</div><div class="metricval">90,1%</div></div>' +
+          '<div class="metric"><div class="metriclabel">Ticket promedio</div><div class="metricval">$484.700</div></div>' +
+        '</div>'
+    },
+    hot: {
+      note: "Ordenando contactos por puntaje y última actividad…",
+      delay: 1150,
+      label: "Tres para hoy",
+      body:
+        'Tres que yo llamaría hoy mismo:<br><br>' +
+        '<strong>Marcela Rojas</strong> <span class="vpill">92</span> — cotizó $340.000 hace dos días y no cerró. Ya te compró tres veces.<br>' +
+        '<strong>Diana Castaño</strong> <span class="vpill">88</span> — hizo el pedido y no confirmó el pago. Lleva 4 días.<br>' +
+        '<strong>Luz Elena Parra</strong> <span class="vpill">84</span> — cuatro compras, la última hace 71 días. Su ciclo es de 45: ya se le acabó el producto.<br><br>' +
+        'Marcela y Yesenia tienen carrito abierto <strong>ahora</strong>. Si enciendes la regla de carritos, las toca hoy.',
+      extra:
+        '<div class="propcard">' +
+          '<div class="proptop">' +
+            '<span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>' +
+            '<span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Vence hoy</span>' +
+          '</div>' +
+          '<div><div class="proptitle">Persigue los 34 carritos que dejaste morir</div>' +
+          '<div class="prophead">$2.840.000 en juego</div></div>' +
+          '<div class="propfoot">' +
+            '<button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>' +
+            '<span class="propmeta">1 regla · 1 promoción · 1 plantilla, ya en borrador</span>' +
+          '</div>' +
+        '</div>'
+    },
+    amor: {
+      note: "Cruzando tu base con el calendario comercial…",
+      delay: 1700,
+      label: "Campaña armada",
+      body:
+        'Amor y Amistad es el <strong>sábado 19 de septiembre</strong>, y la plantilla de Meta tarda ' +
+        'hasta 48 horas en aprobarse: esto se decide esta semana o no sale.<br><br>' +
+        'Armé la campaña para las <strong>142 clientas</strong> que ya te compraron pero no vuelven ' +
+        'hace más de 60 días. Descuento del <span class="vpill">15%</span> — tu directriz dice que ' +
+        'nunca más de ahí, así que lo dejé justo en el techo. Todo queda en borrador y apagado.',
+      extra:
+        '<div class="propcard">' +
+          '<div class="proptop">' +
+            '<span class="kind cam"><svg class="ico ico-sm"><use href="#i-megaphone"/></svg> Campaña</span>' +
+            '<span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Decide antes del 12 de sep</span>' +
+          '</div>' +
+          '<div><div class="proptitle">Amor y Amistad para las que no vuelven</div>' +
+          '<div class="prophead">142 clientas · $16,7 M de potencial</div></div>' +
+          '<div class="metrics">' +
+            '<div class="metric"><div class="metriclabel">Alcanzables</div><div class="metricval">142</div></div>' +
+            '<div class="metric"><div class="metriclabel">Costo de envío</div><div class="metricval">$9.900</div></div>' +
+            '<div class="metric bad"><div class="metriclabel">Margen que cedes</div><div class="metricval">15%</div></div>' +
+          '</div>' +
+          '<div class="propfoot">' +
+            '<button class="btn btn-ai btn-sm" data-open="s3">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>' +
+            '<span class="propmeta">1 segmento · 1 promoción · 1 plantilla de Meta</span>' +
+          '</div>' +
+        '</div>',
+      after: function () {
+        var r = $("railP3");
+        r.classList.remove("hidden");
+        r.classList.add("fresh");
+        refreshCounts();
+        toast("Axel te dejó una propuesta nueva en el tablero", "ai");
+      }
+    }
+  };
+
+  var fallback = {
+    note: "Buscando en lo que tengo guionado…",
+    delay: 750,
+    label: "Alcance del mockup",
+    body:
+      'En el mockup solo tengo tres respuestas guionadas. Pregúntame <strong>cómo vamos</strong>, ' +
+      'por tus <strong>clientas más calientes</strong>, o pídeme que te <strong>arme algo para ' +
+      'Amor y Amistad</strong>.'
+  };
+
+  function respond(key) {
+    var a = answers[key] || fallback;
+    var t = thinking(a.note);
+    setTimeout(function () {
+      t.remove();
+      orb.classList.remove("busy");
+      axelCard(a.label, a.body, a.extra);
+      if (a.after) a.after();
+    }, a.delay);
+  }
+
+  document.querySelectorAll(".cap").forEach(function (c) {
+    c.addEventListener("click", function () {
+      mine(c.querySelector(".capname").textContent.trim());
+      respond(c.dataset.q);
+    });
+  });
+
+  var form = $("chatForm");
+  var input = $("chatInput");
+  input.addEventListener("input", function () {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  });
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = input.value.trim();
+    if (!v) return;
+    mine(v);
+    input.value = "";
+    input.style.height = "auto";
+    var l = v.toLowerCase();
+    var key = null;
+    if (/amor|amistad|campa|promo/.test(l)) key = "amor";
+    else if (/client|calient|mejor|score|puntaj/.test(l)) key = "hot";
+    else if (/vamos|vent|mes|cierr|embudo|como|cómo|numer|número/.test(l)) key = "how";
+    respond(key);
+  });
+
+  /* ---------------- nueva conversación ---------------- */
+  $("newChat").addEventListener("click", function () {
+    thread.innerHTML = "";
+    caps.classList.remove("hidden");
+    document.querySelectorAll(".cap").forEach(function (c) { c.removeAttribute("disabled"); });
+    scroller.scrollTop = 0;
+    toast("Conversación nueva", "ai");
+  });
+
+  /* ---------------- aprobar ---------------- */
+  var approved = {
+    "1": ["Regla encendida. Empieza a perseguir carritos ahora mismo.", "Encendida", "Persiguiendo 34 carritos"],
+    "2": ["Cambio aplicado a Bella. Rige desde la próxima conversación.", "Aplicado", "Vigilando la calidad 7 días"],
+    "3": ["Campaña programada. La plantilla va a revisión de Meta.", "Programada", "Esperando aprobación de Meta"]
+  };
+
+  document.querySelectorAll("[data-approve]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var n = b.dataset.approve;
+      $("s" + n + "done").classList.remove("hidden");
+
+      var foot = $("s" + n + "foot");
+      foot.innerHTML =
+        '<button class="btn" data-close>Listo</button><div class="spacer"></div>' +
+        '<span style="font-size:11.5px;color:var(--ghost-fg)">' + approved[n][2] + '</span>';
+      foot.querySelector("[data-close]").addEventListener("click", closeAll);
+      $("s" + n + "done").scrollIntoView({ block: "nearest" });
+
+      var row = document.querySelector('#railProposals [data-open="s' + n + '"]');
+      if (row) {
+        row.classList.add("settled");
+        var pill = row.querySelector(".pill");
+        pill.className = "pill on";
+        pill.textContent = approved[n][1];
+      }
+      // la tarjeta que vive dentro del hilo, si el usuario llegó por el chat
+      document.querySelectorAll('.propcard [data-open="s' + n + '"]').forEach(function (btn) {
+        var card = btn.closest(".propcard");
+        card.querySelector(".propfoot").innerHTML =
+          '<span class="pill on"><svg class="ico ico-sm" style="vertical-align:-2px"><use href="#i-check"/></svg> ' +
+          approved[n][1] + '</span>';
+        var exp = card.querySelector(".expiry");
+        if (exp) exp.remove();
+      });
+
+      toast(approved[n][0]);
+      refreshCounts();
+    });
+  });
+
+  /* ---------------- rechazar → directriz ---------------- */
+  document.querySelectorAll("[data-reject]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var n = b.dataset.reject;
+      $("s" + n + "reject").classList.remove("hidden");
+      $("s" + n + "foot").classList.add("hidden");
+      $("s" + n + "reject").scrollIntoView({ block: "nearest" });
+    });
+  });
+  document.querySelectorAll("[data-cancel-reject]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var n = b.dataset.cancelReject;
+      $("s" + n + "reject").classList.add("hidden");
+      $("s" + n + "foot").classList.remove("hidden");
+    });
+  });
+  document.querySelectorAll("[data-confirm-reject]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var n = b.dataset.confirmReject;
+      var box = $("s" + n + "reject");
+      var chosen = box.querySelector('input[type="radio"]:checked').parentElement.textContent.trim();
+      var asDirective = box.querySelector('input[type="checkbox"]').checked;
+
+      var row = document.querySelector('#railProposals [data-open="s' + n + '"]');
+      if (row) row.classList.add("hidden", "settled");
+      document.querySelectorAll('.propcard [data-open="s' + n + '"]').forEach(function (btn) {
+        btn.closest(".propcard").remove();
+      });
+
+      closeAll();
+      refreshCounts();
+
+      if (asDirective) {
+        var el = document.createElement("div");
+        el.className = "dir fresh";
+        el.innerHTML = '<svg class="ico"><use href="#i-book"/></svg><div class="dirtext"><span></span>' +
+          '<div class="dirorigin">Salió de una propuesta que rechazaste · hoy</div></div>';
+        el.querySelector(".dirtext span").textContent = chosen;
+        $("dirList").appendChild(el);
+        var c = $("dirCount");
+        c.textContent = String(Number(c.textContent) + 1);
+        toast("Anotado. No te lo vuelvo a proponer.", "ai");
+        axelCard("Directriz guardada",
+          'Listo, lo anoté: «' + chosen + '» No te lo vuelvo a proponer, y lo voy a tener ' +
+          'en cuenta en todo lo que arme de aquí en adelante.');
+      } else {
+        toast("Propuesta descartada");
+      }
+    });
+  });
+
+  refreshCounts();
+})();
+</script>
+</body>
+</html>

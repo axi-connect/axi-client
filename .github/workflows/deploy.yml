@@ -53,6 +53,7 @@ jobs:
             NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'https://api.axi-connect.co' }}
             NEXT_PUBLIC_STORAGE_URL=${{ vars.NEXT_PUBLIC_STORAGE_URL || 'https://storage.axi-connect.co' }}
             NEXT_PUBLIC_SALES_WHATSAPP=${{ vars.NEXT_PUBLIC_SALES_WHATSAPP || '573224970950' }}
+            BUILD_SHA=${{ steps.meta.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -89,11 +90,18 @@ jobs:
              && /opt/apps/axi-connect/deploy-image.sh frontend '$TAG'; \
              status=\$?; docker logout ghcr.io >/dev/null 2>&1; exit \$status"
 
+      # ⚠️ Exige la VERSIÓN, no solo un 200. Un 200 lo devuelve igual el contenedor
+      # viejo, así que con la comprobación anterior un swap que no ocurría salía
+      # verde — es lo que pasó en la API durante diez días (incidente 2026-08-20).
       - name: Comprobar el sitio
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
         run: |
           for i in $(seq 1 10); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' https://axi-connect.co/ || true)
-            [ "$code" = "200" ] && { echo "OK ($code)"; exit 0; }
-            echo "intento $i: $code"; sleep 6
+            body=$(curl -s https://axi-connect.co/api/version || true)
+            if echo "$body" | grep -q "\"version\":\"$TAG\""; then
+              echo "OK ($TAG en servicio)"; exit 0
+            fi
+            echo "intento $i: sirviendo otra versión (esperada $TAG): $body"; sleep 6
           done
-          echo "El sitio no respondió 200 tras el despliegue"; exit 1
+          echo "El sitio no está sirviendo $TAG: el contenedor no se sustituyó"; exit 1

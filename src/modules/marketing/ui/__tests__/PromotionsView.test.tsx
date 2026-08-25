@@ -20,9 +20,21 @@ jest.mock("@/shared/auth/auth.hooks", () => ({
   useAuth: () => ({ hasPermission: () => true }),
 }));
 
+/* El enlace profundo desde el chat de Axel (`?promotion=<id>`) lee el router de
+   App Router, que en jsdom no está montado. `mockParams` es mutable a propósito:
+   así un escenario puede llegar «desde el chat» y el resto no. */
+let mockParams = new URLSearchParams();
+const mockReplace = jest.fn();
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mockReplace, push: jest.fn() }),
+  usePathname: () => "/marketing/promotions",
+  useSearchParams: () => mockParams,
+}));
+
 const showModal = jest.fn();
+const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert: jest.fn(), showModal, closeModal: jest.fn() }),
+  useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
 }));
 
 jest.mock("@/modules/marketing/infrastructure/services/promotions-service.adapter", () => ({
@@ -153,6 +165,40 @@ describe("catálogo con promociones", () => {
       }),
     );
     expect(api.deletePromotion).not.toHaveBeenCalled();
+  });
+});
+
+/* El destino de «Ver la promoción» en el chat de Axel. Lo que Axel deja nace
+   APAGADO, así que el escenario usa justamente la promoción apagada: si el foco
+   no forzara el filtro a «todas», el dueño cerraría el panel y no vería su fila. */
+describe("llegando desde el chat de Axel", () => {
+  afterEach(() => {
+    mockParams = new URLSearchParams();
+  });
+
+  it("abre el borrador que trae el enlace y deja de filtrarlo por estado", async () => {
+    mockParams = new URLSearchParams("promotion=p3");
+    api.listPromotions.mockResolvedValue([
+      promo({ id: "p3", name: "Promo apagada", enabled: false }),
+      promo({ name: "Vuelve y ahorra" }),
+    ]);
+    render(<PromotionsView />);
+
+    expect(await screen.findByText("Editar promoción")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Promo apagada")).toBeInTheDocument();
+    expect(screen.getByLabelText("Filtrar por estado")).toHaveTextContent("Todas");
+  });
+
+  it("dice que ya no está en vez de abrir un panel vacío", async () => {
+    mockParams = new URLSearchParams("promotion=borrada");
+    api.listPromotions.mockResolvedValue([promo({ name: "Vuelve y ahorra" })]);
+    render(<PromotionsView />);
+
+    await screen.findByText("Vuelve y ahorra");
+    expect(showAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Esa promoción ya no está" }),
+    );
+    expect(screen.queryByText("Editar promoción")).not.toBeInTheDocument();
   });
 });
 

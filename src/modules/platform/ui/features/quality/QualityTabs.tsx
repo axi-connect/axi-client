@@ -4,47 +4,19 @@
  * Tabs de la sección Calidad como SEGMENTOS DE RUTA (spec D11): deep-linking
  * directo y back/forward correcto. Terminología: NUNCA "Corridas".
  */
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/core/lib/utils";
+import { Bug, ClipboardList, Layers, PlayCircle } from "lucide-react";
 
-const TABS = [
-  { label: "Ejecuciones", segment: "runs" },
-  { label: "Escenarios", segment: "scenarios" },
-  { label: "Suites", segment: "suites" },
-  { label: "Depurador", segment: "debugger" },
-] as const;
+import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
 const BASE = "/platform/quality";
 
-export function QualityTabs() {
-  const pathname = usePathname();
+const TABS: readonly NavTabItem[] = [
+  { href: `${BASE}/runs`, label: "Ejecuciones", icon: PlayCircle },
+  { href: `${BASE}/scenarios`, label: "Escenarios", icon: ClipboardList },
+  { href: `${BASE}/suites`, label: "Suites", icon: Layers },
+  { href: `${BASE}/debugger`, label: "Depurador", icon: Bug },
+];
 
-  return (
-    <nav aria-label="Secciones de calidad" className="overflow-x-auto border-b border-border">
-      <ul className="flex min-w-max items-center gap-1">
-        {TABS.map((tab) => {
-          const href = `${BASE}/${tab.segment}`;
-          const isActive = pathname === href || pathname.startsWith(`${href}/`);
-          return (
-            <li key={tab.segment}>
-              <Link
-                href={href}
-                prefetch={false}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "inline-block border-b-2 px-3 py-2 text-sm transition-colors",
-                  isActive
-                    ? "border-primary font-medium text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
-                )}
-              >
-                {tab.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
+export function QualityTabs() {
+  return <NavTabs items={TABS} label="Secciones de calidad" surface="inline" prefetch={false} />;
 }

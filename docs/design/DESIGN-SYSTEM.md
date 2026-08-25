@@ -77,6 +77,15 @@ Definidos una sola vez como utilidades en `globals.css` (nunca inline en compone
 
 `core/styles/gradients.ts` (colores Tailwind aleatorios) queda **deprecado**: los avatares/decoraciones derivan de estos gradientes de marca o de los tres acentos.
 
+**Techo de tinte y sus dos excepciones.** El techo del sistema para teñir una
+superficie es el 14% de `--color-accent`. Lo rompen a propósito dos superficies, y
+las dos están declaradas en `globals.css` con su motivo: `.channel-surface`
+(7–34%, el color oficial del proveedor) y `.axel-field` (hasta el 26%, la aurora
+del despacho de Axel). El criterio que las autoriza es el mismo: el tinte no
+compite con el coral de acción ni con los colores de estado, y la superficie
+existe para sentirse habitada, no para presentar datos. Una tercera excepción no
+se añade sin actualizar esta línea.
+
 ### 2.4 Paleta de visualización de datos
 
 Orden fijo para series de gráficos: `brand` → `violet` → `amber` → `info` → `success` → tonos `color-mix` al 60% de los anteriores. Nunca colores fuera de la paleta.
@@ -208,16 +217,45 @@ En Tailwind v4 las clases se extraen estáticamente del fuente: usar `z-[70]` li
   backdrop-filter: saturate(160%) blur(20px);
   box-shadow: var(--shadow-overlay);
 }
+.glass-menu { /* mega-menú público: panel grande con tarjetas dentro */
+  background-color: color-mix(in srgb, var(--color-background) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(32px);
+  box-shadow: var(--shadow-overlay);
+}
 @supports not (backdrop-filter: blur(1px)) {
   .glass, .glass-overlay { background-color: var(--color-background); }
 }
 ```
+
+**Tres recetas, no dos.** La opacidad y el blur se mueven juntos y en sentido
+contrario: **más blur es lo que permite bajar la opacidad sin perder
+legibilidad**. De ahí las tres, por tamaño de la superficie y por lo que lleva
+dentro:
+
+| Receta | Fondo · blur | Para |
+|---|---|---|
+| `.glass` | 65 % · 16px | Barras y flotantes pequeños: header, sidebar, popovers, tooltips |
+| `.glass-menu` | 82 % · 32px | Mega-menú del sitio público: panel ancho con tarjetas propias dentro |
+| `.glass-overlay` | 80 % · 20px | Modales y sheets: texto denso, y el scrim ya separa del fondo |
+
+Corolario para el contenido que va **dentro** de una superficie de cristal: sus
+tarjetas y filas no pueden ser opacas, o tapan el blur y el panel se lee como
+una caja sólida. Para eso están la variante `surface="glass"` de `BrandCard`
+(fondo al 55 %) y `.brand-sheen`, que aporta el halo de marca **sin** su propio
+suelo — mismas coordenadas que `.bg-brand-ambient`, para que el ambiente de la
+marca no se bifurque.
+
+**El lenguaje de superficie de la marca son elipses, no retículas.** El halo
+suave anclado a una esquina es lo que hacen el hero y la tarjeta del footer;
+una rejilla de cuadros es lenguaje técnico y no es de esta marca (por eso se
+retiró la `GridCard` que vino con la plantilla del mega-menú).
 
 ### 5.2 Dónde sí / dónde no
 
 | ✅ Glass | ❌ Sólido |
 |---|---|
 | `PrivateHeader`, `SiteHeader` (sticky) | Tablas (`DataTable`) y sus cards |
+| Panel del mega-menú público (`.glass-menu`) | Páginas de producto: sus tarjetas son sólidas |
 | Sidebar (`AppSidebar`) | Formularios (`DynamicForm`) |
 | `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) |
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |
@@ -247,7 +285,15 @@ Reglas:
 - Toda animación no esencial se desactiva con `prefers-reduced-motion` (`useReducedMotion` de framer-motion o la media query CSS ya presente en `globals.css`).
 - Animar solo `transform` y `opacity` (compositor); nunca `width`/`height`/`top` en listas grandes.
 - **Animaciones que deben sobrevivir a cargas pesadas** (splash, loaders de transición) van en **CSS, no en framer-motion**: framer anima por rAF en el hilo principal y se congela si la página destino está hidratando; el CSS corre en el compositor (caso real: LOADING.md §6.3).
-- Nada parpadea ni se mueve en loop en el workspace.
+- Nada parpadea ni se mueve en loop en el workspace. **Excepción única y
+  declarada: la aurora del despacho de Axel** (`.axel-field::before`, módulo
+  CMO). Se concede porque cumple las tres condiciones que la hacen inocua: 72 s
+  por vuelta (no se percibe movimiento mirando la pantalla, se nota al volver a
+  ella), solo `transform` sobre una capa sin texto encima, y `alternate` para que
+  no dé un salto al reiniciar el ciclo. Se apaga entera con
+  `prefers-reduced-motion`. Cualquier otra superficie del panel sigue quieta: si
+  aparece una segunda, esto deja de ser una excepción y pasa a ser la regla nueva
+  — y entonces se discute aquí, no en el componente.
 
 ---
 
@@ -288,6 +334,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
+| Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
 
 Patrones de estado obligatorios en toda vista: **cargando** (§9.1), **vacío** (icono + frase + acción sugerida), **error** (`errorMessage(err)` + reintento).
@@ -327,6 +374,57 @@ El menú del tenant es un árbol de hasta 3 niveles (contrato y piezas en arquit
 - **El control de plegado vive en la cabecera del sidebar** (`SidebarCollapseButton`), no solo en el header de página: es donde está lo que controla, y colapsado queda centrado bajo el isotipo porque es el único camino de vuelta. **Icono y `aria-label` cambian con el estado** (`PanelLeftClose` / «Colapsar menú» ↔ `PanelLeftOpen` / «Expandir menú»); un control de plegado que se pinta igual en ambos estados no dice en qué estado está. El tooltip incluye el atajo (`⌘B` o `Ctrl+B` según plataforma). En móvil el sidebar es un `Sheet` con su cierre nativo oculto, así que ahí el mismo botón es el cierre (`X`, «Cerrar menú»). El `SidebarTrigger` del header de página **se conserva**: con el sheet cerrado no hay sidebar donde alojar nada.
 - **Modo icono no pierde funciones, las reencaja.** La cabecera usa `px-2` en modo icono (48 − 16 = 32px, el ancho del isotipo, alineado con las filas del menú); con el `px-3` de expandido la caja interior quedaba en 24px y el logo se desbordaba. Y el control de tema pasa a su variante `compact` (un icono + `Popover` con las tres opciones) en vez de ocultarse: el segmentado mide ~84px y no cabe en el rail, pero ocultarlo dejaba el tema inaccesible hasta volver a expandir. Regla general: **en el rail se cambia la presentación, no se elimina el control**.
 - **Sin secciones con etiqueta:** la agrupación la dan exclusivamente los padres colapsables. No se mezclan dos mecanismos de agrupación en el mismo menú.
+
+---
+
+### 9.3 Pestañas, sub-navegación y segmentados — una pastilla, tres semánticas
+
+Todas las pestañas del panel comparten **un solo recetario visual**
+(`shared/components/ui/segmented.tsx`) y **tres semánticas distintas**. Antes
+había tres lenguajes para la misma idea, repartidos en 23 copias: subrayado en
+las navegaciones de sección, rectángulo gris de shadcn en los `Tabs` de Radix y
+pill coral en once copias de un `SegmentedToggle` pegado a mano.
+
+| Si el control… | Es | Componente | Semántica |
+|---|---|---|---|
+| cambia de **ruta** | navegación | `NavTabs` (`layout/nav-tabs.tsx`) | `<nav>` + `<ul>` + `Link` + `aria-current="page"` |
+| cambia de **vista con panel** en la misma página | pestañas | `Tabs` (`variant="pill"`, por defecto) | `role="tab"` + `tabpanel` (Radix) |
+| **elige entre opciones, sin panel** | filtro | `SegmentedControl` | `role="radiogroup"` + `aria-checked` + roving tabindex |
+
+**La semántica no es decorativa.** Once de las copias declaraban `role="tab"`
+sin `tabpanel`: eso anuncia al lector de pantalla una pestaña cuyo contenido no
+existe. Regla: **si no hay panel, no es una pestaña.** Y si cambia de URL,
+tampoco: es navegación.
+
+**El activo es `bg-accent` + `text-accent-foreground` + icono `text-brand`**, no
+coral sólido. Razón dura: blanco sobre `--axi-brand` da ~3.1:1 y **no pasa AA**
+para texto pequeño, y estas etiquetas miden 12–13px. Es además el mismo
+tratamiento del ítem activo del sidebar (§9.2), así que el producto entero
+navega con un solo lenguaje.
+
+**Etiquetas (`labels`)**: `always` (todas), `active` (solo la del activo, el
+resto queda como icono) y `auto` — `active` por debajo de `md` y `always` a
+partir de ahí. La etiqueta oculta **colapsa su caja, nunca sale del DOM**: el
+lector de pantalla sigue leyéndola.
+
+**La pastilla se posiciona midiendo el DOM**, no el estado de React: busca
+`[data-state="active"]`, `[data-active="true"]` o `[aria-current="page"]` con un
+`MutationObserver` + `ResizeObserver`, y escribe `transform`/`width`
+directamente en el nodo. Tres consecuencias buscadas: sirve para las tres
+familias sin duplicar cuál es el ítem activo (Radix escribe `data-state` sin
+avisar a React), medir no re-renderiza la barra, y solo se animan propiedades de
+compositor. Se anula con `motion-reduce:` desde CSS, sin JS.
+
+**Tamaños y superficies:** `size="default"` en barras de cabecera, `sm` dentro
+de una card; `surface="raised"` cuando la barra flota sobre el contenido,
+`inline` cuando ya vive dentro de una superficie elevada (para no elevar dos
+veces). Cuando no cabe, la barra scrollea **dentro de sí misma**: el body de la
+vista nunca scrollea en horizontal (§4.2).
+
+**Fuera de este sistema** quedan a propósito los `aria-pressed` que no eligen
+entre opciones excluyentes: el rail vertical del inbox, los popovers de ajuste,
+la galería de proveedores y el constructor de recurrencia. Son interruptores, no
+pestañas.
 
 ---
 

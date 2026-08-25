@@ -118,6 +118,22 @@ describe("errorMessage — onboarding de canales Meta (F3)", () => {
     expect(message.length).toBeGreaterThan(30);
   });
 
+  it("meta_missing_scopes SÍ arrastra el detalle: sin los nombres no es accionable", () => {
+    // El backend nombra los permisos que faltan y es el único que los conoce.
+    // Sin ellos el mensaje manda a reintentar aceptando casillas —que es lo que
+    // el usuario ya hizo— en vez de a la configuración de Meta, que es donde
+    // está el arreglo.
+    const message = errorMessage(
+      httpError(
+        "channels/meta_missing_scopes",
+        "La configuración de inicio de sesión de Meta no pidió estos permisos: pages_show_list",
+      ),
+    );
+
+    expect(message).toContain("pages_show_list");
+    expect(message).toContain("configuración de inicio de sesión");
+  });
+
   it.each(META_CODES)("%s no filtra jerga técnica al usuario", (code) => {
     const message = errorMessage(httpError(code));
 

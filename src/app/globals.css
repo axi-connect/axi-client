@@ -198,6 +198,30 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-brand) 8%, transparent), transparent 70%);
 }
 
+/**
+ * `.brand-sheen` — el MISMO lenguaje de elipses de `.bg-brand-ambient`, pero sin
+ * su fondo opaco, para superficies que ya traen el suyo (las tarjetas del
+ * mega-menú, que van sobre cristal y no pueden tapar el blur).
+ *
+ * Mismas coordenadas y mismos porcentajes a propósito: si el ambiente de la
+ * marca cambia, cambia en los dos sitios o dejan de ser el mismo material. Los
+ * valores son la mitad de intensos porque aquí la superficie es pequeña — un
+ * 13 % en una tarjeta de 118px de alto se lee como un lavado rosa, no como un
+ * halo.
+ */
+.brand-sheen {
+  background-image:
+    radial-gradient(75% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand) 7%, transparent), transparent 72%),
+    radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-brand) 4%, transparent), transparent 70%);
+}
+
+/** Al pasar el cursor el halo sube, sin cambiar de color ni de forma. */
+.group:hover > .brand-sheen {
+  background-image:
+    radial-gradient(75% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand) 14%, transparent), transparent 72%),
+    radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-amber) 7%, transparent), transparent 70%);
+}
+
 /* -------- Superficie de tarjeta de canal (F1 de canales Meta) -------- */
 
 /**
@@ -352,9 +376,25 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: var(--shadow-overlay);
 }
 
+/**
+ * Mega-menú del sitio público. Tercera receta, y no por capricho: el panel es
+ * grande y lleva sus propias tarjetas dentro, así que necesita **más blur** que
+ * el header (16px) para que el texto se lea sobre una landing con imágenes, y
+ * **menos opacidad** que un modal (80%) para que se lea como cristal y no como
+ * una caja sólida. Subir el blur es justo lo que permite bajar la opacidad sin
+ * perder legibilidad.
+ */
+.glass-menu {
+  background-color: color-mix(in srgb, var(--color-background) 82%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(32px);
+  backdrop-filter: saturate(180%) blur(32px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  box-shadow: var(--shadow-overlay);
+}
+
 /* Fallback: sin backdrop-filter el fondo translúcido no es legible */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass, .glass-overlay { background-color: var(--color-background); }
+  .glass, .glass-overlay, .glass-menu { background-color: var(--color-background); }
 }
 
 /* -------- Ajustes de componentes -------- */
@@ -603,4 +643,433 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background-image: radial-gradient(circle, var(--axi-brand), transparent);
   border-radius: 9999px;
   background-clip: content-box;
+}
+
+/* ==========================================================================
+   MÓDULO CMO — Axel, el director de mercadeo
+   ==========================================================================
+   Dos utilidades y ninguna es nueva de raíz: el orbe reutiliza el ANILLO COMETA
+   de `.channel-surface::after` (misma `@property --comet-angle`, §canales F1) y
+   el campo ambiental parte del lenguaje de `.bg-brand-ambient` — elipses
+   ancladas a esquina, en `srgb` — pero LO ROMPE a propósito: ver §EL CAMPO.
+
+   Se declaran aquí y no como valores arbitrarios de Tailwind por la misma razón
+   que el cometa de canales: un `color-mix` anidado dentro de `bg-[...]` es
+   frágil de extraer, y el sistema pide que los degradados vivan una sola vez.
+   ========================================================================== */
+
+/* Halo difuso detrás del orbe. Violeta porque violeta = IA en todo el panel. */
+.axel-orb-glow {
+  position: absolute;
+  inset: -26px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(6px);
+}
+
+/* El retrato de Axel dentro del orbe (`/images/mascots/cmo-orb.webp`, el mismo
+   render del personaje recortado en cuadrado sobre la cabeza). El disco es
+   `overflow:hidden`, así que la imagen se recorta al círculo. */
+.axel-orb-face {
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/* Vignette violeta pegada al borde interior del retrato. No es decoración: es lo
+   que funde la foto con el anillo para que el cometa no parezca un aro puesto
+   encima de un avatar recortado. `screen` sobre un render oscuro lee como luz. */
+.axel-orb-veil {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      transparent 44%,
+      color-mix(in srgb, var(--axi-violet) 20%, transparent) 84%,
+      color-mix(in srgb, var(--axi-violet) 40%, transparent) 100%
+    ),
+    radial-gradient(
+      circle at 50% 116%,
+      color-mix(in srgb, var(--axi-brand) 24%, transparent),
+      transparent 62%
+    );
+}
+
+/* Derrame del cometa sobre el retrato: el MISMO cónico, difuminado y recortado a
+   la corona interior. Lleva animación propia con idéntica duración y curva
+   porque `--comet-angle` está declarada `inherits: false` (arriba, con el cometa
+   de canales) y un hijo no puede heredar el ángulo animado del padre: la
+   sincronía se consigue con dos animaciones en fase, no heredando el valor. */
+.axel-orb-spill {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(4px);
+  mix-blend-mode: screen;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 54%, #000 90%);
+  mask-image: radial-gradient(circle, transparent 54%, #000 90%);
+  animation: axel-comet 5.5s linear infinite;
+}
+
+/* Cuando Axel piensa el derrame se aviva: el cometa se nota más sin añadir otra
+   animación al DOM. */
+.axel-orb--busy .axel-orb-spill {
+  opacity: 0.72;
+}
+
+/* El cometa: cónico con cola y núcleo, recortado a la franja del borde con dos
+   máscaras que se excluyen. Gira animando `--comet-angle`, que ya existe como
+   propiedad TIPADA arriba (sin `@property` un custom property no interpola).
+   Tricolor del isotipo: es el ÚNICO momento hero del módulo (DESIGN §3.2).
+   `z-index: 2` lo deja por encima del retrato y del derrame. */
+.axel-orb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: axel-comet 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes axel-comet {
+  to {
+    --comet-angle: 360deg;
+  }
+}
+
+/* ==========================================================================
+   LA TARJETA DE PROPUESTA DEL HILO — relieve y cometa
+   --------------------------------------------------------------------------
+   La propuesta que Axel arma DENTRO de la conversación es la unidad de producto
+   del módulo, y aparece en medio de un hilo de texto: sin relieve propio se lee
+   como un párrafo más y el dueño la pasa de largo.
+
+   El relieve son tres capas y ninguna estrena color: un realce violeta en el
+   borde superior (la luz), una sombra proyectada teñida hacia abajo (el peso) y
+   el anillo cónico recortado al borde, con la MISMA técnica de `.axel-orb::after`
+   — dos máscaras que se excluyen sobre `@property --comet-angle`.
+
+   El anillo solo gira mientras la tarjeta es NUEVA: tres vueltas y se apaga
+   solo, sin temporizador en JavaScript. Un anillo permanente en cada tarjeta
+   convertiría el único momento hero del módulo en ruido de fondo.
+   ========================================================================== */
+.axel-comet-card {
+  position: relative;
+  isolation: isolate;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--axi-violet) 24%, transparent),
+    0 14px 34px -16px color-mix(in srgb, var(--axi-violet) 34%, transparent),
+    var(--shadow-float);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease;
+}
+
+/* El levantamiento al pasar por encima: `perspective` en la propia transform
+   para que el giro sea volumétrico y no un escalado plano. */
+.axel-comet-card:hover {
+  transform: perspective(1100px) translateY(-2px) rotateX(1.1deg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--axi-violet) 30%, transparent),
+    0 22px 46px -18px color-mix(in srgb, var(--axi-violet) 40%, transparent),
+    var(--shadow-overlay);
+}
+
+/* Halo violeta de la esquina de la tarjeta pendiente. Vive aquí y no como un
+   bg-[radial-gradient(...color-mix...)] inline: un color-mix anidado dentro de
+   una clase arbitraria es frágil de extraer y el KB del slice lo prohíbe. */
+.axel-card-halo {
+  background: radial-gradient(
+    circle 110px at 22px 18px,
+    color-mix(in srgb, var(--axi-violet) 18%, transparent),
+    transparent
+  );
+}
+
+/* Entrada: la tarjeta se endereza como un panel físico que cae en su sitio. Es
+   la señal de que ACABA de llegar, y por eso solo la lleva la variante nueva. */
+.axel-comet-card--new {
+  animation: axel-card-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes axel-card-in {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(-7deg) translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+
+.axel-comet-card--new::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 214deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 296deg,
+    var(--axi-brand) 338deg,
+    var(--axi-amber) 351deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  /* Tres vueltas y se apaga. El desvanecido arranca en la última para que no
+     desaparezca de golpe. */
+  animation:
+    axel-comet 4.6s linear 3,
+    axel-ring-out 1.2s ease 12.6s forwards;
+  pointer-events: none;
+}
+
+@keyframes axel-ring-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Axel pensando. Existe porque NO hay streaming: un turno tarda decenas de
+   segundos y sin señal de vida el usuario cree que se colgó. Solo `transform`,
+   así que no provoca layout ni repaint del texto. */
+.axel-orb--busy {
+  animation: axel-breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes axel-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+/* ==========================================================================
+   EL CAMPO DEL DESPACHO — aurora con deriva
+   --------------------------------------------------------------------------
+   El fondo de la conversación con Axel. Va en el `<main>` de `CmoView`, nunca
+   en el chat: tiene que quedar detrás del hero, del hilo Y del compositor a la
+   vez, y cuando empezaba debajo del briefing aparecía una costura de 1px que
+   partía la pantalla en dos.
+
+   Tres capas y cada una tiene un trabajo:
+
+     .axel-field           color base + grano fino tileado   ← quieto, cobertura total
+     .axel-field::before   los cuatro halos                  ← LA CAPA QUE DERIVA
+     .axel-field::after    dot-grid con viñeta               ← quieto
+
+   Cuatro decisiones que explican la forma que tiene:
+
+   1. **El color base vive en el ELEMENTO, no en la capa de halos.** Antes
+      estaban juntos, y eso impedía usar `opacity` sobre los halos como perilla
+      de intensidad por tema (habría atenuado también el fondo). Separados,
+      `--axel-veil` sube el tinte en oscuro sin duplicar la estructura — el
+      mismo truco que `.dark .channel-surface::before`. Y hay una segunda razón,
+      dura: la capa que se mueve NO puede llevar el fondo, porque al desplazarse
+      dejaría fondo desnudo detrás.
+
+   2. **`inset: -20%` es lo que hace posible la deriva.** Con `inset: 0`
+      cualquier `translate` descubriría el borde de la capa. Sobredimensionada al
+      140%, se mueve dentro de su propio margen y nunca asoma un canto. Por eso
+      los halos se anclan entre el 14% y el 86%: ése es el tramo VISIBLE de la
+      capa agrandada, no del contenedor.
+
+   3. **El tinte rompe el techo del sistema, a sabiendas.** El techo es el 14%
+      de `--color-accent` y aquí se llega al 26%. Es la misma desviación ya
+      sancionada en `.channel-surface` (7–34%) y por el mismo criterio: el tinte
+      no compite con el coral de acción ni con los colores de estado, y esta es
+      la única superficie del panel que existe para sentirse habitada. Queda
+      declarada en DESIGN-SYSTEM §6 y en `docs/modules/cmo.md`.
+
+   4. **La deriva es una desviación declarada de DESIGN-SYSTEM §6**, que dice
+      que nada se mueve en loop en el workspace. Se acepta SOLO aquí y con tres
+      condiciones que la hacen inocua: 72 s por vuelta (nadie la ve moverse, se
+      nota al volver), únicamente `transform` (compositor: ni layout ni repaint
+      del texto) y `alternate`, para que no dé un salto al reiniciar el ciclo.
+      Se apaga entera con `prefers-reduced-motion`.
+   ========================================================================== */
+.axel-field {
+  position: relative;
+  isolation: isolate;
+  /* La decoración NUNCA sale de la caja que la posee. Sin esto, la capa de
+     halos (`inset: -20%`, decisión 2) se derramaba 206 px por la derecha y otro
+     tanto por arriba: como `main` está posicionado y el rail es un hermano
+     ESTÁTICO posterior, el orden de pintado ponía el degradado ENCIMA del
+     tablero, de su borde y de su scroll, y el canto de la capa se leía como un
+     corte. El sobredimensionado del 140% solo tiene sentido con este recorte:
+     es lo que le da margen a la deriva sin asomar un borde.
+     `clip` y no `hidden`: no crea contenedor de scroll, así que el scroller
+     interno del hilo y el composer anclado siguen exactamente igual. */
+  overflow: clip;
+
+  /* Intensidad de los halos. Sobre negro el mismo `color-mix` se ve la mitad,
+     así que en oscuro va al máximo y en claro se atenúa. */
+  --axel-veil: 0.8;
+
+  background-color: color-mix(in srgb, var(--foreground) 3%, var(--background));
+  /* Grano. Es la mitad de la sensación de superficie física y cuesta un solo
+     paint: un tile de `feTurbulence` en data URI, sin `filter` sobre el árbol.
+     El ruido es gris (saturate 0) y con alfa variable, así que aclara sobre
+     negro y oscurece sobre blanco — sirve para los dos temas con un solo
+     asset. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.dark .axel-field {
+  --axel-veil: 1;
+}
+
+.axel-field::before {
+  content: "";
+  position: absolute;
+  /* 140% de la caja: el margen del que come la deriva (decisión 2). */
+  inset: -20%;
+  z-index: -2;
+  pointer-events: none;
+  opacity: var(--axel-veil);
+  will-change: transform;
+  /* El cuarto halo (abajo-centro) es nuevo y no es decoración: cae justo detrás
+     del compositor, y es lo que hace que el input se lea como la fuente de luz
+     de la pantalla en vez de una caja pegada abajo. */
+  background-image:
+    radial-gradient(
+      42% 38% at 16% 14%,
+      color-mix(in srgb, var(--axi-brand) 26%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      40% 36% at 84% 17%,
+      color-mix(in srgb, var(--axi-violet) 24%, transparent),
+      transparent 66%
+    ),
+    radial-gradient(
+      34% 30% at 70% 62%,
+      color-mix(in srgb, var(--axi-amber) 15%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      44% 34% at 50% 86%,
+      color-mix(in srgb, var(--axi-violet) 20%, transparent),
+      transparent 68%
+    );
+  animation: axel-drift 72s ease-in-out infinite alternate;
+}
+
+/* Desplazamientos de dos puntos porcentuales sobre un margen de veinte: la capa
+   nunca se queda corta. `scale` en el mismo paso para que el movimiento no se
+   lea como un deslizamiento lateral sino como una masa que respira. */
+@keyframes axel-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2.2%, 1.6%, 0) scale(1.045);
+  }
+  100% {
+    transform: translate3d(1.8%, -1.4%, 0) scale(1.02);
+  }
+}
+
+/* Dot-grid con máscara radial: da sensación de consola sin ensuciar el texto,
+   porque se desvanece justo donde empieza a leerse. */
+.axel-field::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--foreground) 12%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  opacity: 0.34;
+}
+
+/* Resplandor propio del compositor, encima del campo y debajo del formulario.
+   Existe porque el halo de la capa de fondo queda MUY difuso a esa altura: este
+   segundo foco, pegado y con blur corto, es el que de verdad hace que el input
+   parezca encendido. Se aplica al bloque `flex-none` que ya envuelve al form.
+
+   No lleva animación: la deriva del campo ya aporta el movimiento, y dos cosas
+   moviéndose a distinto ritmo en la misma pantalla se leen como un fallo. */
+.axel-composer-glow {
+  position: relative;
+  isolation: isolate;
+  --axel-composer-tint: 26%;
+}
+
+.dark .axel-composer-glow {
+  --axel-composer-tint: 34%;
+}
+
+.axel-composer-glow::before {
+  content: "";
+  position: absolute;
+  inset: -30% -8% -70%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    58% 100% at 50% 100%,
+    color-mix(in srgb, var(--axi-violet) var(--axel-composer-tint), transparent),
+    transparent 72%
+  );
+  filter: blur(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axel-orb::after,
+  .axel-orb-spill,
+  .axel-orb--busy,
+  .axel-comet-card--new,
+  .axel-comet-card--new::after,
+  /* La aurora se queda quieta y completa: el degradado sigue ahí, solo deja de
+     derivar. Es la desviación de §6 devolviéndose sola. */
+  .axel-field::before {
+    animation: none;
+  }
 }

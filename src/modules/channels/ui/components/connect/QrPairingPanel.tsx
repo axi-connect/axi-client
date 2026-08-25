@@ -29,13 +29,7 @@ import {
  */
 const POLL_MS = 2_000;
 
-export function QrPairingPanel({
-  channelName,
-  onConnected,
-}: {
-  channelName: string;
-  onConnected: (channel: ChannelDTO) => void;
-}) {
+export function QrPairingPanel({ onConnected }: { onConnected: (channel: ChannelDTO) => void }) {
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
   const pairingByChannel = useChannelStore((s) => s.pairingByChannel);
   const setPairingState = useChannelStore((s) => s.setPairingState);
@@ -58,7 +52,9 @@ export function QrPairingPanel({
     setError(null);
     try {
       const created = await createChannel({
-        name: channelName.trim() === "" ? "WhatsApp" : channelName.trim(),
+        // El wizard ya no pide nombre: se crea con uno provisional y se renombra
+        // en el paso 4, con el mismo formulario que usa el detalle
+        name: "WhatsApp",
         kind: "whatsapp_web",
       });
       upsertChannel(created);
@@ -71,7 +67,7 @@ export function QrPairingPanel({
     } finally {
       setStarting(false);
     }
-  }, [channelName, starting, upsertChannel]);
+  }, [starting, upsertChannel]);
 
   // Respaldo del WebSocket. Se detiene en cuanto el canal conecta: seguir
   // preguntando por un QR que ya no existe devuelve 404 en bucle.

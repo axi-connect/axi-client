@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { SegmentedControl, type SegmentedItem } from "@/shared/components/ui/segmented";
 import { relativeTime } from "@/core/lib/relative-time";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
@@ -33,14 +34,19 @@ import {
   type TasksTab,
 } from "@/modules/crm/infrastructure/stores/tasks.store";
 
-const TABS: Array<{ value: TasksTab; label: string }> = [
+const TABS: readonly SegmentedItem<TasksTab>[] = [
   { value: "me", label: "Mis tareas" },
   { value: "unassigned", label: "Sin asignar" },
   { value: "all", label: "Todas" },
 ];
 
-const DUE_FILTERS: Array<{ value: TaskDueFilter | null; label: string }> = [
-  { value: null, label: "Todas" },
+/**
+ * `null` es «todas» en el store, pero un segmentado trabaja con strings: el
+ * centinela `all` se traduce en el borde, no en el store.
+ */
+const DUE_ALL = "all";
+const DUE_FILTERS: readonly SegmentedItem<TaskDueFilter | typeof DUE_ALL>[] = [
+  { value: DUE_ALL, label: "Todas" },
   { value: "overdue", label: "Vencidas" },
   { value: "today", label: "Hoy" },
   { value: "week", label: "Semana" },
@@ -197,7 +203,7 @@ export function TasksView() {
   const totalPages = Math.max(1, Math.ceil(total / TASKS_PAGE_SIZE));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Tareas</h2>
@@ -219,43 +225,24 @@ export function TasksView() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div role="tablist" aria-label="Filtrar por asignación" className="flex items-center rounded-full border border-border bg-secondary/60 p-1">
-          {TABS.map((option) => (
-            <button
-              key={option.value}
-              role="tab"
-              aria-selected={tab === option.value}
-              onClick={() => setTab(option.value)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                tab === option.value
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          value={tab}
+          onValueChange={setTab}
+          label="Filtrar por asignación"
+          size="sm"
+          items={TABS}
+        />
 
-        <div className="flex items-center gap-1" role="group" aria-label="Filtrar por vencimiento">
-          <span className="mr-1 text-xs text-muted-foreground">Vence:</span>
-          {DUE_FILTERS.map((option) => (
-            <button
-              key={option.label}
-              type="button"
-              aria-pressed={due === option.value}
-              onClick={() => setDue(option.value)}
-              className={cn(
-                "rounded-full border px-2.5 py-1 text-xs transition-colors",
-                due === option.value
-                  ? "border-primary/40 bg-accent text-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-xs">Vence:</span>
+          <SegmentedControl
+            value={due ?? DUE_ALL}
+            onValueChange={(value) => setDue(value === DUE_ALL ? null : value)}
+            label="Filtrar por vencimiento"
+            size="sm"
+            surface="inline"
+            items={DUE_FILTERS}
+          />
         </div>
       </div>
 

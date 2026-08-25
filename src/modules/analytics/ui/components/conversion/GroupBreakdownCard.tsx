@@ -8,6 +8,7 @@ import { Progress } from "@/shared/components/ui/progress";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { SectionError, sectionRefetching } from "./section-states";
 import type { Section } from "@/modules/analytics/infrastructure/stores/analytics.store";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import type {
   FunnelGroup,
   FunnelGroupBy,
@@ -46,31 +47,14 @@ export function GroupBreakdownCard({
     <DashboardCard
       title="¿Quién convierte mejor?"
       action={
-        <div
-          role="tablist"
-          aria-label="Dimensión del desglose"
-          className="inline-flex items-center gap-1 rounded-full border border-border p-0.5"
-        >
-          {GROUP_TABS.map((tab) => {
-            const active = tab.key === groupBy;
-            return (
-              <button
-                key={tab.key}
-                role="tab"
-                aria-selected={active}
-                onClick={() => onGroupByChange(tab.key)}
-                className={cn(
-                  "rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  active
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedControl
+          value={groupBy}
+          onValueChange={onGroupByChange}
+          label="Dimensión del desglose"
+          size="sm"
+          surface="inline"
+          items={GROUP_TABS.map((tab) => ({ value: tab.key, label: tab.label }))}
+        />
       }
     >
       {section.status === "error" ? (

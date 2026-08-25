@@ -12,7 +12,7 @@ import {
   connectMetaPageChannel,
   listMetaPageAssets,
 } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
-import { useMetaPopup, type MetaPopupError } from "./use-meta-popup";
+import { logSignup, useMetaPopup, type MetaPopupError } from "./use-meta-popup";
 
 /**
  * Alta por botón de Instagram y Messenger (F7).
@@ -32,7 +32,6 @@ export type PageAsset = Schemas["MetaPageAssetsDto"]["assets"][number];
 
 export type UsePageSignupOptions = {
   product: "instagram" | "messenger";
-  channelName?: string;
   onConnected?: (channel: ChannelDTO) => void;
 };
 
@@ -48,11 +47,7 @@ export type UsePageSignupResult = {
   reset: () => void;
 };
 
-export function usePageSignup({
-  product,
-  channelName,
-  onConnected,
-}: UsePageSignupOptions): UsePageSignupResult {
+export function usePageSignup({ product, onConnected }: UsePageSignupOptions): UsePageSignupResult {
   const popup = useMetaPopup(product);
   const { open: openPopup, clearWatchdog } = popup;
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
@@ -114,6 +109,7 @@ export function usePageSignup({
   );
 
   const start = useCallback(() => {
+    logSignup("start() — clic recibido (páginas)", { product });
     clearWatchdog();
     setChannel(null);
     setAssets([]);
@@ -124,6 +120,21 @@ export function usePageSignup({
     openPopup({
       onResult: (result) => {
         clearWatchdog();
+        if (result.outcome === "unavailable") {
+          fail({
+            code: "channels/meta_signup_disabled",
+            message: "La conexión automática con Meta no está disponible ahora mismo.",
+          });
+          return;
+        }
+        if (result.outcome === "config_ignored") {
+          fail({
+            code: "meta/config_not_applied",
+            message:
+              "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
+          });
+          return;
+        }
         if (result.outcome === "blocked") {
           setPhase("popup_blocked");
           return;
@@ -135,7 +146,7 @@ export function usePageSignup({
         void exchange(result.code);
       },
     });
-  }, [clearWatchdog, exchange, openPopup]);
+  }, [clearWatchdog, exchange, fail, openPopup, product]);
 
   /**
    * Paso 2. El `asset_id` viaja opaco: el servidor lo valida contra la sesión,
@@ -149,12 +160,12 @@ export function usePageSignup({
       setConnecting(true);
       void (async () => {
         try {
+          // Sin `name`: el backend nombra el canal con la página o la cuenta que
+          // se acaba de elegir, que es más preciso que cualquier cosa que el
+          // usuario pudiera teclear antes de ver la lista
           const created = await connectMetaPageChannel({
             session_id: sessionId,
             asset_id: assetId,
-            ...(channelName !== undefined && channelName.trim() !== ""
-              ? { name: channelName.trim() }
-              : {}),
           });
           upsertChannel(created);
           if (!mountedRef.current) return;
@@ -172,7 +183,7 @@ export function usePageSignup({
         }
       })();
     },
-    [channelName, connecting, fail, onConnected, upsertChannel],
+    [connecting, fail, onConnected, upsertChannel],
   );
 
   const reset = useCallback(() => {

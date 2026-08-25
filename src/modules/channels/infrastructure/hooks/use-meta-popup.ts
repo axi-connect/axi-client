@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MetaProduct, MetaSignupConfigDTO } from "@/modules/channels/domain/meta-signup";
 import { FacebookSdkError } from "@/modules/channels/domain/meta-signup";
 import {
+  getFacebookSdk,
   loadFacebookSdk,
-  type FacebookSdk,
   type FbLoginResponse,
 } from "@/modules/channels/infrastructure/services/facebook-sdk";
 import { getMetaSignupConfig } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
@@ -25,6 +25,18 @@ import { getMetaSignupConfig } from "@/modules/channels/infrastructure/services/
  * no, así que esa parte es de cada flujo.
  */
 
+/**
+ * Traza del intento de conexión.
+ *
+ * Siempre activa y en `info`, no detrás de un flag: el modo de fallo de este
+ * flujo es **no hacer nada** —sin popup, sin error, sin excepción— y sin estas
+ * líneas es indistinguible desde fuera. Son unas pocas por clic, solo durante
+ * un intento, nunca en render.
+ */
+export function logSignup(step: string, fields: Record<string, unknown> = {}): void {
+  console.info(`[meta-signup] ${step}`, fields);
+}
+
 const ABANDON_WATCHDOG_MS = 180_000;
 /** Un humano no autoriza ni cancela en menos de esto: por debajo, fue el navegador. */
 const POPUP_BLOCKED_THRESHOLD_MS = 600;
@@ -40,7 +52,22 @@ export type MetaPopupError = {
 export type MetaPopupResult =
   | { outcome: "code"; code: string }
   | { outcome: "blocked" }
-  | { outcome: "cancelled" };
+  | { outcome: "cancelled" }
+  /**
+   * Meta devolvió un token de usuario en vez del `code`, que es lo que pasa
+   * cuando **ignora el `config_id`** — normalmente porque esa configuración no
+   * pertenece a la app del `app_id`. Tiene salida propia porque la heurística
+   * de tiempo lo tomaría por una cancelación, y decirle al usuario "cancelaste"
+   * ante un error de configuración lo manda a reintentar para siempre.
+   */
+  | { outcome: "config_ignored" }
+  /**
+   * El SDK o el `config_id` no estaban al pulsar. **Siempre se reporta**, nunca
+   * se vuelve en silencio: el flujo ya pintó "esperando a Meta" antes de
+   * llamar, así que rendirse sin avisar deja la pantalla colgada para siempre
+   * —y sin watchdog, porque este se arma después de esta guarda—.
+   */
+  | { outcome: "unavailable" };
 
 export type UseMetaPopupResult = {
   status: MetaPopupStatus;
@@ -68,7 +95,8 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
   const [config, setConfig] = useState<MetaSignupConfigDTO | null>(null);
   const [error, setError] = useState<MetaPopupError | null>(null);
 
-  const sdkRef = useRef<FacebookSdk | null>(null);
+  /** Solo marca que la carga terminó. El objeto se lee del global al usarlo. */
+  const loadedRef = useRef(false);
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedAtRef = useRef<number>(0);
 
@@ -106,12 +134,12 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       try {
         const sdk = await loadFacebookSdk(configResult.app_id, configResult.graph_api_version);
         if (cancelled) return;
-        sdkRef.current = sdk;
+        loadedRef.current = sdk !== null;
         setStatus("ready");
         setError(null);
       } catch (err) {
         if (cancelled) return;
-        sdkRef.current = null;
+        loadedRef.current = false;
         setStatus("unavailable");
         setError({
           code: err instanceof FacebookSdkError ? `sdk/${err.reason}` : "sdk/unknown",
@@ -129,15 +157,40 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
 
   const open = useCallback(
     (handlers: { beforeOpen?: () => void; onResult: (result: MetaPopupResult) => void }) => {
-      const sdk = sdkRef.current;
+      // Se lee AQUÍ, no de una referencia guardada: ver `getFacebookSdk`
+      const sdk = getFacebookSdk();
       const configId = config?.config_id ?? null;
+
+      logSignup("open() llamado", {
+        sdk_cargado: sdk !== null,
+        carga_completada: loadedRef.current,
+        config_id: configId,
+        tipo_config_id: typeof configId,
+        app_id: config?.app_id ?? null,
+        graph_api_version: config?.graph_api_version ?? null,
+        enabled: config?.enabled ?? null,
+      });
+
       if (sdk === null || configId === null) {
+        console.warn("[meta-signup] Se pulsó conectar sin SDK o sin config_id", {
+          sdk_loaded: sdk !== null,
+          config_id: configId,
+        });
         setStatus("unavailable");
+        handlers.onResult({ outcome: "unavailable" });
         return;
       }
 
       startedAtRef.current = Date.now();
-      handlers.beforeOpen?.();
+      try {
+        handlers.beforeOpen?.();
+        logSignup("beforeOpen ok (listener registrado)");
+      } catch (err) {
+        // Si esto lanzara, el clic moriría aquí y `FB.login` nunca correría
+        logSignup("beforeOpen LANZÓ", { error: String(err) });
+        handlers.onResult({ outcome: "cancelled" });
+        return;
+      }
 
       // Abandono: tres minutos sin ninguna señal. Sin esto la UI se queda en
       // "esperando a Meta" para siempre si el usuario cierra el popup de una
@@ -148,9 +201,28 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       }, ABANDON_WATCHDOG_MS);
 
       const callback = (response: FbLoginResponse) => {
+        logSignup("callback de FB.login", {
+          status: response.status,
+          tiene_code: typeof response.authResponse?.code === "string",
+          tiene_access_token: response.authResponse?.accessToken !== undefined,
+          ms_transcurridos: Date.now() - startedAtRef.current,
+        });
         const code = response.authResponse?.code;
         if (typeof code === "string" && code !== "") {
           handlers.onResult({ outcome: "code", code });
+          return;
+        }
+
+        // Autorizó y volvió con TOKEN en vez de code: el `config_id` no se
+        // aplicó. Sin este caso, la heurística de abajo lo llamaría
+        // "cancelaste" y el usuario reintentaría eternamente un fallo de
+        // configuración.
+        if (response.authResponse?.accessToken !== undefined) {
+          console.warn(
+            "[meta-signup] Meta devolvió un access token en vez del code: el config_id no se aplicó",
+            { config_id: configId, app_id: config?.app_id },
+          );
+          handlers.onResult({ outcome: "config_ignored" });
           return;
         }
 
@@ -163,21 +235,36 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         });
       };
 
+      // Los `extras` son del Embedded Signup de WhatsApp y de nadie más: activan
+      // el flujo de alta de WABA. Instagram y Messenger usan Facebook Login for
+      // Business a secas —su ejemplo oficial son tres parámetros y ninguno más—,
+      // y al recibirlos Meta abría el diálogo y lo reventaba contra su pantalla
+      // genérica de "Sorry, something went wrong", sin error ni código que
+      // devolver. Por eso van condicionados al producto y no fijos en la base.
+      const options = {
+        config_id: configId,
+        response_type: "code" as const,
+        override_default_response_type: true,
+        // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
+        // en JSON en vez de en el formato antiguo
+        ...(product === "whatsapp"
+          ? { extras: { setup: {}, featureType: "", sessionInfoVersion: "3" } }
+          : {}),
+      };
+
+      logSignup("llamando a FB.login", { options, tipo_login: typeof sdk.login });
       try {
-        sdk.login(callback, {
-          config_id: configId,
-          response_type: "code",
-          override_default_response_type: true,
-          // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
-          // en JSON en vez de en el formato antiguo
-          extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
-        });
+        sdk.login(callback, options);
+        // Si esta línea sale y NO aparece "callback de FB.login" después, el SDK
+        // aceptó la llamada y no abrió nada: el problema está del lado de Meta
+        // (dominio del SDK, modo de la app, rol de la cuenta)
+        logSignup("FB.login volvió sin lanzar");
       } catch (err) {
-        console.warn("[meta-signup] FB.login lanzó de forma síncrona:", err);
+        logSignup("FB.login LANZÓ de forma síncrona", { error: String(err) });
         handlers.onResult({ outcome: "blocked" });
       }
     },
-    [clearWatchdog, config],
+    [clearWatchdog, config, product],
   );
 
   return {

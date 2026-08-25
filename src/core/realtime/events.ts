@@ -383,6 +383,125 @@ export type MarketingOptOutCreatedEvent = {
   simulated: boolean;
 };
 
+/**
+ * Axel, el director de mercadeo (módulo cmo). El briefing del día quedó listo.
+ *
+ * `proposals_created` es lo que alimenta el badge del sidebar, y `headline` lo
+ * que hace que la notificación diga algo: un aviso de "tienes un informe nuevo"
+ * se ignora a la segunda vez.
+ */
+export type CmoBriefingReadyEvent = {
+  company_id: string;
+  briefing_id: string;
+  /** Día LOCAL del negocio (YYYY-MM-DD), no un instante UTC. */
+  date_local: string;
+  proposals_created: number;
+  headline: string;
+};
+
+/** Axel dejó una propuesta nueva: el tablero la inserta sin recargar. */
+export type CmoProposalCreatedEvent = {
+  company_id: string;
+  proposal_id: string;
+  kind: string;
+  title: string;
+  source: "briefing" | "signal" | "chat";
+  expires_at: string | null;
+};
+
+/**
+ * Una propuesta se decidió. Llega también cuando la decidió OTRA pestaña o
+ * OTRO usuario: es lo que evita que dos personas aprueben la misma campaña
+ * mirando dos pantallas distintas.
+ */
+export type CmoProposalDecidedEvent = {
+  company_id: string;
+  proposal_id: string;
+  status: "approved" | "rejected" | "expired" | "superseded";
+  decided_by_user_id: string | null;
+};
+
+/**
+ * El turno de Axel, contado mientras ocurre (sala `user_{id}`).
+ *
+ * Aquí el WS **sí sincroniza**, y es la excepción declarada al «el WS avisa, no
+ * sincroniza» del resto del módulo: no hay ningún endpoint del que releer un
+ * turno a medio escribir. La verdad final sigue siendo el cuerpo del POST — o el
+ * `cmo.turn_completed`, que la trae ya persistida cuando la conexión se cortó.
+ *
+ * Campos comunes a los cinco: `turn_id` ata los eventos a la petición (el
+ * cliente lo propone antes de enviarla, porque los eventos llegan en el primer
+ * segundo y la respuesta puede tardar noventa) y `seq` da el orden, para
+ * descartar lo repetido y lo que llegue tarde.
+ */
+/**
+ * La forma de la pregunta con opciones, replicada aquí a propósito.
+ *
+ * `core/` no importa de `modules/` (arquitectura §3.3 regla 7), así que este
+ * archivo no puede tomar `CmoQuestionDTO` del slice. La forma es la del contrato
+ * y el que manda sigue siendo el OpenAPI: el store del CMO usa el tipo generado
+ * y esto solo tipa el sobre del socket.
+ */
+type CmoQuestionDTO = {
+  question: string;
+  options: { label: string; hint: string | null }[];
+  allow_free_text: boolean;
+};
+
+type CmoTurnEventBase = {
+  company_id: string;
+  thread_id: string;
+  turn_id: string;
+  seq: number;
+};
+
+export type CmoTurnStartedEvent = CmoTurnEventBase;
+
+/** Una herramienta de Axel arrancó o terminó. La etiqueta la escribe el servidor. */
+export type CmoTurnStepEvent = CmoTurnEventBase & {
+  name: string;
+  label: string;
+  state: "running" | "done";
+  ms: number | null;
+  productive: boolean | null;
+};
+
+/**
+ * Texto de la respuesta, ya COALESCIDO en el servidor (no un evento por token).
+ *
+ * `iteration` es la vuelta del loop de la que sale: si el modelo escribió algo
+ * antes de llamar a una herramienta, ese texto era un preámbulo y no la
+ * respuesta, así que al ver una iteración mayor hay que descartar lo acumulado.
+ */
+export type CmoTurnDeltaEvent = CmoTurnEventBase & {
+  iteration: number;
+  text: string;
+};
+
+/** El turno cerró y ya está PERSISTIDO: esto rescata la respuesta si el POST murió. */
+export type CmoTurnCompletedEvent = CmoTurnEventBase & {
+  message_id: string;
+  body: string;
+  proposal_id: string | null;
+  tool_calls: number;
+  /**
+   * La pregunta con opciones que Axel dejó abierta, o `null`.
+   *
+   * Viaja DENTRO del cierre y no en un evento propio porque solo existe al
+   * terminar el turno: un `cmo.turn_question` sería un segundo camino hacia el
+   * mismo hecho. Y tiene que venir aquí — un turno rescatado por WS (el POST se
+   * cortó) pintaría la pregunta sin sus botones si no.
+   *
+   * Cuando no es `null`, `body` puede llegar vacío: la pregunta ES el mensaje.
+   */
+  question: CmoQuestionDTO | null;
+};
+
+/** El turno falló. `code` es el del error tipado del backend. */
+export type CmoTurnFailedEvent = CmoTurnEventBase & {
+  code: string;
+};
+
 /** Cupón aplicado a un pedido (el total del pedido cambia: llega `order.updated`). */
 export type MarketingPromotionRedeemedEvent = {
   company_id: string;
@@ -482,6 +601,14 @@ export type InboxServerEvents = {
   "marketing.opt_out_created": (payload: MarketingOptOutCreatedEvent) => void;
   "marketing.promotion_redeemed": (payload: MarketingPromotionRedeemedEvent) => void;
   "marketing.promotion_reverted": (payload: MarketingPromotionRevertedEvent) => void;
+  "cmo.briefing_ready": (payload: CmoBriefingReadyEvent) => void;
+  "cmo.proposal_created": (payload: CmoProposalCreatedEvent) => void;
+  "cmo.proposal_decided": (payload: CmoProposalDecidedEvent) => void;
+  "cmo.turn_started": (payload: CmoTurnStartedEvent) => void;
+  "cmo.turn_step": (payload: CmoTurnStepEvent) => void;
+  "cmo.turn_delta": (payload: CmoTurnDeltaEvent) => void;
+  "cmo.turn_completed": (payload: CmoTurnCompletedEvent) => void;
+  "cmo.turn_failed": (payload: CmoTurnFailedEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;

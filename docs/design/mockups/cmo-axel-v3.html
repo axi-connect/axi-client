@@ -1,0 +1,2371 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Consola CMO · campo único</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&family=Outfit:wght@200;300;400;600;700;800&display=swap">
+
+<!--
+  MOCKUP F0 (v3) — módulo CMO (Axel, director de mercadeo).
+  Gate de aprobación. NO es código de producción.
+  Plan: axi-server/docs/plans/cmo_module_plan.md §7 · Módulo: axi-client/docs/modules/cmo.md
+
+  QUÉ CAMBIA FRENTE AL v2 Y POR QUÉ EXISTE ESTE ARCHIVO
+  La implementación de F5 metió una franja fija del briefing encima del chat
+  (`CmoView.tsx` → `flex-none border-b border-border`). Esa franja no declara
+  fondo, así que hereda el degradado `from-muted/50 to-muted` de la superficie
+  del panel privado, mientras `.axel-field::before` pinta su PROPIO fondo opaco
+  justo debajo. Dos backdrops sin relación, separados por una línea de 1px: la
+  costura que el dueño del producto rechazó. Este mockup fija la corrección:
+
+  · V1 — UN SOLO CAMPO. El fondo ambiental (halos + dot-grid) va detrás de
+    hero, hilo Y composer a la vez. El único corte de superficie legítimo es el
+    rail derecho (`border-l` + superficie atenuada). Cero `border-b`.
+  · V1 — El briefing no es una tarjeta: se destila en el titular del hero y su
+    detalle vive en «La lectura de Axel», anclada al pie del rail (como el v2).
+  · V2 — Las propuestas llegan DENTRO del hilo (la tesis del módulo es la
+    disrupción en la conversación) y el rail conserva la lista compacta.
+  · V4 — EL TURNO EN VIVO (adición de esta ronda). El chat deja de ser un
+    skeleton mudo con frases inventadas: se ven los PASOS REALES que ejecuta el
+    runtime (con su etiqueta humana y su duración) y el texto de Axel LLEGA
+    ESCRIBIÉNDOSE. Estados `live`, `stream` y `rich`.
+  · V4 — La respuesta de Axel tiene FORMATO: el subconjunto de markdown que el
+    renderer propio interpreta (`##`, `**`, `*`, `` ` ``, listas `-` y `1.`,
+    `>` citas) mapeado a la tipografía del design system. Nada de HTML.
+  · V4 — La propuesta que Axel arma EN LA CONVERSACIÓN queda anclada a su turno,
+    con sus artefactos como ENLACES a la pantalla real del borrador.
+
+  · V3 — Este mockup dibuja el SHELL REAL: AppSidebar del tenant + PrivateHeader
+    sticky. Desaparecen la topbar de pestañas y el rail izquierdo de 56px que el
+    v2 inventaba y que la app no tiene.
+
+  Reglas que este archivo respeta a propósito:
+  · Los primitivos de la CAPA 1 son COPIA LITERAL de axi-client/src/app/globals.css.
+    Ningún hex vive fuera de ese bloque (DESIGN-SYSTEM §11).
+  · El ANILLO COMETA y el CAMPO AMBIENTAL no son invento: son `@property
+    --comet-angle` + `.channel-surface::after` y `.bg-brand-ambient`, ya en
+    globals.css (`.axel-orb`, `.axel-field`). Se respetan sus topes de tinte (7–13%).
+  · Un solo momento cromático hero: el orbe. Coral solo para la acción primaria
+    (Aprobar); violeta = IA; los colores de estado no cuentan como acento.
+  · El briefing del backend SOLO trae `summary` (una frase), `highlights[]
+    {label,tone,detail}` y `proposal_ids[]`. No hay título ni cifra en campo
+    aparte: el titular del hero ES el `summary`, sin descomponerlo ni parsearlo.
+
+  Aproximaciones conscientes:
+  · Este mockup usa `height:100svh` en `.app`. EN PRODUCCIÓN ESO NO SE COPIA:
+    la cadena es `flex-1 + min-h-0` bajo el único `h-dvh` de
+    `src/app/(private)/layout.tsx:53`. Prohibido `calc(100svh - 54px)`:
+    DESIGN-SYSTEM §4.2 documenta la barra fantasma de 2px que costó seis archivos.
+    Por lo mismo el PrivateHeader de aquí NO declara altura, solo padding.
+  · Nexa (headings, 200/700) es fuente local del repo; aquí cae a Outfit, del
+    mismo registro geométrico y con el mismo par de pesos. Poppins sí es la real.
+  · Los iconos son un sprite con los paths de lucide-react, el set del proyecto.
+  · El turno en vivo se SIMULA con `setInterval`/`setTimeout`. En producción son
+    eventos de Socket.IO (`cmo.turn_step`, `cmo.turn_delta`, `cmo.turn_completed`)
+    COALESCIDOS en el servidor: un evento cada 120 ms o cada 64 caracteres, no
+    uno por token. El mockup imita ese grano, no el de un token.
+  · Las duraciones de los pasos (420 ms, 310 ms…) son plausibles, no medidas.
+    En la app viajan en el evento; aquí están escritas a mano.
+
+  DECISIÓN PENDIENTE — GRAFICAR DENTRO DE LA BURBUJA
+  Las barras de embudo y las rejillas de métricas que aparecen en las respuestas
+  guionadas vienen del v2 y son HTML escrito a mano. El renderer de markdown NO
+  las puede producir: de un texto solo salen títulos, párrafos, listas, citas,
+  negritas y código. Para que Axel grafique de verdad hace falta que el servidor
+  ADJUNTE el dato estructurado del turno (por ejemplo el resultado de
+  `get_business_pulse`) y que el cliente lo pinte con un componente, no con
+  texto. Eso no está en el plan aprobado de esta ronda: queda como la pregunta
+  del gate. Mientras no se decida, lo que la implementación producirá es el
+  bloque de texto con formato del estado `rich`, no las barras.
+  · El selector «Estado» de la cabecera es andamio del mockup: sirve para saltar
+    a los estados que no se alcanzan por clic (cuota agotada). La navegación por
+    clic sigue siendo el criterio de cierre.
+-->
+
+<style>
+/* ==========================================================================
+   CAPA 1 — PRIMITIVOS DE MARCA (copia literal de src/app/globals.css)
+   Único lugar de este archivo donde existen valores hex.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+
+  --axi-on-color: #ffffff;
+}
+
+/* El estado "sistema" no estampa nada: solo prefers-color-scheme separa los
+   temas. El guard :not([data-theme="light"]) deja ganar la elección explícita. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --axi-brand: #fb7185;
+    --axi-brand-2: #df4f4f;
+    --axi-violet: #a78bfa;
+    --axi-amber: #fbbf24;
+    --axi-muted: #18181b;
+    --axi-success: #4ade80;
+    --axi-warning: #fbbf24;
+    --axi-destructive: #f87171;
+    --axi-info: #60a5fa;
+    --axi-on-color: #0a0a0a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --axi-brand: #fb7185;
+  --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa;
+  --axi-amber: #fbbf24;
+  --axi-muted: #18181b;
+  --axi-success: #4ade80;
+  --axi-warning: #fbbf24;
+  --axi-destructive: #f87171;
+  --axi-info: #60a5fa;
+  --axi-on-color: #0a0a0a;
+}
+
+/* ==========================================================================
+   CAPA 2 — TOKENS SEMÁNTICOS (derivan de la capa 1; sin hex nuevos)
+   ========================================================================== */
+:root {
+  --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft: color-mix(in srgb, var(--border) 50%, transparent);
+  --hairline: color-mix(in srgb, var(--foreground) 7%, transparent);
+  --muted-fg: color-mix(in srgb, var(--foreground) 62%, transparent);
+  --faint-fg: color-mix(in srgb, var(--foreground) 44%, transparent);
+  --ghost-fg: color-mix(in srgb, var(--foreground) 30%, transparent);
+  --surface: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  --surface-2: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  --elevated: var(--background);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+  --shadow-lift: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 28px rgb(0 0 0 / 0.08);
+
+  --font-body: "Poppins", Helvetica, Arial, sans-serif;
+  --font-head: "Nexa", "Outfit", "Poppins", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ai: var(--axi-violet);
+  --ai-tint: color-mix(in srgb, var(--axi-violet) 6%, var(--background));
+  --ai-line: color-mix(in srgb, var(--axi-violet) 28%, transparent);
+}
+
+/* ==========================================================================
+   EL PERSONAJE DE AXEL
+   Es `public/images/mascots/cmo-closeup.png` del repo, recortado en cuadrado
+   sobre la cabeza (crop 920×920 desde x=310,y=0 del original 1536×1024) y
+   embebido en base64 para que el mockup siga abriéndose sin servidor. En
+   producción esto es un <Image> de Next contra el PNG del repo, no un data URI.
+   ========================================================================== */
+:root { --axel-face: url("data:image/webp;base64,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"); }
+
+/* Propiedad TIPADA: un custom property sin @property no interpola.
+   Copiada de globals.css — es la que hace girar el cometa. */
+@property --comet-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ==========================================================================
+   CAPA 3 — BASE
+   ========================================================================== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-head); margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+[hidden] { display: none !important; }
+.num { font-variant-numeric: tabular-nums; }
+.ico { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ico-lg { width: 20px; height: 20px; }
+.ico-xl { width: 26px; height: 26px; stroke-width: 1.6; }
+.ico-sm { width: 13px; height: 13px; }
+.spacer { margin-left: auto; }
+.hidden { display: none !important; }
+
+/* ==========================================================================
+   SHELL REAL — AppSidebar del tenant + PrivateHeader + superficie de marca
+   El único alto duro del árbol. En producción es `h-dvh` en el
+   SidebarProvider y de ahí todo se reparte con flex-1 + min-h-0.
+   ========================================================================== */
+.app { display: flex; height: 100vh; height: 100svh; overflow: hidden; }
+
+/* ---- sidebar del tenant (glass, colapsable a rail de iconos) ---- */
+.sidebar {
+  width: 248px; flex: none;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 65%, transparent);
+  backdrop-filter: saturate(160%) blur(16px);
+  transition: width 180ms ease;
+  min-height: 0;
+}
+.sbhead { flex: none; display: flex; align-items: center; gap: 9px; padding: 12px 12px 10px; }
+.mark { width: 26px; height: 26px; border-radius: 9px; flex: none; background-image: linear-gradient(140deg, var(--axi-brand), var(--axi-amber) 55%, var(--axi-violet)); }
+.brandname { font-family: var(--font-head); font-weight: 800; font-size: 14px; letter-spacing: -0.02em; white-space: nowrap; }
+.sbnav { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 8px 10px; display: flex; flex-direction: column; gap: 1px; }
+.sblabel { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ghost-fg); padding: 12px 8px 5px; }
+.sbitem {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 9px; border-radius: var(--radius-md);
+  font-size: 12.5px; font-weight: 500; color: var(--muted-fg);
+  text-decoration: none; white-space: nowrap;
+  transition: background 130ms ease, color 130ms ease;
+}
+.sbitem:hover { background: var(--surface-2); color: var(--foreground); }
+.sbitem.on { background: color-mix(in srgb, var(--ai) 10%, var(--background)); color: var(--foreground); font-weight: 600; }
+.sbitem.on .ico { color: var(--ai); }
+.sbitem .ico { color: var(--faint-fg); }
+.sbfoot { flex: none; border-top: 1px solid var(--border); padding: 9px 10px; display: flex; align-items: center; gap: 9px; }
+.avatar { width: 28px; height: 28px; border-radius: 999px; flex: none; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 10px; font-weight: 700; color: var(--muted-fg); }
+.who { min-width: 0; }
+.whoname { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.whorole { font-size: 10.5px; color: var(--ghost-fg); white-space: nowrap; }
+
+body[data-sb="icon"] .sidebar { width: 64px; }
+body[data-sb="icon"] .sbtext, body[data-sb="icon"] .sblabel, body[data-sb="icon"] .who { display: none; }
+body[data-sb="icon"] .sbitem { justify-content: center; padding: 8px 0; }
+body[data-sb="icon"] .sbhead { justify-content: center; }
+body[data-sb="icon"] .sbfoot { justify-content: center; }
+
+/* ---- panel: header sticky SIN altura declarada + superficie de marca ---- */
+.panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.pheader {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px 9px 10px;   /* sin height: nada depende de cuánto mide */
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  position: relative; z-index: 20;
+}
+.crumb { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ghost-fg); min-width: 0; }
+.crumb b { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--foreground); letter-spacing: -0.02em; }
+.iconbtn { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; color: var(--muted-fg); border: 1px solid transparent; flex: none; }
+.iconbtn:hover { background: var(--surface-2); color: var(--foreground); border-color: var(--hairline); }
+.mockpick { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--ghost-fg); border: 1px dashed var(--border); border-radius: 999px; padding: 3px 4px 3px 10px; }
+.mockpick select { border: 0; background: none; font-size: 11px; font-weight: 600; color: var(--muted-fg); padding: 2px 4px; border-radius: 999px; }
+
+.surface {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border); border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+  background-image: linear-gradient(to bottom right, color-mix(in srgb, var(--axi-muted) 50%, var(--background)), var(--axi-muted));
+  overflow: hidden;   /* recorta el campo a la esquina redondeada */
+}
+.view { flex: 1; min-height: 0; display: flex; }
+
+/* ==========================================================================
+   EL CAMPO ÚNICO — hero + hilo + composer comparten UN backdrop
+   Copia de .axel-field (globals.css): base 2.5% + tres halos (13/11/7%) +
+   dot-grid enmascarado. Antes vivía solo detrás del chat; ahora envuelve
+   también al hero, y por eso desaparece la costura.
+   ========================================================================== */
+.field { flex: 1; min-width: 0; min-height: 0; position: relative; display: flex; flex-direction: column; isolation: isolate; }
+.field::before {
+  content: "";
+  position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background-color: color-mix(in srgb, var(--foreground) 2.5%, var(--background));
+  background-image:
+    radial-gradient(70% 100% at 12% -6%, color-mix(in srgb, var(--axi-brand) 13%, transparent), transparent 70%),
+    radial-gradient(64% 96% at 92% 4%, color-mix(in srgb, var(--axi-violet) 11%, transparent), transparent 68%),
+    radial-gradient(50% 70% at 50% 108%, color-mix(in srgb, var(--axi-amber) 7%, transparent), transparent 72%);
+}
+.field::after {
+  content: "";
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(color-mix(in srgb, var(--foreground) 12%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+  opacity: 0.28;
+}
+
+/* scrollbar de marca (.sidebar-scroll de globals.css) */
+.scroller { flex: 1; min-height: 0; overflow-y: auto; padding: 34px 24px 8px; scrollbar-width: thin; }
+.scroller::-webkit-scrollbar { width: 6px; height: 10px; }
+.scroller::-webkit-scrollbar-track { background: transparent; }
+.scroller::-webkit-scrollbar-thumb { background-image: radial-gradient(circle, var(--axi-brand), transparent); border-radius: 999px; background-clip: content-box; }
+.scroller { display: flex; flex-direction: column; }
+.column { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; }
+/* Sin briefing el hilo está vacío: el hero se centra en el campo en vez de
+   quedar arriba con un vacío debajo. `margin-block:auto` y no
+   `justify-content:center`, que recorta el borde superior al desbordar. */
+body[data-screen="nobrief"] #chatColumn { margin-block: auto; }
+
+/* ---- el orbe de Axel: el único momento cromático hero ---- */
+.stage { display: flex; flex-direction: column; align-items: center; text-align: center; }
+/* 96px y no 84: el orbe dejó de ser un icono para ser el retrato del personaje,
+   y a 84 la cara no se leía. */
+.orbwrap { position: relative; width: 96px; height: 96px; margin-bottom: 20px; }
+.orbglow {
+  position: absolute; inset: -30px; border-radius: 999px; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%, transparent 68%);
+  filter: blur(6px);
+}
+.orb {
+  position: absolute; inset: 0; border-radius: 999px;
+  overflow: hidden;
+  background: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 10%, transparent), var(--shadow-lift);
+  color: var(--ai);
+  isolation: isolate;
+}
+
+/* El retrato del personaje. `background-position` un poco alto para que la
+   cabeza quede centrada en el disco y el traje asome abajo. */
+.orbface {
+  position: absolute; inset: 0; border-radius: inherit; z-index: 0;
+  background-image: var(--axel-face);
+  background-size: cover;
+  background-position: 50% 44%;
+}
+/* Vignette violeta pegada al borde: es lo que funde la foto con el anillo, para
+   que el cometa no parezca un aro puesto encima de un avatar recortado. */
+.orbface::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 40%, transparent 44%, color-mix(in srgb, var(--axi-violet) 20%, transparent) 84%, color-mix(in srgb, var(--axi-violet) 40%, transparent) 100%),
+    radial-gradient(circle at 50% 116%, color-mix(in srgb, var(--axi-brand) 24%, transparent), transparent 62%);
+  mix-blend-mode: screen;
+}
+
+/* Derrame del cometa sobre el retrato: el MISMO cónico, difuminado y recortado
+   al anillo interior. Lleva su propia animación con idéntica duración y curva
+   porque `--comet-angle` no se hereda (@property inherits:false), así que van
+   en fase desde la carga. Sin esto el anillo se ve pegado, no integrado. */
+.orbspill {
+  position: absolute; inset: -1px; border-radius: inherit; z-index: 1; pointer-events: none;
+  background: conic-gradient(from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 54%, #000 90%);
+  mask-image: radial-gradient(circle, transparent 54%, #000 90%);
+  filter: blur(4px);
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  animation: comet 5.5s linear infinite;
+}
+.orb.busy .orbspill { opacity: 0.72; }
+
+/* Anillo cometa — receta de .channel-surface::after: cónico con cola, recortado
+   a la franja de 1.5px con dos máscaras que se excluyen. Va encima de todo. */
+.orb::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; z-index: 2;
+  padding: 1.5px;
+  background: conic-gradient(from var(--comet-angle),
+    transparent 0deg 210deg,
+    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
+    var(--axi-brand) 336deg,
+    var(--axi-amber) 350deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: comet 5.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes comet { to { --comet-angle: 360deg; } }
+.orb.busy { animation: breathe 1.4s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+
+.hello { font-size: 13px; color: var(--faint-fg); letter-spacing: 0.01em; }
+
+/* Identidad (sin briefing todavía): copy estático, así que sí puede llevar
+   el contraste ghost + bold. */
+.headline {
+  font-family: var(--font-head);
+  font-size: 34px; line-height: 1.18; font-weight: 200;
+  color: var(--ghost-fg);
+  letter-spacing: -0.03em;
+  margin-top: 6px;
+  max-width: 18ch;
+}
+.headline b { font-weight: 700; color: var(--foreground); }
+
+/* El titular del briefing ES el `summary` completo: una sola cadena que llega
+   del backend. Nada de bold interior — no se parsea el texto de Axel. */
+.summary {
+  font-family: var(--font-head);
+  font-size: 32px; line-height: 1.2; font-weight: 200;
+  color: var(--foreground);
+  letter-spacing: -0.03em;
+  margin-top: 7px;
+  max-width: 26ch;
+  font-variant-numeric: tabular-nums;
+}
+.subline { font-size: 13px; color: var(--muted-fg); margin-top: 14px; max-width: 46ch; }
+
+/* La espera del primer informe: UNA LÍNEA, no una tarjeta con franja tricolor. */
+.firstnote { display: inline-flex; align-items: center; gap: 7px; margin-top: 16px; font-size: 12px; color: var(--faint-fg); }
+.firstnote .ico { color: var(--ai); }
+.firstnote b { color: var(--muted-fg); font-weight: 600; }
+
+/* ---- tarjetas de capacidad (estado vacío) ---- */
+.caps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; margin-top: 34px; }
+.cap {
+  text-align: left; padding: 14px 14px 15px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; gap: 8px;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.cap:hover { transform: translateY(-2px); border-color: var(--ai-line); box-shadow: var(--shadow-lift); }
+.capico { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--hairline); color: var(--muted-fg); }
+.cap:hover .capico { color: var(--ai); border-color: var(--ai-line); background: color-mix(in srgb, var(--ai) 9%, var(--background)); }
+.capname { font-family: var(--font-head); font-size: 13.5px; font-weight: 700; }
+.capdesc { font-size: 11.5px; color: var(--faint-fg); line-height: 1.45; }
+
+/* arranques compactos: cuando el hilo ya trae las propuestas del día */
+.starters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px; }
+.starter {
+  font-size: 12px; font-weight: 500; color: var(--muted-fg);
+  border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px;
+  background: color-mix(in srgb, var(--background) 78%, transparent);
+  backdrop-filter: blur(8px);
+  transition: color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+.starter:hover { color: var(--foreground); border-color: var(--ai-line); transform: translateY(-1px); }
+
+/* ---- hilo ---- */
+.thread { display: flex; flex-direction: column; gap: 16px; margin-top: 30px; }
+.msgin { animation: rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.me {
+  align-self: flex-end; max-width: 84%;
+  font-size: 13.5px; line-height: 1.55;
+  padding: 11px 15px;
+  border-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-sm);
+  background: var(--background); border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+}
+
+.axel { align-self: stretch; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--elevated); box-shadow: var(--shadow-lift); overflow: hidden; }
+.axelhead { display: flex; align-items: center; gap: 8px; padding: 11px 15px 0; }
+.axellabel { font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--ai); }
+.axelstamp { margin-left: auto; font-size: 10.5px; color: var(--ghost-fg); }
+.axelbody { padding: 9px 15px 14px; font-size: 13.5px; line-height: 1.62; color: var(--muted-fg); }
+.axelbody strong { color: var(--foreground); font-weight: 600; }
+.vpill { display: inline-block; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--foreground); background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 1px 6px; font-size: 12.5px; }
+
+.metrics { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+.metric { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; background: var(--surface); min-width: 108px; }
+.metriclabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ghost-fg); font-weight: 600; }
+.metricval { font-family: var(--font-head); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.metric.bad .metricval { color: var(--axi-warning); }
+.metric.good .metricval { color: var(--axi-success); }
+
+.funnel { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.frow { display: flex; align-items: center; gap: 10px; font-size: 11.5px; }
+.flabel { width: 92px; flex: none; color: var(--faint-fg); }
+.ftrack { flex: 1; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.fbar { display: block; height: 100%; border-radius: 999px; background-image: linear-gradient(to right, var(--ai), color-mix(in srgb, var(--ai) 55%, var(--axi-brand))); transform-origin: left; animation: grow 620ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.fnum { width: 34px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--foreground); }
+
+/* tarjeta de propuesta: dentro de un mensaje de Axel o suelta en el hilo */
+.propcard {
+  margin: 13px 15px 15px; position: relative; isolation: isolate;
+  border: 1px solid var(--ai-line); border-radius: var(--radius-lg);
+  background: var(--ai-tint);
+  padding: 14px 15px;
+  display: flex; flex-direction: column; gap: 11px;
+  overflow: hidden;
+}
+.propcard.solo { margin: 0; align-self: stretch; }
+
+/* ---- RELIEVE Y COMETA de la tarjeta del hilo ----
+   La propuesta aterriza en medio de un hilo de texto: sin relieve propio se lee
+   como un párrafo más. Son tres capas y ninguna estrena color — realce violeta
+   arriba (la luz), sombra teñida abajo (el peso) y el anillo cónico recortado al
+   borde con la MISMA técnica del orbe (dos máscaras que se excluyen sobre
+   `@property --comet-angle`).
+
+   El anillo solo gira mientras la tarjeta es NUEVA: tres vueltas y se apaga
+   solo, sin temporizador. Un anillo permanente en cada tarjeta convertiría el
+   único momento hero del módulo en ruido. */
+.propcard.solo {
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--ai) 24%, transparent),
+    0 14px 34px -16px color-mix(in srgb, var(--ai) 34%, transparent),
+    var(--shadow-float);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+}
+.propcard.solo:hover {
+  transform: perspective(1100px) translateY(-2px) rotateX(1.1deg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--ai) 30%, transparent),
+    0 22px 46px -18px color-mix(in srgb, var(--ai) 40%, transparent),
+    var(--shadow-overlay);
+}
+
+/* Entrada: se endereza como un panel físico que cae en su sitio. */
+.propcard.fresh { animation: card-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes card-in {
+  from { opacity: 0; transform: perspective(1000px) rotateX(-7deg) translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1); }
+}
+
+.propcard.fresh::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit;
+  padding: 1.5px; pointer-events: none;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 214deg,
+    color-mix(in srgb, var(--ai) 45%, transparent) 296deg,
+    var(--axi-brand) 338deg,
+    var(--axi-amber) 351deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: comet 4.6s linear 3, ring-out 1.2s ease 12.6s forwards;
+}
+@keyframes ring-out { to { opacity: 0; } }
+.propcard::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle 110px at 22px 18px, color-mix(in srgb, var(--ai) 18%, transparent) 0%, transparent 100%);
+}
+.proptop { display: flex; align-items: center; gap: 9px; }
+.kind { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); color: var(--muted-fg); }
+.kind.rec { color: var(--axi-amber); border-color: color-mix(in srgb, var(--axi-amber) 42%, transparent); }
+.kind.tun { color: var(--axi-info); border-color: color-mix(in srgb, var(--axi-info) 42%, transparent); }
+.kind.cam { color: var(--ai); border-color: var(--ai-line); }
+.expiry { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--axi-warning); display: inline-flex; align-items: center; gap: 5px; }
+.expiry.calm { color: var(--ghost-fg); }
+.proptitle { font-family: var(--font-head); font-size: 16.5px; font-weight: 700; line-height: 1.3; }
+.prophead { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--ai); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.propfoot { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.propmeta { font-size: 10.5px; color: var(--ghost-fg); }
+.propfrom { display: flex; align-items: center; gap: 7px; font-size: 10.5px; color: var(--ghost-fg); }
+.propfrom .ico { color: var(--ai); }
+
+/* pensando: sin streaming, un turno tarda decenas de segundos → fase rotando */
+.thinking { align-self: stretch; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--elevated); box-shadow: var(--shadow-float); padding: 14px 15px; display: flex; flex-direction: column; gap: 8px; }
+.tline { height: 9px; border-radius: 999px; background: color-mix(in srgb, var(--ai) 16%, transparent); animation: shimmer 1.25s ease-in-out infinite; }
+.tline:nth-child(2) { width: 84%; animation-delay: 0.14s; }
+.tline:nth-child(3) { width: 58%; animation-delay: 0.28s; }
+@keyframes shimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.tnote { font-size: 11px; color: var(--ghost-fg); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+
+/* ---- turno EN VIVO: los pasos que el runtime ejecuta de verdad ----
+   Sustituye al skeleton mudo. Cada fila es un `cmo.turn_step`: la etiqueta la
+   emite el servidor (una sola fuente, `tool_labels.ts`), no el cliente. */
+.steps { display: flex; flex-direction: column; gap: 1px; }
+.step { display: flex; align-items: center; gap: 9px; font-size: 12px; padding: 5px 0; color: var(--muted-fg); }
+.step .ico { flex: none; width: 14px; height: 14px; }
+.step.run { color: var(--foreground); }
+.step.run .ico { color: var(--ai); animation: spin 900ms linear infinite; }
+.step.done .ico { color: var(--axi-success); }
+.step.wait { color: var(--ghost-fg); }
+.step.wait .ico { color: var(--ghost-fg); }
+.stepms { margin-left: auto; font-size: 10.5px; color: var(--ghost-fg); font-variant-numeric: tabular-nums; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* el pie del turno: los pasos colapsados una vez terminó */
+.axelfoot { border-top: 1px solid var(--hairline); padding: 8px 15px 10px; font-size: 10.5px; color: var(--ghost-fg); display: flex; align-items: center; gap: 6px; }
+
+/* el cursor del texto llegando */
+.caret { display: inline-block; width: 2px; height: 1.02em; vertical-align: -0.16em; margin-left: 1px; background: var(--ai); animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---- el subconjunto de markdown que el renderer interpreta ----
+   Nada de HTML: el parser produce un AST y el componente mapea cada nodo a la
+   tipografía de DESIGN-SYSTEM §3. Lo no reconocido se pinta como texto. */
+.axelbody .mdh { font-family: var(--font-head); font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; color: var(--foreground); margin: 14px 0 6px; }
+.axelbody > .mdh:first-child { margin-top: 0; }
+.axelbody .mdp { margin: 0 0 10px; }
+.axelbody .mdp:last-child { margin-bottom: 0; }
+.axelbody .mdq { margin: 12px 0; padding: 9px 13px; border-left: 2px solid var(--ai-line); background: color-mix(in srgb, var(--ai) 5%, transparent); border-radius: 0 var(--radius-md) var(--radius-md) 0; color: var(--foreground); }
+.axelbody .mdlist { margin: 0 0 10px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+/* El marcador va POSICIONADO, no como ítem flex. Con `display:flex` + `gap` en
+   el <li>, cada <strong> del texto se convierte en un ítem flex y el gap le mete
+   9px a cada lado: las cifras aparecían separadas de la coma que las sigue. El
+   flujo en línea del texto tiene que quedar intacto. */
+.axelbody .mdlist li { position: relative; padding-left: 19px; }
+.axelbody .mdlist li::before {
+  content: attr(data-marker);
+  position: absolute; left: 0; top: 0;
+  color: var(--ai); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.axelbody .mdcode { font-family: var(--font-mono); font-size: 11.5px; padding: 1px 5px; border-radius: 6px; background: var(--surface-2); color: var(--foreground); }
+.axelbody em { font-style: italic; }
+/* tabular-nums SOLO en columnas de cifras (rejillas de métricas, embudo). En
+   prosa el ancho fijo del último dígito se lee como un espacio antes del signo
+   de puntuación — DESIGN-SYSTEM §3.2 lo reserva a tablas y métricas. */
+
+/* ---- artefactos como ENLACES a la pantalla real del borrador ----
+   El href lo construye el cliente desde el `id` del artefacto; el modelo NUNCA
+   escribe una URL (escribir URLs es alucinar ids). Sin `id` no hay enlace. */
+.arts { display: flex; flex-wrap: wrap; gap: 6px; }
+.artlink { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--muted-fg); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; background: var(--background); }
+.artlink:hover { color: var(--ai); border-color: var(--ai-line); background: color-mix(in srgb, var(--ai) 6%, var(--background)); }
+.artlink .ico { color: var(--ghost-fg); }
+.artlink:hover .ico { color: var(--ai); }
+.artlink.mute { opacity: 0.5; }
+
+/* ---- composer: hermano flex-none del scroller, dentro del MISMO campo ---- */
+.dock { flex: none; padding: 12px 24px 20px; }
+.dockinner { width: 100%; max-width: 640px; margin: 0 auto; }
+.composer {
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: var(--shadow-lift);
+  padding: 13px 14px 10px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.composer:focus-within { border-color: var(--ai-line); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai) 10%, transparent), var(--shadow-lift); }
+.composer textarea { width: 100%; border: 0; outline: 0; background: none; resize: none; font-size: 14px; line-height: 1.5; min-height: 42px; max-height: 120px; }
+.composer textarea::placeholder { color: var(--ghost-fg); }
+.composer.off { opacity: 0.55; }
+.tools { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+.tool { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--muted-fg); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
+.tool:hover { color: var(--foreground); background: var(--surface-2); }
+.tool.on { color: var(--ai); border-color: var(--ai-line); background: color-mix(in srgb, var(--ai) 8%, var(--background)); }
+.send { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; margin-left: auto; color: var(--axi-on-color); background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); box-shadow: var(--shadow-float); transition: transform 110ms ease, filter 140ms ease; }
+.send:hover { filter: brightness(1.07); }
+.send:active { transform: scale(0.94); }
+.dockmeta { display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 10px; font-size: 10.5px; color: var(--ghost-fg); text-align: center; }
+
+/* ---- cuota agotada: DENTRO del campo, no fuera ---- */
+.blocked { max-width: 460px; margin: 0 auto; padding: 54px 0 40px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 13px; }
+.blockedtitle { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.blockedtext { font-size: 13px; color: var(--muted-fg); }
+.safe { display: flex; gap: 9px; text-align: left; border: 1px solid color-mix(in srgb, var(--axi-success) 42%, transparent); background: color-mix(in srgb, var(--axi-success) 8%, var(--background)); border-radius: var(--radius-md); padding: 12px 13px; font-size: 12.5px; line-height: 1.55; }
+.safe .ico { color: var(--axi-success); margin-top: 2px; }
+
+/* ==========================================================================
+   RAIL DERECHO — el único corte de superficie legítimo de la vista
+   ========================================================================== */
+.railR {
+  width: 316px; flex: none;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.railscroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
+.railpin { flex: none; border-top: 1px solid var(--border); padding: 14px; }
+
+.card { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); overflow: hidden; }
+.cardhead { display: flex; align-items: center; gap: 8px; padding: 12px 13px 0; }
+.cardtitle { font-family: var(--font-head); font-size: 12.5px; font-weight: 700; letter-spacing: -0.01em; }
+.cardbody { padding: 11px 13px 13px; display: flex; flex-direction: column; gap: 11px; }
+
+.livechip { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 7px 11px; background: var(--surface); }
+.livedot { position: relative; width: 7px; height: 7px; border-radius: 999px; background: var(--axi-success); flex: none; }
+.livedot::after { content: ""; position: absolute; inset: -4px; border-radius: 999px; border: 1px solid var(--axi-success); animation: ping 1.9s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
+.livechip .num { font-size: 11px; color: var(--faint-fg); }
+
+.meter { display: flex; flex-direction: column; gap: 6px; }
+.meterrow { display: flex; align-items: baseline; gap: 8px; }
+.meterlabel { font-size: 11.5px; color: var(--faint-fg); }
+.metervalue { margin-left: auto; font-family: var(--font-head); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mtrack { height: 7px; border-radius: 999px; background: var(--surface-2); overflow: hidden; display: flex; gap: 2px; }
+.mseg { flex: 1; background: var(--surface-2); border-radius: 1px; }
+.mseg.fill { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber)); }
+.mseg.fill.ai { background-image: linear-gradient(to right, var(--ai), color-mix(in srgb, var(--ai) 50%, var(--axi-brand))); }
+.metersub { font-size: 10.5px; color: var(--ghost-fg); }
+
+.signal { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 11px 12px 9px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; transition: border-color 150ms ease, transform 150ms ease; }
+.signal:hover { border-color: var(--ai-line); transform: translateY(-1px); }
+.sigtop { display: flex; align-items: flex-start; gap: 8px; }
+.signame { font-size: 12.5px; font-weight: 600; }
+.sigsub { font-size: 10.5px; color: var(--ghost-fg); margin-top: 1px; }
+.sigright { margin-left: auto; text-align: right; flex: none; }
+.sigval { font-family: var(--font-head); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 999px; padding: 2px 7px; }
+.badge.urgent { color: var(--axi-on-color); background: var(--axi-warning); }
+.badge.chance { color: var(--axi-on-color); background: var(--axi-success); }
+.badge.watch { color: var(--axi-on-color); background: var(--axi-info); }
+.spark { display: block; width: 100%; height: 34px; overflow: visible; }
+.spark .sbars { fill: color-mix(in srgb, var(--axi-amber) 32%, transparent); }
+.spark .sbar-hot { fill: var(--axi-amber); }
+.spark .sfill { fill: url(#gRe); }
+.spark .sline { fill: none; stroke: var(--axi-success); stroke-width: 1.6; stroke-linejoin: round; }
+.spark .stip { fill: var(--axi-success); }
+.spark .s0 { stop-color: var(--axi-success); stop-opacity: 0.34; }
+.spark .s1 { stop-color: var(--axi-success); stop-opacity: 0; }
+
+/* La lectura de Axel: el detalle del briefing (summary + chips de highlights) */
+.insight { display: flex; flex-direction: column; gap: 8px; }
+.insighthead { display: flex; align-items: center; gap: 7px; }
+.insightlabel { font-size: 11px; font-weight: 700; letter-spacing: 0.03em; color: var(--ai); }
+.insightstamp { margin-left: auto; font-size: 10px; color: var(--ghost-fg); }
+.insighttext { font-size: 11.5px; line-height: 1.55; color: var(--muted-fg); }
+.insighttext b { color: var(--foreground); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 10.5px; font-weight: 500; border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; color: var(--muted-fg); }
+.chip.up { color: var(--axi-success); border-color: color-mix(in srgb, var(--axi-success) 35%, transparent); background: color-mix(in srgb, var(--axi-success) 8%, transparent); }
+.chip.down { color: var(--axi-warning); border-color: color-mix(in srgb, var(--axi-warning) 35%, transparent); background: color-mix(in srgb, var(--axi-warning) 8%, transparent); }
+.chip.warn { color: var(--axi-destructive); border-color: color-mix(in srgb, var(--axi-destructive) 35%, transparent); background: color-mix(in srgb, var(--axi-destructive) 8%, transparent); }
+
+.qrow { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); text-decoration: none; color: inherit; }
+.qrow:hover { border-color: var(--ai-line); background: var(--ai-tint); }
+.qrow .n { flex: 1; font-size: 12px; font-weight: 600; }
+.qrow .v { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.empty { font-size: 11.5px; color: var(--ghost-fg); display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.empty .ico { color: var(--axi-success); }
+
+.pill { font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--border); color: var(--muted-fg); white-space: nowrap; }
+.pill.off { color: var(--axi-warning); border-color: color-mix(in srgb, var(--axi-warning) 36%, transparent); }
+.pill.on { color: var(--axi-success); border-color: color-mix(in srgb, var(--axi-success) 36%, transparent); }
+
+/* ==========================================================================
+   AJUSTES (/cmo/settings) — documental, dentro del mismo campo
+   ========================================================================== */
+.setcol { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 30px; }
+.sethead { display: flex; flex-direction: column; gap: 5px; margin-bottom: 2px; }
+.settitle { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.setsub { font-size: 12.5px; color: var(--muted-fg); }
+.setcard { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); padding: 17px 18px; display: flex; flex-direction: column; gap: 13px; box-shadow: var(--shadow-float); }
+.setcardtitle { font-family: var(--font-head); font-size: 14px; font-weight: 700; }
+.setrow { display: flex; align-items: center; gap: 12px; }
+.setrow .t { flex: 1; min-width: 0; }
+.setlabel { font-size: 12.5px; font-weight: 600; }
+.sethelp { font-size: 11.5px; color: var(--ghost-fg); margin-top: 2px; }
+.switch { width: 42px; height: 24px; border-radius: 999px; flex: none; background: var(--surface-2); border: 1px solid var(--border); position: relative; transition: background 160ms ease; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 999px; background: var(--background); box-shadow: var(--shadow-float); transition: transform 160ms ease; }
+.switch.on { background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); border-color: transparent; }
+.switch.on::after { transform: translateX(18px); }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fieldbox { display: flex; flex-direction: column; gap: 5px; }
+.fieldlabel { font-size: 11px; font-weight: 600; color: var(--muted-fg); }
+.fieldbox input, .fieldbox select { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background); padding: 7px 10px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.fieldbox input:focus, .fieldbox select:focus { outline: 0; border-color: var(--ai-line); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai) 10%, transparent); }
+.fieldhelp { font-size: 10.5px; color: var(--ghost-fg); }
+.dirrow { display: flex; gap: 11px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 11px 13px; background: var(--surface); }
+.dirrow .ico { color: var(--ai); margin-top: 2px; }
+.dirtext { flex: 1; font-size: 12.5px; line-height: 1.55; }
+.dirorigin { font-size: 10.5px; color: var(--ghost-fg); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+.dirrow.fresh { animation: rise 400ms ease both; border-color: var(--ai-line); background: var(--ai-tint); }
+.dirnew { display: flex; gap: 9px; }
+.dirnew input { flex: 1; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--background); padding: 8px 11px; font-size: 12.5px; }
+.dirnew input:focus { outline: 0; border-color: var(--ai-line); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai) 10%, transparent); }
+
+/* ==========================================================================
+   BOTONES
+   ========================================================================== */
+.btn { display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-md); padding: 7px 13px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--border); background: var(--background); color: var(--foreground); transition: transform 100ms ease, background 130ms ease, filter 130ms ease; }
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); color: var(--axi-on-color); border-color: transparent; }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-ai { background: var(--ai); color: var(--axi-on-color); border-color: transparent; }
+.btn-ai:hover { background: var(--ai); filter: brightness(1.07); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-ghost { border-color: transparent; color: var(--muted-fg); }
+.btn-ghost:hover { color: var(--foreground); background: var(--surface-2); }
+.count { font-size: 10.5px; font-weight: 700; background: var(--surface-2); border: 1px solid var(--hairline); color: var(--muted-fg); border-radius: 999px; padding: 0 6px; }
+
+/* ==========================================================================
+   SHEET DE PROPUESTA (ruta interceptada /cmo/@sheet/(.)proposals/[id])
+   ========================================================================== */
+.backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.46); opacity: 0; pointer-events: none; transition: opacity 200ms ease; z-index: 50; backdrop-filter: blur(2px); }
+.backdrop.open { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 580px; max-width: 100vw;
+  background: var(--background);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-overlay);
+  transform: translateX(100%);
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 60; display: flex; flex-direction: column;
+}
+.sheet.open { transform: none; }
+.sheethead { flex: none; padding: 18px 22px 16px; border-bottom: 1px solid var(--border); position: relative; isolation: isolate; overflow: hidden; }
+.sheethead::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(70% 150% at 6% 0%, color-mix(in srgb, var(--ai) 12%, transparent), transparent 70%); pointer-events: none; }
+.sheettitle { font-size: 21px; line-height: 1.25; }
+.sheetbody { flex: 1; overflow-y: auto; padding: 18px 22px 26px; display: flex; flex-direction: column; gap: 18px; }
+.sheetfoot { flex: none; padding: 13px 22px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 9px; background: var(--surface); }
+
+.block { display: flex; flex-direction: column; gap: 9px; }
+.blocklabel { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ghost-fg); display: flex; align-items: center; gap: 7px; }
+.evid { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.evidrow { display: flex; align-items: baseline; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border-soft); font-size: 12.5px; }
+.evidrow:last-child { border-bottom: 0; }
+.evidrow .k { flex: 1; color: var(--muted-fg); }
+.evidrow .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+.note { font-size: 11.5px; color: var(--ghost-fg); }
+.noteai { font-size: 11.5px; color: var(--ai); display: flex; gap: 7px; align-items: flex-start; }
+.noteai .ico { margin-top: 2px; }
+
+.plan { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px 14px; background: var(--surface); display: flex; flex-direction: column; gap: 9px; }
+.planrow { display: flex; gap: 10px; font-size: 12.5px; }
+.planrow .k { width: 122px; flex: none; color: var(--ghost-fg); }
+.planrow .v { flex: 1; }
+
+.risk { display: flex; gap: 9px; font-size: 12.5px; color: var(--muted-fg); line-height: 1.55; }
+.risk .ico { color: var(--axi-warning); margin-top: 3px; }
+
+.artifact { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; text-decoration: none; color: inherit; }
+.artifact:hover { border-color: var(--ai-line); background: var(--ai-tint); }
+.artifact .n { flex: 1; font-size: 12.5px; font-weight: 600; }
+
+.msgbox { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 13px; background: var(--surface); font-size: 12.5px; line-height: 1.62; white-space: pre-line; }
+.varmark { color: var(--ai); font-weight: 600; }
+
+.decided { border: 1px solid color-mix(in srgb, var(--axi-success) 42%, transparent); background: color-mix(in srgb, var(--axi-success) 8%, var(--background)); border-radius: var(--radius-md); padding: 13px 14px; display: flex; gap: 10px; font-size: 12.5px; line-height: 1.55; }
+.decided .ico { color: var(--axi-success); margin-top: 1px; }
+
+.rejectbox { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px 14px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); }
+.reasons { display: flex; flex-direction: column; gap: 8px; }
+.reason { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; cursor: pointer; line-height: 1.5; }
+.reason input { margin: 3px 0 0; accent-color: var(--ai); }
+.dirnote { font-size: 11.5px; color: var(--ai); display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.dirnote input { accent-color: var(--ai); }
+
+/* ==========================================================================
+   TOASTS
+   ========================================================================== */
+.toasts { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast { display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 500; padding: 10px 16px; border-radius: 999px; background: color-mix(in srgb, var(--background) 80%, transparent); backdrop-filter: blur(16px) saturate(160%); border: 1px solid var(--border); box-shadow: var(--shadow-overlay); animation: rise 280ms ease both; }
+.toast .ico { color: var(--axi-success); }
+.toast.ai .ico { color: var(--ai); }
+
+/* ==========================================================================
+   RESPONSIVE — calcado del comportamiento de la app
+   ========================================================================== */
+.railtoggle { display: none; }
+
+@media (max-width: 1240px) {
+  .sidebar { width: 64px; }
+  .sbtext, .sblabel, .who { display: none; }
+  .sbitem { justify-content: center; padding: 8px 0; }
+  .sbhead, .sbfoot { justify-content: center; }
+  .railR { width: 272px; }
+  .caps { grid-template-columns: 1fr; }
+  .grid3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 1040px) {
+  .view { position: relative; }
+  .railR { display: none; }
+  .railtoggle { display: grid; }
+  body[data-rail="on"] .railR { display: flex; position: absolute; top: 0; right: 0; bottom: 0; width: 300px; z-index: 30; box-shadow: var(--shadow-overlay); }
+}
+@media (max-width: 780px) {
+  .sidebar { display: none; }
+  .headline { font-size: 27px; }
+  .summary { font-size: 25px; }
+  .scroller { padding: 24px 14px 8px; }
+  .dock { padding: 10px 14px 16px; }
+  .sheet { width: 100%; }
+  .grid3 { grid-template-columns: 1fr; }
+  .surface { border-radius: 18px 18px 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body data-screen="nobrief">
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-5.14-1.32a.5.5 0 0 1 0-.96L8.5 10.44A2 2 0 0 0 9.94 9L11.5 3.87a.5.5 0 0 1 .96 0L14.06 9a2 2 0 0 0 1.44 1.44l5.14 1.34a.5.5 0 0 1 0 .96l-5.14 1.32A2 2 0 0 0 14.06 15.5l-1.6 5.13a.5.5 0 0 1-.96 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 16v-5M12 16V8M17 16v-3"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59a2 2 0 0 0-1.42-.59H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.83 8.83a2 2 0 0 0 2.82 0l7.18-7.18a2 2 0 0 0 0-2.82Z"/><circle cx="6.5" cy="6.5" r="1.5"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M13.23 1.85 3.4 11.68a5.57 5.57 0 0 0 7.88 7.88l8.42-8.42a3.71 3.71 0 0 0-5.25-5.25l-8.42 8.43a1.86 1.86 0 0 0 2.63 2.62l7.72-7.71"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-arrowleft" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ===================== SIDEBAR REAL DEL TENANT ===================== -->
+  <aside class="sidebar" aria-label="Navegación">
+    <div class="sbhead">
+      <div class="mark"></div>
+      <span class="brandname sbtext">axi&nbsp;connect</span>
+      <button class="iconbtn spacer sbtext" id="sbCollapse" aria-label="Colapsar menú"><svg class="ico"><use href="#i-panel"/></svg></button>
+    </div>
+    <nav class="sbnav">
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-home"/></svg><span class="sbtext">Tablero</span></a>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-msg"/></svg><span class="sbtext">Conversaciones</span></a>
+      <div class="sblabel">Crecimiento</div>
+      <a class="sbitem on" href="#" aria-current="page"><svg class="ico"><use href="#i-sparkles"/></svg><span class="sbtext">CMO</span></a>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-megaphone"/></svg><span class="sbtext">Mercadeo</span></a>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-users"/></svg><span class="sbtext">Clientes</span></a>
+      <div class="sblabel">Operación</div>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-cart"/></svg><span class="sbtext">Pedidos</span></a>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-tag"/></svg><span class="sbtext">Catálogo</span></a>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-calendar"/></svg><span class="sbtext">Agenda</span></a>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-chart"/></svg><span class="sbtext">Analíticas</span></a>
+      <div class="sblabel">Configuración</div>
+      <a class="sbitem" href="#"><svg class="ico"><use href="#i-sliders"/></svg><span class="sbtext">Ajustes</span></a>
+    </nav>
+    <div class="sbfoot">
+      <div class="avatar" title="Catalina Restrepo">CR</div>
+      <div class="who sbtext">
+        <div class="whoname">Catalina Restrepo</div>
+        <div class="whorole">Bella Piel · dueña</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="panel">
+    <!-- ===== PrivateHeader: sticky y SIN altura declarada (solo padding) ===== -->
+    <header class="pheader">
+      <button class="iconbtn" id="sbMobile" aria-label="Menú"><svg class="ico"><use href="#i-menu"/></svg></button>
+      <div class="crumb">
+        <b id="crumbTitle">CMO</b>
+        <span id="crumbTail">· Axel, tu director de mercadeo</span>
+      </div>
+      <div class="spacer"></div>
+
+      <label class="mockpick" title="Andamio del mockup: salta a los estados que no se alcanzan por clic">
+        Estado
+        <select id="screenSel" aria-label="Estado de la pantalla">
+          <option value="nobrief">Sin briefing todavía</option>
+          <option value="brief">Con briefing y propuestas</option>
+          <option value="thinking">Axel pensando (sin socket)</option>
+          <option value="live">Turno en vivo · pasos reales</option>
+          <option value="stream">Turno en vivo · texto llegando</option>
+          <option value="rich">Respuesta con formato y propuesta</option>
+          <option value="quota">Cuota agotada</option>
+          <option value="settings">Ajustes y directrices</option>
+        </select>
+      </label>
+
+      <button class="iconbtn railtoggle" id="railToggle" aria-label="Mostrar tablero"><svg class="ico"><use href="#i-panel"/></svg></button>
+      <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema"><svg class="ico"><use href="#i-moon"/></svg></button>
+      <button class="iconbtn" aria-label="Notificaciones"><svg class="ico"><use href="#i-bell"/></svg></button>
+    </header>
+
+    <!-- superficie de marca del panel: rounded-3xl rounded-b-none + muted -->
+    <div class="surface">
+      <!-- data-app-view: la vista queda topada y garantiza scroller propio -->
+      <div class="view" data-app-view>
+
+        <!-- =============== EL CAMPO ÚNICO =============== -->
+        <main class="field">
+          <div class="scroller" id="scroller">
+
+            <!-- ---------- vista principal (chat) ---------- -->
+            <div class="column" id="chatColumn" data-on="nobrief brief thinking live stream rich quota">
+
+              <!-- hero: el briefing destilado, sin tarjeta ni banda -->
+              <div class="stage" id="stage">
+                <div class="orbwrap">
+                  <div class="orbglow"></div>
+                  <div class="orb" id="orb" role="img" aria-label="Axel, tu director de mercadeo">
+                    <span class="orbface"></span>
+                    <span class="orbspill" aria-hidden="true"></span>
+                  </div>
+                </div>
+
+                <p class="hello">Buen día, Catalina · viernes 21 de agosto</p>
+
+                <!-- sin briefing: identidad. En «cuota agotada» NO sale: el bloque
+                     de bloqueo ya dice quién habla y duplicarlo sonaba a error. -->
+                <div data-on="nobrief thinking">
+                  <h1 class="headline">Soy Axel, tu <b>director de mercadeo</b></h1>
+                  <p class="subline">
+                    Miro tus números todos los días y te dejo propuestas listas para decidir.
+                    Nada se envía a un cliente sin que tú lo apruebes.
+                  </p>
+                  <p class="firstnote" data-on="nobrief thinking">
+                    <svg class="ico ico-sm"><use href="#i-clock"/></svg>
+                    Mi primer informe llega <b>mañana a las 4:00 p.m.</b> Si no quieres esperar, pregúntame ahora.
+                  </p>
+                </div>
+
+                <!-- con briefing: el titular ES el summary del backend -->
+                <div data-on="brief live stream rich">
+                  <h1 class="summary">Hoy tienes $2.840.000 en carritos sin cerrar y el cierre cayó 1,9 puntos.</h1>
+                  <p class="subline">Te dejé <b>2 propuestas</b> listas para decidir. Están abajo y en el tablero.</p>
+                </div>
+              </div>
+
+              <!-- Con briefing el hilo YA trae contenido (las propuestas del día),
+                   así que los arranques bajan a una fila discreta: si se quedan
+                   como tarjetas grandes, empujan las propuestas fuera de pantalla. -->
+              <div class="starters" data-on="brief">
+                <button class="starter" data-q="how">¿Cómo vamos?</button>
+                <button class="starter" data-q="hot">Clientas calientes</button>
+                <button class="starter" data-q="amor">Ármame una campaña</button>
+              </div>
+
+              <!-- estado vacío: tres capacidades -->
+              <div class="caps" id="caps" data-on="nobrief">
+                <button class="cap" data-q="how">
+                  <span class="capico"><svg class="ico"><use href="#i-chart"/></svg></span>
+                  <span class="capname">¿Cómo vamos?</span>
+                  <span class="capdesc">Ventas, cierre y en qué escalón del embudo se te va la plata.</span>
+                </button>
+                <button class="cap" data-q="hot">
+                  <span class="capico"><svg class="ico"><use href="#i-flame"/></svg></span>
+                  <span class="capname">Clientas calientes</span>
+                  <span class="capdesc">Quién está a punto de comprar y por qué lo sé.</span>
+                </button>
+                <button class="cap" data-q="amor">
+                  <span class="capico"><svg class="ico"><use href="#i-megaphone"/></svg></span>
+                  <span class="capname">Ármame una campaña</span>
+                  <span class="capdesc">Audiencia, promoción y mensaje en borrador, listos para lanzar.</span>
+                </button>
+              </div>
+
+              <!-- hilo -->
+              <div class="thread" id="thread">
+
+                <!-- las propuestas del briefing llegan DENTRO del hilo -->
+                <div class="propcard solo" data-on="brief" id="briefProp1">
+                  <div class="propfrom">
+                    <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+                    Axel · del informe de hoy, 4:00 p.m.
+                  </div>
+                  <div class="proptop">
+                    <span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>
+                    <span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Vence hoy</span>
+                  </div>
+                  <div>
+                    <div class="proptitle">Persigue los 34 carritos que dejaste morir</div>
+                    <div class="prophead">$2.840.000 en juego</div>
+                  </div>
+                  <div class="propfoot">
+                    <button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>
+                    <span class="propmeta">1 regla · 1 promoción · 1 plantilla, ya en borrador</span>
+                  </div>
+                </div>
+
+                <div class="propcard solo" data-on="brief" id="briefProp2">
+                  <div class="propfrom">
+                    <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+                    Axel · del informe de hoy, 4:00 p.m.
+                  </div>
+                  <div class="proptop">
+                    <span class="kind tun"><svg class="ico ico-sm"><use href="#i-bot"/></svg> Cómo vende tu agente</span>
+                    <span class="expiry calm"><svg class="ico ico-sm"><use href="#i-clock"/></svg> 6 días</span>
+                  </div>
+                  <div>
+                    <div class="proptitle">Bella pierde 14 conversaciones diciendo «agotado»</div>
+                    <div class="prophead">9 clientas no volvieron</div>
+                  </div>
+                  <div class="propfoot">
+                    <button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>
+                    <span class="propmeta">Cambio de guion, revisable antes y después</span>
+                  </div>
+                </div>
+
+                <!-- pensando: un turno tarda decenas de segundos, sin streaming -->
+                <div data-on="thinking" style="display:contents">
+                  <div class="me">¿Cómo vamos este mes?</div>
+                  <div class="thinking">
+                    <div class="tline"></div><div class="tline"></div><div class="tline"></div>
+                    <div class="tnote">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      <span id="phase">Leyendo tu embudo de los últimos 30 días…</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- EN VIVO: los pasos que el runtime ejecuta DE VERDAD.
+                     Cada fila es un `cmo.turn_step`; la etiqueta la emite el
+                     servidor (`tool_labels.ts`), no la inventa el cliente. El
+                     skeleton mudo con frases rotando queda como RESPALDO para
+                     cuando no llegó ningún paso (socket caído) — es el estado
+                     `thinking` de arriba. -->
+                <div data-on="live" style="display:contents">
+                  <div class="me">¿Cómo vamos este mes?</div>
+                  <div class="thinking">
+                    <div class="steps">
+                      <div class="step done">
+                        <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                        Leyendo tu embudo y tus ventas
+                        <span class="stepms">420 ms</span>
+                      </div>
+                      <div class="step done">
+                        <svg class="ico ico-sm"><use href="#i-check"/></svg>
+                        Buscando por dónde se te va la plata
+                        <span class="stepms">310 ms</span>
+                      </div>
+                      <div class="step run">
+                        <svg class="ico ico-sm"><use href="#i-loader"/></svg>
+                        Mirando quién está por recomprar
+                      </div>
+                      <div class="step wait">
+                        <svg class="ico ico-sm"><use href="#i-circle"/></svg>
+                        Revisando tus campañas y tus reglas
+                      </div>
+                    </div>
+                    <div class="tnote">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      Axel está trabajando · 2 lecturas hasta ahora
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TEXTO LLEGANDO: `cmo.turn_delta`, ya coalescido en el
+                     servidor (120 ms / 64 caracteres). Los pasos colapsan al
+                     pie en cuanto empieza a escribir: lo que importa pasa a
+                     ser el texto. -->
+                <div data-on="stream" style="display:contents">
+                  <div class="me">¿Cómo vamos este mes?</div>
+                  <div class="axel">
+                    <div class="axelhead">
+                      <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
+                      <span class="axellabel">Diagnóstico</span>
+                      <span class="axelstamp">escribiendo…</span>
+                    </div>
+                    <div class="axelbody">
+                      <div class="mdh">Vas mejor en plata y peor en cierre</div>
+                      <p class="mdp">Pagaron <strong>$18.420.000</strong> este mes,
+                        un <strong>11,4%</strong> más que el pasado. Pero de 312 conversaciones
+                        cerraste 38: eso es un <strong>12,2%</strong>, cuando antes cerrabas el
+                        14,1% con menos tráf<span class="caret"></span></p>
+                    </div>
+                    <div class="axelfoot">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      Consultó 4 fuentes de tus datos
+                    </div>
+                  </div>
+                </div>
+
+                <!-- RESPUESTA COMPLETA: el subconjunto de markdown renderizado
+                     con la tipografía del design system, y la propuesta que
+                     Axel armó EN ESTA CONVERSACIÓN anclada a su turno (hoy se
+                     pierde al recargar porque nadie escribe
+                     `cmo_message.proposal_id`). -->
+                <div data-on="rich" style="display:contents">
+                  <div class="me">Ármame algo para recuperar lo que se está perdiendo</div>
+                  <div class="axel">
+                    <div class="axelhead">
+                      <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
+                      <span class="axellabel">Propuesta armada</span>
+                      <span class="axelstamp">9:41 a.m.</span>
+                    </div>
+                    <div class="axelbody">
+                      <div class="mdh">La fuga grande son los carritos</div>
+                      <p class="mdp">Tienes <strong>22 carritos abandonados</strong> por
+                        <strong>$8.129.000</strong>, y la regla de recuperación existe
+                        pero está <em>apagada</em>. Es la única fuga donde ya tienes el mecanismo
+                        montado: encenderla no cuesta trabajo, cuesta una decisión.</p>
+                      <ul class="mdlist">
+                        <li data-marker="—">30 conversaciones con intención se quedaron sin respuesta.</li>
+                        <li data-marker="—">17 oportunidades estancadas por <strong>$8.510.000</strong>, sin ninguna regla que las persiga.</li>
+                        <li data-marker="—">La tasa de cierre cayó de <strong>47,5%</strong> a <strong>18,2%</strong>.</li>
+                      </ul>
+                      <div class="mdq">Empieza por los carritos. Te dejé la regla, la promoción y el
+                        mensaje en borrador y apagados: si los apruebas, salen; si no, no pasa nada.</div>
+                      <p class="mdp">El descuento quedó en <strong>15%</strong> porque tu directriz
+                        dice que nunca más de ahí, y el segmento lo guardé como
+                        <code class="mdcode">carritos_7d</code>.</p>
+                    </div>
+                    <div class="axelfoot">
+                      <svg class="ico ico-sm"><use href="#i-scan"/></svg>
+                      Consultó 6 fuentes de tus datos
+                    </div>
+                  </div>
+
+                  <div class="propcard solo fresh">
+                    <div class="propfrom">
+                      <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+                      Axel · de esta conversación
+                    </div>
+                    <div class="proptop">
+                      <span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>
+                      <span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> 3 días</span>
+                    </div>
+                    <div>
+                      <div class="proptitle">Persigue los 22 carritos con urgencia real</div>
+                      <div class="prophead">$8.129.000 en juego</div>
+                    </div>
+                    <div class="arts">
+                      <a class="artlink" href="#" data-toast="Abre /marketing/promotions?promotion=… con el editor ya abierto">
+                        <svg class="ico ico-sm"><use href="#i-tag"/></svg> Ver la promoción
+                      </a>
+                      <a class="artlink" href="#" data-toast="Abre /marketing/automations?automation=… con el editor ya abierto">
+                        <svg class="ico ico-sm"><use href="#i-bot"/></svg> Ver la regla
+                      </a>
+                      <a class="artlink" href="#" data-toast="Abre /marketing/settings/templates?template=…">
+                        <svg class="ico ico-sm"><use href="#i-msg"/></svg> Ver el mensaje
+                      </a>
+                    </div>
+                    <div class="propfoot">
+                      <button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>
+                      <span class="propmeta">1 regla · 1 promoción · 1 plantilla, ya en borrador</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- cuota agotada: dentro del campo, sin perder el fondo -->
+              <div class="blocked" data-on="quota">
+                <div class="blockedtitle">Se acabaron tus análisis de este ciclo</div>
+                <p class="blockedtext">
+                  Usaste los 30 análisis del plan. Axel queda en pausa hasta el 1 de septiembre,
+                  o puedes ampliar el tope ahora mismo.
+                </p>
+                <div class="safe">
+                  <svg class="ico ico-lg"><use href="#i-shield"/></svg>
+                  <div>
+                    <strong>Tus agentes siguen atendiendo y vendiendo con normalidad.</strong>
+                    Esto solo pausa a Axel: jamás la atención a tus clientas.
+                  </div>
+                </div>
+                <div style="display:flex;gap:9px;margin-top:2px">
+                  <button class="btn btn-primary" data-toast="Abriría tu plan para ampliar el tope">Ampliar el tope</button>
+                  <button class="btn" data-screen-go="settings">Ver ajustes de Axel</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ---------- /cmo/settings ---------- -->
+            <div class="setcol" data-on="settings">
+              <div class="sethead">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <button class="btn btn-sm btn-ghost" data-screen-go="brief"><svg class="ico ico-sm"><use href="#i-arrowleft"/></svg> Volver al despacho</button>
+                </div>
+                <h1 class="settitle">Ajustes de Axel</h1>
+                <p class="setsub">Cuándo trabaja, hasta dónde puede llegar y qué reglas tiene que respetar.</p>
+              </div>
+
+              <section class="setcard">
+                <div class="setrow">
+                  <div class="t">
+                    <div class="setlabel">Axel está encendido</div>
+                    <div class="sethelp">Si lo apagas, deja de analizar y de proponer. Tus agentes siguen atendiendo igual.</div>
+                  </div>
+                  <button class="switch on" id="axelSwitch" role="switch" aria-checked="true" aria-label="Encender Axel"></button>
+                </div>
+                <div class="setrow" style="border-top:1px solid var(--border-soft);padding-top:13px">
+                  <div class="t">
+                    <div class="setlabel">Hora del informe diario</div>
+                    <div class="sethelp">Hora local de tu negocio. Axel revisa el día anterior y te deja el informe listo.</div>
+                  </div>
+                  <div class="fieldbox" style="width:120px">
+                    <select aria-label="Hora del informe">
+                      <option>6:00 a.m.</option>
+                      <option>8:00 a.m.</option>
+                      <option selected>4:00 p.m.</option>
+                      <option>8:00 p.m.</option>
+                    </select>
+                  </div>
+                </div>
+              </section>
+
+              <section class="setcard">
+                <div class="setcardtitle">Topes del negocio</div>
+                <p class="sethelp" style="margin-top:-6px">
+                  Son límites duros: Axel no puede proponer nada que se los salte, y el motor los aplica del lado del servidor.
+                </p>
+                <div class="grid3">
+                  <label class="fieldbox">
+                    <span class="fieldlabel">Descuento máximo</span>
+                    <input value="15" inputmode="numeric" aria-label="Descuento máximo en porcentaje">
+                    <span class="fieldhelp">% sobre el precio de lista</span>
+                  </label>
+                  <label class="fieldbox">
+                    <span class="fieldlabel">Mensajes por clienta</span>
+                    <input value="1" inputmode="numeric" aria-label="Mensajes por clienta al día">
+                    <span class="fieldhelp">al día, en todos los canales</span>
+                  </label>
+                  <label class="fieldbox">
+                    <span class="fieldlabel">Análisis del ciclo</span>
+                    <input value="30" inputmode="numeric" aria-label="Análisis por ciclo">
+                    <span class="fieldhelp">18 usados · agotarlos pausa a Axel</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="setcard">
+                <div class="setcardtitle">Tus directrices <span class="count" id="dirCount">3</span></div>
+                <p class="sethelp" style="margin-top:-6px">
+                  Reglas permanentes en tus palabras. Axel las respeta y te las cita cuando explique una propuesta.
+                </p>
+                <div class="dirnew">
+                  <input id="dirInput" placeholder="Escríbele una regla: «nunca descuentos en la línea premium»" aria-label="Nueva directriz">
+                  <button class="btn btn-sm" id="dirAdd"><svg class="ico ico-sm"><use href="#i-plus"/></svg> Anotar</button>
+                </div>
+                <div id="dirList" style="display:flex;flex-direction:column;gap:9px">
+                  <div class="dirrow">
+                    <svg class="ico"><use href="#i-book"/></svg>
+                    <div class="dirtext">
+                      Nunca pases del 15% de descuento.
+                      <div class="dirorigin"><svg class="ico ico-sm"><use href="#i-msg"/></svg> Se la dictaste en el chat · 12 de agosto</div>
+                    </div>
+                  </div>
+                  <div class="dirrow">
+                    <svg class="ico"><use href="#i-book"/></svg>
+                    <div class="dirtext">
+                      Para recuperar carritos prefiero regalar el flete, no bajar el precio.
+                      <div class="dirorigin"><svg class="ico ico-sm"><use href="#i-x"/></svg> Salió de una propuesta que rechazaste · 14 de agosto</div>
+                    </div>
+                  </div>
+                  <div class="dirrow">
+                    <svg class="ico"><use href="#i-book"/></svg>
+                    <div class="dirtext">
+                      No escribas a clientas los domingos.
+                      <div class="dirorigin"><svg class="ico ico-sm"><use href="#i-msg"/></svg> Se la dictaste en el chat · 3 de agosto</div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <!-- composer: hermano flex-none, MISMO campo, misma columna de 640 -->
+          <div class="dock" data-on="nobrief brief thinking live stream rich quota">
+            <div class="dockinner">
+              <form class="composer" id="chatForm">
+                <textarea id="chatInput" rows="1" placeholder="Pregúntale a Axel o dile qué armar…" aria-label="Mensaje para Axel"></textarea>
+                <div class="tools">
+                  <button class="tool" type="button" data-toast="Adjuntar es andamio del mockup"><svg class="ico ico-sm"><use href="#i-paperclip"/></svg> Adjuntar</button>
+                  <button class="tool on" type="button" id="wsToggle" title="Andamio del mockup: apaga el socket para ver la degradación"><svg class="ico ico-sm"><use href="#i-panel"/></svg> <span id="wsLabel">Socket en vivo</span></button>
+                  <button class="tool on" type="button" data-toast="Axel siempre responde con tus datos reales"><svg class="ico ico-sm"><use href="#i-scan"/></svg> Con mis datos</button>
+                  <button class="send" type="submit" aria-label="Enviar"><svg class="ico ico-sm"><use href="#i-up"/></svg></button>
+                </div>
+              </form>
+              <div class="dockmeta" data-on="nobrief brief thinking live stream rich">
+                <svg class="ico ico-sm"><use href="#i-sparkles"/></svg>
+                Axel propone; tú apruebas. Nunca envía nada por su cuenta. · <span class="num">18 de 30</span> análisis este ciclo
+              </div>
+              <div class="dockmeta" data-on="quota">
+                <svg class="ico ico-sm"><use href="#i-lock"/></svg>
+                Sin análisis disponibles. El chat vuelve cuando amplíes el tope o empiece el ciclo nuevo.
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- =============== RAIL: EL TABLERO =============== -->
+        <aside class="railR" id="railR" aria-label="Tablero del negocio" data-on="nobrief brief thinking live stream rich quota">
+          <div class="railscroll">
+
+            <section class="card">
+              <div class="cardhead">
+                <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-target"/></svg>
+                <h2 class="cardtitle">Cómo va el negocio</h2>
+              </div>
+              <div class="cardbody">
+                <div class="livechip">
+                  <span class="livedot"></span> Vigilancia activa
+                  <span class="spacer"></span>
+                  <span class="num">hace 12 min</span>
+                </div>
+
+                <div class="meter">
+                  <div class="meterrow">
+                    <span class="meterlabel">Ventas pagadas · 30 d</span>
+                    <span class="metervalue">$18,42 M</span>
+                  </div>
+                  <div class="mtrack" aria-hidden="true">
+                    <span class="mseg fill"></span><span class="mseg fill"></span><span class="mseg fill"></span>
+                    <span class="mseg fill"></span><span class="mseg fill"></span><span class="mseg fill"></span>
+                    <span class="mseg fill"></span><span class="mseg"></span><span class="mseg"></span><span class="mseg"></span>
+                  </div>
+                  <div class="metersub">+11,4% contra el mes pasado · meta $26 M</div>
+                </div>
+
+                <div class="meter">
+                  <div class="meterrow">
+                    <span class="meterlabel">Tasa de cierre</span>
+                    <span class="metervalue">12,2%</span>
+                  </div>
+                  <div class="mtrack" aria-hidden="true">
+                    <span class="mseg fill ai"></span><span class="mseg fill ai"></span><span class="mseg fill ai"></span>
+                    <span class="mseg"></span><span class="mseg"></span><span class="mseg"></span>
+                    <span class="mseg"></span><span class="mseg"></span><span class="mseg"></span><span class="mseg"></span>
+                  </div>
+                  <div class="metersub">Bajó 1,9 puntos · el mes pasado cerrabas 14,1%</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="cardhead">
+                <svg class="ico ico-sm" style="color:var(--axi-amber)"><use href="#i-alert"/></svg>
+                <h2 class="cardtitle">Señales prioritarias</h2>
+              </div>
+              <div class="cardbody">
+                <div class="signal">
+                  <div class="sigtop">
+                    <div>
+                      <div class="signame">Carritos sin cerrar</div>
+                      <div class="sigsub">Últimos 7 días · sin regla activa</div>
+                    </div>
+                    <div class="sigright">
+                      <div class="sigval">$2,84 M</div>
+                      <span class="badge urgent">Urgente</span>
+                    </div>
+                  </div>
+                  <svg class="spark" viewBox="0 0 160 34" preserveAspectRatio="none" aria-label="Carritos abandonados por día, en aumento">
+                    <g class="sbars">
+                      <rect x="0" y="20" width="8" height="14" rx="1.5"/>
+                      <rect x="11" y="17" width="8" height="17" rx="1.5"/>
+                      <rect x="22" y="22" width="8" height="12" rx="1.5"/>
+                      <rect x="33" y="15" width="8" height="19" rx="1.5"/>
+                      <rect x="44" y="18" width="8" height="16" rx="1.5"/>
+                      <rect x="55" y="12" width="8" height="22" rx="1.5"/>
+                      <rect x="66" y="14" width="8" height="20" rx="1.5"/>
+                      <rect x="77" y="9" width="8" height="25" rx="1.5"/>
+                      <rect x="88" y="11" width="8" height="23" rx="1.5"/>
+                      <rect x="99" y="7" width="8" height="27" rx="1.5"/>
+                      <rect x="110" y="10" width="8" height="24" rx="1.5"/>
+                      <rect x="121" y="5" width="8" height="29" rx="1.5"/>
+                      <rect x="132" y="8" width="8" height="26" rx="1.5"/>
+                    </g>
+                    <rect class="sbar-hot" x="143" y="2" width="8" height="32" rx="1.5"/>
+                  </svg>
+                </div>
+
+                <div class="signal">
+                  <div class="sigtop">
+                    <div>
+                      <div class="signame">Recompra vencida</div>
+                      <div class="sigsub">Pasaron su ciclo de 45 días</div>
+                    </div>
+                    <div class="sigright">
+                      <div class="sigval num">18</div>
+                      <span class="badge chance">Oportunidad</span>
+                    </div>
+                  </div>
+                  <svg class="spark" viewBox="0 0 160 34" preserveAspectRatio="none" aria-label="Clientas que pasaron su ciclo de recompra, acumulándose">
+                    <defs>
+                      <linearGradient id="gRe" x1="0" y1="0" x2="0" y2="1">
+                        <stop class="s0" offset="0%"/>
+                        <stop class="s1" offset="100%"/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M0 28 L20 26 L40 27 L60 22 L80 20 L100 15 L120 14 L140 9 L160 6 L160 34 L0 34 Z" class="sfill"/>
+                    <path d="M0 28 L20 26 L40 27 L60 22 L80 20 L100 15 L120 14 L140 9 L160 6" class="sline"/>
+                    <circle class="stip" cx="158" cy="6" r="2.6"/>
+                  </svg>
+                </div>
+
+                <div class="signal">
+                  <div class="sigtop">
+                    <div>
+                      <div class="signame">Bella pierde con «agotado»</div>
+                      <div class="sigsub">No ofrece alternativa · 9 no volvieron</div>
+                    </div>
+                    <div class="sigright">
+                      <div class="sigval num">14</div>
+                      <span class="badge watch">Revisar</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="cardhead">
+                <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-inbox"/></svg>
+                <h2 class="cardtitle">Por decidir</h2>
+                <span class="count spacer" id="propCount">0</span>
+              </div>
+              <div class="cardbody" id="railProposals">
+                <div class="empty" data-on="nobrief" id="railEmpty">
+                  <svg class="ico ico-sm"><use href="#i-check"/></svg> Estás al día. Nada pendiente de decidir.
+                </div>
+                <a class="qrow" href="#" data-open="s1" data-on="brief thinking live stream rich quota">
+                  <svg class="ico" style="color:var(--axi-amber)"><use href="#i-flame"/></svg>
+                  <span class="n">Perseguir 34 carritos</span>
+                  <span class="pill off">Vence hoy</span>
+                </a>
+                <a class="qrow" href="#" data-open="s1" data-on="brief thinking live stream rich quota">
+                  <svg class="ico" style="color:var(--axi-info)"><use href="#i-bot"/></svg>
+                  <span class="n">Ajustar el guion de Bella</span>
+                  <span class="pill">6 días</span>
+                </a>
+                <a class="qrow hidden" href="#" data-open="s1" id="railP3">
+                  <svg class="ico" style="color:var(--ai)"><use href="#i-megaphone"/></svg>
+                  <span class="n">Amor y Amistad · 142</span>
+                  <span class="pill">12 de sep</span>
+                </a>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="cardhead">
+                <svg class="ico ico-sm" style="color:var(--axi-success)"><use href="#i-megaphone"/></svg>
+                <h2 class="cardtitle">En vuelo</h2>
+              </div>
+              <div class="cardbody">
+                <a class="qrow" href="#">
+                  <span class="n">Rebajas de agosto<br><span style="font-weight:400;font-size:10.5px;color:var(--ghost-fg)">208 enviados · 12 compraron</span></span>
+                  <span class="v">$1,24 M</span>
+                </a>
+                <a class="qrow" href="#">
+                  <span class="n">Inactiva 72 h<br><span style="font-weight:400;font-size:10.5px;color:var(--ghost-fg)">23 disparos · 5 volvieron</span></span>
+                  <span class="pill on">Activa</span>
+                </a>
+              </div>
+            </section>
+          </div>
+
+          <!-- La lectura de Axel: el detalle del briefing, anclada abajo -->
+          <div class="railpin">
+            <div class="insight">
+              <div class="insighthead">
+                <svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>
+                <span class="insightlabel">La lectura de Axel</span>
+                <span class="insightstamp" data-on="brief thinking live stream rich quota">hoy, 4:00 p.m.</span>
+              </div>
+
+              <!-- sin briefing: el rail también dice la verdad, sin adornos -->
+              <p class="insighttext" data-on="nobrief">
+                Todavía no te he leído el negocio. Mi primer informe sale
+                <b>mañana a las 4:00 p.m.</b> — cuando esté, aquí queda el resumen del día.
+              </p>
+
+              <!-- con briefing: el summary + los chips de highlights -->
+              <div data-on="brief thinking live stream rich quota" style="display:contents">
+                <p class="insighttext">
+                  Hoy tienes <b>$2.840.000</b> en carritos sin cerrar y el cierre cayó
+                  <b>1,9 puntos</b>. La quincena cae el domingo 30: en tus dos quincenas
+                  anteriores las ventas subieron <b>34%</b> el fin de semana y las dos veces
+                  llegaste sin nada preparado.
+                </p>
+                <div class="chips">
+                  <span class="chip up">Ventas +11,4%</span>
+                  <span class="chip down">Cierre −1,9 pts</span>
+                  <span class="chip warn">34 carritos muertos</span>
+                  <span class="chip">18 para recompra</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== BACKDROP ===================== -->
+<div class="backdrop" id="backdrop"></div>
+
+<!-- ===================== SHEET · PROPUESTA DE RECUPERACIÓN ===================== -->
+<aside class="sheet" id="s1" role="dialog" aria-modal="true" aria-label="Propuesta de recuperación">
+  <div class="sheethead">
+    <div class="proptop" style="margin-bottom:11px">
+      <span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>
+      <span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Vence hoy</span>
+      <button class="iconbtn" data-close aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    </div>
+    <h2 class="sheettitle">Persigue los 34 carritos que dejaste morir</h2>
+    <p class="prophead" style="font-size:16px">$2.840.000 en juego</p>
+  </div>
+
+  <div class="sheetbody">
+    <div class="decided hidden" id="s1done">
+      <svg class="ico ico-lg"><use href="#i-check"/></svg>
+      <div><strong>Encendida.</strong> La regla queda activa desde ahora y toca los carritos que cumplan 3 horas. Te cuento el resultado en el informe de mañana.</div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-chart"/></svg> Por qué ahora</div>
+      <div class="evid">
+        <div class="evidrow"><span class="k">Carritos en borrador, últimos 7 días</span><span class="v num">34</span></div>
+        <div class="evidrow"><span class="k">Valor total de esos carritos</span><span class="v num">$2.840.000</span></div>
+        <div class="evidrow"><span class="k">Ticket promedio del carrito</span><span class="v num">$83.500</span></div>
+        <div class="evidrow"><span class="k">Clientas con compra previa</span><span class="v num">11 de 34</span></div>
+        <div class="evidrow"><span class="k">Reglas de carrito abandonado activas</span><span class="v">ninguna</span></div>
+      </div>
+      <p class="note">Sale de tus pedidos en borrador y del historial de compra de cada contacto. Ningún dato estimado.</p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-right"/></svg> Qué va a pasar si apruebas</div>
+      <div class="plan">
+        <div class="planrow"><span class="k">Regla</span><span class="v">Carrito abandonado — 3 horas</span></div>
+        <div class="planrow"><span class="k">A quién toca</span><span class="v">Carritos en borrador con más de 3 horas y sin pago</span></div>
+        <div class="planrow"><span class="k">Promoción</span><span class="v">Flete gratis por 24 horas ($12.000)</span></div>
+        <div class="planrow"><span class="k">Tope</span><span class="v">1 mensaje por clienta cada 24 horas</span></div>
+        <div class="planrow"><span class="k">Canal</span><span class="v">WhatsApp, dentro de la ventana de 24 horas</span></div>
+        <div class="planrow"><span class="k">Costo de envío</span><span class="v">$0 · la conversación ya está abierta</span></div>
+      </div>
+      <div class="msgbox">Hola <span class="varmark">{nombre}</span>, vi que dejaste tu pedido a medias 🙂
+Te dejo el <b>envío gratis</b> si lo cierras hoy: <span class="varmark">{cupon}</span>
+Vence en 24 horas. ¿Te lo despacho?</div>
+      <p class="noteai">
+        <svg class="ico ico-sm"><use href="#i-book"/></svg>
+        Elegí flete gratis y no descuento porque tú me lo pediste en una directriz. El cupón lo genera y lo vence el sistema, no el mensaje.
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-alert"/></svg> Qué puede salir mal</div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Vas a regalar el flete también en carritos que igual iban a cerrar. Con tu ticket promedio son $12.000 sobre $83.500: un 14% del pedido.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>4 de las 34 ya recibieron un mensaje esta semana. El tope diario las deja fuera hoy y las toca mañana.</span></div>
+      <div class="risk"><svg class="ico ico-sm"><use href="#i-alert"/></svg><span>Si una clienta está hablando con alguien de tu equipo, la regla no la interrumpe.</span></div>
+    </div>
+
+    <div class="block">
+      <div class="blocklabel"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Lo que ya te dejé armado, apagado</div>
+      <a class="artifact" href="#"><svg class="ico" style="color:var(--axi-amber)"><use href="#i-flame"/></svg><span class="n">Regla · Carrito abandonado — 3 horas</span><span class="pill off">Apagada</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-tag"/></svg><span class="n">Promoción · Flete gratis 24 h</span><span class="pill off">Apagada</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+      <a class="artifact" href="#"><svg class="ico"><use href="#i-msg"/></svg><span class="n">Plantilla · Carrito 3 h</span><span class="pill">Borrador</span><svg class="ico ico-sm"><use href="#i-external"/></svg></a>
+    </div>
+
+    <div class="rejectbox hidden" id="s1reject">
+      <strong style="font-size:13px">¿Por qué no?</strong>
+      <div class="reasons">
+        <label class="reason"><input type="radio" name="r1" checked> No quiero regalar el flete en esta temporada.</label>
+        <label class="reason"><input type="radio" name="r1"> 3 horas es muy pronto, la clienta se siente perseguida.</label>
+        <label class="reason"><input type="radio" name="r1"> Prefiero que mi equipo los llame uno por uno.</label>
+      </div>
+      <label class="dirnote">
+        <input type="checkbox" checked>
+        <svg class="ico ico-sm"><use href="#i-book"/></svg>
+        Guardar como directriz para que no me lo vuelvas a proponer
+      </label>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" data-confirm-reject>Rechazar</button>
+        <button class="btn btn-ghost btn-sm" data-cancel-reject>Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheetfoot" id="s1foot">
+    <button class="btn btn-primary" id="s1approve"><svg class="ico ico-sm"><use href="#i-check"/></svg> Aprobar y encender</button>
+    <button class="btn" data-toast="Abriría el borrador en su propia pantalla para que lo edites">Ajustar antes</button>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" data-reject>No, gracias</button>
+  </div>
+</aside>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var body = document.body;
+  var root = document.documentElement;
+
+  /* ---------------- tema ---------------- */
+  var themeBtn = $("themeBtn");
+  function isDark() {
+    var stamped = root.getAttribute("data-theme");
+    if (stamped) return stamped === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function paintTheme() {
+    themeBtn.innerHTML = '<svg class="ico"><use href="#' + (isDark() ? "i-sun" : "i-moon") + '"/></svg>';
+  }
+  themeBtn.addEventListener("click", function () {
+    root.setAttribute("data-theme", isDark() ? "light" : "dark");
+    paintTheme();
+  });
+  paintTheme();
+
+  /* ---------------- toasts ---------------- */
+  var toasts = $("toasts");
+  function toast(text, kind) {
+    var el = document.createElement("div");
+    el.className = "toast" + (kind === "ai" ? " ai" : "");
+    el.innerHTML = '<svg class="ico"><use href="#' + (kind === "ai" ? "i-sparkles" : "i-check") + '"/></svg><span></span>';
+    el.querySelector("span").textContent = text;
+    toasts.appendChild(el);
+    setTimeout(function () { el.remove(); }, 4200);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-toast]");
+    if (b) toast(b.dataset.toast, "ai");
+  });
+
+  /* ---------------- estados de pantalla ----------------
+     Un solo shell; los bloques declaran en qué estados existen con data-on.
+     Así el mockup no duplica el chrome cuatro veces y la costura se juzga
+     siempre sobre el mismo campo. */
+  var scroller = $("scroller");
+  var thread = $("thread");
+  var caps = $("caps");
+  var orb = $("orb");
+  var sel = $("screenSel");
+  var phaseTimer = null;
+
+  /* Estados en los que Axel está trabajando. `thinking` es el RESPALDO (no
+     llegó ningún paso porque el socket está caído); `live` y `stream` son el
+     turno en vivo de verdad. */
+  var BUSY = ["thinking", "live", "stream"];
+
+  var PHASES = [
+    "Leyendo tu embudo de los últimos 30 días…",
+    "Revisando pedidos, pagos y carritos…",
+    "Cruzando con el calendario comercial…",
+    "Armando lo que te propongo…"
+  ];
+
+  function paintScreen(name) {
+    body.setAttribute("data-screen", name);
+    document.querySelectorAll("[data-on]").forEach(function (el) {
+      el.hidden = el.dataset.on.split(" ").indexOf(name) === -1;
+    });
+
+    // el orbe respira solo mientras Axel piensa
+    // el orbe respira mientras Axel trabaja: pensando (sin socket), leyendo
+    // sus fuentes o escribiendo la respuesta
+    orb.classList.toggle("busy", BUSY.indexOf(name) !== -1);
+    // las frases inventadas SOLO en el estado de respaldo: si llegan pasos
+    // reales, inventar una fase sería mentir con más pasos a la vista
+    rotatePhases(name === "thinking");
+
+    // el composer se apaga con la cuota agotada
+    var composer = $("chatForm");
+    composer.classList.toggle("off", name === "quota");
+    $("chatInput").disabled = name === "quota";
+
+    $("crumbTitle").textContent = name === "settings" ? "Ajustes de Axel" : "CMO";
+    $("crumbTail").textContent = name === "settings" ? "· hora, topes y directrices" : "· Axel, tu director de mercadeo";
+
+    if (sel.value !== name) sel.value = name;
+    refreshCounts();
+    scroller.scrollTop = 0;
+  }
+
+  function rotatePhases(on) {
+    if (phaseTimer) { clearInterval(phaseTimer); phaseTimer = null; }
+    if (!on) return;
+    var i = 0;
+    phaseTimer = setInterval(function () {
+      i = (i + 1) % PHASES.length;
+      var node = $("phase");
+      if (node) node.textContent = PHASES[i];
+    }, 6000);   // 6 s: un turno tarda decenas de segundos y no hay streaming
+  }
+
+  sel.addEventListener("change", function () { paintScreen(sel.value); });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-screen-go]");
+    if (b) { e.preventDefault(); paintScreen(b.dataset.screenGo); }
+  });
+
+  /* ---------------- sidebar y rail ---------------- */
+  $("sbCollapse").addEventListener("click", function () {
+    body.setAttribute("data-sb", body.getAttribute("data-sb") === "icon" ? "full" : "icon");
+  });
+  $("sbMobile").addEventListener("click", function () {
+    toast("En la app abre el sidebar como Sheet", "ai");
+  });
+  $("railToggle").addEventListener("click", function () {
+    body.setAttribute("data-rail", body.getAttribute("data-rail") === "on" ? "off" : "on");
+  });
+
+  /* ---------------- contadores ---------------- */
+  function refreshCounts() {
+    var rows = document.querySelectorAll("#railProposals .qrow");
+    var n = 0;
+    rows.forEach(function (r) {
+      if (!r.hidden && !r.classList.contains("hidden") && !r.classList.contains("settled")) n++;
+    });
+    $("propCount").textContent = String(n);
+    // «Estás al día» solo cuando de verdad no queda nada por decidir: si Axel
+    // acaba de dejar una propuesta en el chat, el vacío desaparece.
+    var empty = $("railEmpty");
+    if (empty) empty.hidden = n > 0 || body.getAttribute("data-screen") !== "nobrief";
+  }
+
+  /* ---------------- overlays ---------------- */
+  var backdrop = $("backdrop");
+  function closeAll() {
+    document.querySelectorAll(".sheet.open").forEach(function (n) { n.classList.remove("open"); });
+    backdrop.classList.remove("open");
+  }
+  function openPanel(node) {
+    closeAll();
+    node.classList.add("open");
+    backdrop.classList.add("open");
+  }
+  backdrop.addEventListener("click", closeAll);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+  document.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", closeAll); });
+
+  function wireOpeners(scope) {
+    scope.querySelectorAll("[data-open]").forEach(function (b) {
+      if (b.dataset.wired) return;
+      b.dataset.wired = "1";
+      b.addEventListener("click", function (e) {
+        e.preventDefault();
+        openPanel($(b.dataset.open));
+      });
+    });
+  }
+  wireOpeners(document);
+
+  /* ---------------- hilo ---------------- */
+  function stamp() {
+    var d = new Date();
+    var h = d.getHours(), m = String(d.getMinutes()).padStart(2, "0");
+    var ap = h >= 12 ? "p.m." : "a.m.";
+    h = h % 12 || 12;
+    return h + ":" + m + " " + ap;
+  }
+  function toBottom() { scroller.scrollTop = scroller.scrollHeight; }
+
+  function mine(text) {
+    caps.hidden = true;
+    document.querySelectorAll(".starters").forEach(function (s) { s.hidden = true; });
+    var el = document.createElement("div");
+    el.className = "me msgin";
+    el.textContent = text;
+    thread.appendChild(el);
+    toBottom();
+  }
+
+  function axelCard(label, bodyHtml, extraHtml) {
+    var el = document.createElement("div");
+    el.className = "axel msgin";
+    el.innerHTML =
+      '<div class="axelhead">' +
+        '<svg class="ico ico-sm" style="color:var(--ai)"><use href="#i-sparkles"/></svg>' +
+        '<span class="axellabel">' + label + '</span>' +
+        '<span class="axelstamp">' + stamp() + '</span>' +
+      '</div>' +
+      '<div class="axelbody">' + bodyHtml + '</div>' +
+      (extraHtml || "");
+    thread.appendChild(el);
+    wireOpeners(el);
+    toBottom();
+    return el;
+  }
+
+  /* La misma tarjeta, pero con el cuerpo VACÍO para llenarlo con los deltas. La
+     marca de tiempo dice «escribiendo…» hasta que el turno cierra: poner la hora
+     de un mensaje que todavía se está escribiendo es mentir sobre su estado. */
+  function axelShell(label) {
+    var el = axelCard(label, "");
+    el.querySelector(".axelstamp").textContent = "escribiendo…";
+    return el;
+  }
+
+  /* El cierre del turno (`cmo.turn_completed`): la hora real, los pasos
+     colapsados al pie, y la propuesta anclada COMO HERMANA en el hilo — no
+     dentro de la burbuja: es su propia tarjeta, con sus enlaces. */
+  function closeCard(el, sources, extraHtml) {
+    el.querySelector(".axelstamp").textContent = stamp();
+    var foot = document.createElement("div");
+    foot.className = "axelfoot";
+    foot.innerHTML = '<svg class="ico ico-sm"><use href="#i-scan"/></svg><span></span>';
+    foot.querySelector("span").textContent =
+      "Consultó " + sources + (sources === 1 ? " fuente" : " fuentes") + " de tus datos";
+    el.appendChild(foot);
+    if (extraHtml) {
+      var holder = document.createElement("div");
+      holder.className = "msgin";
+      holder.style.display = "contents";
+      holder.innerHTML = extraHtml;
+      thread.appendChild(holder);
+      wireOpeners(holder);
+    }
+    toBottom();
+  }
+
+  function thinkingBox(note) {
+    orb.classList.add("busy");
+    var el = document.createElement("div");
+    el.className = "thinking msgin";
+    el.innerHTML =
+      '<div class="tline"></div><div class="tline"></div><div class="tline"></div>' +
+      '<div class="tnote"><svg class="ico ico-sm"><use href="#i-scan"/></svg><span></span></div>';
+    el.querySelector(".tnote span").textContent = note;
+    thread.appendChild(el);
+    toBottom();
+    return el;
+  }
+
+  /* ---------------- el turno EN VIVO ----------------
+     Dos piezas que en la app son eventos de Socket.IO y aquí son temporizadores:
+
+     · `liveBox` pinta los pasos del turno. Cada fila es un `cmo.turn_step`: el
+       nombre humano lo emite el SERVIDOR (`tool_labels.ts`), porque el cliente
+       no debe mantener un diccionario paralelo de las catorce herramientas.
+     · `revealInto` imita `cmo.turn_delta`. El grano NO es el token: el servidor
+       coalesce en 120 ms / 64 caracteres, así que aquí el texto se parte en
+       trozos de ese tamaño en vez de letra por letra. Un delta por token serían
+       ~350 publicaciones de Redis por respuesta.
+
+     El skeleton mudo (`thinkingBox`) sigue existiendo y es el respaldo honesto:
+     si el socket está caído no llega ningún paso y hay que decir algo. */
+
+  var CHUNK = 64;   // el mismo tope que CMO_STREAM_FLUSH_CHARS en el servidor
+  var TICK = 110;   // ~ CMO_STREAM_FLUSH_MS, redondeado para que se vea calmado
+
+  function liveBox(steps) {
+    orb.classList.add("busy");
+    var el = document.createElement("div");
+    el.className = "thinking msgin";
+    el.innerHTML = '<div class="steps"></div><div class="tnote">' +
+      '<svg class="ico ico-sm"><use href="#i-scan"/></svg><span></span></div>';
+    var list = el.querySelector(".steps");
+    steps.forEach(function (step) {
+      var row = document.createElement("div");
+      row.className = "step wait";
+      row.innerHTML = '<svg class="ico ico-sm"><use href="#i-circle"/></svg>' +
+        '<span class="steplabel"></span><span class="stepms"></span>';
+      row.querySelector(".steplabel").textContent = step.label;
+      list.appendChild(row);
+    });
+    thread.appendChild(el);
+    toBottom();
+
+    var note = el.querySelector(".tnote span");
+    function mark(i, state) {
+      var row = list.children[i];
+      if (!row) return;
+      row.className = "step " + state;
+      row.querySelector("use").setAttribute("href", state === "done" ? "#i-check" : state === "run" ? "#i-loader" : "#i-circle");
+      if (state === "done") row.querySelector(".stepms").textContent = String(steps[i].ms) + " ms";
+      var done = list.querySelectorAll(".step.done").length;
+      note.textContent = done === 0
+        ? "Axel está trabajando"
+        : "Axel está trabajando · " + done + (done === 1 ? " lectura" : " lecturas") + " hasta ahora";
+      toBottom();
+    }
+
+    return { el: el, mark: mark };
+  }
+
+  function runSteps(box, steps, done) {
+    var i = 0;
+    (function next() {
+      if (i >= steps.length) { done(); return; }
+      box.mark(i, "run");
+      var at = i;
+      setTimeout(function () { box.mark(at, "done"); i++; next(); }, steps[at].ms + 380);
+    })();
+  }
+
+  /* Parte el HTML en la lista de trozos que se van revelando. Los nodos de
+     texto largos se cortan por palabras en tramos de CHUNK; los elementos
+     (negritas, barras del embudo) entran de una pieza, porque un delta jamás
+     parte un nodo del DOM: parte el TEXTO que luego el parser convierte. */
+  function chunksOf(html) {
+    var tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    var out = [];
+    Array.prototype.slice.call(tmp.childNodes).forEach(function (node) {
+      if (node.nodeType !== 3) { out.push(node); return; }
+      var words = node.nodeValue.split(/(\s+)/);
+      var buf = "";
+      words.forEach(function (w) {
+        if ((buf + w).length > CHUNK && buf !== "") { out.push(document.createTextNode(buf)); buf = w; }
+        else buf += w;
+      });
+      if (buf !== "") out.push(document.createTextNode(buf));
+    });
+    return out;
+  }
+
+  function revealInto(container, html, done) {
+    var nodes = chunksOf(html);
+    var caret = document.createElement("span");
+    caret.className = "caret";
+    container.appendChild(caret);
+    var i = 0;
+    (function next() {
+      if (i >= nodes.length) { caret.remove(); done(); return; }
+      container.insertBefore(nodes[i], caret);
+      i++;
+      toBottom();
+      setTimeout(next, TICK);
+    })();
+  }
+
+  /* ---------------- respuestas guionadas ---------------- */
+  var funnelHtml =
+    '<div class="funnel">' +
+    '<div class="frow"><span class="flabel">Escribieron</span><span class="ftrack"><span class="fbar" style="width:100%"></span></span><span class="fnum">312</span></div>' +
+    '<div class="frow"><span class="flabel">Cotizaron</span><span class="ftrack"><span class="fbar" style="width:41%"></span></span><span class="fnum">128</span></div>' +
+    '<div class="frow"><span class="flabel">Pidieron</span><span class="ftrack"><span class="fbar" style="width:19%"></span></span><span class="fnum">60</span></div>' +
+    '<div class="frow"><span class="flabel">Pagaron</span><span class="ftrack"><span class="fbar" style="width:12%"></span></span><span class="fnum">38</span></div>' +
+    '</div>';
+
+  /* Los pasos que Axel ejecuta de verdad en cada tipo de pregunta. Los nombres
+     son los de `tool_labels.ts` en el servidor; las duraciones son plausibles,
+     no medidas. */
+  var STEPS_PULSE = [
+    { label: "Leyendo tu embudo y tus ventas", ms: 420 },
+    { label: "Buscando por dónde se te va la plata", ms: 310 },
+    { label: "Revisando cómo va atendiendo tu agente", ms: 240 }
+  ];
+  var STEPS_HOT = [
+    { label: "Leyendo tu embudo y tus ventas", ms: 380 },
+    { label: "Ordenando tus contactos más calientes", ms: 290 },
+    { label: "Mirando quién está por recomprar", ms: 260 }
+  ];
+  var STEPS_BUILD = [
+    { label: "Leyendo tu embudo y tus ventas", ms: 420 },
+    { label: "Buscando por dónde se te va la plata", ms: 300 },
+    { label: "Revisando tus campañas y tus reglas", ms: 210 },
+    { label: "Midiendo a cuánta gente alcanzas", ms: 340 },
+    { label: "Dejando la promoción en borrador", ms: 180 },
+    { label: "Dejando la campaña en borrador", ms: 260 }
+  ];
+
+  var answers = {
+    how: {
+      label: "Diagnóstico",
+      steps: STEPS_PULSE,
+      body:
+        '<div class="mdh">Vas mejor en plata y peor en cierre</div>' +
+        '<p class="mdp">Pagaron <strong>$18.420.000</strong> este mes, un ' +
+        '<strong>11,4%</strong> más que el pasado. Pero de 312 conversaciones cerraste 38: ' +
+        'eso es un <strong>12,2%</strong>, cuando antes cerrabas el <strong>14,1%</strong> con ' +
+        'menos tráfico.</p>' +
+        '<p class="mdp">El escalón que se te rompió está entre cotizar y pedir: cotizaste 128 y ' +
+        'solo 60 se volvieron pedido.</p>' +
+        funnelHtml +
+        '<div class="mdq">No necesitas más gente escribiendo: necesitas cerrar la que ya te ' +
+        'escribe. Empieza por las 68 cotizaciones que no llegaron a pedido.</div>' +
+        '<div class="metrics">' +
+          '<div class="metric bad"><div class="metriclabel">Fuga del embudo</div><div class="metricval">68 · 53%</div></div>' +
+          '<div class="metric good"><div class="metriclabel">Resueltas por la IA</div><div class="metricval">90,1%</div></div>' +
+          '<div class="metric"><div class="metriclabel">Ticket promedio</div><div class="metricval">$484.700</div></div>' +
+        '</div>'
+    },
+    hot: {
+      label: "Tres para hoy",
+      steps: STEPS_HOT,
+      body:
+        '<div class="mdh">Tres que yo llamaría hoy mismo</div>' +
+        '<ul class="mdlist">' +
+          '<li data-marker="1."><strong>Marcela Rojas</strong> — cotizó <strong>$340.000</strong> hace dos días y no cerró. Ya te compró tres veces.</li>' +
+          '<li data-marker="2."><strong>Diana Castaño</strong> — hizo el pedido y no confirmó el pago. Lleva 4 días.</li>' +
+          '<li data-marker="3."><strong>Luz Elena Parra</strong> — cuatro compras, la última hace 71 días. Su ciclo es de 45: ya se le acabó el producto.</li>' +
+        '</ul>' +
+        '<p class="mdp">Marcela y Yesenia tienen carrito abierto <em>ahora</em>. Si enciendes la ' +
+        'regla de carritos, las toca hoy sin que tengas que escribirles.</p>',
+      extra:
+        '<div class="propcard solo fresh">' +
+          '<div class="propfrom"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg> Axel · de esta conversación</div>' +
+          '<div class="proptop">' +
+            '<span class="kind rec"><svg class="ico ico-sm"><use href="#i-flame"/></svg> Recuperación</span>' +
+            '<span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Vence hoy</span>' +
+          '</div>' +
+          '<div><div class="proptitle">Persigue los 34 carritos que dejaste morir</div>' +
+          '<div class="prophead">$2.840.000 en juego</div></div>' +
+          '<div class="arts">' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/automations?automation=… con el editor ya abierto"><svg class="ico ico-sm"><use href="#i-bot"/></svg> Ver la regla</a>' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/promotions?promotion=… con el editor ya abierto"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Ver la promoción</a>' +
+          '</div>' +
+          '<div class="propfoot">' +
+            '<button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>' +
+            '<span class="propmeta">1 regla · 1 promoción · 1 plantilla, ya en borrador</span>' +
+          '</div>' +
+        '</div>'
+    },
+    amor: {
+      label: "Propuesta armada",
+      steps: STEPS_BUILD,
+      body:
+        '<div class="mdh">Amor y Amistad se decide esta semana</div>' +
+        '<p class="mdp">La fecha es el <strong>sábado 19 de septiembre</strong> y la plantilla de ' +
+        'Meta tarda hasta 48 horas en aprobarse: esto se decide ahora o no sale.</p>' +
+        '<p class="mdp">Armé la campaña para las <strong>142 clientas</strong> que ya ' +
+        'te compraron pero no vuelven hace más de 60 días. El descuento quedó en ' +
+        '<strong>15%</strong> porque tu directriz dice que nunca más de ahí, así que lo dejé justo ' +
+        'en el techo. El segmento lo guardé como <code class="mdcode">no_vuelven_60d</code>.</p>' +
+        '<div class="mdq">Todo queda en borrador y apagado. Si lo apruebas sale; si no, no pasa ' +
+        'nada y nadie recibe un mensaje.</div>',
+      extra:
+        '<div class="propcard solo fresh">' +
+          '<div class="propfrom"><svg class="ico ico-sm"><use href="#i-sparkles"/></svg> Axel · de esta conversación</div>' +
+          '<div class="proptop">' +
+            '<span class="kind cam"><svg class="ico ico-sm"><use href="#i-megaphone"/></svg> Campaña</span>' +
+            '<span class="expiry"><svg class="ico ico-sm"><use href="#i-clock"/></svg> Decide antes del 12 de sep</span>' +
+          '</div>' +
+          '<div><div class="proptitle">Amor y Amistad para las que no vuelven</div>' +
+          '<div class="prophead">142 clientas · $16,7 M de potencial</div></div>' +
+          '<div class="metrics">' +
+            '<div class="metric"><div class="metriclabel">Alcanzables</div><div class="metricval">142</div></div>' +
+            '<div class="metric"><div class="metriclabel">Costo de envío</div><div class="metricval">$9.900</div></div>' +
+            '<div class="metric bad"><div class="metriclabel">Margen que cedes</div><div class="metricval">15%</div></div>' +
+          '</div>' +
+          '<div class="arts">' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/campaigns/&lt;id&gt; — la campaña sí tiene ruta propia"><svg class="ico ico-sm"><use href="#i-megaphone"/></svg> Ver la campaña</a>' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/promotions?promotion=… con el editor ya abierto"><svg class="ico ico-sm"><use href="#i-tag"/></svg> Ver la promoción</a>' +
+            '<a class="artlink" href="#" data-toast="Abre /marketing/settings/templates?template=…"><svg class="ico ico-sm"><use href="#i-msg"/></svg> Ver el mensaje</a>' +
+            '<span class="artlink mute" title="Ninguna herramienta emite segmentos con id: sin id no hay enlace"><svg class="ico ico-sm"><use href="#i-users"/></svg> Segmento</span>' +
+          '</div>' +
+          '<div class="propfoot">' +
+            '<button class="btn btn-ai btn-sm" data-open="s1">Revisar <svg class="ico ico-sm"><use href="#i-right"/></svg></button>' +
+            '<span class="propmeta">1 segmento · 1 promoción · 1 plantilla de Meta</span>' +
+          '</div>' +
+        '</div>',
+      after: function () {
+        var r = $("railP3");
+        r.classList.remove("hidden");
+        r.hidden = false;
+        refreshCounts();
+        toast("Axel te dejó una propuesta nueva en el tablero", "ai");
+      }
+    }
+  };
+
+  var fallback = {
+    label: "Alcance del mockup",
+    steps: [{ label: "Buscando en lo que tengo guionado", ms: 220 }],
+    body:
+      '<p class="mdp">En el mockup solo tengo tres respuestas guionadas. Pregúntame ' +
+      '<strong>cómo vamos</strong>, por tus <strong>clientas más calientes</strong>, o pídeme ' +
+      'que te <strong>arme algo para Amor y Amistad</strong>.</p>'
+  };
+
+  /* El turno completo, en el orden en que el dueño lo ve:
+     pasos reales → el texto llegando → el cierre con la propuesta anclada.
+     En la app son `cmo.turn_step`, `cmo.turn_delta` y `cmo.turn_completed`. */
+  /* Andamio: apagar el socket es la única forma de JUZGAR la degradación. Con el
+     socket caído no llega ningún paso ni ningún delta, así que el chat vuelve
+     exactamente a lo que hay hoy — skeleton con la fase rotando y la respuesta
+     de golpe al resolver el POST. Es el respaldo, no un modo distinto. */
+  var wsLive = true;
+  $("wsToggle").addEventListener("click", function () {
+    wsLive = !wsLive;
+    this.classList.toggle("on", wsLive);
+    $("wsLabel").textContent = wsLive ? "Socket en vivo" : "Socket caído";
+    toast(wsLive ? "Socket en vivo: pasos y texto en vivo" : "Socket caído: el chat cae al POST síncrono", "ai");
+  });
+
+  function respond(key) {
+    var a = answers[key] || fallback;
+
+    if (!wsLive) {
+      // sin socket: skeleton mudo con la fase rotando y todo de golpe al final
+      var t = thinkingBox(PHASES[0]);
+      var total = a.steps.reduce(function (sum, st) { return sum + st.ms + 380; }, 0);
+      setTimeout(function () {
+        t.remove();
+        orb.classList.remove("busy");
+        var full = axelCard(a.label, a.body);
+        closeCard(full, a.steps.length, a.extra);
+        if (a.after) a.after();
+      }, total);
+      return;
+    }
+
+    var box = liveBox(a.steps);
+    runSteps(box, a.steps, function () {
+      box.el.remove();
+      var card = axelShell(a.label);
+      revealInto(card.querySelector(".axelbody"), a.body, function () {
+        orb.classList.remove("busy");
+        closeCard(card, a.steps.length, a.extra);
+        if (a.after) a.after();
+      });
+    });
+  }
+
+  document.querySelectorAll(".cap, .starter").forEach(function (c) {
+    c.addEventListener("click", function () {
+      var name = c.querySelector(".capname");
+      mine((name ? name.textContent : c.textContent).trim());
+      respond(c.dataset.q);
+    });
+  });
+
+  var form = $("chatForm");
+  var input = $("chatInput");
+  input.addEventListener("input", function () {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 120) + "px";
+  });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  });
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (body.getAttribute("data-screen") === "quota") { toast("Sin análisis disponibles este ciclo"); return; }
+    var v = input.value.trim();
+    if (!v) return;
+    // los estados guionados son fotos fijas: al escribir se vuelve al hilo vivo
+    if (["thinking", "live", "stream", "rich"].indexOf(body.getAttribute("data-screen")) !== -1) paintScreen("brief");
+    mine(v);
+    input.value = "";
+    input.style.height = "auto";
+    var l = v.toLowerCase();
+    var key = null;
+    if (/amor|amistad|campa|promo/.test(l)) key = "amor";
+    else if (/client|calient|mejor|score|puntaj/.test(l)) key = "hot";
+    else if (/vamos|vent|mes|cierr|embudo|como|cómo|numer|número/.test(l)) key = "how";
+    respond(key);
+  });
+
+  /* ---------------- aprobar ---------------- */
+  $("s1approve").addEventListener("click", function () {
+    $("s1done").classList.remove("hidden");
+    var foot = $("s1foot");
+    foot.innerHTML =
+      '<button class="btn" data-close>Listo</button><div class="spacer"></div>' +
+      '<span style="font-size:11.5px;color:var(--ghost-fg)">Persiguiendo 34 carritos</span>';
+    foot.querySelector("[data-close]").addEventListener("click", closeAll);
+    $("s1done").scrollIntoView({ block: "nearest" });
+
+    document.querySelectorAll('#railProposals [data-open="s1"]').forEach(function (row, i) {
+      if (i > 0) return;
+      row.classList.add("settled");
+      var pill = row.querySelector(".pill");
+      pill.className = "pill on";
+      pill.textContent = "Encendida";
+    });
+
+    // la tarjeta del hilo queda decidida, sin vencimiento colgando
+    var card = $("briefProp1");
+    if (card) {
+      card.querySelector(".propfoot").innerHTML =
+        '<span class="pill on"><svg class="ico ico-sm" style="vertical-align:-2px"><use href="#i-check"/></svg> Encendida</span>' +
+        '<span class="propmeta">Regla activa · promoción activa</span>';
+      var exp = card.querySelector(".expiry");
+      if (exp) exp.remove();
+    }
+
+    toast("Regla encendida. Empieza a perseguir carritos ahora mismo.");
+    refreshCounts();
+  });
+
+  /* ---------------- rechazar → directriz ---------------- */
+  document.querySelector("[data-reject]").addEventListener("click", function () {
+    $("s1reject").classList.remove("hidden");
+    $("s1foot").classList.add("hidden");
+    $("s1reject").scrollIntoView({ block: "nearest" });
+  });
+  document.querySelector("[data-cancel-reject]").addEventListener("click", function () {
+    $("s1reject").classList.add("hidden");
+    $("s1foot").classList.remove("hidden");
+  });
+  document.querySelector("[data-confirm-reject]").addEventListener("click", function () {
+    var box = $("s1reject");
+    var chosen = box.querySelector('input[type="radio"]:checked').parentElement.textContent.trim();
+    var asDirective = box.querySelector('input[type="checkbox"]').checked;
+
+    var row = document.querySelector('#railProposals [data-open="s1"]');
+    if (row) { row.classList.add("hidden", "settled"); }
+    var card = $("briefProp1");
+    if (card) card.remove();
+
+    closeAll();
+    refreshCounts();
+
+    if (asDirective) {
+      addDirective(chosen, "Salió de una propuesta que rechazaste · hoy", "i-x");
+      toast("Anotado. No te lo vuelvo a proponer.", "ai");
+      axelCard("Directriz guardada",
+        'Listo, lo anoté: «' + chosen + '» No te lo vuelvo a proponer, y lo voy a tener ' +
+        'en cuenta en todo lo que arme de aquí en adelante.');
+    } else {
+      toast("Propuesta descartada");
+    }
+  });
+
+  /* ---------------- directrices (en ajustes) ---------------- */
+  function addDirective(text, origin, icon) {
+    var el = document.createElement("div");
+    el.className = "dirrow fresh";
+    el.innerHTML =
+      '<svg class="ico"><use href="#i-book"/></svg>' +
+      '<div class="dirtext"><span></span>' +
+        '<div class="dirorigin"><svg class="ico ico-sm"><use href="#' + icon + '"/></svg><span class="o"></span></div>' +
+      '</div>';
+    el.querySelector(".dirtext span").textContent = text;
+    el.querySelector(".dirorigin .o").textContent = origin;
+    $("dirList").appendChild(el);
+    var c = $("dirCount");
+    c.textContent = String(Number(c.textContent) + 1);
+  }
+  $("dirAdd").addEventListener("click", function () {
+    var v = $("dirInput").value.trim();
+    if (!v) return;
+    addDirective(v, "Se la dictaste en el chat · hoy", "i-msg");
+    $("dirInput").value = "";
+    toast("Anotado. Lo voy a respetar en todo lo que te proponga.", "ai");
+  });
+
+  /* ---------------- interruptor de Axel ---------------- */
+  $("axelSwitch").addEventListener("click", function () {
+    var on = this.classList.toggle("on");
+    this.setAttribute("aria-checked", on ? "true" : "false");
+    toast(on ? "Axel encendido" : "Axel apagado. Tus agentes siguen atendiendo.", on ? "ai" : undefined);
+  });
+
+  /* ---------------- arranque (hash como atajo, no como navegación) ---------------- */
+  var VALID = ["nobrief", "brief", "thinking", "live", "stream", "rich", "quota", "settings"];
+  var initial = window.location.hash.replace("#", "");
+  paintScreen(VALID.indexOf(initial) === -1 ? "nobrief" : initial);
+})();
+</script>
+</body>
+</html>

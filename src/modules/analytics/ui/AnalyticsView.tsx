@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { BarChart3, ShieldCheck, TriangleAlert, type LucideIcon } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -21,6 +22,13 @@ import { AlertsBanner } from "./components/AlertsBanner";
 import { ConversionTab } from "./components/conversion/ConversionTab";
 import { QualityTab } from "./components/quality/QualityTab";
 import { AlertsTab } from "./components/alerts/AlertsTab";
+
+/** Icono por pestaña. Vive aquí y no en `domain/`, que es TypeScript puro. */
+const TAB_ICONS: Record<AnalyticsTab, LucideIcon> = {
+  conversion: BarChart3,
+  calidad: ShieldCheck,
+  alertas: TriangleAlert,
+};
 
 function parseTab(value: string | null): AnalyticsTab {
   return (ANALYTICS_TABS as string[]).includes(value ?? "")
@@ -156,8 +164,11 @@ export function AnalyticsView() {
 
       <Tabs value={tab} onValueChange={(value) => goToTab(value as AnalyticsTab)}>
         <TabsList aria-label="Secciones de analíticas">
-          {ANALYTICS_TABS.map((key) => (
+          {ANALYTICS_TABS.map((key) => {
+            const Icon = TAB_ICONS[key];
+            return (
             <TabsTrigger key={key} value={key}>
+              <Icon aria-hidden="true" />
               {TAB_LABELS[key]}
               {key === "alertas" && triggeredCount !== null && triggeredCount > 0 && (
                 <Badge variant="destructive" className="ml-1 px-1.5 tabular-nums">
@@ -165,7 +176,8 @@ export function AnalyticsView() {
                 </Badge>
               )}
             </TabsTrigger>
-          ))}
+            );
+          })}
         </TabsList>
 
         <TabsContent value="conversion" className="pt-2">

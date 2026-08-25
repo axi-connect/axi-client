@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import {
@@ -36,7 +35,6 @@ export function ConnectChannelView() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [provider, setProvider] = useState<ChannelProvider | null>(null);
-  const [channelName, setChannelName] = useState("");
   const [connected, setConnected] = useState<ChannelDTO | null>(null);
 
   const goToSuccess = (channel: ChannelDTO) => {
@@ -49,7 +47,7 @@ export function ConnectChannelView() {
     const strategy = effectiveConnectStrategy(provider);
 
     if (strategy === "qr") {
-      return <QrPairingPanel channelName={channelName} onConnected={goToSuccess} />;
+      return <QrPairingPanel onConnected={goToSuccess} />;
     }
     if (strategy === "manual") {
       return (
@@ -72,7 +70,6 @@ export function ConnectChannelView() {
       return (
         <PageSignupButton
           provider={provider}
-          channelName={channelName}
           onConnected={goToSuccess}
           onManualCreated={onManualCreated}
         />
@@ -82,7 +79,6 @@ export function ConnectChannelView() {
     return (
       <EmbeddedSignupButton
         provider={provider}
-        channelName={channelName}
         onConnected={goToSuccess}
         onManualCreated={onManualCreated}
       />
@@ -114,21 +110,12 @@ export function ConnectChannelView() {
 
       {step === 0 && (
         <div className="space-y-6">
+          {/* Aquí NO se pide el nombre del canal. El alta ya lo pone —el número o
+              la página que se acaba de autorizar— y el paso 4 deja cambiarlo con
+              el mismo formulario del detalle. Pedirlo antes de saber qué activo
+              se va a conectar era teclear a ciegas, y dejaba dos sitios donde se
+              edita lo mismo. */}
           <ProviderGallery selected={provider} onSelect={setProvider} />
-          <div className="max-w-sm space-y-1.5">
-            <label htmlFor="channel-name" className="text-sm font-medium">
-              ¿Cómo quieres llamarlo?
-            </label>
-            <Input
-              id="channel-name"
-              value={channelName}
-              placeholder="Ventas"
-              onChange={(event) => setChannelName(event.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Solo lo ven tus agentes, para distinguirlo de otros números. Puedes cambiarlo después.
-            </p>
-          </div>
           <Button disabled={provider === null} onClick={() => setStep(1)}>
             Continuar
           </Button>
@@ -156,8 +143,10 @@ function title(step: number, provider: ChannelProvider | null): string {
     if (provider === null) return "Conecta tu canal";
     const strategy = effectiveConnectStrategy(provider);
     if (strategy === "qr") return "Vincula tu WhatsApp";
-    if (strategy === "manual") return `Conecta ${provider.label}`;
-    return "Conecta tu WhatsApp";
+    // El botón de Meta dejó de ser solo de WhatsApp: Instagram y Messenger pasan
+    // por aquí desde F7, y titular su pantalla "Conecta tu WhatsApp" es un error
+    // visible del que nadie se recupera leyendo el resto
+    return `Conecta ${provider.label}`;
   }
   return "Todo listo";
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { LayoutGrid, List, Package, Plus, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Input } from "@/shared/components/ui/input";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -122,30 +123,19 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-full border border-border p-0.5" role="group" aria-label="Cambiar vista">
-            <Button
-              type="button"
-              size="sm"
-              variant={view === "table" ? "secondary" : "ghost"}
-              className="h-8 rounded-full px-3"
-              aria-pressed={view === "table"}
-              aria-label="Vista de tabla"
-              onClick={() => changeView("table")}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={view === "grid" ? "secondary" : "ghost"}
-              className="h-8 rounded-full px-3"
-              aria-pressed={view === "grid"}
-              aria-label="Vista de tarjetas"
-              onClick={() => changeView("grid")}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-          </div>
+          <SegmentedControl
+            value={view}
+            onValueChange={changeView}
+            label="Cambiar vista"
+            size="sm"
+            surface="inline"
+            // Solo iconos: el nombre de la vista lo dice la propia vista.
+            labels="active"
+            items={[
+              { value: "table" as ViewMode, label: "Tabla", icon: List },
+              { value: "grid" as ViewMode, label: "Tarjetas", icon: LayoutGrid },
+            ]}
+          />
           {canManage && (
             <Button asChild className="rounded-full">
               <Link href="/catalog/products/create">
