@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
-import { GridCard } from "@/shared/components/ui/grid-card";
+import { BrandCard } from "@/shared/components/ui/brand-card";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { CASES } from "@/modules/landing/ui/content/landing.content";
@@ -212,7 +212,7 @@ export default function CasosPage() {
                   className="scroll-mt-28 last:md:col-span-2"
                 >
                   <Reveal delay={index * 0.05}>
-                    <GridCard pattern={index} className="h-full gap-4 px-6 py-6">
+                    <BrandCard className="h-full gap-4 px-6 py-6">
                       <div className="relative flex items-center gap-3">
                         <span className="border-border bg-card flex size-10 items-center justify-center rounded-xl border">
                           <Icon aria-hidden="true" className="text-brand size-[1.125rem]" />
@@ -225,7 +225,7 @@ export default function CasosPage() {
                       <p className="text-muted-foreground border-border/60 relative border-t pt-3 text-xs">
                         {vertical.proof}
                       </p>
-                    </GridCard>
+                    </BrandCard>
                   </Reveal>
                 </section>
               );

@@ -16,7 +16,7 @@ import {
 import { cn } from "@/core/lib/utils";
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { Button } from "@/shared/components/ui/button";
-import { GridCard } from "@/shared/components/ui/grid-card";
+import { BrandCard } from "@/shared/components/ui/brand-card";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 
@@ -201,7 +201,7 @@ function IntegrationBlock({ item, index }: { item: Integration; index: number })
   return (
     <section id={item.id} className="scroll-mt-28">
       <Reveal>
-        <GridCard pattern={index} className="gap-5 px-6 py-7 sm:px-8 sm:py-8">
+        <BrandCard className="gap-5 px-6 py-7 sm:px-8 sm:py-8">
           <div className="relative flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="border-border bg-card flex size-11 items-center justify-center rounded-xl border">
@@ -227,7 +227,7 @@ function IntegrationBlock({ item, index }: { item: Integration; index: number })
               </li>
             ))}
           </ul>
-        </GridCard>
+        </BrandCard>
       </Reveal>
     </section>
   );

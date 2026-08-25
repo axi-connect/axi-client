@@ -193,6 +193,30 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-brand) 8%, transparent), transparent 70%);
 }
 
+/**
+ * `.brand-sheen` — el MISMO lenguaje de elipses de `.bg-brand-ambient`, pero sin
+ * su fondo opaco, para superficies que ya traen el suyo (las tarjetas del
+ * mega-menú, que van sobre cristal y no pueden tapar el blur).
+ *
+ * Mismas coordenadas y mismos porcentajes a propósito: si el ambiente de la
+ * marca cambia, cambia en los dos sitios o dejan de ser el mismo material. Los
+ * valores son la mitad de intensos porque aquí la superficie es pequeña — un
+ * 13 % en una tarjeta de 118px de alto se lee como un lavado rosa, no como un
+ * halo.
+ */
+.brand-sheen {
+  background-image:
+    radial-gradient(75% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand) 7%, transparent), transparent 72%),
+    radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-brand) 4%, transparent), transparent 70%);
+}
+
+/** Al pasar el cursor el halo sube, sin cambiar de color ni de forma. */
+.group:hover > .brand-sheen {
+  background-image:
+    radial-gradient(75% 120% at 8% 0%, color-mix(in srgb, var(--axi-brand) 14%, transparent), transparent 72%),
+    radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-amber) 7%, transparent), transparent 70%);
+}
+
 /* -------- Superficie de tarjeta de canal (F1 de canales Meta) -------- */
 
 /**
@@ -338,9 +362,25 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: var(--shadow-overlay);
 }
 
+/**
+ * Mega-menú del sitio público. Tercera receta, y no por capricho: el panel es
+ * grande y lleva sus propias tarjetas dentro, así que necesita **más blur** que
+ * el header (16px) para que el texto se lea sobre una landing con imágenes, y
+ * **menos opacidad** que un modal (80%) para que se lea como cristal y no como
+ * una caja sólida. Subir el blur es justo lo que permite bajar la opacidad sin
+ * perder legibilidad.
+ */
+.glass-menu {
+  background-color: color-mix(in srgb, var(--color-background) 72%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  box-shadow: var(--shadow-overlay);
+}
+
 /* Fallback: sin backdrop-filter el fondo translúcido no es legible */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass, .glass-overlay { background-color: var(--color-background); }
+  .glass, .glass-overlay, .glass-menu { background-color: var(--color-background); }
 }
 
 /* -------- Ajustes de componentes -------- */

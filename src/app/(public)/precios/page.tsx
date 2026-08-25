@@ -10,7 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/shared/components/ui/accordion";
-import { GridCard } from "@/shared/components/ui/grid-card";
+import { BrandCard } from "@/shared/components/ui/brand-card";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { PricingPlans } from "@/modules/landing/ui/components/PricingPlans";
@@ -125,7 +125,7 @@ export default function PreciosPage() {
               const Icon = item.icon;
               return (
                 <Reveal key={item.title} delay={index * 0.05}>
-                  <GridCard pattern={index} className="h-full gap-4 px-6 py-6">
+                  <BrandCard className="h-full gap-4 px-6 py-6">
                     <div className="relative flex items-center gap-3">
                       <span className="border-border bg-card flex size-10 items-center justify-center rounded-xl border">
                         <Icon aria-hidden="true" className="text-brand size-[1.125rem]" />
@@ -135,7 +135,7 @@ export default function PreciosPage() {
                     <p className="text-muted-foreground relative text-sm leading-relaxed text-pretty">
                       {item.body}
                     </p>
-                  </GridCard>
+                  </BrandCard>
                 </Reveal>
               );
             })}

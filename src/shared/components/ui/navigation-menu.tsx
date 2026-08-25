@@ -124,10 +124,12 @@ function NavigationMenuViewport({
       <NavigationMenuPrimitive.Viewport
         data-slot="navigation-menu-viewport"
         className={cn(
-          // `glass-overlay` y no `glass`: es el material que el design system
-          // reserva para legibilidad sobre contenido en movimiento (§5.1). Con
-          // `.glass` el texto del panel competía con la landing de detrás.
-          "glass-overlay border-border/60 origin-top relative mt-2 overflow-hidden rounded-2xl border",
+          // `glass-menu` (§5.1): 72 % de fondo con 28px de blur. Es la receta
+          // del mega-menú y no una de las otras dos a propósito — con la del
+          // header (16px) el texto competía con la landing de detrás, y con la
+          // de un modal (80 %) el panel se leía como una caja sólida. El blur
+          // alto es lo que permite bajar la opacidad sin perder legibilidad.
+          "glass-menu origin-top relative mt-2 overflow-hidden rounded-2xl",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 duration-200",
           // El primitivo mide el panel activo y publica su tamaño en estas

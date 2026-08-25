@@ -217,16 +217,45 @@ En Tailwind v4 las clases se extraen estáticamente del fuente: usar `z-[70]` li
   backdrop-filter: saturate(160%) blur(20px);
   box-shadow: var(--shadow-overlay);
 }
+.glass-menu { /* mega-menú público: panel grande con tarjetas dentro */
+  background-color: color-mix(in srgb, var(--color-background) 72%, transparent);
+  backdrop-filter: saturate(180%) blur(28px);
+  box-shadow: var(--shadow-overlay);
+}
 @supports not (backdrop-filter: blur(1px)) {
   .glass, .glass-overlay { background-color: var(--color-background); }
 }
 ```
+
+**Tres recetas, no dos.** La opacidad y el blur se mueven juntos y en sentido
+contrario: **más blur es lo que permite bajar la opacidad sin perder
+legibilidad**. De ahí las tres, por tamaño de la superficie y por lo que lleva
+dentro:
+
+| Receta | Fondo · blur | Para |
+|---|---|---|
+| `.glass` | 65 % · 16px | Barras y flotantes pequeños: header, sidebar, popovers, tooltips |
+| `.glass-menu` | 72 % · 28px | Mega-menú del sitio público: panel ancho con tarjetas propias dentro |
+| `.glass-overlay` | 80 % · 20px | Modales y sheets: texto denso, y el scrim ya separa del fondo |
+
+Corolario para el contenido que va **dentro** de una superficie de cristal: sus
+tarjetas y filas no pueden ser opacas, o tapan el blur y el panel se lee como
+una caja sólida. Para eso están la variante `surface="glass"` de `BrandCard`
+(fondo al 45 %) y `.brand-sheen`, que aporta el halo de marca **sin** su propio
+suelo — mismas coordenadas que `.bg-brand-ambient`, para que el ambiente de la
+marca no se bifurque.
+
+**El lenguaje de superficie de la marca son elipses, no retículas.** El halo
+suave anclado a una esquina es lo que hacen el hero y la tarjeta del footer;
+una rejilla de cuadros es lenguaje técnico y no es de esta marca (por eso se
+retiró la `GridCard` que vino con la plantilla del mega-menú).
 
 ### 5.2 Dónde sí / dónde no
 
 | ✅ Glass | ❌ Sólido |
 |---|---|
 | `PrivateHeader`, `SiteHeader` (sticky) | Tablas (`DataTable`) y sus cards |
+| Panel del mega-menú público (`.glass-menu`) | Páginas de producto: sus tarjetas son sólidas |
 | Sidebar (`AppSidebar`) | Formularios (`DynamicForm`) |
 | `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) |
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |

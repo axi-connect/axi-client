@@ -6,7 +6,7 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { Badge } from "@/shared/components/ui/badge";
-import { GridCard } from "@/shared/components/ui/grid-card";
+import { BrandCard } from "@/shared/components/ui/brand-card";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -44,16 +44,13 @@ function Claim({ text }: { text: string }) {
   );
 }
 
-function PanelCard({ card, index }: { card: SiteNavCard; index: number }) {
+function PanelCard({ card }: { card: SiteNavCard }) {
   const Icon = card.icon;
   return (
     <li>
       <NavigationMenuLink asChild>
         <Link href={card.href} prefetch={false} className="block h-full rounded-xl p-0">
-          {/* `pattern={index}`: la textura de cada tarjeta se deriva de su
-              posición, así la fila no se ve repetida y el HTML es idéntico en
-              servidor y cliente. */}
-          <GridCard pattern={index}>
+          <BrandCard surface="glass">
             <Icon aria-hidden="true" className="text-foreground/75 group-hover:text-brand relative size-5 transition-colors" />
             <div className="relative">
               <span className="text-foreground block text-sm font-semibold tracking-tight">
@@ -63,7 +60,7 @@ function PanelCard({ card, index }: { card: SiteNavCard; index: number }) {
                 {card.description}
               </span>
             </div>
-          </GridCard>
+          </BrandCard>
         </Link>
       </NavigationMenuLink>
     </li>
@@ -78,7 +75,7 @@ function PanelRow({ row }: { row: SiteNavRow }) {
         <Link
           href={row.href}
           prefetch={false}
-          className="group hover:bg-accent/60 flex h-max flex-row items-center gap-2.5 rounded-lg px-2.5 py-2"
+          className="group hover:bg-accent/50 flex h-max flex-row items-center gap-2.5 rounded-lg px-2.5 py-2"
         >
           <Icon aria-hidden="true" className="text-muted-foreground group-hover:text-brand size-4 shrink-0 transition-colors" />
           <span className="text-sm">{row.name}</span>
@@ -104,7 +101,7 @@ function PanelRow({ row }: { row: SiteNavRow }) {
  */
 function PanelFooter({ footer }: { footer: SiteNavPanelFooter }) {
   return (
-    <div className="border-border/60 bg-foreground/[0.03] col-span-full flex flex-wrap items-center gap-x-5 gap-y-3 border-t px-5 py-3.5">
+    <div className="border-border/50 bg-foreground/[0.02] col-span-full flex flex-wrap items-center gap-x-5 gap-y-3 border-t px-5 py-3.5">
       <Claim text={footer.claim} />
       <div className="ml-auto flex flex-wrap items-center gap-x-5 gap-y-2">
         {footer.whatsappMessage ? (
@@ -157,12 +154,12 @@ function MegaPanel({ item }: { item: Extract<SiteNavItem, { kind: "mega" }> }) {
       >
         <ul
           className={cn(
-            "border-border/60 grid grow gap-3 p-4 md:border-r",
+            "border-border/50 grid grow gap-3 p-4 md:border-r",
             item.cardColumns === 3 ? "md:grid-cols-3" : "md:grid-cols-2",
           )}
         >
-          {item.cards.map((card, index) => (
-            <PanelCard key={card.href} card={card} index={index} />
+          {item.cards.map((card) => (
+            <PanelCard key={card.href} card={card} />
           ))}
         </ul>
 
