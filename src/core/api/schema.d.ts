@@ -3732,6 +3732,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_summary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_listInvoices_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_invoiceDetail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/invoices/{invoice_id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["BillingController_issueInvoiceLink_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/invoices/{invoice_id}/checkout-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["BillingController_createCheckoutSession_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/payment-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_listPaymentSources_v1"];
+        put?: never;
+        post: operations["BillingController_registerPaymentSource_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/acceptance-terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_acceptanceTerms_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/data-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_exportData_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/payment-sources/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["BillingController_revokePaymentSource_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformBillingPricesController_list_v1"];
+        put?: never;
+        post: operations["PlatformBillingPricesController_publish_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/prices/{price_id}/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformBillingPricesController_setActive_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/billing/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformBillingInvoicesController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/invoices/{invoice_id}/withholding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBillingInvoicesController_registerWithholding_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/invoices/{invoice_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBillingInvoicesController_voidInvoice_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/invoices/{invoice_id}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBillingInvoicesController_addAdjustment_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantBillingController_get_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformTenantBillingController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/billing/cycle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformTenantBillingController_setCycle_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduling/reminders": {
         parameters: {
             query?: never;
@@ -9303,6 +9575,425 @@ export interface components {
             notify: {
                 in_app: boolean;
             };
+        };
+        BillingSummaryDto: {
+            /** @enum {string|null} */
+            account_status: "current" | "past_due" | "suspended" | "cancelled" | null;
+            plan_code: string | null;
+            currency: string;
+            cycle: {
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+            } | null;
+            next_invoice_estimate_cents: number | null;
+            outstanding_cents: number;
+            open_invoices: number;
+            auto_charge: boolean;
+            has_payment_source: boolean;
+            grace_days: number;
+            /** Format: date-time */
+            oldest_due_at: string | null;
+        };
+        InvoiceListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                number: string;
+                /** @enum {string} */
+                status: "draft" | "open" | "partially_paid" | "paid" | "void" | "uncollectible";
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+                /** Format: date-time */
+                issued_at: string | null;
+                /** Format: date-time */
+                due_at: string | null;
+                total_cents: number;
+                paid_cents: number;
+                withholding_cents: number;
+                outstanding_cents: number;
+                currency: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        InvoiceDetailDto: {
+            /** Format: uuid */
+            id: string;
+            number: string;
+            /** @enum {string} */
+            status: "draft" | "open" | "partially_paid" | "paid" | "void" | "uncollectible";
+            /** Format: date-time */
+            period_start: string;
+            /** Format: date-time */
+            period_end: string;
+            /** Format: date-time */
+            issued_at: string | null;
+            /** Format: date-time */
+            due_at: string | null;
+            total_cents: number;
+            paid_cents: number;
+            withholding_cents: number;
+            outstanding_cents: number;
+            currency: string;
+            plan_code: string | null;
+            lines: {
+                kind: string;
+                description: string;
+                quantity: number;
+                unit_amount_cents: number;
+                amount_cents: number;
+                tax_cents: number;
+            }[];
+        };
+        InvoiceLinkDto: {
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        CheckoutSessionDto: {
+            reference: string;
+            amount_in_cents: number;
+            currency: string;
+            signature: string;
+            public_key: string;
+            /** Format: date-time */
+            expiration_time: string | null;
+            /** Format: uri */
+            redirect_url: string | null;
+        };
+        PaymentSourceListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: "card" | "nequi" | "bancolombia_transfer" | "daviplata";
+                brand: string | null;
+                last_four: string | null;
+                exp_month: string | null;
+                exp_year: string | null;
+                /** @enum {string} */
+                status: "pending" | "available" | "declined" | "error" | "revoked";
+                is_default: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        AcceptanceTermsDto: {
+            /** Format: uri */
+            end_user_policy_url: string;
+            /** Format: uri */
+            personal_data_auth_url: string;
+        };
+        RegisterPaymentSourceDto: {
+            /**
+             * @default card
+             * @enum {string}
+             */
+            type: "card" | "nequi" | "bancolombia_transfer" | "daviplata";
+            token: string;
+        };
+        RegisteredPaymentSourceDto: {
+            /** Format: uuid */
+            id: string;
+            brand: string | null;
+            last_four: string | null;
+            status: string;
+            is_default: boolean;
+        };
+        BillingDataExportDto: {
+            /** Format: date-time */
+            generated_at: string;
+            /** Format: uuid */
+            company_id: string;
+            account: {
+                legal_name: string | null;
+                tax_id: string | null;
+                billing_email: string;
+                billing_phone: string | null;
+                notify_email: boolean;
+                notify_whatsapp: boolean;
+                notify_in_app: boolean;
+                status: string;
+                grace_days: number;
+                auto_charge: boolean;
+                currency: string;
+                /** Format: date-time */
+                created_at: string;
+            } | null;
+            invoices: {
+                number: string;
+                status: string;
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+                /** Format: date-time */
+                issued_at: string | null;
+                /** Format: date-time */
+                due_at: string | null;
+                subtotal_cents: number;
+                tax_cents: number;
+                total_cents: number;
+                paid_cents: number;
+                withholding_cents: number;
+                outstanding_cents: number;
+                currency: string;
+                lines: {
+                    kind: string;
+                    description: string;
+                    quantity: number;
+                    unit_amount_cents: number;
+                    amount_cents: number;
+                    tax_treatment: string;
+                    tax_rate_bps: number;
+                    tax_cents: number;
+                }[];
+            }[];
+            charges: {
+                reference: string;
+                status: string;
+                mode: string;
+                amount_cents: number;
+                currency: string;
+                payment_method_type: string | null;
+                provider_transaction_id: string | null;
+                attempt: number;
+                failure_code: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                finalized_at: string | null;
+            }[];
+            payment_sources: {
+                type: string;
+                brand: string | null;
+                last_four: string | null;
+                exp_month: string | null;
+                exp_year: string | null;
+                status: string;
+                is_default: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                revoked_at: string | null;
+                consent: {
+                    /** Format: date-time */
+                    recorded_at: string | null;
+                    from_ip: string | null;
+                    /** Format: uuid */
+                    accepted_by_user_id: string | null;
+                };
+            }[];
+            notifications: {
+                kind: string;
+                channel: string;
+                status: string;
+                target_masked: string | null;
+                /** Format: date-time */
+                sent_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        BillingPriceListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                plan_id: string;
+                plan_code: string;
+                plan_name: string;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                currency: string;
+                /** @enum {string} */
+                tax_treatment: "excluded" | "taxed" | "exempt";
+                tax_rate_bps: number;
+                /** Format: date-time */
+                effective_from: string;
+                /** Format: date-time */
+                effective_to: string | null;
+                is_active: boolean;
+                is_current: boolean;
+                overage_rates: {
+                    /** @enum {string} */
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                    included_quantity: number | null;
+                    unit_size: number;
+                    amount_cents_per_unit: number;
+                    /** @enum {string} */
+                    tax_treatment: "excluded" | "taxed" | "exempt";
+                    tax_rate_bps: number;
+                }[];
+            }[];
+        };
+        PublishBillingPriceDto: {
+            /** Format: uuid */
+            plan_id: string;
+            /**
+             * @default monthly
+             * @enum {string}
+             */
+            interval: "monthly" | "annual";
+            amount_cents: number;
+            /**
+             * @default COP
+             * @enum {string}
+             */
+            currency: "COP";
+            /**
+             * @default excluded
+             * @enum {string}
+             */
+            tax_treatment: "excluded" | "taxed" | "exempt";
+            /** @default 0 */
+            tax_rate_bps: number;
+            /** Format: date-time */
+            effective_from: string;
+            /** @default [] */
+            overage_rates: {
+                /** @enum {string} */
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                /** @default null */
+                included_quantity: number | null;
+                unit_size: number;
+                amount_cents_per_unit: number;
+                /**
+                 * @default excluded
+                 * @enum {string}
+                 */
+                tax_treatment: "excluded" | "taxed" | "exempt";
+                /** @default 0 */
+                tax_rate_bps: number;
+            }[];
+        };
+        CreatedBillingPriceDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        SetPriceActiveDto: {
+            is_active: boolean;
+        };
+        PlatformInvoiceListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string | null;
+                number: string;
+                /** @enum {string} */
+                status: "draft" | "open" | "partially_paid" | "paid" | "void" | "uncollectible";
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+                /** Format: date-time */
+                issued_at: string | null;
+                /** Format: date-time */
+                due_at: string | null;
+                total_cents: number;
+                paid_cents: number;
+                withholding_cents: number;
+                outstanding_cents: number;
+                currency: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        RegisterWithholdingDto: {
+            /** Format: uuid */
+            company_id: string;
+            withholding_cents: number;
+        };
+        InvoiceAdministrationDto: {
+            /** Format: uuid */
+            invoice_id: string;
+            status: string;
+            total_cents: number;
+            paid_cents: number;
+            withholding_cents: number;
+            outstanding_cents: number;
+        };
+        VoidInvoiceDto: {
+            /** Format: uuid */
+            company_id: string;
+            reason: string;
+        };
+        AddAdjustmentDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** @enum {string} */
+            kind: "adjustment" | "credit";
+            description: string;
+            amount_cents: number;
+            /**
+             * @default excluded
+             * @enum {string}
+             */
+            tax_treatment: "excluded" | "taxed" | "exempt";
+            /** @default 0 */
+            tax_rate_bps: number;
+        };
+        TenantBillingViewDto: {
+            account: {
+                /** Format: uuid */
+                id: string;
+                legal_name: string;
+                tax_id: string;
+                billing_email: string;
+                billing_phone: string | null;
+                notify_email: boolean;
+                notify_whatsapp: boolean;
+                notify_in_app: boolean;
+                /** @enum {string} */
+                status: "current" | "past_due" | "suspended" | "cancelled";
+                grace_days: number;
+                payment_terms_days: number;
+                auto_charge: boolean;
+                dunning_attempt: number;
+                currency: string;
+                notes: string | null;
+            } | null;
+            cycle: {
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+            } | null;
+            outstanding_cents: number;
+            open_invoices: number;
+            has_payment_source: boolean;
+        };
+        UpdateTenantBillingDto: {
+            legal_name?: string;
+            tax_id?: string;
+            /** Format: email */
+            billing_email?: string;
+            billing_phone?: string | null;
+            notify_email?: boolean;
+            notify_whatsapp?: boolean;
+            notify_in_app?: boolean;
+            grace_days?: number;
+            payment_terms_days?: number;
+            auto_charge?: boolean;
+            notes?: string | null;
+        };
+        SetBillingCycleDto: {
+            /** Format: date-time */
+            billing_cycle_anchor: string;
         };
         RemindersListDto: {
             data: {
@@ -16965,6 +17656,443 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CmoSettingsViewDto"];
                 };
+            };
+        };
+    };
+    BillingController_summary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingSummaryDto"];
+                };
+            };
+        };
+    };
+    BillingController_listInvoices_v1: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceListDto"];
+                };
+            };
+        };
+    };
+    BillingController_invoiceDetail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetailDto"];
+                };
+            };
+        };
+    };
+    BillingController_issueInvoiceLink_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceLinkDto"];
+                };
+            };
+        };
+    };
+    BillingController_createCheckoutSession_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutSessionDto"];
+                };
+            };
+        };
+    };
+    BillingController_listPaymentSources_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSourceListDto"];
+                };
+            };
+        };
+    };
+    BillingController_registerPaymentSource_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPaymentSourceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegisteredPaymentSourceDto"];
+                };
+            };
+        };
+    };
+    BillingController_acceptanceTerms_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptanceTermsDto"];
+                };
+            };
+        };
+    };
+    BillingController_exportData_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingDataExportDto"];
+                };
+            };
+        };
+    };
+    BillingController_revokePaymentSource_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformBillingPricesController_list_v1: {
+        parameters: {
+            query: {
+                plan_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPriceListDto"];
+                };
+            };
+        };
+    };
+    PlatformBillingPricesController_publish_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBillingPriceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedBillingPriceDto"];
+                };
+            };
+        };
+    };
+    PlatformBillingPricesController_setActive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                price_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPriceActiveDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformBillingInvoicesController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                status?: "draft" | "open" | "partially_paid" | "paid" | "void" | "uncollectible";
+                overdue?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformInvoiceListDto"];
+                };
+            };
+        };
+    };
+    PlatformBillingInvoicesController_registerWithholding_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterWithholdingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceAdministrationDto"];
+                };
+            };
+        };
+    };
+    PlatformBillingInvoicesController_voidInvoice_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidInvoiceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceAdministrationDto"];
+                };
+            };
+        };
+    };
+    PlatformBillingInvoicesController_addAdjustment_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddAdjustmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceAdministrationDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantBillingController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantBillingViewDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantBillingController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTenantBillingDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformTenantBillingController_setCycle_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetBillingCycleDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
