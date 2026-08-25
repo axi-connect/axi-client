@@ -45,7 +45,7 @@ export function PageOutline({
   return (
     <div className="w-full">
       <section className="mx-auto w-full max-w-[1200px] px-6 pt-32 pb-16 sm:pt-40">
-        <SectionHeading kicker={kicker} title={title} intro={intro} />
+        <SectionHeading as="h1" kicker={kicker} title={title} intro={intro} />
         <div className="mt-9 flex flex-wrap gap-3.5">
           <Button asChild size="lg" className="h-12 px-7 text-base">
             <Link href={ctaHref}>{ctaLabel}</Link>

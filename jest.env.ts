@@ -10,3 +10,7 @@
  * propio valor antes de recargar el módulo con `jest.isolateModules`.
  */
 process.env.NEXT_PUBLIC_SALES_WHATSAPP ??= '573224970950'
+
+// `SITE_URL` se resuelve igual (y también lanza si falta), así que la suite
+// necesita un origen válido para cualquier test que toque metadata o SEO.
+process.env.NEXT_PUBLIC_APP_URL ??= 'https://axi-connect.co'

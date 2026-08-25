@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -32,12 +36,12 @@ import { CASES } from "@/modules/landing/ui/content/landing.content";
  * canal, tamaño y forma del catálogo. Un porcentaje inventado en esta página
  * cuesta la venta entera cuando el prospecto lo pregunta en la demo.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Casos",
   description:
     "Un restaurante en Palmira, una marca de ropa en Bogotá y un estudio de grabación: tres formas distintas de vender por chat con la misma configuración base de Axi Connect.",
-  alternates: { canonical: "/casos" },
-};
+  path: "/casos",
+});
 
 /** Datos verificables de cada piloto (knowledge-base §17.2). */
 const CASE_FACTS: Record<string, { catalog: string; channel: string; proves: string }> = {
@@ -107,8 +111,10 @@ const VERTICALS: readonly Vertical[] = [
 export default function CasosPage() {
   return (
     <div className="w-full">
+      <JsonLd data={breadcrumbSchema(["/casos"])} />
       <section className="mx-auto w-full max-w-[1100px] px-6 pt-32 pb-14 sm:pt-40">
         <SectionHeading
+          as="h1"
           kicker="Tres negocios, tres formas de vender"
           title={CASES.title}
           intro="Un restaurante de comida rápida, una marca de ropa urbana y un estudio de grabación. Catálogos reales, precios reales, fotos reales — y la misma configuración base, sin una línea de desarrollo a medida para ninguno."

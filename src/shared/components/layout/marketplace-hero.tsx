@@ -185,7 +185,7 @@ export default function MarketplaceHero() {
 			<div className="relative z-10 flex min-h-screen flex-col items-center justify-between px-8 py-12 md:px-16 md:py-20">
 				{/* Top tagline */}
 				<div className="text-center">
-					<h2 className="text-xs font-light tracking-[0.2em] uppercase opacity-80 md:text-sm" style={{ color: 'color-mix(in srgb, var(--foreground) 75%, transparent)' }}>
+					<p className="text-xs tracking-[0.2em] uppercase opacity-80 md:text-sm" style={{ color: 'color-mix(in srgb, var(--foreground) 75%, transparent)' }}>
 						<span className="word" data-delay="0">Marketplace</span>
 						<span className="word" data-delay="200">de</span>
 						<span className="word" data-delay="400">Influencia</span>
@@ -197,7 +197,7 @@ export default function MarketplaceHero() {
 						<span className="word" data-delay="1600">con</span>
 						<span className="word" data-delay="1800">impacto</span>
 						<span className="word" data-delay="2000">real.</span>
-					</h2>
+					</p>
 					<div className="mt-4 h-px w-16 opacity-30" style={{ background: 'linear-gradient(to right, transparent, color-mix(in srgb, var(--foreground) 60%, transparent), transparent)' }} />
 				</div>
 
@@ -237,7 +237,7 @@ export default function MarketplaceHero() {
 				{/* Bottom tagline */}
 				<div className="text-center">
 					<div className="mb-4 h-px w-16 opacity-30" style={{ background: 'linear-gradient(to right, transparent, color-mix(in srgb, var(--foreground) 60%, transparent), transparent)' }} />
-					<h2 className="font-mono text-xs font-light tracking-[0.2em] uppercase opacity-80 md:text-sm" style={{ color: 'color-mix(in srgb, var(--foreground) 75%, transparent)' }}>
+					<p className="font-mono text-xs tracking-[0.2em] uppercase opacity-80 md:text-sm" style={{ color: 'color-mix(in srgb, var(--foreground) 75%, transparent)' }}>
 						<span className="word" data-delay="5600">ROI</span>
 						<span className="word" data-delay="5750">claro,</span>
 						<span className="word" data-delay="5900">integraciones</span>
@@ -247,7 +247,7 @@ export default function MarketplaceHero() {
 						<span className="word" data-delay="6500">en</span>
 						<span className="word" data-delay="6650">tiempo</span>
 						<span className="word" data-delay="6800">real.</span>
-					</h2>
+					</p>
 					<div className="mt-8 flex justify-center gap-3 opacity-0" style={{ animation: 'word-appear 1s ease-out forwards', animationDelay: '6900ms' }}>
 						<Link prefetch={false} href="/signup" className="inline-flex items-center rounded-full bg-brand-gradient px-6 py-2.5 text-sm font-medium text-white transition-all hover:shadow-lg">Comenzar ahora</Link>
 						<Link prefetch={false} href="/marketplace/browse" className="inline-flex items-center rounded-full border border-border px-6 py-2.5 text-sm font-medium transition-colors hover:text-brand">Explorar talentos</Link>

@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema, faqSchema } from "@/core/seo/site";
+import { pricingSchema } from "@/modules/landing/ui/seo/landing-schema";
 import Link from "next/link";
 import { BellRing, Database, Gauge, MessageCircle, ShieldCheck } from "lucide-react";
 
@@ -33,12 +38,12 @@ import { PRICING } from "@/modules/landing/ui/content/landing.content";
  * Ningún CTA de esta página dice «regístrate»: todos llevan a la demo o al
  * WhatsApp comercial.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Precios",
   description:
     "Pagas por el volumen de conversaciones que maneja tu negocio, no por funciones: todos los planes incluyen el producto completo. Prueba de 7 días con acompañamiento.",
-  alternates: { canonical: "/precios" },
-};
+  path: "/precios",
+});
 
 const GUARANTEES = [
   {
@@ -97,8 +102,11 @@ const PRICING_FAQ = [
 export default function PreciosPage() {
   return (
     <div className="w-full">
+      <JsonLd data={pricingSchema()} />
+      <JsonLd data={faqSchema(PRICING_FAQ)} />
+      <JsonLd data={breadcrumbSchema(["/precios"])} />
       <section className="mx-auto w-full max-w-[1200px] px-6 pt-32 pb-4 sm:pt-40">
-        <SectionHeading title={PRICING.title} intro={PRICING.intro} align="center" className="mx-auto" />
+        <SectionHeading as="h1" title={PRICING.title} intro={PRICING.intro} align="center" className="mx-auto" />
       </section>
 
       <section className="mx-auto w-full max-w-[1200px] px-6 pb-16">

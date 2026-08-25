@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
+
 import { PageOutline, type OutlineSection } from "@/modules/landing/ui/components/PageOutline";
 
 /**
@@ -13,12 +17,12 @@ import { PageOutline, type OutlineSection } from "@/modules/landing/ui/component
  * Las anclas de abajo YA están enlazadas desde el dropdown del navbar: si se
  * renombra una, hay que actualizar `SiteHeader.tsx` en el mismo commit.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Productos",
   description:
     "El agente vendedor, el inbox con handoff, el CRM, el catálogo con stock real, la agenda y la medición en pesos. Producto construido y en producción, no roadmap.",
-  alternates: { canonical: "/productos" },
-};
+  path: "/productos",
+});
 
 const SECTIONS: readonly OutlineSection[] = [
   {
@@ -55,12 +59,15 @@ const SECTIONS: readonly OutlineSection[] = [
 
 export default function ProductosPage() {
   return (
-    <PageOutline
+    <>
+      <JsonLd data={breadcrumbSchema(["/productos"])} />
+      <PageOutline
       kicker="Producto construido, en producción"
       title="Todo lo que Axi ya hace por tu negocio"
       intro="No es una promesa de roadmap. Es lo que está funcionando hoy, con negocios reales vendiendo por chat todos los días."
       sections={SECTIONS}
       footerNote="30 minutos. Te mostramos una venta completa —del «hola» al pago verificado— con un negocio como el tuyo."
-    />
+      />
+    </>
   );
 }

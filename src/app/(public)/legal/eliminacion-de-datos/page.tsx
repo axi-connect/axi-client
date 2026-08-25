@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
+
 import {
   LegalDocument,
   type LegalSection,
@@ -21,12 +25,12 @@ import {
  * ⚠️ REQUIERE REVISIÓN LEGAL ANTES DE PUBLICAR, igual que las otras dos.
  * Los plazos deben coincidir con los de `legal/privacidad`.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Cómo eliminar tus datos",
   description:
     "Pasos para solicitar la eliminación de los datos que Axi Connect trata, qué se borra, qué se conserva por obligación legal y en cuánto tiempo respondemos.",
-  alternates: { canonical: "/legal/eliminacion-de-datos" },
-};
+  path: "/legal/eliminacion-de-datos",
+});
 
 const SECTIONS: readonly LegalSection[] = [
   {
@@ -83,11 +87,14 @@ const SECTIONS: readonly LegalSection[] = [
 
 export default function DataDeletionPage() {
   return (
-    <LegalDocument
-      title="Cómo eliminar tus datos"
-      updatedAt="18 de agosto de 2026"
-      intro="Esta página explica cómo pedir la eliminación de los datos que tratamos, qué se borra exactamente, qué estamos obligados a conservar y en cuánto tiempo respondemos."
-      sections={SECTIONS}
-    />
+    <>
+      <JsonLd data={breadcrumbSchema(["/legal/eliminacion-de-datos"])} />
+      <LegalDocument
+        title="Cómo eliminar tus datos"
+        updatedAt="18 de agosto de 2026"
+        intro="Esta página explica cómo pedir la eliminación de los datos que tratamos, qué se borra exactamente, qué estamos obligados a conservar y en cuánto tiempo respondemos."
+        sections={SECTIONS}
+      />
+    </>
   );
 }

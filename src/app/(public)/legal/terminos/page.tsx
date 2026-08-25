@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
+
 import {
   LegalDocument,
   type LegalSection,
@@ -15,12 +19,12 @@ import {
  *
  * Fuente de los hechos descritos: `docs/business/knowledge-base.md` §9, §15.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Términos y condiciones",
   description:
     "Condiciones de uso del servicio de Axi Connect: alta de cuentas, planes y límites de consumo, canales de mensajería, responsabilidades y vigencia.",
-  alternates: { canonical: "/legal/terminos" },
-};
+  path: "/legal/terminos",
+});
 
 const SECTIONS: readonly LegalSection[] = [
   {
@@ -100,11 +104,14 @@ const SECTIONS: readonly LegalSection[] = [
 
 export default function TerminosPage() {
   return (
-    <LegalDocument
-      title="Términos y condiciones"
-      updatedAt="3 de agosto de 2026"
-      intro="Estas condiciones describen cómo se presta el servicio de Axi Connect y qué puede esperar cada parte. Están escritas para entenderse sin abogado."
-      sections={SECTIONS}
-    />
+    <>
+      <JsonLd data={breadcrumbSchema(["/legal/terminos"])} />
+      <LegalDocument
+        title="Términos y condiciones"
+        updatedAt="3 de agosto de 2026"
+        intro="Estas condiciones describen cómo se presta el servicio de Axi Connect y qué puede esperar cada parte. Están escritas para entenderse sin abogado."
+        sections={SECTIONS}
+      />
+    </>
   );
 }

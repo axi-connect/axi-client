@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import SiteHeader from "@/shared/components/layout/site/SiteHeader";
 import SiteFooter from "@/shared/components/layout/site/SiteFooter";
+import { PublicAnalytics } from "@/core/analytics/ui/PublicAnalytics";
 
 export default function PublicLayout({
   children,
@@ -18,10 +19,17 @@ export default function PublicLayout({
   // ~15px de scroll horizontal en cuanto la barra era visible.
   return (
     <div ref={scrollContainerRef} data-app-scroll className="relative h-screen w-full overflow-y-auto sidebar-scroll">
+      {/* Solo en la capa pública: montarlo en el layout raíz mandaría a Google
+          y a Meta las rutas del panel privado. */}
+      <PublicAnalytics />
       <SiteHeader scrollContainerRef={scrollContainerRef} />
-      <div className="flex flex-col items-center justify-center">
+      {/* `main` es el landmark que faltaba en toda la capa pública: sin él, ni
+          los lectores de pantalla ni los extractores de contenido de los
+          buscadores pueden distinguir el contenido de la página del cromo
+          (cabecera, menú, pie) que se repite en las doce rutas. */}
+      <main className="flex flex-col items-center justify-center">
         {children}
-      </div>
+      </main>
       <SiteFooter />
     </div>
   );

@@ -38,10 +38,21 @@ ARG NEXT_PUBLIC_STORAGE_URL
 # Obligatoria: sin ella `npm run build` aborta (core/config/env.ts). Antes
 # faltaba aquí, y la imagen salía sin ningún CTA de ventas sin avisar.
 ARG NEXT_PUBLIC_SALES_WHATSAPP
+# Origen público del sitio. OBLIGATORIA: `core/config/env.ts` aborta el build si
+# falta, porque de ella cuelgan metadataBase, los canonical, Open Graph, el
+# sitemap y el JSON-LD (docs/architecture.md §13.2).
+ARG NEXT_PUBLIC_APP_URL
+# Analítica. Opcionales: si no se pasan, el sitio se despliega sin medición en
+# vez de romper el build.
+ARG NEXT_PUBLIC_GA_ID
+ARG NEXT_PUBLIC_META_PIXEL_ID
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
     NEXT_PUBLIC_WS_BASE_URL=${NEXT_PUBLIC_WS_BASE_URL} \
     NEXT_PUBLIC_STORAGE_URL=${NEXT_PUBLIC_STORAGE_URL} \
     NEXT_PUBLIC_SALES_WHATSAPP=${NEXT_PUBLIC_SALES_WHATSAPP} \
+    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+    NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID} \
+    NEXT_PUBLIC_META_PIXEL_ID=${NEXT_PUBLIC_META_PIXEL_ID} \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production \
     NODE_OPTIONS=--max-old-space-size=3072

@@ -77,3 +77,103 @@ export function formatSalesWhatsApp(): string {
   const co = /^57(3\d{2})(\d{3})(\d{4})$/.exec(SALES_WHATSAPP);
   return co ? `+57 ${co[1]} ${co[2]} ${co[3]}` : `+${SALES_WHATSAPP}`;
 }
+
+/* ─────────────────── Origen público del sitio (SEO) ─────────────────── */
+
+/**
+ * Origen absoluto del sitio público, sin barra final: `https://axi-connect.co`.
+ *
+ * Falla en carga por la misma razón que `SALES_WHATSAPP` (§13.1 de
+ * docs/architecture.md), y con consecuencias peores: de este valor cuelgan
+ * `metadataBase`, los `canonical` de las doce rutas públicas, las URLs
+ * absolutas de Open Graph, el sitemap y los `@id` del JSON-LD. Una
+ * `NEXT_PUBLIC_*` ausente se hornea como `undefined` en el bundle sin error en
+ * ningún sitio: el resultado sería un sitio en producción declarando que su
+ * contenido canónico vive en `localhost`, sin ninguna señal. Ya pasó — era el
+ * estado del repositorio antes de este módulo.
+ */
+function resolveSiteUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (!raw) {
+    throw new Error(
+      "Falta NEXT_PUBLIC_APP_URL. Es obligatoria: de ella cuelgan metadataBase, " +
+        "los canonical, las URLs de Open Graph, el sitemap y el JSON-LD. " +
+        "Formato: origen absoluto, p.ej. https://axi-connect.co",
+    );
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(
+      `NEXT_PUBLIC_APP_URL="${raw}" no es una URL absoluta válida ` +
+        "(debe incluir el esquema, p.ej. https://axi-connect.co).",
+    );
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(
+      `NEXT_PUBLIC_APP_URL="${raw}" debe usar http o https, no "${parsed.protocol}".`,
+    );
+  }
+
+  // Sin barra final: todo el código de SEO concatena paths que ya empiezan por
+  // '/', y `https://axi-connect.co//precios` sería una URL canónica distinta.
+  return parsed.origin;
+}
+
+/** Origen público del sitio, sin barra final. Única fuente de verdad del dominio. */
+export const SITE_URL = resolveSiteUrl();
+
+/** URL absoluta del sitio para un path que empieza por '/'. */
+export function siteUrl(path = "/"): string {
+  return path === "/" ? `${SITE_URL}/` : `${SITE_URL}${path}`;
+}
+
+/* ────────────────────────────── Analítica ────────────────────────────── */
+
+/**
+ * Los identificadores de analítica degradan a `null` si faltan, al revés que
+ * `SITE_URL`: un desarrollador que solo quiere levantar la landing no puede
+ * quedarse sin build por no tener una propiedad de GA. Pero un id **mal
+ * formado** sí lanza, porque es el peor de los dos mundos: aparenta estar
+ * configurado y no mide nada, y nadie lo nota en meses.
+ *
+ * En GitHub Actions una Variable no definida llega como cadena VACÍA, no como
+ * indefinida — de ahí el `trim()` antes de decidir.
+ */
+function resolveOptionalId(name: string, pattern: RegExp, example: string): string | null {
+  const raw = process.env[name]?.trim();
+  if (!raw) return null;
+
+  if (!pattern.test(raw)) {
+    throw new Error(
+      `${name}="${raw}" no tiene el formato esperado (p.ej. ${example}). ` +
+        "Un id mal escrito se despliega sin medir nada y sin avisar: mejor que reviente el build.",
+    );
+  }
+  return raw;
+}
+
+/** Id de medición de GA4 (`G-XXXXXXX`), o `null` si no está configurado. */
+export const GA_MEASUREMENT_ID = resolveOptionalId(
+  "NEXT_PUBLIC_GA_ID",
+  /^G-[A-Z0-9]{4,}$/,
+  "G-ABC1234567",
+);
+
+/** Id del píxel de Meta (15-16 dígitos), o `null` si no está configurado. */
+export const META_PIXEL_ID = resolveOptionalId(
+  "NEXT_PUBLIC_META_PIXEL_ID",
+  /^\d{15,16}$/,
+  "123456789012345",
+);
+
+/**
+ * La analítica solo se monta en producción y solo si hay algo que medir: en
+ * desarrollo no se ensucia la propiedad de GA con navegación de trabajo.
+ */
+export const ANALYTICS_ENABLED =
+  process.env.NODE_ENV === "production" && (GA_MEASUREMENT_ID !== null || META_PIXEL_ID !== null);

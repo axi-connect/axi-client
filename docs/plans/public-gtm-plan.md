@@ -567,14 +567,36 @@ Móvil: la tabla se convierte en 3 tarjetas apiladas por columna,
 
 ---
 
-## F9 — SEO, QA y documentación
+## F9 — SEO, QA y documentación — ✅ **COMPLETADA (agosto 2026)**
 
-**SEO**
-- **`src/app/robots.ts`** — permitir todo salvo `/platform`, `/workspace`, `/admin`, `/settings`, `/auth`, `/api`; apuntar al sitemap. Hoy **no existe**.
-- **`src/app/sitemap.ts`** — `/`, `/productos`, `/soluciones`, `/contacto`, `/marketplace`, `/legal/*`. Hoy **no existe**.
-- `alternates.canonical` en cada página pública; `metadata` propio en `/marketplace`, `/auth/login` (+ `robots: noindex`) y `/auth/logout`.
-- **JSON-LD**: `Organization` en el layout público y `FAQPage` sobre las 8 preguntas de `LandingFaq` — es la sección que más rinde en resultados enriquecidos y ya está construida.
-- `next.config.ts`: `images.formats: ["image/avif", "image/webp"]` y `minimumCacheTTL`. La landing sirve fotos de Cloudinary sin ninguna de las dos.
+> Ejecutada y ampliada. El detalle vive en **`docs/plans/seo-plan.md`**; aquí queda el
+> resumen y las desviaciones respecto de lo que esta fase preveía.
+
+**SEO — hecho**
+- ✅ **`src/app/robots.ts`** y **`src/app/sitemap.ts`**, este último derivado de
+  `INDEXABLE_ROUTES` (`core/seo/routes.ts`) para que añadir una página no exija tocarlo.
+- ✅ `alternates.canonical` en todas las públicas vía `pageMetadata()` (`core/seo/metadata.ts`),
+  `metadata` propio en `/marketplace` y `noindex` en `/auth/*` (desde su layout: `/auth/logout`
+  es `"use client"` y no puede exportar `metadata`).
+- ✅ **JSON-LD**: `Organization` + `WebSite` + `FAQPage` en la home, `SoftwareApplication` con
+  las ofertas reales + `FAQPage` + migas en `/precios`, `ContactPage` en `/contacto`, migas en
+  el resto. **No** en el layout público: es `"use client"` y el JSON acabaría en el bundle.
+- ✅ `next.config.ts`: `images.formats` ya estaba; se añadió `minimumCacheTTL`.
+
+**Tres cosas que esta fase no había detectado, y eran las importantes**
+1. **`metadataBase` apuntaba a `localhost:3001` en producción.** `NEXT_PUBLIC_APP_URL` no
+   estaba declarada en el `Dockerfile` ni en el workflow, así que el fallback ganaba siempre.
+   Todos los `canonical` que esta fase pedía escribir habrían apuntado a localhost.
+2. **El middleware devolvía 307 al login en las rutas de metadata.** `/opengraph-image.png`,
+   `/icon.svg` y `/apple-icon.png` no estaban en `PUBLIC_PATHS`: la imagen de enlace existía en
+   el repo y **ningún scraper podía verla**. `/robots.txt` y `/sitemap.xml` habrían caído igual.
+3. **Cinco páginas sin `<h1>`** (`/precios`, `/casos`, `/integraciones`, `/productos`,
+   `/soluciones`), porque `SectionHeading` emitía `<h2>` sin excepción, y **ningún `<main>`** en
+   toda la capa pública.
+
+**Fuera del alcance original, añadido:** analítica GA4 + píxel de Meta con consentimiento
+(`core/analytics/`), Open Graph y Twitter Card por página, y Nexa convertida a WOFF2
+(287 KB → 102 KB, −64 %, y es la fuente del `<h1>`).
 
 **QA (recorrido completo, light + dark + móvil)**
 - Cada ruta del mapa, **en ventana privada sin cookies**: ninguna debe rebotar a `/auth/login`.

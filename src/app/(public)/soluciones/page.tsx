@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
+
 import { PageOutline, type OutlineSection } from "@/modules/landing/ui/components/PageOutline";
 
 /**
@@ -11,12 +15,12 @@ import { PageOutline, type OutlineSection } from "@/modules/landing/ui/component
  * Las anclas de abajo YA están enlazadas desde el dropdown del navbar: si se
  * renombra una, hay que actualizar `SiteHeader.tsx` en el mismo commit.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Soluciones",
   description:
     "Califica leads, cierra ventas dentro del chat, retén clientes y programa citas sobre disponibilidad real. El mismo producto, cuatro formas de usarlo.",
-  alternates: { canonical: "/soluciones" },
-};
+  path: "/soluciones",
+});
 
 const SECTIONS: readonly OutlineSection[] = [
   {
@@ -47,12 +51,15 @@ const SECTIONS: readonly OutlineSection[] = [
 
 export default function SolucionesPage() {
   return (
-    <PageOutline
+    <>
+      <JsonLd data={breadcrumbSchema(["/soluciones"])} />
+      <PageOutline
       kicker="Cuatro trabajos, un solo producto"
       title="Lo que Axi hace por ti, según lo que necesites resolver"
       intro="No hay desarrollo a medida: un restaurante, una tienda de ropa y un estudio de grabación usan el mismo software con configuración distinta."
       sections={SECTIONS}
       footerNote="En la demo lo vemos con tu tipo de negocio y estimamos contigo el volumen que manejas."
-    />
+      />
+    </>
   );
 }

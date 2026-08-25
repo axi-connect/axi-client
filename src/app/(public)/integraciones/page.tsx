@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -34,12 +38,12 @@ import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
  * y WhatsApp Web es un canal *best effort*. Decirlo aquí cuesta menos que
  * decirlo en la demo.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Integraciones",
   description:
     "WhatsApp (tu número actual o la API oficial), Instagram, Messenger, Shopify y los medios de pago que usa Colombia. Conecta lo que ya tienes y empieza a vender el mismo día.",
-  alternates: { canonical: "/integraciones" },
-};
+  path: "/integraciones",
+});
 
 type IntegrationStatus = "probado" | "pendiente" | "best-effort";
 
@@ -236,8 +240,10 @@ function IntegrationBlock({ item, index }: { item: Integration; index: number })
 export default function IntegracionesPage() {
   return (
     <div className="w-full">
+      <JsonLd data={breadcrumbSchema(["/integraciones"])} />
       <section className="mx-auto w-full max-w-[1100px] px-6 pt-32 pb-14 sm:pt-40">
         <SectionHeading
+          as="h1"
           kicker="Conecta lo que ya tienes"
           title="Tu WhatsApp de hoy, funcionando esta semana"
           intro="No hay que montar un canal nuevo ni pedirle permiso a nadie para empezar. Conectas el número que ya usas, cargas tu catálogo y el agente empieza a atender. Cuando el volumen lo justifique, formalizas con la API oficial de Meta sin rehacer nada."

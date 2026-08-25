@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { http } from "@/core/services/http";
@@ -21,6 +22,15 @@ import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCou
  * `AppSidebar` cae entonces a su fetch cliente y a su estado de error con
  * reintento.
  */
+/**
+ * El panel nunca debe aparecer en un buscador. El middleware ya lo protege, así
+ * que esto es defensa en profundidad: cubre el caso de una ruta privada nueva
+ * que se olvide de registrar, y las URLs que puedan filtrarse por referrer.
+ */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
+
 async function prefetchNavigation() {
   try {
     const navigation = await http.get<Schemas["NavigationDto"]>("/me/navigation");

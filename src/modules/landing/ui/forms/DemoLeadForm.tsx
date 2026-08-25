@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle } from "lucide-react";
 
 import { salesWhatsAppUrl } from "@/core/config/env";
+import { track } from "@/core/analytics/track";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -61,6 +62,10 @@ export function DemoLeadForm() {
       whatsapp: values.whatsapp,
       volumeLabel: monthlyConversationLabel(values.monthly_conversations),
     });
+    // Única instrumentación explícita del sitio: la delegación de clics de
+    // `core/analytics/outbound.ts` cubre los enlaces `wa.me`, pero esto es un
+    // `window.open`, no un clic sobre un `<a>`, así que no lo ve.
+    track({ name: "demo_form_submit", params: { volume: values.monthly_conversations } });
     window.open(salesWhatsAppUrl(waText), "_blank", "noopener");
     setSubmitted(true);
     requestAnimationFrame(() => successRef.current?.focus());

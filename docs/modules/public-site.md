@@ -82,6 +82,14 @@ El hero del marketplace vive aparte: `src/shared/components/layout/marketplace-h
 - Design system: shadcn/ui new-york (`src/shared/components/ui/`) + Tailwind v4 CSS-first — tokens semánticos de `src/app/globals.css` (`bg-background`, `text-brand`…), nunca hex sueltos; light/dark obligatorio; iconos lucide.
 - Fuentes: **Nexa** (headings) + **Poppins** (cuerpo). framer-motion con tipos ambient (no importar tipos del paquete).
 - Formularios → reutilizar `DynamicForm` (`src/shared/components/features/dynamic-form/`); datos → `http` (`src/core/services/http.ts`) vía BFF `/api/proxy`; backend en `../axi-server`.
+- **SEO (obligatorio, ver `docs/plans/seo-plan.md`)**: alta en `PUBLIC_PATHS`
+  (`core/config/routes.ts`) **y** en `INDEXABLE_ROUTES` (`core/seo/routes.ts`, de donde sale
+  el sitemap entero); `export const metadata = pageMetadata({ title, description, path })`
+  (`core/seo/metadata.ts`), que compone canonical, Open Graph y Twitter Card de una vez; y un
+  `<h1>` único — con `SectionHeading`, `as="h1"` en la primera cabecera, porque su default es
+  `h2` (en la home el `h1` lo pone `LandingHero`).
+- **Analítica**: no hay que instrumentar los CTA. `core/analytics/outbound.ts` captura por
+  delegación cualquier enlace `wa.me` o ancla `#demo` que se añada.
 
 ### 4.1 Mantenimiento del Programa Fundadores (§9 Planes)
 
@@ -135,16 +143,21 @@ botón primario, `lang="en"`→`"es"`, las animaciones ausentes de Radix
   siendo un `setTimeout` — **ningún lead se persiste**. La conversión real es el WhatsApp
   que abre el submit. Contrato del endpoint pendiente en el plan §Requerimiento para
   axi-server; cuando exista, el cambio es una línea en ese adapter.
-- **F5–F9**: `/soluciones` y `/productos` definitivas, comparativa y barra CTA móvil en la
-  home, marketplace con badge "Pronto", y SEO (`robots.ts`, `sitemap.ts`, JSON-LD) + QA.
-  Cada una con su propio plan.
+- **F5–F8**: `/soluciones` y `/productos` definitivas, comparativa y barra CTA móvil en la
+  home, y marketplace con badge "Pronto". Cada una con su propio plan.
+  **F9 (SEO) está cerrada** — ver `docs/plans/seo-plan.md`. Nota: `/productos` y
+  `/soluciones` ya se indexan aunque sigan siendo andamios, así que rellenarlas dejó de ser
+  solo cosmética: hoy son contenido fino publicado.
 - **Revisión legal** de `/legal/terminos` y `/legal/privacidad`.
 - **Datos de negocio pendientes**: Kodecol (URL, claim, logo, redes) en
   `kodecol.content.ts`; correo comercial en `CONTACT` (`landing.content.ts`); redes de Axi
   en `SITE_SOCIALS` (vacío a propósito: iconos con `href="#"` son peor que ninguno).
+  Consecuencia añadida: el `Organization` del JSON-LD **omite `sameAs`** mientras siga vacío,
+  porque declarar los perfiles de Kodecol como si fueran de axi sería falso.
 - **Recuperación de contraseña**: `docs/architecture.md` §6 promete
   `/auth/forgot-password` y `/auth/reset-password` y no existen.
 - **Deuda de la home** (intacta por decisión): formulario sobre glass encima de canvas
   WebGL, `blur-2xl` de 640px en el hero (riesgo de LCP), h1 a 24px en móvil, y prueba
   social publicando el badge "CIFRA PENDIENTE" con 2 de 3 logos vacíos. Listado completo
-  en el plan §F9.
+  en el plan §F9. De esa lista **ya no cuenta la tipografía**: Nexa pasó de TTF a WOFF2
+  (287 KB → 102 KB) y Poppins bajó de cinco pesos a cuatro.

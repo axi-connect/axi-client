@@ -484,6 +484,10 @@ NEXT_PUBLIC_WS_BASE_URL=http://localhost:3000    # WebSocket (namespaces /inbox 
 NEXT_PUBLIC_SALES_WHATSAPP=573224970950          # WhatsApp comercial de axi. OBLIGATORIA: sin ella el build
                                                  #   aborta (§13.1). Dígitos con indicativo; un celular
                                                  #   colombiano sin indicativo se completa solo
+NEXT_PUBLIC_APP_URL=http://localhost:3001        # Origen público del sitio. OBLIGATORIA: sin ella el build
+                                                 #   aborta (§13.2). En producción https://axi-connect.co
+NEXT_PUBLIC_GA_ID=                               # GA4 (G-XXXXXXX). OPCIONAL: si falta, no hay analítica
+NEXT_PUBLIC_META_PIXEL_ID=                       # Píxel de Meta. OPCIONAL, mismo criterio
 ```
 
 **§13.1 — El WhatsApp comercial tiene un único punto de definición.** `core/config/env.ts` expone `SALES_WHATSAPP` (normalizado), `salesWhatsAppUrl(message?)` y `formatSalesWhatsApp()`; **nadie más construye un `wa.me` ni escribe el número**. De ahí cuelgan los seis puntos donde aparece: hero y CTA final de la landing, enlace y texto de `/contacto`, `TrialCountdownBanner`, `CompanySuspendedScreen` y el `PrerequisitesChecklist` de canales.
@@ -493,6 +497,24 @@ Se resuelve en carga del módulo y **lanza si la variable falta**, en vez de deg
 - El `Dockerfile` declara su `ARG`/`ENV` y `.github/workflows/deploy.yml` pasa el build arg (con default sobreescribible por una Variable del repositorio). Si se añade otro pipeline, tiene que pasarla.
 - `jest.env.ts` (en `setupFiles`, antes que `setupFilesAfterEnv`) la fija para la suite: `env.ts` entra transitivamente por `core/services/http.ts` en casi cualquier test.
 - La normalización acepta `+`, espacios, guiones y paréntesis, y aplica la regla Colombia-first de `axi-server/src/core/system/kernel/phone.ts` (10 dígitos que empiezan por `3` ⇒ se antepone `57`).
+
+**§13.2 — El origen público del sitio y la analítica.** `core/config/env.ts` expone también `SITE_URL` (origen normalizado, sin barra final) y `siteUrl(path)`; **nadie más escribe el dominio**. De ahí cuelgan `metadataBase`, los `canonical` de las doce rutas públicas, las URLs absolutas de Open Graph, `sitemap.xml`, `robots.txt` y los `@id` del JSON-LD.
+
+La política de fallo es distinta según la variable, y es deliberada:
+
+| Variable | Ausente | Mal formada |
+|---|---|---|
+| `NEXT_PUBLIC_APP_URL` | **aborta el build** | **aborta el build** |
+| `NEXT_PUBLIC_GA_ID` | degrada a `null` | **aborta el build** |
+| `NEXT_PUBLIC_META_PIXEL_ID` | degrada a `null` | **aborta el build** |
+
+`APP_URL` aborta porque su ausencia no produce ningún error: el sitio se despliega declarando que su contenido canónico vive en `localhost`, y nadie se entera. Fue el estado real del repositorio hasta agosto de 2026. Los ids de analítica degradan porque un desarrollador que solo quiere levantar la landing no puede quedarse sin build por no tener una propiedad de GA — pero un id **con un typo** sí aborta, porque aparenta estar configurado y no mide nada.
+
+Como con `SALES_WHATSAPP`: el `Dockerfile` declara sus `ARG`/`ENV` y `.github/workflows/deploy.yml` pasa los build args; `jest.env.ts` fija `APP_URL` para la suite.
+
+**Regla para toda página pública nueva.** Además del alta en `PUBLIC_PATHS` (§8), necesita: `metadata` propia vía `pageMetadata()` (`core/seo/metadata.ts`, que compone título, descripción, `canonical`, Open Graph y Twitter Card de una vez), una entrada en `INDEXABLE_ROUTES` (`core/seo/routes.ts`, de donde se deriva el sitemap entero) y un `<h1>` único. Las rutas que redirigen (308 en `next.config.ts`) **no** se listan como indexables: una URL que redirige no es canónica.
+
+**Analítica.** `core/analytics/` (transversal; no confundir con `modules/analytics/`, que es el módulo de producto del panel). Se monta **solo** en `app/(public)/layout.tsx`: el layout raíz también envuelve `(private)` y `/platform`, y montarla ahí enviaría a Google y a Meta las rutas de las conversaciones de los clientes. Los CTA se instrumentan por **delegación de eventos** (`core/analytics/outbound.ts`), no con `onClick`, para no convertir en componentes de cliente los Server Components que enlazan a `wa.me`. `track()` es la única salida; el píxel de Meta no carga sin consentimiento explícito.
 
 Registrar el origin del frontend (p.ej. `http://localhost:3001`) en `CORS_ORIGINS` del backend.
 

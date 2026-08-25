@@ -83,9 +83,15 @@ const nextConfig: NextConfig = {
    * el SDK carga sin tocar nada. Cuando se añada, estos tres dominios son los que
    * el flujo necesita, y omitir cualquiera lo rompe:
    *
-   *   script-src  'self' https://connect.facebook.net
+   *   script-src  'self' https://connect.facebook.net https://www.googletagmanager.com
    *   frame-src   'self' https://web.facebook.com https://www.facebook.com
    *   connect-src 'self' https://graph.facebook.com https://www.facebook.com
+   *               https://www.google-analytics.com https://*.analytics.google.com
+   *   img-src     'self' data: https://www.facebook.com https://www.google-analytics.com
+   *
+   * Los dominios de Google Tag Manager y de Analytics son de la capa de
+   * analítica (`core/analytics/`), añadida con el SEO: omitirlos dejaría el
+   * sitio sin medición y sin ningún error visible.
    */
   async headers() {
     return [
@@ -108,6 +114,12 @@ const nextConfig: NextConfig = {
     // Formatos modernos: la capa pública sirve fotos de producto y de clientes
     // desde Cloudinary; sin esto Next las entrega en el formato original.
     formats: ["image/avif", "image/webp"],
+    // 31 días. El default de Next son 60 segundos, así que cada imagen se
+    // reoptimizaba constantemente: coste de CPU en el servidor y, sobre todo,
+    // una descarga nueva para el visitante que vuelve. Las fotos de producto y
+    // de casos cambian de URL cuando cambian (Cloudinary versiona el path), así
+    // que cachearlas largo no puede servir una imagen obsoleta.
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       { protocol: "https", hostname: "pps.whatsapp.net" }, // avatares de WhatsApp
       { protocol: "https", hostname: "res.cloudinary.com" }, // assets de marca

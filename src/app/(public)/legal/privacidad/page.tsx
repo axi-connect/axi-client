@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema } from "@/core/seo/site";
+
 import {
   LegalDocument,
   type LegalSection,
@@ -17,12 +21,12 @@ import {
  *
  * Los datos de retención salen de `docs/business/knowledge-base.md` §15.5.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Política de privacidad",
   description:
     "Cómo Axi Connect trata los datos personales: qué recogemos, para qué, cuánto tiempo los conservamos y cómo ejercer tus derechos.",
-  alternates: { canonical: "/legal/privacidad" },
-};
+  path: "/legal/privacidad",
+});
 
 const SECTIONS: readonly LegalSection[] = [
   {
@@ -94,11 +98,14 @@ const SECTIONS: readonly LegalSection[] = [
 
 export default function PrivacidadPage() {
   return (
-    <LegalDocument
-      title="Política de privacidad"
-      updatedAt="3 de agosto de 2026"
-      intro="Este documento explica qué datos personales recogemos, con qué finalidad, cuánto tiempo los conservamos y cómo puedes ejercer tus derechos sobre ellos."
-      sections={SECTIONS}
-    />
+    <>
+      <JsonLd data={breadcrumbSchema(["/legal/privacidad"])} />
+      <LegalDocument
+        title="Política de privacidad"
+        updatedAt="3 de agosto de 2026"
+        intro="Este documento explica qué datos personales recogemos, con qué finalidad, cuánto tiempo los conservamos y cómo puedes ejercer tus derechos sobre ellos."
+        sections={SECTIONS}
+      />
+    </>
   );
 }

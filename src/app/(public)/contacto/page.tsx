@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+
+import { pageMetadata } from "@/core/seo/metadata";
+import { JsonLd } from "@/core/seo/json-ld";
+import { breadcrumbSchema, contactPageSchema } from "@/core/seo/site";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 
@@ -27,16 +31,19 @@ import {
  * pendiente está en `docs/plans/public-gtm-plan.md` §Requerimiento para
  * axi-server.
  */
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Agenda tu demo",
   description:
     "30 minutos con un negocio como el tuyo: te mostramos una venta completa, del «hola» al pago verificado, y el embudo que dice cuánto produjo.",
-  alternates: { canonical: "/contacto" },
-};
+  path: "/contacto",
+  ogTitle: "Agenda tu demo de Axi Connect",
+});
 
 export default function ContactoPage() {
   return (
     <div className="w-full">
+      <JsonLd data={contactPageSchema()} />
+      <JsonLd data={breadcrumbSchema(["/contacto"])} />
       <section className="mx-auto w-full max-w-[1100px] px-6 pt-32 pb-20 sm:pt-40">
         <div className="max-w-3xl">
           <h1 className="font-heading text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">

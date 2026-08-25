@@ -29,6 +29,18 @@ export const PUBLIC_PATHS = [
   "/fonts",
   "/images",
   "/platform",
+  // Rutas de primer nivel que genera Next para SEO y metadata. NO son
+  // opcionales: el matcher del middleware solo exime `favicon.ico` de este
+  // grupo, así que sin registrarlas aquí Googlebot y los scrapers de enlaces
+  // (WhatsApp, LinkedIn, X, Facebook) reciben un 307 al login en vez del
+  // archivo. Era el estado real de `/opengraph-image.png` en producción: la
+  // imagen existía en el repo y no llegaba a ningún preview.
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.webmanifest",
+  "/opengraph-image.png",
+  "/icon.svg",
+  "/apple-icon.png",
 ];
 
 export function isPublicPath(pathname: string) {

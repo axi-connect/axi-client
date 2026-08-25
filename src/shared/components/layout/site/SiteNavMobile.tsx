@@ -130,7 +130,10 @@ export function SiteNavMobile({
           </SheetClose>
         </div>
 
-        <div className="sidebar-scroll flex-1 overflow-y-auto px-4 py-3">
+        {/* `nav` y no `div`: es la navegación primaria en móvil, y sin el
+            landmark el lector de pantalla no puede saltar a ella. El desktop ya
+            lo tiene vía Radix NavigationMenu, que renderiza su propio `nav`. */}
+        <nav aria-label="Principal" className="sidebar-scroll flex-1 overflow-y-auto px-4 py-3">
           <Accordion type="single" collapsible>
             {megaItems.map((item) => (
               <AccordionItem key={item.name} value={item.name}>
@@ -177,7 +180,7 @@ export function SiteNavMobile({
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
 
         <div className="border-border/60 flex flex-col gap-3 border-t p-4">
           <div className="flex justify-center pb-1">

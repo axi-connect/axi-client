@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import LoginForm from "./form"
 import Image from 'next/image';
 import { Suspense } from 'react';
@@ -11,7 +12,7 @@ export default function LoginPage() {
         <Image src={logo} width={200} height={0} className="mx-auto" style={{ width: '200px', height: '182px' }} alt="Axi" />
         <div className="space-y-2">
           <h3 className="text-2xl font-bold sm:text-3xl">Inicia sesión en tu cuenta</h3>
-          <p className="text-sm text-muted-foreground">¿No tienes cuenta? <a href="#" className="font-medium text-brand">Contáctanos</a></p>
+          <p className="text-sm text-muted-foreground">¿No tienes cuenta? <Link href="/contacto" className="font-medium text-brand">Contáctanos</Link></p>
         </div>
       </div>
 
