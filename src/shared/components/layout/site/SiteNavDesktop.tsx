@@ -180,10 +180,27 @@ function MegaPanel({ item }: { item: Extract<SiteNavItem, { kind: "mega" }> }) {
   );
 }
 
-export function SiteNavDesktop() {
+/**
+ * Cáscara del menú: es el `Root` de Radix y el ancla del panel.
+ *
+ * Envuelve a la barra en lugar de vivir dentro de ella, y esa inversión es un
+ * REQUISITO, no una preferencia de estilo: la barra lleva `.glass`, y un
+ * elemento con `backdrop-filter` crea un *backdrop root* que deja a sus
+ * descendientes sin nada que difuminar. Con el panel dentro de la barra, su
+ * cristal se veía completamente transparente. Como hermano, difumina la página.
+ */
+export function SiteNavShell({ children }: { children: React.ReactNode }) {
   return (
-    <NavigationMenu className="hidden lg:flex" aria-label="Principal">
-      <NavigationMenuList>
+    <NavigationMenu aria-label="Principal" className="block w-full">
+      {children}
+    </NavigationMenu>
+  );
+}
+
+/** Los disparadores. Van dentro de la barra; el panel lo monta la cáscara. */
+export function SiteNavList() {
+  return (
+    <NavigationMenuList className="hidden lg:flex">
         {SITE_NAV.map((item) =>
           item.kind === "mega" ? (
             <NavigationMenuItem key={item.name}>
@@ -209,7 +226,6 @@ export function SiteNavDesktop() {
             </NavigationMenuItem>
           ),
         )}
-      </NavigationMenuList>
-    </NavigationMenu>
+    </NavigationMenuList>
   );
 }

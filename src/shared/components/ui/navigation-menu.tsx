@@ -19,6 +19,19 @@ import { cn } from "@/core/lib/utils";
  *
  * No lleva z-index propio: vive dentro del `SiteHeader`, que ya establece su
  * capa (DESIGN-SYSTEM §4.4 prohíbe z-index sueltos en componentes).
+ *
+ * ⚠️ **REGLA DE MONTAJE, no es opcional.** El panel (`NavigationMenuViewport`)
+ * NO puede ser descendiente de un elemento con `backdrop-filter`, `filter`,
+ * `opacity < 1`, `transform` o `will-change`: cualquiera de esos crea un
+ * *backdrop root*, y a partir de ahí el panel solo puede difuminar lo que se
+ * pinte **dentro** de ese ancestro — que detrás del panel es nada. El síntoma es
+ * exacto y desconcertante: el cristal del panel se ve completamente
+ * transparente, con la página legible detrás y sin una pizca de blur, mientras
+ * el mismo `backdrop-filter` funciona en la barra de arriba.
+ *
+ * Por eso el `Root` va **por fuera** de la barra con `.glass` y el panel queda
+ * como HERMANO de esa barra, no como su hijo (ver `SiteHeader`). El `Root` es un
+ * div sin material a propósito: si se le pone glass, rompe a sus propios hijos.
  */
 
 function NavigationMenu({
@@ -34,7 +47,9 @@ function NavigationMenu({
     <NavigationMenuPrimitive.Root
       data-slot="navigation-menu"
       data-viewport={viewport}
-      className={cn("group/navigation-menu flex max-w-max flex-1 items-center justify-center", className)}
+      // `relative`: es el ancla del panel absoluto. Sin material propio (ver la
+      // regla de montaje de arriba).
+      className={cn("group/navigation-menu relative", className)}
       {...props}
     >
       {children}
@@ -120,7 +135,13 @@ function NavigationMenuViewport({
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
   return (
-    <div className="absolute top-full left-0 isolate flex w-full justify-center">
+    // OJO: aquí NO va `isolate`. `isolation: isolate` está en la lista de
+    // propiedades que crean un *backdrop root* (igual que `filter` u `opacity`),
+    // así que con él el panel se queda otra vez sin nada que difuminar. Era la
+    // segunda causa del cristal transparente, y venía de la plantilla original.
+    // El apilamiento lo da el orden del DOM: el panel se pinta después que la
+    // barra.
+    <div className="absolute top-full left-0 flex w-full justify-center">
       <NavigationMenuPrimitive.Viewport
         data-slot="navigation-menu-viewport"
         className={cn(

@@ -39,7 +39,7 @@ export function BrandCard({
         "group border-border relative isolate z-0 flex h-full flex-col justify-between gap-2.5 overflow-hidden rounded-xl border px-5 py-4",
         "hover:border-brand/35 transition-colors duration-200",
         surface === "glass"
-          ? "bg-background/45 hover:bg-background/60"
+          ? "bg-background/55 hover:bg-background/70"
           : "bg-card",
         className,
       )}

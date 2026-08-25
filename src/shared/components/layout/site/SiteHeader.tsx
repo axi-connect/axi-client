@@ -10,7 +10,7 @@ import { useAuthContext } from '@/core/providers/auth-provider';
 import { useSplashOptional } from '@/core/providers/splash-provider';
 import { ThemeToggle } from '@/shared/components/layout/theme-toggle';
 import { BrandMark } from '@/shared/components/ui/brand-mark';
-import { SiteNavDesktop } from '@/shared/components/layout/site/SiteNavDesktop';
+import { SiteNavList, SiteNavShell } from '@/shared/components/layout/site/SiteNavDesktop';
 import { SiteNavMobile } from '@/shared/components/layout/site/SiteNavMobile';
 import {
     SITE_NAV_CTA,
@@ -69,73 +69,83 @@ export default function SiteHeader({
     };
 
     return (
-        <motion.header
-            initial="initial"
-            variants={headerVariants}
-            animate={isScrolled ? 'scrolled' : 'animate'}
-            transition={fade.slow}
-            // El borde de 1px existe SIEMPRE (transparente en reposo): togglear
-            // `.glass` a secas hacía saltar border-width 0→1px y `transition-all`
-            // interpolaba el border-color desde el gris por defecto — el "flash"
-            // de borde iluminado al cambiar de estado. Solo transicionan las
-            // propiedades del material (fondo, borde, sombra, blur).
-            className={`fixed top-0 right-0 left-0 z-50 border border-transparent transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${
-                isScrolled
-                    ? 'glass'
-                    : 'bg-transparent shadow-none [-webkit-backdrop-filter:saturate(100%)_blur(0px)] [backdrop-filter:saturate(100%)_blur(0px)]'
-            }`}
-        >
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
-                    <motion.div
-                        className="flex items-center space-x-2"
-                        whileHover={{ scale: 1.05 }}
-                        transition={spring.snappy}
-                    >
-                        {/* BrandMark (SVG inline) en lugar de <Image> remota: el
-                            isotipo se servía desde Cloudinary — request externo en
-                            el critical path del LCP — y el PNG local pesa 423 KB
-                            para renderizar 32px. */}
-                        <Link prefetch={false} href="/" className="flex items-center space-x-2">
-                            <BrandMark className="size-8" />
-                            <span className="text-brand-gradient font-heading bg-clip-text text-xl font-bold text-transparent">
-                                axi connect
-                            </span>
-                        </Link>
-                    </motion.div>
-
-                    <SiteNavDesktop />
-
-                    <div className="hidden items-center gap-4 lg:flex">
-                        <ThemeToggle />
-                        <Link
-                            prefetch={false}
-                            href={session.href}
-                            className="text-foreground hover:text-brand font-medium transition-colors duration-200"
-                        >
-                            {session.text}
-                        </Link>
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Link
-                                prefetch={false}
-                                href={ctaHref}
-                                className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-6 py-2.5 font-medium transition-all duration-200 hover:brightness-110"
-                                onClick={onCtaClick}
+        // El `<header>` es un contenedor PELADO: sin material, sin transform y
+        // sin opacidad. Es la condición para que el panel del mega-menú pueda
+        // difuminar la página (ver la regla de montaje en `navigation-menu.tsx`):
+        // cualquiera de esas tres propiedades aquí crearía un backdrop root y
+        // dejaría al panel sin nada que difuminar.
+        <header className="fixed top-0 right-0 left-0 z-50">
+            <SiteNavShell>
+                {/* La barra: aquí sí vive el cristal, y aquí sí anima.
+                    El borde de 1px existe SIEMPRE (transparente en reposo):
+                    togglear `.glass` a secas hacía saltar border-width 0→1px y
+                    `transition-all` interpolaba el border-color desde el gris por
+                    defecto — el "flash" de borde iluminado al cambiar de estado.
+                    Solo transicionan las propiedades del material. */}
+                <motion.div
+                    initial="initial"
+                    variants={headerVariants}
+                    animate={isScrolled ? 'scrolled' : 'animate'}
+                    transition={fade.slow}
+                    className={`border border-transparent transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${
+                        isScrolled
+                            ? 'glass'
+                            : 'bg-transparent shadow-none [-webkit-backdrop-filter:saturate(100%)_blur(0px)] [backdrop-filter:saturate(100%)_blur(0px)]'
+                    }`}
+                >
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="flex h-16 items-center justify-between gap-4 lg:h-20">
+                            <motion.div
+                                className="flex items-center space-x-2"
+                                whileHover={{ scale: 1.05 }}
+                                transition={spring.snappy}
                             >
-                                <span>{ctaLabel}</span>
-                                <ArrowRight aria-hidden="true" className="h-4 w-4" />
-                            </Link>
-                        </motion.div>
-                    </div>
+                                {/* BrandMark (SVG inline) en lugar de <Image> remota: el
+                                    isotipo se servía desde Cloudinary — request externo en
+                                    el critical path del LCP — y el PNG local pesa 423 KB
+                                    para renderizar 32px. */}
+                                <Link prefetch={false} href="/" className="flex items-center space-x-2">
+                                    <BrandMark className="size-8" />
+                                    <span className="text-brand-gradient font-heading bg-clip-text text-xl font-bold text-transparent">
+                                        axi connect
+                                    </span>
+                                </Link>
+                            </motion.div>
 
-                    <SiteNavMobile
-                        session={session}
-                        ctaHref={ctaHref}
-                        ctaLabel={ctaLabel}
-                        onCtaClick={onCtaClick}
-                    />
-                </div>
-            </div>
-        </motion.header>
+                            <SiteNavList />
+
+                            <div className="hidden items-center gap-4 lg:flex">
+                                <ThemeToggle />
+                                <Link
+                                    prefetch={false}
+                                    href={session.href}
+                                    className="text-foreground hover:text-brand font-medium transition-colors duration-200"
+                                >
+                                    {session.text}
+                                </Link>
+                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                    <Link
+                                        prefetch={false}
+                                        href={ctaHref}
+                                        className="bg-brand-gradient text-primary-foreground inline-flex items-center space-x-2 rounded-full px-6 py-2.5 font-medium transition-all duration-200 hover:brightness-110"
+                                        onClick={onCtaClick}
+                                    >
+                                        <span>{ctaLabel}</span>
+                                        <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                                    </Link>
+                                </motion.div>
+                            </div>
+
+                            <SiteNavMobile
+                                session={session}
+                                ctaHref={ctaHref}
+                                ctaLabel={ctaLabel}
+                                onCtaClick={onCtaClick}
+                            />
+                        </div>
+                    </div>
+                </motion.div>
+            </SiteNavShell>
+        </header>
     );
 }

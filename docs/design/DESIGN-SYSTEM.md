@@ -218,8 +218,8 @@ En Tailwind v4 las clases se extraen estáticamente del fuente: usar `z-[70]` li
   box-shadow: var(--shadow-overlay);
 }
 .glass-menu { /* mega-menú público: panel grande con tarjetas dentro */
-  background-color: color-mix(in srgb, var(--color-background) 72%, transparent);
-  backdrop-filter: saturate(180%) blur(28px);
+  background-color: color-mix(in srgb, var(--color-background) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(32px);
   box-shadow: var(--shadow-overlay);
 }
 @supports not (backdrop-filter: blur(1px)) {
@@ -235,13 +235,13 @@ dentro:
 | Receta | Fondo · blur | Para |
 |---|---|---|
 | `.glass` | 65 % · 16px | Barras y flotantes pequeños: header, sidebar, popovers, tooltips |
-| `.glass-menu` | 72 % · 28px | Mega-menú del sitio público: panel ancho con tarjetas propias dentro |
+| `.glass-menu` | 82 % · 32px | Mega-menú del sitio público: panel ancho con tarjetas propias dentro |
 | `.glass-overlay` | 80 % · 20px | Modales y sheets: texto denso, y el scrim ya separa del fondo |
 
 Corolario para el contenido que va **dentro** de una superficie de cristal: sus
 tarjetas y filas no pueden ser opacas, o tapan el blur y el panel se lee como
 una caja sólida. Para eso están la variante `surface="glass"` de `BrandCard`
-(fondo al 45 %) y `.brand-sheen`, que aporta el halo de marca **sin** su propio
+(fondo al 55 %) y `.brand-sheen`, que aporta el halo de marca **sin** su propio
 suelo — mismas coordenadas que `.bg-brand-ambient`, para que el ambiente de la
 marca no se bifurque.
 

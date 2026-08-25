@@ -371,10 +371,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
  * perder legibilidad.
  */
 .glass-menu {
-  background-color: color-mix(in srgb, var(--color-background) 72%, transparent);
-  -webkit-backdrop-filter: saturate(180%) blur(28px);
-  backdrop-filter: saturate(180%) blur(28px);
-  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  background-color: color-mix(in srgb, var(--color-background) 82%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(32px);
+  backdrop-filter: saturate(180%) blur(32px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
   box-shadow: var(--shadow-overlay);
 }
 
