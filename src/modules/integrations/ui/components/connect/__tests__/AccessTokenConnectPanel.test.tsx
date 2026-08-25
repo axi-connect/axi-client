@@ -7,20 +7,30 @@ import {
 } from "@/modules/integrations/domain/integration-providers";
 
 const mockConnectIntegration = jest.fn();
-jest.mock("@/modules/integrations/infrastructure/services/integrations-service.adapter", () => ({
-  connectIntegration: (...args: unknown[]) => mockConnectIntegration(...args),
-}));
+jest.mock(
+  "@/modules/integrations/infrastructure/services/integrations-service.adapter",
+  () => ({
+    connectIntegration: (...args: unknown[]) => mockConnectIntegration(...args),
+  }),
+);
 
 const mockUpsertIntegration = jest.fn();
-jest.mock("@/modules/integrations/infrastructure/stores/integrations.store", () => ({
-  useIntegrationsStore: (
-    selector: (state: { upsertIntegration: typeof mockUpsertIntegration }) => unknown,
-  ) => selector({ upsertIntegration: mockUpsertIntegration }),
-}));
+jest.mock(
+  "@/modules/integrations/infrastructure/stores/integrations.store",
+  () => ({
+    useIntegrationsStore: (
+      selector: (state: {
+        upsertIntegration: typeof mockUpsertIntegration;
+      }) => unknown,
+    ) => selector({ upsertIntegration: mockUpsertIntegration }),
+  }),
+);
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports -- el mock de arriba
+   exige require() tras jest.mock (import estático se izaría antes del mock) */
 const { AccessTokenConnectPanel } =
   require("../AccessTokenConnectPanel") as typeof import("../AccessTokenConnectPanel");
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 /**
  * F8: el formulario del paso «Conexión» se GENERA desde el descriptor, y el
@@ -57,7 +67,9 @@ describe("AccessTokenConnectPanel", () => {
     expect(token).toHaveAttribute("type", "password");
     expect(secret).toHaveAttribute("type", "password");
     expect(
-      screen.getByText("Empieza por shpat_. Shopify lo muestra UNA sola vez al instalar la app."),
+      screen.getByText(
+        "Empieza por shpat_. Shopify lo muestra UNA sola vez al instalar la app.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -97,7 +109,9 @@ describe("AccessTokenConnectPanel", () => {
   });
 
   it("muestra el motivo del backend tal cual cuando el alta falla", async () => {
-    mockConnectIntegration.mockRejectedValue(new Error("La moneda de la tienda no coincide"));
+    mockConnectIntegration.mockRejectedValue(
+      new Error("La moneda de la tienda no coincide"),
+    );
     renderShopify();
 
     fireEvent.change(screen.getByLabelText("Dominio de tu tienda"), {
@@ -111,7 +125,9 @@ describe("AccessTokenConnectPanel", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Conectar tienda" }));
 
-    expect(await screen.findByText("La moneda de la tienda no coincide")).toBeInTheDocument();
+    expect(
+      await screen.findByText("La moneda de la tienda no coincide"),
+    ).toBeInTheDocument();
   });
 
   it("una regla validate del descriptor corta ANTES de tocar la red", async () => {
@@ -122,11 +138,14 @@ describe("AccessTokenConnectPanel", () => {
         external_account_field: {
           ...shopify.connect.external_account_field,
           validate: (value) =>
-            value.endsWith(".myshopify.com") ? null : "Debe terminar en .myshopify.com",
+            value.endsWith(".myshopify.com")
+              ? null
+              : "Debe terminar en .myshopify.com",
         },
       },
     };
-    if (provider.connect.strategy !== "access_token") throw new Error("config inesperada");
+    if (provider.connect.strategy !== "access_token")
+      throw new Error("config inesperada");
 
     render(
       <AccessTokenConnectPanel
@@ -147,7 +166,9 @@ describe("AccessTokenConnectPanel", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Conectar tienda" }));
 
-    expect(await screen.findByText("Debe terminar en .myshopify.com")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Debe terminar en .myshopify.com"),
+    ).toBeInTheDocument();
     expect(mockConnectIntegration).not.toHaveBeenCalled();
   });
 });

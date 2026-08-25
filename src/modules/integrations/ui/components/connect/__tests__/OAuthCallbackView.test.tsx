@@ -6,9 +6,11 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => params,
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports -- el mock de arriba
+   exige require() tras jest.mock (import estático se izaría antes del mock) */
 const { OAuthCallbackView } =
   require("../OAuthCallbackView") as typeof import("../OAuthCallbackView");
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 /**
  * F11: el aterrizaje del alta OAuth no llama a ninguna API — cuenta el
@@ -17,7 +19,9 @@ const { OAuthCallbackView } =
  */
 describe("OAuthCallbackView", () => {
   it("con status=ok lleva al detalle de la integración creada", () => {
-    params = new URLSearchParams("provider=salesforce&status=ok&integration_id=int-9");
+    params = new URLSearchParams(
+      "provider=salesforce&status=ok&integration_id=int-9",
+    );
     render(<OAuthCallbackView />);
 
     expect(screen.getByText("Todo listo")).toBeInTheDocument();
@@ -44,6 +48,8 @@ describe("OAuthCallbackView", () => {
     render(<OAuthCallbackView />);
 
     expect(screen.getByText("La conexión no se completó")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Reintentar/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Reintentar/i }),
+    ).toBeInTheDocument();
   });
 });
