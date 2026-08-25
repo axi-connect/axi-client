@@ -44,22 +44,29 @@ function Claim({ text }: { text: string }) {
   );
 }
 
-function PanelCard({ card }: { card: SiteNavCard }) {
+function PanelCard({ card, className }: { card: SiteNavCard; className?: string }) {
   const Icon = card.icon;
   return (
-    <li>
+    <li className={className}>
       <NavigationMenuLink asChild>
         <Link href={card.href} prefetch={false} className="block h-full rounded-xl p-0">
-          <BrandCard surface="glass">
-            <Icon aria-hidden="true" className="text-foreground/75 group-hover:text-brand relative size-5 transition-colors" />
-            <div className="relative">
-              <span className="text-foreground block text-sm font-semibold tracking-tight">
+          {/* `justify-start` y no el `justify-between` que trae `BrandCard`: en
+              una rejilla de altura igualada, "between" empuja el icono arriba y
+              el texto abajo y abre un hueco en medio. Aquí el icono va EN LÍNEA
+              con el título, que además es como se leen las filas de la columna
+              derecha. */}
+          <BrandCard surface="glass" className="justify-start gap-1.5 px-4 py-3">
+            <div className="relative flex items-center gap-2">
+              <Icon aria-hidden="true" className="text-foreground/75 group-hover:text-brand size-4 shrink-0 transition-colors" />
+              <span className="text-foreground text-[0.8125rem] leading-tight font-semibold tracking-tight">
                 {card.name}
               </span>
-              <span className="text-muted-foreground mt-1.5 block text-xs leading-relaxed">
-                {card.description}
-              </span>
             </div>
+            {/* Dos líneas como máximo: con descripciones de largo distinto, sin
+                el clamp una tarjeta estira toda su fila. */}
+            <span className="text-muted-foreground line-clamp-2 text-xs leading-snug">
+              {card.description}
+            </span>
           </BrandCard>
         </Link>
       </NavigationMenuLink>
@@ -75,7 +82,7 @@ function PanelRow({ row }: { row: SiteNavRow }) {
         <Link
           href={row.href}
           prefetch={false}
-          className="group hover:bg-accent/50 flex h-max flex-row items-center gap-2.5 rounded-lg px-2.5 py-2"
+          className="group hover:bg-accent/50 flex h-max flex-row items-center gap-2.5 rounded-lg px-2.5 py-1.5"
         >
           <Icon aria-hidden="true" className="text-muted-foreground group-hover:text-brand size-4 shrink-0 transition-colors" />
           <span className="text-sm">{row.name}</span>
@@ -101,7 +108,7 @@ function PanelRow({ row }: { row: SiteNavRow }) {
  */
 function PanelFooter({ footer }: { footer: SiteNavPanelFooter }) {
   return (
-    <div className="border-border/50 bg-foreground/[0.02] col-span-full flex flex-wrap items-center gap-x-5 gap-y-3 border-t px-5 py-3.5">
+    <div className="border-border/50 bg-foreground/[0.02] col-span-full flex flex-wrap items-center gap-x-5 gap-y-2.5 border-t px-4 py-3">
       <Claim text={footer.claim} />
       <div className="ml-auto flex flex-wrap items-center gap-x-5 gap-y-2">
         {footer.whatsappMessage ? (
@@ -142,32 +149,55 @@ function PanelFooter({ footer }: { footer: SiteNavPanelFooter }) {
   );
 }
 
+/**
+ * Reparto de la última fila de tarjetas.
+ *
+ * La rejilla se declara en **6 sub-columnas** para que las filas incompletas se
+ * repartan el ancho en vez de dejar un hueco: Producto tiene 5 tarjetas en 3
+ * columnas, y con una rejilla normal la última fila eran dos tarjetas y un
+ * agujero del tamaño de una tercera. Aquí esas dos se reparten la fila entera.
+ *
+ * Se deriva de los datos —cuántas tarjetas hay y en cuántas columnas— así que
+ * añadir o quitar una entrada del menú no obliga a tocar nada.
+ */
+function cardSpan(index: number, total: number, columns: 2 | 3): string {
+  const base = 6 / columns;
+  const remainder = total % columns;
+  const firstOfLastRow = total - remainder;
+  if (remainder === 0 || index < firstOfLastRow) {
+    return base === 2 ? "md:col-span-2" : "md:col-span-3";
+  }
+  const spanOfLastRow = 6 / remainder;
+  return spanOfLastRow === 6 ? "md:col-span-6" : spanOfLastRow === 3 ? "md:col-span-3" : "md:col-span-2";
+}
+
 function MegaPanel({ item }: { item: Extract<SiteNavItem, { kind: "mega" }> }) {
   return (
     <NavigationMenuContent>
       <div
         className={cn(
-          "grid w-full md:grid-cols-[1fr_0.36fr]",
+          // Columna derecha de ancho FIJO: con una fracción, al estrechar el
+          // panel las etiquetas de dos palabras partían en dos líneas.
+          "grid w-full md:grid-cols-[1fr_15rem]",
           // El ancho lo publica el viewport del primitivo leyendo esta caja.
-          item.cardColumns === 3 ? "md:w-[min(88vw,60rem)]" : "md:w-[min(88vw,52rem)]",
+          item.cardColumns === 3 ? "md:w-[min(90vw,54rem)]" : "md:w-[min(90vw,48rem)]",
         )}
       >
-        <ul
-          className={cn(
-            "border-border/50 grid grow gap-3 p-4 md:border-r",
-            item.cardColumns === 3 ? "md:grid-cols-3" : "md:grid-cols-2",
-          )}
-        >
-          {item.cards.map((card) => (
-            <PanelCard key={card.href} card={card} />
+        <ul className="border-border/50 grid grow gap-2 p-3 md:grid-cols-6 md:border-r">
+          {item.cards.map((card, index) => (
+            <PanelCard
+              key={card.href}
+              card={card}
+              className={cardSpan(index, item.cards.length, item.cardColumns)}
+            />
           ))}
         </ul>
 
-        <div className="p-4">
-          <p className="text-muted-foreground px-2.5 pb-2 text-[0.6875rem] font-medium tracking-widest uppercase">
+        <div className="p-3">
+          <p className="text-muted-foreground px-2.5 pb-1.5 text-[0.6875rem] font-medium tracking-widest uppercase">
             {item.side.title}
           </p>
-          <ul className="space-y-0.5">
+          <ul className="space-y-px">
             {item.side.rows.map((row) => (
               <PanelRow key={row.href} row={row} />
             ))}

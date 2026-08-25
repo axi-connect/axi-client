@@ -363,18 +363,23 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 /**
- * Mega-menú del sitio público. Tercera receta, y no por capricho: el panel es
- * grande y lleva sus propias tarjetas dentro, así que necesita **más blur** que
- * el header (16px) para que el texto se lea sobre una landing con imágenes, y
- * **menos opacidad** que un modal (80%) para que se lea como cristal y no como
- * una caja sólida. Subir el blur es justo lo que permite bajar la opacidad sin
- * perder legibilidad.
+ * Mega-menú del sitio público: **la receta del header, con la sombra de un
+ * overlay**. Es la misma que la barra fijada al scrollear (65 % · 16px), porque
+ * el panel cuelga de esa barra y los dos materiales tienen que leerse como uno.
+ *
+ * Historia, para que no se vuelva a subir "por legibilidad": este panel llevó
+ * 80 % y 32px de blur, y ninguno de los dos números arreglaba nada — el panel
+ * estaba dentro de un backdrop root y NO difuminaba en absoluto (ver la regla de
+ * montaje en `navigation-menu.tsx`). Lo que se leía como transparencia excesiva
+ * era la ausencia de blur, no su suavidad. Con el montaje correcto, 16px bastan.
  */
 .glass-menu {
-  background-color: color-mix(in srgb, var(--color-background) 82%, transparent);
-  -webkit-backdrop-filter: saturate(180%) blur(32px);
-  backdrop-filter: saturate(180%) blur(32px);
-  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  background-color: color-mix(in srgb, var(--color-background) 65%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  /* Única diferencia con `.glass`: el panel es una superficie grande y separada
+     del contenido, así que le corresponde la sombra amplia de overlay. */
   box-shadow: var(--shadow-overlay);
 }
 
