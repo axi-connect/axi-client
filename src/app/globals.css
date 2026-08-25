@@ -878,6 +878,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .axel-field {
   position: relative;
   isolation: isolate;
+  /* La decoración NUNCA sale de la caja que la posee. Sin esto, la capa de
+     halos (`inset: -20%`, decisión 2) se derramaba 206 px por la derecha y otro
+     tanto por arriba: como `main` está posicionado y el rail es un hermano
+     ESTÁTICO posterior, el orden de pintado ponía el degradado ENCIMA del
+     tablero, de su borde y de su scroll, y el canto de la capa se leía como un
+     corte. El sobredimensionado del 140% solo tiene sentido con este recorte:
+     es lo que le da margen a la deriva sin asomar un borde.
+     `clip` y no `hidden`: no crea contenedor de scroll, así que el scroller
+     interno del hilo y el composer anclado siguen exactamente igual. */
+  overflow: clip;
 
   /* Intensidad de los halos. Sobre negro el mismo `color-mix` se ve la mitad,
      así que en oscuro va al máximo y en claro se atenúa. */
