@@ -39,6 +39,11 @@
   --logo-whatsapp: #25d366;
   --logo-instagram: #e1306c;
   --logo-messenger: #0084ff;
+  /* F17: proveedores de integraciones (mismo criterio que los de mensajería) */
+  --logo-shopify: #96bf48;
+  --logo-mercadopago: #00b1ea;
+  --logo-salesforce: #00a1e0;
+  --logo-hubspot: #ff7a59;
 }
 
 .dark {
@@ -243,6 +248,11 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .brand-whatsapp { --ch-glow: var(--logo-whatsapp); }
 .brand-instagram { --ch-glow: var(--logo-instagram); }
 .brand-messenger { --ch-glow: var(--logo-messenger); }
+/* F17: integraciones — mismas superficies con el color del proveedor */
+.brand-shopify { --ch-glow: var(--logo-shopify); }
+.brand-mercadopago { --ch-glow: var(--logo-mercadopago); }
+.brand-salesforce { --ch-glow: var(--logo-salesforce); }
+.brand-hubspot { --ch-glow: var(--logo-hubspot); }
 /* Un canal caído deja de presumir de marca: comunica el problema por color */
 .brand-fault { --ch-glow: var(--axi-destructive); }
 
@@ -250,6 +260,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .text-logo-whatsapp { color: var(--logo-whatsapp); }
 .text-logo-instagram { color: var(--logo-instagram); }
 .text-logo-messenger { color: var(--logo-messenger); }
+.text-logo-shopify { color: var(--logo-shopify); }
+.text-logo-mercadopago { color: var(--logo-mercadopago); }
+.text-logo-salesforce { color: var(--logo-salesforce); }
+.text-logo-hubspot { color: var(--logo-hubspot); }
 
 /* Placa del logo: teñida al 10% del color de la app con línea de un pelo al 22%.
    Como utilidad y no como valor arbitrario de Tailwind: un `color-mix` anidado

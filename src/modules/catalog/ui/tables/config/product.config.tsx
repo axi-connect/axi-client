@@ -166,6 +166,7 @@ export function mapProductToRow(
     stock_state: stock.state,
     duration_minutes: item.duration_minutes,
     is_active: item.is_active,
+    governed: item.governed_by_connection_id !== null,
     created_at: item.created_at,
   };
 }

@@ -16,6 +16,7 @@ import {
   Mic,
   Package,
   Plug,
+  Puzzle,
   ScrollText,
   Sparkles,
   Settings,
@@ -54,6 +55,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   mic: Mic,
   package: Package,
   plug: Plug,
+  puzzle: Puzzle,
   scroll: ScrollText,
   settings: Settings,
   // Axel, el director de mercadeo (módulo cmo). El seeder del backend lo pide

@@ -141,6 +141,8 @@ export type ProductRow = {
   stock_state: ProductStockState;
   duration_minutes: number | null;
   is_active: boolean;
+  /** F17: no-null = espejo de una integración externa (badge de origen). */
+  governed: boolean;
   created_at: string;
 };
 
