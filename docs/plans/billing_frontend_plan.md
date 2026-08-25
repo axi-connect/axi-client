@@ -48,7 +48,7 @@ Este plan construye las **tres superficies** del KB, separadas a propósito:
 | Fase | Contenido | Estado |
 |---|---|---|
 | **F0** | Mockup HTML navegable de alta fidelidad (Artifact privado) | ✅ **Aprobado** 2026-08-25 |
-| **F1** | Fundaciones: `api:types`, slice `modules/billing` con `domain/` puro, adapter, `error-messages`, eventos WS, icono + nodo de sidebar, ruta `/billing` con **Resumen** | ⏳ |
+| **F1** | Fundaciones: `api:types`, slice `modules/billing` con `domain/` puro, adapter, `error-messages`, eventos WS, icono + nodo de sidebar, ruta `/billing` con **Resumen** | ✅ **Código completo** |
 | **F2** | **Plataforma**: tarifas (vigencias + publicar), cartera (`overdue=true`), las tres acciones de factura, tab `Facturación` en la ficha del tenant | ⏳ |
 | **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ⏳ |
 | **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ⏳ |
@@ -201,6 +201,20 @@ Todo lo de abajo se comprobó leyendo el código y el `openapi.json` del worktre
 22. **Los textos de los avisos vienen redactados del backend** (`notice_templates.ts`): `title` y `body`
     se pintan tal cual. Reescribirlos en el cliente haría que el correo y la campanita dijeran cosas
     distintas del mismo hecho.
+
+### 3.4 Halladas al implementar F1
+
+23. **La línea del detalle del tenant NO trae el tratamiento fiscal.** `InvoiceDetailDto.lines` expone
+    `{kind, description, quantity, unit_amount_cents, amount_cents, tax_cents}` y **nada más**: ni
+    `tax_treatment` ni `tax_rate_bps` (que sí viajan en las tarifas de plataforma y en el export de
+    habeas data). Excluido, exento y gravado al 0 % dan los tres `tax_cents: 0` y son figuras
+    tributarias distintas, así que **no se puede afirmar por línea** cuál aplica. → la exclusión de la
+    licencia se declara **una vez a nivel de documento**, donde es cierta por ley, y `lineTaxNote()`
+    devuelve `null` sin impuesto en vez de escribir «Excluido de IVA» adivinando. `taxLabel()` queda
+    para la superficie de plataforma (F2), donde el tratamiento sí existe.
+24. **F1 no monta la sub-navegación.** Una sola pestaña no es navegación, y añadir «Facturas» antes de
+    F3 dejaría un ítem apuntando a un 404 — la regla del proyecto lo prohíbe. `BillingNav` entra en F3,
+    cuando hay dos destinos reales.
 
 ---
 
@@ -500,10 +514,15 @@ incógnito → el tenant vuelve a entrar sin que nadie toque nada.
 - `npm run api:types:check` solo tendrá sentido tras mergear el backend a main (P1).
 - **Visual**: claro, oscuro y ancho móvil, con guard automático de desbordamiento horizontal (receta de
   chromium sin sudo en WSL de `docs/`). Trampa conocida: `npm`/`npx` desde un worktree con
-  `node_modules` symlinkeado **vacía** el del checkout principal → solo scripts del `package.json`.
+  `node_modules` symlinkeado **vacía** el del checkout principal → este worktree tiene su **propia
+  copia** (945 MB, como los de marketing y scheduling) y los binarios se invocan desde
+  `node_modules/.bin`.
+- **`npm run build` en un worktree exige `.env.local`**, que no está versionado: hay que copiarlo del
+  checkout principal. Sin él el build muere en `Failed to collect page data for /api/auth/refresh` por
+  un `NEXT_PUBLIC_SALES_WHATSAPP` ausente — un error que no nombra la variable en la línea que
+  importa y que no tiene nada que ver con lo que estés tocando.
 - **De punta a punta**: `axi-server/docs/runbooks/wompi_sandbox.md`, bloque B — tarjetas
   `4242…4242` (aprueba) / `4111…1111` (rechaza), PSE bancos `"1"`/`"2"`, Nequi `3991111111`/`3992222222`,
   y los caminos que no son un pago (retención, anulación, nota de crédito).
 - **El usuario compila y levanta él**: nunca se arranca en modo dev ni se matan sus servidores; se le
   entregan los comandos.
-</content>

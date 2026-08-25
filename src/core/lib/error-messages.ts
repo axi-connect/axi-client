@@ -225,6 +225,33 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "channels/template_sync_failed":
     "Meta rechazó la sincronización de plantillas. Revisa el detalle e inténtalo de nuevo",
   "platform/forbidden": "Tu cuenta no tiene acceso a la consola de plataforma",
+  // Facturación de la licencia (slice billing) — KB §12.
+  //
+  // Dos familias con reglas de redacción propias:
+  //
+  // 1) 502/503 NO son «pago rechazado». Un timeout puede llegar DESPUÉS de que
+  //    la pasarela creó el cobro, así que decir «falló, reintenta» acaba en un
+  //    pago doble. El texto dice «no pudimos confirmar» y jamás invita a
+  //    reintentar; el backend tampoco reintenta por esa razón.
+  // 2) Lo que no es culpa de quien lo lee no se le presenta como su error:
+  //    el enlace caducado, la tarifa sin configurar y el descuadre de importe
+  //    son incidentes nuestros, y el texto lo dice.
+  "billing/account_not_found": "Todavía no tienes una cuenta de cobro configurada",
+  "billing/invoice_not_found": "La factura ya no existe",
+  "billing/invoice_not_payable": "Esta factura ya no admite pago",
+  "billing/price_missing":
+    "Tu plan no tiene una tarifa vigente. Es un problema de configuración nuestro: ya estamos avisados",
+  "billing/no_payment_source": "No hay un medio de pago guardado para el cobro automático",
+  "billing/price_not_found": "La tarifa no existe",
+  "billing/price_vigency_overlap": "Ya hay una tarifa que empieza en esa fecha o después",
+  "billing/invalid_overage_rate": "Revisa los excedentes: el tamaño de bloque debe ser mayor que cero",
+  "billing/amount_mismatch":
+    "El pago no cuadra con el cargo. No es algo que puedas resolver desde aquí: ya estamos avisados",
+  "billing/gateway_error":
+    "El proveedor de pagos no está disponible. Inténtalo en unos minutos; si ya pagaste, no vuelvas a pagar",
+  "billing/gateway_rate_limited": "El proveedor de pagos está saturado. Espera un momento y vuelve a intentarlo",
+  "billing/link_expired": "Este enlace de pago caducó. Pide uno nuevo desde tu panel o escríbenos",
+  "auth/payment_overdue": "Tu servicio está suspendido por un pago pendiente",
   "client/network": "No fue posible contactar al servidor",
 };
 

@@ -545,6 +545,51 @@ export type ChannelSessionFailedEvent = {
   reason: string;
 };
 
+// ---------------------------------------------------------------------------
+// Facturación de la licencia (slice billing)
+// ---------------------------------------------------------------------------
+
+export type InvoiceStatus = Schemas["InvoiceListDto"]["data"][number]["status"];
+
+/** Se emitió la factura del ciclo. El panel refresca su resumen y su lista. */
+export type BillingInvoiceIssuedEvent = {
+  company_id: string;
+  invoice_id: string;
+  number: string;
+  total_cents: number;
+  currency: string;
+  due_at: string | null;
+  period_start: string;
+  period_end: string;
+};
+
+/**
+ * Se aplicó un pago. Es la señal que resuelve la pantalla de «estamos
+ * confirmando tu pago»: trae `invoice_status`, así que el cliente distingue
+ * `paid` de `partially_paid` sin volver a preguntar por el detalle.
+ */
+export type BillingPaymentApprovedEvent = {
+  company_id: string;
+  invoice_id: string;
+  reference: string;
+  amount_cents: number;
+  currency: string;
+  invoice_status: InvoiceStatus;
+  payment_method_type: string | null;
+};
+
+/**
+ * La cuenta pasó a mora. Sin payload más allá de la empresa: el panel
+ * re-consulta el resumen, que es quien tiene el saldo y la cuenta atrás.
+ *
+ * El tenant ya SUSPENDIDO no recibe este evento ni ningún otro —su socket está
+ * cerrado—, así que el aviso de suspensión jamás debe diseñarse como algo que
+ * llega por WS. Para él existen el correo y el WhatsApp.
+ */
+export type BillingPastDueEvent = {
+  company_id: string;
+};
+
 /**
  * F15: la empresa fue suspendida — llega a `/inbox` Y `/channels`, seguido de
  * la desconexión forzada de los sockets desde el server. El cliente debe
@@ -609,6 +654,9 @@ export type InboxServerEvents = {
   "cmo.turn_delta": (payload: CmoTurnDeltaEvent) => void;
   "cmo.turn_completed": (payload: CmoTurnCompletedEvent) => void;
   "cmo.turn_failed": (payload: CmoTurnFailedEvent) => void;
+  "billing.invoice_issued": (payload: BillingInvoiceIssuedEvent) => void;
+  "billing.payment_approved": (payload: BillingPaymentApprovedEvent) => void;
+  "billing.past_due": (payload: BillingPastDueEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;
