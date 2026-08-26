@@ -17864,8 +17864,8 @@ export interface operations {
     };
     PlatformBillingPricesController_list_v1: {
         parameters: {
-            query: {
-                plan_id: string;
+            query?: {
+                plan_id?: string;
             };
             header?: never;
             path?: never;
