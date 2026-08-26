@@ -193,9 +193,12 @@ Todo lo de abajo se comprobó leyendo el código y el `openapi.json` del worktre
 19. **No hay registry de icono por tipo de notificación**: `NotificationItem` no pinta icono y
     `NotificationToaster` usa un `<Bell>` fijo. → no se promete icono propio para los avisos de
     facturación; sería crear ese registry, y no está en el alcance.
-20. **Tres tipos de campanita están documentados pero no tienen emisor** (`billing.payment_receipt`,
-    `billing.payment_failed`, `billing.source_expiring`): plantilla escrita, ningún emisor. **No se
-    construyen manejadores** — no llegarían nunca. Para «tu pago se aplicó» se usa el WS.
+20. ~~**Tres tipos de campanita no tienen emisor**~~ — **RESUELTO en el backend (B9, `ff56b2f`)**:
+    `payment_receipt`, `payment_failed` y `source_expiring` ya se emiten, y se añadió un noveno
+    `kind` (`invoice_issued`, que no existía: el barrido emitía la factura y no avisaba a nadie).
+    **El frontend no necesitó ningún cambio**: el resolver de la campanita empareja por prefijo
+    `"billing."`, así que los cuatro nuevos abren su factura sin tocar código. `source_expiring` no
+    trae `invoice_id` y cae a `/billing`, que es lo correcto.
 21. **El suspendido no recibe ningún evento WS** (su socket está cerrado). El aviso de suspensión no se
     diseña como algo que llega por WS.
 22. **Los textos de los avisos vienen redactados del backend** (`notice_templates.ts`): `title` y `body`
@@ -397,7 +400,7 @@ construye en esta entrega, y la UI **no lo insinúa** (ni botones deshabilitados
 | **Factura electrónica DIAN** | El bloque fiscal existe en el modelo pero no se expone ni se llena: no hay proveedor conectado. Es obligatoria para una S.A.S. aunque el servicio esté excluido de IVA (Res. 000165/2023), pero es trabajo de backend (un adapter del puerto `FISCAL_INVOICING`). |
 | **Marcar un medio como predeterminado** | No existe el endpoint (§3.2.6). |
 | **Desglose de la estimación del próximo cobro** | `next_invoice_estimate_cents` es un entero sin líneas (§3.2.8). |
-| **Avisos `payment_receipt`, `payment_failed`, `source_expiring`** | Plantilla escrita, ningún emisor (§3.3.20). |
+| ~~**Avisos `payment_receipt`, `payment_failed`, `source_expiring`**~~ | **Ya se emiten** desde B9 (`ff56b2f`), junto con `invoice_issued`. El frontend los cubre sin cambios (§3.3.20). |
 | **Reembolsos · multi-moneda · el módulo `payments` del tenant** | Fuera de alcance del backend a propósito. La vía del reembolso es la nota de crédito. |
 
 ---

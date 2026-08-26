@@ -104,8 +104,11 @@ Throttle de las dos: **10 req/min por IP**, y el tracker es la IP del socket.
 > suspensión nunca se diseña como algo que llega por WS — para él existen el correo y el WhatsApp.
 
 **Campanita:** los avisos escriben notificaciones con `type = billing.{kind}` y `invoice_id` en su
-`data`, así que el clic abre ESA factura (`notification-target.ts`). Solo se emiten hoy
-`due_soon_7`, `due_soon_3`, `due_today`, `past_due` y `suspended`.
+`data`, así que el clic abre ESA factura (`notification-target.ts`). Desde B9 (`ff56b2f`) los **nueve**
+`kind` tienen emisor: `invoice_issued`, `due_soon_7`, `due_soon_3`, `due_today`, `past_due`,
+`suspended`, `payment_receipt`, `payment_failed` y `source_expiring`. El resolver empareja por
+**prefijo**, así que cubrió los cuatro nuevos sin tocar código; `source_expiring` no trae factura y
+cae a `/billing`.
 
 ---
 
@@ -241,7 +244,7 @@ que más duelen si se olvidan:
 | **Comprobante descargable** | `GET /billing/invoices/:id/document` no está implementado |
 | **Factura electrónica DIAN** | El bloque fiscal existe en el modelo pero no se expone ni se llena. **La UI no dice «factura electrónica» ni pinta CUFE**: legalmente todavía no lo es |
 | **Marcar medio predeterminado · desglose de la estimación** | No hay endpoint / el DTO no lo trae |
-| **Avisos `payment_receipt`, `payment_failed`, `source_expiring`** | Plantilla escrita, **ningún emisor**. No se construyen manejadores |
+| ~~Avisos sin emisor~~ | **Ya no aplica.** B9 (`ff56b2f`) encendió `payment_receipt`, `payment_failed` y `source_expiring`, y añadió `invoice_issued`. Los **nueve** `kind` tienen emisor, y el frontend los cubre sin cambios: el resolver empareja por prefijo |
 | **Reembolsos · multi-moneda** | Fuera de alcance del backend a propósito. La vía del reembolso es la nota de crédito |
 
 ### Prerrequisitos operativos

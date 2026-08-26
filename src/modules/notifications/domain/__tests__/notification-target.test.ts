@@ -85,3 +85,29 @@ describe("facturación", () => {
     expect(notificationTarget("billing.past_due", {})).toBe("/billing");
   });
 });
+
+describe("los nueve avisos de facturación (B9 encendió los cuatro que faltaban)", () => {
+  // El resolver empareja por PREFIJO `billing.`, así que encender un kind nuevo
+  // en el backend no exige tocar el frontend. Este test lo fija: si alguien
+  // cambia el prefijo por tipos exactos, los avisos nuevos dejarían de navegar.
+  const CON_FACTURA = [
+    "billing.invoice_issued",
+    "billing.due_soon_7",
+    "billing.due_soon_3",
+    "billing.due_today",
+    "billing.past_due",
+    "billing.suspended",
+    "billing.payment_receipt",
+    "billing.payment_failed",
+  ];
+
+  it.each(CON_FACTURA)("%s abre su factura", (type) => {
+    expect(notificationTarget(type, { invoice_id: "inv-42" })).toBe("/billing/invoices/inv-42");
+  });
+
+  it("`source_expiring` no tiene factura y cae a la sección", () => {
+    // Es un aviso del medio de pago, no de un documento: mandarlo a una factura
+    // inventada sería peor que no navegar.
+    expect(notificationTarget("billing.source_expiring", {})).toBe("/billing");
+  });
+});
