@@ -52,7 +52,7 @@ Este plan construye las **tres superficies** del KB, separadas a propósito:
 | **F2** | **Plataforma**: tarifas (vigencias + publicar), cartera (`overdue=true`), las tres acciones de factura, tab `Facturación` en la ficha del tenant | ✅ **Código completo** |
 | **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ✅ **Código completo** |
 | **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ✅ **Código completo** |
-| **F5** | **Mora y suspensión**: banner escalado + tercera variante de `CompanySuspendedScreen` + **página pública `/pay/:id/:token`** | ⏳ |
+| **F5** | **Mora y suspensión**: banner escalado + tercera variante de `CompanySuspendedScreen` + **página pública `/pay/:id/:token`** | ✅ **Código completo** |
 | **F6** | Tests, `docs/modules/billing.md`, reindexado del grafo | ⏳ |
 
 **Orden justificado.** F2 (plataforma) va **antes** que las vistas del tenant porque es la única forma
@@ -289,6 +289,25 @@ Todo lo de abajo se comprobó leyendo el código y el `openapi.json` del worktre
     clientes, otra cosa entera.
 40. **La página de retorno necesita `Suspense`.** Lee `useSearchParams`, y sin el límite de suspensión
     el prerender del build falla.
+
+### 3.8 Halladas al implementar F5
+
+41. **El banner de mora monta en TODAS las páginas del panel**, y eso impone dos cuidados que no son
+    obvios: no puede pedir el resumen sin `billing:read` —supervisor y operator no tienen ningún
+    permiso del slice a propósito, así que sería un 403 en cada pantalla— y no puede duplicar la
+    petición con la vista de resumen. Lo segundo se resuelve con **deduplicación de la petición en
+    vuelo** en el store (promesa a nivel de módulo, mismo espíritu que `loadMyCompanyOnce`): al entrar
+    a `/billing` los dos montan casi a la vez y sale una sola petición.
+42. **`load()` y `refresh()` dejan de ser lo mismo.** El banner llama a `load()`, que **no** repite la
+    petición si ya tiene el dato; la vista de resumen llama a `refresh()` si el banner ya lo trajo, para
+    no servir cifras de hace tres navegaciones en la pantalla del dinero. Una sola de las dos por
+    montaje, nunca las dos.
+43. **La variante de mora es la única suspensión con salida comercial además del trial.** El CTA de la
+    pantalla bloqueante era exclusivo de `trial_expired`; la mora lo necesita también, pero con otro
+    mensaje (que le reenvíen el enlace, no que active un plan). La suspensión genérica —fraude, abuso—
+    sigue sin CTA: ahí el camino es soporte, no ventas.
+44. **El banner pinta la FECHA del corte además de los días.** Un «12 de septiembre» es más accionable
+    que un «faltan 3 días», y sin `oldest_due_at` el texto avisa de la deuda **sin inventar un plazo**.
 
 ---
 

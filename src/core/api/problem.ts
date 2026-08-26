@@ -34,6 +34,7 @@ export const API_ERROR_CODES = {
   unauthorized: "auth/unauthorized",
   companySuspended: "auth/company_suspended",
   trialExpired: "auth/trial_expired",
+  paymentOverdue: "auth/payment_overdue",
   permissionDenied: "rbac/permission_denied",
   usageLimitExceeded: "usage/limit_exceeded",
   outsideServiceWindow: "channels/outside_service_window",
@@ -50,19 +51,31 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES
  * Lo despachan el `HttpClient` (403 de suspensión en cualquier request) y los
  * hooks de tiempo real (evento WS `company.suspended`); lo escucha únicamente
  * el `AuthProvider`, que corta la sesión y muestra la pantalla bloqueante.
- * El `detail` lleva el code (`auth/company_suspended` | `auth/trial_expired`)
- * para elegir la variante de copy; un Event sin detail cae a la genérica.
+ * El `detail` lleva el code (`auth/company_suspended` | `auth/trial_expired` |
+ * `auth/payment_overdue`) para elegir la variante de copy; un Event sin detail
+ * cae a la genérica.
  * Convención `familia:acción:estado` (architecture §9).
  */
 export const COMPANY_SUSPENDED_EVENT = "auth:company:suspended";
 
 /**
- * ¿El code corresponde a un bloqueo total de la empresa (F15)? El trial
- * vencido comparte TODO el mecanismo de la suspensión (tokens revocados,
+ * ¿El code corresponde a un bloqueo total de la empresa (F15)? El trial vencido
+ * y la mora comparten TODO el mecanismo de la suspensión (tokens revocados,
  * pantalla bloqueante, sin refresh) — solo cambia el copy de la pantalla.
+ *
+ * `auth/payment_overdue` entra aquí y no en un camino propio porque el backend
+ * lo devuelve en los **tres** puntos de bloqueo —login, refresh y el verifier
+ * del access token (`auth/application/suspension_reason.ts`)—, exactamente como
+ * los otros dos. El código existe separado del genérico **para el frontend**:
+ * permite llevar a quien solo necesita pagar a una pantalla de pago en vez de a
+ * un callejón sin salida de «contacta a soporte».
  */
 export function isSuspensionCode(code: string | undefined): boolean {
-  return code === API_ERROR_CODES.companySuspended || code === API_ERROR_CODES.trialExpired;
+  return (
+    code === API_ERROR_CODES.companySuspended ||
+    code === API_ERROR_CODES.trialExpired ||
+    code === API_ERROR_CODES.paymentOverdue
+  );
 }
 
 /**

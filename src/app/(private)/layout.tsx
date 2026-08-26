@@ -11,6 +11,7 @@ import { NotificationBell } from "@/modules/notifications/ui/components/Notifica
 import { CompanyIdentity } from "@/modules/companies/ui/components/CompanyIdentity";
 import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusChip";
 import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
+import { DunningBanner } from "@/modules/billing/ui/DunningBanner";
 
 /**
  * Precarga del árbol de navegación en el servidor: `http` en server lee la
@@ -85,6 +86,9 @@ export default async function PrivateLayout({
           <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} />
           {/* Últimos 2 días de trial: en flujo, empuja el contenido */}
           <TrialCountdownBanner />
+          {/* Pago vencido: avisa con el plazo antes de la suspensión. No
+              bloquea — en `past_due` el panel sigue operativo. */}
+          <DunningBanner />
         </div>
         {/* `min-height: auto` en estos dos niveles es lo que deja CRECER a las
             vistas documentales (dashboard, ajustes) para que scrollee el panel.

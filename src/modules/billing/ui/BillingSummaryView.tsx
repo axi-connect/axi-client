@@ -28,13 +28,17 @@ import { Badge } from "@/shared/components/ui/badge";
  */
 export function BillingSummaryView() {
   const { hasPermission } = useAuth();
-  const { status, summary, error, load } = useBillingStore();
+  const { status, summary, error, load, refresh } = useBillingStore();
 
   useBillingSocket();
 
+  // Primera carga: con esqueleto. Si el banner de mora ya trajo el resumen al
+  // montar el panel, esto refresca en silencio en vez de repetir la petición —
+  // la pantalla del dinero no debe servir un dato de hace tres navegaciones.
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (useBillingStore.getState().summary === null) void load();
+    else void refresh();
+  }, [load, refresh]);
 
   if (status === "loading" && summary === null) {
     return <TableSkeleton rows={4} />;

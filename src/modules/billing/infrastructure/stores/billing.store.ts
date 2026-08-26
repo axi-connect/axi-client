@@ -21,6 +21,11 @@ interface BillingState {
   summary: BillingSummaryDTO | null;
   error: string | null;
 
+  /**
+   * Carga el resumen **si no lo tiene ya**. Es lo que llama el banner de mora,
+   * que monta en TODAS las páginas del panel: pedirlo de nuevo en cada
+   * navegación sería una petición por pantalla para un dato que cambia por WS.
+   */
   load: () => Promise<void>;
   /** Recarga silenciosa: no vacía la pantalla mientras trae el dato nuevo. */
   refresh: () => Promise<void>;
@@ -30,54 +35,74 @@ interface BillingState {
   onPastDue: () => void;
 }
 
-export const useBillingStore = create<BillingState>((set, get) => ({
-  status: "idle",
-  summary: null,
-  error: null,
+/**
+ * Petición en vuelo, a nivel de módulo y NO en el estado.
+ *
+ * El banner de mora vive en el layout privado y la vista de resumen en su
+ * página: al entrar a `/billing` los dos montan casi a la vez y pedirían el
+ * resumen dos veces. Compartir la promesa deja una sola petición sin que
+ * ninguno de los dos tenga que saber del otro.
+ */
+let inFlight: Promise<void> | null = null;
 
-  load: async () => {
-    // Conserva lo anterior: un refetch atenúa, no deja la pantalla en blanco.
-    set({ status: "loading", error: null });
-    try {
-      set({ status: "ready", summary: await getBillingSummary(), error: null });
-    } catch (error) {
-      set({ status: "error", error: errorMessage(error) });
-    }
-  },
+export const useBillingStore = create<BillingState>((set, get) => {
+  async function fetchSummary(): Promise<void> {
+    if (inFlight !== null) return inFlight;
 
-  refresh: async () => {
-    try {
-      set({ summary: await getBillingSummary(), status: "ready", error: null });
-    } catch (error) {
-      // Un refresco fallido NO tumba una pantalla que ya tiene datos: el
-      // usuario está mirando cifras válidas y cambiárselas por un error es
-      // peor que servirle un dato de hace unos segundos.
-      if (get().summary === null) set({ status: "error", error: errorMessage(error) });
-    }
-  },
+    inFlight = (async () => {
+      try {
+        set({ status: "ready", summary: await getBillingSummary(), error: null });
+      } catch (error) {
+        // Un fallo NO tumba una pantalla que ya tiene datos: el usuario está
+        // mirando cifras válidas y cambiárselas por un error es peor que
+        // servirle un dato de hace unos segundos.
+        if (get().summary === null) set({ status: "error", error: errorMessage(error) });
+      } finally {
+        inFlight = null;
+      }
+    })();
 
-  /**
-   * Se emitió la factura del ciclo: cambia el saldo y el número de abiertas, así
-   * que se re-consulta en vez de recalcular a mano. El payload no trae el saldo
-   * agregado y deducirlo sumando sería inventar el dato.
-   */
-  onInvoiceIssued: () => {
-    void get().refresh();
-  },
+    return inFlight;
+  }
 
-  /**
-   * Se aplicó un pago. También se re-consulta: el evento trae el estado de LA
-   * factura, no el saldo de la cuenta.
-   */
-  onPaymentApproved: () => {
-    void get().refresh();
-  },
+  return {
+    status: "idle",
+    summary: null,
+    error: null,
 
-  /**
-   * La cuenta pasó a mora. El payload solo trae `company_id`, así que el estado
-   * nuevo (y con él la cuenta atrás) sale del resumen.
-   */
-  onPastDue: () => {
-    void get().refresh();
-  },
-}));
+    load: async () => {
+      if (get().summary !== null) return;
+      set({ status: "loading", error: null });
+      await fetchSummary();
+    },
+
+    refresh: async () => {
+      await fetchSummary();
+    },
+
+    /**
+     * Se emitió la factura del ciclo: cambia el saldo y el número de abiertas,
+     * así que se re-consulta en vez de recalcular a mano. El payload no trae el
+     * saldo agregado y deducirlo sumando sería inventar el dato.
+     */
+    onInvoiceIssued: () => {
+      void get().refresh();
+    },
+
+    /**
+     * Se aplicó un pago. También se re-consulta: el evento trae el estado de LA
+     * factura, no el saldo de la cuenta.
+     */
+    onPaymentApproved: () => {
+      void get().refresh();
+    },
+
+    /**
+     * La cuenta pasó a mora. El payload solo trae `company_id`, así que el
+     * estado nuevo (y con él la cuenta atrás) sale del resumen.
+     */
+    onPastDue: () => {
+      void get().refresh();
+    },
+  };
+});
