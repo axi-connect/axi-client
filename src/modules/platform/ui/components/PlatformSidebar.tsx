@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Receipt,
   ScrollText,
   type LucideIcon,
 } from "lucide-react";
@@ -63,6 +64,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "building-2": Building2,
   layers: Layers,
   "circle-dollar-sign": CircleDollarSign,
+  receipt: Receipt,
   "scroll-text": ScrollText,
   activity: Activity,
   "flask-conical": FlaskConical,

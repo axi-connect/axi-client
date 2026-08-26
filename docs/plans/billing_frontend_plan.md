@@ -49,7 +49,7 @@ Este plan construye las **tres superficies** del KB, separadas a propósito:
 |---|---|---|
 | **F0** | Mockup HTML navegable de alta fidelidad (Artifact privado) | ✅ **Aprobado** 2026-08-25 |
 | **F1** | Fundaciones: `api:types`, slice `modules/billing` con `domain/` puro, adapter, `error-messages`, eventos WS, icono + nodo de sidebar, ruta `/billing` con **Resumen** | ✅ **Código completo** |
-| **F2** | **Plataforma**: tarifas (vigencias + publicar), cartera (`overdue=true`), las tres acciones de factura, tab `Facturación` en la ficha del tenant | ⏳ |
+| **F2** | **Plataforma**: tarifas (vigencias + publicar), cartera (`overdue=true`), las tres acciones de factura, tab `Facturación` en la ficha del tenant | ✅ **Código completo** |
 | **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ⏳ |
 | **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ⏳ |
 | **F5** | **Mora y suspensión**: banner escalado + tercera variante de `CompanySuspendedScreen` + **página pública `/pay/:id/:token`** | ⏳ |
@@ -215,6 +215,28 @@ Todo lo de abajo se comprobó leyendo el código y el `openapi.json` del worktre
 24. **F1 no monta la sub-navegación.** Una sola pestaña no es navegación, y añadir «Facturas» antes de
     F3 dejaría un ítem apuntando a un 404 — la regla del proyecto lo prohíbe. `BillingNav` entra en F3,
     cuando hay dos destinos reales.
+
+### 3.5 Halladas al implementar F2
+
+25. **`GET /platform/billing/prices` declaraba `plan_id` OBLIGATORIO en el spec** aunque el endpoint lo
+    acepta opcional en runtime: un `@Query()` opcional sin `@ApiQuery` explícito sale del generador como
+    requerido. → **arreglado en el backend** (`964b4b4`), pendiente de regenerar el OpenAPI. La pantalla
+    no se ve afectada porque es por plan de todas formas, y el hook exige `planId` con `enabled`.
+26. **`AddAdjustmentDto` exige `tax_treatment` y `tax_rate_bps` en el tipo generado** aunque el backend
+    les da default: `openapi-typescript` los emite requeridos porque llevan `@default`. Se envían
+    explícitos (`excluded`, `0`), que además es lo correcto — un ajuste sobre una licencia excluida no
+    lleva impuesto, y dejarlo implícito haría que el día que cambie el default cambie la contabilidad.
+27. **`Badge` no tiene variante `success`** (`default | secondary | destructive | outline | info |
+    warning`). Los estados verdes van por `StatusBadge` con el mapa en el `domain/`, que es el semáforo
+    del proyecto — no con clases sueltas.
+28. **El narrowing de un prop o de un `useState` no sobrevive dentro de los callbacks.** Aparece dos
+    veces en F2 (`InvoiceAdminSheet`, `TenantBillingView`) y en las dos se resuelve sin `!`: partiendo
+    el componente en guarda + cuerpo, o pasando el valor por parámetro. Un `!` funciona hoy y deja de
+    avisar el día que la guarda se mueva.
+29. **Las suites pesadas de react-hook-form dan timeout bajo carga.** `FormsSection` (74 s),
+    `TenantWizard`, `PricingFormSheet` y `PromotionsView` fallan en la corrida completa cuando el
+    `load average` pasa de 6, y **cada corrida falla en una suite distinta**; todas pasan en
+    aislamiento. No es una regresión: conviene `--maxWorkers=3` para leer un resultado fiable.
 
 ---
 
