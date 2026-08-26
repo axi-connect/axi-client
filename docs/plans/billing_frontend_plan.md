@@ -53,7 +53,7 @@ Este plan construye las **tres superficies** del KB, separadas a propósito:
 | **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ✅ **Código completo** |
 | **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ✅ **Código completo** |
 | **F5** | **Mora y suspensión**: banner escalado + tercera variante de `CompanySuspendedScreen` + **página pública `/pay/:id/:token`** | ✅ **Código completo** |
-| **F6** | Tests, `docs/modules/billing.md`, reindexado del grafo | ⏳ |
+| **F6** | Tests, `docs/modules/billing.md`, reindexado del grafo | ✅ **Código completo** (el grafo espera el merge, ver §4) |
 
 **Orden justificado.** F2 (plataforma) va **antes** que las vistas del tenant porque es la única forma
 de crear el dato: sin una tarifa publicada, un plan asignado y un `billing_email` relleno no existe
@@ -358,6 +358,8 @@ Conflictos resueltos, los seis por unión —ambas ramas añadían a la misma li
 | P2 | Ítem de menú visible | Correr **`seedRbac`** (nunca `npm run seed`: sobrescribe el formulario `order_intake` y el catálogo del tenant demo). Es del usuario, no del agente: toca su base de desarrollo. |
 | P3 | Verificación real | Las tres cosas del KB §16: llaves `*_test_*` de Wompi, dominio verificado en Resend (SPF+DKIM) y plantilla HSM `utility` aprobada. Sin ellas se desarrolla con `BILLING_ENABLED=false`: la superficie responde y el adapter de correo queda inerte. |
 | P4 | Despliegue | `BILLING_PUBLIC_BASE_URL` → origen del **frontend**; origen del frontend en `CORS_ORIGINS` del backend (decisión 9). |
+| P5 | Grafo `codebase-memory` | **Reindexar `axi-client` DESPUÉS del merge a main**, no antes. Hoy el proyecto indexado apunta al checkout principal en `f9dd198` (sin este trabajo); indexar el worktree crearía un proyecto duplicado por una rama que va a desaparecer, y reindexar main daría un grafo que no conoce el módulo. Es el único punto de F6 que no se puede cerrar desde aquí. |
+| P6 | Backend | Regenerar el OpenAPI para que `plan_id` pase a opcional (`964b4b4`). Requiere que la feature de correos de facturación compile. |
 
 ## 5. Piezas existentes reutilizadas (no se reinventan)
 
@@ -571,19 +573,33 @@ la factura pasar a `paid` sin tocar nada más; y con `4111 1111 1111 1111` no ve
 lleva a la pantalla de pago (no a la de soporte) → pago por el enlace público desde una ventana de
 incógnito → el tenant vuelve a entrar sin que nadie toque nada.
 
-### F6 — Tests, documentación y grafo
+### F6 — Tests, documentación y grafo — ✅
 
-- **Unit (Jest + Testing Library)**, con prioridad al `domain/` puro: máquina de estados de la factura,
-  `isPayable`, `dunningVariant`, `daysToSuspension`, `outstanding` con retención, `taxLabel`,
-  `estimateLabel(null)`, resolver de campanita, tipos a mano de la vista pública.
-- **No-regresión de F15**: `isSuspensionCode('auth/payment_overdue') === true`, y que un 403 de RBAC
-  (`rbac/permission_denied`) **no** dispare la pantalla bloqueante.
-- `docs/modules/billing.md` con el formato de `marketing.md` (contrato / anatomía del slice /
-  desviaciones y gotchas) e incluyendo §6 de este plan como «Pendientes».
-- Copiar este plan a `axi-client/docs/plans/billing_frontend_plan.md`.
-- Reindexar el grafo `codebase-memory` del proyecto `axi-client`.
+**147 tests propios del módulo en 17 suites**, sobre 1473 de la app entera. El `domain/` está cubierto
+al 100 % (los seis módulos puros); las brechas que se cerraron en esta fase son las que **tocan
+dinero**:
 
----
+- `use-start-checkout` — que con token vaya por el endpoint público, que **sin firma no abra el
+  checkout**, y que un 502 no diga «tu pago falló» ni invite a reintentar.
+- `billing.store` — que el banner y la vista de resumen **compartan una sola petición** (la
+  deduplicación en vuelo de F5, que es exactamente el tipo de invariante que regresa en silencio), y
+  que un fallo no deje la promesa atascada dejando el store mudo el resto de la sesión.
+- `InvoiceAdminSheet` — las tres acciones de plataforma: la retención en centavos, el anuncio de la
+  reactivación cuando queda saldada, el importe positivo del ajuste, y que anular esté deshabilitado
+  con pagos aplicados en vez de descubrirlo con un 409.
+- `portfolio-table.config` — los días de mora, el fallback del nombre de empresa y que la fila sea
+  plana (el `DataTable` exige primitivos).
+
+**Sin test a propósito:** `BillingNav`/`BillingTabs` (una lista de dos entradas), `InvoiceDetailRoute`
+(adaptador de tres líneas), el adapter HTTP (envoltorios de `http` sin lógica) y `use-billing-socket`
+(tres suscripciones). Sus efectos se prueban donde importan: en el store y en las vistas.
+
+**Documentación:** `docs/modules/billing.md` con el formato de `marketing.md` — contrato del backend,
+anatomía del slice con las cinco invariantes de negocio, los doce gotchas que más duelen, y la Parte D
+con lo que el módulo NO tiene y por qué.
+
+**Grafo:** pendiente del merge (P5). Reindexar ahora daría un grafo que no conoce el módulo, o un
+proyecto duplicado por una rama que va a desaparecer.
 
 ## 8. Rendimiento (requisitos, no aspiraciones)
 
