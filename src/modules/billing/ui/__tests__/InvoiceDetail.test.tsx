@@ -11,6 +11,12 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: jest.fn(), showModal: jest.fn(), closeModal: jest.fn() }),
 }));
 
+const startCheckout = jest.fn();
+
+jest.mock("@/modules/billing/infrastructure/hooks/use-start-checkout", () => ({
+  useStartCheckout: () => ({ start: startCheckout, starting: false }),
+}));
+
 /**
  * Normaliza los espacios duros que mete `Intl.NumberFormat` y colapsa el texto
  * repartido entre elementos. Sin esto las aserciones son frágiles a cómo el
@@ -106,15 +112,13 @@ describe("InvoiceDetail", () => {
     expect(textOf(line.closest("li"))).toContain(`− ${money(8_600_000)}`);
   });
 
-  it("una factura saldada no menciona saldo por pagar", () => {
+  it("una factura saldada NO ofrece pagar", () => {
     render(<InvoiceDetail invoice={invoiceWithWithholding()} />);
 
-    expect(screen.queryByText(/por pagar\./)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Pagar/ })).not.toBeInTheDocument();
   });
 
-  it("con saldo pendiente dice cuánto falta, y NO pinta un CTA que todavía no paga", () => {
-    // El checkout llega en F4. Un botón «Pagar» que no paga miente, y este
-    // proyecto ya rechaza los botones que solo fallan al pulsarlos.
+  it("con saldo pendiente ofrece pagar SOLO lo que falta", () => {
     const invoice = {
       ...invoiceWithWithholding(),
       status: "partially_paid" as const,
@@ -122,8 +126,11 @@ describe("InvoiceDetail", () => {
     };
     render(<InvoiceDetail invoice={invoice} />);
 
-    expect(textOf(screen.getByText(/por pagar\./))).toContain(money(11_000_000));
-    expect(screen.queryByRole("button", { name: /^Pagar/ })).not.toBeInTheDocument();
+    // El total son $1.119.000, pero cobrar eso sería cobrarle de nuevo lo que
+    // ya giró y lo que retuvo.
+    const pay = screen.getByRole("button", { name: /^Pagar/ });
+    expect(textOf(pay)).toBe(`Pagar ${money(11_000_000)}`);
+    expect(textOf(pay)).not.toContain(money(111_900_000));
   });
 
   it("avisa de que emitir un enlace nuevo invalida el anterior", () => {

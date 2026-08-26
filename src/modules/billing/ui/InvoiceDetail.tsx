@@ -15,6 +15,7 @@ import {
 } from "@/modules/billing/domain/invoice";
 import { lineTaxNote, totalTaxCents } from "@/modules/billing/domain/tax";
 import { issueInvoiceLink } from "@/modules/billing/infrastructure/services/billing-service.adapter";
+import { useStartCheckout } from "@/modules/billing/infrastructure/hooks/use-start-checkout";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { StatusBadge } from "@/shared/components/features/status-badge/StatusBadge";
 import { Badge } from "@/shared/components/ui/badge";
@@ -34,6 +35,7 @@ import { Button } from "@/shared/components/ui/button";
 export function InvoiceDetail({ invoice }: { invoice: InvoiceDetailDTO }) {
   const { hasPermission } = useAuth();
   const { showAlert } = useAlert();
+  const { start, starting } = useStartCheckout();
   const [issuing, setIssuing] = useState(false);
 
   async function issueLink() {
@@ -128,6 +130,7 @@ export function InvoiceDetail({ invoice }: { invoice: InvoiceDetailDTO }) {
           y <b>emitir uno nuevo invalida el anterior</b>.
         </p>
         <Button
+          variant="outline"
           size="sm"
           className="w-full"
           disabled={!canPay || issuing}
@@ -143,11 +146,20 @@ export function InvoiceDetail({ invoice }: { invoice: InvoiceDetailDTO }) {
       </section>
 
       {payable && canPay ? (
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          Quedan {formatMoney(invoice.outstanding_cents, invoice.currency)} por pagar.
-          El pago con tarjeta, PSE o Nequi desde el panel llega en la próxima
-          entrega; por ahora la vía es el enlace de arriba.
-        </p>
+        <div className="flex flex-col items-end gap-2">
+          <Button
+            className="rounded-full"
+            disabled={starting}
+            onClick={() => void start(invoice.id)}
+          >
+            {starting ? <Loader2 aria-hidden="true" className="animate-spin" /> : null}
+            Pagar {formatMoney(invoice.outstanding_cents, invoice.currency)}
+          </Button>
+          <p className="text-muted-foreground text-right text-xs leading-relaxed">
+            Te llevamos al checkout seguro de Wompi. Puedes pagar con tarjeta, PSE,
+            Nequi o en efectivo.
+          </p>
+        </div>
       ) : null}
     </div>
   );

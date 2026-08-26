@@ -16,6 +16,7 @@ import {
 import { listInvoices } from "@/modules/billing/infrastructure/services/billing-service.adapter";
 import { BILLING_INVOICE_CHANGED } from "@/modules/billing/domain/events";
 import { useBillingSocket } from "@/modules/billing/infrastructure/realtime/use-billing-socket";
+import { useStartCheckout } from "@/modules/billing/infrastructure/hooks/use-start-checkout";
 import { useSuppressToasts } from "@/modules/notifications/public";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -51,6 +52,7 @@ const FILTERABLE: InvoiceStatus[] = [
 export function InvoicesView() {
   const { hasPermission } = useAuth();
   const canPay = hasPermission("billing:pay");
+  const { start, starting } = useStartCheckout();
 
   const [status, setStatus] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
@@ -177,7 +179,13 @@ export function InvoicesView() {
                 </thead>
                 <tbody>
                   {rows.map((invoice) => (
-                    <InvoiceRow key={invoice.id} invoice={invoice} canPay={canPay} />
+                    <InvoiceRow
+                      key={invoice.id}
+                      invoice={invoice}
+                      canPay={canPay}
+                      start={(id) => void start(id)}
+                      starting={starting}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -210,7 +218,17 @@ function Th({ children, right }: { children?: React.ReactNode; right?: boolean }
   );
 }
 
-function InvoiceRow({ invoice, canPay }: { invoice: InvoiceDTO; canPay: boolean }) {
+function InvoiceRow({
+  invoice,
+  canPay,
+  start,
+  starting,
+}: {
+  invoice: InvoiceDTO;
+  canPay: boolean;
+  start: (invoiceId: string) => void;
+  starting: boolean;
+}) {
   const overdue = isOverdue(invoice);
   const payable = isPayable(invoice);
 
@@ -259,14 +277,18 @@ function InvoiceRow({ invoice, canPay }: { invoice: InvoiceDTO; canPay: boolean 
         <StatusBadge status={invoice.status} map={INVOICE_STATUS_MAP} />
       </td>
       <td className="px-3.5 py-3 text-right">
-        {/* El CTA de pago llega en F4, con el checkout de Wompi detrás. Hasta
-            entonces no se pinta un botón «Pagar» que no paga: la vía real es el
-            enlace de pago, que se emite desde el detalle. */}
         {payable && canPay ? (
-          <Button asChild variant="outline" size="sm" className="rounded-full">
-            <Link href={`/billing/invoices/${invoice.id}`}>Ver detalle</Link>
+          <Button
+            size="sm"
+            className="rounded-full"
+            disabled={starting}
+            onClick={() => void start(invoice.id)}
+          >
+            Pagar
           </Button>
         ) : invoice.withholding_cents > 0 ? (
+          // Explica por qué una factura con «falta $ 0» tiene el pagado por
+          // debajo del total, en vez de dejar la fila muda.
           <span className="text-muted-foreground text-xs">con retención</span>
         ) : null}
       </td>

@@ -51,7 +51,7 @@ Este plan construye las **tres superficies** del KB, separadas a propósito:
 | **F1** | Fundaciones: `api:types`, slice `modules/billing` con `domain/` puro, adapter, `error-messages`, eventos WS, icono + nodo de sidebar, ruta `/billing` con **Resumen** | ✅ **Código completo** |
 | **F2** | **Plataforma**: tarifas (vigencias + publicar), cartera (`overdue=true`), las tres acciones de factura, tab `Facturación` en la ficha del tenant | ✅ **Código completo** |
 | **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ✅ **Código completo** |
-| **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ⏳ |
+| **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ✅ **Código completo** |
 | **F5** | **Mora y suspensión**: banner escalado + tercera variante de `CompanySuspendedScreen` + **página pública `/pay/:id/:token`** | ⏳ |
 | **F6** | Tests, `docs/modules/billing.md`, reindexado del grafo | ⏳ |
 
@@ -262,6 +262,33 @@ Todo lo de abajo se comprobó leyendo el código y el `openapi.json` del worktre
     tiene `fetchDetail`, pero solo controla el esqueleto: no entrega el dato. Cargar arriba permite
     titular el panel con el número de la factura, y evita que un panel que dice «Detalle» conviva con
     un `h2` que repite la cabecera dentro.
+
+### 3.7 Halladas al implementar F4
+
+35. **La query de Wompi NO se arma con `URLSearchParams`.** El parámetro se llama
+    `signature:integrity`, y `URLSearchParams` percent-codifica los dos puntos del **nombre**
+    (`signature%3Aintegrity`). Los dos puntos son legales en un nombre de parámetro, y preferimos
+    enviarlo tal cual antes que depender de que la pasarela decodifique el nombre igual que el valor.
+    La query se construye a mano codificando **solo los valores**, y hay un test que lo fija.
+36. **La pantalla de retorno necesita dos caminos, en dos componentes.** Con sesión hay socket que
+    escuchar (`billing.payment_approved` llega en segundos con tarjeta) y sin ella no — un pagador
+    anónimo no tiene WebSocket. Los hooks no son condicionales, así que `useSocket` no puede ir tras
+    un `if`: se parte en `AuthenticatedReturn` y `PublicReturn` sobre un hook de poll compartido.
+37. **El retorno arrastra la factura, y el token cuando lo hay.** El `redirect-url` lo pone el
+    frontend, así que lleva `?invoice=<id>` y, si el pago salió del enlace público, `&token=<token>`:
+    sin él la pantalla no puede consultar el estado (el endpoint autenticado no le sirve). No expone
+    nada nuevo — el token ya estaba en la URL de la que viene.
+38. **El backoff tiene techo por dos razones, no una.** La obvia es que un spinner eterno es peor que
+    un «te avisamos»; la dura es que el endpoint público limita a **10 req/min por IP**. Seis intentos
+    repartidos en 128 s dejan como mucho cinco peticiones en el primer minuto, con margen para una
+    recarga del usuario. Hay un test que calcula la ventana peor caso.
+39. **`/pay` es de primer nivel y pasa DOS guardas.** El middleware del edge y —el que se olvida— el
+    `AuthProvider`, que hidrata en todo el árbol y solo se salva de `redirectToLogin()` por
+    `isPublicPath`. Hay test de ambas, incluido que `/pay` **no** abra `/payments` ni
+    `/payment-methods` por coincidencia de prefijo: son el módulo de cobro del tenant a *sus*
+    clientes, otra cosa entera.
+40. **La página de retorno necesita `Suspense`.** Lee `useSearchParams`, y sin el límite de suspensión
+    el prerender del build falla.
 
 ---
 

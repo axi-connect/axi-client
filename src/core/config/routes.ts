@@ -21,6 +21,11 @@ export const PUBLIC_PATHS = [
   "/demo", // redirige a /contacto (next.config.ts)
   "/marketplace",
   "/auth",
+  // Pago sin sesión (billing_frontend_plan.md F4/F5): el retorno del checkout y
+  // el enlace de una factura. A los dos llega gente sin sesión —incluido un
+  // tenant SUSPENDIDO por mora, que es justo el caso de uso— así que el guard no
+  // puede interceptarlos. El prefijo cubre `/pay/return` y `/pay/:id/:token`.
+  "/pay",
   // Infraestructura y estáticos
   "/api",
   "/_next",
