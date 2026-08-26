@@ -35,6 +35,11 @@ const FAMILY: Record<string, TargetResolver> = {
      donde estaba. Si trae la propuesta, se abre su detalle; si no, el despacho. */
   "cmo.": (d) =>
     typeof d.proposal_id === "string" ? `/cmo/proposals/${d.proposal_id}` : "/cmo",
+  /* Facturación: el aviso trae `invoice_id` en su payload, así que el clic abre
+     LA factura y no un resumen genérico —quien recibe «tu factura vence en 3
+     días» quiere verla, no navegar—. Sin id cae a la sección. */
+  "billing.": (d) =>
+    typeof d.invoice_id === "string" ? `/billing/invoices/${d.invoice_id}` : "/billing",
 }
 
 export function notificationTarget(type: string, data: unknown): string | null {

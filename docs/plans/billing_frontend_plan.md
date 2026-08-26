@@ -50,7 +50,7 @@ Este plan construye las **tres superficies** del KB, separadas a propósito:
 | **F0** | Mockup HTML navegable de alta fidelidad (Artifact privado) | ✅ **Aprobado** 2026-08-25 |
 | **F1** | Fundaciones: `api:types`, slice `modules/billing` con `domain/` puro, adapter, `error-messages`, eventos WS, icono + nodo de sidebar, ruta `/billing` con **Resumen** | ✅ **Código completo** |
 | **F2** | **Plataforma**: tarifas (vigencias + publicar), cartera (`overdue=true`), las tres acciones de factura, tab `Facturación` en la ficha del tenant | ✅ **Código completo** |
-| **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ⏳ |
+| **F3** | **Facturas del tenant**: lista paginada + detalle en `DetailSheet` con líneas y desglose fiscal | ✅ **Código completo** |
 | **F4** | **Pago**: checkout de Wompi + `/pay/return` + confirmación por WS + resolver de campanita | ⏳ |
 | **F5** | **Mora y suspensión**: banner escalado + tercera variante de `CompanySuspendedScreen` + **página pública `/pay/:id/:token`** | ⏳ |
 | **F6** | Tests, `docs/modules/billing.md`, reindexado del grafo | ⏳ |
@@ -237,6 +237,31 @@ Todo lo de abajo se comprobó leyendo el código y el `openapi.json` del worktre
     `TenantWizard`, `PricingFormSheet` y `PromotionsView` fallan en la corrida completa cuando el
     `load average` pasa de 6, y **cada corrida falla en una suite distinta**; todas pasan en
     aislamiento. No es una regresión: conviene `--maxWorkers=3` para leer un resultado fiable.
+
+### 3.6 Halladas al implementar F3
+
+30. **El slice `notifications` no tenía `public.ts`**, y facturación necesita silenciar los toasts de su
+    propia familia mientras su vista está montada. Se crea el barrel exponiendo un **hook**
+    (`useSuppressToasts`) y no el store: lo que se publica queda acoplado, y exponer el store dejaría a
+    cualquier slice mutando la campanita. El hook encapsula además el par suppress/unsuppress, cuyo
+    cleanup olvidado deja la familia muda el resto de la sesión.
+    **Deuda anotada, no tocada:** `orders/ui/OrdersView.tsx` hace lo mismo importando el store por ruta
+    profunda (viola §3.3.5). Debería pasar por este hook; no se cambia aquí para no meter modificaciones
+    ajenas a facturación.
+31. **`BasicPagination` es un export DEFAULT**, no nombrado (`shared/components/ui/pagination`).
+32. **`formatMoney` produce un espacio DURO** entre el signo y la cifra (`Intl.NumberFormat` en es-CO).
+    `getByText` lo normaliza, pero `textContent` crudo no: las aserciones de importes se construyen con
+    `formatMoney` y con los espacios colapsados, nunca con un literal `"$ 119.000"`.
+33. **La ruta interceptada de una vista DOCUMENTAL no necesita hueco en el flex.** `orders` y
+    `crm/pipeline` reservan una columna para su rail porque son vistas de aplicación
+    (`data-app-view`); el `DetailSheet` es un portal de Radix, así que el layout de `/billing/invoices`
+    solo renderiza `{children}{sheet}`. Sí hacen falta los dos `default.tsx` (el del slot y el de
+    `children`, que remonta la lista detrás del panel al llegar desde otro segmento — p.ej. el
+    deep-link de la campanita).
+34. **El detalle se carga en el adaptador de ruta, no en el componente de detalle.** `DetailSheet`
+    tiene `fetchDetail`, pero solo controla el esqueleto: no entrega el dato. Cargar arriba permite
+    titular el panel con el número de la factura, y evita que un panel que dice «Detalle» conviva con
+    un `h2` que repite la cabecera dentro.
 
 ---
 

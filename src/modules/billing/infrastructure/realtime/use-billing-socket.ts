@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
+import { BILLING_INVOICE_CHANGED } from "@/modules/billing/domain/events";
 import { useBillingStore } from "@/modules/billing/infrastructure/stores/billing.store";
 
 /**
@@ -18,10 +19,14 @@ export function useBillingSocket(): { connected: boolean } {
 
   useSocketEvent(socket, "billing.invoice_issued", (payload) => {
     useBillingStore.getState().onInvoiceIssued(payload);
+    // La lista de facturas tiene su propia paginación y no vive en el store:
+    // se le avisa por el bus del DOM en vez de acoplar las dos superficies.
+    window.dispatchEvent(new CustomEvent(BILLING_INVOICE_CHANGED));
   });
 
   useSocketEvent(socket, "billing.payment_approved", (payload) => {
     useBillingStore.getState().onPaymentApproved(payload);
+    window.dispatchEvent(new CustomEvent(BILLING_INVOICE_CHANGED));
   });
 
   useSocketEvent(socket, "billing.past_due", () => {
