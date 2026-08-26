@@ -27,6 +27,18 @@ export const platformKeys = {
     list: () => [...platformKeys.pricing.all, "list"] as const,
   },
 
+  // Facturación de la licencia (billing_frontend_plan.md F2). La cartera pagina
+  // en server: los filtros (page incluido) viajan en la key. La ficha del tenant
+  // cuelga de su id para que invalidarla no toque la cartera.
+  billing: {
+    all: ["platform", "billing"] as const,
+    invoices: (filters?: Record<string, unknown>) =>
+      [...platformKeys.billing.all, "invoices", filters ?? {}] as const,
+    prices: (planId?: string) =>
+      [...platformKeys.billing.all, "prices", planId ?? "all"] as const,
+    tenant: (id: string) => [...platformKeys.billing.all, "tenant", id] as const,
+  },
+
   audit: {
     all: ["platform", "audit"] as const,
     list: (filters?: Record<string, unknown>) =>

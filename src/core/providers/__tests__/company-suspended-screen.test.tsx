@@ -22,3 +22,42 @@ describe("CompanySuspendedScreen (polimórfica por variante)", () => {
     expect(screen.getByRole("button", { name: /iniciar sesión/i })).toBeInTheDocument()
   })
 })
+
+describe("CompanySuspendedScreen · variante de pago vencido", () => {
+  it("manda a pagar, NO a soporte", () => {
+    // El backend devuelve un code distinto del genérico precisamente para
+    // esto: mandar a soporte a un moroso es fricción que cuesta dinero.
+    render(<CompanySuspendedScreen variant="payment_overdue" />)
+
+    expect(
+      screen.getByText("Tu servicio está suspendido por un pago pendiente"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/administrador de la plataforma/)).not.toBeInTheDocument()
+  })
+
+  it("dice por dónde le llegó el enlace, porque desde aquí no se puede emitir", () => {
+    // Sin sesión no hay forma de emitir un enlace de pago, y el aviso de
+    // cobranza ya lo llevaba.
+    render(<CompanySuspendedScreen variant="payment_overdue" />)
+
+    const body = screen.getByText(/enlace de pago/)
+    expect(body.textContent).toContain("correo")
+    expect(body.textContent).toContain("WhatsApp")
+  })
+
+  it("promete que la reactivación es automática, y no regaña", () => {
+    render(<CompanySuspendedScreen variant="payment_overdue" />)
+
+    expect(screen.getByText(/se reactiva solo/)).toBeInTheDocument()
+    expect(screen.getByText(/datos siguen intactos/)).toBeInTheDocument()
+  })
+
+  it("ofrece escribir por WhatsApp además de reintentar el login", () => {
+    render(<CompanySuspendedScreen variant="payment_overdue" />)
+
+    expect(screen.getByRole("link", { name: "Escríbenos por WhatsApp" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Volver a intentar iniciar sesión" }),
+    ).toBeInTheDocument()
+  })
+})

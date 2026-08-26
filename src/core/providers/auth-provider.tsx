@@ -167,7 +167,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={value}>
       {status === "suspended" ? (
         <CompanySuspendedScreen
-          variant={suspensionCode === API_ERROR_CODES.trialExpired ? "trial_expired" : "suspended"}
+          variant={
+            suspensionCode === API_ERROR_CODES.trialExpired
+              ? "trial_expired"
+              : suspensionCode === API_ERROR_CODES.paymentOverdue
+                ? "payment_overdue"
+                : "suspended"
+          }
         />
       ) : (
         children

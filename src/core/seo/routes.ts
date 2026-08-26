@@ -52,6 +52,8 @@ export const DISALLOWED_PREFIXES = [
   "/marketing/",
   "/analytics/",
   "/integrations/",
+  // Pago sin sesión: la URL lleva un token de un solo recurso.
+  "/pay/",
 ] as const;
 
 /** Etiqueta legible de un path indexable, para migas de pan. */

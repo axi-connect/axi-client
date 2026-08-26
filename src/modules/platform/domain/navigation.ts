@@ -16,6 +16,9 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Tenants", path: "/platform/tenants", icon: "building-2" },
   { label: "Planes", path: "/platform/plans", icon: "layers" },
   { label: "Pricing IA", path: "/platform/pricing", icon: "circle-dollar-sign" },
+  // Facturación de la licencia. Va tras «Pricing IA» porque son las dos caras
+  // del dinero: aquella es lo que nos cuesta la IA, esta lo que cobramos.
+  { label: "Facturación", path: "/platform/billing", icon: "receipt" },
   { label: "Auditoría", path: "/platform/audit", icon: "scroll-text" },
   { label: "Analytics", path: "/platform/analytics", icon: "activity" },
   { label: "Calidad", path: "/platform/quality", icon: "flask-conical" },

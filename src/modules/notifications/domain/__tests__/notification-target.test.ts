@@ -63,3 +63,25 @@ describe("notificationTarget", () => {
     expect(notificationTarget("conversation.queued", "texto")).toBeNull()
   })
 })
+
+describe("facturación", () => {
+  it("abre LA factura del aviso, no la sección", () => {
+    // Quien recibe «tu factura AXI-000042 vence en 3 días» quiere verla, no
+    // navegar hasta ella. El payload de `billing.notice` trae el id.
+    expect(
+      notificationTarget("billing.due_soon_3", {
+        invoice_id: "018f0000-0000-7000-8000-000000000042",
+      }),
+    ).toBe("/billing/invoices/018f0000-0000-7000-8000-000000000042");
+  });
+
+  it("cubre toda la familia, no solo un tipo", () => {
+    for (const type of ["billing.due_soon_7", "billing.due_today", "billing.past_due", "billing.suspended"]) {
+      expect(notificationTarget(type, { invoice_id: "abc" })).toBe("/billing/invoices/abc");
+    }
+  });
+
+  it("sin id cae a la sección en vez de no navegar", () => {
+    expect(notificationTarget("billing.past_due", {})).toBe("/billing");
+  });
+});

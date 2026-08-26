@@ -20,7 +20,7 @@ import { Button } from "@/shared/components/ui/button"
  * login de inmediato; si sigue bloqueada, el form muestra el mismo aviso).
  */
 
-type SuspensionVariant = "suspended" | "trial_expired"
+type SuspensionVariant = "suspended" | "trial_expired" | "payment_overdue"
 
 const COPY: Record<SuspensionVariant, { title: string; description: string }> = {
   suspended: {
@@ -35,9 +35,21 @@ const COPY: Record<SuspensionVariant, { title: string; description: string }> = 
       "Gracias por probar axi connect. Activa tu plan para recuperar el acceso " +
       "y seguir atendiendo a tus clientes — tus datos siguen intactos.",
   },
+  // No regaña: quien lo lee ya tiene el problema, y el texto solo dice cómo se
+  // resuelve. Tampoco ofrece un enlace de pago desde aquí — sin sesión no hay
+  // forma de emitirlo, y el aviso de cobranza ya lo llevaba.
+  payment_overdue: {
+    title: "Tu servicio está suspendido por un pago pendiente",
+    description:
+      "Te enviamos el enlace de pago al correo y al WhatsApp de cobro. En cuanto " +
+      "se registre el pago, el servicio se reactiva solo y tu equipo vuelve a " +
+      "entrar — tus conversaciones y tus datos siguen intactos.",
+  },
 }
 
 const TRIAL_CTA_MESSAGE = "Hola, mi prueba de axi connect terminó y quiero activar mi plan."
+const OVERDUE_CTA_MESSAGE =
+  "Hola, mi servicio de axi connect está suspendido por un pago pendiente y necesito el enlace de pago."
 
 export function CompanySuspendedScreen({
   variant = "suspended",
@@ -45,7 +57,15 @@ export function CompanySuspendedScreen({
   variant?: SuspensionVariant
 }) {
   const copy = COPY[variant]
-  const salesCta = variant === "trial_expired" ? salesWhatsAppUrl(TRIAL_CTA_MESSAGE) : null
+  // Los dos casos con salida COMERCIAL llevan CTA: el trial vencido a activar
+  // plan, y la mora a que le reenvíen el enlace de pago. La suspensión genérica
+  // (fraude, abuso) no: ahí el camino es soporte, no ventas.
+  const salesCta =
+    variant === "trial_expired"
+      ? salesWhatsAppUrl(TRIAL_CTA_MESSAGE)
+      : variant === "payment_overdue"
+        ? salesWhatsAppUrl(OVERDUE_CTA_MESSAGE)
+        : null
 
   return (
     <div
@@ -61,7 +81,7 @@ export function CompanySuspendedScreen({
         {salesCta ? (
           <Button asChild>
             <a href={salesCta} target="_blank" rel="noopener noreferrer">
-              Hablar con ventas
+              {variant === "payment_overdue" ? "Escríbenos por WhatsApp" : "Hablar con ventas"}
             </a>
           </Button>
         ) : null}

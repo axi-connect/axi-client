@@ -25,6 +25,10 @@ function loginErrorMessage(error: LoginError): string {
       return "La empresa está suspendida. Contacta a soporte."
     case API_ERROR_CODES.trialExpired:
       return "Tu prueba gratuita terminó. Contáctanos para activar tu plan."
+    // Distinto del genérico A PROPÓSITO: a quien solo le falta pagar no se le
+    // manda a soporte. El enlace de pago le llegó por correo y WhatsApp.
+    case API_ERROR_CODES.paymentOverdue:
+      return "Tu servicio está suspendido por un pago pendiente. Revisa el enlace de pago que te enviamos por correo."
     default:
       if (error.status === 429) {
         const wait = error.retryAfterSeconds ? ` Reintenta en ${error.retryAfterSeconds}s.` : ""
