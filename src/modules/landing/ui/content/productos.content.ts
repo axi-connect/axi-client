@@ -46,10 +46,10 @@ const CLOUDINARY_VIDEO = "https://res.cloudinary.com/dpfnxj52w/video/upload";
  * Streaming progresivo (HTTP range) con transcodificación de Cloudinary:
  * H.264 como base universal + VP9 para navegadores que lo prefieran, dos
  * anchos según viewport y poster extraído del propio video (segundo 2).
- *
- * TODO(bloqueante de merge): subir el video real con este `public_id`.
+ * Las derivadas se generan on-the-fly en la primera petición y quedan
+ * cacheadas en el CDN — no hay nada más que configurar en Cloudinary.
  */
-const HERO_VIDEO_ID = "productos-hero";
+const HERO_VIDEO_ID = "optimized_axi-connect-product_wcopqg";
 
 export const HERO_VIDEO = {
   publicId: HERO_VIDEO_ID,
