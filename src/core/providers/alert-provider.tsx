@@ -43,18 +43,21 @@ export function AlertProvider({ children }: { children: ReactNode }) {
       {alert && (
         <StatusAlert {...alert} onOpenChange={() => setAlert(null)}/>
       )}
-      {
-        <Modal
-          open={modalOpen}
-          key="modal-notification"
-          onOpenChange={setModalOpen}
-          config={modalConfig || undefined}
-        >
-          <div className="text-sm text-muted-foreground">
-            Esta acción no se puede deshacer. Se eliminarán de forma permanente los datos asociados.
-          </div>
-        </Modal>
-      }
+      {/*
+        SIN cuerpo fijo. El "Esta acción no se puede deshacer. Se eliminarán de
+        forma permanente los datos asociados." que vivía aquí se pintaba en
+        TODAS las confirmaciones de la app y contradecía la copia de las que no
+        son destructivas: "puedes volver a conectarlo cuando quieras",
+        "volverás a la última versión guardada", "los contactos no se ven
+        afectados"… La consecuencia la escribe cada `description`; quien
+        necesite más, usa `config.body`.
+      */}
+      <Modal
+        open={modalOpen}
+        key="modal-notification"
+        onOpenChange={setModalOpen}
+        config={modalConfig || undefined}
+      />
     </AlertContext.Provider>
   )
 }

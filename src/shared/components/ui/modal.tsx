@@ -23,6 +23,13 @@ export type ModalAction = {
 export type ModalConfig = {
   title?: string
   description?: string
+  /**
+   * Contenido extra bajo la descripción. Es OPCIONAL a propósito: la
+   * consecuencia de la acción la escribe cada `description`, y un cuerpo fijo
+   * en el proveedor contradecía la copia de la mitad de las confirmaciones
+   * (ver `alert-provider.tsx`).
+   */
+  body?: React.ReactNode
   trigger?: React.ReactNode
   actions?: ModalAction[]
   className?: string
@@ -36,7 +43,7 @@ type ModalProps = React.PropsWithChildren<{
 }>
 
 export function Modal({ open, onOpenChange, config, children }: ModalProps) {
-  const { title, description, trigger, actions = [], className, showCloseButton = true } = config || {}
+  const { title, description, trigger, actions = [], className, showCloseButton = true, body } = config || {}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,6 +56,7 @@ export function Modal({ open, onOpenChange, config, children }: ModalProps) {
           </DialogHeader>
         )}
 
+        {body}
         {children}
 
         {actions.length > 0 && (

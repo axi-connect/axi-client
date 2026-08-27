@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/core/lib/utils"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5",
   {
     variants: {
       variant: {
@@ -12,6 +12,15 @@ const alertVariants = cva(
         destructive:
           "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
         success: "text-success bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-success/90",
+        // Receta AA-segura (DESIGN-SYSTEM §2.2 y §10): la superficie y el borde
+        // llevan el tinte del tono y el ICONO lleva el color; el texto se queda
+        // en `foreground`/`muted-foreground`. Teñir el texto es lo que hacían
+        // las nueve copias a mano de este callout, y `--axi-warning` (#D97706)
+        // sobre fondo claro da ~3.0:1 — no pasa AA a 12–14px.
+        warning:
+          "border-warning/40 bg-warning/8 text-foreground dark:bg-warning/10 [&>svg]:text-warning",
+        info:
+          "border-info/40 bg-info/8 text-foreground dark:bg-info/10 [&>svg]:text-info",
       },
     },
     defaultVariants: {

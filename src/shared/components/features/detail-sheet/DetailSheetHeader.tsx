@@ -15,8 +15,8 @@ export function DetailSheetHeader({ title, subtitle, className, children, ...res
   return (
     <div className={cn("flex items-start gap-3 p-4 border-b border-border", className)} {...rest}>
       <div className="min-w-0 flex-1">
-        {title ? <h3 className="text-foreground font-semibold truncate">{title}</h3> : null}
-        {subtitle ? <p className="text-muted-foreground text-sm truncate">{subtitle}</p> : null}
+        {title ? <h3 className="text-foreground font-semibold line-clamp-2">{title}</h3> : null}
+        {subtitle ? <p className="text-muted-foreground text-sm line-clamp-2">{subtitle}</p> : null}
         {children}
       </div>
     </div>

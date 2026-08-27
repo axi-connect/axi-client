@@ -23,15 +23,21 @@ export function removeSuiteScenario(list: SuiteScenarioItem[], index: number): S
   return list.filter((_, i) => i !== index);
 }
 
-/** Mueve una posición arriba (-1) o abajo (+1); no-op en los bordes. */
-export function moveSuiteScenario(
+/**
+ * Reubica un escenario de `from` a `to` (semántica `arrayMove`: los de en medio
+ * se corren, no se intercambian). Es la ÚNICA implementación del invariante de
+ * orden: la usan tanto el arrastre como las flechas, para que los dos controles
+ * no puedan divergir. No-op si algún índice está fuera de rango o `from === to`.
+ */
+export function reorderSuiteScenario(
   list: SuiteScenarioItem[],
-  index: number,
-  dir: -1 | 1,
+  from: number,
+  to: number,
 ): SuiteScenarioItem[] {
-  const target = index + dir;
-  if (index < 0 || index >= list.length || target < 0 || target >= list.length) return list;
+  if (from === to) return list;
+  if (from < 0 || from >= list.length || to < 0 || to >= list.length) return list;
   const next = [...list];
-  [next[index], next[target]] = [next[target], next[index]];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
   return next;
 }

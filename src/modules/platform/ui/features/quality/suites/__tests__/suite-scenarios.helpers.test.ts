@@ -1,8 +1,8 @@
 import { MAX_SUITE_SCENARIOS } from "../../../../../domain/quality";
 import {
   addSuiteScenario,
-  moveSuiteScenario,
   removeSuiteScenario,
+  reorderSuiteScenario,
   type SuiteScenarioItem,
 } from "../suite-scenarios.helpers";
 
@@ -21,17 +21,30 @@ describe("addSuiteScenario", () => {
   });
 });
 
-describe("moveSuiteScenario", () => {
-  const list = [item("a"), item("b"), item("c")];
+describe("reorderSuiteScenario", () => {
+  const list = [item("a"), item("b"), item("c"), item("d")];
 
-  it("intercambia posiciones (el índice define position)", () => {
-    expect(moveSuiteScenario(list, 1, -1).map((i) => i.id)).toEqual(["b", "a", "c"]);
-    expect(moveSuiteScenario(list, 1, 1).map((i) => i.id)).toEqual(["a", "c", "b"]);
+  it("corre los de en medio, no los intercambia (semántica arrayMove)", () => {
+    // Arrastrar el primero al final NO puede dejar a "d" en la cabeza.
+    expect(reorderSuiteScenario(list, 0, 3).map((i) => i.id)).toEqual(["b", "c", "d", "a"]);
+    expect(reorderSuiteScenario(list, 3, 0).map((i) => i.id)).toEqual(["d", "a", "b", "c"]);
   });
 
-  it("no-op en los bordes", () => {
-    expect(moveSuiteScenario(list, 0, -1)).toBe(list);
-    expect(moveSuiteScenario(list, 2, 1)).toBe(list);
+  it("un salto adyacente equivale a intercambiar (el caso de las flechas ↑↓)", () => {
+    expect(reorderSuiteScenario(list, 1, 0).map((i) => i.id)).toEqual(["b", "a", "c", "d"]);
+    expect(reorderSuiteScenario(list, 1, 2).map((i) => i.id)).toEqual(["a", "c", "b", "d"]);
+  });
+
+  it("no muta el original", () => {
+    reorderSuiteScenario(list, 0, 3);
+    expect(list.map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("no-op sin movimiento real o con índices fuera de rango", () => {
+    expect(reorderSuiteScenario(list, 2, 2)).toBe(list);
+    expect(reorderSuiteScenario(list, -1, 0)).toBe(list);
+    expect(reorderSuiteScenario(list, 0, 4)).toBe(list);
+    expect(reorderSuiteScenario(list, 9, 0)).toBe(list);
   });
 });
 

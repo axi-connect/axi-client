@@ -4,6 +4,7 @@ import "./styles.css"
 import * as React from "react"
 import { cn } from "@/core/lib/utils"
 import * as Dialog from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
 import { useBodyScrollLock } from "./hooks/useBodyScrollLock"
 import { useResponsiveSide } from "./hooks/useResponsiveSide"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
@@ -219,14 +220,14 @@ export default function DetailSheet<Id extends string | number = string | number
                     <div className="min-w-0 flex-1">
                       {title ? (
                         <Dialog.Title asChild>
-                          <h3 className="text-foreground font-semibold truncate">{title}</h3>
+                          <h3 className="text-foreground font-semibold line-clamp-2">{title}</h3>
                         </Dialog.Title>
                       ) : (
                         <Dialog.Title className="sr-only">Detalle</Dialog.Title>
                       )}
                       {subtitle ? (
                         <Dialog.Description asChild>
-                          <p className="text-muted-foreground text-sm truncate">{subtitle}</p>
+                          <p className="text-muted-foreground text-sm line-clamp-2">{subtitle}</p>
                         </Dialog.Description>
                       ) : (
                         <Dialog.Description className="sr-only">Panel de detalle</Dialog.Description>
@@ -235,9 +236,9 @@ export default function DetailSheet<Id extends string | number = string | number
                     <Dialog.Close asChild>
                       <button
                         aria-label="Cerrar"
-                        className="inline-flex size-8 items-center justify-center rounded-md hover:bg-secondary text-foreground/80"
+                        className="relative inline-flex size-9 shrink-0 items-center justify-center rounded-md text-foreground/80 outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 after:absolute after:-inset-1 md:after:hidden"
                       >
-                        ✕
+                        <X aria-hidden="true" className="size-4" />
                       </button>
                     </Dialog.Close>
                   </div>
@@ -245,7 +246,7 @@ export default function DetailSheet<Id extends string | number = string | number
                   {renderHeader ? renderHeader() : null}
 
                   {/* Body */}
-                  <div className="min-h-0 flex-1 overflow-auto p-4">
+                  <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4">
                     {loading && skeleton ? skeleton : children}
                   </div>
 
