@@ -29,9 +29,14 @@
 6. **18 herramientas, no 16**: la cifra del plan F6 estaba desactualizada. Los
    nombres de las pills son los archivos reales de
    `axi-server/src/modules/ai_agents/application/tools/*.tool.ts` (18).
-7. **Acento de vista coral**; violeta solo en `#medicion` (reutiliza las cifras
-   de `METRICS` de la home — una sola fuente de números) y en los marcadores de
-   IA (convención transversal: el badge de IA es violeta).
+7. **Acento de vista coral**; violeta solo en los marcadores de IA
+   (convención transversal: el badge de IA es violeta).
+7b. **La sección `#medicion` se RETIRÓ de esta página** (2ª revisión del
+   dueño: duplicaba la §6 de la home). En su lugar va el muro 3D de
+   conversaciones (`ProductosConversaciones`: marquee vertical CSS en
+   perspectiva, negocios ficticios de retail/comida/moda). Las entradas del
+   mega-menú y del carrusel apuntan ahora a `/#medicion` (la §6 de la home,
+   `LandingMetrics`). `ProductosMedicion.tsx` se eliminó.
 8. **Pendiente declarado por el dueño**: revisar el efecto del pin-reveal
    («parallax») tras verlo en la página real; posible ajuste de coreografía.
 

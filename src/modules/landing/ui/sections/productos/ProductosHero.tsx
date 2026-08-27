@@ -12,8 +12,9 @@ import { HERO_VIDEO, PRODUCTOS_HERO } from "@/modules/landing/ui/content/product
  * marca (que es también su respaldo si el asset no carga), texto mínimo
  * anclado abajo-izquierda y barra delgada de stats con count-up.
  *
- * Momento hero: único lugar de la página (junto al CTA final) donde el
- * gradiente tricolor está permitido (DESIGN §3.2).
+ * El titular es plata (`.text-silver-gradient`, foreground→gris): premium y
+ * corporativo, sin competir con el video — y teasea el diálogo con el que el
+ * video de bienvenida abre.
  */
 export default function ProductosHero() {
   return (
@@ -46,13 +47,8 @@ export default function ProductosHero() {
 
       {/* Mensaje mínimo, abajo a la izquierda. */}
       <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 flex-col justify-end px-6 pt-32 pb-12 sm:px-7">
-        <p className="text-accent-amber mb-3.5 text-[11px] font-semibold tracking-[0.16em] uppercase">
-          {PRODUCTOS_HERO.kicker}
-        </p>
-        <h1 className="font-heading max-w-[18ch] text-3xl leading-[1.08] font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
-          {PRODUCTOS_HERO.headline}{" "}
-          <span className="text-brand-gradient-tri">{PRODUCTOS_HERO.headlineGradient}</span>{" "}
-          {PRODUCTOS_HERO.headlineTail}
+        <h1 className="font-heading text-silver-gradient max-w-[24ch] text-3xl leading-[1.1] font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+          {PRODUCTOS_HERO.headline}
         </h1>
         <div className="mt-7 flex flex-wrap gap-3">
           <Button asChild className="h-11 px-6">

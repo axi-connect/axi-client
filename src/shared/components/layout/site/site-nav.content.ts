@@ -115,7 +115,9 @@ export const SITE_NAV: readonly SiteNavItem[] = [
       },
       {
         name: "Medición en pesos",
-        href: "/productos#medicion",
+        /* La sección vive en la home (§6, LandingMetrics): /productos retiró
+           su copia por duplicada — no recrear el ancla allí sin mover esto. */
+        href: "/#medicion",
         description: "Cuánto vendió cada conversación, con hechos de tu base de datos.",
         icon: BarChart3,
       },

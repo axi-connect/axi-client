@@ -169,6 +169,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .bg-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); }
 .text-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .text-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Titular plata (hero de /productos): degradado del propio foreground hacia su
+   mezcla con el fondo — premium/corporativo, sin color de marca. Derivado de
+   tokens: funciona en ambos temas y dentro de las islas oscuras. */
+.text-silver-gradient { background-image: linear-gradient(180deg, var(--foreground) 25%, color-mix(in srgb, var(--foreground) 52%, var(--background))); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 /* -------- Ambientación de marca para superficies grandes -------- */
 
@@ -618,6 +622,21 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-flip-top { animation: flip-top 0.14s ease-in forwards; }
 .animate-flip-bottom { animation: flip-bottom 0.14s 0.14s ease-out both; }
 
+/* -------- Marquee vertical (muro de conversaciones de /productos) --------
+   Mismo contrato que `logo-marquee`: CSS puro (compositor), dos copias del
+   contenido y desplazamiento de una copia completa + el gap. La dirección se
+   invierte por columna con [animation-direction:reverse] y el hover del grupo
+   pausa el muro entero. */
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--marquee-gap, 1rem))); }
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--marquee-duration, 44s) linear infinite;
+}
+.group\/wall:hover .animate-marquee-vertical { animation-play-state: paused; }
+
 /* -------- Trenzado del isotipo (/productos, pin-reveal) --------
    Las tres cintas de la α entran escalonadas (coral → violeta → ámbar) y
    aterrizan trenzándose — el concepto `isotype-weave` del sistema de marca.
@@ -652,6 +671,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .animate-splash-in { animation-name: fade-in; }
   .animate-mascot-bob, .animate-hero-float { animation: none; }
   .animate-logo-marquee { animation: none; }
+  .animate-marquee-vertical { animation: none; }
   .animate-accordion-down, .animate-accordion-up { animation: none; }
   /* El countdown sigue contando: solo desaparece el doblez (la cifra cambia
      de golpe). El componente además no monta las hojas con reduced-motion. */

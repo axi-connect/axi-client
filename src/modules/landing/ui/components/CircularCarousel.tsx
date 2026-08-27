@@ -91,7 +91,7 @@ function OrbitCarousel({
 
   return (
     <div
-      className={cn("flex flex-col items-center gap-10", className)}
+      className={cn("flex flex-col items-center gap-4", className)}
       role="region"
       aria-roledescription="carrusel"
       aria-label="Capacidades del producto"
@@ -101,7 +101,9 @@ function OrbitCarousel({
       onBlur={() => setPaused(false)}
       onKeyDown={onKeyDown}
     >
-      <div ref={stageRef} className="relative h-[320px] w-full max-w-[760px]">
+      {/* El arco vive en el tercio superior del escenario y el contador abajo,
+          con aire propio: nunca se pisan (feedback de la primera revisión). */}
+      <div ref={stageRef} className="relative h-[380px] w-full max-w-[820px]">
         {items.map((item, i) => {
           /* Offset circular más corto respecto a la activa. */
           let offset = i - active;
@@ -110,7 +112,7 @@ function OrbitCarousel({
 
           const angle = (offset / 5) * Math.PI;
           const x = Math.sin(angle) * radiusX;
-          const y = -Math.cos(angle) * RADIUS_Y;
+          const yArc = -Math.cos(angle) * RADIUS_Y;
           const distance = Math.abs(offset);
           const scale = Math.max(0.55, 1 - distance * 0.16);
           const opacity = Math.max(0.16, 1 - distance * 0.34);
@@ -118,8 +120,8 @@ function OrbitCarousel({
           return (
             <motion.div
               key={item.id}
-              className="absolute top-1/2 left-1/2 w-[228px]"
-              animate={{ x: x - 114, y: y - 78, scale, opacity, zIndex: 20 - distance }}
+              className="absolute top-0 left-1/2 w-[228px]"
+              animate={{ x: x - 114, y: yArc + 108, scale, opacity, zIndex: 20 - distance }}
               transition={spring.soft}
             >
               <CapabilityCard
@@ -132,8 +134,11 @@ function OrbitCarousel({
           );
         })}
 
-        {/* Contador central */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        {/* Contador: abajo del arco, nunca debajo de las tarjetas. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-center"
+        >
           <span className="text-brand-gradient font-heading text-6xl font-bold tracking-tight tabular-nums">
             {String(active + 1).padStart(2, "0")}
           </span>

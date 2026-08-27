@@ -78,9 +78,11 @@ function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLEle
 
   return (
     <RevealShell tall ref={trackRef}>
+      {/* pt-28: el SiteHeader (glass, pegado arriba) mide ~72px + margen — sin
+          este padding el titular queda atrapado debajo del navbar al pinear. */}
       <div
         ref={stageRef}
-        className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden px-6 py-8 text-center"
+        className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-8 text-center"
       >
         <RevealHeading>
           <KineticWords
@@ -100,9 +102,11 @@ function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLEle
         </motion.p>
 
         <div className="relative mt-8 w-full max-w-[1000px]">
+          {/* Altura acotada al viewport (no aspect-ratio): con pills y titular
+              en el mismo svh, un 16:9 completo desbordaba pantallas bajas. */}
           <motion.div
             style={{ clipPath }}
-            className="border-border bg-card relative aspect-[16/9.4] overflow-hidden rounded-[20px] border will-change-[clip-path]"
+            className="border-border bg-card relative h-[min(44svh,520px)] overflow-hidden rounded-[20px] border will-change-[clip-path]"
           >
             <RevealShot />
             {/* El emblema: la α trenzándose dentro del círculo pequeño. */}
@@ -156,7 +160,7 @@ function RevealShell({
 
 function RevealHeading({ children }: { children: ReactNode }) {
   return (
-    <h2 className="font-heading max-w-[20ch] text-3xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+    <h2 className="font-heading max-w-[20ch] text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
       {children}
     </h2>
   );

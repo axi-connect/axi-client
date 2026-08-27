@@ -10,7 +10,7 @@ import ProductosCarousel from "@/modules/landing/ui/sections/productos/Productos
 import ProductosInbox from "@/modules/landing/ui/sections/productos/ProductosInbox";
 import ProductosCrmBento from "@/modules/landing/ui/sections/productos/ProductosCrmBento";
 import ProductosCatalogo from "@/modules/landing/ui/sections/productos/ProductosCatalogo";
-import ProductosMedicion from "@/modules/landing/ui/sections/productos/ProductosMedicion";
+import ProductosConversaciones from "@/modules/landing/ui/sections/productos/ProductosConversaciones";
 import ProductosFinalCta from "@/modules/landing/ui/sections/productos/ProductosFinalCta";
 
 /**
@@ -20,9 +20,10 @@ import ProductosFinalCta from "@/modules/landing/ui/sections/productos/Productos
  *
  * Plan de fase: `docs/plans/public-gtm-f6-productos.md`.
  *
- * Las anclas `#agente #inbox #crm #catalogo #medicion` están enlazadas desde
- * el mega-menú y el footer: si se renombra una, hay que actualizar
- * `site-nav.content.ts` en el mismo commit.
+ * Las anclas `#agente #inbox #crm #catalogo` están enlazadas desde el
+ * mega-menú y el footer: si se renombra una, hay que actualizar
+ * `site-nav.content.ts` en el mismo commit. `#medicion` ya no vive aquí:
+ * duplicaba la §6 de la home y su entrada del nav apunta a `/#medicion`.
  *
  * La raíz es `w-full` (el `<main>` del layout centra con `items-center`) y
  * NINGÚN wrapper de página lleva overflow: el pin de `#agente` depende de que
@@ -45,7 +46,7 @@ export default function ProductosPage() {
       <ProductosInbox />
       <ProductosCrmBento />
       <ProductosCatalogo />
-      <ProductosMedicion />
+      <ProductosConversaciones />
       <ProductosFinalCta />
     </div>
   );

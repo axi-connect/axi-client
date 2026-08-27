@@ -68,11 +68,12 @@ export const HERO_VIDEO = {
 /* ─────────────────────────────── Hero ──────────────────────────────── */
 
 export const PRODUCTOS_HERO = {
-  kicker: "Producto en producción · no roadmap",
-  /** El video manda: titular corto, abajo a la izquierda (decisión del mockup v2). */
-  headline: "Todo lo que Axi",
-  headlineGradient: "ya hace",
-  headlineTail: "por tu negocio",
+  /**
+   * Eco del gancho del video de bienvenida (Cristian, fundador y CTO): «El
+   * canal por el que hoy ingresa el dinero es el peor gestionado de las
+   * empresas…». El titular no vende: teasea el diálogo que el video abre.
+   */
+  headline: "El canal por donde hoy entra el dinero es el peor gestionado de tu empresa.",
   ctaPrimary: { label: "Agenda tu demo", href: "/contacto" },
   ctaSecondary: { label: "Ver el producto", href: "#agente" },
   soundOn: "Activar sonido",
@@ -174,7 +175,8 @@ export const CAPABILITIES: readonly CapabilityItem[] = [
     tag: "Resultados",
     title: "Medición en pesos",
     description: "Ventas atribuidas del hola al pago verificado.",
-    href: "#medicion",
+    /* La medición vive en la home (§6) — /productos retiró su copia. */
+    href: "/#medicion",
   },
 ];
 
@@ -284,18 +286,54 @@ export const CATALOG_SECTION = {
   },
 } as const;
 
-/* ──────────────────────── #medicion · header ───────────────────────── */
+/* ─────────────── Muro de conversaciones (pre-CTA) ──────────────── */
 
 /**
- * Las cifras (embudo, stat-tiles) NO viven aquí: se reutilizan las de
- * `METRICS` en `landing.content.ts` — una sola fuente de números para toda la
- * capa pública. Aquí solo el copy propio de la página.
+ * La sección de medición se retiró de esta página (duplicaba la §6 de la
+ * home — el ancla del mega-menú apunta ahora a `/#medicion`). En su lugar,
+ * el muro 3D de conversaciones: mensajes de clientes y respuestas del agente
+ * en negocios FICTICIOS de retail, comida y moda (jamás clientes reales sin
+ * permiso), con la voz del producto.
  */
-export const MEASURE_SECTION = {
-  kicker: "Medición en pesos",
-  title: "Del hola al pago verificado, medido",
-  intro: "No «mensajes atendidos»: ventas atribuidas, embudo real y dónde se cayó cada peso.",
+export interface WallMessage {
+  id: string;
+  business: string;
+  channel: "whatsapp" | "instagram" | "messenger";
+  from: "customer" | "agent";
+  text: string;
+}
+
+export const CONVERSATIONS_SECTION = {
+  kicker: "En vivo, en tus canales",
+  title: "Así suena un negocio con Axi",
+  intro:
+    "Clientes de moda, comida y retail escribiendo a cualquier hora — y el agente respondiendo en segundos, con datos reales.",
 } as const;
+
+/** Tres columnas del muro; cada una alterna cliente ↔ agente. */
+export const CHAT_WALL: readonly (readonly WallMessage[])[] = [
+  [
+    { id: "w1", business: "Moda Lunar", channel: "whatsapp", from: "customer", text: "¿La hoodie oversize la tienen en talla M?" },
+    { id: "w2", business: "Moda Lunar", channel: "whatsapp", from: "agent", text: "Quedan 3 en M, $129.900. ¿Te la aparto?" },
+    { id: "w3", business: "Kicks Bogotá", channel: "instagram", from: "customer", text: "Vi las tenis del reel, ¿en cuánto salen?" },
+    { id: "w4", business: "Kicks Bogotá", channel: "instagram", from: "agent", text: "$289.900 y hoy el envío va gratis. Te paso las fotos." },
+    { id: "w5", business: "Moda Lunar", channel: "whatsapp", from: "customer", text: "¿El cambio de talla tiene costo?" },
+  ],
+  [
+    { id: "w6", business: "Burger 33", channel: "messenger", from: "customer", text: "¿Llegan hasta Cedritos?" },
+    { id: "w7", business: "Burger 33", channel: "messenger", from: "agent", text: "Sí, en unos 35 minutos. ¿Repetimos tu última orden?" },
+    { id: "w8", business: "Burger 33", channel: "whatsapp", from: "customer", text: "¿El combo familiar trae gaseosa?" },
+    { id: "w9", business: "Burger 33", channel: "whatsapp", from: "agent", text: "Trae una de 1.5 L. ¿Lo confirmo para las 8:00?" },
+    { id: "w10", business: "Dulce Alma", channel: "instagram", from: "customer", text: "Necesito una torta para 20 personas el sábado." },
+  ],
+  [
+    { id: "w11", business: "TechNova", channel: "whatsapp", from: "agent", text: "Tu pedido #1043 salió a despacho. Te comparto la guía." },
+    { id: "w12", business: "TechNova", channel: "whatsapp", from: "customer", text: "¿Puedo pagar con Nequi?" },
+    { id: "w13", business: "TechNova", channel: "whatsapp", from: "agent", text: "Sí: Nequi, tarjeta o contraentrega. Como prefieras." },
+    { id: "w14", business: "BarberLab", channel: "messenger", from: "customer", text: "¿Tienen cita mañana a las 10:00?" },
+    { id: "w15", business: "BarberLab", channel: "messenger", from: "agent", text: "Las 10:00 están libres. Te agendo y te llega recordatorio." },
+  ],
+] as const;
 
 /* ─────────────────────────── CTA final ─────────────────────────────── */
 

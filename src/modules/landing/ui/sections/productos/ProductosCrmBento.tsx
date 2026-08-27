@@ -1,12 +1,11 @@
-import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { BrandCard } from "@/shared/components/ui/brand-card";
-import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { UnifiedContactBeam } from "@/modules/landing/ui/components/UnifiedContactBeam";
 import { CRM_SECTION } from "@/modules/landing/ui/content/productos.content";
 
 /** Bloques por etapa del mini-pipeline (deterministas, nunca aleatorios). */
@@ -96,27 +95,10 @@ export default function ProductosCrmBento() {
             </TiltCard>
           </Reveal>
 
-          {/* Contacto unificado */}
+          {/* Contacto unificado: los canales laten hacia la α (AnimatedBeam) */}
           <Reveal delay={0.12} className="lg:col-span-2">
             <BrandCard className="h-full px-6 py-6">
-              <div className="relative h-24" aria-hidden>
-                <svg viewBox="0 0 200 96" className="absolute inset-0 h-full w-full" fill="none">
-                  <path
-                    d="M42 22 C 90 22, 100 48, 148 48 M42 74 C 90 74, 100 48, 148 48"
-                    stroke="var(--color-border)"
-                    strokeWidth="1.5"
-                  />
-                </svg>
-                <span className="text-logo-whatsapp bg-secondary absolute top-0 left-4 flex size-10 items-center justify-center rounded-full">
-                  <FaWhatsapp className="size-5" />
-                </span>
-                <span className="text-logo-instagram bg-secondary absolute bottom-0 left-4 flex size-10 items-center justify-center rounded-full">
-                  <FaInstagram className="size-5" />
-                </span>
-                <span className="border-border bg-card shadow-float absolute top-1/2 right-6 flex size-13 -translate-y-1/2 items-center justify-center rounded-full border">
-                  <BrandMark className="size-8" />
-                </span>
-              </div>
+              <UnifiedContactBeam />
               <CardText title={cards.unified.title} body={cards.unified.body} />
             </BrandCard>
           </Reveal>
