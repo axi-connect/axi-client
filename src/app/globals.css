@@ -618,6 +618,32 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-flip-top { animation: flip-top 0.14s ease-in forwards; }
 .animate-flip-bottom { animation: flip-bottom 0.14s 0.14s ease-out both; }
 
+/* -------- Trenzado del isotipo (/productos, pin-reveal) --------
+   Las tres cintas de la α entran escalonadas (coral → violeta → ámbar) y
+   aterrizan trenzándose — el concepto `isotype-weave` del sistema de marca.
+   El isotipo NUNCA rota (DESIGN §2.2). En CSS y no en framer: transform puro
+   de compositor, misma razón que el splash. El disparo lo hace el componente
+   añadiendo la clase cuando el emblema entra en viewport. */
+@keyframes ribbon-in {
+  from {
+    opacity: 0;
+    transform: translateY(5%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-ribbon-weave [data-ribbon] {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ribbon-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-ribbon-weave [data-ribbon="violet"] { animation-delay: 0.18s; }
+.animate-ribbon-weave [data-ribbon="amber"] { animation-delay: 0.36s; }
+
 /* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
    `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja
    intensidad. El splash cae a crossfade puro (el provider maneja la rama JS). */
@@ -630,6 +656,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   /* El countdown sigue contando: solo desaparece el doblez (la cifra cambia
      de golpe). El componente además no monta las hojas con reduced-motion. */
   .animate-flip-top, .animate-flip-bottom { animation: none; }
+  /* El isotipo del pin-reveal aparece entero, sin trenzado. */
+  .animate-ribbon-weave [data-ribbon] { animation: none; opacity: 1; }
   /* Entradas/salidas de Radix (popover, dropdown, sheet): sin animación,
      los elementos aparecen/desaparecen al instante. */
   .animate-in, .animate-out { animation: none; }
