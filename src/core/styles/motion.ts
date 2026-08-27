@@ -44,15 +44,13 @@ export const durations = {
 /**
  * Coreografía del pin-reveal de `/productos` (§#agente): una sección alta con
  * hijo sticky cuyo progreso de scroll (0→1 sobre el contenedor
- * `[data-app-scroll]`) reparte titular cinético, expansión del medio y pills.
+ * `[data-app-scroll]`) reparte titular cinético, entrada del panel y pills.
  * Los rangos viven aquí para que la sección no defina números ad-hoc.
  *
- * EXCEPCIÓN DOCUMENTADA (DESIGN-SYSTEM §6): la expansión anima `clip-path`,
- * que no es transform/opacity. Se concede porque es UNA superficie, guiada por
- * scroll (sin reloj propio), con `will-change: clip-path` los navegadores
- * Blink/WebKit la componen fuera del hilo principal, y la alternativa (scale
- * sobre máscara redonda) deforma el contenido revelado. Con reduced-motion la
- * sección colapsa a su estado final estático.
+ * La entrada del panel es «Lift & Scale» (opción A elegida por el dueño sobre
+ * el comparador de coreografías, 2026-08-27 — estilo página de producto de
+ * Apple): el panel sube y crece hasta ocupar la escena. Solo transform y
+ * opacity — cumple DESIGN-SYSTEM §6 sin excepciones.
  */
 export const scrollReveal = {
   /** Offset del useScroll del track: progreso 0→1 mientras la sección está pineada. */
@@ -63,10 +61,8 @@ export const scrollReveal = {
   title: { from: 0.02, step: 0.03, span: 0.1 },
   /** Subtítulo. */
   sub: { from: 0.1, to: 0.18 },
-  /** Expansión del círculo (clip-path). */
-  media: { from: 0.18, to: 0.62, circleFrom: "circle(7% at 50% 50%)", circleTo: "circle(120% at 50% 50%)" },
-  /** Desvanecimiento del isotipo al abrirse el círculo. */
-  emblem: { from: 0.26, to: 0.42 },
+  /** Entrada del panel: sube liftPct% mientras escala y aclara hasta reposo. */
+  media: { from: 0.14, to: 0.58, liftPct: 16, scaleFrom: 0.74, opacityFrom: 0.25 },
   /** Pills de herramientas, escalonadas. */
   pills: { from: 0.6, step: 0.012, span: 0.1 },
 } as const

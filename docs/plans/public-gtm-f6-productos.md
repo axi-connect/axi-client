@@ -23,9 +23,12 @@
    «Activar sonido».
 4. **Hero envolvente**: el video manda — texto mínimo abajo a la izquierda,
    overlay ligero, barra de stats delgada (feedback del mockup v1→v2).
-5. **Isotipo, no estampilla**: el emblema del pin-reveal es `BrandMark` (las
-   tres cintas entran trenzándose — `.animate-ribbon-weave`, nuevo en
-   `globals.css`), nunca rota, se desvanece al expandirse el círculo.
+5. **Entrada del panel = «Lift & Scale»** (opción A del comparador de
+   coreografías, elegida por el dueño en la 3ª revisión sobre el círculo
+   expansivo + isotipo, que se retiró): el panel sube desde abajo creciendo
+   (translateY 16%→0, scale 0.74→1, opacity 0.25→1, easeOut) — estilo página
+   de producto de Apple, solo transform/opacity (sin excepción de clip-path).
+   El titular cinético y las pills se conservan tal cual.
 6. **18 herramientas, no 16**: la cifra del plan F6 estaba desactualizada. Los
    nombres de las pills son los archivos reales de
    `axi-server/src/modules/ai_agents/application/tools/*.tool.ts` (18).

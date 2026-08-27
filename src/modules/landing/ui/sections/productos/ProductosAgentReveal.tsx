@@ -2,11 +2,10 @@
 
 import { useRef, type ReactNode, type RefObject } from "react";
 import Image from "next/image";
-import { motion, useInView, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { easeOut, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 
 import { cn } from "@/core/lib/utils";
 import { scrollReveal } from "@/core/styles/motion";
-import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { KineticWords, type ScrollProgress } from "@/modules/landing/ui/components/KineticWords";
 import { useScrollContainer } from "@/modules/landing/ui/components/use-scroll-container";
 import {
@@ -19,9 +18,9 @@ import {
  * §2 `#agente` — la escena pineada: una sección alta cuyo hijo sticky queda
  * clavado al viewport mientras el progreso de scroll (coreografía en
  * `motion.ts → scrollReveal`) revela, en orden: el titular palabra a palabra,
- * el círculo que se expande sobre la captura real del panel de agentes (se
- * entra por el ojo de la α: el isotipo trenzándose ocupa el círculo pequeño y
- * se desvanece al abrirse), y las 18 herramientas reales como pills.
+ * el panel con la captura real de agentes entrando en «Lift & Scale» (opción A
+ * del comparador — sube desde abajo creciendo, estilo página de producto de
+ * Apple), y las 18 herramientas reales como pills.
  *
  * Sticky funciona contra el scroller `[data-app-scroll]` porque ningún
  * ancestro intermedio tiene overflow/transform — NO añadir `overflow-hidden`
@@ -53,8 +52,6 @@ export default function ProductosAgentReveal() {
 
 function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
   const trackRef = useRef<HTMLElement | null>(null);
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const emblemInView = useInView(stageRef, { once: true, amount: 0.3 });
 
   const { scrollYProgress } = useScroll({
     target: trackRef,
@@ -65,25 +62,21 @@ function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLEle
   const progress = scrollYProgress as ScrollProgress;
 
   const subOpacity = useTransform(progress, [scrollReveal.sub.from, scrollReveal.sub.to], [0, 1]);
-  const clipPath = useTransform(
-    progress,
-    [scrollReveal.media.from, scrollReveal.media.to],
-    [scrollReveal.media.circleFrom, scrollReveal.media.circleTo],
-  );
-  const emblemOpacity = useTransform(
-    progress,
-    [scrollReveal.emblem.from, scrollReveal.emblem.to],
-    [1, 0],
-  );
+  /* «Lift & Scale» (opción A): el panel sube desde abajo creciendo y
+     aclarándose hasta reposar — easeOut para el aterrizaje suave de Apple. */
+  const { media } = scrollReveal;
+  const mediaRange = [media.from, media.to];
+  const y = useTransform(progress, mediaRange, [`${media.liftPct}%`, "0%"], { ease: easeOut });
+  const scale = useTransform(progress, mediaRange, [media.scaleFrom, 1], { ease: easeOut });
+  const mediaOpacity = useTransform(progress, mediaRange, [media.opacityFrom, 1], {
+    ease: easeOut,
+  });
 
   return (
     <RevealShell tall ref={trackRef}>
       {/* pt-28: el SiteHeader (glass, pegado arriba) mide ~72px + margen — sin
           este padding el titular queda atrapado debajo del navbar al pinear. */}
-      <div
-        ref={stageRef}
-        className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-8 text-center"
-      >
+      <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-8 text-center">
         <RevealHeading>
           <KineticWords
             text={AGENT_REVEAL.title}
@@ -105,26 +98,10 @@ function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLEle
           {/* Altura acotada al viewport (no aspect-ratio): con pills y titular
               en el mismo svh, un 16:9 completo desbordaba pantallas bajas. */}
           <motion.div
-            style={{ clipPath }}
-            className="border-border bg-card relative h-[min(44svh,520px)] overflow-hidden rounded-[20px] border will-change-[clip-path]"
+            style={{ y, scale, opacity: mediaOpacity }}
+            className="border-border bg-card shadow-overlay relative h-[min(44svh,520px)] overflow-hidden rounded-[20px] border will-change-transform"
           >
             <RevealShot />
-            {/* El emblema: la α trenzándose dentro del círculo pequeño. */}
-            <motion.div
-              style={{ opacity: emblemOpacity }}
-              className="absolute inset-0 grid place-items-center"
-            >
-              <span
-                aria-hidden
-                className="bg-background/55 absolute inset-0 backdrop-blur-[2px]"
-              />
-              <BrandMark
-                className={cn(
-                  "relative size-28 drop-shadow-[0_0_34px_color-mix(in_srgb,var(--axi-brand)_38%,transparent)] sm:size-36",
-                  emblemInView && "animate-ribbon-weave",
-                )}
-              />
-            </motion.div>
           </motion.div>
         </div>
 
