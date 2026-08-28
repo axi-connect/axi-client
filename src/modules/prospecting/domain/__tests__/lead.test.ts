@@ -47,7 +47,7 @@ describe("whyChannelBlocked", () => {
     const publico = {
       ...BASE,
       legal_basis: "public_business_data" as const,
-      allowed_channels: ["email", "manual" as const],
+      allowed_channels: ["email", "manual"] as const,
     };
     const motivo = whyChannelBlocked(publico, "whatsapp");
     // El tooltip tiene que decir el motivo: un icono tachado sin explicación se
@@ -59,7 +59,7 @@ describe("whyChannelBlocked", () => {
     const desconocido = {
       ...BASE,
       legal_basis: "unknown" as const,
-      allowed_channels: ["manual" as const],
+      allowed_channels: ["manual"] as const,
     };
     expect(whyChannelBlocked(desconocido, "email")).toContain(
       "No sabemos de dónde salió",

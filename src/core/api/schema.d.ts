@@ -4228,6 +4228,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/icp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_getIcp_v1"];
+        put: operations["ProspectingController_putIcp_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/quality/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_qualitySummary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_verify_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/proposals/{proposal_id}/approve": {
         parameters: {
             query?: never;
@@ -10324,6 +10372,68 @@ export interface components {
             auto_promote_consented: boolean;
             quarantine_days: number;
             promote_batch_max: number;
+        };
+        IcpDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            definition: {
+                /** @default [] */
+                categories: string[];
+                /** @default [] */
+                cities: string[];
+                /** @default [] */
+                countries: string[];
+                /** @default [] */
+                keywords: string[];
+                /** @default [] */
+                exclude_keywords: string[];
+            };
+            weights: {
+                contactability: number;
+                identity: number;
+                fit: number;
+                provenance: number;
+            };
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateIcpDto: {
+            name?: string;
+            definition: {
+                /** @default [] */
+                categories: string[];
+                /** @default [] */
+                cities: string[];
+                /** @default [] */
+                countries: string[];
+                /** @default [] */
+                keywords: string[];
+                /** @default [] */
+                exclude_keywords: string[];
+            };
+            weights?: {
+                contactability: number;
+                identity: number;
+                fit: number;
+                provenance: number;
+            };
+        };
+        QualitySummaryDto: {
+            unverified: number;
+            verified: number;
+            risky: number;
+            invalid: number;
+            suppressed: number;
+            unscored: number;
+            average_score: number;
+        };
+        ScoreResultDto: {
+            /** Format: uuid */
+            lead_id: string;
+            score: number;
+            /** @enum {string} */
+            status: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
         };
         ApprovalResultDto: {
             applied: {
@@ -18759,6 +18869,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProspectingSettingsDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_getIcp_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IcpDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_putIcp_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIcpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IcpDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_qualitySummary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySummaryDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_verify_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoreResultDto"];
                 };
             };
         };

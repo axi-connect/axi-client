@@ -6,6 +6,10 @@ export type LeadDetailDTO = Schemas["LeadDetailDto"];
 export type LeadEventDTO = LeadDetailDTO["events"][number];
 export type ProspectingStatsDTO = Schemas["ProspectingStatsDto"];
 export type PromoteResultDTO = Schemas["PromoteResultDto"];
+export type IcpDTO = Schemas["IcpDto"];
+export type IcpDefinitionDTO = IcpDTO["definition"];
+export type AxisWeightsDTO = IcpDTO["weights"];
+export type QualitySummaryDTO = Schemas["QualitySummaryDto"];
 
 export type LeadStatus = LeadDTO["status"];
 export type LeadSource = LeadDTO["source"];
@@ -256,4 +260,73 @@ export function rowAllowedChannels(row: LeadRow): OutreachChannel[] {
   if (row.allows_email) allowed.push("email");
   if (row.allows_manual) allowed.push("manual");
   return allowed;
+}
+
+/** Una señal del índice, tal como la guarda el backend en `quality_signals`. */
+export interface QualityCheck {
+  key: string;
+  axis: QualityAxisKey;
+  outcome: "pass" | "fail" | "warn" | "unknown";
+  evidence: string;
+}
+
+/**
+ * Las señales con su evidencia, agrupadas por eje.
+ *
+ * Las `unknown` se conservan y se muestran aparte: son la respuesta a «¿por qué
+ * este lead tiene 74 y no 90?» cuando el motivo no es que algo falle sino que
+ * nadie lo ha medido todavía. Ocultarlas haría que el puntaje pareciera
+ * arbitrario.
+ */
+export function readQualityChecks(signals: unknown): QualityCheck[] {
+  const record =
+    typeof signals === "object" && signals !== null
+      ? (signals as Record<string, unknown>)
+      : {};
+  const raw = record.checks;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const { key, axis, outcome, evidence } = entry as Record<string, unknown>;
+    if (typeof key !== "string" || typeof evidence !== "string") return [];
+    if (!QUALITY_AXES.some((known) => known.key === axis)) return [];
+    if (
+      outcome !== "pass" &&
+      outcome !== "fail" &&
+      outcome !== "warn" &&
+      outcome !== "unknown"
+    ) {
+      return [];
+    }
+    return [{ key, axis: axis as QualityAxisKey, outcome, evidence }];
+  });
+}
+
+export function checksByAxis(
+  checks: QualityCheck[],
+  axis: QualityAxisKey,
+): QualityCheck[] {
+  return checks.filter((check) => check.axis === axis);
+}
+
+/**
+ * Cuántos puntos del eje se pudieron medir. Viene del backend porque es lo que
+ * permite decir «21 de 25 medidos» en vez de fingir que se evaluó todo.
+ */
+export function readAxisEvaluable(
+  signals: unknown,
+  axis: QualityAxisKey,
+): number {
+  const record =
+    typeof signals === "object" && signals !== null
+      ? (signals as Record<string, unknown>)
+      : {};
+  const evaluable =
+    typeof record.evaluable === "object" && record.evaluable !== null
+      ? (record.evaluable as Record<string, unknown>)
+      : {};
+  const value = evaluable[axis];
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.round(value)
+    : 0;
 }

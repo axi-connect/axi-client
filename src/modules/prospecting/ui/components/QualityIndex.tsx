@@ -9,10 +9,14 @@ import {
 
 import {
   QUALITY_AXES,
-  readQualityAxes,
+  checksByAxis,
   hasQualitySignals,
+  readAxisEvaluable,
+  readQualityAxes,
+  readQualityChecks,
   type LeadRow,
 } from "../../domain/lead";
+import { QualityEvidence } from "./QualityEvidence";
 
 /**
  * El Índice de Calidad de Lead, en su forma compacta: cuatro segmentos, uno
@@ -93,7 +97,7 @@ export function QualityIndex({
   );
 }
 
-/** Desglose completo, para el detalle del lead. */
+/** Desglose completo con la evidencia de cada señal, para el detalle. */
 export function QualityBreakdown({
   score,
   signals,
@@ -103,6 +107,7 @@ export function QualityBreakdown({
 }) {
   const axes = readQualityAxes(signals);
   const measured = hasQualitySignals(signals);
+  const checks = readQualityChecks(signals);
 
   return (
     <div>
@@ -116,35 +121,45 @@ export function QualityBreakdown({
 
       {!measured && (
         <p className="text-muted-foreground mb-3 text-xs">
-          Este lead todavía no se ha verificado. Cuando el motor de calidad esté
-          activo, aquí verás de qué depende su puntaje y con qué evidencia.
+          Este lead todavía no se ha puntuado. Aparecerá aquí en cuanto el motor
+          lo revise.
         </p>
       )}
 
       <dl className="divide-border-soft divide-y">
-        {axes.map((axis) => (
-          <div
-            key={axis.key}
-            className="grid grid-cols-[1fr_auto] items-center gap-x-3 py-2.5"
-          >
-            <dt className="text-sm font-semibold">{axis.label}</dt>
-            <dd className="font-heading text-sm font-bold tabular-nums">
-              {axis.score}{" "}
-              <span className="text-muted-foreground text-xs font-medium">
-                / {axis.max}
-              </span>
-            </dd>
-            <div className="bg-foreground/8 col-span-2 mt-1 h-1 overflow-hidden rounded-sm">
-              <div
-                className="bg-accent-violet h-full rounded-sm"
-                style={{ width: `${(axis.score / axis.max) * 100}%` }}
-              />
+        {axes.map((axis) => {
+          const evaluable = readAxisEvaluable(signals, axis.key);
+          const axisChecks = checksByAxis(checks, axis.key);
+          return (
+            <div key={axis.key} className="py-3">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
+                <dt className="text-sm font-semibold">{axis.label}</dt>
+                <dd className="font-heading text-sm font-bold tabular-nums">
+                  {axis.score}{" "}
+                  <span className="text-muted-foreground text-xs font-medium">
+                    / {evaluable > 0 ? evaluable : axis.max}
+                  </span>
+                </dd>
+              </div>
+              <div className="bg-foreground/8 mt-1 h-1 overflow-hidden rounded-sm">
+                <div
+                  className="bg-accent-violet h-full rounded-sm"
+                  style={{
+                    width: `${(axis.score / (evaluable > 0 ? evaluable : axis.max)) * 100}%`,
+                  }}
+                />
+              </div>
+              {/* «de 25» cuando solo se midieron 18 sería mentir sobre lo que
+                  se sabe: el denominador es lo evaluable, no el peso. */}
+              {evaluable > 0 && evaluable < axis.max && (
+                <p className="text-muted-foreground mt-1 text-[11px]">
+                  Sobre {evaluable} de {axis.max} puntos medibles
+                </p>
+              )}
+              <QualityEvidence checks={axisChecks} />
             </div>
-            <p className="text-muted-foreground col-span-2 mt-1 text-xs">
-              {axis.question}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </dl>
     </div>
   );

@@ -138,7 +138,7 @@ export function LeadsInboxView({
   return (
     <div>
       <PageHeader
-        title="Captación"
+        title="Bandeja"
         description="Prospectos descubiertos y a la espera de entrar a tu CRM. Nadie sale de aquí sin que tú lo promuevas."
       />
 

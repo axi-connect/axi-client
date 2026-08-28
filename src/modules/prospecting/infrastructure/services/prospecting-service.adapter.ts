@@ -2,6 +2,9 @@ import type { Paginated, Schemas } from "@/core/api/types";
 import { http, type Params } from "@/core/services/http";
 
 import type {
+  AxisWeightsDTO,
+  IcpDTO,
+  IcpDefinitionDTO,
   LeadDTO,
   LeadDetailDTO,
   LeadSource,
@@ -10,6 +13,7 @@ import type {
   PromoteResultDTO,
   ProspectingStatsDTO,
   QualityStatus,
+  QualitySummaryDTO,
 } from "../../domain/lead";
 
 export type ProspectingSettingsDTO = Schemas["ProspectingSettingsDto"];
@@ -85,4 +89,36 @@ export function updateProspectingSettings(
   input: ProspectingSettingsDTO,
 ): Promise<ProspectingSettingsDTO> {
   return http.put<ProspectingSettingsDTO>("/prospecting/settings", input);
+}
+
+// ============================================================================
+// F2 — motor de calidad
+// ============================================================================
+
+/** Siempre devuelve algo: el backend crea el default lazy. */
+export function getIcp(): Promise<IcpDTO> {
+  return http.get<IcpDTO>("/prospecting/icp");
+}
+
+/**
+ * Guardar el cliente ideal re-puntúa la base **sin gastar cuota**, así que
+ * responde de inmediato con el ICP guardado: el re-cálculo va por detrás.
+ */
+export function updateIcp(input: {
+  name?: string;
+  definition: IcpDefinitionDTO;
+  weights?: AxisWeightsDTO;
+}): Promise<IcpDTO> {
+  return http.put<IcpDTO>("/prospecting/icp", input);
+}
+
+export function getQualitySummary(): Promise<QualitySummaryDTO> {
+  return http.get<QualitySummaryDTO>("/prospecting/quality/summary");
+}
+
+/** Re-puntúa un lead. SÍ puede gastar cuota: por eso pide `leads:manage`. */
+export function verifyLead(
+  leadId: string,
+): Promise<{ lead_id: string; score: number; status: QualityStatus }> {
+  return http.post(`/prospecting/leads/${leadId}/verify`);
 }

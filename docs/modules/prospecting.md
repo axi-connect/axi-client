@@ -1,7 +1,8 @@
 # Captación de leads (`/marketing/leads`)
 
 > Slice `prospecting` del frontend. Backend: `axi-server/docs/plans/prospecting_module_plan.md`.
-> Estado: **F1** — bandeja y detalle. Búsquedas, fuentes y calidad llegan en sus fases.
+> Estado: **F1 + F2** — bandeja, detalle con evidencia, y pestaña de Calidad con el cliente
+> ideal editable. Búsquedas y fuentes llegan en F3/F4.
 
 ## La idea en una frase
 
@@ -30,9 +31,14 @@ tachado sin motivo se lee como un fallo del sistema.
 
 ```
 src/app/(private)/(content)/marketing/leads/
+├── layout.tsx                      → LeadsNav (la pastilla de pestañas)
 ├── page.tsx + loading.tsx          → LeadsInboxView (stats precargadas en el servidor)
-└── [leadId]/page.tsx               → LeadDetailView
+├── [leadId]/page.tsx               → LeadDetailView
+└── quality/page.tsx + loading.tsx  → QualityView (F2)
 ```
+
+La pastilla aparece con F2, cuando hay dos vistas que valen una URL propia. Con una sola pantalla
+habría sido decoración.
 
 El ítem de sidebar es `marketing_leads` («Captación»), hijo de Marketing, con permiso
 `leads:read`. Lo siembra `security.seeder.ts` del backend.
@@ -52,12 +58,18 @@ pulsarlo es un control que miente.
 1. **`POST /prospecting/leads/promote` responde 200 con fallos parciales.** El cuerpo trae
    `{ promoted, failed }` y hay que leer `failed` aunque la petición haya ido bien: que uno de
    cinco esté suprimido no invalida los otros cuatro.
-2. **`quality_signals` llega vacío hasta F2.** `readQualityAxes` devuelve los cuatro ejes en cero y
-   `hasQualitySignals` dice si alguien midió algo. La UI pinta «—» en vez de un 0 que parecería una
-   mala nota.
-3. **`extraParams` de `usePaginatedList` va memoizado** o el hook entra en bucle de fetch (mismo
+2. **Una señal sin medir NO es una señal fallida.** `quality_signals.checks[]` trae `unknown` para
+   lo que nadie pudo medir, y se pinta en gris, no en rojo: si el motor no tiene proveedor de
+   verificación conectado, esas señales quedan sin medir y **no bajan el puntaje de nadie**. Es la
+   invariante F2-D1 del backend, y la UI tiene que contarla igual.
+3. **El denominador de un eje es lo evaluable, no su peso.** `readAxisEvaluable` devuelve cuántos
+   puntos se pudieron medir; decir «18 de 25» cuando solo se midieron 22 sería mentir sobre lo que
+   se sabe.
+4. **El estado de calidad no sale del puntaje.** Un lead puede tener 92 y estar `risky` porque su
+   dominio es catch-all. Nunca derives el semáforo del número.
+5. **`extraParams` de `usePaginatedList` va memoizado** o el hook entra en bucle de fetch (mismo
    gotcha que `CampaignDetailView`).
-4. **`LeadRow` es un `type`, no un `interface`.** `DataTable` exige `Record<string, Primitive>` y un
+6. **`LeadRow` es un `type`, no un `interface`.** `DataTable` exige `Record<string, Primitive>` y un
    `interface` no satisface un index signature. Por eso existe `mapLeadToRow`: aplana el desglose
    del índice y los permisos a primitivos.
 
@@ -67,9 +79,12 @@ pulsarlo es un control que miente.
   semáforo. TypeScript puro.
 - `infrastructure/services/prospecting-service.adapter.ts` — la única puerta al HTTP.
 - `ui/LeadsInboxView.tsx` · `ui/LeadDetailView.tsx`
+- `ui/QualityView.tsx` — la pestaña de Calidad (F2).
 - `ui/components/` — `CaptureFunnel` (la cuarentena hecha visible), `ChannelPermissions`,
-  `QualityIndex` + `QualityBreakdown`, `LeadProvenance` (de dónde salió cada dato),
-  `PromotionGate` (la puerta con sus requisitos listados antes de pulsar), `LeadTimeline`.
+  `QualityIndex` + `QualityBreakdown`, `QualityEvidence` (la evidencia por señal),
+  `QualityDistribution`, `IcpEditor` (el cliente ideal editable), `LeadProvenance` (de dónde salió
+  cada dato), `PromotionGate` (la puerta con sus requisitos listados antes de pulsar),
+  `LeadTimeline`, `LeadsNav`.
 - `ui/tables/leads.config.tsx` — columnas por factory (`buildLeadColumns`), porque la casilla
   necesita leer la selección y `ColumnDef.cell` solo recibe la fila.
 
@@ -78,7 +93,8 @@ pulsarlo es un control que miente.
 - **Búsquedas** (F4) y **Fuentes** (F3/F5): el mockup las tiene, el backend todavía no. Cuando
   lleguen, la sección pasa a `NavTabs` (patrón `MarketingSettingsNav`) con Bandeja · Búsquedas ·
   Fuentes · Calidad. Hoy es una sola vista y no vale la pena la pastilla.
-- **Calidad** (F2): la pestaña con el ICP editable, los pesos por eje y la lista de supresión. El
-  backend ya expone `GET|PUT /prospecting/settings` y el CRUD de supresiones; falta la pantalla.
+- **Lista de supresión**: el backend la expone desde F1 (`GET|POST|DELETE /prospecting/suppressions`)
+  pero todavía no tiene pantalla. Ojo al diseñarla: la lista **no devuelve el valor en claro**, solo
+  su hash — se puede saber cuántos hay y quitar uno por su id, no leer a quién se dejó fuera.
 - **Tiempo real**: cuando F4 traiga búsquedas con progreso, el patrón es WS como señal primaria y
   polling derivado del estado como respaldo (`campaignPollInterval` es el modelo exacto).

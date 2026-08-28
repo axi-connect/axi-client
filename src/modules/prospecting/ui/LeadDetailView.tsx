@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, Check, RefreshCw, X } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
@@ -26,6 +26,7 @@ import {
   discardLead,
   getLead,
   promoteLeads,
+  verifyLead,
 } from "../infrastructure/services/prospecting-service.adapter";
 import { ChannelPermissions } from "./components/ChannelPermissions";
 import { LeadProvenance } from "./components/LeadProvenance";
@@ -78,6 +79,32 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
         });
       }
       await load();
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, load, showAlert]);
+
+  /**
+   * Volver a puntuar este lead. SÍ puede gastar cuota —por eso pide
+   * `leads:manage`— y se dice en el botón: quien lo pulsa está pidiendo que se
+   * pague por saber.
+   */
+  const onVerify = useCallback(async () => {
+    setBusy(true);
+    try {
+      const result = await verifyLead(leadId);
+      showAlert({
+        tone: "success",
+        title: `Puntaje actualizado: ${String(result.score)}`,
+        description: "Abajo tienes la evidencia de cada señal.",
+      });
+      await load();
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo verificar",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
     } finally {
       setBusy(false);
     }
@@ -145,18 +172,30 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
           </p>
         </div>
 
-        {canDiscard(lead) && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-auto"
-            disabled={busy}
-            onClick={() => void onDiscard()}
-          >
-            <X className="size-4" aria-hidden />
-            Descartar
-          </Button>
-        )}
+        <div className="ml-auto flex gap-2">
+          {hasPermission("leads:manage") && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => void onVerify()}
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              Volver a revisar
+            </Button>
+          )}
+          {canDiscard(lead) && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => void onDiscard()}
+            >
+              <X className="size-4" aria-hidden />
+              Descartar
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
