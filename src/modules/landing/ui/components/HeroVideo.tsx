@@ -165,7 +165,11 @@ export function HeroVideo({
         onCanPlay={() => setCanPlay(true)}
         onError={() => setFailed(true)}
         className={cn(
-          "h-full w-full object-cover transition-opacity duration-700",
+          /* Móvil: `cover` — el máster vertical llena la pantalla sin perder
+             nada. Escritorio: `contain`, que en el marco de cine (ya 16:9) da
+             el mismo resultado que cover pero JAMÁS recorta si el marco tuviera
+             que estrecharse en un viewport angosto y alto. */
+          "h-full w-full object-cover transition-opacity duration-700 md:object-contain",
           showVideo ? "opacity-100" : "opacity-0",
         )}
       >

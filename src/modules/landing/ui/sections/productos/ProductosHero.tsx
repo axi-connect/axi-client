@@ -33,7 +33,12 @@ export default function ProductosHero() {
   return (
     <section
       aria-label="Presentación del producto"
-      className="dark theme-dark-island bg-background text-foreground relative flex min-h-svh w-full flex-col overflow-hidden"
+      /* `md:h-svh` y no solo `min-h-svh`: el marco no tiene contenido en flujo
+         (el video va en absoluto), así que su alto sale de `h-full`. Una
+         altura de MÍNIMO no es definida, el porcentaje cae a `auto`, el marco
+         mide cero y del hero solo se ve el degradado. Con la altura definida
+         la cadena sección → escenario (flex-1) → marco resuelve entera. */
+      className="dark theme-dark-island bg-background text-foreground relative flex min-h-svh w-full flex-col overflow-hidden md:h-svh"
     >
       {/* Fondo de marca: LCP instantáneo y fallback permanente del video. */}
       <BrandGradientCanvas className="absolute inset-0 h-full w-full" speed={0.9} grain={0.6} opacity={0.6} />
@@ -42,17 +47,22 @@ export default function ProductosHero() {
           Móvil: cubre la sección entera (el video es el fondo).
           Escritorio: único elemento flexible de la columna — la altura la
           reparte flex, jamás un `calc(100svh - alto fijo)` (DESIGN-SYSTEM
-          §4.2). `container-type: size` lo convierte en la referencia contra
-          la que el marco calcula su ancho. */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center md:relative md:inset-auto md:z-10 md:min-h-0 md:flex-1 md:[container-type:size] md:px-6 md:pt-28 [@media(max-height:760px)]:md:pt-24">
+          §4.2). */}
+      <div className="absolute inset-0 z-0 flex items-center justify-center md:relative md:inset-auto md:z-10 md:min-h-0 md:flex-1 md:px-6 md:pt-28 [@media(max-height:760px)]:md:pt-24">
         {/* Marco.
-            El ancho sale de `min(100%, 177.78cqh)` —el alto del escenario por
-            16/9— porque un `aspect-video` con `width:100%` y `max-height:100%`
-            NO encoge: al recortar el alto el navegador conserva el ancho y
-            rompe la proporción. Midiendo contra el escenario el ancho es
-            correcto tanto si manda el alto como si manda el ancho, y
-            `aspect-video` deriva la altura. */}
-        <div className="relative h-full w-full overflow-hidden md:aspect-video md:h-auto md:w-[min(100%,177.78cqh)] md:rounded-[20px] md:border md:border-border/60 md:shadow-[0_40px_100px_-40px_color-mix(in_srgb,var(--axi-brand)_38%,transparent)]">
+            Manda el ALTO: toma todo el alto del escenario y `aspect-video`
+            deriva el ancho, así el video ocupa cuanto se pueda sin recortarse.
+            `max-w-full` es la red de seguridad del caso raro —viewport estrecho
+            y muy alto— en el que el ancho derivado no cabría; ahí el marco deja
+            de ser 16:9 y por eso el video va con `object-contain`, que nunca
+            recorta (en el caso normal el marco YA es 16:9 y contain llena el
+            cuadro exactamente igual que cover).
+
+            NO usar unidades de contenedor aquí: la versión previa calculaba el
+            ancho con `min(100%,177.78cqh)` sobre un escenario con
+            `container-type: size`, y Chrome resolvía `cqh` a 0 — el marco salía
+            de ancho cero y del hero solo se veía el degradado de fondo. */}
+        <div className="relative h-full w-full overflow-hidden md:aspect-video md:h-full md:w-auto md:max-w-full md:rounded-[20px] md:border md:border-border/60 md:shadow-[0_40px_100px_-40px_color-mix(in_srgb,var(--axi-brand)_38%,transparent)]">
           <HeroVideo
             desktop={HERO_VIDEO.desktop}
             mobile={HERO_VIDEO.mobile}
@@ -64,28 +74,21 @@ export default function ProductosHero() {
         </div>
       </div>
 
-      {/* Velo de legibilidad: SOLO en móvil, que es donde el texto se posa
-          sobre el video. En escritorio el texto vive sobre la isla oscura. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-[1] md:hidden"
-        style={{
-          background:
-            "radial-gradient(85% 110% at 10% 100%, color-mix(in srgb, var(--background) 80%, transparent) 0%, transparent 58%)," +
-            "linear-gradient(to top, color-mix(in srgb, var(--background) 90%, transparent) 0%, color-mix(in srgb, var(--background) 30%, transparent) 26%, transparent 48%)," +
-            "linear-gradient(to bottom, color-mix(in srgb, var(--background) 45%, transparent) 0%, transparent 16%)",
-        }}
-      />
-
       {/* Lockup de dos líneas con jerarquía (muted plantea, strong remata).
           En móvil se apoya al pie sobre el velo; en escritorio queda bajo el
           marco, ya sin nada que taparle. */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 shrink-0 flex-col justify-end px-6 pt-32 pb-10 sm:px-7 md:flex-none md:pt-8 md:pb-7 [@media(max-height:760px)]:md:pt-5 [@media(max-height:760px)]:md:pb-5">
-        <h1 className="font-heading max-w-[34ch] text-2xl leading-[1.22] font-semibold tracking-tight sm:text-3xl lg:text-4xl [@media(max-height:760px)]:md:text-2xl">
+      {/* En móvil este bloque no pinta nada —el video se ve entero— pero
+          conserva `flex-1` para empujar la barra de stats al pie. */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 shrink-0 flex-col justify-end md:flex-none md:px-7 md:pt-8 md:pb-7 [@media(max-height:760px)]:md:pt-5 [@media(max-height:760px)]:md:pb-5">
+        {/* `sr-only` y NO `hidden`: es el único h1 de la página y la capa
+            pública lo exige para SEO (docs/modules/public-site.md). Ocultarlo
+            del todo lo sacaría del árbol de accesibilidad y del indexado
+            mobile-first; así deja de ocupar espacio pero sigue existiendo. */}
+        <h1 className="font-heading max-md:sr-only max-w-[34ch] text-2xl leading-[1.22] font-semibold tracking-tight sm:text-3xl lg:text-4xl [@media(max-height:760px)]:md:text-2xl">
           <span className="text-foreground/55 block">{PRODUCTOS_HERO.headlineMuted}</span>
           <span className="text-silver-gradient block">{PRODUCTOS_HERO.headlineStrong}</span>
         </h1>
-        <div className="mt-6 flex flex-wrap items-center gap-3.5 [@media(max-height:760px)]:md:mt-4">
+        <div className="mt-6 flex flex-wrap items-center gap-3.5 max-md:hidden [@media(max-height:760px)]:md:mt-4">
           <Button
             asChild
             className="group h-12 rounded-full px-7 text-[15px] shadow-[0_14px_40px_color-mix(in_srgb,var(--axi-brand)_40%,transparent)]"
