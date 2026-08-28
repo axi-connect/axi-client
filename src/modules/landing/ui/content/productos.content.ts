@@ -76,7 +76,7 @@ export const PRODUCTOS_HERO = {
   headline: "El canal por donde hoy entra el dinero es el peor gestionado de tu empresa.",
   ctaPrimary: { label: "Agenda tu demo", href: "/contacto" },
   ctaSecondary: { label: "Ver el producto", href: "#agente" },
-  soundOn: "Activar sonido",
+  soundOn: "Escuchar el mensaje",
   soundOff: "Silenciar",
   play: "Reproducir video",
   stats: [

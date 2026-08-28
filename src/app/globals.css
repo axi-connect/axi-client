@@ -637,6 +637,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 .group\/wall:hover .animate-marquee-vertical { animation-play-state: paused; }
 
+/* -------- Ecualizador del control de sonido (hero de /productos) --------
+   Tres barras que laten mientras el mensaje del video suena — feedback de
+   estado, no decoración: es lo que dice "esto está sonando" sin leer. */
+@keyframes sound-eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+.animate-sound-eq {
+  animation: sound-eq 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
 /* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
    `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja
    intensidad. El splash cae a crossfade puro (el provider maneja la rama JS). */
@@ -646,6 +659,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .animate-mascot-bob, .animate-hero-float { animation: none; }
   .animate-logo-marquee { animation: none; }
   .animate-marquee-vertical { animation: none; }
+  .animate-sound-eq { animation: none; }
   .animate-accordion-down, .animate-accordion-up { animation: none; }
   /* El countdown sigue contando: solo desaparece el doblez (la cifra cambia
      de golpe). El componente además no monta las hojas con reduced-motion. */

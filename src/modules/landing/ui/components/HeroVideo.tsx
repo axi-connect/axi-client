@@ -13,21 +13,26 @@ export interface HeroVideoSources {
 }
 
 /**
- * Video de hero en streaming progresivo (Cloudinary sirve con HTTP range):
- * autoplay SIEMPRE silenciado —los navegadores bloquean autoplay con audio— y
- * botón «Activar sonido» cuyo clic, por ser gesto del usuario, legaliza el
- * audio sin recargar nada.
+ * Video de hero en streaming progresivo (Cloudinary sirve con HTTP range).
  *
- * Rendimiento y resiliencia:
- * - Las `<source>` se montan tras la hidratación (elige desktop/móvil con
- *   `matchMedia` una sola vez): el LCP es lo que haya DEBAJO del video (el
- *   `BrandGradientCanvas` de la sección), nunca el video. El video entra con
- *   un fade cuando ya puede reproducir; si el asset no existe o falla, el
- *   componente queda invisible y el fondo de marca sostiene el hero.
- * - Se pausa al salir del viewport (IntersectionObserver sobre el scroller
- *   `[data-app-scroll]`) y reanuda al volver.
- * - Con `prefers-reduced-motion` o `Save-Data` no hay autoplay: botón de
- *   reproducción explícito.
+ * Audio — el mensaje es lo importante (decisión del dueño):
+ * - Al montar se intenta el autoplay CON sonido. Donde la política del
+ *   navegador lo permita (engagement previo, ajustes del sitio), el video
+ *   suena de entrada. Si el navegador lo veta —el caso común— cae a autoplay
+ *   silenciado sin romper nada.
+ * - El control de sonido es un pill glass con ecualizador vivo cuando suena;
+ *   al ACTIVAR el sonido el video reinicia desde el principio, para que el
+ *   mensaje se escuche completo, no desde la mitad del loop.
+ *
+ * Plomería que costó un bug: las `<source>` se montan tras la hidratación
+ * (elección desktop/móvil con matchMedia), y añadir sources a un `<video>` ya
+ * montado NO relanza la selección de recurso — hay que llamar `load()`
+ * explícito o el video no carga jamás.
+ *
+ * Rendimiento y resiliencia: el LCP es lo que haya debajo del video (el
+ * `BrandGradientCanvas` de la sección), que es también su respaldo si el
+ * asset falla; pausa fuera de viewport (IO sobre `[data-app-scroll]`);
+ * `prefers-reduced-motion`/Save-Data ⇒ sin autoplay, botón de reproducción.
  */
 export function HeroVideo({
   desktop,
@@ -68,6 +73,29 @@ export function HeroVideo({
     setSources(window.matchMedia("(max-width: 768px)").matches ? mobile : desktop);
   }, [reduced, desktop, mobile]);
 
+  /* Arranque: load() explícito y autoplay con sonido → fallback silenciado. */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !sources) return;
+    video.load();
+    if (!autoplayAllowed) return;
+    video.muted = false;
+    video
+      .play()
+      .then(() => {
+        setMuted(false);
+        setStarted(true);
+      })
+      .catch(() => {
+        video.muted = true;
+        setMuted(true);
+        void video
+          .play()
+          .then(() => setStarted(true))
+          .catch(() => {});
+      });
+  }, [sources, autoplayAllowed]);
+
   /* Pausa fuera de viewport / reanuda al volver (solo si ya arrancó). */
   useEffect(() => {
     const video = videoRef.current;
@@ -89,10 +117,15 @@ export function HeroVideo({
   const toggleSound = () => {
     const video = videoRef.current;
     if (!video) return;
-    const next = !muted;
-    video.muted = next ? true : false;
-    setMuted(next);
-    /* El gesto también sirve para (re)arrancar si el autoplay fue denegado. */
+    if (muted) {
+      /* Encender el sonido reinicia el mensaje: se escucha desde el hola. */
+      video.currentTime = 0;
+      video.muted = false;
+      setMuted(false);
+    } else {
+      video.muted = true;
+      setMuted(true);
+    }
     void video.play().catch(() => {});
     setStarted(true);
   };
@@ -117,7 +150,6 @@ export function HeroVideo({
         playsInline
         preload="metadata"
         poster={poster}
-        autoPlay={autoplayAllowed}
         aria-label={ariaLabel}
         onCanPlay={() => setCanPlay(true)}
         onError={() => setFailed(true)}
@@ -146,20 +178,29 @@ export function HeroVideo({
         </button>
       ) : null}
 
-      {/* Control de sonido: visible solo cuando el video ya está en pantalla. */}
+      {/* Control de sonido: por encima de la barra de stats (z + bottom), con
+          ecualizador vivo cuando el mensaje está sonando. */}
       {showVideo ? (
         <button
           type="button"
           onClick={toggleSound}
           aria-pressed={!muted}
-          className="glass focus-visible:ring-ring pointer-events-auto absolute right-6 bottom-6 flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none md:right-8"
+          className={cn(
+            "glass focus-visible:ring-ring pointer-events-auto absolute right-6 bottom-20 z-20 flex items-center gap-2.5 rounded-full py-2.5 pr-5 pl-4 text-[13px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none md:right-8 md:bottom-24",
+            !muted && "border-brand/40",
+          )}
         >
           {muted ? (
             <VolumeX aria-hidden className="size-4" />
           ) : (
-            <Volume2 aria-hidden className="text-brand size-4" />
+            <span aria-hidden className="flex h-4 items-end gap-[3px]">
+              <span className="animate-sound-eq bg-brand w-[3px] rounded-full" style={{ height: "100%" }} />
+              <span className="animate-sound-eq bg-brand w-[3px] rounded-full" style={{ height: "100%", animationDelay: "0.22s" }} />
+              <span className="animate-sound-eq bg-brand w-[3px] rounded-full" style={{ height: "100%", animationDelay: "0.44s" }} />
+            </span>
           )}
           {muted ? soundOnLabel : soundOffLabel}
+          {muted ? null : <Volume2 aria-hidden className="text-brand size-4" />}
         </button>
       ) : null}
     </div>
