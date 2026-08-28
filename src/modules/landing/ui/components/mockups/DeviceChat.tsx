@@ -43,7 +43,7 @@ export interface VoiceControls {
 export function DeviceChat({
   business,
   status,
-  initials,
+  avatar,
   composerPlaceholder,
   backLabel,
   messages,
@@ -53,7 +53,7 @@ export function DeviceChat({
 }: {
   business: string;
   status: string;
-  initials: string;
+  avatar: { src: string; alt: string };
   composerPlaceholder: string;
   backLabel: string;
   messages: readonly DemoMessage[];
@@ -138,11 +138,16 @@ export function DeviceChat({
                 aria-label={backLabel}
                 className="text-muted-foreground w-[clamp(13px,5.6cqw,18px)] shrink-0"
               />
-              <span
-                aria-hidden
-                className="font-heading bg-brand-gradient grid aspect-square w-[clamp(26px,11cqw,38px)] shrink-0 place-items-center rounded-full text-[clamp(11px,4.6cqw,15px)] font-bold text-white"
-              >
-                {initials}
+              {/* El logo trae su propio fondo blanco, así que el aro tenue es
+                  lo que evita que el disco flote recortado sobre el header. */}
+              <span className="ring-border/70 relative aspect-square w-[clamp(26px,11cqw,38px)] shrink-0 overflow-hidden rounded-full ring-1">
+                <Image
+                  src={avatar.src}
+                  alt={avatar.alt}
+                  fill
+                  sizes="38px"
+                  className="object-cover"
+                />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[clamp(11.5px,4.8cqw,15px)] leading-tight font-semibold">

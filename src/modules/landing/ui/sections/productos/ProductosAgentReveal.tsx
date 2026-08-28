@@ -216,7 +216,7 @@ function Demo({ visibleUpTo, voice }: { visibleUpTo: number; voice: VoiceControl
     <DeviceChat
       business={AGENT_DEMO.business}
       status={AGENT_DEMO.status}
-      initials={AGENT_DEMO.initials}
+      avatar={AGENT_DEMO.avatar}
       composerPlaceholder={AGENT_DEMO.composerPlaceholder}
       backLabel={AGENT_DEMO.backLabel}
       messages={AGENT_DEMO.messages}

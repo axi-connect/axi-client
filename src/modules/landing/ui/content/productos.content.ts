@@ -220,8 +220,16 @@ const DEMO_AUDIO = "/assets/audio";
 export const AGENT_DEMO = {
   business: "Óptica Vértice",
   status: "en línea",
-  /** Iniciales del avatar del negocio. */
-  initials: "V",
+  /**
+   * Logo del negocio. Decorativo (`alt` vacío): el nombre va escrito al lado,
+   * así que anunciarlo otra vez solo repetiría «Óptica Vértice» al lector de
+   * pantalla. Estático local recortado a su contenido — el original traía el
+   * ojo a un tercio del lienzo y se habría visto diminuto en el avatar.
+   */
+  avatar: {
+    src: "/images/landing/optica-vertice-logo.png",
+    alt: "",
+  },
   composerPlaceholder: "Escribe un mensaje",
   backLabel: "Volver a la lista de chats",
   messages: [
