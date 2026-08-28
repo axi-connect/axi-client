@@ -650,6 +650,29 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   transform-origin: bottom;
 }
 
+/* -------- Chat de la demo del agente (#agente de /productos) --------
+   La burbuja entra al MONTARSE, así que la animación va en CSS y no en
+   framer-motion: durante el scroll de la escena pineada el hilo principal
+   está ocupado y una animación de framer se congelaría a medias
+   (DESIGN-SYSTEM §6, regla 3). Solo transform y opacity. */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(11px) scale(0.985); }
+}
+
+.animate-msg-in {
+  animation: msg-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Los tres puntos de «el agente está escribiendo». */
+@keyframes typing-bob {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+.animate-typing-bob {
+  animation: typing-bob 1.1s ease-in-out infinite;
+}
+
 /* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
    `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja
    intensidad. El splash cae a crossfade puro (el provider maneja la rama JS). */
@@ -660,6 +683,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .animate-logo-marquee { animation: none; }
   .animate-marquee-vertical { animation: none; }
   .animate-sound-eq { animation: none; }
+  /* La burbuja aparece de golpe; el «escribiendo» deja de latir pero los tres
+     puntos siguen ahí, que es lo que comunica el estado. */
+  .animate-msg-in { animation: none; }
+  .animate-typing-bob { animation: none; opacity: 0.55; }
   .animate-accordion-down, .animate-accordion-up { animation: none; }
   /* El countdown sigue contando: solo desaparece el doblez (la cifra cambia
      de golpe). El componente además no monta las hojas con reduced-motion. */

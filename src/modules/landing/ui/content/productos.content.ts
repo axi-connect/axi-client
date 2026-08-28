@@ -7,13 +7,14 @@
  * Honestidad del contenido:
  * - `AGENT_TOOLS` son los 18 archivos reales de
  *   `axi-server/src/modules/ai_agents/application/tools/*.tool.ts` — no se
- *   inventan herramientas ni se redondea la cifra.
+ *   inventan herramientas ni se redondea la cifra. Cada beat de `AGENT_DEMO`
+ *   declara qué tools respaldan lo que enseña, y un test lo verifica.
  * - Las capturas (`PRODUCT_SHOTS`) son las únicas imágenes reales del producto
  *   que existen, cosechadas del árbol legacy `layout/site/` (las URLs se copian,
  *   el componente legacy no se importa).
- * - El video del hero AÚN NO EXISTE en Cloudinary: `HERO_VIDEO.publicId` es el
- *   contrato con quien lo suba. Mientras el asset no resuelva, el hero degrada
- *   al `BrandGradientCanvas` de marca (nunca se ve roto).
+ * - La conversación de `#agente` es un negocio FICTICIO (Óptica Vértice), como
+ *   el muro de `CHAT_WALL`. Es el tercer vertical de la plataforma a propósito:
+ *   la home ya usa tecnología (`HERO_CHAT`) y moda (`STORY_CHAT`).
  */
 
 /* ────────────────────────── Capturas reales ────────────────────────── */
@@ -21,11 +22,6 @@
 const CLOUDINARY_IMG = "https://res.cloudinary.com/dpfnxj52w/image/upload";
 
 export const PRODUCT_SHOTS = {
-  /** Pantalla de configuración de agentes (media del pin-reveal). */
-  agents: {
-    src: `${CLOUDINARY_IMG}/v1762278699/agents-cover_v9gbrg.png`,
-    alt: "Configuración del agente de IA en el panel de Axi Connect",
-  },
   /** Conversación real del producto. */
   conversation: {
     src: `${CLOUDINARY_IMG}/v1762284864/conversation-cover_rghzsm.png`,
@@ -49,7 +45,7 @@ const CLOUDINARY_VIDEO = "https://res.cloudinary.com/dpfnxj52w/video/upload";
  * Las derivadas se generan on-the-fly en la primera petición y quedan
  * cacheadas en el CDN — no hay nada más que configurar en Cloudinary.
  */
-const HERO_VIDEO_ID = "optimized_axi-connect-product_wcopqg";
+const HERO_VIDEO_ID = "axi-producto-hero_anqcob";
 
 export const HERO_VIDEO = {
   publicId: HERO_VIDEO_ID,
@@ -65,35 +61,16 @@ export const HERO_VIDEO = {
   ariaLabel: "Video de bienvenida: el producto Axi Connect en acción",
 } as const;
 
-/* ─────────────────────────────── Hero ──────────────────────────────── */
-
-export const PRODUCTOS_HERO = {
-  /**
-   * Eco del gancho del video de bienvenida (Cristian, fundador y CTO): «El
-   * canal por el que hoy ingresa el dinero es el peor gestionado de las
-   * empresas…». El titular no vende: teasea el diálogo que el video abre.
-   * Dos líneas con jerarquía —la primera plantea (apagada), la segunda
-   * remata (brillante)— el mismo lockup muted/strong de METRICS en la home.
-   */
-  headlineMuted: "El canal por donde hoy entra el dinero",
-  headlineStrong: "es el peor gestionado de tu empresa.",
-  ctaPrimary: { label: "Agenda tu demo", href: "/contacto" },
-  ctaSecondary: { label: "Ver el producto", href: "#agente" },
-  soundOn: "Escuchar el mensaje",
-  soundOff: "Silenciar",
-  play: "Reproducir video",
-  stats: [
-    { id: "tools", value: 18, label: "herramientas reales del agente" },
-    { id: "ais", value: 4, label: "IAs distintas trabajando juntas" },
-    { id: "metrics", value: 9, label: "métricas medidas en pesos" },
-  ],
-} as const;
-
-/* ─────────────────────── #agente · pin-reveal ──────────────────────── */
+/* ──────────────── Las 18 herramientas reales del agente ────────────── */
 
 /**
- * Los 18 tools reales del agente (nombres literales del registro del backend).
- * En móvil las secciones muestran un subconjunto + el total.
+ * Nombres literales del registro del backend
+ * (`ai_agents/application/tools/*.tool.ts`). No se renderizan en ningún sitio
+ * —son vocabulario de desarrollador, no de dueño de negocio— pero son la
+ * fuente de la cifra del hero y el respaldo de cada beat de la demo.
+ *
+ * Va antes que todo lo que lo consume: `PRODUCTOS_HERO` lee su `length` al
+ * inicializarse y un `const` declarado más abajo estaría en zona muerta.
  */
 export const AGENT_TOOLS = [
   "catalog_lookup",
@@ -116,10 +93,228 @@ export const AGENT_TOOLS = [
   "close_conversation",
 ] as const;
 
+/* ─────────────────────────────── Hero ──────────────────────────────── */
+
+export const PRODUCTOS_HERO = {
+  /**
+   * Eco del gancho del video de bienvenida (Cristian, fundador y CTO): «El
+   * canal por el que hoy ingresa el dinero es el peor gestionado de las
+   * empresas…». El titular no vende: teasea el diálogo que el video abre.
+   * Dos líneas con jerarquía —la primera plantea (apagada), la segunda
+   * remata (brillante)— el mismo lockup muted/strong de METRICS en la home.
+   */
+  headlineMuted: "El canal por donde hoy entra el dinero",
+  headlineStrong: "es el peor gestionado de tu empresa.",
+  ctaPrimary: { label: "Agenda tu demo", href: "/contacto" },
+  ctaSecondary: { label: "Ver el producto", href: "#agente" },
+  soundOn: "Escuchar el mensaje",
+  soundOff: "Silenciar",
+  play: "Reproducir video",
+  stats: [
+    /* El 18 se DERIVA de `AGENT_TOOLS`: si el backend suma una herramienta y
+       se añade abajo, la cifra del hero sube sola. Una sola fuente. */
+    { id: "tools", value: AGENT_TOOLS.length, label: "herramientas reales del agente" },
+    { id: "ais", value: 4, label: "IAs distintas trabajando juntas" },
+    { id: "metrics", value: 9, label: "métricas medidas en pesos" },
+  ],
+} as const;
+
+/* ────────────────── #agente · la demo en vivo (pin) ────────────────── */
+
+/**
+ * Mensajes de la conversación. Tipo PROPIO de esta escena: el `ChatMessage`
+ * de `landing.content.ts` no tiene tarjeta de pedido ni comprobante, y
+ * extenderlo arrastraría los dos mockups de la home.
+ */
+export type DemoMessage =
+  | { id: string; from: "customer" | "agent"; kind: "text"; text: string }
+  | { id: string; from: "agent"; kind: "product"; text: string; product: DemoProduct }
+  | { id: string; from: "agent"; kind: "order"; order: DemoOrder }
+  | { id: string; from: "customer"; kind: "receipt"; text: string; receipt: DemoReceipt }
+  | { id: string; from: "system"; kind: "system"; text: string };
+
+export interface DemoProduct {
+  name: string;
+  meta: string;
+  /** Estático local: `public/images/` es la única carpeta que el middleware
+   *  deja pasar sin redirigir al login (ver `PUBLIC_PATHS`). */
+  imageSrc: string;
+  imageAlt: string;
+}
+export interface DemoOrder {
+  id: string;
+  amount: string;
+  methods: readonly string[];
+}
+export interface DemoReceipt {
+  label: string;
+  amount: string;
+  time: string;
+}
+
+/** Qué demuestra cada mensaje, en lenguaje de dueño de negocio. */
+export interface DemoBeat {
+  id: string;
+  /** Clave del mapa de iconos de la sección (el contenido no importa React). */
+  icon: "catalog" | "quote" | "promo" | "order" | "payment" | "crm" | "agenda";
+  title: string;
+  body: string;
+  /** Índice del mensaje que lo demuestra. */
+  atMessage: number;
+  /** Tools reales que lo respaldan. No se renderizan; los verifica el test. */
+  tools: readonly string[];
+}
+
+const DEMO_TEXTS = {
+  totalConFormula: "$309.000",
+  totalConCupon: "$278.100",
+} as const;
+
+export const AGENT_DEMO = {
+  business: "Óptica Vértice",
+  status: "en línea",
+  /** Iniciales del avatar del negocio. */
+  initials: "V",
+  composerPlaceholder: "Escribe un mensaje",
+  backLabel: "Volver a la lista de chats",
+  messages: [
+    {
+      id: "d1",
+      from: "customer",
+      kind: "text",
+      text: "Hola, vi las gafas negras de lente naranja del reel. ¿Las tienen?",
+    },
+    {
+      id: "d2",
+      from: "agent",
+      kind: "product",
+      text: "Sí, nos quedan 4. Te las muestro:",
+      product: {
+        name: "Aviador Ámbar",
+        meta: "$189.000 · quedan 4",
+        imageSrc: "/images/landing/gafas-aviador-ambar.jpg",
+        imageAlt: "Gafas Aviador Ámbar: montura negra con lente naranja",
+      },
+    },
+    { id: "d3", from: "customer", kind: "text", text: "¿Se pueden hacer con mi fórmula?" },
+    {
+      id: "d4",
+      from: "agent",
+      kind: "text",
+      text: `Montura $189.000 + lente con tu fórmula $120.000. Total: ${DEMO_TEXTS.totalConFormula}, listas en 3 días.`,
+    },
+    { id: "d5", from: "customer", kind: "text", text: "Tengo el cupón PRIMERAVEZ" },
+    {
+      id: "d6",
+      from: "agent",
+      kind: "text",
+      text: `Aplicado ✓ PRIMERAVEZ te deja en ${DEMO_TEXTS.totalConCupon}.`,
+    },
+    {
+      id: "d7",
+      from: "agent",
+      kind: "order",
+      order: {
+        id: "Pedido #1042",
+        amount: DEMO_TEXTS.totalConCupon,
+        methods: ["Nequi", "Tarjeta", "PSE"],
+      },
+    },
+    {
+      id: "d8",
+      from: "customer",
+      kind: "receipt",
+      text: "Listo, ya pagué",
+      receipt: {
+        label: "Comprobante · Nequi",
+        amount: DEMO_TEXTS.totalConCupon,
+        time: "hoy · 9:41 p.m.",
+      },
+    },
+    {
+      id: "d9",
+      from: "agent",
+      kind: "text",
+      text: "Pago verificado ✓ Pedido #1042 confirmado. Te aviso cuando estén listas.",
+    },
+    { id: "d10", from: "system", kind: "system", text: "Contacto guardado · Negocio abierto en el CRM" },
+    { id: "d11", from: "customer", kind: "text", text: "¿Y para el examen visual?" },
+    {
+      id: "d12",
+      from: "agent",
+      kind: "text",
+      text: "Martes 3: 10:00 a.m. o 4:00 p.m. ¿Cuál te dejo?",
+    },
+  ] as readonly DemoMessage[],
+  beats: [
+    {
+      id: "catalogo",
+      icon: "catalog",
+      title: "Responde con tu catálogo real",
+      body: "Consulta stock y precio en el momento y manda la foto. No promete lo que no hay.",
+      atMessage: 1,
+      tools: ["catalog_lookup", "send_product_images"],
+    },
+    {
+      id: "cotiza",
+      icon: "quote",
+      title: "Cotiza con tus precios",
+      body: "Suma montura, lente y tiempos de entrega con tus reglas — no con una cifra inventada.",
+      atMessage: 3,
+      tools: ["quote_order"],
+    },
+    {
+      id: "promos",
+      icon: "promo",
+      title: "Valida cupones y promociones",
+      body: "Comprueba que el cupón exista y esté vigente antes de descontar un peso.",
+      atMessage: 5,
+      tools: ["validate_coupon", "apply_promotion"],
+    },
+    {
+      id: "pedido",
+      icon: "order",
+      title: "Arma el pedido y cobra",
+      body: "Crea el pedido en tu sistema y ofrece tus medios de pago, no un número suelto.",
+      atMessage: 6,
+      tools: ["create_order", "get_payment_methods"],
+    },
+    {
+      id: "pago",
+      icon: "payment",
+      title: "Verifica el pago",
+      body: "Confirma contra la pasarela. Nadie de tu equipo revisa comprobantes a mano.",
+      atMessage: 8,
+      tools: ["report_payment", "get_order_status"],
+    },
+    {
+      id: "crm",
+      icon: "crm",
+      title: "Registra todo en el CRM",
+      body: "La conversación deja ficha, negocio y actividad. Sin que nadie digite nada.",
+      atMessage: 9,
+      tools: ["save_contact_data", "open_deal", "log_crm_activity"],
+    },
+    {
+      id: "agenda",
+      icon: "agenda",
+      title: "Agenda la cita",
+      body: "Consulta tu agenda de verdad y reserva el cupo con recordatorio incluido.",
+      atMessage: 11,
+      tools: ["book_appointment", "schedule_availability"],
+    },
+  ] as readonly DemoBeat[],
+} as const;
+
 export const AGENT_REVEAL = {
-  title: "Se configura, no se programa.",
-  sub: "Las herramientas se cargan según lo que tu negocio tiene de verdad: sin catálogo, no ofrece productos.",
-  toolsTotal: `${AGENT_TOOLS.length} herramientas en total`,
+  title: "Una conversación. Una venta cerrada.",
+  sub: "De la primera pregunta a la cita agendada, sin que nadie de tu equipo tuviera que abrir el chat.",
+  /** Estado del foco antes de que entre el primer beat. */
+  introTitle: "Lo que el agente acaba de hacer",
+  introBody: "Cada mensaje de la conversación demuestra una capacidad distinta.",
+  /** `N de 7` bajo el riel de progreso. */
+  progressLabel: (done: number, total: number) => `${done} de ${total}`,
+  demoLabel: "Conversación de demostración con un negocio de ejemplo",
 } as const;
 
 /* ─────────────────── Carrusel · seis capacidades ───────────────────── */

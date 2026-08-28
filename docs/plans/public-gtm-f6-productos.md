@@ -40,8 +40,10 @@
    perspectiva, negocios ficticios de retail/comida/moda). Las entradas del
    mega-menú y del carrusel apuntan ahora a `/#medicion` (la §6 de la home,
    `LandingMetrics`). `ProductosMedicion.tsx` se eliminó.
-8. **Pendiente declarado por el dueño**: revisar el efecto del pin-reveal
-   («parallax») tras verlo en la página real; posible ajuste de coreografía.
+8. **`#agente` es una DEMO EN VIVO, no una lista de capacidades** (rediseño
+   aprobado sobre mockup Artifact tras una auditoría UX/UI; ver más abajo).
+   Sustituye al pin-reveal original de titular centrado + captura + muro de 18
+   chips en monoespaciada.
 
 ## Archivos
 
@@ -54,20 +56,70 @@
 | `src/modules/landing/ui/components/CircularCarousel.tsx` | client — carrusel elíptico 3D, autoplay, teclado, reduced→grid |
 | `src/modules/landing/ui/components/mockups/BrowserFrame.tsx` | RSC — pestaña de navegador premium |
 | `src/modules/landing/ui/components/mockups/TabletFrame.tsx` | client — tablet con rotateY scroll-driven (patrón LaptopMockup) |
-| `src/modules/landing/ui/sections/productos/*` | 8 secciones (Hero, AgentReveal, Carousel, Inbox, CrmBento, Catalogo, Medicion, FinalCta) |
+| `src/modules/landing/ui/components/mockups/DeviceChat.tsx` | client — el dispositivo de `#agente`: chat que cambia de forma (teléfono ↔ tablet) |
+| `src/modules/landing/ui/sections/productos/*` | 8 secciones (Hero, AgentReveal, Carousel, Inbox, CrmBento, Catalogo, Conversaciones, FinalCta) |
 | `src/core/styles/motion.ts` | preset `scrollReveal` (coreografía del pin) |
-| `src/app/globals.css` | `.animate-ribbon-weave` + keyframes `ribbon-in` |
+| `src/app/globals.css` | `msg-in` + `typing-bob` (entrada de burbuja y «escribiendo») |
+| `public/images/landing/gafas-aviador-ambar.jpg` | foto de catálogo de la demo |
+
+## `#agente` — la demo en vivo
+
+Auditoría UX/UI que motivó el rediseño (los chips se solapaban con la imagen y
+la escena «no tenía nivel de producto premium»):
+
+- El solape era el síntoma: el contenedor del panel era `flex-1 min-h-0` pero
+  su hijo llevaba `min-h-[200px]`, así que al apretarse el presupuesto el hijo
+  ganaba y se salía de su caja. **La escena estaba sobre-suscrita**: titular +
+  sub + panel + 5 filas de chips en un solo `h-svh`.
+- El fallo de fondo era otro: el titular prometía «se configura, no se
+  programa» y debajo se mostraban 18 identificadores `snake_case` con ✓ verdes
+  — vocabulario de desarrollador y tres acentos en una vista.
+
+Diseño resultante: un chat incrustado en un dispositivo donde **cada paso de
+scroll trae un mensaje y cada mensaje demuestra una capacidad**, con el foco de
+capacidad nombrándola a la izquierda y un riel de 7 segmentos.
+
+Decisiones que no revertir:
+
+- **El negocio es una óptica ficticia** (Óptica Vértice). Tercer vertical a
+  propósito: la home ya usa tecnología (`HERO_CHAT`) y moda (`STORY_CHAT`), y
+  es el único caso donde catálogo y agenda conviven sin forzar la historia.
+- **Los 18 tools NO se renderizan.** Cada beat declara cuáles lo respaldan y
+  `content/__tests__/productos.test.ts` verifica que existan, que apunten a un
+  mensaje real, que cuelguen de un turno del agente (nunca del cliente) y que
+  avancen en orden.
+- **El dispositivo cambia de forma por CSS, jamás por JS**: teléfono 19.5:9 por
+  defecto, tablet 3:4 desde `lg`. Con 19.5:9 el ancho depende del alto, así que
+  en portátiles de pantalla baja el teléfono se estrangulaba a ~190px; la
+  tablet da un 60% más de ancho con el mismo presupuesto vertical. Decidirlo
+  con `matchMedia` daría desajuste de hidratación y un salto al montar.
+- **La interfaz interior escala con su propia pantalla** (`@container` + `cqw`
+  acotado con `clamp`), no con el viewport: cero anchos fijos en las tarjetas
+  (era lo que desbordaba la burbuja) y la cabecera trunca con elipsis.
+- **El hilo se desplaza con `transform`, nunca `scrollTop`**: un scroller
+  interno competiría con el de la página y rompería el pin.
+- La entrada de burbuja va en **CSS y no en framer-motion**: durante el scroll
+  de una escena pineada el hilo principal está ocupado y una animación de
+  framer se congelaría a medias (DESIGN-SYSTEM §6, regla 3).
+- El aro de acero es un **gradiente cónico** (los destellos caen en las
+  esquinas, como en metal pulido) hecho solo con `color-mix` sobre tokens.
 
 ## Reglas duras aplicadas
 
-- Sticky/pin: sección `h-[280vh]` + hijo `sticky top-0 h-svh overflow-hidden`;
+- Sticky/pin: sección `h-[340vh]` + hijo `sticky top-0 h-svh overflow-hidden`;
   ningún wrapper intermedio con `overflow-hidden`; raíz de página `w-full`.
 - Islas oscuras con `dark theme-dark-island` (hero, reveal, carrusel, CTA).
 - Cero hex nuevos; `prefers-reduced-motion` degrada cada pieza a su estado
   final estático (el pin colapsa a `h-auto`, sin viewport muertos).
-- Solo `transform`/`opacity` + `clip-path` (excepción documentada en
-  `motion.ts`: corre en compositor con `will-change`).
+- Solo `transform`/`opacity`.
 - LCP del hero = poster/canvas, no el video (`preload="metadata"`).
+
+## Deuda conocida
+
+`#catalogo` sigue usando `TabletFrame` (plano, sin aro ni canto) mientras
+`#agente` muestra la tablet nueva: en portátil la página enseña dos tablets
+distintas. Lo natural es que `#catalogo` adopte el marco de `DeviceChat` y
+`TabletFrame` se retire — pendiente de decisión del dueño.
 
 ## Verificación
 

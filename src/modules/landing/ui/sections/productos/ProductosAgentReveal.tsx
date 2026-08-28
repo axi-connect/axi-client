@@ -1,33 +1,42 @@
 "use client";
 
-import { useRef, type ReactNode, type RefObject } from "react";
-import Image from "next/image";
-import { easeOut, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useCallback, useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  BadgeCheck,
+  BadgePercent,
+  CalendarClock,
+  Calculator,
+  ContactRound,
+  CreditCard,
+  Image as ImageIcon,
+  type LucideIcon,
+} from "lucide-react";
+import { easeOut, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
 
 import { cn } from "@/core/lib/utils";
 import { scrollReveal } from "@/core/styles/motion";
+import { DeviceChat } from "@/modules/landing/ui/components/mockups/DeviceChat";
 import { KineticWords, type ScrollProgress } from "@/modules/landing/ui/components/KineticWords";
 import { useScrollContainer } from "@/modules/landing/ui/components/use-scroll-container";
-import {
-  AGENT_REVEAL,
-  AGENT_TOOLS,
-  PRODUCT_SHOTS,
-} from "@/modules/landing/ui/content/productos.content";
+import { AGENT_DEMO, AGENT_REVEAL, type DemoBeat } from "@/modules/landing/ui/content/productos.content";
 
 /**
- * §2 `#agente` — la escena pineada: una sección alta cuyo hijo sticky queda
+ * §2 `#agente` — la demo en vivo. Una sección alta cuyo hijo sticky queda
  * clavado al viewport mientras el progreso de scroll (coreografía en
  * `motion.ts → scrollReveal`) revela, en orden: el titular palabra a palabra,
- * el panel con la captura real de agentes entrando en «Lift & Scale» (opción A
- * del comparador — sube desde abajo creciendo, estilo página de producto de
- * Apple), y las 18 herramientas reales como pills.
+ * el dispositivo entrando en «Lift & Scale», y la conversación completa a
+ * razón de un mensaje por paso de scroll.
+ *
+ * A la izquierda, el foco de capacidad nombra lo que el mensaje recién
+ * entrado acaba de demostrar: la escena no explica el producto, lo enseña
+ * funcionando y le pone nombre a cada cosa.
  *
  * Sticky funciona contra el scroller `[data-app-scroll]` porque ningún
  * ancestro intermedio tiene overflow/transform — NO añadir `overflow-hidden`
  * a los wrappers de esta sección (el recorte vive en el hijo sticky).
  *
  * Con reduced-motion —o hasta hidratar— la escena colapsa a su estado final
- * estático sin viewport muertos.
+ * estático (conversación completa) sin viewports muertos.
  */
 export default function ProductosAgentReveal() {
   const reduced = useReducedMotion();
@@ -36,21 +45,24 @@ export default function ProductosAgentReveal() {
   if (reduced || !ready) {
     return (
       <RevealShell tall={false}>
-        <div className="flex flex-col items-center gap-6 px-6 py-24 text-center">
-          <RevealHeading>
-            <span>{AGENT_REVEAL.title}</span>
-          </RevealHeading>
-          <p className="text-muted-foreground max-w-[52ch] text-pretty">{AGENT_REVEAL.sub}</p>
-          <RevealMedia />
-          <ToolPills />
+        <div className="mx-auto grid w-full max-w-[1220px] items-center gap-10 px-6 py-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <div>
+            <RevealHeading>{AGENT_REVEAL.title}</RevealHeading>
+            <p className="text-muted-foreground mt-4 max-w-[42ch] text-pretty">{AGENT_REVEAL.sub}</p>
+            <FocusCard beat={AGENT_DEMO.beats[AGENT_DEMO.beats.length - 1]} />
+            <ProgressRail done={AGENT_DEMO.beats.length} />
+          </div>
+          <div className="flex justify-center">
+            <Demo visibleUpTo={AGENT_DEMO.messages.length} />
+          </div>
         </div>
       </RevealShell>
     );
   }
-  return <AgentRevealAnimated containerRef={containerRef} />;
+  return <AgentDemoAnimated containerRef={containerRef} />;
 }
 
-function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
+function AgentDemoAnimated({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
   const trackRef = useRef<HTMLElement | null>(null);
 
   const { scrollYProgress } = useScroll({
@@ -62,59 +74,97 @@ function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLEle
   const progress = scrollYProgress as ScrollProgress;
 
   const subOpacity = useTransform(progress, [scrollReveal.sub.from, scrollReveal.sub.to], [0, 1]);
-  /* «Lift & Scale» (opción A): el panel sube desde abajo creciendo y
-     aclarándose hasta reposar — easeOut para el aterrizaje suave de Apple. */
+
+  /* «Lift & Scale» + enderezado en perspectiva: el dispositivo sube desde
+     abajo creciendo, aclarándose y girando hasta ponerse de frente. */
   const { media } = scrollReveal;
   const mediaRange = [media.from, media.to];
   const y = useTransform(progress, mediaRange, [`${media.liftPct}%`, "0%"], { ease: easeOut });
   const scale = useTransform(progress, mediaRange, [media.scaleFrom, 1], { ease: easeOut });
-  const mediaOpacity = useTransform(progress, mediaRange, [media.opacityFrom, 1], {
-    ease: easeOut,
-  });
+  const rotateY = useTransform(progress, mediaRange, [media.rotateFrom, 0], { ease: easeOut });
+  const deviceOpacity = useTransform(progress, mediaRange, [media.opacityFrom, 1], { ease: easeOut });
+
+  /**
+   * Cuántos mensajes se ven. Se calcula por UMBRAL con `useMotionValueEvent`,
+   * no en cada frame: son doce `setState` en toda la escena en vez de uno por
+   * frame de scroll.
+   */
+  const [visible, setVisible] = useState(0);
+  const onProgress = useCallback((value: number) => {
+    const { from, step, span } = scrollReveal.messages;
+    let count = 0;
+    for (let i = 0; i < AGENT_DEMO.messages.length; i += 1) {
+      if (value >= from + i * step + span / 2) count = i + 1;
+    }
+    setVisible((current) => (current === count ? current : count));
+  }, []);
+  useMotionValueEvent(scrollYProgress, "change", onProgress);
+
+  /* El beat activo es el último cuyo mensaje ya entró. */
+  const beat =
+    [...AGENT_DEMO.beats].reverse().find((item) => item.atMessage <= visible - 1) ?? null;
 
   return (
     <RevealShell tall ref={trackRef}>
       {/* pt-28: el SiteHeader (glass, pegado arriba) mide ~72px + margen — sin
           este padding el titular queda atrapado debajo del navbar al pinear. */}
-      <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-hidden px-6 pt-28 pb-8 text-center">
-        <RevealHeading>
-          <KineticWords
-            text={AGENT_REVEAL.title}
-            progress={progress}
-            from={scrollReveal.title.from}
-            step={scrollReveal.title.step}
-            span={scrollReveal.title.span}
-          />
-        </RevealHeading>
+      <div className="sticky top-0 flex h-svh overflow-hidden pt-28 pb-8 max-lg:pt-24">
+        <SceneAmbient />
+        <div className="relative z-10 mx-auto grid w-full max-w-[1220px] min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] items-center gap-6 px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[100%] lg:gap-12">
+          <div className="min-w-0">
+            <RevealHeading>
+              <KineticWords
+                text={AGENT_REVEAL.title}
+                progress={progress}
+                from={scrollReveal.title.from}
+                step={scrollReveal.title.step}
+                span={scrollReveal.title.span}
+              />
+            </RevealHeading>
 
-        <motion.p
-          style={{ opacity: subOpacity }}
-          className="text-muted-foreground mt-3 max-w-[52ch] shrink-0 text-pretty"
-        >
-          {AGENT_REVEAL.sub}
-        </motion.p>
+            <motion.div style={{ opacity: subOpacity }}>
+              <p className="text-muted-foreground mt-4 max-w-[42ch] text-pretty max-lg:text-sm">
+                {AGENT_REVEAL.sub}
+              </p>
+              <FocusCard beat={beat} />
+              <ProgressRail done={beat ? AGENT_DEMO.beats.indexOf(beat) + 1 : 0} />
+            </motion.div>
+          </div>
 
-        {/* El panel es el ÚNICO elemento flexible de la escena: toma exacto el
-            alto que queda entre el sub y las pills (flex-1 + min-h-0), así el
-            titular nunca desborda bajo el navbar ni las pills se cortan abajo
-            — la altura la reparte flex, jamás un svh calculado a mano
-            (DESIGN-SYSTEM §4.2, mismo antipatrón del doble scroll del panel). */}
-        <div className="mt-6 flex min-h-0 w-full max-w-[1000px] flex-1">
-          <motion.div
-            style={{ y, scale, opacity: mediaOpacity }}
-            className="border-border bg-card shadow-overlay relative h-full min-h-[200px] w-full overflow-hidden rounded-[20px] border will-change-transform"
+          {/* `perspective` en el escenario para que el giro del dispositivo
+              tenga profundidad real y no lea como una imagen doblándose. */}
+          <div
+            className="flex min-h-0 items-center justify-center [perspective:1700px]"
+            style={{ height: "100%" }}
           >
-            <RevealShot />
-          </motion.div>
+            <motion.div
+              style={{ y, scale, rotateY, opacity: deviceOpacity }}
+              className="flex h-full max-h-full items-center justify-center will-change-transform"
+            >
+              <Demo visibleUpTo={visible} />
+            </motion.div>
+          </div>
         </div>
-
-        <ToolPills progress={progress} />
       </div>
     </RevealShell>
   );
 }
 
 /* ───────────────────────────── piezas ───────────────────────────── */
+
+function Demo({ visibleUpTo }: { visibleUpTo: number }) {
+  return (
+    <DeviceChat
+      business={AGENT_DEMO.business}
+      status={AGENT_DEMO.status}
+      initials={AGENT_DEMO.initials}
+      composerPlaceholder={AGENT_DEMO.composerPlaceholder}
+      backLabel={AGENT_DEMO.backLabel}
+      messages={AGENT_DEMO.messages}
+      visibleUpTo={visibleUpTo}
+    />
+  );
+}
 
 function RevealShell({
   tall,
@@ -138,109 +188,94 @@ function RevealShell({
   );
 }
 
+/**
+ * Ambiente de la escena: elipses ancladas, nunca retículas — es el lenguaje
+ * de superficie de la marca (DESIGN-SYSTEM §7).
+ */
+function SceneAmbient() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(50% 40% at 12% 12%, color-mix(in srgb, var(--axi-brand) 8%, transparent), transparent 72%), radial-gradient(44% 62% at 76% 50%, color-mix(in srgb, var(--axi-brand) 13%, transparent), transparent 68%)",
+      }}
+    />
+  );
+}
+
 function RevealHeading({ children }: { children: ReactNode }) {
   return (
-    /* El salto a 5xl exige ANCHO y ALTO: en laptops de 768px de alto el
-       titular grande consumía el presupuesto de la escena pineada. */
-    <h2 className="font-heading max-w-[20ch] shrink-0 text-3xl font-bold tracking-tight text-balance sm:text-4xl [@media(min-height:800px)_and_(min-width:1024px)]:text-5xl">
+    <h2 className="font-heading max-w-[15ch] text-2xl font-bold tracking-tight text-balance sm:text-3xl lg:text-4xl [@media(min-height:800px)_and_(min-width:1024px)]:text-[2.75rem]">
       {children}
     </h2>
   );
 }
 
-/** Variante estática del medio (reduced-motion / pre-hidratación). */
-function RevealMedia() {
+const BEAT_ICONS: Record<DemoBeat["icon"], LucideIcon> = {
+  catalog: ImageIcon,
+  quote: Calculator,
+  promo: BadgePercent,
+  order: CreditCard,
+  payment: BadgeCheck,
+  crm: ContactRound,
+  agenda: CalendarClock,
+};
+
+/**
+ * Lo que el mensaje recién entrado acaba de demostrar. Antes del primer beat
+ * muestra el rótulo de introducción, así la tarjeta nunca aparece vacía ni
+ * cambia de alto al llegar el primero.
+ */
+function FocusCard({ beat }: { beat: DemoBeat | null }) {
+  const Icon = beat ? BEAT_ICONS[beat.icon] : ImageIcon;
   return (
-    <div className="border-border bg-card relative aspect-[16/9.4] w-full max-w-[1000px] overflow-hidden rounded-[20px] border">
-      <RevealShot />
+    <div
+      aria-live="polite"
+      className="border-border bg-secondary shadow-float mt-6 flex max-w-[420px] items-start gap-3.5 rounded-2xl border p-4 max-lg:mt-4"
+    >
+      <span
+        className={cn(
+          "grid size-9 shrink-0 place-items-center rounded-xl transition-colors duration-300",
+          beat ? "bg-accent text-brand" : "bg-input text-muted-foreground",
+        )}
+      >
+        <Icon aria-hidden className="size-[17px]" />
+      </span>
+      {/* `key` fuerza el remonte para que la entrada se reproduzca en cada
+          cambio de beat — es lo que hace legible que algo cambió. */}
+      <span key={beat?.id ?? "intro"} className="animate-msg-in min-w-0">
+        <span className="block text-[15px] leading-tight font-semibold">
+          {beat ? beat.title : AGENT_REVEAL.introTitle}
+        </span>
+        <span className="text-muted-foreground mt-1 block text-[13px] leading-relaxed">
+          {beat ? beat.body : AGENT_REVEAL.introBody}
+        </span>
+      </span>
     </div>
   );
 }
 
-function RevealShot() {
+/** Riel de progreso: un segmento por capacidad demostrada. */
+function ProgressRail({ done }: { done: number }) {
+  const total = AGENT_DEMO.beats.length;
   return (
-    <Image
-      src={PRODUCT_SHOTS.agents.src}
-      alt={PRODUCT_SHOTS.agents.alt}
-      fill
-      sizes="(max-width: 1024px) 92vw, 1000px"
-      className="object-cover object-top"
-    />
-  );
-}
-
-/**
- * Las 18 herramientas. En la variante animada cada pill entra en su tramo del
- * progreso; sin `progress` (estático/reduced) se pintan visibles.
- */
-function ToolPills({ progress }: { progress?: ScrollProgress }) {
-  return (
-    <ul className="mt-6 flex max-w-[920px] shrink-0 flex-wrap items-center justify-center gap-1.5">
-      {AGENT_TOOLS.map((tool, i) =>
-        progress ? (
-          <AnimatedToolPill key={tool} progress={progress} index={i}>
-            {tool}
-          </AnimatedToolPill>
-        ) : (
-          <li key={tool} className={pillClass(i, false)}>
-            <PillContent>{tool}</PillContent>
-          </li>
-        ),
-      )}
-      {progress ? (
-        <AnimatedToolPill progress={progress} index={AGENT_TOOLS.length} total>
-          {AGENT_REVEAL.toolsTotal}
-        </AnimatedToolPill>
-      ) : (
-        <li className={pillClass(AGENT_TOOLS.length, true)}>{AGENT_REVEAL.toolsTotal}</li>
-      )}
-    </ul>
-  );
-}
-
-function pillClass(index: number, total: boolean) {
-  return cn(
-    "rounded-full border px-3 py-1 font-mono text-[11px] will-change-transform",
-    /* El viewport manda cuántas pills caben: móvil 8, mediano 12, grande 18
-       — siempre + la pill del total. */
-    index >= 8 && !total && "max-md:hidden",
-    index >= 12 && !total && "max-lg:hidden",
-    total
-      ? "border-accent-violet/35 bg-accent-violet/12 text-accent-violet font-medium"
-      : "border-border bg-secondary/50 text-muted-foreground",
-  );
-}
-
-function PillContent({ children }: { children: string }) {
-  return (
-    <>
-      <span aria-hidden className="text-success mr-1.5 font-sans font-semibold">
-        ✓
+    <div className="mt-4 flex max-w-[420px] items-center gap-3">
+      <span aria-hidden className="flex flex-1 gap-1.5">
+        {AGENT_DEMO.beats.map((item, index) => (
+          <span
+            key={item.id}
+            className={cn(
+              "h-[3px] flex-1 rounded-full transition-colors duration-300",
+              index < done ? "bg-brand" : "bg-input",
+            )}
+          />
+        ))}
       </span>
-      {children}
-    </>
-  );
-}
-
-function AnimatedToolPill({
-  progress,
-  index,
-  total = false,
-  children,
-}: {
-  progress: ScrollProgress;
-  index: number;
-  total?: boolean;
-  children: string;
-}) {
-  const from = scrollReveal.pills.from + index * scrollReveal.pills.step;
-  const to = from + scrollReveal.pills.span;
-  const opacity = useTransform(progress, [from, to], [0, 1]);
-  const y = useTransform(progress, [from, to], [14, 0]);
-
-  return (
-    <motion.li style={{ opacity, y }} className={pillClass(index, total)}>
-      {total ? children : <PillContent>{children}</PillContent>}
-    </motion.li>
+      <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
+        {AGENT_REVEAL.progressLabel(done, total)}
+      </span>
+    </div>
   );
 }
