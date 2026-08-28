@@ -15,14 +15,10 @@
    dependencias nuevas. Los componentes de referencia (hero-scroll-video-pin-
    reveal de GSAP y CircularCarousel) se replican con `useScroll`/`useTransform`
    sobre el contenedor `[data-app-scroll]` (hook `use-scroll-container`).
-3. **Video del hero por Cloudinary progresivo** (`vc_h264`/`vc_vp9` + `q_auto`,
-   pseudo-streaming por HTTP range). El asset **aún no existe**: el `public_id`
-   (`productos-hero`) vive en `productos.content.ts` y el hero degrada al
-   `BrandGradientCanvas` de marca mientras el video no cargue — la página nunca
-   se ve rota. Autoplay siempre **muted** (bloqueo de navegador); botón glass
-   «Activar sonido».
-4. **Hero envolvente**: el video manda — texto mínimo abajo a la izquierda,
-   overlay ligero, barra de stats delgada (feedback del mockup v1→v2).
+3. **Video del hero por Cloudinary progresivo** (`vc_h264` + `q_90`,
+   pseudo-streaming por HTTP range). Autoplay CON sonido primero y fallback
+   muted; el `BrandGradientCanvas` debajo es el respaldo si el asset falla.
+4. **Hero de cine, con DOS másteres**. Ver la sección propia más abajo.
 5. **Entrada del panel = «Lift & Scale»** (opción A del comparador de
    coreografías, elegida por el dueño en la 3ª revisión sobre el círculo
    expansivo + isotipo, que se retiró): el panel sube desde abajo creciendo
@@ -127,8 +123,44 @@ distintas. Lo natural es que `#catalogo` adopte el marco de `DeviceChat` y
 symlink ni `npx`); visual: light/dark, reduced-motion, 390px, las 5 anclas
 desde el mega-menú, sonido, pausa del video fuera de viewport.
 
+## El hero — encuadre de cine
+
+El video era un fondo a sangre (`object-cover` sobre toda la sección). En un
+portátil ancho y bajo la caja ronda 2,7:1, así que un 16:9 perdía **~40% de su
+altura** y los rótulos del propio video subían a chocar con el navbar.
+
+- **Escritorio (`md+`)**: marco de cine 16:9. El video no pierde un píxel y el
+  titular con los CTA viven DEBAJO, sobre la isla oscura — no pueden pisar los
+  rótulos del video. Marco con filo y resplandor coral, el mismo lenguaje del
+  teléfono de `#agente`.
+- **Móvil**: máster **vertical 9:16** propio (`axi-producto-hero-9x16_tcfaou`),
+  a sangre — en un móvil esa proporción llena la pantalla sin recortar nada. El
+  texto vuelve a ir superpuesto sobre el velo, que por eso es `md:hidden`.
+
+Decisiones que no revertir:
+
+- **Una sola pieza con variantes `md:`, no dos árboles con `hidden`**: dos
+  árboles montarían dos `<video>` y el navegador descargaría el asset dos veces.
+- **`w-[min(100%,177.78cqh)]` + `container-type: size` en el escenario.** Un
+  `aspect-video` con `width:100%` y `max-height:100%` NO encoge: al recortar el
+  alto el navegador conserva el ancho y rompe la proporción. Midiendo contra el
+  alto del escenario (`177.78cqh` = alto × 16/9) el ancho es correcto mande el
+  alto o mande el ancho. Y no usa `calc(100svh - alto fijo)`, que
+  DESIGN-SYSTEM §4.2 prohíbe.
+- **El `<video>` conserva `object-cover`**: no hace falta `object-contain`
+  porque el marco ya tiene la proporción del asset en cada dispositivo.
+- **El umbral de la fuente es `(min-width: 768px)`, no `(max-width: 768px)`** —
+  la definición exacta de `md:`. Con el `max-width` anterior, a exactamente
+  768px convivían el video vertical y el marco 16:9.
+- Cada variante trae **su propio póster**: el 16:9 sobre un móvil vertical se
+  vería recortado y saltaría de encuadre al arrancar.
+
+Pesos (medidos, `q_90`): escritorio 1920×1080 a 3,11 Mbps / 34 MB; móvil
+1080×1920 a 3,58 Mbps / 39 MB. Se eligió `w_1080` en móvil y no `w_720`
+(1,62 Mbps / 17,7 MB) porque un móvil de 390px a 3× son 1170px reales y el
+720 se vería ampliado un 63%, ablandando justo los rótulos del video. Bajarlo
+es cambiar un número si el peso pesa más que la nitidez.
+
 ## Bloqueantes de merge
 
-- Subir el video real a Cloudinary como `productos-hero` (o cambiar el id en
-  `productos.content.ts`).
 - Autorización de push (el push a main despliega).

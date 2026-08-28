@@ -39,13 +39,19 @@ export const PRODUCT_SHOTS = {
 const CLOUDINARY_VIDEO = "https://res.cloudinary.com/dpfnxj52w/video/upload";
 
 /**
- * Streaming progresivo (HTTP range) con transcodificación de Cloudinary: dos
- * anchos según viewport y poster extraído del propio video (segundo 2). Las
- * derivadas se generan on-the-fly en la primera petición y quedan cacheadas
- * en el CDN — no hay nada más que configurar en Cloudinary.
+ * Streaming progresivo (HTTP range) con transcodificación de Cloudinary. Cada
+ * variante trae SU PROPIO póster además del video: el póster 16:9 sobre un
+ * móvil vertical se vería recortado y provocaría un salto de encuadre al
+ * arrancar la reproducción. Las derivadas se generan on-the-fly en la primera
+ * petición y quedan cacheadas en el CDN — no hay nada más que configurar.
  *
- * CALIDAD — `q_90`, nunca `q_auto`. Medido sobre este máster (1920×1080 a
- * 5,15 Mbps):
+ * DOS MÁSTERES, no dos recortes del mismo. El horizontal es el que va en el
+ * marco de cine de escritorio; el vertical se grabó aparte para que en un
+ * móvil el cuadro llene la pantalla sin perder nada. `HeroVideo` elige uno u
+ * otro en el MISMO umbral que la maqueta (`md`, 768px).
+ *
+ * CALIDAD — `q_90`, nunca `q_auto`. Medido sobre el máster horizontal
+ * (1920×1080 a 5,15 Mbps):
  *
  * | transformación   | bitrate  |
  * |------------------|----------|
@@ -60,18 +66,21 @@ const CLOUDINARY_VIDEO = "https://res.cloudinary.com/dpfnxj52w/video/upload";
  * Se retiró la fuente WebM/VP9 (ver `HeroVideoSources`): Cloudinary la
  * comprimía aún más y, al ir primero, era la que elegían Chrome y Firefox.
  */
-const HERO_VIDEO_ID = "axi-producto-hero_anqcob";
 const HERO_VIDEO_Q = "q_90";
+/** Máster horizontal 1920×1080 — marco de cine en escritorio. */
+const HERO_VIDEO_ID = "axi-producto-hero_anqcob";
+/** Máster vertical 1080×1920 — a sangre en móvil. */
+const HERO_VIDEO_ID_9X16 = "axi-producto-hero-9x16_tcfaou";
+
+const heroVariant = (id: string, width: number) => ({
+  mp4: `${CLOUDINARY_VIDEO}/vc_h264,${HERO_VIDEO_Q},w_${width}/${id}.mp4`,
+  poster: `${CLOUDINARY_VIDEO}/so_2,${HERO_VIDEO_Q},f_jpg,w_${width}/${id}.jpg`,
+});
 
 export const HERO_VIDEO = {
   publicId: HERO_VIDEO_ID,
-  poster: `${CLOUDINARY_VIDEO}/so_2,${HERO_VIDEO_Q},f_jpg,w_1600/${HERO_VIDEO_ID}.jpg`,
-  desktop: {
-    mp4: `${CLOUDINARY_VIDEO}/vc_h264,${HERO_VIDEO_Q},w_1920/${HERO_VIDEO_ID}.mp4`,
-  },
-  mobile: {
-    mp4: `${CLOUDINARY_VIDEO}/vc_h264,${HERO_VIDEO_Q},w_960/${HERO_VIDEO_ID}.mp4`,
-  },
+  desktop: heroVariant(HERO_VIDEO_ID, 1920),
+  mobile: heroVariant(HERO_VIDEO_ID_9X16, 1080),
   ariaLabel: "Video de bienvenida: el producto Axi Connect en acción",
 } as const;
 

@@ -17,6 +17,9 @@ import { useScrollContainer } from "@/modules/landing/ui/components/use-scroll-c
  */
 export interface HeroVideoSources {
   mp4: string;
+  /** Cada variante trae el SUYO: el póster 16:9 sobre un móvil vertical se
+   *  vería recortado y saltaría de encuadre al arrancar la reproducción. */
+  poster: string;
 }
 
 /**
@@ -44,7 +47,6 @@ export interface HeroVideoSources {
 export function HeroVideo({
   desktop,
   mobile,
-  poster,
   ariaLabel,
   soundOnLabel,
   soundOffLabel,
@@ -53,7 +55,6 @@ export function HeroVideo({
 }: {
   desktop: HeroVideoSources;
   mobile: HeroVideoSources;
-  poster: string;
   ariaLabel: string;
   soundOnLabel: string;
   soundOffLabel: string;
@@ -77,7 +78,10 @@ export function HeroVideo({
       "connection" in navigator &&
       Boolean((navigator as { connection?: { saveData?: boolean } }).connection?.saveData);
     setAutoplayAllowed(!reduced && !saveData);
-    setSources(window.matchMedia("(max-width: 768px)").matches ? mobile : desktop);
+    /* MISMO umbral que la maqueta. Con `(max-width: 768px)` el desfase de un
+       píxel hacía que a exactamente 768px conviviesen el video vertical y el
+       marco 16:9 — `(min-width: 768px)` es literalmente la definición de `md:`. */
+    setSources(window.matchMedia("(min-width: 768px)").matches ? desktop : mobile);
   }, [reduced, desktop, mobile]);
 
   /* Arranque: load() explícito y autoplay con sonido → fallback silenciado. */
@@ -156,7 +160,7 @@ export function HeroVideo({
         loop
         playsInline
         preload="metadata"
-        poster={poster}
+        poster={sources?.poster}
         aria-label={ariaLabel}
         onCanPlay={() => setCanPlay(true)}
         onError={() => setFailed(true)}
@@ -192,7 +196,9 @@ export function HeroVideo({
           onClick={toggleSound}
           aria-pressed={!muted}
           className={cn(
-            "glass focus-visible:ring-ring pointer-events-auto absolute right-6 bottom-20 z-20 flex items-center gap-2.5 rounded-full py-2.5 pr-5 pl-4 text-[13px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none md:right-8 md:bottom-24",
+            /* Móvil: por encima de la barra de stats, que va a sangre.
+               Escritorio: esquina del marco de cine. */
+            "glass focus-visible:ring-ring pointer-events-auto absolute right-6 bottom-20 z-20 flex items-center gap-2.5 rounded-full py-2.5 pr-5 pl-4 text-[13px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none md:right-4 md:bottom-4",
             !muted && "border-brand/40",
           )}
         >
