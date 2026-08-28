@@ -79,6 +79,45 @@ export const PROVIDER_DESCRIPTORS: Record<ProviderName, ProviderDescriptor> = {
     fields: [{ id: "api_key", label: "API key", secret: true }],
     note: "Cobra 1 crédito por datos de contacto, pero 9 si devuelve un móvil. Por eso el teléfono viene apagado por defecto.",
   },
+  overpass: {
+    label: "OpenStreetMap",
+    tagline: "Busca negocios por categoría y zona en el mapa libre",
+    prerequisites: ["Nada: es una base de datos abierta"],
+    fields: [],
+    note: "Gratis y sin llave: no consume la cuota de nadie. Trae menos negocios que Google y casi nunca el correo — enciéndelo junto al extractor de sitios, que es quien completa el contacto.",
+  },
+  site_extractor: {
+    label: "Extractor de sitios",
+    tagline: "Saca correo, teléfono y redes de la web del propio lead",
+    prerequisites: ["Nada: lo hacemos nosotros"],
+    fields: [],
+    note: "Gratis. Es lo que convierte un nombre en un lead con el que se puede hacer algo, porque ninguna fuente de mapas entrega correo. Va delante de Firecrawl para que solo se pague cuando esto no encuentre nada.",
+  },
+  google_places: {
+    label: "Google Maps",
+    tagline: "El catálogo de negocios más completo de Colombia",
+    prerequisites: [
+      "Crea un proyecto en Google Cloud y habilita «Places API (New)»",
+      "Activa la facturación del proyecto: sin ella la llave existe pero no responde",
+      "Crea una clave de API y restríngela a Places API",
+    ],
+    fields: [{ id: "api_key", label: "Clave de API", secret: true }],
+    note: "Unos 32 USD por cada 1.000 llamadas. No devuelve correo por diseño de Google: da el sitio web y de ahí lo saca el extractor.",
+  },
+  serper: {
+    label: "Serper · buscador",
+    tagline: "Encuentra al negocio que está en la web pero en ningún mapa",
+    prerequisites: ["Regístrate en serper.dev y copia la API key del panel"],
+    fields: [{ id: "api_key", label: "API key", secret: true }],
+    note: "Cerca de 1 USD por cada 1.000 búsquedas: la fuente de pago más barata. Devuelve dominios, no fichas — el contacto lo completa el extractor.",
+  },
+  firecrawl: {
+    label: "Firecrawl",
+    tagline: "Extrae datos de páginas que el extractor propio no puede leer",
+    prerequisites: ["Regístrate en firecrawl.dev y copia la API key"],
+    fields: [{ id: "api_key", label: "API key", secret: true }],
+    note: "Una página, un crédito, encuentre algo o no. Ponlo con prioridad MÁS ALTA que el extractor propio para que solo cobre cuando lo gratis ya falló.",
+  },
 };
 
 /** Etiquetas de capacidad para la vitrina. */
@@ -88,6 +127,8 @@ export const CAPABILITY_LABELS: Record<string, string> = {
   identity_lookup: "Confirma identidad",
   enrich_person: "Datos de personas",
   enrich_company: "Datos de empresas",
+  discover: "Busca negocios",
+  extract_site: "Lee sitios web",
 };
 
 /**
@@ -100,8 +141,16 @@ export const CAPABILITY_LABELS: Record<string, string> = {
 export type ProviderStatus =
   "active" | "disabled" | "unhealthy" | "no_credential" | "capped";
 
+/** Los que no piden llave se reconocen por no tener campos que pedir. */
+function needsCredential(provider: ProviderName): boolean {
+  return PROVIDER_DESCRIPTORS[provider].fields.length > 0;
+}
+
 export function providerStatus(account: ProviderAccount): ProviderStatus {
-  if (account.token_last4 === null && account.provider !== "rues")
+  // Antes se preguntaba `provider !== "rues"`, y F4 trajo dos fuentes sin llave
+  // más: una lista de excepciones escrita a mano habría dejado a Overpass
+  // eternamente «sin llave» aunque estuviera funcionando.
+  if (account.token_last4 === null && needsCredential(account.provider))
     return "no_credential";
   if (!account.enabled) return "disabled";
   if (!account.healthy) return "unhealthy";

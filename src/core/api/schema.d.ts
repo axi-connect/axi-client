@@ -10660,8 +10660,8 @@ export interface components {
         ProviderCatalogDto: {
             data: {
                 /** @enum {string} */
-                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo";
-                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company")[];
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor";
+                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site")[];
                 /** @enum {string} */
                 credential_mode: "api_key" | "key_secret" | "none";
                 unit_cost: {
@@ -10673,7 +10673,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo";
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor";
             label: string;
             enabled: boolean;
             capabilities: string[];
@@ -10692,7 +10692,7 @@ export interface components {
         };
         CreateProviderDto: {
             /** @enum {string} */
-            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo";
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor";
             label: string;
             credentials: {
                 /** @enum {string} */

@@ -133,3 +133,52 @@ describe("descriptores", () => {
     expect(PROVIDER_DESCRIPTORS.twilio_lookup.note).toContain("0,008");
   });
 });
+
+describe("Cobertura del catálogo (regresión de F4)", () => {
+  /**
+   * F4 añadió cinco proveedores al backend y el panel se quedó con los cuatro
+   * de F3. El síntoma era sordo: la fuente «no estaba disponible» y nada
+   * señalaba a esta pantalla. El `Record<ProviderName, …>` ya lo impide en
+   * compilación; esto lo afirma también en runtime, con el detalle de que un
+   * descriptor a medias es tan inútil como no tenerlo.
+   */
+  it("todo proveedor tiene etiqueta, gancho y prerrequisitos", () => {
+    for (const [name, descriptor] of Object.entries(PROVIDER_DESCRIPTORS)) {
+      expect(descriptor.label.length).toBeGreaterThan(0);
+      expect(descriptor.tagline.length).toBeGreaterThan(0);
+      expect(descriptor.prerequisites.length).toBeGreaterThan(0);
+      // Un campo sin `id` no se puede enviar: el id ES el nombre en el DTO.
+      for (const field of descriptor.fields) {
+        expect(field.id.length).toBeGreaterThan(0);
+        expect(field.label.length).toBeGreaterThan(0);
+      }
+      expect(name.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("las fuentes gratis NO piden llave, y por eso no se marcan «sin llave»", () => {
+    // Overpass y el extractor propio funcionan sin credencial. Antes de F4 la
+    // excepción era una lista escrita a mano con «rues» dentro.
+    for (const free of ["rues", "overpass", "site_extractor"] as const) {
+      expect(PROVIDER_DESCRIPTORS[free].fields).toHaveLength(0);
+      expect(
+        providerStatus({
+          ...BASE,
+          provider: free,
+          token_last4: null,
+          enabled: true,
+          healthy: true,
+        }),
+      ).toBe("active");
+    }
+  });
+
+  it("las de pago sí: sin llave no están activas aunque el interruptor esté puesto", () => {
+    for (const paid of ["google_places", "serper", "firecrawl"] as const) {
+      expect(PROVIDER_DESCRIPTORS[paid].fields.length).toBeGreaterThan(0);
+      expect(
+        providerStatus({ ...BASE, provider: paid, token_last4: null, enabled: true }),
+      ).toBe("no_credential");
+    }
+  });
+});
