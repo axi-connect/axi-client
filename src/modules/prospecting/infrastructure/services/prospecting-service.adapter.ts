@@ -15,6 +15,11 @@ import type {
   QualityStatus,
   QualitySummaryDTO,
 } from "../../domain/lead";
+import type {
+  SearchDTO,
+  SearchSource,
+  SourceCatalogItemDTO,
+} from "../../domain/search";
 
 export type ProspectingSettingsDTO = Schemas["ProspectingSettingsDto"];
 export type SuppressionDTO = Schemas["SuppressionDto"];
@@ -121,4 +126,47 @@ export function verifyLead(
   leadId: string,
 ): Promise<{ lead_id: string; score: number; status: QualityStatus }> {
   return http.post(`/prospecting/leads/${leadId}/verify`);
+}
+
+// ============================================================================
+// F4 — búsquedas
+// ============================================================================
+
+/**
+ * Lanzar una búsqueda. Responde **202**: el trabajo lo hace la cola y la fila
+ * es el reporte, así que la UI se queda con el id y sigue el progreso — no hay
+ * nada que esperar aquí.
+ *
+ * Errores propios que la vista tiene que saber leer:
+ * - `prospecting/search_in_flight` (409): ya hay una de esa fuente corriendo.
+ * - `prospecting/no_discovery_quota` (429): se acabaron las unidades del ciclo.
+ * - `prospecting/source_unavailable` (503): nadie encendió esa fuente en axi.
+ */
+export function startSearch(input: StartSearchInput): Promise<{ search_id: string }> {
+  return http.post<{ search_id: string }>("/prospecting/searches", input);
+}
+
+export type StartSearchInput = {
+  source: SearchSource;
+  label?: string;
+  text?: string;
+  category?: string;
+  city?: string;
+  country?: string;
+  center?: { lat: number; lng: number };
+  radius_m?: number;
+  /** Obligatorio: no existe «búscame todos». */
+  limit: number;
+};
+
+export function listSearches(): Promise<{ items: SearchDTO[] }> {
+  return http.get<{ items: SearchDTO[] }>("/prospecting/searches");
+}
+
+export function getSearch(searchId: string): Promise<SearchDTO> {
+  return http.get<SearchDTO>(`/prospecting/searches/${searchId}`);
+}
+
+export function listSources(): Promise<{ items: SourceCatalogItemDTO[] }> {
+  return http.get<{ items: SourceCatalogItemDTO[] }>("/prospecting/sources");
 }

@@ -607,6 +607,35 @@ export type CompanySuspendedEvent = {
 // ---------------------------------------------------------------------------
 
 /** Namespace `/inbox`. Incluye usage.* y notification.* (base para módulos futuros). */
+/**
+ * Progreso de una búsqueda de captación (prospecting F4).
+ *
+ * El WS es COMODIDAD: la verdad vive en la fila de la búsqueda y la vista hace
+ * polling derivado del estado como respaldo. Quien recarga a mitad de búsqueda
+ * ve exactamente lo mismo que antes de recargar.
+ */
+export type ProspectingSearchProgressEvent = {
+  company_id: string;
+  search_id: string;
+  found_count: number;
+  new_count: number;
+  duplicate_count: number;
+  rejected_count: number;
+  units_spent: number;
+  estimated_total: number | null;
+};
+
+export type ProspectingSearchCompletedEvent = {
+  company_id: string;
+  search_id: string;
+  status: "completed" | "partial" | "failed" | "cancelled";
+  found_count: number;
+  new_count: number;
+  duplicate_count: number;
+  rejected_count: number;
+  units_spent: number;
+};
+
 export type InboxServerEvents = {
   "conversation.created": (payload: ConversationCreatedEvent) => void;
   "conversation.message_received": (payload: MessageReceivedEvent) => void;
@@ -646,6 +675,12 @@ export type InboxServerEvents = {
   "marketing.opt_out_created": (payload: MarketingOptOutCreatedEvent) => void;
   "marketing.promotion_redeemed": (payload: MarketingPromotionRedeemedEvent) => void;
   "marketing.promotion_reverted": (payload: MarketingPromotionRevertedEvent) => void;
+  "prospecting.search_progress": (
+    payload: ProspectingSearchProgressEvent,
+  ) => void;
+  "prospecting.search_completed": (
+    payload: ProspectingSearchCompletedEvent,
+  ) => void;
   "cmo.briefing_ready": (payload: CmoBriefingReadyEvent) => void;
   "cmo.proposal_created": (payload: CmoProposalCreatedEvent) => void;
   "cmo.proposal_decided": (payload: CmoProposalDecidedEvent) => void;

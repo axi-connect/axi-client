@@ -25,13 +25,23 @@ export const SOURCE_LABELS: Record<LeadSource, string> = {
   ctwa: "Click-to-WhatsApp",
   meta_lead_ads: "Formulario de anuncio",
   manual: "Cargado a mano",
+  google_places: "Google Maps",
+  openstreetmap: "OpenStreetMap",
+  serp: "Buscador web",
 };
 
+/**
+ * `rejected` y `discarded` decían los dos «Descartado», que es un estado con
+ * ruido: quien mira la bandeja no podía saber si lo tiró una persona o si su
+ * propio cliente ideal lo vetó — y la respuesta cambia qué hacer (revisar el
+ * ICP frente a no hacer nada). Desde F4 el descubrimiento escribe `rejected`,
+ * así que la distinción por fin significa algo.
+ */
 export const STATUS_LABELS: Record<LeadStatus, string> = {
   new: "Nuevo",
   enriching: "Buscando datos",
   qualified: "Calificado",
-  rejected: "Descartado",
+  rejected: "Fuera de tu cliente ideal",
   promoted: "En el CRM",
   discarded: "Descartado",
   suppressed: "No contactar",
@@ -196,7 +206,7 @@ export const LEAD_STATUS_MAP: StatusMap = {
   enriching: { label: "Buscando datos", tone: "info", transient: true },
   qualified: { label: "Calificado", tone: "success" },
   promoted: { label: "En el CRM", tone: "success" },
-  rejected: { label: "Descartado", tone: "neutral" },
+  rejected: { label: "Fuera de tu cliente ideal", tone: "neutral" },
   discarded: { label: "Descartado", tone: "neutral" },
   suppressed: { label: "No contactar", tone: "destructive" },
 };

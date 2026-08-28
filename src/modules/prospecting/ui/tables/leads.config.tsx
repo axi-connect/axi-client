@@ -24,11 +24,20 @@ import {
 import { ChannelPermissions } from "../components/ChannelPermissions";
 import { QualityIndex } from "../components/QualityIndex";
 
-/** Punto de color por fuente: se reconoce antes de leer la etiqueta. */
+/**
+ * Punto de color por fuente: se reconoce antes de leer la etiqueta.
+ *
+ * Las de F4 comparten el acento y no llevan color de marca a propósito: lo que
+ * el ojo tiene que separar de un vistazo es «me escribió» de «lo salimos a
+ * buscar», no Google de OpenStreetMap.
+ */
 const SOURCE_DOTS: Record<LeadSource, string> = {
   ctwa: "bg-[var(--logo-whatsapp)]",
   meta_lead_ads: "bg-[var(--logo-messenger)]",
   manual: "bg-muted-foreground",
+  google_places: "bg-accent",
+  openstreetmap: "bg-accent",
+  serp: "bg-accent",
 };
 
 const BASE_COLUMNS: ColumnDef<LeadRow>[] = [

@@ -4116,6 +4116,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_sources_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_listSearches_v1"];
+        put?: never;
+        post: operations["ProspectingController_startSearch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_getSearch_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/stats": {
         parameters: {
             query?: never;
@@ -10325,7 +10373,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                source: "ctwa" | "meta_lead_ads" | "manual";
+                source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
                 external_id: string | null;
                 /** @enum {string} */
                 kind: "person" | "business";
@@ -10360,6 +10408,100 @@ export interface components {
                 page_size: number;
             };
         };
+        SourcesCatalogDto: {
+            items: {
+                /** @enum {string} */
+                source: "google_places" | "openstreetmap" | "serp";
+                provider: string;
+                label: string;
+                available: boolean;
+                free: boolean;
+                allowed_channels: ("whatsapp" | "email" | "manual")[];
+                attribution: string | null;
+            }[];
+        };
+        SearchesListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "google_places" | "openstreetmap" | "serp";
+                label: string | null;
+                /** @enum {string} */
+                status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
+                params: {
+                    text: string | null;
+                    category: string | null;
+                    city: string | null;
+                    country: string;
+                    radius_m: number | null;
+                    limit: number;
+                };
+                found_count: number;
+                new_count: number;
+                duplicate_count: number;
+                rejected_count: number;
+                units_spent: number;
+                estimated_total: number | null;
+                error: string | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        SearchDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            source: "google_places" | "openstreetmap" | "serp";
+            label: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
+            params: {
+                text: string | null;
+                category: string | null;
+                city: string | null;
+                country: string;
+                radius_m: number | null;
+                limit: number;
+            };
+            found_count: number;
+            new_count: number;
+            duplicate_count: number;
+            rejected_count: number;
+            units_spent: number;
+            estimated_total: number | null;
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        StartSearchDto: {
+            /** @enum {string} */
+            source: "google_places" | "openstreetmap" | "serp";
+            label?: string;
+            text?: string;
+            category?: string;
+            city?: string;
+            /** @default CO */
+            country: string;
+            center?: {
+                lat: number;
+                lng: number;
+            };
+            radius_m?: number;
+            limit: number;
+        };
+        StartSearchResultDto: {
+            /** Format: uuid */
+            search_id: string;
+        };
         ProspectingStatsDto: {
             discovered: number;
             qualified: number;
@@ -10371,7 +10513,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            source: "ctwa" | "meta_lead_ads" | "manual";
+            source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
             external_id: string | null;
             /** @enum {string} */
             kind: "person" | "business";
@@ -18825,7 +18967,7 @@ export interface operations {
                 page?: number;
                 page_size?: number;
                 status?: "new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed";
-                source?: "ctwa" | "meta_lead_ads" | "manual";
+                source?: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
                 quality_status?: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
                 allows?: "whatsapp" | "email" | "manual";
                 min_score?: number;
@@ -18844,6 +18986,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LeadsListDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_sources_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcesCatalogDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_listSearches_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchesListDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_startSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartSearchDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartSearchResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_getSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchDto"];
                 };
             };
         };
