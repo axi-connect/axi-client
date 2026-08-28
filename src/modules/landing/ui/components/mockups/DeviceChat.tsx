@@ -2,10 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, Image as ImageIcon, SendHorizontal } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, Pause, Play, SendHorizontal } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { DemoMessage } from "@/modules/landing/ui/content/productos.content";
+
+/** Estado y mando del audio de la escena, resueltos fuera de este componente. */
+export interface VoiceControls {
+  /** Id del mensaje sonando ahora, o `null`. */
+  playingId: string | null;
+  /** Avance del clip en curso, 0→1. */
+  progress: number;
+  onToggle: (messageId: string) => void;
+  playLabel: string;
+  pauseLabel: string;
+}
 
 /**
  * El dispositivo de la escena `#agente`: un chat incrustado en un aparato que
@@ -37,6 +48,7 @@ export function DeviceChat({
   backLabel,
   messages,
   visibleUpTo,
+  voice,
   className,
 }: {
   business: string;
@@ -47,6 +59,13 @@ export function DeviceChat({
   messages: readonly DemoMessage[];
   /** Cuántos mensajes se ven. Los demás no se montan. */
   visibleUpTo: number;
+  /**
+   * Estado y mando del audio. El `<audio>` NO vive aquí: uno solo para toda
+   * la escena, en `ProductosAgentReveal` — así nunca suenan dos voces a la vez
+   * (mismo criterio que `VoiceSelector` del panel). Opcional: la variante
+   * estática de reduced-motion pinta las burbujas sin sonido.
+   */
+  voice?: VoiceControls;
   className?: string;
 }) {
   const threadRef = useRef<HTMLDivElement | null>(null);
@@ -143,7 +162,7 @@ export function DeviceChat({
                 style={{ transform: `translateY(${-offset}px)` }}
               >
                 {shown.map((message) => (
-                  <Bubble key={message.id} message={message} />
+                  <Bubble key={message.id} message={message} voice={voice} />
                 ))}
                 {agentIsTyping ? <TypingBubble /> : null}
               </div>
@@ -362,7 +381,7 @@ function StatusBar() {
 /** Ancho de las tarjetas dentro de la burbuja: del contenedor, jamás fijo. */
 const CARD = "block w-[clamp(120px,60cqw,250px)] max-w-full";
 
-function Bubble({ message }: { message: DemoMessage }) {
+function Bubble({ message, voice }: { message: DemoMessage; voice?: VoiceControls }) {
   if (message.kind === "system") {
     return (
       <div className="animate-msg-in mt-[2.4cqw] flex justify-center">
@@ -387,6 +406,7 @@ function Bubble({ message }: { message: DemoMessage }) {
         )}
       >
         {message.kind === "receipt" ? <Receipt message={message} /> : null}
+        {message.kind === "voice" ? <Voice message={message} voice={voice} /> : null}
         {message.kind === "text" || message.kind === "product" || message.kind === "receipt" ? (
           <span className="block">{message.text}</span>
         ) : null}
@@ -394,6 +414,82 @@ function Bubble({ message }: { message: DemoMessage }) {
         {message.kind === "order" ? <Order message={message} /> : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * Alturas de la onda, en tanto por uno. Constante ESCRITA, no aleatoria: un
+ * `Math.random()` daría barras distintas en servidor y cliente y React
+ * abortaría la hidratación de la escena entera.
+ */
+const WAVE = [
+  0.32, 0.55, 0.4, 0.72, 0.95, 0.61, 0.44, 0.83, 1, 0.68, 0.38, 0.52, 0.77, 0.9, 0.58, 0.35, 0.66,
+  0.88, 0.5, 0.72, 0.42, 0.6, 0.85, 0.47, 0.3, 0.64, 0.79, 0.41,
+] as const;
+
+/**
+ * Nota de voz. Solo pinta: el `<audio>` es único y vive en la sección, así
+ * que aquí llegan el estado y el mando ya resueltos.
+ *
+ * No reutiliza `AudioPlayerCore` del inbox a propósito — tiene un ancho fijo
+ * en píxeles (`w-56`) que rompería el escalado por `@container` de esta
+ * pantalla, y acoplaría el sitio público a un módulo privado.
+ */
+function Voice({
+  message,
+  voice,
+}: {
+  message: Extract<DemoMessage, { kind: "voice" }>;
+  voice?: VoiceControls;
+}) {
+  const playing = voice?.playingId === message.id;
+  const progress = playing ? voice.progress : 0;
+  return (
+    <span className="block">
+      <span className="flex items-center gap-[3cqw]">
+        <button
+          type="button"
+          onClick={() => voice?.onToggle(message.id)}
+          disabled={!voice}
+          aria-label={`${playing ? voice.pauseLabel : (voice?.playLabel ?? "")}: ${message.text}`}
+          className={cn(
+            "grid shrink-0 place-items-center rounded-full transition-colors",
+            "size-[clamp(24px,10cqw,34px)]",
+            "bg-foreground/12 hover:bg-foreground/20 disabled:opacity-60",
+          )}
+        >
+          {playing ? (
+            <Pause className="w-[clamp(9px,3.8cqw,13px)] fill-current" />
+          ) : (
+            <Play className="w-[clamp(9px,3.8cqw,13px)] translate-x-px fill-current" />
+          )}
+        </button>
+
+        {/* La onda se colorea hasta la cabeza de lectura: es la barra de
+            progreso, no un adorno. */}
+        <span aria-hidden className="flex h-[clamp(15px,6cqw,22px)] flex-1 items-center gap-[1.6px]">
+          {WAVE.map((height, index) => (
+            <span
+              key={index}
+              className={cn(
+                "flex-1 rounded-full transition-colors duration-150",
+                index / WAVE.length <= progress ? "bg-brand" : "bg-foreground/25",
+              )}
+              style={{ height: `${Math.round(height * 100)}%` }}
+            />
+          ))}
+        </span>
+
+        <span className="text-muted-foreground shrink-0 font-mono text-[clamp(8.4px,3.4cqw,11px)] tabular-nums">
+          {message.audio.durationLabel}
+        </span>
+      </span>
+
+      {/* Transcripción: quien no puede oír sigue la conversación igual. */}
+      <span className="text-muted-foreground mt-[2.4cqw] block text-[clamp(9px,3.7cqw,12px)] leading-snug italic">
+        {message.text}
+      </span>
+    </span>
   );
 }
 

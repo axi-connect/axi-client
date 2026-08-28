@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
+  AudioLines,
   BadgeCheck,
   BadgePercent,
   CalendarClock,
@@ -9,16 +10,26 @@ import {
   ContactRound,
   CreditCard,
   Image as ImageIcon,
+  Volume2,
+  VolumeX,
   type LucideIcon,
 } from "lucide-react";
 import { easeOut, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "framer-motion";
 
 import { cn } from "@/core/lib/utils";
 import { scrollReveal } from "@/core/styles/motion";
-import { DeviceChat } from "@/modules/landing/ui/components/mockups/DeviceChat";
+import { DeviceChat, type VoiceControls } from "@/modules/landing/ui/components/mockups/DeviceChat";
 import { KineticWords, type ScrollProgress } from "@/modules/landing/ui/components/KineticWords";
+import { useDemoAudio, type DemoClip } from "@/modules/landing/ui/components/use-demo-audio";
 import { useScrollContainer } from "@/modules/landing/ui/components/use-scroll-container";
 import { AGENT_DEMO, AGENT_REVEAL, type DemoBeat } from "@/modules/landing/ui/content/productos.content";
+
+/** El clip del último mensaje revelado, si ese mensaje es una nota de voz. */
+function clipAt(visibleUpTo: number): DemoClip | null {
+  const message = AGENT_DEMO.messages[visibleUpTo - 1];
+  if (!message || message.kind !== "voice") return null;
+  return { id: message.id, src: message.audio.src };
+}
 
 /**
  * §2 `#agente` — la demo en vivo. Una sección alta cuyo hijo sticky queda
@@ -42,24 +53,62 @@ export default function ProductosAgentReveal() {
   const reduced = useReducedMotion();
   const { containerRef, ready } = useScrollContainer();
 
-  if (reduced || !ready) {
-    return (
-      <RevealShell tall={false}>
-        <div className="mx-auto grid w-full max-w-[1220px] items-center gap-10 px-6 py-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          <div>
-            <RevealHeading>{AGENT_REVEAL.title}</RevealHeading>
-            <p className="text-muted-foreground mt-4 max-w-[42ch] text-pretty">{AGENT_REVEAL.sub}</p>
-            <FocusCard beat={AGENT_DEMO.beats[AGENT_DEMO.beats.length - 1]} />
-            <ProgressRail done={AGENT_DEMO.beats.length} />
-          </div>
-          <div className="flex justify-center">
-            <Demo visibleUpTo={AGENT_DEMO.messages.length} />
-          </div>
-        </div>
-      </RevealShell>
-    );
-  }
+  if (reduced || !ready) return <AgentDemoStatic />;
   return <AgentDemoAnimated containerRef={containerRef} />;
+}
+
+/**
+ * Escena colapsada: conversación completa, sin viewports muertos. El audio NO
+ * se reproduce solo aquí —no hay scroll que lo gobierne y `reduced-motion`
+ * pide justamente eso— pero cada nota de voz conserva su botón.
+ */
+function AgentDemoStatic() {
+  const { controls } = useSceneVoice(AGENT_DEMO.messages.length, false);
+  return (
+    <RevealShell tall={false}>
+      <div className="mx-auto grid w-full max-w-[1220px] items-center gap-10 px-6 py-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <div>
+          <RevealHeading>{AGENT_REVEAL.title}</RevealHeading>
+          <p className="text-muted-foreground mt-4 max-w-[42ch] text-pretty">{AGENT_REVEAL.sub}</p>
+          <FocusCard beat={AGENT_DEMO.beats[AGENT_DEMO.beats.length - 1]} />
+          <ProgressRail done={AGENT_DEMO.beats.length} />
+        </div>
+        <div className="flex justify-center">
+          <Demo visibleUpTo={AGENT_DEMO.messages.length} voice={controls} />
+        </div>
+      </div>
+    </RevealShell>
+  );
+}
+
+/**
+ * Puente entre el scroll y el audio. `sync` distingue la escena animada (el
+ * scroll manda) de la estática (solo botones).
+ */
+function useSceneVoice(visible: number, sync: boolean) {
+  const audio = useDemoAudio();
+  const clip = clipAt(visible);
+  const clipId = clip?.id ?? null;
+  const clipSrc = clip?.src ?? null;
+  const { syncTo, toggle } = audio;
+
+  useEffect(() => {
+    if (!sync) return;
+    syncTo(clipId && clipSrc ? { id: clipId, src: clipSrc } : null);
+  }, [sync, clipId, clipSrc, syncTo]);
+
+  const controls: VoiceControls = {
+    playingId: audio.playingId,
+    progress: audio.progress,
+    onToggle: (messageId) => {
+      const message = AGENT_DEMO.messages.find((entry) => entry.id === messageId);
+      if (message?.kind === "voice") toggle({ id: message.id, src: message.audio.src });
+    },
+    playLabel: AGENT_REVEAL.voicePlayLabel,
+    pauseLabel: AGENT_REVEAL.voicePauseLabel,
+  };
+
+  return { audio, controls, clip };
 }
 
 function AgentDemoAnimated({ containerRef }: { containerRef: RefObject<HTMLElement | null> }) {
@@ -104,6 +153,8 @@ function AgentDemoAnimated({ containerRef }: { containerRef: RefObject<HTMLEleme
   const beat =
     [...AGENT_DEMO.beats].reverse().find((item) => item.atMessage <= visible - 1) ?? null;
 
+  const { audio, controls, clip } = useSceneVoice(visible, true);
+
   return (
     <RevealShell tall ref={trackRef}>
       {/* pt-28: el SiteHeader (glass, pegado arriba) mide ~72px + margen — sin
@@ -128,6 +179,14 @@ function AgentDemoAnimated({ containerRef }: { containerRef: RefObject<HTMLEleme
               </p>
               <FocusCard beat={beat} />
               <ProgressRail done={beat ? AGENT_DEMO.beats.indexOf(beat) + 1 : 0} />
+              <SoundToggle
+                armed={audio.armed}
+                /* Se arma DENTRO del clic y arranca ahí mismo el clip que esté
+                   en pantalla: es ese gesto el que desbloquea la política, y
+                   esperar al siguiente paso de scroll se sentiría roto. */
+                onArm={() => audio.arm(clip)}
+                onDisarm={audio.disarm}
+              />
             </motion.div>
           </div>
 
@@ -141,7 +200,7 @@ function AgentDemoAnimated({ containerRef }: { containerRef: RefObject<HTMLEleme
               style={{ y, scale, rotateY, opacity: deviceOpacity }}
               className="flex h-full max-h-full items-center justify-center will-change-transform"
             >
-              <Demo visibleUpTo={visible} />
+              <Demo visibleUpTo={visible} voice={controls} />
             </motion.div>
           </div>
         </div>
@@ -152,7 +211,7 @@ function AgentDemoAnimated({ containerRef }: { containerRef: RefObject<HTMLEleme
 
 /* ───────────────────────────── piezas ───────────────────────────── */
 
-function Demo({ visibleUpTo }: { visibleUpTo: number }) {
+function Demo({ visibleUpTo, voice }: { visibleUpTo: number; voice: VoiceControls }) {
   return (
     <DeviceChat
       business={AGENT_DEMO.business}
@@ -162,7 +221,48 @@ function Demo({ visibleUpTo }: { visibleUpTo: number }) {
       backLabel={AGENT_DEMO.backLabel}
       messages={AGENT_DEMO.messages}
       visibleUpTo={visibleUpTo}
+      voice={voice}
     />
+  );
+}
+
+/**
+ * Arma el sonido de la escena. Apagado por defecto y visible desde el primer
+ * momento: el scroll NO desbloquea audio en ningún navegador, así que sin este
+ * clic las notas de voz se quedarían mudas sin explicación. Y la WCAG 1.4.2
+ * exige un control de pausa para audio que arranca solo.
+ */
+function SoundToggle({
+  armed,
+  onArm,
+  onDisarm,
+}: {
+  armed: boolean;
+  onArm: () => void;
+  onDisarm: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={armed ? onDisarm : onArm}
+      aria-pressed={armed}
+      className={cn(
+        "focus-visible:ring-ring mt-5 inline-flex items-center gap-2.5 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none max-lg:mt-4",
+        armed
+          ? "border-brand/40 bg-accent text-brand"
+          : "border-border bg-secondary hover:border-brand/30",
+      )}
+    >
+      {armed ? (
+        <Volume2 aria-hidden className="size-4" />
+      ) : (
+        <VolumeX aria-hidden className="size-4" />
+      )}
+      {armed ? AGENT_REVEAL.soundOnLabel : AGENT_REVEAL.soundArmLabel}
+      {armed ? null : (
+        <span className="text-muted-foreground font-normal">· {AGENT_REVEAL.soundHint}</span>
+      )}
+    </button>
   );
 }
 
@@ -214,6 +314,7 @@ function RevealHeading({ children }: { children: ReactNode }) {
 }
 
 const BEAT_ICONS: Record<DemoBeat["icon"], LucideIcon> = {
+  voice: AudioLines,
   catalog: ImageIcon,
   quote: Calculator,
   promo: BadgePercent,

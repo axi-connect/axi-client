@@ -151,10 +151,26 @@ export const PRODUCTOS_HERO = {
  */
 export type DemoMessage =
   | { id: string; from: "customer" | "agent"; kind: "text"; text: string }
+  | { id: string; from: "customer" | "agent"; kind: "voice"; text: string; audio: DemoAudio }
   | { id: string; from: "agent"; kind: "product"; text: string; product: DemoProduct }
   | { id: string; from: "agent"; kind: "order"; order: DemoOrder }
   | { id: string; from: "customer"; kind: "receipt"; text: string; receipt: DemoReceipt }
   | { id: string; from: "system"; kind: "system"; text: string };
+
+/**
+ * Nota de voz. El `text` del mensaje es su TRANSCRIPCIÓN literal: la burbuja
+ * la muestra bajo la onda, así que quien no puede o no quiere oír sigue la
+ * conversación igual (y el buscador la indexa).
+ */
+export interface DemoAudio {
+  /** Bajo `/assets/`, JAMÁS `/audio/`: el matcher del middleware
+   *  (`src/middleware.ts`) no excluye `audio`, así que un visitante sin
+   *  sesión recibiría la redirección al login en vez del archivo. */
+  src: string;
+  /** Duración ya escrita, no leída del archivo: la burbuja debe medir lo
+   *  mismo antes y después de cargar los metadatos o el hilo daría un salto. */
+  durationLabel: string;
+}
 
 export interface DemoProduct {
   name: string;
@@ -179,7 +195,7 @@ export interface DemoReceipt {
 export interface DemoBeat {
   id: string;
   /** Clave del mapa de iconos de la sección (el contenido no importa React). */
-  icon: "catalog" | "quote" | "promo" | "order" | "payment" | "crm" | "agenda";
+  icon: "voice" | "catalog" | "quote" | "promo" | "order" | "payment" | "crm" | "agenda";
   title: string;
   body: string;
   /** Índice del mensaje que lo demuestra. */
@@ -193,6 +209,14 @@ const DEMO_TEXTS = {
   totalConCupon: "$278.100",
 } as const;
 
+/**
+ * Carpeta de los audios de la demo. `/assets/` y no `/audio/`: el matcher del
+ * middleware es `/((?!_next|api|favicon.ico|assets|fonts|images).*)` y `audio`
+ * NO está excluido, así que en una página pública un visitante sin sesión
+ * recibiría un 307 al login en vez del MP3 — y fallaría en silencio.
+ */
+const DEMO_AUDIO = "/assets/audio";
+
 export const AGENT_DEMO = {
   business: "Óptica Vértice",
   status: "en línea",
@@ -201,17 +225,34 @@ export const AGENT_DEMO = {
   composerPlaceholder: "Escribe un mensaje",
   backLabel: "Volver a la lista de chats",
   messages: [
+    /**
+     * El intercambio de voz va PRIMERO y es uno solo, por la regla real del
+     * producto: el agente responde con nota de voz *solo cuando el cliente le
+     * habla con audio* (espejo), y lo que lleva precio, tarjeta o enlace sale
+     * en texto. Repartir audios por toda la conversación enseñaría un
+     * comportamiento que el producto no tiene.
+     */
     {
       id: "d1",
       from: "customer",
-      kind: "text",
-      text: "Hola, vi las gafas negras de lente naranja del reel. ¿Las tienen?",
+      kind: "voice",
+      text: "Hola, buenas. Oye, vi en el reel unas gafas negras, de lente naranja… ¿Todavía las tienen?",
+      audio: { src: `${DEMO_AUDIO}/cliente-gafas.mp3`, durationLabel: "0:05" },
     },
     {
       id: "d2",
       from: "agent",
+      kind: "voice",
+      text: "¡Hola! Sí, claro. Todavía nos quedan unas pocas. Son las Aviador Ámbar: montura negra, lente ámbar. Te paso la foto y el precio.",
+      audio: { src: `${DEMO_AUDIO}/agente-aviador.mp3`, durationLabel: "0:08" },
+    },
+    {
+      id: "d3",
+      from: "agent",
       kind: "product",
-      text: "Sí, nos quedan 4. Te las muestro:",
+      /* La nota de voz acaba de prometer «la foto y el precio»: la tarjeta ES
+         esa promesa cumplida, así que el texto solo tiene que entregarla. */
+      text: "Aquí las tienes:",
       product: {
         name: "Aviador Ámbar",
         meta: "$189.000 · quedan 4",
@@ -219,22 +260,22 @@ export const AGENT_DEMO = {
         imageAlt: "Gafas Aviador Ámbar: montura negra con lente naranja",
       },
     },
-    { id: "d3", from: "customer", kind: "text", text: "¿Se pueden hacer con mi fórmula?" },
+    { id: "d4", from: "customer", kind: "text", text: "¿Se pueden hacer con mi fórmula?" },
     {
-      id: "d4",
+      id: "d5",
       from: "agent",
       kind: "text",
       text: `Montura $189.000 + lente con tu fórmula $120.000. Total: ${DEMO_TEXTS.totalConFormula}, listas en 3 días.`,
     },
-    { id: "d5", from: "customer", kind: "text", text: "Tengo el cupón PRIMERAVEZ" },
+    { id: "d6", from: "customer", kind: "text", text: "Tengo el cupón PRIMERAVEZ" },
     {
-      id: "d6",
+      id: "d7",
       from: "agent",
       kind: "text",
       text: `Aplicado ✓ PRIMERAVEZ te deja en ${DEMO_TEXTS.totalConCupon}.`,
     },
     {
-      id: "d7",
+      id: "d8",
       from: "agent",
       kind: "order",
       order: {
@@ -244,7 +285,7 @@ export const AGENT_DEMO = {
       },
     },
     {
-      id: "d8",
+      id: "d9",
       from: "customer",
       kind: "receipt",
       text: "Listo, ya pagué",
@@ -255,15 +296,15 @@ export const AGENT_DEMO = {
       },
     },
     {
-      id: "d9",
+      id: "d10",
       from: "agent",
       kind: "text",
       text: "Pago verificado ✓ Pedido #1042 confirmado. Te aviso cuando estén listas.",
     },
-    { id: "d10", from: "system", kind: "system", text: "Contacto guardado · Negocio abierto en el CRM" },
-    { id: "d11", from: "customer", kind: "text", text: "¿Y para el examen visual?" },
+    { id: "d11", from: "system", kind: "system", text: "Contacto guardado · Negocio abierto en el CRM" },
+    { id: "d12", from: "customer", kind: "text", text: "¿Y para el examen visual?" },
     {
-      id: "d12",
+      id: "d13",
       from: "agent",
       kind: "text",
       text: "Martes 3: 10:00 a.m. o 4:00 p.m. ¿Cuál te dejo?",
@@ -271,11 +312,22 @@ export const AGENT_DEMO = {
   ] as readonly DemoMessage[],
   beats: [
     {
+      id: "voz",
+      icon: "voice",
+      title: "Contesta en voz a quien le habla en voz",
+      body: "Si el cliente manda un audio, el agente responde con nota de voz. Lo que lleva precio o tarjeta sigue saliendo en texto.",
+      atMessage: 1,
+      /* VACÍO A PROPÓSITO: la voz no es una herramienta, es una política de
+         respuesta del agente (`voice_enabled`), así que no hay ningún
+         `*.tool.ts` que citar sin mentir. */
+      tools: [],
+    },
+    {
       id: "catalogo",
       icon: "catalog",
       title: "Responde con tu catálogo real",
       body: "Consulta stock y precio en el momento y manda la foto. No promete lo que no hay.",
-      atMessage: 1,
+      atMessage: 2,
       tools: ["catalog_lookup", "send_product_images"],
     },
     {
@@ -283,7 +335,7 @@ export const AGENT_DEMO = {
       icon: "quote",
       title: "Cotiza con tus precios",
       body: "Suma montura, lente y tiempos de entrega con tus reglas — no con una cifra inventada.",
-      atMessage: 3,
+      atMessage: 4,
       tools: ["quote_order"],
     },
     {
@@ -291,7 +343,7 @@ export const AGENT_DEMO = {
       icon: "promo",
       title: "Valida cupones y promociones",
       body: "Comprueba que el cupón exista y esté vigente antes de descontar un peso.",
-      atMessage: 5,
+      atMessage: 6,
       tools: ["validate_coupon", "apply_promotion"],
     },
     {
@@ -299,7 +351,7 @@ export const AGENT_DEMO = {
       icon: "order",
       title: "Arma el pedido y cobra",
       body: "Crea el pedido en tu sistema y ofrece tus medios de pago, no un número suelto.",
-      atMessage: 6,
+      atMessage: 7,
       tools: ["create_order", "get_payment_methods"],
     },
     {
@@ -307,7 +359,7 @@ export const AGENT_DEMO = {
       icon: "payment",
       title: "Verifica el pago",
       body: "Confirma contra la pasarela. Nadie de tu equipo revisa comprobantes a mano.",
-      atMessage: 8,
+      atMessage: 9,
       tools: ["report_payment", "get_order_status"],
     },
     {
@@ -315,7 +367,7 @@ export const AGENT_DEMO = {
       icon: "crm",
       title: "Registra todo en el CRM",
       body: "La conversación deja ficha, negocio y actividad. Sin que nadie digite nada.",
-      atMessage: 9,
+      atMessage: 10,
       tools: ["save_contact_data", "open_deal", "log_crm_activity"],
     },
     {
@@ -323,7 +375,7 @@ export const AGENT_DEMO = {
       icon: "agenda",
       title: "Agenda la cita",
       body: "Consulta tu agenda de verdad y reserva el cupo con recordatorio incluido.",
-      atMessage: 11,
+      atMessage: 12,
       tools: ["book_appointment", "schedule_availability"],
     },
   ] as readonly DemoBeat[],
@@ -335,9 +387,16 @@ export const AGENT_REVEAL = {
   /** Estado del foco antes de que entre el primer beat. */
   introTitle: "Lo que el agente acaba de hacer",
   introBody: "Cada mensaje de la conversación demuestra una capacidad distinta.",
-  /** `N de 7` bajo el riel de progreso. */
+  /** `N de 8` bajo el riel de progreso. */
   progressLabel: (done: number, total: number) => `${done} de ${total}`,
   demoLabel: "Conversación de demostración con un negocio de ejemplo",
+  /** Botón que ARMA el audio de la escena. Ver `ProductosAgentReveal`: el
+   *  scroll no desbloquea sonido en ningún navegador, hace falta un clic. */
+  soundArmLabel: "Activar sonido",
+  soundOnLabel: "Sonido activado",
+  soundHint: "Escucha cómo suena el agente",
+  voicePlayLabel: "Reproducir nota de voz",
+  voicePauseLabel: "Pausar nota de voz",
 } as const;
 
 /* ─────────────────── Carrusel · seis capacidades ───────────────────── */

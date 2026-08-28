@@ -43,6 +43,39 @@ describe("contenido de /productos", () => {
     });
   });
 
+  describe("notas de voz de la demo", () => {
+    const voces = AGENT_DEMO.messages.filter((message) => message.kind === "voice");
+
+    it("hay un intercambio de voz que enseñar", () => {
+      expect(voces.length).toBeGreaterThan(0);
+    });
+
+    it("sirven desde /assets/, que es lo único que el middleware deja pasar", () => {
+      // `/audio/` NO está excluido del matcher de `src/middleware.ts`: en una
+      // página pública un visitante sin sesión recibiría un 307 al login en
+      // vez del MP3, y el fallo sería mudo.
+      const malUbicadas = voces.filter((message) => !message.audio.src.startsWith("/assets/"));
+      expect(malUbicadas).toEqual([]);
+    });
+
+    it("traen transcripción: la conversación se sigue sin oír nada", () => {
+      const sinTexto = voces.filter((message) => message.text.trim() === "");
+      expect(sinTexto).toEqual([]);
+    });
+
+    it("respetan la regla espejo del producto", () => {
+      // El agente responde con nota de voz SOLO cuando el cliente le habla con
+      // audio. Una nota de voz suya sin un audio del cliente justo antes
+      // anunciaría un comportamiento que el producto no tiene.
+      const sinDetonante = AGENT_DEMO.messages
+        .map((message, index) => ({ message, previa: AGENT_DEMO.messages[index - 1] }))
+        .filter(({ message }) => message.kind === "voice" && message.from === "agent")
+        .filter(({ previa }) => previa?.kind !== "voice" || previa.from !== "customer")
+        .map(({ message }) => message.id);
+      expect(sinDetonante).toEqual([]);
+    });
+  });
+
   it("la cifra de herramientas del hero deriva del registro, no está escrita a mano", () => {
     const tools = PRODUCTOS_HERO.stats.find((stat) => stat.id === "tools");
     expect(tools?.value).toBe(AGENT_TOOLS.length);

@@ -56,6 +56,8 @@
 | `src/modules/landing/ui/sections/productos/*` | 8 secciones (Hero, AgentReveal, Carousel, Inbox, CrmBento, Catalogo, Conversaciones, FinalCta) |
 | `src/core/styles/motion.ts` | preset `scrollReveal` (coreografía del pin) |
 | `src/app/globals.css` | `msg-in` + `typing-bob` (entrada de burbuja y «escribiendo») |
+| `src/modules/landing/ui/components/use-demo-audio.ts` | client — el audio de la escena: armado por gesto, play/stop por scroll, rampa de salida |
+| `public/assets/audio/*.mp3` | las dos notas de voz de la demo |
 | `public/images/landing/gafas-aviador-ambar.jpg` | foto de catálogo de la demo |
 
 ## `#agente` — la demo en vivo
@@ -73,7 +75,7 @@ la escena «no tenía nivel de producto premium»):
 
 Diseño resultante: un chat incrustado en un dispositivo donde **cada paso de
 scroll trae un mensaje y cada mensaje demuestra una capacidad**, con el foco de
-capacidad nombrándola a la izquierda y un riel de 7 segmentos.
+capacidad nombrándola a la izquierda y un riel de 8 segmentos.
 
 Decisiones que no revertir:
 
@@ -99,6 +101,53 @@ Decisiones que no revertir:
   framer se congelaría a medias (DESIGN-SYSTEM §6, regla 3).
 - El aro de acero es un **gradiente cónico** (los destellos caen en las
   esquinas, como en metal pulido) hecho solo con `color-mix` sobre tokens.
+
+### Las notas de voz
+
+La escena enseña **cómo suena el agente** con un solo intercambio de voz al
+principio: el cliente manda un audio y el agente contesta con otro. No es una
+elección estética — es **la regla real del producto**, que la UI de
+`/settings/voice` y `AgentForm` enuncian así: *«el agente responde con nota de
+voz solo cuando el cliente le habla con audio (espejo); las respuestas largas o
+con enlaces salen en texto»*. Repartir audios por toda la conversación
+anunciaría un comportamiento inexistente, y la demo acaba enseñando la regla,
+no solo la función: lo que lleva tarjeta o precio sigue en texto **porque el
+producto lo manda así**.
+
+Decisiones que no revertir:
+
+- **Los MP3 viven en `public/assets/audio/`, jamás en `public/audio/`.** El
+  matcher del middleware no excluye `audio`, así que en una página pública un
+  visitante sin sesión recibiría un 307 al login en vez del archivo — mudo y
+  sin error visible. Existe ya un `public/audio/` que funciona solo porque sus
+  consumidores viven detrás del login. Hay un test que lo fija.
+- **El sonido se ARMA con un clic; el scroll no lo desbloquea.** El scroll no
+  cuenta como gesto de activación en ningún navegador: `play()` con sonido se
+  rechaza mientras el documento no reciba un clic. Con la escena armada, el
+  scroll gobierna play y stop. Además la WCAG 1.4.2 exige control de pausa para
+  audio que arranca solo, así que el botón hace falta igual.
+- **Un solo `<audio>` para toda la escena**, reutilizado entre clips: nunca
+  suenan dos voces a la vez, y Safari «bendice» el elemento reproducido dentro
+  de un gesto —no el origen—, así que crear uno por clip volvería a chocar con
+  la política en cada mensaje.
+- **Arranque diferido 150 ms y salida con rampa de 180 ms.** El audio es
+  temporal y el scroll posicional: sin esto, bajar rápido dispara y corta un
+  clip por burbuja. El corte seco a media palabra es lo que suena barato.
+- **El beat de voz declara `tools: []` a propósito**: la voz no es una
+  herramienta sino una política de respuesta (`voice_enabled`), y no hay
+  ningún `*.tool.ts` que citar sin mentir.
+- **Cada nota lleva transcripción visible** bajo la onda, y la duración va
+  escrita en el contenido, no leída del archivo: la burbuja debe medir lo mismo
+  antes y después de cargar metadatos o el hilo daría un salto.
+- La onda es una **constante escrita**, nunca `Math.random()`: barras distintas
+  en servidor y cliente abortarían la hidratación de la escena entera.
+- No se reutiliza `AudioPlayerCore` del inbox: tiene ancho fijo (`w-56`), que
+  rompería el escalado por `@container`, y acoplaría el sitio público a un
+  módulo privado.
+
+Masterizado (medido): ambos clips a mono 44,1 kHz, 64 kbps, −16,7 LUFS con
+picos bajo −1,5 dBTP; 40 KB y 64 KB. Se recortó el silencio de cola (0,38 s en
+el del agente) conservando las pausas internas, que son prosodia.
 
 ## Reglas duras aplicadas
 
