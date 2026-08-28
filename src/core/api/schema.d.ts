@@ -4276,6 +4276,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/prospecting/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformProspectingController_getCatalog_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformProspectingController_listProviders_v1"];
+        put?: never;
+        post: operations["PlatformProspectingController_createProvider_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers/{id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformProspectingController_rotateCredentials_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformProspectingController_updateProvider_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers/{id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformProspectingController_probeProvider_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/proposals/{proposal_id}/approve": {
         parameters: {
             query?: never;
@@ -10434,6 +10514,90 @@ export interface components {
             score: number;
             /** @enum {string} */
             status: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
+        };
+        ProviderCatalogDto: {
+            data: {
+                /** @enum {string} */
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo";
+                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company")[];
+                /** @enum {string} */
+                credential_mode: "api_key" | "key_secret" | "none";
+                unit_cost: {
+                    [key: string]: number;
+                };
+            }[];
+        };
+        ProviderAccountDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo";
+            label: string;
+            enabled: boolean;
+            capabilities: string[];
+            priority: number;
+            config: unknown;
+            daily_cap: number | null;
+            spent_today: number;
+            spent_cycle: number;
+            healthy: boolean;
+            last_error: string | null;
+            /** Format: date-time */
+            last_checked_at: string | null;
+            token_last4: string | null;
+            /** Format: date-time */
+            credential_set_at: string | null;
+        };
+        CreateProviderDto: {
+            /** @enum {string} */
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo";
+            label: string;
+            credentials: {
+                /** @enum {string} */
+                mode: "api_key";
+                api_key: string;
+            } | {
+                /** @enum {string} */
+                mode: "key_secret";
+                key_sid: string;
+                secret: string;
+            } | {
+                /** @enum {string} */
+                mode: "none";
+            };
+            priority?: number;
+            config?: {
+                [key: string]: unknown;
+            };
+            daily_cap?: number;
+        };
+        RotateProviderCredentialsDto: {
+            credentials: {
+                /** @enum {string} */
+                mode: "api_key";
+                api_key: string;
+            } | {
+                /** @enum {string} */
+                mode: "key_secret";
+                key_sid: string;
+                secret: string;
+            } | {
+                /** @enum {string} */
+                mode: "none";
+            };
+        };
+        UpdateProviderDto: {
+            enabled?: boolean;
+            priority?: number;
+            config?: {
+                [key: string]: unknown;
+            };
+            daily_cap?: number | null;
+        };
+        ProviderHealthDto: {
+            healthy: boolean;
+            balance?: number;
+            detail?: string;
         };
         ApprovalResultDto: {
             applied: {
@@ -18951,6 +19115,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScoreResultDto"];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_getCatalog_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderCatalogDto"];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_listProviders_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderAccountDto"][];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_createProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProviderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderAccountDto"];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_rotateCredentials_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateProviderCredentialsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformProspectingController_updateProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProviderDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformProspectingController_probeProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderHealthDto"];
                 };
             };
         };

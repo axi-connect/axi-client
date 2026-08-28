@@ -83,4 +83,12 @@ export const platformKeys = {
         [...platformKeys.quality.debug.all, companyId, "contacts", contactId, "conversations"] as const,
     },
   },
+
+  // Proveedores externos de la captación de leads (prospecting F3). La lista
+  // trae saldo y salud, así que se refresca al volver a la pestaña.
+  prospecting: {
+    all: ["platform", "prospecting"] as const,
+    catalog: () => [...platformKeys.prospecting.all, "catalog"] as const,
+    providers: () => [...platformKeys.prospecting.all, "providers"] as const,
+  },
 } as const;
