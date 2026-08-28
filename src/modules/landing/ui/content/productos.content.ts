@@ -39,24 +39,38 @@ export const PRODUCT_SHOTS = {
 const CLOUDINARY_VIDEO = "https://res.cloudinary.com/dpfnxj52w/video/upload";
 
 /**
- * Streaming progresivo (HTTP range) con transcodificación de Cloudinary:
- * H.264 como base universal + VP9 para navegadores que lo prefieran, dos
- * anchos según viewport y poster extraído del propio video (segundo 2).
- * Las derivadas se generan on-the-fly en la primera petición y quedan
- * cacheadas en el CDN — no hay nada más que configurar en Cloudinary.
+ * Streaming progresivo (HTTP range) con transcodificación de Cloudinary: dos
+ * anchos según viewport y poster extraído del propio video (segundo 2). Las
+ * derivadas se generan on-the-fly en la primera petición y quedan cacheadas
+ * en el CDN — no hay nada más que configurar en Cloudinary.
+ *
+ * CALIDAD — `q_90`, nunca `q_auto`. Medido sobre este máster (1920×1080 a
+ * 5,15 Mbps):
+ *
+ * | transformación   | bitrate  |
+ * |------------------|----------|
+ * | `q_auto` H.264   | 1,09 Mbps|
+ * | `q_auto:best`    | 2,32 Mbps|
+ * | **`q_90`**       | 3,11 Mbps|
+ *
+ * `q_auto` recorta el 79% del bitrate sin tocar la resolución: por eso el
+ * video se veía blando. `q_90` deja 32 MB para 84 s, que en streaming
+ * progresivo el navegador NO descarga de golpe — pide solo lo que reproduce.
+ *
+ * Se retiró la fuente WebM/VP9 (ver `HeroVideoSources`): Cloudinary la
+ * comprimía aún más y, al ir primero, era la que elegían Chrome y Firefox.
  */
 const HERO_VIDEO_ID = "axi-producto-hero_anqcob";
+const HERO_VIDEO_Q = "q_90";
 
 export const HERO_VIDEO = {
   publicId: HERO_VIDEO_ID,
-  poster: `${CLOUDINARY_VIDEO}/so_2,q_auto,f_jpg,w_1600/${HERO_VIDEO_ID}.jpg`,
+  poster: `${CLOUDINARY_VIDEO}/so_2,${HERO_VIDEO_Q},f_jpg,w_1600/${HERO_VIDEO_ID}.jpg`,
   desktop: {
-    webm: `${CLOUDINARY_VIDEO}/vc_vp9,q_auto,w_1920/${HERO_VIDEO_ID}.webm`,
-    mp4: `${CLOUDINARY_VIDEO}/vc_h264,q_auto,w_1920/${HERO_VIDEO_ID}.mp4`,
+    mp4: `${CLOUDINARY_VIDEO}/vc_h264,${HERO_VIDEO_Q},w_1920/${HERO_VIDEO_ID}.mp4`,
   },
   mobile: {
-    webm: `${CLOUDINARY_VIDEO}/vc_vp9,q_auto,w_960/${HERO_VIDEO_ID}.webm`,
-    mp4: `${CLOUDINARY_VIDEO}/vc_h264,q_auto,w_960/${HERO_VIDEO_ID}.mp4`,
+    mp4: `${CLOUDINARY_VIDEO}/vc_h264,${HERO_VIDEO_Q},w_960/${HERO_VIDEO_ID}.mp4`,
   },
   ariaLabel: "Video de bienvenida: el producto Axi Connect en acción",
 } as const;

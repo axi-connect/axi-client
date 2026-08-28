@@ -7,8 +7,15 @@ import { Play, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useScrollContainer } from "@/modules/landing/ui/components/use-scroll-container";
 
+/**
+ * Una sola fuente H.264 a propósito. Antes se ofrecía además un WebM/VP9 y,
+ * al ir primero, era el que elegían Chrome y Firefox — pero Cloudinary lo
+ * comprimía mucho más (0,59 Mbps frente a 1,09 del H.264 con `q_auto`), así
+ * que la mayoría de visitantes veía la peor de las dos copias. Ni pidiendo
+ * `q_auto:best` alcanzaba paridad. El ahorro del VP9 no venía de comprimir
+ * mejor sino de comprimir más: se retiró.
+ */
 export interface HeroVideoSources {
-  webm: string;
   mp4: string;
 }
 
@@ -160,7 +167,6 @@ export function HeroVideo({
       >
         {sources ? (
           <>
-            <source src={sources.webm} type="video/webm" />
             <source src={sources.mp4} type="video/mp4" />
           </>
         ) : null}
