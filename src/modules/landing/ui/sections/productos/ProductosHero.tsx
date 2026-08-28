@@ -45,12 +45,13 @@ export default function ProductosHero() {
         }}
       />
 
-      {/* Mensaje mínimo, abajo a la izquierda. */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 flex-col justify-end px-6 pt-32 pb-12 sm:px-7">
-        <h1 className="font-heading text-silver-gradient max-w-[24ch] text-3xl leading-[1.1] font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+      {/* Mensaje mínimo: franja ancha y baja — el titular acompaña al video,
+          nunca tapa a quien habla (1 línea en desktop, 2 en tablet). */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 flex-col justify-end px-6 pt-32 pb-9 sm:px-7">
+        <h1 className="font-heading text-silver-gradient max-w-[58ch] text-xl leading-snug font-semibold tracking-tight text-balance sm:text-2xl lg:text-[30px]">
           {PRODUCTOS_HERO.headline}
         </h1>
-        <div className="mt-7 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-3">
           <Button asChild className="h-11 px-6">
             <Link href={PRODUCTOS_HERO.ctaPrimary.href}>{PRODUCTOS_HERO.ctaPrimary.label}</Link>
           </Button>
