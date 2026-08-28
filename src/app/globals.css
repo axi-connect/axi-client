@@ -1139,3 +1139,203 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   FACTURACIÓN — EL TIQUETE DEL PRÓXIMO COBRO
+   --------------------------------------------------------------------------
+   La estimación del próximo cobro es la pieza que evita la factura sorpresa, y
+   un tiquete con talón es la forma física de «esto es lo que vas a pagar y
+   cuándo se corta». Nada nuevo de raíz: el anillo es la MISMA receta de
+   `.channel-surface::after` (dos máscaras que se excluyen sobre
+   `@property --comet-angle`) con el ámbar del módulo, y el tilt y el brillo los
+   aporta `TiltCard` desde fuera.
+
+   Cuatro decisiones que explican la forma que tiene:
+
+   1. **Las muescas son agujeros DE VERDAD, con `mask`.** Se probaron las dos
+      alternativas y las dos se caen. `clip-path` no puede hacer un mordisco
+      semicircular (un polígono no tiene arcos, `circle()` no se combina con un
+      rectángulo y `shape()` es Chrome 135+). Y pintar dos discos del color del
+      fondo tampoco: detrás de las tarjetas del panel no hay `--background`,
+      hay `bg-gradient-to-br from-muted/50 to-muted` (`(private)/layout.tsx`),
+      así que el disco no puede acertar el color —cambia a lo largo del
+      degradado— y encima `overflow: hidden` recorta en la caja de PADDING, con
+      lo que la línea del borde seguiría entera por encima de la muesca.
+
+   2. **La máscara va en el envoltorio de `TiltCard`, no en un hijo.** Tres
+      cosas salen gratis: el `mask` del grupo y el `mask` del anillo viven en
+      elementos distintos y no se pisan (encadenar `exclude` + `intersect` en
+      cuatro capas es ilegible y en Safari se escribe con otras palabras); el
+      brillo de `TiltCard` es hijo, así que se recorta igual y no pinta un
+      rectángulo teñido sobre el agujero; y todo el tiquete es UN solo grupo
+      enmascarado, o sea una sola rasterización.
+      Efecto lateral a saber: `mask` fuerza `transform-style: flat`, así que el
+      `preserve-3d` del envoltorio queda inerte en esta instancia (hoy es
+      inocuo: nada de dentro usa transforms 3D propias) y **cualquier sombra o
+      halo EXTERIOR desaparece** — se enmascara con el elemento. Por eso el
+      tinte va dentro, como `background-image`, y no hay `box-shadow`.
+
+   3. **`--ticket-stub` es la única fuente de verdad.** La consumen la máscara
+      de aquí y el `flex-basis` del talón en el JSX; si se desincronizan, la
+      muesca deja de caer en la perforación. Va en px/rem y no en %, para que
+      la máscara (que mide sobre la caja de BORDE) y el talón (que mide sobre
+      la de contenido) no discrepen por el ancho del borde.
+
+   4. **En reposo NO se mueve nada.** DESIGN-SYSTEM §6 no admite una segunda
+      superficie del panel animándose en bucle, y esto no lo es: igual que
+      `.channel-surface` —que ya vive en el panel—, el cometa está apagado y
+      solo corre mientras el puntero está encima. Reutiliza `channel-comet`,
+      que es literalmente `to { --comet-angle: 360deg }` y no tiene nada de
+      canales; la duración la pone el shorthand `animation`, no el keyframe.
+
+   El tinte de superficie se queda en el 12 % que ya tenía la tarjeta plana: el
+   ámbar fuerte vive en el anillo de 1px, que NO es tinte de superficie. Por eso
+   esto no pide una tercera excepción al techo de DESIGN-SYSTEM §2.3.
+   ========================================================================== */
+
+.ticket-surface {
+  /* Ancho del talón. Fijo y con un escalón en `sm`: es la medida que comparten
+     la máscara y el `flex-basis`. */
+  --ticket-stub: 6.5rem;
+  --ticket-notch: 10px;
+  /* Color del canto de las muescas. Es una variable porque tiene que seguir al
+     borde: con el tiquete vivo el borde es ámbar, y un arco gris en medio de un
+     borde ámbar se lee como un defecto de render, no como un recorte. */
+  --ticket-edge: var(--color-border);
+  /* X de la perforación, desde el borde derecho de la caja de BORDE. El -1px
+     compensa el borde: el talón mide su base sobre la caja de contenido, un
+     píxel más estrecha por cada lado. */
+  --ticket-cut: calc(100% - var(--ticket-stub) - 1px);
+
+  position: relative;
+  background-color: var(--background);
+
+  /* La silueta. El truco que la hace responsiva sin `mask-composite: intersect`
+     es que cada capa cubre SOLO su mitad (`100% 51%` + `no-repeat`), así que la
+     unión por defecto da la forma completa. El tramo 98%→100% es el
+     antialiasing del corte (a 10px de radio, 0,2px). */
+  -webkit-mask:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 0, #0000 98%, #000 100%)
+      top / 100% 51% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 100%, #0000 98%, #000 100%)
+      bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 0, #0000 98%, #000 100%)
+      top / 100% 51% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 100%, #0000 98%, #000 100%)
+      bottom / 100% 51% no-repeat;
+
+  transition: border-color 0.25s ease;
+}
+
+@media (min-width: 640px) {
+  .ticket-surface {
+    --ticket-stub: 7.5rem;
+  }
+}
+
+/* Contorno de las muescas: un anillo de 1px por muesca, con el MISMO radio que
+   las corta. La mitad de fuera se la come la máscara del grupo, así que queda
+   exactamente el arco interior y la silueta cierra sin costuras. Sin esto la
+   muesca solo se lee por el hueco, y el hueco es sutil.
+
+   Los z-index de esta capa y del anillo son orden de pintado INTRA-componente
+   (§4.4 y `LAYERS` gobiernan overlays y contenido portalado, no esto). El 6 va
+   por encima del brillo de `TiltCard`, que es `z-[5]`, para que el
+   `mix-blend-overlay` no lave el contorno; y no tapa texto porque en los 10px
+   del borde solo hay padding. */
+.ticket-surface::before {
+  content: "";
+  position: absolute;
+  /* `-1px` y no `0`, y es aritmética, no gusto: un absoluto con `inset: 0` se
+     ancla a la caja de PADDING (1px más estrecha por cada lado que la de
+     borde), mientras que la máscara de arriba mide sobre la caja de BORDE
+     (`mask-origin` es `border-box`; el de `background` es `padding-box`). Con
+     `inset: 0` el mismo `--ticket-cut` cae 2px a la izquierda y los arcos no
+     coinciden con los agujeros. Extenderlo 1px —el ancho del borde— iguala las
+     dos cajas en los dos ejes. Si el borde deja de medir 1px, este número
+     cambia con él. */
+  inset: -1px;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 0,
+      #0000 calc(100% - 1px), var(--ticket-edge) calc(100% - 1px),
+      var(--ticket-edge) 100%, #0000 100%),
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 100%,
+      #0000 calc(100% - 1px), var(--ticket-edge) calc(100% - 1px),
+      var(--ticket-edge) 100%, #0000 100%);
+}
+
+/* El cometa. `z-index: 7` por encima del brillo: por debajo, el reflejo blanco
+   al 35 % en `overlay` lava el núcleo ámbar y el cometa se pierde. */
+.ticket-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 228deg,
+    color-mix(in srgb, var(--axi-amber) 45%, transparent) 302deg,
+    var(--axi-amber) 344deg,
+    color-mix(in srgb, var(--axi-amber) 88%, var(--background)) 356deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+/* El tinte cálido y el cometa solo con dato dentro. Una tarjeta que dice «no lo
+   sabemos» y a la vez presume de anillo ámbar promete atención sobre un vacío,
+   y el color señala significado, no decora (DESIGN §3.5). El modificador entra
+   por `className`, patrón de `.axel-comet-card--new`. */
+.ticket-surface--live {
+  /* El mismo 30 % que `border-accent-amber/30` en el TSX: si uno cambia, el otro
+     también, o el arco deja de continuar el borde. */
+  --ticket-edge: color-mix(in srgb, var(--axi-amber) 30%, transparent);
+  background-image:
+    radial-gradient(circle 220px at 8% 0%,
+      color-mix(in srgb, var(--axi-amber) 12%, transparent) 0%,
+      transparent 100%),
+    linear-gradient(to bottom right,
+      color-mix(in srgb, var(--axi-amber) 7%, transparent),
+      transparent 64%);
+}
+
+/* Dentro de `hover: hover` para que en táctiles no se quede encendido pegado */
+@media (hover: hover) {
+  .ticket-surface--live:hover {
+    border-color: color-mix(in srgb, var(--axi-amber) 52%, var(--color-border));
+    --ticket-edge: color-mix(in srgb, var(--axi-amber) 52%, var(--color-border));
+  }
+  .ticket-surface--live:hover::after {
+    opacity: 1;
+    animation: channel-comet 3.4s linear infinite;
+  }
+}
+
+/* Igual que en canales: sin movimiento queda un arco fijo en el borde, que
+   sigue leyéndose como acento. Degradación silenciosa a propósito. */
+@media (prefers-reduced-motion: reduce) {
+  .ticket-surface--live::after {
+    animation: none !important;
+  }
+  .ticket-surface {
+    transition: none;
+  }
+}
+
+/* La perforación: el `border-l border-dotted` del talón, no un gradiente. Así
+   la línea y la muesca comparten la misma medida por construcción, sin
+   porcentajes que se puedan desincronizar. Solo se tiñe de ámbar cuando el
+   tiquete está vivo. */
+.ticket-surface--live .ticket-perforation {
+  border-color: color-mix(in srgb, var(--axi-amber) 42%, transparent);
+}

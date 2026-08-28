@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, Clock, FileText, Receipt, TrendingUp } from "lucide-react";
+import { AlertTriangle, Clock, FileText, Receipt } from "lucide-react";
 import { formatShortDate } from "@/core/lib/format";
 import {
   dunningVariant,
   type BillingSummaryDTO,
 } from "@/modules/billing/domain/account";
-import { estimateLabel, formatMoney, hasEstimate } from "@/modules/billing/domain/money";
+import { formatMoney } from "@/modules/billing/domain/money";
+import { EstimateTicket } from "@/modules/billing/ui/components/EstimateTicket";
 import { useBillingSocket } from "@/modules/billing/infrastructure/realtime/use-billing-socket";
 import { useBillingStore } from "@/modules/billing/infrastructure/stores/billing.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -97,32 +98,16 @@ function AccountBadge({ summary }: { summary: BillingSummaryDTO }) {
  * El orden no es casual: primero lo que va a pasar (la estimación), luego lo que
  * se debe hoy y por último el calendario. Es el orden en que el dueño de una
  * PyME se hace las preguntas.
+ *
+ * La estimación es un `EstimateTicket` y no una `StatTile`: manda la pantalla y
+ * con la misma forma que sus vecinas se leía como una más.
  */
 function Estimate({ summary }: { summary: BillingSummaryDTO }) {
   const cycle = summary.cycle;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="border-accent-amber/30 from-accent-amber/12 rounded-2xl border bg-gradient-to-br to-transparent p-5 sm:col-span-2">
-        <div className="text-accent-amber flex items-center gap-2 text-xs font-medium">
-          <TrendingUp className="size-3.5" aria-hidden="true" />
-          Próximo cobro estimado
-        </div>
-        <p
-          className={
-            hasEstimate(summary.next_invoice_estimate_cents)
-              ? "mt-2 text-4xl font-semibold tracking-tight tabular-nums"
-              : "text-muted-foreground mt-2 text-lg font-medium"
-          }
-        >
-          {estimateLabel(summary.next_invoice_estimate_cents, summary.currency)}
-        </p>
-        <p className="text-muted-foreground mt-2 text-xs leading-relaxed">
-          {hasEstimate(summary.next_invoice_estimate_cents)
-            ? "Cuota vigente más el excedente acumulado en el ciclo, con las mismas reglas que usará la emisión. Puede subir si sigues consumiendo."
-            : "No hay ciclo abierto o tu plan aún no tiene tarifa vigente. En cuanto lo haya, verás aquí lo que costaría el ciclo si cerrara hoy."}
-        </p>
-      </div>
+      <EstimateTicket summary={summary} />
 
       <StatTile
         label="Saldo pendiente"

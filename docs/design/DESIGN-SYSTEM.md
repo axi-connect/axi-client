@@ -294,6 +294,15 @@ Reglas:
   `prefers-reduced-motion`. Cualquier otra superficie del panel sigue quieta: si
   aparece una segunda, esto deja de ser una excepción y pasa a ser la regla nueva
   — y entonces se discute aquí, no en el componente.
+- **Lo que NO cuenta como excepción**: un efecto que solo corre mientras el
+  puntero está encima. En reposo la superficie está quieta, no hay animación ni
+  `requestAnimationFrame` vivo, y el usuario decide cuándo empieza y cuándo
+  acaba. Es el caso del cometa de `.channel-surface` (canales e integraciones),
+  del de `.ticket-surface--live` (el tiquete de facturación) y del tilt de
+  `TiltCard`. La línea que separa una cosa de la otra es *quién lo dispara*: si
+  arranca solo, es un loop y necesita permiso aquí; si lo enciende el ratón, es
+  respuesta a una acción. Los tres se apagan igualmente con
+  `prefers-reduced-motion` y ninguno se engancha sin puntero fino.
 
 ---
 

@@ -98,3 +98,45 @@ export function suspensionDate(
 
   return new Date(due + summary.grace_days * DAY_MS);
 }
+
+/**
+ * Días que faltan para el corte del ciclo, o `null` si no hay cuenta atrás que
+ * pintar.
+ *
+ * Es la cuenta atrás del talón del tiquete: responde «¿cuándo me cobran?», que
+ * es la otra mitad de la pregunta que hace la estimación del importe.
+ *
+ * Mismo criterio que `daysToSuspension`: `0` el mismo día del corte —«hoy»
+ * sigue siendo una cuenta atrás válida— y `null` cuando no hay ciclo, cuando
+ * `period_end` no es una fecha, o cuando el corte YA pasó. Ese último caso es
+ * real: si el barrido de emisión no ha rotado el ciclo todavía, el panel no
+ * narra el retraso del backend con un número negativo.
+ */
+export function daysToCycleClose(
+  summary: Pick<BillingSummaryDTO, "cycle">,
+  now: Date = new Date(),
+): number | null {
+  if (summary.cycle === null) return null;
+
+  const end = new Date(summary.cycle.period_end).getTime();
+  if (Number.isNaN(end)) return null;
+
+  const remaining = Math.ceil((end - now.getTime()) / DAY_MS);
+  if (remaining < 0) return null;
+  // `Math.ceil` de un delta negativo mínimo devuelve `-0`, que pasa el `< 0` de
+  // arriba y se colaría en la etiqueta como «-0 días». El `+ 0` lo normaliza.
+  return remaining + 0;
+}
+
+/**
+ * La cuenta atrás del corte en palabras. `null` es «no lo sabemos», nunca cero.
+ *
+ * No dice «Mañana» para `days === 1` a propósito: `Math.ceil` devuelve 1 para
+ * cualquier resto entre 0 y 24 h, así que «Mañana» sería falso a las 22:00 de la
+ * víspera. «En 1 día» es cierto en todo el rango.
+ */
+export function cycleCloseLabel(days: number | null): string {
+  if (days === null) return "—";
+  if (days === 0) return "Hoy";
+  return `En ${String(days)} ${days === 1 ? "día" : "días"}`;
+}
