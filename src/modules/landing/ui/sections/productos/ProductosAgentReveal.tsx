@@ -89,17 +89,20 @@ function AgentRevealAnimated({ containerRef }: { containerRef: RefObject<HTMLEle
 
         <motion.p
           style={{ opacity: subOpacity }}
-          className="text-muted-foreground mt-4 max-w-[52ch] text-pretty"
+          className="text-muted-foreground mt-3 max-w-[52ch] shrink-0 text-pretty"
         >
           {AGENT_REVEAL.sub}
         </motion.p>
 
-        <div className="relative mt-8 w-full max-w-[1000px]">
-          {/* Altura acotada al viewport (no aspect-ratio): con pills y titular
-              en el mismo svh, un 16:9 completo desbordaba pantallas bajas. */}
+        {/* El panel es el ÚNICO elemento flexible de la escena: toma exacto el
+            alto que queda entre el sub y las pills (flex-1 + min-h-0), así el
+            titular nunca desborda bajo el navbar ni las pills se cortan abajo
+            — la altura la reparte flex, jamás un svh calculado a mano
+            (DESIGN-SYSTEM §4.2, mismo antipatrón del doble scroll del panel). */}
+        <div className="mt-6 flex min-h-0 w-full max-w-[1000px] flex-1">
           <motion.div
             style={{ y, scale, opacity: mediaOpacity }}
-            className="border-border bg-card shadow-overlay relative h-[min(44svh,520px)] overflow-hidden rounded-[20px] border will-change-transform"
+            className="border-border bg-card shadow-overlay relative h-full min-h-[200px] w-full overflow-hidden rounded-[20px] border will-change-transform"
           >
             <RevealShot />
           </motion.div>
@@ -137,7 +140,9 @@ function RevealShell({
 
 function RevealHeading({ children }: { children: ReactNode }) {
   return (
-    <h2 className="font-heading max-w-[20ch] text-3xl font-bold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+    /* El salto a 5xl exige ANCHO y ALTO: en laptops de 768px de alto el
+       titular grande consumía el presupuesto de la escena pineada. */
+    <h2 className="font-heading max-w-[20ch] shrink-0 text-3xl font-bold tracking-tight text-balance sm:text-4xl [@media(min-height:800px)_and_(min-width:1024px)]:text-5xl">
       {children}
     </h2>
   );
@@ -170,7 +175,7 @@ function RevealShot() {
  */
 function ToolPills({ progress }: { progress?: ScrollProgress }) {
   return (
-    <ul className="mt-8 flex max-w-[880px] flex-wrap items-center justify-center gap-2">
+    <ul className="mt-6 flex max-w-[920px] shrink-0 flex-wrap items-center justify-center gap-1.5">
       {AGENT_TOOLS.map((tool, i) =>
         progress ? (
           <AnimatedToolPill key={tool} progress={progress} index={i}>
@@ -195,9 +200,11 @@ function ToolPills({ progress }: { progress?: ScrollProgress }) {
 
 function pillClass(index: number, total: boolean) {
   return cn(
-    "rounded-full border px-3.5 py-1.5 font-mono text-xs will-change-transform",
-    /* En móvil el viewport no da para 19 pills: se ve un subconjunto + total. */
+    "rounded-full border px-3 py-1 font-mono text-[11px] will-change-transform",
+    /* El viewport manda cuántas pills caben: móvil 8, mediano 12, grande 18
+       — siempre + la pill del total. */
     index >= 8 && !total && "max-md:hidden",
+    index >= 12 && !total && "max-lg:hidden",
     total
       ? "border-accent-violet/35 bg-accent-violet/12 text-accent-violet font-medium"
       : "border-border bg-secondary/50 text-muted-foreground",
