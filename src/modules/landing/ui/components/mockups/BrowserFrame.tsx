@@ -7,7 +7,7 @@ import { BrandMark } from "@/shared/components/ui/brand-mark";
  * Marco de navegador premium para presentar capturas del producto: barra con
  * los tres puntos (la firma de `LaptopMockup`), pestaña con el isotipo y
  * campo de URL en mono. RSC — el marco no se anima; si hace falta parallax o
- * tilt, se envuelve desde fuera (`ParallaxLayer`/`TiltCard`).
+ * tilt, se envuelve desde fuera (`ParallaxLayer` / `TiltCard` de `shared/components/ui`).
  */
 export function BrowserFrame({
   url,

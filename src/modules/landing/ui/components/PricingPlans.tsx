@@ -7,7 +7,7 @@ import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { FoundersBar } from "@/modules/landing/ui/components/FoundersBar";
 import { VolumeEstimator } from "@/modules/landing/ui/components/VolumeEstimator";
 import {

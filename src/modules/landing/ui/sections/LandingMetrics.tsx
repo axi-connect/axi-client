@@ -1,5 +1,5 @@
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { FunnelPreview } from "@/modules/landing/ui/components/mockups/FunnelPreview";
 import { LaptopMockup } from "@/modules/landing/ui/components/mockups/LaptopMockup";
 import { StatTile } from "@/modules/landing/ui/components/mockups/StatTile";

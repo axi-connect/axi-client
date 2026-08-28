@@ -13,6 +13,12 @@ import { cn } from "@/core/lib/utils";
  * Inerte con `prefers-reduced-motion` y en dispositivos sin puntero fino
  * (`hover: none`): queda como tarjeta estática accesible.
  *
+ * Vive en `shared/` y no en un slice porque tiene consumidores en dos: las
+ * secciones de la capa pública (`modules/landing`) y el tiquete del próximo
+ * cobro (`modules/billing`). Un slice no puede importar del `ui/components/`
+ * de otro (architecture §3.3 regla 5), y el efecto no tiene dominio: solo
+ * depende de `cn`, así que `shared/` sigue sin importar de `modules/` (regla 7).
+ *
  * IMPORTANTE: el wrapper debe tener el MISMO radio que la tarjeta hija
  * (default `rounded-2xl`) — el glare recorta con `rounded-[inherit]`; sin
  * radio en el wrapper, sus esquinas cuadradas asoman iluminadas por fuera
@@ -23,6 +29,7 @@ export function TiltCard({
   depth = 10,
   // Renombrado: dentro del efecto `glare` es la referencia al DOM del reflejo.
   glare: glareTone = "soft",
+  scale = 1.02,
   className,
   children,
 }: {
@@ -35,6 +42,13 @@ export function TiltCard({
    * oscura el `overlay` con blanco apenas aclara y el cometa se pierde.
    */
   glare?: "soft" | "bright";
+  /**
+   * Cuánto crece la tarjeta mientras el puntero está encima. El default 1.02
+   * es el de las tarjetas de la capa pública, donde el acercamiento forma
+   * parte del gesto. `1` lo desactiva: en el panel una tarjeta de datos que
+   * crece bajo el cursor desplaza la mirada de la cifra que se está leyendo.
+   */
+  scale?: number;
   className?: string;
   children: ReactNode;
 }) {
@@ -58,12 +72,18 @@ export function TiltCard({
     const loop = () => {
       cx += (tx - cx) * 0.12;
       cy += (ty - cy) * 0.12;
-      el.style.transform = `perspective(900px) rotateX(${(-cy * depth).toFixed(2)}deg) rotateY(${(cx * depth).toFixed(2)}deg) translateZ(0) scale(${hovering ? 1.02 : 1})`;
-      if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001 || hovering) {
+      el.style.transform = `perspective(900px) rotateX(${(-cy * depth).toFixed(2)}deg) rotateY(${(cx * depth).toFixed(2)}deg) translateZ(0) scale(${hovering ? scale : 1})`;
+      // La parada NO mira `hovering`: en cuanto el lerp se asienta, el bucle
+      // muere aunque el puntero siga encima. Antes se mantenía vivo a 60 fps
+      // reescribiendo la misma cadena de transform mientras el ratón
+      // descansaba, y solo para no perder la inclinación —porque al asentarse
+      // limpiaba el transform—. Conservarlo cuando hay puntero resuelve las dos
+      // cosas: la tarjeta se queda inclinada y el bucle se apaga.
+      if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) {
         raf = requestAnimationFrame(loop);
       } else {
         raf = 0;
-        el.style.transform = "";
+        if (!hovering) el.style.transform = "";
       }
     };
     const start = () => {
@@ -106,7 +126,7 @@ export function TiltCard({
       el.removeEventListener("pointerleave", onLeave);
       el.style.transform = "";
     };
-  }, [depth, glareTone, reduced]);
+  }, [depth, glareTone, scale, reduced]);
 
   return (
     <div ref={rootRef} className={cn("relative rounded-2xl [transform-style:preserve-3d]", className)}>

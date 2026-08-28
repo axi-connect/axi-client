@@ -2,7 +2,7 @@ import Image from "next/image";
 
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { CountUpNumber } from "@/modules/landing/ui/components/CountUpNumber";
 import { Button } from "@/shared/components/ui/button";
 import { CASES, LANDING_ANCHORS } from "@/modules/landing/ui/content/landing.content";

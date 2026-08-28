@@ -4,7 +4,7 @@ import { cn } from "@/core/lib/utils";
 import { BrandCard } from "@/shared/components/ui/brand-card";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { UnifiedContactBeam } from "@/modules/landing/ui/components/UnifiedContactBeam";
 import { CRM_SECTION } from "@/modules/landing/ui/content/productos.content";
 
