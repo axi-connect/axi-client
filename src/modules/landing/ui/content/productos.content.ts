@@ -72,8 +72,11 @@ export const PRODUCTOS_HERO = {
    * Eco del gancho del video de bienvenida (Cristian, fundador y CTO): «El
    * canal por el que hoy ingresa el dinero es el peor gestionado de las
    * empresas…». El titular no vende: teasea el diálogo que el video abre.
+   * Dos líneas con jerarquía —la primera plantea (apagada), la segunda
+   * remata (brillante)— el mismo lockup muted/strong de METRICS en la home.
    */
-  headline: "El canal por donde hoy entra el dinero es el peor gestionado de tu empresa.",
+  headlineMuted: "El canal por donde hoy entra el dinero",
+  headlineStrong: "es el peor gestionado de tu empresa.",
   ctaPrimary: { label: "Agenda tu demo", href: "/contacto" },
   ctaSecondary: { label: "Ver el producto", href: "#agente" },
   soundOn: "Escuchar el mensaje",

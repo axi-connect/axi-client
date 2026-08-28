@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { BrandGradientCanvas } from "@/modules/landing/ui/components/BrandGradientCanvas";
@@ -35,27 +36,45 @@ export default function ProductosHero() {
         playLabel={PRODUCTOS_HERO.play}
       />
 
-      {/* Velo de legibilidad: solo al pie, para que el video respire. */}
+      {/* Velo de legibilidad: banda al pie + viñeta radial en la esquina del
+          texto — garantiza contraste exactamente donde vive el titular, sin
+          oscurecer el cuadro (patrón de heros de video de Apple TV+). */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(to top, color-mix(in srgb, var(--background) 85%, transparent) 0%, color-mix(in srgb, var(--background) 25%, transparent) 28%, transparent 46%)",
+            "radial-gradient(85% 110% at 10% 100%, color-mix(in srgb, var(--background) 80%, transparent) 0%, transparent 58%)," +
+            "linear-gradient(to top, color-mix(in srgb, var(--background) 90%, transparent) 0%, color-mix(in srgb, var(--background) 30%, transparent) 26%, transparent 48%)," +
+            "linear-gradient(to bottom, color-mix(in srgb, var(--background) 45%, transparent) 0%, transparent 16%)",
         }}
       />
 
-      {/* Mensaje mínimo: franja ancha y baja — el titular acompaña al video,
-          nunca tapa a quien habla (1 línea en desktop, 2 en tablet). */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 flex-col justify-end px-6 pt-32 pb-9 sm:px-7">
-        <h1 className="font-heading text-silver-gradient max-w-[58ch] text-xl leading-snug font-semibold tracking-tight text-balance sm:text-2xl lg:text-[30px]">
-          {PRODUCTOS_HERO.headline}
+      {/* Lockup de dos líneas con jerarquía (muted plantea, strong remata) en
+          la esquina inferior izquierda, sobre la viñeta — el video manda. */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1220px] flex-1 flex-col justify-end px-6 pt-32 pb-10 sm:px-7">
+        <h1 className="font-heading max-w-[34ch] text-2xl leading-[1.22] font-semibold tracking-tight sm:text-3xl lg:text-4xl">
+          <span className="text-foreground/55 block">{PRODUCTOS_HERO.headlineMuted}</span>
+          <span className="text-silver-gradient block">{PRODUCTOS_HERO.headlineStrong}</span>
         </h1>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Button asChild className="h-11 px-6">
-            <Link href={PRODUCTOS_HERO.ctaPrimary.href}>{PRODUCTOS_HERO.ctaPrimary.label}</Link>
+        <div className="mt-6 flex flex-wrap items-center gap-3.5">
+          <Button
+            asChild
+            className="group h-12 rounded-full px-7 text-[15px] shadow-[0_14px_40px_color-mix(in_srgb,var(--axi-brand)_40%,transparent)]"
+          >
+            <Link href={PRODUCTOS_HERO.ctaPrimary.href}>
+              {PRODUCTOS_HERO.ctaPrimary.label}
+              <ArrowRight
+                aria-hidden
+                className="size-4 transition-transform duration-200 group-hover:translate-x-0.5"
+              />
+            </Link>
           </Button>
-          <Button asChild variant="outline" className="h-11 px-6 backdrop-blur-sm">
+          <Button
+            asChild
+            variant="ghost"
+            className="border-foreground/20 bg-foreground/10 hover:bg-foreground/15 h-12 rounded-full border px-7 text-[15px] backdrop-blur-md"
+          >
             <a href={PRODUCTOS_HERO.ctaSecondary.href}>{PRODUCTOS_HERO.ctaSecondary.label}</a>
           </Button>
         </div>
