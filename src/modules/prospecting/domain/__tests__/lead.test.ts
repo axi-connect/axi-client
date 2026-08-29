@@ -8,6 +8,10 @@ import {
   readQualityAxes,
   rowAllowedChannels,
   channelVerdict,
+  dataCompleteness,
+  readSocials,
+  PROVIDER_LABELS,
+  ATTRIBUTE_LABELS,
   type LeadDTO,
 } from "../lead";
 
@@ -21,7 +25,14 @@ const BASE: LeadDTO = {
   email: "marcela@sazon.co",
   phone: "+573104482290",
   website: null,
+  domain: null,
+  country: "CO",
   city: "Bogotá",
+  address: null,
+  latitude: null,
+  longitude: null,
+  tax_id: null,
+  socials: null,
   category: null,
   quality_score: 92,
   quality_status: "verified",
@@ -34,6 +45,7 @@ const BASE: LeadDTO = {
   contact_id: null,
   source_ref: null,
   attributes: null,
+  last_enriched_at: null,
   promoted_at: null,
   created_at: "2026-08-28T10:00:00.000Z",
 };
@@ -189,5 +201,99 @@ describe("etiquetas", () => {
     ]) {
       expect(QUALITY_STATUS_MAP[status]).toBeDefined();
     }
+  });
+});
+
+describe("readSocials", () => {
+  it("devuelve las redes conocidas como enlaces", () => {
+    expect(
+      readSocials({
+        instagram: "https://instagram.com/kokoa_co",
+        facebook: "https://facebook.com/kokoaandco",
+      }),
+    ).toEqual([
+      { network: "instagram", url: "https://instagram.com/kokoa_co" },
+      { network: "facebook", url: "https://facebook.com/kokoaandco" },
+    ]);
+  });
+
+  it("IGNORA una red fuera de la lista: lo que se pinta como enlace se decide aquí", () => {
+    expect(readSocials({ myspace: "https://myspace.com/kokoa" })).toEqual([]);
+  });
+
+  it.each([
+    ["null", null],
+    ["vacío", {}],
+    ["una cadena", "instagram.com/kokoa"],
+    ["un valor vacío dentro", { instagram: "   " }],
+  ])("no revienta con %s", (_caso, value) => {
+    expect(readSocials(value)).toEqual([]);
+  });
+});
+
+describe("dataCompleteness", () => {
+  const row = (over: Partial<ReturnType<typeof mapLeadToRow>> = {}) =>
+    mapLeadToRow({ ...BASE, ...over } as LeadDTO);
+
+  it("cuenta los datos que se conocen, no la calidad", () => {
+    // Este lead está VERIFICADO y aun así solo tiene dos de los cinco datos.
+    // Son dos ejes distintos y por eso se cuentan aparte.
+    expect(dataCompleteness(row())).toEqual({ filled: 2, total: 5 });
+  });
+
+  it("un lead con todo llega a cinco", () => {
+    const full = mapLeadToRow({
+      ...BASE,
+      address: "Cl. 84A #8-75",
+      website: "https://kokoa.co",
+      socials: { instagram: "https://instagram.com/kokoa_co" },
+    } as LeadDTO);
+    expect(dataCompleteness(full)).toEqual({ filled: 5, total: 5 });
+  });
+
+  it("un lead de mapa recién descubierto no tiene ninguno", () => {
+    const bare = mapLeadToRow({
+      ...BASE,
+      email: null,
+      phone: null,
+    } as LeadDTO);
+    expect(dataCompleteness(bare)).toEqual({ filled: 0, total: 5 });
+  });
+});
+
+describe("mapLeadToRow — lo que no se puede caer", () => {
+  it("SIGUE distinguiendo tener el dato de poder usarlo", () => {
+    // Si al añadir dirección y redes alguien reescribe esta función desde el
+    // DTO nuevo, `has_email`/`has_phone` se caen y la columna «Puedo contactar
+    // por» vuelve a pintar el correo en verde para leads sin correo.
+    const row = mapLeadToRow({ ...BASE, email: null } as LeadDTO);
+    expect(row.has_email).toBe(false);
+    expect(row.has_phone).toBe(true);
+    expect(row.allows_email).toBe(true);
+  });
+
+  it("aplana los datos nuevos como booleanos, sin arrastrar el valor", () => {
+    const row = mapLeadToRow({
+      ...BASE,
+      address: "Cl. 84A #8-75",
+      socials: { instagram: "https://instagram.com/kokoa_co" },
+    } as LeadDTO);
+    expect(row.has_address).toBe(true);
+    expect(row.has_socials).toBe(true);
+    expect(row.has_website).toBe(false);
+    expect(Object.values(row)).not.toContain("Cl. 84A #8-75");
+  });
+});
+
+describe("etiquetas de procedencia", () => {
+  it("traduce a quien completó el dato, no solo a quien trajo el lead", () => {
+    expect(PROVIDER_LABELS.nominatim).toBe("OpenStreetMap");
+    expect(PROVIDER_LABELS.site_extractor).toBe("Su sitio web");
+    expect(PROVIDER_LABELS.rues).toBe("RUES");
+  });
+
+  it("traduce las claves crudas de attributes", () => {
+    expect(ATTRIBUTE_LABELS.social_instagram).toBe("Instagram");
+    expect(ATTRIBUTE_LABELS.address).toBe("Dirección");
   });
 });

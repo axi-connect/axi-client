@@ -131,6 +131,36 @@ export function verifyLead(
 }
 
 // ============================================================================
+// F4b — enriquecimiento
+// ============================================================================
+
+/**
+ * Buscarle a UN lead los datos que le faltan, ahora.
+ *
+ * Responde 202: el trabajo se hace en una cola porque una sola pasada puede
+ * hablar con cuatro proveedores y descargar páginas de un sitio ajeno — eso no
+ * cabe en la espera de un clic. `queued` devuelve los ids aceptados.
+ *
+ * **Este sí gasta cuota** (`leads:manage`): lo pide una persona que está mirando
+ * ese lead, que es justo el momento en que pagar por un dato tiene sentido.
+ */
+export function enrichLead(leadId: string): Promise<{ queued: string[] }> {
+  return http.post(`/prospecting/leads/${leadId}/enrich`);
+}
+
+/**
+ * Lo mismo para una selección, pero **sin gastar una sola unidad**.
+ *
+ * El backend fuerza el lote a los proveedores gratuitos, y no es una cortesía:
+ * cien leads contra proveedores de pago es exactamente cómo se funde la cuota
+ * de un plan en un clic. Casi todo lo que hace falta —dirección, NIT, correo y
+ * redes de la propia web— sale igualmente de lo gratis.
+ */
+export function enrichLeads(leadIds: string[]): Promise<{ queued: string[] }> {
+  return http.post("/prospecting/leads/enrich", { lead_ids: leadIds });
+}
+
+// ============================================================================
 // F4 — búsquedas
 // ============================================================================
 

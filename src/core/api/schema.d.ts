@@ -4244,6 +4244,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/leads/{id}/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_enrichOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_enrichMany_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/leads/{id}/discard": {
         parameters: {
             query?: never;
@@ -10414,7 +10446,14 @@ export interface components {
                 email: string | null;
                 phone: string | null;
                 website: string | null;
+                domain: string | null;
+                country: string | null;
                 city: string | null;
+                address: string | null;
+                latitude: number | null;
+                longitude: number | null;
+                tax_id: string | null;
+                socials: unknown;
                 category: string | null;
                 quality_score: number;
                 /** @enum {string} */
@@ -10429,6 +10468,8 @@ export interface components {
                 contact_id: string | null;
                 source_ref: unknown;
                 attributes: unknown;
+                /** Format: date-time */
+                last_enriched_at: string | null;
                 /** Format: date-time */
                 promoted_at: string | null;
                 /** Format: date-time */
@@ -10568,7 +10609,14 @@ export interface components {
             email: string | null;
             phone: string | null;
             website: string | null;
+            domain: string | null;
+            country: string | null;
             city: string | null;
+            address: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            tax_id: string | null;
+            socials: unknown;
             category: string | null;
             quality_score: number;
             /** @enum {string} */
@@ -10583,6 +10631,8 @@ export interface components {
             contact_id: string | null;
             source_ref: unknown;
             attributes: unknown;
+            /** Format: date-time */
+            last_enriched_at: string | null;
             /** Format: date-time */
             promoted_at: string | null;
             /** Format: date-time */
@@ -10616,6 +10666,12 @@ export interface components {
                 code: string;
                 reason: string;
             }[];
+        };
+        EnrichQueuedDto: {
+            queued: string[];
+        };
+        EnrichLeadsDto: {
+            lead_ids: string[];
         };
         DiscardLeadDto: {
             reason?: string;
@@ -19223,6 +19279,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PromoteResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_enrichOne_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_enrichMany_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrichLeadsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
                 };
             };
         };

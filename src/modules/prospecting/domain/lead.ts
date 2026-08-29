@@ -60,6 +60,73 @@ export const QUALITY_LABELS: Record<QualityStatus, string> = {
  * explica por qué un lead no permite WhatsApp: sin esta etiqueta, el icono
  * tachado parece un error del sistema en vez de una decisión.
  */
+/**
+ * De dónde salió UN DATO, que no es lo mismo que de dónde salió el lead.
+ *
+ * `LeadSource` dice cómo entró el lead a la cuarentena; esto dice qué proveedor
+ * trajo cada campo, y son ejes distintos: un lead de OpenStreetMap puede tener
+ * el NIT de RUES y el correo de su propia web.
+ *
+ * Vivía duplicado y a medias dentro de `LeadProvenance` —le faltaban dos
+ * fuentes reales y tenía dos que no existen—, así que sube aquí, que es donde
+ * el resto del módulo mira. Sin traducción cae al identificador crudo, que es
+ * feo pero honesto: mejor «firecrawl» que inventarse un nombre.
+ */
+export const PROVIDER_LABELS: Record<string, string> = {
+  // Cómo entró el lead
+  ctwa: "Anuncio de WhatsApp",
+  meta_lead_ads: "Formulario de anuncio",
+  manual: "Cargado a mano",
+  openstreetmap: "OpenStreetMap",
+  google_places: "Google Maps",
+  serp: "Buscador web",
+  // Quién completó el dato
+  nominatim: "OpenStreetMap",
+  overpass: "OpenStreetMap",
+  rues: "RUES",
+  site_extractor: "Su sitio web",
+  firecrawl: "Su sitio web",
+  serper: "Buscador web",
+  millionverifier: "Verificador de correo",
+  twilio_lookup: "Verificador de teléfono",
+  apollo: "Apollo",
+};
+
+/**
+ * Las claves crudas de `attributes`, en español.
+ *
+ * El backend guarda `{campo: {value, source, confidence, fetched_at}}` con la
+ * clave técnica, así que sin esto la ficha enseña literalmente
+ * «social_instagram» como etiqueta de una fila.
+ */
+export const ATTRIBUTE_LABELS: Record<string, string> = {
+  address: "Dirección",
+  city: "Ciudad",
+  country: "País",
+  domain: "Dominio",
+  email: "Correo",
+  phone: "Teléfono",
+  website: "Sitio web",
+  legal_name: "Razón social",
+  tax_id: "NIT",
+  category: "Categoría",
+  latitude: "Latitud",
+  longitude: "Longitud",
+  social_instagram: "Instagram",
+  social_facebook: "Facebook",
+  social_linkedin: "LinkedIn",
+  social_tiktok: "TikTok",
+  social_whatsapp: "WhatsApp",
+};
+
+export const SOCIAL_LABELS: Record<SocialNetwork, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+  tiktok: "TikTok",
+  whatsapp: "WhatsApp",
+};
+
 export const LEGAL_BASIS_LABELS: Record<LegalBasis, string> = {
   consent_form: "Llenó un formulario",
   consent_ad: "Escribió desde un anuncio",
@@ -158,6 +225,18 @@ export function canPromote(lead: Pick<LeadDTO, "status">): boolean {
     lead.status === "enriching" ||
     lead.status === "qualified"
   );
+}
+
+/**
+ * A quién tiene sentido buscarle datos.
+ *
+ * Más ancho que `canPromote`: a un lead rechazado por el cliente ideal o ya
+ * descartado se le puede seguir completando la ficha —el dato sirve para
+ * decidir si el veto fue justo—. Lo único inútil es pedir datos de alguien que
+ * ya es un contacto del CRM, o de quien pidió que no lo contactaran.
+ */
+export function canEnrich(lead: Pick<LeadDTO, "status">): boolean {
+  return lead.status !== "promoted" && lead.status !== "suppressed";
 }
 
 export function canDiscard(lead: Pick<LeadDTO, "status">): boolean {
@@ -292,6 +371,10 @@ export type LeadRow = {
    */
   has_email: boolean;
   has_phone: boolean;
+  /** Los otros tres datos que cuenta la columna «Datos». Booleanos por lo mismo. */
+  has_address: boolean;
+  has_website: boolean;
+  has_socials: boolean;
   status: LeadStatus;
   city: string | null;
   created_at: string;
@@ -319,6 +402,9 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
     allows_manual: lead.allowed_channels.includes("manual"),
     has_email: lead.email !== null,
     has_phone: lead.phone !== null,
+    has_address: lead.address !== null,
+    has_website: lead.website !== null,
+    has_socials: countSocials(lead.socials) > 0,
     status: lead.status,
     city: lead.city,
     created_at: lead.created_at,
@@ -335,6 +421,68 @@ export function rowChannelSubject(row: LeadRow): ChannelSubject {
     email: row.has_email ? "" : null,
     phone: row.has_phone ? "" : null,
   };
+}
+
+/**
+ * Las redes de un lead, listas para pintar.
+ *
+ * Lectura defensiva porque `socials` llega como `unknown` del backend y puede
+ * ser `null`, `{}` o traer una clave con valor vacío. La allowlist es la misma
+ * que aplica el servidor al escribir: lo que se renderiza como enlace no puede
+ * salir de una clave que nadie decidió.
+ */
+export const SOCIAL_NETWORKS = [
+  "instagram",
+  "facebook",
+  "linkedin",
+  "tiktok",
+  "whatsapp",
+] as const;
+export type SocialNetwork = (typeof SOCIAL_NETWORKS)[number];
+
+export interface LeadSocial {
+  network: SocialNetwork;
+  url: string;
+}
+
+export function readSocials(socials: unknown): LeadSocial[] {
+  if (typeof socials !== "object" || socials === null) return [];
+  const raw = socials as Record<string, unknown>;
+  return SOCIAL_NETWORKS.flatMap((network) => {
+    const url = raw[network];
+    if (typeof url !== "string" || url.trim().length === 0) return [];
+    return [{ network, url: url.trim() }];
+  });
+}
+
+function countSocials(socials: unknown): number {
+  return readSocials(socials).length;
+}
+
+/**
+ * Cuántos de los datos clave conocemos.
+ *
+ * **No es calidad, y por eso vive aparte del índice.** Un lead puede tener los
+ * cinco datos y seguir sin permiso de WhatsApp; y uno con dos datos verificados
+ * puntúa más que uno con cinco sin verificar. Cuenta lo que se sabe, nada más.
+ */
+export const DATA_FIELDS = 5;
+
+export function dataCompleteness(lead: {
+  has_email: boolean;
+  has_phone: boolean;
+  has_address: boolean;
+  has_website: boolean;
+  has_socials: boolean;
+}): { filled: number; total: number } {
+  const filled = [
+    lead.has_email,
+    lead.has_phone,
+    lead.has_address,
+    lead.has_website,
+    lead.has_socials,
+  ].filter(Boolean).length;
+  return { filled, total: DATA_FIELDS };
 }
 
 export function rowAllowedChannels(row: LeadRow): OutreachChannel[] {
