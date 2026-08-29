@@ -33,6 +33,25 @@ export type ProviderBrand = keyof typeof BRAND_CLASSES;
 export interface ProviderMetric {
   label: string;
   value: ReactNode;
+  /**
+   * Convierte la métrica en un consumo con barra.
+   *
+   * `used` sobre `total`; `total: null` significa «sin tope» y entonces no hay
+   * barra que pintar — una barra al 0 % junto a «sin tope» se lee como «no has
+   * gastado nada», que es lo contrario de lo que pasa.
+   *
+   * La barra existe porque un tope es una cifra que solo importa por su
+   * DISTANCIA al techo: «312» no dice nada y «312 de 500» obliga a dividir.
+   */
+  meter?: { used: number; total: number | null };
+}
+
+/** El tono de un chip. `neutral` es el de siempre. */
+export type ChipTone = "neutral" | "good" | "warn";
+
+export interface ProviderChip {
+  label: string;
+  tone?: ChipTone;
 }
 
 export interface ProviderCardProps {
@@ -46,7 +65,11 @@ export interface ProviderCardProps {
   /** Una frase de qué hace o qué trae. */
   body?: ReactNode;
   metrics?: readonly ProviderMetric[];
-  chips?: readonly string[];
+  /**
+   * Capacidades o canales. Las cadenas sueltas se pintan neutras: la forma
+   * corta existe porque la mayoría de las tarjetas no necesitan tono.
+   */
+  chips?: readonly (string | ProviderChip)[];
   /** Atribución de licencia, aviso de plan. */
   footnote?: ReactNode;
   /** Fuerza el resplandor al destructivo, por encima de `brand`. */
@@ -137,11 +160,24 @@ export function ProviderCard({
       {body !== undefined && <p className="text-muted-foreground relative text-sm">{body}</p>}
 
       {metrics !== undefined && metrics.length > 0 && (
-        <dl className="relative flex flex-wrap gap-x-6 gap-y-1.5">
+        <dl
+          className={cn(
+            "relative gap-y-2.5",
+            // Con barras, cada métrica necesita su propio ancho o la barra no
+            // se puede comparar con la de al lado. Sin barras, el flujo suelto
+            // aprovecha mejor una tarjeta estrecha.
+            metrics.some((metric) => metric.meter !== undefined)
+              ? "grid grid-cols-2 gap-x-4"
+              : "flex flex-wrap gap-x-6",
+          )}
+        >
           {metrics.map((metric) => (
-            <div key={metric.label} className="flex flex-col">
+            <div key={metric.label} className="flex min-w-0 flex-col">
               <dt className="text-muted-foreground text-xs">{metric.label}</dt>
-              <dd className="text-[13px] font-medium">{metric.value}</dd>
+              <dd className="text-[13px] font-medium tabular-nums">{metric.value}</dd>
+              {metric.meter !== undefined && metric.meter.total !== null && (
+                <MeterBar used={metric.meter.used} total={metric.meter.total} />
+              )}
             </div>
           ))}
         </dl>
@@ -149,14 +185,18 @@ export function ProviderCard({
 
       {chips !== undefined && chips.length > 0 && (
         <div className="relative flex flex-wrap gap-1.5">
-          {chips.map((chip) => (
-            <span
-              key={chip}
-              className="bg-secondary text-muted-foreground rounded-full px-2 py-0.5 text-xs"
-            >
-              {chip}
-            </span>
-          ))}
+          {chips.map((chip) => {
+            const { label, tone = "neutral" } =
+              typeof chip === "string" ? { label: chip, tone: "neutral" as const } : chip;
+            return (
+              <span
+                key={label}
+                className={cn("rounded-full px-2 py-0.5 text-xs", CHIP_TONES[tone])}
+              >
+                {label}
+              </span>
+            );
+          })}
         </div>
       )}
 
@@ -203,6 +243,37 @@ export function ProviderCard({
       )}
       {content}
     </button>
+  );
+}
+
+const CHIP_TONES: Record<ChipTone, string> = {
+  neutral: "bg-secondary text-muted-foreground",
+  good: "bg-success/10 text-success",
+  warn: "bg-warning/10 text-warning",
+};
+
+/**
+ * La barra de consumo de un tope.
+ *
+ * Ámbar a partir del 80 %: es donde deja de ser información y pasa a ser un
+ * aviso — al proveedor le quedan días, no semanas, antes de salirse de la
+ * cascada solo.
+ */
+function MeterBar({ used, total }: { used: number; total: number }) {
+  const pct = total <= 0 ? 0 : Math.min(100, Math.round((used / total) * 100));
+  return (
+    <span
+      role="meter"
+      aria-valuenow={used}
+      aria-valuemin={0}
+      aria-valuemax={total}
+      className="bg-secondary mt-1.5 block h-1 w-full overflow-hidden rounded-full"
+    >
+      <span
+        className={cn("block h-full rounded-full", pct >= 80 ? "bg-warning" : "bg-accent")}
+        style={{ width: `${String(pct)}%` }}
+      />
+    </span>
   );
 }
 
