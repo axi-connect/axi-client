@@ -4132,6 +4132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_geocode_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/searches": {
         parameters: {
             query?: never;
@@ -4158,6 +4174,22 @@ export interface paths {
         get: operations["ProspectingController_getSearch_v1"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_cancelSearch_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10419,6 +10451,20 @@ export interface components {
                 allowed_channels: ("whatsapp" | "email" | "manual")[];
                 attribution: string | null;
             }[];
+            categories: {
+                id: string;
+                label: string;
+            }[];
+        };
+        GeocodeResultsDto: {
+            items: {
+                id: string;
+                name: string;
+                detail: string;
+                lat: number;
+                lng: number;
+                kind: string;
+            }[];
         };
         SearchesListDto: {
             items: {
@@ -10660,8 +10706,8 @@ export interface components {
         ProviderCatalogDto: {
             data: {
                 /** @enum {string} */
-                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor";
-                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site")[];
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site" | "geocode")[];
                 /** @enum {string} */
                 credential_mode: "api_key" | "key_secret" | "none";
                 unit_cost: {
@@ -10673,13 +10719,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor";
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
             label: string;
             enabled: boolean;
             capabilities: string[];
             priority: number;
             config: unknown;
             daily_cap: number | null;
+            monthly_cap: number | null;
             spent_today: number;
             spent_cycle: number;
             healthy: boolean;
@@ -10692,7 +10739,7 @@ export interface components {
         };
         CreateProviderDto: {
             /** @enum {string} */
-            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor";
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
             label: string;
             credentials: {
                 /** @enum {string} */
@@ -10712,6 +10759,7 @@ export interface components {
                 [key: string]: unknown;
             };
             daily_cap?: number;
+            monthly_cap?: number;
         };
         RotateProviderCredentialsDto: {
             credentials: {
@@ -10735,6 +10783,7 @@ export interface components {
                 [key: string]: unknown;
             };
             daily_cap?: number | null;
+            monthly_cap?: number | null;
         };
         ProviderHealthDto: {
             healthy: boolean;
@@ -19009,6 +19058,28 @@ export interface operations {
             };
         };
     };
+    ProspectingController_geocode_v1: {
+        parameters: {
+            query: {
+                q: string;
+                country?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeocodeResultsDto"];
+                };
+            };
+        };
+    };
     ProspectingController_listSearches_v1: {
         parameters: {
             query?: never;
@@ -19052,6 +19123,27 @@ export interface operations {
         };
     };
     ProspectingController_getSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_cancelSearch_v1: {
         parameters: {
             query?: never;
             header?: never;

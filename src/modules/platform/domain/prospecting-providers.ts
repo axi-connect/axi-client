@@ -86,6 +86,13 @@ export const PROVIDER_DESCRIPTORS: Record<ProviderName, ProviderDescriptor> = {
     fields: [],
     note: "Gratis y sin llave: no consume la cuota de nadie. Trae menos negocios que Google y casi nunca el correo — enciéndelo junto al extractor de sitios, que es quien completa el contacto.",
   },
+  nominatim: {
+    label: "Nominatim · OpenStreetMap",
+    tagline: "Completa dirección, ciudad y país a partir de las coordenadas",
+    prerequisites: ["Nada: es una fuente pública"],
+    fields: [],
+    note: "Gratis y sin llave. Comparte el límite de una petición por segundo con la búsqueda de ubicaciones del formulario, así que su ritmo no depende de cuántas cuentas tengas.",
+  },
   site_extractor: {
     label: "Extractor de sitios",
     tagline: "Saca correo, teléfono y redes de la web del propio lead",
@@ -129,6 +136,7 @@ export const CAPABILITY_LABELS: Record<string, string> = {
   enrich_company: "Datos de empresas",
   discover: "Busca negocios",
   extract_site: "Lee sitios web",
+  geocode: "Ubica direcciones",
 };
 
 /**

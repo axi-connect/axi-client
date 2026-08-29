@@ -98,3 +98,20 @@ export function queryOf(search: SearchDTO): string {
   ].filter(Boolean);
   return parts.join(" · ");
 }
+
+export type DiscoveryCategoryDTO =
+  Schemas["SourcesCatalogDto"]["categories"][number];
+export type GeocodedPlaceDTO = Schemas["GeocodeResultsDto"]["items"][number];
+
+/**
+ * Radios que ofrece el formulario, en metros.
+ *
+ * Discretos y no un deslizador libre: el radio es la mitad de cuánto vas a
+ * gastar, y una lista corta se compara de un vistazo con lo que el mapa enseña.
+ */
+export const SEARCH_RADII = [
+  { value: 1_000, label: "1 km · unas cuadras" },
+  { value: 3_000, label: "3 km · el barrio" },
+  { value: 8_000, label: "8 km · la zona" },
+  { value: 20_000, label: "20 km · la ciudad" },
+] as const;

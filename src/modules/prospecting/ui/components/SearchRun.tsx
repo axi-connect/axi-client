@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCw } from "lucide-react";
+import { RotateCw, X } from "lucide-react";
 
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { Button } from "@/shared/components/ui/button";
@@ -28,9 +28,11 @@ import {
 export function SearchRun({
   search,
   onRepeat,
+  onCancel,
 }: {
   search: SearchDTO;
   onRepeat?: (search: SearchDTO) => void;
+  onCancel?: (search: SearchDTO) => void;
 }) {
   const live = isInFlight(search);
   const pct = Math.round(progressOf(search) * 100);
@@ -51,6 +53,19 @@ export function SearchRun({
             {costOf(search)}
           </span>
           <StatusBadge status={search.status} map={SEARCH_STATUS_MAP} />
+          {/* Parar es de las pocas cosas del panel que gasta dinero sola: quien
+              se da cuenta de que puso mal la categoría tiene que poder cortar. */}
+          {live && onCancel !== undefined && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onCancel(search)}
+              aria-label={`Detener «${search.label ?? queryOf(search)}»`}
+            >
+              <X aria-hidden="true" />
+              Detener
+            </Button>
+          )}
           {!live && onRepeat !== undefined && (
             <Button
               size="sm"

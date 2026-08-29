@@ -7,18 +7,20 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useSocket } from "@/core/realtime/use-socket";
 import { useAuth } from "@/shared/auth/auth.hooks";
-import { EmptyState } from "@/shared/components/features/empty-state";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
 import { Button } from "@/shared/components/ui/button";
 import { PageHeader } from "@/shared/components/layout/page-header";
 
 import { isInFlight, paramsOf, type SearchDTO } from "../domain/search";
-import type { SourceCatalogItemDTO } from "../domain/search";
+import type { DiscoveryCategoryDTO, SourceCatalogItemDTO } from "../domain/search";
 import {
+  cancelSearch,
   listSearches,
   listSources,
   type StartSearchInput,
 } from "../infrastructure/services/prospecting-service.adapter";
+import { MagnifiedShowcase } from "@/shared/components/features/magnified-showcase";
+
 import { SearchRun } from "./components/SearchRun";
 import { StartSearchSheet } from "./components/StartSearchSheet";
 
@@ -30,6 +32,16 @@ import { StartSearchSheet } from "./components/StartSearchSheet";
  * la pestaña, o entra desde otro dispositivo, tiene que ver lo mismo.
  */
 const POLL_MS = 5_000;
+
+/** Si el catálogo no cargó, el bloque enseña algo en vez de quedarse vacío. */
+const FALLBACK_TAGS = [
+  { id: "restaurante", label: "Restaurantes" },
+  { id: "hotel", label: "Hoteles" },
+  { id: "ferreteria", label: "Ferreterías" },
+  { id: "panaderia", label: "Panaderías" },
+  { id: "clinica", label: "Clínicas" },
+  { id: "taller", label: "Talleres" },
+];
 
 /**
  * La pestaña de Búsquedas.
@@ -45,6 +57,7 @@ export function SearchesView() {
 
   const [searches, setSearches] = useState<SearchDTO[] | null>(null);
   const [sources, setSources] = useState<SourceCatalogItemDTO[]>([]);
+  const [categories, setCategories] = useState<DiscoveryCategoryDTO[]>([]);
   const [sheet, setSheet] = useState<Partial<StartSearchInput> | null>(null);
 
   const load = useCallback(async () => {
@@ -52,6 +65,7 @@ export function SearchesView() {
       const [runs, catalog] = await Promise.all([listSearches(), listSources()]);
       setSearches(runs.items);
       setSources(catalog.items);
+      setCategories(catalog.categories);
     } catch (caught) {
       showAlert({ tone: "error", title: errorMessage(caught) });
       setSearches([]);
@@ -103,6 +117,16 @@ export function SearchesView() {
     };
   }, [socket, load]);
 
+  async function stop(search: SearchDTO) {
+    try {
+      await cancelSearch(search.id);
+      showAlert({ tone: "success", title: "Búsqueda detenida" });
+      await load();
+    } catch (caught) {
+      showAlert({ tone: "error", title: errorMessage(caught) });
+    }
+  }
+
   if (searches === null) return <BrandLoader />;
 
   return (
@@ -121,13 +145,20 @@ export function SearchesView() {
       />
 
       {searches.length === 0 ? (
-        <EmptyState
-          icon={Search}
-          title="Todavía no has buscado nada"
+        // El bloque magnificado en vez de un cartel: quien llega aquí todavía no
+        // sabe qué puede pedirle al módulo, y las etiquetas que desfilan bajo la
+        // lupa son exactamente el catálogo de lo que sí se puede buscar.
+        <MagnifiedShowcase
+          title="Sal a buscar negocios que todavía no te conocen"
           description={
             canManage
-              ? "Elige una categoría y una ciudad, y trae negocios a tu bandeja."
+              ? "Elige una categoría y un punto del mapa, y los negocios de esa zona entran a tu bandeja con su calidad ya medida."
               : "Cuando alguien de tu equipo lance una búsqueda, aparecerá aquí."
+          }
+          tags={
+            categories.length > 0
+              ? categories.map((category) => ({ id: category.id, label: category.label }))
+              : FALLBACK_TAGS
           }
         />
       ) : (
@@ -137,6 +168,7 @@ export function SearchesView() {
               key={search.id}
               search={search}
               onRepeat={canManage ? (run) => setSheet(paramsOf(run)) : undefined}
+              onCancel={canManage ? (run) => void stop(run) : undefined}
             />
           ))}
         </div>
@@ -146,6 +178,7 @@ export function SearchesView() {
         <StartSearchSheet
           open
           sources={sources}
+          categories={categories}
           initial={sheet}
           onOpenChange={(open) => !open && setSheet(null)}
           onStarted={() => void load()}

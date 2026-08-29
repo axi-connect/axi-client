@@ -159,7 +159,7 @@ describe("Cobertura del catálogo (regresión de F4)", () => {
   it("las fuentes gratis NO piden llave, y por eso no se marcan «sin llave»", () => {
     // Overpass y el extractor propio funcionan sin credencial. Antes de F4 la
     // excepción era una lista escrita a mano con «rues» dentro.
-    for (const free of ["rues", "overpass", "site_extractor"] as const) {
+    for (const free of ["rues", "overpass", "site_extractor", "nominatim"] as const) {
       expect(PROVIDER_DESCRIPTORS[free].fields).toHaveLength(0);
       expect(
         providerStatus({

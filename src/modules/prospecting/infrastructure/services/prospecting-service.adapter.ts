@@ -16,6 +16,8 @@ import type {
   QualitySummaryDTO,
 } from "../../domain/lead";
 import type {
+  DiscoveryCategoryDTO,
+  GeocodedPlaceDTO,
   SearchDTO,
   SearchSource,
   SourceCatalogItemDTO,
@@ -167,6 +169,25 @@ export function getSearch(searchId: string): Promise<SearchDTO> {
   return http.get<SearchDTO>(`/prospecting/searches/${searchId}`);
 }
 
-export function listSources(): Promise<{ items: SourceCatalogItemDTO[] }> {
-  return http.get<{ items: SourceCatalogItemDTO[] }>("/prospecting/sources");
+export function listSources(): Promise<{
+  items: SourceCatalogItemDTO[];
+  categories: DiscoveryCategoryDTO[];
+}> {
+  return http.get("/prospecting/sources");
+}
+
+/** Cancela una búsqueda en vuelo y devuelve la fila con su estado final. */
+export function cancelSearch(searchId: string): Promise<SearchDTO> {
+  return http.post<SearchDTO>(`/prospecting/searches/${searchId}/cancel`, {});
+}
+
+/**
+ * Buscar un lugar por su nombre.
+ *
+ * Va por nuestro backend y no contra el geocodificador directamente: su
+ * política pide un `User-Agent` identificable y una petición por segundo, y un
+ * navegador no puede garantizar ninguna de las dos.
+ */
+export function geocode(query: string): Promise<{ items: GeocodedPlaceDTO[] }> {
+  return http.get<{ items: GeocodedPlaceDTO[] }>("/prospecting/geocode", { q: query });
 }
