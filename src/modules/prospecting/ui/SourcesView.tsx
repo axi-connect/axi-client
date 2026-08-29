@@ -7,6 +7,11 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
 import { Badge } from "@/shared/components/ui/badge";
+import {
+  ProviderCard,
+  ProviderCardGrid,
+  type ProviderBrand,
+} from "@/shared/components/features/provider-card";
 import { PageHeader } from "@/shared/components/layout/page-header";
 
 import { CHANNEL_LABELS } from "../domain/lead";
@@ -17,6 +22,19 @@ const ICONS: Record<SearchSource, typeof MapPin> = {
   google_places: MapPin,
   openstreetmap: Globe,
   serp: Search,
+};
+
+/** El resplandor de cada fuente. Clases estáticas: Tailwind extrae en compilación. */
+const BRANDS: Record<SearchSource, ProviderBrand> = {
+  google_places: "maps",
+  openstreetmap: "osm",
+  serp: "serp",
+};
+
+const SUBTITLES: Record<SearchSource, string> = {
+  google_places: "Places API · con llave de Google Cloud",
+  openstreetmap: "Mapa libre · sin llave",
+  serp: "Serper · resultados de buscador",
 };
 
 /** Qué aporta cada fuente, dicho por lo que el dueño va a obtener. */
@@ -58,53 +76,34 @@ export function SourcesView() {
         description="Las llaves las pone axi. Tú eliges la fuente y pagas por lo que uses, contra la cuota de tu plan."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <ProviderCardGrid>
         {sources.map((source) => {
           const Icon = ICONS[source.source];
           return (
-            <article
+            <ProviderCard
               key={source.source}
-              className="border-border bg-card flex flex-col gap-3 rounded-lg border p-5"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Icon aria-hidden="true" className="size-5 shrink-0" />
-                  <h3 className="font-semibold">{source.label}</h3>
-                </div>
-                <Badge variant="outline">
-                  {source.available
-                    ? source.free
-                      ? "Gratis"
-                      : "Consume unidades"
-                    : "No disponible"}
+              brand={BRANDS[source.source]}
+              icon={<Icon aria-hidden="true" className="size-5.5" />}
+              title={source.label}
+              subtitle={SUBTITLES[source.source]}
+              badge={
+                <Badge variant="outline" className="shrink-0">
+                  {source.available ? (source.free ? "Gratis" : "Consume unidades") : "No disponible"}
                 </Badge>
-              </div>
-
-              <p className="text-muted-foreground text-sm">{PITCH[source.source]}</p>
-
-              <div className="mt-auto">
-                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                  Cómo podrás contactarlos
-                </p>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {source.allowed_channels.map((channel) => (
-                    <Badge key={channel} variant="secondary">
-                      {CHANNEL_LABELS[channel]}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {source.attribution !== null && (
-                // No es letra pequeña: la ODbL permite el uso comercial CITANDO
-                // la fuente, así que la cita es la condición bajo la que ese
-                // dato es nuestro para usarlo.
-                <p className="text-muted-foreground text-xs">{source.attribution}</p>
-              )}
-            </article>
+              }
+              body={PITCH[source.source]}
+              // Lo que hay que saber ANTES de descubrir doscientos, no después.
+              // Sale de `allowedChannelsFor` en el backend, no de un texto a mano.
+              chips={source.allowed_channels.map((channel) => CHANNEL_LABELS[channel])}
+              footnote={
+                source.attribution ??
+                (source.available ? undefined : "Tu plataforma todavía no encendió esta fuente.")
+              }
+              inert
+            />
           );
         })}
-      </div>
+      </ProviderCardGrid>
     </div>
   );
 }

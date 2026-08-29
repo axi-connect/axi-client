@@ -1,8 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
-import { cn } from "@/core/lib/utils";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { channelProvider } from "@/modules/channels/domain/channel-providers";
 import {
@@ -11,6 +8,11 @@ import {
   readMetaAccess,
   readQualityRating,
 } from "@/modules/channels/domain/channel-health";
+import {
+  ProviderCard,
+  type ProviderBrand,
+} from "@/shared/components/features/provider-card";
+
 import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
 
@@ -21,73 +23,60 @@ import { ChannelStatusBadge } from "./ChannelStatusBadge";
  * filas como mucho, con estado en vivo, y `GET /channels` no pagina, así que
  * `usePaginatedList` se alimentaría de un contrato que no existe.
  *
- * La superficie (`channel-surface` + `brand-*`) trae el resplandor del
- * proveedor y el cometa del borde aprobados en F0. Un canal en `error` cambia
- * su `--ch-glow` al destructivo: la tarjeta comunica el problema por color y no
- * solo por el badge.
+ * La superficie premium la pone `ProviderCard`, compartido con integraciones y
+ * con las fuentes de captación: estaba copiada literal en cuatro archivos. Un
+ * canal en `error` cambia su resplandor al destructivo, así que la tarjeta
+ * comunica el problema por color y no solo por el badge.
  */
 export function ChannelCard({ channel }: { channel: ChannelDTO }) {
   const provider = channelProvider(channel.kind);
   const faulted = channel.status === "error";
 
   return (
-    <Link
+    <ProviderCard
       href={`/settings/channels/${channel.id}`}
-      className={cn(
-        "channel-surface flex w-full flex-col gap-3.5 rounded-lg border border-border bg-background p-4",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
-        faulted ? "brand-fault" : provider.brand_class,
-      )}
-    >
-      <div className="relative flex items-start gap-3">
-        <ChannelProviderIcon iconId={provider.icon_id} />
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate font-semibold">{channel.name}</span>
-          <span className="truncate text-xs text-muted-foreground">
-            {provider.label}
-            {channel.display_phone_number ? ` · ${channel.display_phone_number}` : ""}
-          </span>
-        </span>
-        <ChannelStatusBadge status={channel.status} />
-      </div>
+      brand={provider.brand_class.replace("brand-", "") as ProviderBrand}
+      faulted={faulted}
+      icon={<ChannelProviderIcon iconId={provider.icon_id} bare />}
+      title={channel.name}
+      subtitle={`${provider.label}${channel.display_phone_number ? ` · ${channel.display_phone_number}` : ""}`}
+      badge={<ChannelStatusBadge status={channel.status} />}
+      /* Las mismas traducciones que la tarjeta de salud, desde `domain/`: ningún
+         enum de Meta llega a la pantalla ni aquí ni en el detalle.
 
-      {/* Las mismas traducciones que la tarjeta de salud, desde `domain/`: ningún
-          enum de Meta llega a la pantalla ni aquí ni en el detalle */}
-      <dl className="relative flex flex-wrap gap-x-6 gap-y-1.5">
-        {/* Tres ramas, no dos. La versión anterior mandaba TODO lo que no era
-            `whatsapp_cloud` a la métrica de sesión, así que Instagram, Messenger
-            y el simulador anunciaban estar «Vinculada al celular» — un concepto
-            que solo existe en WhatsApp Web. Un canal que miente sobre cómo está
-            conectado es peor que un canal que no dice nada. */}
-        {channel.kind === "whatsapp_cloud" ? (
-          <>
-            <Metric label="Calidad del número" value={readQualityRating(channel.quality_rating).label} />
-            <Metric label="Puedes iniciar" value={readMessagingLimit(channel.messaging_limit).label} />
-          </>
-        ) : channel.kind === "whatsapp_web" ? (
-          <Metric
-            label="Sesión"
-            value={channel.status === "connected" ? "Vinculada al celular" : "Sin vincular"}
-          />
-        ) : null}
-        <Metric
-          label={faulted ? "Última comprobación" : "Acceso de Meta"}
-          value={
-            faulted
-              ? readLastCheck(channel.last_health_check_at)
-              : readMetaAccess(channel).label
-          }
-        />
-      </dl>
-    </Link>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="text-[13px] font-medium">{value}</dd>
-    </div>
+         Tres ramas, no dos. La versión anterior mandaba TODO lo que no era
+         `whatsapp_cloud` a la métrica de sesión, así que Instagram, Messenger y
+         el simulador anunciaban estar «Vinculada al celular» — un concepto que
+         solo existe en WhatsApp Web. Un canal que miente sobre cómo está
+         conectado es peor que un canal que no dice nada. */
+      metrics={[
+        ...(channel.kind === "whatsapp_cloud"
+          ? [
+              {
+                label: "Calidad del número",
+                value: readQualityRating(channel.quality_rating).label,
+              },
+              {
+                label: "Puedes iniciar",
+                value: readMessagingLimit(channel.messaging_limit).label,
+              },
+            ]
+          : channel.kind === "whatsapp_web"
+            ? [
+                {
+                  label: "Sesión",
+                  value:
+                    channel.status === "connected" ? "Vinculada al celular" : "Sin vincular",
+                },
+              ]
+            : []),
+        {
+          label: faulted ? "Última comprobación" : "Acceso de Meta",
+          value: faulted
+            ? readLastCheck(channel.last_health_check_at)
+            : readMetaAccess(channel).label,
+        },
+      ]}
+    />
   );
 }

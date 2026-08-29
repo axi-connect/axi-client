@@ -44,6 +44,12 @@
   --logo-mercadopago: #00b1ea;
   --logo-salesforce: #00a1e0;
   --logo-hubspot: #ff7a59;
+  /* Fuentes de captación (F4). OpenStreetMap usa su verde oficial; para Maps se
+     toma el azul de Google y no su rojo de pin, que chocaría con el
+     destructivo; el buscador va con el violeta de acento del panel. */
+  --logo-osm: #7ebc6f;
+  --logo-maps: #4285f4;
+  --logo-serp: #8b5cf6;
 }
 
 .dark {
@@ -254,6 +260,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .brand-salesforce { --ch-glow: var(--logo-salesforce); }
 .brand-hubspot { --ch-glow: var(--logo-hubspot); }
 /* Un canal caído deja de presumir de marca: comunica el problema por color */
+.brand-osm { --ch-glow: var(--logo-osm); }
+.brand-maps { --ch-glow: var(--logo-maps); }
+.brand-serp { --ch-glow: var(--logo-serp); }
 .brand-fault { --ch-glow: var(--axi-destructive); }
 
 /* Glifo del proveedor: color oficial, y SOLO en el glifo (DESIGN-SYSTEM §7) */
@@ -264,6 +273,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .text-logo-mercadopago { color: var(--logo-mercadopago); }
 .text-logo-salesforce { color: var(--logo-salesforce); }
 .text-logo-hubspot { color: var(--logo-hubspot); }
+.text-logo-osm { color: var(--logo-osm); }
+.text-logo-maps { color: var(--logo-maps); }
+.text-logo-serp { color: var(--logo-serp); }
 
 /* Placa del logo: teñida al 10% del color de la app con línea de un pelo al 22%.
    Como utilidad y no como valor arbitrario de Tailwind: un `color-mix` anidado

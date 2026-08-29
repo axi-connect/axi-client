@@ -1,0 +1,1383 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Enriquecimiento de Leads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800&display=swap">
+
+<!--
+  MOCKUP F4b — enriquecimiento de leads (slice `prospecting`).
+  Gate de aprobación. NO es código de producción.
+  Plan: axi-server/docs/plans/prospecting_f4b_enrichment.md (backend, entregado)
+
+  QUÉ TIENE QUE PROBAR ESTE MOCKUP
+
+  1. QUE «CUÁLES SON LOS DATOS» Y «DE DÓNDE SALIERON» SON DOS PREGUNTAS.
+     Arriba, la tarjeta de identidad: lo que sabemos del negocio, copiable.
+     Abajo, la procedencia: qué proveedor trajo cada dato. Fundirlas haría una
+     lista de quince filas donde no se encuentra nada.
+  2. QUE TENER EL WHATSAPP NO ES TENER PERMISO. El extractor encuentra el
+     número en la web del negocio y se guarda — y el canal sigue tachado. Si
+     el mockup no hace incómoda esa contradicción, alguien la «arreglará»
+     fusionando las dos cosas, y eso quema el número del tenant.
+  3. QUE COMPLETITUD NO ES CALIDAD. La columna «Datos» cuenta campos conocidos
+     y va en gris. Andrés Carne de Res tiene los cinco y sigue sin WhatsApp.
+  4. QUE EL LOTE NO GASTA, y que se dice antes de pulsarlo.
+  5. QUE LOS TOPES DEL PROVEEDOR EXISTEN Y SE VEN, incluido el mensual, que
+     hasta esta fase era una columna decorativa que no frenaba nada.
+
+  Reglas que este archivo respeta a propósito:
+  · Las CAPAS 1 y 2 son COPIA LITERAL de prospecting-leads.html (el mockup F0),
+    que a su vez copia axi-client/src/app/globals.css. Ningún hex nuevo.
+  · Outfit hace de Nexa (fuente local, no está en Google Fonts).
+  · El violeta es el acento de dataviz (el índice de calidad); el coral es
+    ACCIÓN y no se gasta en decorar. Nunca los dos acentos en la misma vista.
+  · Los colores de las redes vienen de --logo-*: son marcas de terceros y no
+    cambian con el tema.
+  · Glass en ninguna parte: DESIGN-SYSTEM §5.2 lo prohíbe en tablas y cards de
+    datos. Todo el contenido de trabajo va sólido.
+  · El mini-mapa va dibujado con CSS porque el visor de Artifacts no puede
+    cargar teselas externas. En producción es <MapPreview>, que ya existe.
+-->
+
+<style>
+/* ============================================================================
+   CAPA 1 — PRIMITIVOS DE MARCA (copia literal de globals.css)
+   Adaptada a las tres situaciones de tema del visor de Artifacts:
+   :root = claro · prefers-color-scheme guardado · [data-theme] explícito.
+   ============================================================================ */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+
+  --axi-on-color: #ffffff;
+
+  --logo-whatsapp: #25d366;
+  --logo-instagram: #e1306c;
+  --logo-messenger: #0084ff;
+  --logo-google: #4285f4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --axi-brand: #fb7185;
+    --axi-brand-2: #df4f4f;
+    --axi-violet: #a78bfa;
+    --axi-amber: #fbbf24;
+    --axi-muted: #18181b;
+    --axi-success: #4ade80;
+    --axi-warning: #fbbf24;
+    --axi-destructive: #f87171;
+    --axi-info: #60a5fa;
+    --axi-on-color: #0a0a0a;
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --axi-brand: #fb7185;
+  --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa;
+  --axi-amber: #fbbf24;
+  --axi-muted: #18181b;
+  --axi-success: #4ade80;
+  --axi-warning: #fbbf24;
+  --axi-destructive: #f87171;
+  --axi-info: #60a5fa;
+  --axi-on-color: #0a0a0a;
+}
+
+/* ============================================================================
+   CAPA 2 — TOKENS SEMÁNTICOS (derivan de la capa 1; sin hex nuevos)
+   ============================================================================ */
+:root {
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-border-soft: color-mix(in srgb, var(--color-border) 50%, transparent);
+  --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --color-muted-fg: color-mix(in srgb, var(--foreground) 62%, transparent);
+  --color-muted-fg-2: color-mix(in srgb, var(--foreground) 45%, transparent);
+  --color-accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --color-input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+
+  --font-body: "Poppins", Helvetica, Arial, sans-serif;
+  --font-heading: "Outfit", "Poppins", Helvetica, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --shell-w: 268px;
+}
+
+/* ============================================================================
+   BASE
+   ============================================================================ */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4 { font-family: var(--font-heading); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; border-radius: var(--radius-sm); }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ============================================================================
+   SHELL — AppSidebar + PrivateHeader
+   ============================================================================ */
+.shell { display: grid; grid-template-columns: var(--shell-w) 1fr; min-height: 100vh; }
+
+.sidebar {
+  border-right: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--axi-muted) 55%, var(--background));
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sb-brand { display: flex; align-items: center; gap: 10px; padding: 18px 18px 14px; }
+.sb-logo {
+  width: 30px; height: 30px; border-radius: 9px; flex: none;
+  background-image: linear-gradient(135deg, var(--axi-brand), var(--axi-amber) 55%, var(--axi-violet));
+}
+.sb-brand strong { font-family: var(--font-heading); font-weight: 800; font-size: 15px; letter-spacing: -0.02em; }
+.sb-brand span { display: block; font-size: 11px; color: var(--color-muted-fg-2); font-weight: 400; letter-spacing: .02em; }
+
+.sb-group { padding: 6px 10px; }
+.sb-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--color-muted-fg-2); padding: 12px 10px 6px; font-weight: 600;
+}
+.sb-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border-radius: var(--radius-md);
+  color: var(--color-muted-fg); font-size: 13.5px; font-weight: 500; text-align: left;
+}
+.sb-item:hover { background: var(--color-secondary); color: var(--foreground); }
+.sb-item svg { width: 17px; height: 17px; flex: none; opacity: .85; }
+.sb-item.is-open { color: var(--foreground); }
+.sb-sub { margin: 2px 0 6px 27px; padding-left: 12px; border-left: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 1px; }
+.sb-sub .sb-item { padding: 6px 10px; font-size: 13px; }
+/* Activo = bg-accent, nunca coral sólido (no pasa AA) */
+.sb-sub .sb-item.active, .sb-item.active { background: var(--color-accent); color: var(--foreground); font-weight: 600; }
+.sb-chev { margin-left: auto; opacity: .5; }
+
+.main { display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 24px; border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+.crumb { font-size: 13px; color: var(--color-muted-fg-2); }
+.crumb b { color: var(--foreground); font-weight: 600; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--color-accent); font-size: 11.5px; font-weight: 700; letter-spacing: .02em;
+}
+.icon-btn { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; color: var(--color-muted-fg); }
+.icon-btn:hover { background: var(--color-secondary); color: var(--foreground); }
+
+.content { padding: 24px; max-width: 1280px; width: 100%; margin: 0 auto; }
+
+/* ============================================================================
+   ENCABEZADO DE PÁGINA + NavTabs (pastilla)
+   ============================================================================ */
+.page-head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.page-head h1 { font-size: 25px; font-weight: 700; }
+.page-head p { color: var(--color-muted-fg); font-size: 13.5px; margin-top: 4px; max-width: 62ch; }
+.page-head .actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.navtabs {
+  display: inline-flex; gap: 2px; padding: 3px; margin-bottom: 20px;
+  background: var(--color-secondary); border-radius: 999px; border: 1px solid var(--color-border-soft);
+}
+.navtabs button {
+  padding: 6px 15px; border-radius: 999px; font-size: 13px; font-weight: 500;
+  color: var(--color-muted-fg); display: flex; align-items: center; gap: 7px;
+}
+.navtabs button:hover { color: var(--foreground); }
+.navtabs button[aria-current="page"] {
+  background: var(--background); color: var(--foreground); font-weight: 600; box-shadow: var(--shadow-float);
+}
+.navtabs .count {
+  font-size: 11px; padding: 0 6px; border-radius: 999px; line-height: 17px;
+  background: var(--color-accent); font-weight: 600;
+}
+
+/* ============================================================================
+   BOTONES
+   ============================================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+  padding: 8px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500;
+  border: 1px solid var(--color-border); background: var(--background); white-space: nowrap;
+  transition: background .14s ease, border-color .14s ease;
+}
+.btn:hover { background: var(--color-secondary); }
+.btn svg { width: 15px; height: 15px; }
+.btn-primary {
+  background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2));
+  color: var(--axi-on-color); border-color: transparent; font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.06); background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); }
+.btn-sm { padding: 5px 10px; font-size: 12.5px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ============================================================================
+   TARJETAS / STAT TILES
+   ============================================================================ */
+.card {
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--background); box-shadow: var(--shadow-float);
+}
+.card-pad { padding: 18px; }
+
+/* La franja de cuarentena: la separación conceptual del módulo, hecha visible */
+.funnel {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  overflow: hidden; margin-bottom: 20px; background: var(--background);
+  box-shadow: var(--shadow-float);
+}
+.funnel-step { padding: 15px 18px; position: relative; }
+.funnel-step + .funnel-step { border-left: 1px solid var(--color-border); }
+/* Los tres primeros pasos son cuarentena; el cuarto ya es el CRM del tenant */
+.funnel-step.quarantine { background: color-mix(in srgb, var(--axi-violet) 4%, var(--background)); }
+.funnel-step.promoted::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 2px;
+  background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2));
+}
+.funnel-k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .085em; color: var(--color-muted-fg-2); font-weight: 600; }
+.funnel-v { font-family: var(--font-heading); font-size: 27px; font-weight: 700; line-height: 1.15; margin-top: 3px; }
+.funnel-d { font-size: 12px; color: var(--color-muted-fg-2); margin-top: 1px; }
+.funnel-note {
+  grid-column: 1 / -1; padding: 8px 18px; font-size: 11.5px; color: var(--color-muted-fg-2);
+  border-top: 1px solid var(--color-border); background: var(--color-secondary);
+  display: flex; align-items: center; gap: 7px;
+}
+.funnel-note svg { width: 13px; height: 13px; flex: none; }
+
+/* ============================================================================
+   EL ICL — barra de cuatro ejes. El violeta es el acento de dataviz.
+   ============================================================================ */
+.icl { display: flex; align-items: center; gap: 9px; }
+.icl-num { font-family: var(--font-heading); font-weight: 700; font-size: 15px; min-width: 24px; text-align: right; font-variant-numeric: tabular-nums; }
+.icl-bar { display: flex; gap: 2px; width: 88px; }
+.icl-seg { height: 6px; flex: 1; border-radius: 2px; background: color-mix(in srgb, var(--foreground) 10%, transparent); overflow: hidden; }
+.icl-seg i { display: block; height: 100%; border-radius: 2px; background: var(--axi-violet); }
+.icl-seg[data-fill="low"] i { background: color-mix(in srgb, var(--axi-violet) 45%, transparent); }
+
+/* Desglose en el detalle */
+.axis { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 11px 0; }
+.axis + .axis { border-top: 1px solid var(--color-border-soft); }
+.axis-name { font-weight: 600; font-size: 13.5px; }
+.axis-score { font-family: var(--font-heading); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
+.axis-score small { color: var(--color-muted-fg-2); font-weight: 500; font-size: 11.5px; }
+.axis-track { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--foreground) 8%, transparent); overflow: hidden; }
+.axis-track i { display: block; height: 100%; background: var(--axi-violet); border-radius: 3px; }
+.axis-ev { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+
+/* ============================================================================
+   CHIPS — la pareja que prueba D6
+   ============================================================================ */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px;
+  border-radius: 999px; font-size: 11.5px; font-weight: 600; line-height: 18px;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.chip svg { width: 12px; height: 12px; flex: none; }
+.chip-verified { color: var(--axi-success); background: color-mix(in srgb, var(--axi-success) 12%, var(--background)); border-color: color-mix(in srgb, var(--axi-success) 26%, transparent); }
+.chip-risky    { color: var(--axi-warning); background: color-mix(in srgb, var(--axi-warning) 13%, var(--background)); border-color: color-mix(in srgb, var(--axi-warning) 28%, transparent); }
+.chip-invalid  { color: var(--axi-destructive); background: color-mix(in srgb, var(--axi-destructive) 12%, var(--background)); border-color: color-mix(in srgb, var(--axi-destructive) 26%, transparent); }
+.chip-unver    { color: var(--color-muted-fg); background: var(--color-secondary); border-color: var(--color-border); }
+.chip-neutral  { color: var(--color-muted-fg); background: var(--color-secondary); border-color: var(--color-border); font-weight: 500; }
+.chip-src      { color: var(--color-muted-fg); background: transparent; border-color: var(--color-border); font-weight: 500; font-size: 11px; }
+
+/* Canales permitidos: presencia = permitido, tachado = negado por base legal */
+.channels { display: inline-flex; gap: 4px; align-items: center; }
+.ch {
+  width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center;
+  border: 1px solid var(--color-border); background: var(--background); position: relative;
+}
+.ch svg { width: 12px; height: 12px; }
+.ch[data-on="wa"]   { color: var(--logo-whatsapp); border-color: color-mix(in srgb, var(--logo-whatsapp) 35%, transparent); background: color-mix(in srgb, var(--logo-whatsapp) 9%, var(--background)); }
+.ch[data-on="mail"] { color: var(--axi-info); border-color: color-mix(in srgb, var(--axi-info) 32%, transparent); background: color-mix(in srgb, var(--axi-info) 9%, var(--background)); }
+.ch[data-on="hand"] { color: var(--color-muted-fg); }
+.ch[data-off] { color: color-mix(in srgb, var(--foreground) 22%, transparent); background: transparent; }
+.ch[data-off]::after {
+  content: ""; position: absolute; left: 3px; right: 3px; top: 50%; height: 1.5px;
+  background: color-mix(in srgb, var(--foreground) 28%, transparent); transform: rotate(-32deg);
+}
+
+/* ============================================================================
+   FILTROS + TABLA
+   ============================================================================ */
+.filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.field {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px;
+  border: 1px solid var(--color-input); border-radius: var(--radius-md);
+  font-size: 13px; color: var(--color-muted-fg); background: var(--background);
+}
+.field svg { width: 14px; height: 14px; opacity: .7; }
+.field.search { min-width: 250px; }
+.field select { border: 0; background: none; font: inherit; color: var(--foreground); outline: none; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--background); box-shadow: var(--shadow-float); }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+thead th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .085em;
+  color: var(--color-muted-fg-2); font-weight: 600; padding: 11px 16px;
+  border-bottom: 1px solid var(--color-border); white-space: nowrap; background: var(--color-secondary);
+}
+tbody td { padding: 13px 16px; border-bottom: 1px solid var(--color-border-soft); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: color-mix(in srgb, var(--axi-brand) 3.5%, var(--background)); }
+.lead-name { font-weight: 600; font-size: 13.5px; }
+.lead-sub { font-size: 12px; color: var(--color-muted-fg-2); margin-top: 1px; }
+.cell-src { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--color-muted-fg); }
+.src-dot { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+.checkbox { width: 15px; height: 15px; border: 1.5px solid var(--color-input); border-radius: 4px; display: block; }
+.checkbox.on { background: var(--axi-brand); border-color: var(--axi-brand); position: relative; }
+.checkbox.on::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--axi-on-color); font-size: 10px; font-weight: 700; }
+
+/* Barra de selección masiva: la puerta de promoción */
+.bulkbar {
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px; margin-bottom: 12px;
+  border: 1px solid color-mix(in srgb, var(--axi-brand) 30%, transparent);
+  background: var(--color-accent); border-radius: var(--radius-md); font-size: 13px;
+}
+.bulkbar .grow { margin-left: auto; display: flex; gap: 8px; }
+.bulkbar b { font-weight: 600; }
+
+.tablefoot { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-top: 1px solid var(--color-border); font-size: 12.5px; color: var(--color-muted-fg-2); }
+.pager { margin-left: auto; display: flex; gap: 4px; }
+.pager button { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: grid; place-items: center; font-size: 12px; }
+.pager button[aria-current] { background: var(--color-accent); font-weight: 700; border-color: color-mix(in srgb, var(--axi-brand) 30%, transparent); }
+
+/* ============================================================================
+   DETALLE DE LEAD (patrón «Contacto 360»)
+   ============================================================================ */
+.detail-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; align-items: start; }
+@media (max-width: 940px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.dhead { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+.dhead .mono {
+  width: 52px; height: 52px; border-radius: var(--radius-md); flex: none; display: grid; place-items: center;
+  background: var(--color-accent); font-family: var(--font-heading); font-weight: 800; font-size: 18px;
+}
+.dhead h2 { font-size: 21px; font-weight: 700; }
+.dhead .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 7px; align-items: center; }
+.dhead .actions { margin-left: auto; display: flex; gap: 8px; }
+
+.sec-title {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .085em; font-weight: 600;
+  color: var(--color-muted-fg-2); margin-bottom: 10px;
+}
+
+/* Lista de campos con procedencia: la columna derecha ES la fuente */
+.fields { display: flex; flex-direction: column; }
+.frow { display: grid; grid-template-columns: 108px 1fr auto; gap: 10px; align-items: baseline; padding: 9px 0; }
+.frow + .frow { border-top: 1px solid var(--color-border-soft); }
+.fkey { font-size: 12.5px; color: var(--color-muted-fg-2); }
+.fval { font-size: 13.5px; font-weight: 500; word-break: break-word; }
+.fval.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.fval .warn { color: var(--axi-warning); font-weight: 600; font-size: 12px; }
+
+/* La puerta de promoción, dibujada como puerta */
+.gate {
+  border: 1px solid color-mix(in srgb, var(--axi-brand) 28%, transparent);
+  border-radius: var(--radius-lg); overflow: hidden; background: var(--background);
+}
+.gate-head { padding: 14px 18px; background: var(--color-accent); }
+.gate-head h3 { font-size: 14.5px; font-weight: 700; }
+.gate-head p { font-size: 12.5px; color: var(--color-muted-fg); margin-top: 3px; }
+.gate-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 11px; }
+.req { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; }
+.req .tick { width: 17px; height: 17px; border-radius: 999px; display: grid; place-items: center; flex: none; margin-top: 1px; }
+.req.ok .tick { background: color-mix(in srgb, var(--axi-success) 16%, var(--background)); color: var(--axi-success); }
+.req.no .tick { background: color-mix(in srgb, var(--axi-destructive) 14%, var(--background)); color: var(--axi-destructive); }
+.req svg { width: 11px; height: 11px; }
+.req span small { display: block; color: var(--color-muted-fg-2); font-size: 11.5px; }
+.gate-foot { padding: 12px 18px; border-top: 1px solid var(--color-border); display: flex; gap: 8px; align-items: center; }
+.gate-foot .hint { font-size: 11.5px; color: var(--color-muted-fg-2); }
+
+/* Timeline de prospecting_lead_event */
+.tl { display: flex; flex-direction: column; }
+.tl-item { display: grid; grid-template-columns: 22px 1fr; gap: 11px; padding-bottom: 15px; position: relative; }
+.tl-item:not(:last-child)::before {
+  content: ""; position: absolute; left: 10.5px; top: 21px; bottom: 0; width: 1px; background: var(--color-border);
+}
+.tl-dot { width: 21px; height: 21px; border-radius: 999px; display: grid; place-items: center; background: var(--color-secondary); border: 1px solid var(--color-border); z-index: 1; }
+.tl-dot svg { width: 11px; height: 11px; color: var(--color-muted-fg); }
+.tl-dot.brand { background: var(--color-accent); border-color: color-mix(in srgb, var(--axi-brand) 30%, transparent); }
+.tl-dot.brand svg { color: var(--axi-brand); }
+.tl-t { font-size: 13px; font-weight: 600; }
+.tl-s { font-size: 12px; color: var(--color-muted-fg-2); }
+.tl-time { font-size: 11px; color: var(--color-muted-fg-2); margin-top: 2px; }
+
+/* ============================================================================
+   BÚSQUEDAS — progreso en vivo
+   ============================================================================ */
+.run { padding: 16px 18px; }
+.run + .run { border-top: 1px solid var(--color-border); }
+.run-head { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; }
+.run-title { font-weight: 600; font-size: 14px; }
+.run-q { font-size: 12.5px; color: var(--color-muted-fg-2); margin-top: 2px; }
+.run-head .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.progress { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--foreground) 8%, transparent); overflow: hidden; margin-top: 12px; }
+.progress i { display: block; height: 100%; border-radius: 3px; background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); transition: width .5s ease; }
+.run-stats { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+.run-stat { font-size: 12px; color: var(--color-muted-fg-2); }
+.run-stat b { display: block; font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: var(--foreground); font-variant-numeric: tabular-nums; }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--axi-brand); }
+.live i { width: 6px; height: 6px; border-radius: 999px; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }
+@media (prefers-reduced-motion: reduce) { .live i { animation: none; } .progress i { transition: none; } }
+
+.cost {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--axi-violet) 11%, var(--background));
+  color: var(--axi-violet); border: 1px solid color-mix(in srgb, var(--axi-violet) 26%, transparent);
+}
+
+/* Medidor de cuota */
+.quota { display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
+.quota-bar { flex: 1; height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--foreground) 8%, transparent); overflow: hidden; }
+.quota-bar i { display: block; height: 100%; background: var(--axi-violet); border-radius: 4px; }
+.quota-bar i.warn { background: var(--axi-warning); }
+.quota-txt { font-size: 12.5px; color: var(--color-muted-fg); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.quota-txt b { color: var(--foreground); font-weight: 600; }
+
+/* ============================================================================
+   FUENTES — la vitrina (calco de la tienda de integraciones)
+   ============================================================================ */
+.sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 14px; }
+.source {
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px;
+  background: var(--background); position: relative; overflow: hidden; box-shadow: var(--shadow-float);
+  display: flex; flex-direction: column; gap: 10px;
+}
+/* Resplandor de marca de la fuente: el mismo lenguaje de .channel-surface */
+.source::before {
+  content: ""; position: absolute; inset: -40% 40% 55% -30%; pointer-events: none;
+  background: radial-gradient(closest-side, var(--src-glow, transparent) 0%, transparent 100%);
+  opacity: .18;
+}
+.source.soon { opacity: .62; }
+.source-top { display: flex; align-items: center; gap: 11px; position: relative; }
+.source-logo {
+  width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex: none;
+  border: 1px solid var(--color-border); background: var(--background); color: var(--src-glow, var(--foreground));
+}
+.source-logo svg { width: 19px; height: 19px; }
+.source h3 { font-size: 14.5px; font-weight: 700; }
+.source .tagline { font-size: 12.5px; color: var(--color-muted-fg); position: relative; }
+.source .caps { display: flex; flex-wrap: wrap; gap: 5px; position: relative; }
+.source .foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 4px; position: relative; }
+.badge-soon { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted-fg-2); }
+.badge-on {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--axi-success); display: inline-flex; align-items: center; gap: 5px;
+}
+.badge-on i { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.legal-note {
+  font-size: 11.5px; padding: 7px 10px; border-radius: var(--radius-sm); position: relative;
+  background: color-mix(in srgb, var(--axi-warning) 10%, var(--background));
+  color: color-mix(in srgb, var(--axi-warning) 78%, var(--foreground));
+  border: 1px solid color-mix(in srgb, var(--axi-warning) 24%, transparent);
+  display: flex; gap: 7px; align-items: flex-start;
+}
+.legal-note svg { width: 13px; height: 13px; flex: none; margin-top: 1px; }
+
+/* ============================================================================
+   CALIDAD — ICP + supresión
+   ============================================================================ */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 940px) { .two-col { grid-template-columns: 1fr; } }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 9px 0; font-size: 13px; align-items: center; }
+.kv + .kv { border-top: 1px solid var(--color-border-soft); }
+.kv .k { color: var(--color-muted-fg); }
+.kv .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.slider { display: flex; align-items: center; gap: 10px; }
+.slider .track { width: 110px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--foreground) 9%, transparent); position: relative; }
+.slider .track i { display: block; height: 100%; border-radius: 3px; background: var(--axi-violet); }
+.slider .track b { position: absolute; top: 50%; width: 13px; height: 13px; border-radius: 999px; background: var(--background); border: 2px solid var(--axi-violet); transform: translate(-50%, -50%); }
+
+.view { display: none; }
+.view.active { display: block; }
+.empty-hint { font-size: 12.5px; color: var(--color-muted-fg-2); padding: 14px 18px; }
+</style>
+<style>
+/* ============================================================================
+   CAPA 3 — LO QUE AÑADE F4b. Todo derivado de los tokens de arriba; cero hex.
+   ============================================================================ */
+
+/* --- Tarjeta «Identidad y contacto» ------------------------------------- */
+/* Rejilla etiqueta/valor. El botón de copiar aparece al pasar por encima,
+   como hace FieldList: un icono permanente por fila es ruido en una lista
+   de siete campos. */
+.idl { display: flex; flex-direction: column; }
+.idrow {
+  display: grid; grid-template-columns: 92px 1fr auto; gap: 10px;
+  align-items: baseline; padding: 9px 0;
+}
+.idrow + .idrow { border-top: 1px solid var(--color-border-soft); }
+.idk { font-size: 12.5px; color: var(--color-muted-fg-2); }
+.idv { font-size: 13.5px; font-weight: 500; word-break: break-word; }
+.idv.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.idv a { color: var(--axi-info); text-decoration: none; }
+.idv a:hover { text-decoration: underline; }
+.copy {
+  width: 24px; height: 24px; border-radius: var(--radius-sm); display: grid; place-items: center;
+  color: var(--color-muted-fg-2); opacity: 0; transition: opacity .14s ease;
+}
+.idrow:hover .copy, .copy:focus-visible { opacity: 1; }
+.copy:hover { background: var(--color-secondary); color: var(--foreground); }
+.copy svg { width: 13px; height: 13px; }
+
+/* --- Perfiles sociales --------------------------------------------------- */
+/* Los colores de marca de terceros NO cambian con el tema: son suyos, no
+   nuestros. Viven en --logo-* desde globals.css. */
+.profiles { display: flex; flex-wrap: wrap; gap: 7px; }
+.profile {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 8px;
+  border-radius: 999px; border: 1px solid var(--color-border);
+  background: var(--background); font-size: 12.5px; font-weight: 500;
+  transition: border-color .14s ease, background .14s ease;
+}
+.profile:hover { background: var(--color-secondary); }
+.profile svg { width: 14px; height: 14px; flex: none; }
+.profile[data-net="instagram"] { color: var(--logo-instagram); border-color: color-mix(in srgb, var(--logo-instagram) 30%, transparent); }
+.profile[data-net="facebook"]  { color: var(--logo-messenger); border-color: color-mix(in srgb, var(--logo-messenger) 30%, transparent); }
+.profile[data-net="whatsapp"]  { color: var(--logo-whatsapp);  border-color: color-mix(in srgb, var(--logo-whatsapp) 32%, transparent); }
+.profile .host { color: var(--color-muted-fg-2); font-weight: 400; }
+
+/* El WhatsApp encontrado lleva su propia advertencia: tener el número no es
+   tener permiso. Es la invariante del módulo, dicha donde se puede desobedecer. */
+.wa-warn {
+  display: flex; gap: 7px; align-items: flex-start; margin-top: 9px;
+  font-size: 11.5px; padding: 7px 10px; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--axi-warning) 10%, var(--background));
+  color: color-mix(in srgb, var(--axi-warning) 80%, var(--foreground));
+  border: 1px solid color-mix(in srgb, var(--axi-warning) 24%, transparent);
+}
+.wa-warn svg { width: 13px; height: 13px; flex: none; margin-top: 1px; }
+
+/* --- Mini-mapa ----------------------------------------------------------- */
+/* En producción es <MapPreview>, que calcula teselas de OpenStreetMap y las
+   pinta como imágenes — sin librería de mapas. Aquí va dibujado con CSS
+   porque el visor de Artifacts no puede cargar teselas externas. */
+.map {
+  position: relative; height: 132px; margin-top: 12px; overflow: hidden;
+  border-radius: var(--radius-md); border: 1px solid var(--color-border);
+  background:
+    linear-gradient(color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 34px,
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px) 0 0 / 46px 100%,
+    color-mix(in srgb, var(--logo-osm) 8%, var(--background));
+}
+.map::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(103deg, transparent 43%, color-mix(in srgb, var(--foreground) 9%, transparent) 43% 46%, transparent 46%),
+    linear-gradient(11deg, transparent 62%, color-mix(in srgb, var(--foreground) 7%, transparent) 62% 64.5%, transparent 64.5%);
+}
+.pin {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%);
+  color: var(--axi-brand); filter: drop-shadow(0 2px 4px rgb(0 0 0 / .28));
+}
+.pin svg { width: 26px; height: 26px; }
+.map-label {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, 8px);
+  font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  background: var(--background); border: 1px solid var(--color-border); white-space: nowrap;
+  box-shadow: var(--shadow-float);
+}
+.map-attr {
+  position: absolute; right: 5px; bottom: 4px; font-size: 9.5px;
+  color: var(--color-muted-fg-2); background: color-mix(in srgb, var(--background) 78%, transparent);
+  padding: 1px 6px; border-radius: 999px;
+}
+
+/* --- Pie de frescura ----------------------------------------------------- */
+.freshness {
+  display: flex; align-items: center; gap: 7px; margin-top: 12px; padding-top: 11px;
+  border-top: 1px solid var(--color-border-soft);
+  font-size: 11.5px; color: var(--color-muted-fg-2);
+}
+.freshness svg { width: 12px; height: 12px; }
+
+/* --- Completitud: CUENTA DATOS, NO CALIDAD ------------------------------- */
+/* Neutro a propósito. Verde/rojo aquí lo leería como un juicio de calidad, y
+   son dos ejes distintos: cinco datos no dan permiso de WhatsApp. */
+.dots { display: flex; gap: 3px; }
+.dots i {
+  width: 7px; height: 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+.dots i.on { background: color-mix(in srgb, var(--foreground) 55%, transparent); }
+.dots-txt { font-size: 11px; color: var(--color-muted-fg-2); margin-top: 3px; font-variant-numeric: tabular-nums; }
+
+/* --- Estado «buscando datos» -------------------------------------------- */
+.chip-working {
+  color: var(--axi-info); background: color-mix(in srgb, var(--axi-info) 11%, var(--background));
+  border-color: color-mix(in srgb, var(--axi-info) 26%, transparent);
+}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+/* Fila que está trabajando: se atenúa el contenido, nunca se bloquea la fila. */
+tbody tr.working td { background: color-mix(in srgb, var(--axi-info) 4%, var(--background)); }
+
+/* --- Campo vacío, con su remedio ---------------------------------------- */
+.missing { color: var(--color-muted-fg-2); font-style: italic; font-weight: 400; }
+
+/* --- Topes del proveedor (panel de plataforma) --------------------------- */
+.caps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+.capbox { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 11px 13px; }
+.capbox .k { font-size: 11px; color: var(--color-muted-fg-2); text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+.capbox .v { font-family: var(--font-heading); font-size: 17px; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.capbar { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--foreground) 8%, transparent); overflow: hidden; margin-top: 8px; }
+.capbar i { display: block; height: 100%; border-radius: 3px; background: var(--axi-violet); }
+.capbar i.warn { background: var(--axi-warning); }
+.capbar i.full { background: var(--axi-destructive); }
+
+/* --- Aviso de que el lote no gasta -------------------------------------- */
+.free-note {
+  font-size: 11.5px; color: var(--color-muted-fg-2);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.free-note svg { width: 12px; height: 12px; }
+
+/* --- Barra de pestañas del propio mockup (no es producto) --------------- */
+.mockbar {
+  position: sticky; top: 0; z-index: 40; display: flex; gap: 6px; align-items: center;
+  padding: 9px 16px; border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--axi-violet) 7%, var(--background));
+  font-size: 12px; flex-wrap: wrap;
+}
+.mockbar strong { font-family: var(--font-heading); font-size: 12px; letter-spacing: .02em; margin-right: 6px; }
+.mockbar button {
+  padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--color-border); background: var(--background); color: var(--color-muted-fg);
+}
+.mockbar button[aria-current="true"] {
+  background: var(--axi-violet); border-color: transparent; color: var(--axi-on-color); font-weight: 600;
+}
+.mockbar .sp { margin-left: auto; color: var(--color-muted-fg-2); }
+</style>
+
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-megaphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.43.65.79.79H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 17.5 18.7 19l1.5.7-1.5.7L18 22l-.7-1.6-1.5-.7 1.5-.7z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm5.3 14c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.6a11 11 0 0 1-4.2-3.9c-.3-.5-.7-1.2-.7-2 0-.7.3-1.1.5-1.3.2-.2.4-.3.6-.3h.4c.2 0 .3 0 .5.4l.7 1.6c0 .2 0 .3-.1.4l-.3.4-.2.2c-.1.1-.2.2 0 .5.2.3.7 1.1 1.4 1.7.9.8 1.6 1 1.9 1.2.2 0 .4 0 .5-.1l.6-.8c.2-.2.3-.2.5-.1l1.6.8c.2.1.4.2.4.3v.5z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m2 7 10 6 10-6"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h6v7H9z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-7-7 7 7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 5-5m-5 5-5-5"/><path d="M4 21h16"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="10" x="4" y="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+
+  <symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 12-12"/><path d="m14 6 4 4"/><path d="M18 3.5 18.7 5l1.5.7-1.5.7L18 8l-.7-1.6L15.8 5.7l1.5-.7z"/><path d="M6 3.5 6.5 4.7l1.2.5-1.2.5L6 7l-.5-1.3-1.2-.5 1.2-.5z"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v4M12 17v4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M3 12h4M17 12h4M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9" opacity=".35"/><path d="M12 3v4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="9" y="9" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 12h12"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 6-6 6 6 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="12" x="3" y="9" rx="2"/><path d="M12 9v12M3 13h18"/><path d="M12 9S10.5 4 8 4a2.5 2.5 0 0 0 0 5zM12 9s1.5-5 4-5a2.5 2.5 0 0 1 0 5z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 6 2 7 2 7H4s2-1 2-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></symbol>
+  <!-- Logos de terceros: fill sólido, colores propios vía --logo-* -->
+  <symbol id="i-ig" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.1A6.7 6.7 0 1 0 18.7 12 6.7 6.7 0 0 0 12 5.3zm0 11A4.3 4.3 0 1 1 16.3 12 4.3 4.3 0 0 1 12 16.3zm6.9-11.2a1.6 1.6 0 1 1-1.6-1.6 1.6 1.6 0 0 1 1.6 1.6z"/></symbol>
+  <symbol id="i-fb" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z"/></symbol>
+</svg>
+
+<!-- Barra del mockup. NO es producto: existe para poder recorrer los cuatro
+     estados sin backend. -->
+<div class="mockbar">
+  <strong>F4b · Enriquecimiento</strong>
+  <button data-go="full" aria-current="true">1 · Ficha completa</button>
+  <button data-go="half">2 · Buscando datos</button>
+  <button data-go="inbox">3 · Bandeja</button>
+  <button data-go="platform">4 · Topes del proveedor</button>
+  <span class="sp">Mockup de aprobación · no es código de producción</span>
+</div>
+
+<div class="shell">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"></div>
+      <div><strong>axi connect</strong><span>Dotaciones Andina S.A.S.</span></div>
+    </div>
+    <nav class="sb-group">
+      <div class="sb-label">Operación</div>
+      <button class="sb-item"><svg><use href="#i-chart"/></svg>Dashboard</button>
+      <button class="sb-item"><svg><use href="#i-inbox"/></svg>Inbox</button>
+      <button class="sb-item"><svg><use href="#i-users"/></svg>CRM<svg class="sb-chev"><use href="#i-chev"/></svg></button>
+      <button class="sb-item"><svg><use href="#i-calendar"/></svg>Agenda</button>
+      <button class="sb-item"><svg><use href="#i-sparkles"/></svg>CMO</button>
+      <div class="sb-label">Crecimiento</div>
+      <button class="sb-item is-open"><svg><use href="#i-megaphone"/></svg>Marketing<svg class="sb-chev"><use href="#i-chev"/></svg></button>
+      <div class="sb-sub">
+        <button class="sb-item">Campañas</button>
+        <button class="sb-item active">Captación</button>
+        <button class="sb-item">Promociones</button>
+        <button class="sb-item">Recuperación</button>
+        <button class="sb-item">Configuración</button>
+      </div>
+      <button class="sb-item"><svg><use href="#i-bag"/></svg>Ventas<svg class="sb-chev"><use href="#i-chev"/></svg></button>
+      <div class="sb-label">Sistema</div>
+      <button class="sb-item"><svg><use href="#i-settings"/></svg>Configuración<svg class="sb-chev"><use href="#i-chev"/></svg></button>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb">Marketing · Captación · <b>Kokoa &amp; Co</b></div>
+      <div class="topbar-right">
+        <button class="icon-btn" aria-label="Notificaciones"><svg width="17" height="17"><use href="#i-bell"/></svg></button>
+        <div class="avatar">DR</div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ==================================================================
+           1 · FICHA COMPLETA — el caso que motivó la fase
+           ================================================================== -->
+      <section class="view active" id="v-full">
+        <button class="btn btn-sm" style="margin-bottom:16px"><svg><use href="#i-back"/></svg>Volver a la bandeja</button>
+
+        <div class="dhead">
+          <div class="mono">KC</div>
+          <div>
+            <h2>Kokoa &amp; Co</h2>
+            <div class="meta">
+              <span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin verificar</span>
+              <span class="chip chip-neutral">Nuevo</span>
+              <span class="chip chip-src">Dato público de empresa</span>
+              <span class="channels">
+                <span class="ch" data-off title="WhatsApp: un negocio de un mapa nunca pidió que lo contactaras"><svg><use href="#i-wa"/></svg></span>
+                <span class="ch" data-on="mail" title="Correo: permitido en B2B con opt-out visible"><svg><use href="#i-mail"/></svg></span>
+                <span class="ch" data-on="hand" title="Llamada o trabajo manual: siempre disponible"><svg><use href="#i-hand"/></svg></span>
+              </span>
+            </div>
+            <p style="font-size:12.5px;color:var(--color-muted-fg-2);margin-top:7px">
+              OpenStreetMap · descubierto el 29 ago 2026
+            </p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary"><svg><use href="#i-wand"/></svg>Buscar datos</button>
+            <button class="btn"><svg><use href="#i-refresh"/></svg>Volver a revisar</button>
+            <button class="btn"><svg><use href="#i-x"/></svg>Descartar</button>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <!-- ---------- COLUMNA IZQUIERDA ---------- -->
+          <div style="display:flex;flex-direction:column;gap:18px">
+
+            <!-- LA TARJETA NUEVA. Responde «cuáles son los datos».
+                 La procedencia responde «de dónde salieron», y va aparte. -->
+            <div class="card card-pad">
+              <div class="sec-title">Identidad y contacto</div>
+              <div class="idl">
+                <div class="idrow">
+                  <span class="idk">Dirección</span>
+                  <span class="idv">Cl. 84A #8-75, Chapinero, Bogotá</span>
+                  <button class="copy" aria-label="Copiar dirección"><svg><use href="#i-copy"/></svg></button>
+                </div>
+                <div class="idrow">
+                  <span class="idk">NIT</span>
+                  <span class="idv mono">901.442.118-3</span>
+                  <button class="copy" aria-label="Copiar NIT"><svg><use href="#i-copy"/></svg></button>
+                </div>
+                <div class="idrow">
+                  <span class="idk">Correo</span>
+                  <span class="idv mono">hola@kokoa.co</span>
+                  <button class="copy" aria-label="Copiar correo"><svg><use href="#i-copy"/></svg></button>
+                </div>
+                <div class="idrow">
+                  <span class="idk">Teléfono</span>
+                  <span class="idv mono">+57 310 448 2290</span>
+                  <button class="copy" aria-label="Copiar teléfono"><svg><use href="#i-copy"/></svg></button>
+                </div>
+                <div class="idrow">
+                  <span class="idk">Sitio web</span>
+                  <span class="idv"><a href="#">kokoa.co</a></span>
+                  <button class="copy" aria-label="Copiar sitio web"><svg><use href="#i-copy"/></svg></button>
+                </div>
+                <div class="idrow" style="grid-template-columns:92px 1fr">
+                  <span class="idk">Perfiles</span>
+                  <span class="profiles">
+                    <a class="profile" data-net="instagram" href="#"><svg><use href="#i-ig"/></svg>@kokoa_co</a>
+                    <a class="profile" data-net="facebook" href="#"><svg><use href="#i-fb"/></svg>kokoaandco</a>
+                    <a class="profile" data-net="whatsapp" href="#"><svg><use href="#i-wa"/></svg>+57 310 448 2290</a>
+                  </span>
+                </div>
+              </div>
+
+              <!-- La invariante, dicha justo donde alguien podría desobedecerla -->
+              <div class="wa-warn">
+                <svg><use href="#i-shield"/></svg>
+                <span>Su WhatsApp está publicado en su web, pero este lead no permite WhatsApp:
+                  lo descubrimos en un mapa y nunca pidió que lo contactaran. Se puede llamar o escribir un correo.</span>
+              </div>
+
+              <div class="map">
+                <div class="pin"><svg><use href="#i-pin"/></svg></div>
+                <span class="map-label">Kokoa &amp; Co</span>
+                <span class="map-attr">© OpenStreetMap</span>
+              </div>
+
+              <div class="freshness">
+                <svg><use href="#i-clock"/></svg>
+                Datos completados hace 2 minutos · sin gastar unidades de tu plan
+              </div>
+            </div>
+
+            <!-- Índice de calidad: sin cambios, pero ahora con la señal 20 -->
+            <div class="card card-pad">
+              <div class="sec-title">Índice de calidad</div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+                <span style="font-family:var(--font-heading);font-size:30px;font-weight:700;color:var(--axi-violet)">78</span>
+                <span style="font-size:12.5px;color:var(--color-muted-fg-2)">sobre 100</span>
+              </div>
+              <div class="axis">
+                <span class="axis-name">Contactabilidad</span>
+                <span class="axis-score">19<small> / 22 medibles</small></span>
+                <span class="axis-track"><i style="width:86%"></i></span>
+                <span class="axis-ev">
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>Celular colombiano</span>
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>El dominio puede recibir correo</span>
+                  <span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin verificar el buzón</span>
+                </span>
+              </div>
+              <div class="axis">
+                <span class="axis-name">Identidad</span>
+                <span class="axis-score">17<small> / 20 medibles</small></span>
+                <span class="axis-track"><i style="width:85%"></i></span>
+                <span class="axis-ev">
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>Registro tributario conocido</span>
+                  <!-- La señal 20, que llega con esta fase -->
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>Presencia pública en 2 redes</span>
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>Dominio propio</span>
+                </span>
+              </div>
+              <div class="axis">
+                <span class="axis-name">Ajuste con tu cliente ideal</span>
+                <span class="axis-score">21<small> / 25 medibles</small></span>
+                <span class="axis-track"><i style="width:84%"></i></span>
+              </div>
+              <div class="axis">
+                <span class="axis-name">Procedencia</span>
+                <span class="axis-score">15<small> / 20 medibles</small></span>
+                <span class="axis-track"><i style="width:75%"></i></span>
+                <span class="axis-ev">
+                  <!-- Lo que descongela el arreglo de la procedencia -->
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>El nombre coincide en 2 fuentes</span>
+                  <span class="chip chip-verified"><svg><use href="#i-check"/></svg>Datos de 3 fuentes distintas</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- La procedencia, ahora de verdad -->
+            <div class="card card-pad">
+              <div class="sec-title">Datos y de dónde salió cada uno</div>
+              <div class="fields">
+                <div class="frow"><span class="fkey">Nombre</span><span class="fval">Kokoa &amp; Co</span><span class="chip chip-src">OpenStreetMap</span></div>
+                <div class="frow"><span class="fkey">Razón social</span><span class="fval">Kokoa and Co S.A.S.</span><span class="chip chip-src">RUES</span></div>
+                <div class="frow"><span class="fkey">Dirección</span><span class="fval">Cl. 84A #8-75, Chapinero, Bogotá</span><span class="chip chip-src" title="Completado el 29 ago 2026, 11:42">OpenStreetMap</span></div>
+                <div class="frow"><span class="fkey">NIT</span><span class="fval mono">901.442.118-3</span><span class="chip chip-src">RUES</span></div>
+                <div class="frow"><span class="fkey">Correo</span><span class="fval mono">hola@kokoa.co</span><span class="chip chip-src">Su sitio web</span></div>
+                <div class="frow"><span class="fkey">Teléfono</span><span class="fval mono">+57 310 448 2290</span><span class="chip chip-src">Su sitio web</span></div>
+                <div class="frow"><span class="fkey">Instagram</span><span class="fval">@kokoa_co</span><span class="chip chip-src">Su sitio web</span></div>
+                <div class="frow"><span class="fkey">Facebook</span><span class="fval">kokoaandco</span><span class="chip chip-src">Su sitio web</span></div>
+                <div class="frow"><span class="fkey">Ciudad</span><span class="fval">Bogotá</span><span class="chip chip-src">OpenStreetMap</span></div>
+              </div>
+              <p style="font-size:11.5px;color:var(--color-muted-fg-2);margin-top:12px">
+                Cada dato guarda su fuente y su fecha. Es lo que se enseña si alguien reclama por sus datos.
+              </p>
+            </div>
+          </div>
+
+          <!-- ---------- COLUMNA DERECHA ---------- -->
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="gate">
+              <div class="gate-head">
+                <h3>Promover al CRM</h3>
+                <p>Sale de la cuarentena y se vuelve un contacto tuyo.</p>
+              </div>
+              <div class="gate-body">
+                <div class="req ok"><span class="tick"><svg><use href="#i-check"/></svg></span><span>Base legal declarada<small>Dato público de empresa</small></span></div>
+                <div class="req ok"><span class="tick"><svg><use href="#i-check"/></svg></span><span>Se puede identificar<small>Tiene correo y teléfono</small></span></div>
+                <div class="req no"><span class="tick"><svg><use href="#i-x"/></svg></span><span>No permite WhatsApp<small>Podrás llamarlo o escribirle un correo</small></span></div>
+              </div>
+              <div class="gate-foot">
+                <button class="btn btn-primary"><svg><use href="#i-shield"/></svg>Promover al CRM</button>
+                <span class="hint">Quedará con origen «Captación»</span>
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="sec-title">Historial</div>
+              <div class="tl">
+                <div class="tl-item">
+                  <span class="tl-dot brand"><svg><use href="#i-search"/></svg></span>
+                  <span><span class="tl-t">Descubierto</span><span class="tl-s">OpenStreetMap</span><span class="tl-time">29 ago 2026, 11:40</span></span>
+                </div>
+                <div class="tl-item">
+                  <span class="tl-dot"><svg><use href="#i-wand"/></svg></span>
+                  <span><span class="tl-t">Datos completados</span><span class="tl-s">Nominatim · dirección, ciudad</span><span class="tl-time">29 ago 2026, 11:42</span></span>
+                </div>
+                <div class="tl-item">
+                  <span class="tl-dot"><svg><use href="#i-wand"/></svg></span>
+                  <span><span class="tl-t">Datos completados</span><span class="tl-s">RUES · NIT, razón social</span><span class="tl-time">29 ago 2026, 11:42</span></span>
+                </div>
+                <div class="tl-item">
+                  <span class="tl-dot"><svg><use href="#i-wand"/></svg></span>
+                  <span><span class="tl-t">Datos completados</span><span class="tl-s">Su sitio web · correo, teléfono, redes</span><span class="tl-time">29 ago 2026, 11:42</span></span>
+                </div>
+                <div class="tl-item">
+                  <span class="tl-dot"><svg><use href="#i-chart"/></svg></span>
+                  <span><span class="tl-t">Puntuado</span><span class="tl-s">78 · sin verificar</span><span class="tl-time">29 ago 2026, 11:43</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           2 · BUSCANDO DATOS — el estado de trabajo y el lead a medias
+           ================================================================== -->
+      <section class="view" id="v-half">
+        <button class="btn btn-sm" style="margin-bottom:16px"><svg><use href="#i-back"/></svg>Volver a la bandeja</button>
+
+        <div class="dhead">
+          <div class="mono">CD</div>
+          <div>
+            <h2>Café Devoción</h2>
+            <div class="meta">
+              <span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin verificar</span>
+              <!-- El badge transient que StatusBadge ya sabe pintar -->
+              <span class="chip chip-working"><svg class="spin"><use href="#i-loader"/></svg>Buscando datos</span>
+              <span class="chip chip-src">Dato público de empresa</span>
+              <span class="channels">
+                <span class="ch" data-off><svg><use href="#i-wa"/></svg></span>
+                <span class="ch" data-off title="Correo: permitido, pero todavía no sabemos ninguno"><svg><use href="#i-mail"/></svg></span>
+                <span class="ch" data-on="hand"><svg><use href="#i-hand"/></svg></span>
+              </span>
+            </div>
+            <p style="font-size:12.5px;color:var(--color-muted-fg-2);margin-top:7px">
+              OpenStreetMap · descubierto el 29 ago 2026
+            </p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" disabled><svg class="spin"><use href="#i-loader"/></svg>Buscando…</button>
+            <button class="btn" disabled><svg><use href="#i-refresh"/></svg>Volver a revisar</button>
+            <button class="btn"><svg><use href="#i-x"/></svg>Descartar</button>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="card card-pad">
+              <div class="sec-title">Identidad y contacto</div>
+              <div class="idl">
+                <div class="idrow">
+                  <span class="idk">Dirección</span>
+                  <span class="idv missing">Buscándola en OpenStreetMap…</span>
+                  <span></span>
+                </div>
+                <div class="idrow">
+                  <span class="idk">NIT</span>
+                  <span class="idv missing">Sin dato todavía</span>
+                  <span></span>
+                </div>
+                <div class="idrow">
+                  <span class="idk">Correo</span>
+                  <span class="idv missing">Sin dato todavía</span>
+                  <span></span>
+                </div>
+                <div class="idrow">
+                  <span class="idk">Sitio web</span>
+                  <span class="idv"><a href="#">devocion.com</a></span>
+                  <button class="copy" aria-label="Copiar sitio web"><svg><use href="#i-copy"/></svg></button>
+                </div>
+              </div>
+              <div class="freshness">
+                <svg class="spin"><use href="#i-loader"/></svg>
+                Preguntando a las fuentes gratuitas · esto no gasta unidades de tu plan
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="sec-title">Índice de calidad</div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+                <span style="font-family:var(--font-heading);font-size:30px;font-weight:700;color:var(--axi-violet)">41</span>
+                <span style="font-size:12.5px;color:var(--color-muted-fg-2)">sobre 100 · se recalcula al terminar</span>
+              </div>
+              <div class="axis">
+                <span class="axis-name">Contactabilidad</span>
+                <span class="axis-score">3<small> / 8 medibles</small></span>
+                <span class="axis-track"><i style="width:38%"></i></span>
+                <span class="axis-ev">
+                  <span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin correo conocido</span>
+                  <span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin teléfono conocido</span>
+                </span>
+              </div>
+              <div class="axis">
+                <span class="axis-name">Identidad</span>
+                <span class="axis-score">6<small> / 13 medibles</small></span>
+                <span class="axis-track"><i style="width:46%"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="gate">
+              <div class="gate-head">
+                <h3>Promover al CRM</h3>
+                <p>Sale de la cuarentena y se vuelve un contacto tuyo.</p>
+              </div>
+              <div class="gate-body">
+                <div class="req ok"><span class="tick"><svg><use href="#i-check"/></svg></span><span>Base legal declarada<small>Dato público de empresa</small></span></div>
+                <div class="req no"><span class="tick"><svg><use href="#i-x"/></svg></span><span>No se puede identificar<small>Hace falta un correo o un teléfono</small></span></div>
+              </div>
+              <div class="gate-foot">
+                <button class="btn btn-primary" disabled><svg><use href="#i-shield"/></svg>Promover al CRM</button>
+                <span class="hint">Espera a que termine la búsqueda de datos</span>
+              </div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="sec-title">Historial</div>
+              <div class="tl">
+                <div class="tl-item">
+                  <span class="tl-dot brand"><svg><use href="#i-search"/></svg></span>
+                  <span><span class="tl-t">Descubierto</span><span class="tl-s">OpenStreetMap</span><span class="tl-time">29 ago 2026, 11:40</span></span>
+                </div>
+                <div class="tl-item">
+                  <span class="tl-dot"><svg class="spin"><use href="#i-loader"/></svg></span>
+                  <span><span class="tl-t">Buscando datos</span><span class="tl-s">En curso</span><span class="tl-time">hace unos segundos</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           3 · BANDEJA — completitud y las dos acciones masivas
+           ================================================================== -->
+      <section class="view" id="v-inbox">
+        <div class="page-head">
+          <div>
+            <h1>Captación</h1>
+            <p>Prospectos descubiertos, verificados y a la espera de entrar a tu CRM. Nadie sale de aquí sin que tú lo promuevas.</p>
+          </div>
+        </div>
+
+        <div class="navtabs">
+          <button aria-current="page">Bandeja <span class="count">24</span></button>
+          <button>Búsquedas</button>
+          <button>Calidad</button>
+          <button>Fuentes</button>
+        </div>
+
+        <div class="funnel">
+          <div class="funnel-step quarantine"><div class="funnel-k">Descubiertos</div><div class="funnel-v">24</div><div class="funnel-d">esta semana</div></div>
+          <div class="funnel-step quarantine"><div class="funnel-k">En cuarentena</div><div class="funnel-v">21</div><div class="funnel-d">sin promover</div></div>
+          <div class="funnel-step quarantine"><div class="funnel-k">Calificados</div><div class="funnel-v">9</div><div class="funnel-d">listos para revisar</div></div>
+          <div class="funnel-step promoted"><div class="funnel-k">En tu CRM</div><div class="funnel-v">3</div><div class="funnel-d">promovidos</div></div>
+          <div class="funnel-note"><svg><use href="#i-lock"/></svg>Mientras estén en cuarentena, ninguna campaña puede escribirles.</div>
+        </div>
+
+        <div class="filters">
+          <span class="field search"><svg><use href="#i-search"/></svg>Buscar por nombre, correo o teléfono</span>
+          <span class="field"><select><option>Estado: todos</option></select></span>
+          <span class="field"><select><option>Origen: todos</option></select></span>
+          <span class="field"><select><option>Canal permitido: todos</option></select></span>
+          <button class="btn" style="margin-left:auto"><svg><use href="#i-wand"/></svg>Buscar datos de 8</button>
+          <button class="btn btn-primary"><svg><use href="#i-shield"/></svg>Promover 3 al CRM</button>
+        </div>
+        <div style="margin:-6px 0 14px">
+          <span class="free-note"><svg><use href="#i-gift"/></svg>Buscar datos en lote usa solo las fuentes gratuitas: no gasta unidades de tu plan.</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:44px"></th>
+                <th>Lead</th>
+                <th>Origen</th>
+                <th>Calidad del dato</th>
+                <th>Calidad</th>
+                <th>Datos</th>
+                <th>Puedo contactar por</th>
+                <th>Ciudad</th>
+                <th>Descubierto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="checkbox on"></span></td>
+                <td><div class="lead-name">Kokoa &amp; Co</div><div class="lead-sub">+57 310 448 2290 · hola@kokoa.co</div></td>
+                <td><span class="cell-src"><i class="src-dot" style="background:var(--logo-osm)"></i>OpenStreetMap</span></td>
+                <td><span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin verificar</span></td>
+                <td><span class="icl"><span class="icl-num">78</span><span class="icl-bar"><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg" data-fill="low"><i style="height:100%"></i></span></span></span></td>
+                <td><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><div class="dots-txt">4 de 5</div></td>
+                <td><span class="channels"><span class="ch" data-off><svg><use href="#i-wa"/></svg></span><span class="ch" data-on="mail"><svg><use href="#i-mail"/></svg></span><span class="ch" data-on="hand"><svg><use href="#i-hand"/></svg></span></span></td>
+                <td style="font-size:13px">Bogotá</td>
+                <td style="font-size:12.5px;color:var(--color-muted-fg-2)">29 ago 2026</td>
+              </tr>
+              <tr class="working">
+                <td><span class="checkbox on"></span></td>
+                <td><div class="lead-name">Café Devoción</div><div class="lead-sub" style="display:flex;align-items:center;gap:6px"><svg class="spin" width="11" height="11"><use href="#i-loader"/></svg>Buscando datos…</div></td>
+                <td><span class="cell-src"><i class="src-dot" style="background:var(--logo-osm)"></i>OpenStreetMap</span></td>
+                <td><span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin verificar</span></td>
+                <td><span class="icl"><span class="icl-num">41</span><span class="icl-bar"><span class="icl-seg" data-fill="low"><i style="height:100%"></i></span><span class="icl-seg" data-fill="low"><i style="height:100%"></i></span><span class="icl-seg"></span><span class="icl-seg"></span></span></span></td>
+                <td><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span><div class="dots-txt">1 de 5</div></td>
+                <td><span class="channels"><span class="ch" data-off><svg><use href="#i-wa"/></svg></span><span class="ch" data-off><svg><use href="#i-mail"/></svg></span><span class="ch" data-on="hand"><svg><use href="#i-hand"/></svg></span></span></td>
+                <td style="font-size:13px">Bogotá</td>
+                <td style="font-size:12.5px;color:var(--color-muted-fg-2)">29 ago 2026</td>
+              </tr>
+              <tr>
+                <td><span class="checkbox"></span></td>
+                <td><div class="lead-name">Andrés Carne de Res</div><div class="lead-sub">+57 601 861 2233 · contacto@andrescarnederes.com</div></td>
+                <td><span class="cell-src"><i class="src-dot" style="background:var(--logo-maps)"></i>Google Maps</span></td>
+                <td><span class="chip chip-verified"><svg><use href="#i-check"/></svg>Verificado</span></td>
+                <td><span class="icl"><span class="icl-num">92</span><span class="icl-bar"><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span></span></span></td>
+                <td><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><div class="dots-txt">5 de 5</div></td>
+                <td><span class="channels"><span class="ch" data-off title="Verificado, y aun así sin WhatsApp: la calidad del dato y el permiso son cosas distintas"><svg><use href="#i-wa"/></svg></span><span class="ch" data-on="mail"><svg><use href="#i-mail"/></svg></span><span class="ch" data-on="hand"><svg><use href="#i-hand"/></svg></span></span></td>
+                <td style="font-size:13px">Chía</td>
+                <td style="font-size:12.5px;color:var(--color-muted-fg-2)">28 ago 2026</td>
+              </tr>
+              <tr>
+                <td><span class="checkbox on"></span></td>
+                <td><div class="lead-name">Panadería El Rosal</div><div class="lead-sub">Sin datos de contacto</div></td>
+                <td><span class="cell-src"><i class="src-dot" style="background:var(--logo-osm)"></i>OpenStreetMap</span></td>
+                <td><span class="chip chip-unver"><svg><use href="#i-minus"/></svg>Sin verificar</span></td>
+                <td><span class="icl"><span class="icl-num">28</span><span class="icl-bar"><span class="icl-seg" data-fill="low"><i style="height:100%"></i></span><span class="icl-seg"></span><span class="icl-seg"></span><span class="icl-seg"></span></span></span></td>
+                <td><span class="dots"><i></i><i></i><i></i><i></i><i></i></span><div class="dots-txt">0 de 5</div></td>
+                <td><span class="channels"><span class="ch" data-off><svg><use href="#i-wa"/></svg></span><span class="ch" data-off><svg><use href="#i-mail"/></svg></span><span class="ch" data-on="hand"><svg><use href="#i-hand"/></svg></span></span></td>
+                <td style="font-size:13px">Bogotá</td>
+                <td style="font-size:12.5px;color:var(--color-muted-fg-2)">29 ago 2026</td>
+              </tr>
+              <tr>
+                <td><span class="checkbox"></span></td>
+                <td><div class="lead-name">Laura Restrepo</div><div class="lead-sub">+57 315 220 1180</div></td>
+                <td><span class="cell-src"><i class="src-dot" style="background:var(--logo-whatsapp)"></i>Click-to-WhatsApp</span></td>
+                <td><span class="chip chip-verified"><svg><use href="#i-check"/></svg>Verificado</span></td>
+                <td><span class="icl"><span class="icl-num">84</span><span class="icl-bar"><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg"><i style="height:100%"></i></span><span class="icl-seg" data-fill="low"><i style="height:100%"></i></span></span></span></td>
+                <td><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span><div class="dots-txt">1 de 5</div></td>
+                <td><span class="channels"><span class="ch" data-on="wa" title="Escribió ella desde un anuncio: hay consentimiento"><svg><use href="#i-wa"/></svg></span><span class="ch" data-on="mail"><svg><use href="#i-mail"/></svg></span><span class="ch" data-on="hand"><svg><use href="#i-hand"/></svg></span></span></td>
+                <td style="font-size:13px">Medellín</td>
+                <td style="font-size:12.5px;color:var(--color-muted-fg-2)">27 ago 2026</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="tablefoot">
+            <span>21 leads en cuarentena · 3 seleccionados para promover, 8 para completar</span>
+            <span class="pager"><button aria-current="page">1</button><button>2</button><button>3</button></span>
+          </div>
+        </div>
+
+        <p style="font-size:11.5px;color:var(--color-muted-fg-2);margin-top:12px;max-width:75ch">
+          «Datos» cuenta cuántos de los cinco campos clave conocemos —correo, teléfono, dirección, sitio y redes—.
+          No es calidad: Andrés Carne de Res tiene los cinco y sigue sin permiso de WhatsApp.
+        </p>
+      </section>
+
+      <!-- ==================================================================
+           4 · PLATAFORMA — los topes, que hasta ahora no frenaban nada
+           ================================================================== -->
+      <section class="view" id="v-platform">
+        <div class="page-head">
+          <div>
+            <h1>Proveedores de captación</h1>
+            <p>Las llaves las pone axi, no el tenant. Los topes protegen la factura de la plataforma y son independientes de la cuota de cada empresa.</p>
+          </div>
+          <div class="actions"><button class="btn btn-primary"><svg><use href="#i-plus"/></svg>Conectar proveedor</button></div>
+        </div>
+
+        <div class="sources">
+          <div class="source" style="--src-glow:var(--logo-maps)">
+            <div class="source-top">
+              <span class="source-logo"><svg><use href="#i-pin"/></svg></span>
+              <div><h3>Google Places</h3><span class="badge-on"><i></i>Activo</span></div>
+            </div>
+            <p class="tagline">Descubre negocios y completa su ficha. No entrega correo, por diseño.</p>
+            <div class="caps"><span class="chip chip-neutral">Descubre</span><span class="chip chip-neutral">Completa empresa</span></div>
+            <div class="caps-grid">
+              <div class="capbox">
+                <div class="k">Tope diario</div><div class="v">312 / 500</div>
+                <div class="capbar"><i style="width:62%"></i></div>
+              </div>
+              <div class="capbox">
+                <div class="k">Tope mensual</div><div class="v">4.180 / 5.000</div>
+                <div class="capbar"><i class="warn" style="width:84%"></i></div>
+              </div>
+            </div>
+            <p style="font-size:11.5px;color:var(--color-muted-fg-2);margin-top:2px">
+              El cupo gratuito de Google se cuenta por mes. Al llegar al tope, el proveedor sale de la cascada solo.
+            </p>
+          </div>
+
+          <div class="source" style="--src-glow:var(--logo-osm)">
+            <div class="source-top">
+              <span class="source-logo"><svg><use href="#i-pin"/></svg></span>
+              <div><h3>Nominatim · OpenStreetMap</h3><span class="badge-on"><i></i>Activo</span></div>
+            </div>
+            <p class="tagline">Completa dirección, ciudad y país a partir de las coordenadas.</p>
+            <div class="caps"><span class="chip chip-neutral">Ubica direcciones</span><span class="chip chip-verified">Sin llave</span></div>
+            <div class="caps-grid">
+              <div class="capbox">
+                <div class="k">Tope diario</div><div class="v">1.847 / 2.500</div>
+                <div class="capbar"><i style="width:74%"></i></div>
+              </div>
+              <div class="capbox">
+                <div class="k">Tope mensual</div><div class="v">Sin tope</div>
+                <div class="capbar"><i style="width:0"></i></div>
+              </div>
+            </div>
+            <p style="font-size:11.5px;color:var(--color-muted-fg-2);margin-top:2px">
+              Gratis, pero su política pide una petición por segundo. El tope diario es la red de seguridad:
+              pasarse cuesta el bloqueo del rango de IP, y ese mismo bloqueo se llevaría a Overpass por delante.
+            </p>
+          </div>
+
+          <div class="source" style="--src-glow:var(--logo-serp)">
+            <div class="source-top">
+              <span class="source-logo"><svg><use href="#i-search"/></svg></span>
+              <div><h3>Serper</h3><span class="badge-soon">Apagado</span></div>
+            </div>
+            <p class="tagline">Encuentra la web de un negocio que solo conocemos por su nombre.</p>
+            <div class="caps"><span class="chip chip-neutral">Descubre</span><span class="chip chip-neutral">Completa empresa</span></div>
+            <div class="caps-grid">
+              <div class="capbox">
+                <div class="k">Tope diario</div><div class="v">— / 50</div>
+                <div class="capbar"><i style="width:0"></i></div>
+              </div>
+              <div class="capbox">
+                <div class="k">Tope mensual</div><div class="v">— / 200</div>
+                <div class="capbar"><i style="width:0"></i></div>
+              </div>
+            </div>
+            <div class="legal-note">
+              <svg><use href="#i-alert"/></svg>
+              <span>Su plan gratuito son ~2.500 créditos <b>una sola vez</b>, no al mes.
+                Nace apagado y con tope conservador: si no, el «cupo gratis» se agota el primer mes y la
+                siguiente búsqueda ya cuesta dinero de verdad.</span>
+            </div>
+          </div>
+
+          <div class="source" style="--src-glow:var(--axi-destructive)">
+            <div class="source-top">
+              <span class="source-logo"><svg><use href="#i-alert"/></svg></span>
+              <div><h3>RUES</h3><span class="chip chip-invalid" style="margin-top:3px"><svg><use href="#i-x"/></svg>Con problemas</span></div>
+            </div>
+            <p class="tagline">Registro mercantil: NIT, razón social y CIIU de empresas colombianas.</p>
+            <div class="caps"><span class="chip chip-neutral">Verifica identidad</span><span class="chip chip-verified">Sin llave</span></div>
+            <div class="legal-note">
+              <svg><use href="#i-alert"/></svg>
+              <span>Su consulta pública responde 404 desde el 29 ago 2026. Antes esto se leía como
+                «este lead no tenía NIT» y nadie lo atribuía a la fuente; ahora la sonda lo dice.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+// Navegación del mockup. Cuatro vistas, sin router: es un gate de aprobación.
+(function () {
+  var CRUMBS = {
+    full: "Marketing · Captación · <b>Kokoa &amp; Co</b>",
+    half: "Marketing · Captación · <b>Café Devoción</b>",
+    inbox: "Marketing · <b>Captación</b>",
+    platform: "Plataforma · <b>Proveedores de captación</b>",
+  };
+  var buttons = document.querySelectorAll(".mockbar button");
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      var target = button.dataset.go;
+      buttons.forEach(function (other) { other.setAttribute("aria-current", String(other === button)); });
+      document.querySelectorAll(".view").forEach(function (view) {
+        view.classList.toggle("active", view.id === "v-" + target);
+      });
+      document.getElementById("crumb").innerHTML = CRUMBS[target];
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  });
+})();
+</script>
+</body>
+</html>
