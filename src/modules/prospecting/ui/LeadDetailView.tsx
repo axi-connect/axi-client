@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, RefreshCw, X } from "lucide-react";
+import { ArrowLeft, Check, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
@@ -24,15 +24,21 @@ import {
 } from "../domain/lead";
 import {
   discardLead,
+  enrichLead,
   getLead,
   promoteLeads,
   verifyLead,
 } from "../infrastructure/services/prospecting-service.adapter";
 import { ChannelPermissions } from "./components/ChannelPermissions";
+import { LeadIdentityCard } from "./components/LeadIdentityCard";
 import { LeadProvenance } from "./components/LeadProvenance";
 import { LeadTimeline } from "./components/LeadTimeline";
 import { PromotionGate } from "./components/PromotionGate";
 import { QualityBreakdown } from "./components/QualityIndex";
+
+/** Cada cuánto se recarga mientras se buscan datos, y cuándo nos rendimos. */
+const POLL_MS = 5_000;
+const POLL_TIMEOUT_MS = 90_000;
 
 export function LeadDetailView({ leadId }: { leadId: string }) {
   const router = useRouter();
@@ -41,6 +47,11 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
 
   const [lead, setLead] = useState<LeadDetailDTO | null>(null);
   const [busy, setBusy] = useState(false);
+  /**
+   * El `last_enriched_at` que había al pedir la búsqueda. Mientras no cambie,
+   * el trabajo sigue en curso. `undefined` = no hay nada pedido.
+   */
+  const [enrichingSince, setEnrichingSince] = useState<string | null | undefined>(undefined);
 
   const load = useCallback(async () => {
     try {
@@ -58,6 +69,45 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const working = enrichingSince !== undefined && lead?.last_enriched_at === enrichingSince;
+
+  /**
+   * Sondeo mientras se buscan los datos. No hay evento de tiempo real por lead
+   * —solo de búsqueda—, y para una acción que el usuario acaba de pedir y está
+   * mirando, recargar cada pocos segundos basta.
+   *
+   * El tope NO es opcional: si un proveedor se cuelga, el trabajo puede no
+   * terminar nunca, y un spinner girando sobre algo parado miente igual que un
+   * estado sin barrido. A los 90 segundos se rinde y lo dice.
+   */
+  useEffect(() => {
+    if (!working) return;
+    const timer = setInterval(() => void load(), POLL_MS);
+    const giveUp = setTimeout(() => {
+      setEnrichingSince(undefined);
+      showAlert({
+        tone: "warning",
+        title: "La búsqueda está tardando",
+        description: "Sigue en curso. Recarga en un momento para ver si llegó algo.",
+      });
+    }, POLL_TIMEOUT_MS);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(giveUp);
+    };
+  }, [working, load, showAlert]);
+
+  // Llegaron datos nuevos: se deja de sondear y se dice qué cambió.
+  useEffect(() => {
+    if (enrichingSince === undefined || working) return;
+    setEnrichingSince(undefined);
+    showAlert({
+      tone: "success",
+      title: "Datos actualizados",
+      description: "Abajo tienes lo que encontramos y de qué fuente salió cada cosa.",
+    });
+  }, [enrichingSince, working, showAlert]);
 
   const onPromote = useCallback(async () => {
     setBusy(true);
@@ -83,6 +133,37 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
       setBusy(false);
     }
   }, [leadId, load, showAlert]);
+
+  /**
+   * Buscarle los datos que le faltan.
+   *
+   * Responde 202 y el trabajo sigue en una cola, así que no hay nada que
+   * esperar en la petición: se marca «buscando» a mano y se recarga cada pocos
+   * segundos hasta que `last_enriched_at` cambie. No se toca `lead.status` —
+   * ese es el ciclo de vida del lead y el servidor nunca escribe `enriching`;
+   * lo transitorio es nuestra petición, no la vida del lead.
+   */
+  const onEnrich = useCallback(async () => {
+    setBusy(true);
+    try {
+      await enrichLead(leadId);
+      setEnrichingSince(lead?.last_enriched_at ?? null);
+      showAlert({
+        tone: "info",
+        title: "Buscando datos",
+        description:
+          "Estamos preguntando a las fuentes. Los datos aparecen aquí en cuanto lleguen.",
+      });
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo pedir la búsqueda",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, lead?.last_enriched_at, showAlert]);
 
   /**
    * Volver a puntuar este lead. SÍ puede gastar cuota —por eso pide
@@ -177,11 +258,23 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
         </div>
 
         <div className="ml-auto flex gap-2">
+          {/* Buscar datos va PRIMERO y en primario: para un lead a medio
+              llenar es la acción que desbloquea a las otras dos. */}
+          {hasPermission("leads:manage") && (
+            <Button size="sm" disabled={busy || working} onClick={() => void onEnrich()}>
+              {working ? (
+                <LoaderCircle aria-hidden className="size-4 animate-spin" />
+              ) : (
+                <WandSparkles aria-hidden className="size-4" />
+              )}
+              {working ? "Buscando…" : "Buscar datos"}
+            </Button>
+          )}
           {hasPermission("leads:manage") && (
             <Button
               variant="outline"
               size="sm"
-              disabled={busy}
+              disabled={busy || working}
               onClick={() => void onVerify()}
             >
               <RefreshCw className="size-4" aria-hidden />
@@ -204,6 +297,9 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
 
       <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="flex flex-col gap-5">
+          {/* Los datos primero: es lo que se viene a ver. El índice y la
+              procedencia explican y matizan, pero no son la respuesta. */}
+          <LeadIdentityCard lead={lead} />
           <section className="border-border shadow-float bg-background rounded-lg border p-5">
             <QualityBreakdown
               score={lead.quality_score}
