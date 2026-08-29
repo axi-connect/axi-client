@@ -13,7 +13,7 @@ import {
   SOURCE_LABELS,
   canPromote,
   mapLeadToRow,
-  rowAllowedChannels,
+  rowChannelSubject,
   type LeadRow,
   type LeadSource,
 } from "../../domain/lead";
@@ -95,14 +95,7 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
     accessorKey: "allows_whatsapp",
     header: "Puedo contactar por",
     minWidth: 120,
-    cell: ({ row }) => (
-      <ChannelPermissions
-        lead={{
-          allowed_channels: rowAllowedChannels(row.original),
-          legal_basis: row.original.legal_basis,
-        }}
-      />
-    ),
+    cell: ({ row }) => <ChannelPermissions lead={rowChannelSubject(row.original)} />,
   },
   {
     accessorKey: "city",

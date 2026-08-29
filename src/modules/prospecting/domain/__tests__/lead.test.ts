@@ -7,7 +7,7 @@ import {
   mapLeadToRow,
   readQualityAxes,
   rowAllowedChannels,
-  whyChannelBlocked,
+  channelVerdict,
   type LeadDTO,
 } from "../lead";
 
@@ -38,33 +38,50 @@ const BASE: LeadDTO = {
   created_at: "2026-08-28T10:00:00.000Z",
 };
 
-describe("whyChannelBlocked", () => {
-  it("un canal permitido no da motivo", () => {
-    expect(whyChannelBlocked(BASE, "whatsapp")).toBeNull();
+describe("channelVerdict", () => {
+  it("con permiso y con el dato, el canal es usable", () => {
+    expect(channelVerdict(BASE, "whatsapp")).toEqual({ state: "usable", reason: null });
   });
 
-  it("explica POR QUÉ WhatsApp está bloqueado en un dato público", () => {
-    const publico = {
-      ...BASE,
-      legal_basis: "public_business_data" as const,
-      allowed_channels: ["email", "manual"] as const,
-    };
-    const motivo = whyChannelBlocked(publico, "whatsapp");
-    // El tooltip tiene que decir el motivo: un icono tachado sin explicación se
-    // lee como un fallo del sistema, no como una decisión.
-    expect(motivo).toContain("suspenda tu número");
+  it("lo que la base legal no permite queda BLOQUEADO, y dice por qué", () => {
+    const publico = { ...BASE, legal_basis: "public_business_data" as const, allowed_channels: ["email", "manual"] as const };
+    const veredicto = channelVerdict(publico, "whatsapp");
+    expect(veredicto.state).toBe("blocked");
+    expect(veredicto.reason).toContain("suspenda tu número");
   });
 
-  it("un origen sin confirmar solo deja trabajo manual", () => {
-    const desconocido = {
-      ...BASE,
-      legal_basis: "unknown" as const,
-      allowed_channels: ["manual"] as const,
-    };
-    expect(whyChannelBlocked(desconocido, "email")).toContain(
+  it("PERMITIDO PERO SIN EL DATO no es lo mismo que prohibido", () => {
+    // El bug que se vio en la primera prueba real: la bandeja pintaba el correo
+    // en verde para leads descubiertos en un mapa, que casi nunca traen correo.
+    // La columna se llama «Puedo contactar por» y estaba respondiendo a otra
+    // pregunta: si la LEY lo permite, no si hay a dónde escribir.
+    const sinCorreo = { ...BASE, email: null };
+    const veredicto = channelVerdict(sinCorreo, "email");
+    expect(veredicto.state).toBe("no_data");
+    expect(veredicto.reason).toContain("Enriquece el lead");
+  });
+
+  it("y el remedio que sugiere es distinto en cada caso", () => {
+    // Es la razón de que sean tres estados y no dos: lo bloqueado por la ley no
+    // se arregla, y lo que falta por no tener el dato se enriquece.
+    const sinTelefono = { ...BASE, phone: null };
+    expect(channelVerdict(sinTelefono, "whatsapp").reason).toContain("Enriquece");
+
+    const publico = { ...BASE, legal_basis: "public_business_data" as const, allowed_channels: ["email", "manual"] as const };
+    expect(channelVerdict(publico, "whatsapp").reason).not.toContain("Enriquece");
+  });
+
+  it("«a mano» nunca depende de un dato: siempre hay alguien que puede llamar", () => {
+    const pelado = { ...BASE, email: null, phone: null };
+    expect(channelVerdict(pelado, "manual").state).toBe("usable");
+  });
+
+  it("sin saber de dónde salió, solo queda el trabajo manual", () => {
+    const desconocido = { ...BASE, legal_basis: "unknown" as const, allowed_channels: ["manual"] as const };
+    expect(channelVerdict(desconocido, "email").reason).toContain(
       "No sabemos de dónde salió",
     );
-    expect(whyChannelBlocked(desconocido, "manual")).toBeNull();
+    expect(channelVerdict(desconocido, "manual").state).toBe("usable");
   });
 });
 

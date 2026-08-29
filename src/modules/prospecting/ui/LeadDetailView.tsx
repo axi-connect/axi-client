@@ -163,6 +163,10 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               lead={{
                 allowed_channels: lead.allowed_channels,
                 legal_basis: lead.legal_basis,
+                // El detalle SÍ tiene los valores: pasarlos es lo que
+                // distingue «no te dejan» de «no lo tenemos».
+                email: lead.email,
+                phone: lead.phone,
               }}
             />
           </div>

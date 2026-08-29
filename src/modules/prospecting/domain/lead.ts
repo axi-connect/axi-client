@@ -78,21 +78,74 @@ export const CHANNEL_LABELS: Record<OutreachChannel, string> = {
 export const CHANNEL_ORDER: OutreachChannel[] = ["whatsapp", "email", "manual"];
 
 /**
- * Por qué NO se puede escribir por este canal. La UI necesita decirlo en el
- * tooltip: «no se puede» sin motivo se lee como un fallo.
+ * En qué situación está un canal para ESTE lead.
+ *
+ * - `usable`: hay permiso y hay a quién escribir.
+ * - `blocked`: la base legal no lo autoriza.
+ * - `no_data`: se podría, pero no tenemos el dato.
  */
-export function whyChannelBlocked(
-  lead: {
-    allowed_channels: readonly OutreachChannel[];
-    legal_basis: LegalBasis;
-  },
+export type ChannelState = "usable" | "blocked" | "no_data";
+
+export interface ChannelVerdict {
+  state: ChannelState;
+  /** Qué pasa y qué hacer. Vacío cuando el canal es usable. */
+  reason: string | null;
+}
+
+/** Lo mínimo que hay que saber de un lead para juzgar sus canales. */
+export interface ChannelSubject {
+  allowed_channels: readonly OutreachChannel[];
+  legal_basis: LegalBasis;
+  email: string | null;
+  phone: string | null;
+}
+
+/**
+ * PERMISO Y POSESIÓN SON DOS COSAS, y esta función cruza las dos.
+ *
+ * `allowed_channels` sale ÚNICAMENTE de la base legal: dice con qué derecho
+ * podríamos escribir, no si tenemos a dónde. Durante un tiempo la bandeja pintó
+ * el correo en verde para leads sin correo porque leía solo la primera mitad —
+ * la columna se llama «Puedo contactar por» y estaba respondiendo a otra
+ * pregunta.
+ *
+ * Son TRES estados y no dos porque cada uno se arregla distinto: lo bloqueado
+ * por la ley no se arregla, y lo que falta por no tener el dato se arregla
+ * enriqueciendo. Fundirlos en «no se puede» borraría justo lo accionable.
+ */
+export function channelVerdict(
+  lead: ChannelSubject,
   channel: OutreachChannel,
-): string | null {
-  if (lead.allowed_channels.includes(channel)) return null;
+): ChannelVerdict {
+  if (!lead.allowed_channels.includes(channel)) {
+    return { state: "blocked", reason: whyChannelBlocked(lead.legal_basis, channel) };
+  }
+
+  const missing = whatIsMissing(lead, channel);
+  if (missing !== null) return { state: "no_data", reason: missing };
+
+  return { state: "usable", reason: null };
+}
+
+/** El permiso existe, pero ¿hay a dónde escribir? `manual` siempre lo hay. */
+function whatIsMissing(lead: ChannelSubject, channel: OutreachChannel): string | null {
+  if (channel === "email" && lead.email === null) {
+    return "Tienes permiso para escribirle por correo, pero todavía no sabemos cuál es. Enriquece el lead para conseguirlo.";
+  }
+  if (channel === "whatsapp" && lead.phone === null) {
+    return "Tienes permiso para escribirle por WhatsApp, pero no tenemos su teléfono. Enriquece el lead para conseguirlo.";
+  }
+  // `manual` no necesita un dato: es una persona de tu equipo decidiendo qué
+  // hacer con lo que haya.
+  return null;
+}
+
+/** Por qué la base legal no autoriza este canal. */
+function whyChannelBlocked(legalBasis: LegalBasis, channel: OutreachChannel): string {
   if (channel === "whatsapp") {
     return "WhatsApp solo se puede usar con quien dio permiso: escribir primero a un dato público hace que Meta suspenda tu número.";
   }
-  if (lead.legal_basis === "unknown") {
+  if (legalBasis === "unknown") {
     return "No sabemos de dónde salió este dato, así que solo se puede trabajar a mano.";
   }
   return "Este canal no está permitido con el permiso que tenemos sobre el dato.";
@@ -232,6 +285,13 @@ export type LeadRow = {
   allows_whatsapp: boolean;
   allows_email: boolean;
   allows_manual: boolean;
+  /**
+   * Si TENEMOS el dato, que es distinto de si podemos usarlo. Se aplanan
+   * aparte porque `contact_line` los funde en un string y la celda de canales
+   * necesita saber cuál de los dos falta.
+   */
+  has_email: boolean;
+  has_phone: boolean;
   status: LeadStatus;
   city: string | null;
   created_at: string;
@@ -257,6 +317,8 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
     allows_whatsapp: lead.allowed_channels.includes("whatsapp"),
     allows_email: lead.allowed_channels.includes("email"),
     allows_manual: lead.allowed_channels.includes("manual"),
+    has_email: lead.email !== null,
+    has_phone: lead.phone !== null,
     status: lead.status,
     city: lead.city,
     created_at: lead.created_at,
@@ -264,6 +326,17 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
 }
 
 /** Los canales permitidos reconstruidos desde la fila plana. */
+export function rowChannelSubject(row: LeadRow): ChannelSubject {
+  return {
+    allowed_channels: rowAllowedChannels(row),
+    legal_basis: row.legal_basis,
+    // La fila no guarda los valores, solo si existen. Para juzgar el canal
+    // basta con eso, y así el aplanado no arrastra PII que la tabla no pinta.
+    email: row.has_email ? "" : null,
+    phone: row.has_phone ? "" : null,
+  };
+}
+
 export function rowAllowedChannels(row: LeadRow): OutreachChannel[] {
   const allowed: OutreachChannel[] = [];
   if (row.allows_whatsapp) allowed.push("whatsapp");
