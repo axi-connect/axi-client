@@ -136,7 +136,7 @@ export function LeadsInboxView({
   }, [promotable, refresh, showAlert]);
 
   return (
-    <div>
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Bandeja"
         description="Prospectos descubiertos y a la espera de entrar a tu CRM. Nadie sale de aquí sin que tú lo promuevas."

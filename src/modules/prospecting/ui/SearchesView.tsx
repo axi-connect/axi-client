@@ -130,7 +130,7 @@ export function SearchesView() {
   if (searches === null) return <BrandLoader />;
 
   return (
-    <>
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Búsquedas"
         description="Sal a buscar negocios que todavía no te conocen."
@@ -184,6 +184,6 @@ export function SearchesView() {
           onStarted={() => void load()}
         />
       )}
-    </>
+    </div>
   );
 }

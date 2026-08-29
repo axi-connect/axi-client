@@ -52,7 +52,7 @@ export function SourcesView() {
   if (sources === null) return <BrandLoader />;
 
   return (
-    <>
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="De dónde traemos leads"
         description="Las llaves las pone axi. Tú eliges la fuente y pagas por lo que uses, contra la cuota de tu plan."
@@ -105,6 +105,6 @@ export function SourcesView() {
           );
         })}
       </div>
-    </>
+    </div>
   );
 }

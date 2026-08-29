@@ -95,7 +95,7 @@ export function QualityView() {
     return <BrandLoader label="Cargando calidad" />;
 
   return (
-    <div>
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Calidad"
         description="Qué es un buen lead para ti, y qué se sabe de los que ya tienes."
@@ -103,7 +103,7 @@ export function QualityView() {
 
       <QualityDistribution summary={summary} />
 
-      <div className="mt-5 grid items-start gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid items-start gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="border-border shadow-float bg-background rounded-lg border p-5">
           <IcpEditor
             icp={icp}

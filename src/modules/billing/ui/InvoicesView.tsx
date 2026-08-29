@@ -92,7 +92,7 @@ export function InvoicesView() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Facturas"
         description="Historial de tu licencia, de la más reciente a la más antigua."

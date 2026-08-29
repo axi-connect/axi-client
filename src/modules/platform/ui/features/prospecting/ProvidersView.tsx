@@ -45,7 +45,7 @@ export function ProvidersView() {
   );
 
   return (
-    <div>
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Proveedores de datos"
         description="Las fuentes con las que se verifican y completan los leads. Las llaves son de axi: los tenants eligen la fuente y consumen su cuota, pero nunca ven una credencial."
@@ -68,7 +68,7 @@ export function ProvidersView() {
       )}
 
       {available.length > 0 && (
-        <section className="mt-8">
+        <section>
           <h2 className="font-heading mb-1 text-base font-bold">Disponibles</h2>
           <p className="text-muted-foreground mb-3 text-xs">
             Conectar uno no lo enciende: se da de alta apagado, porque a partir
@@ -110,7 +110,7 @@ export function ProvidersView() {
       )}
 
       {catalog.isError && (
-        <div className="mt-6">
+        <div>
           <Button
             variant="outline"
             size="sm"

@@ -78,7 +78,7 @@ export function MarketingOverviewView() {
   const loadError = automations.error ?? liveCampaigns.error ?? promotions.error;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Marketing"
         description="Recupera ventas perdidas y habla con toda tu base de clientes."
