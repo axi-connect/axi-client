@@ -27,7 +27,8 @@ const STATUS_CLASSES: Record<ProviderStatus, string> = {
   // Sin llave es un problema distinto de «con problemas»: no es que falle, es
   // que no hay con qué llamar.
   no_credential: "border-warning/40 bg-warning/10 text-warning",
-  capped: "border-warning/40 bg-warning/10 text-warning",
+  capped_day: "border-warning/40 bg-warning/10 text-warning",
+  capped_month: "border-warning/40 bg-warning/10 text-warning",
 };
 
 export function ProviderCard({ account }: { account: ProviderAccount }) {
@@ -93,7 +94,14 @@ export function ProviderCard({ account }: { account: ProviderAccount }) {
               : `${String(account.spent_today)} / ${String(account.daily_cap)}`
           }
         />
-        <Field label="Gasto del ciclo" value={String(account.spent_cycle)} />
+        <Field
+          label="Gasto del mes"
+          value={
+            account.monthly_cap === null
+              ? String(account.spent_cycle)
+              : `${String(account.spent_cycle)} / ${String(account.monthly_cap)}`
+          }
+        />
       </dl>
 
       <div className="mt-2 flex flex-wrap gap-1.5">

@@ -15,6 +15,7 @@ const BASE: ProviderAccount = {
   priority: 10,
   config: {},
   daily_cap: null,
+  monthly_cap: null,
   spent_today: 0,
   spent_cycle: 0,
   healthy: true,
@@ -53,11 +54,28 @@ describe("providerStatus", () => {
 
   it("el tope diario alcanzado se ve, no se confunde con una caída", () => {
     expect(providerStatus({ ...BASE, daily_cap: 100, spent_today: 100 })).toBe(
-      "capped",
+      "capped_day",
     );
     expect(providerStatus({ ...BASE, daily_cap: 100, spent_today: 99 })).toBe(
       "active",
     );
+  });
+
+  it("EL MENSUAL SE DISTINGUE DEL DIARIO: el remedio no es el mismo", () => {
+    // Uno se arregla mañana; el otro hay que subirlo o esperar al mes que
+    // viene. Y es el que guarda el cupo gratuito de Places, que va por mes.
+    expect(
+      providerStatus({ ...BASE, monthly_cap: 5000, spent_cycle: 5000 }),
+    ).toBe("capped_month");
+    expect(
+      providerStatus({ ...BASE, monthly_cap: 5000, spent_cycle: 4999 }),
+    ).toBe("active");
+  });
+
+  it("sin tope no hay tope: no se inventa un límite", () => {
+    expect(
+      providerStatus({ ...BASE, spent_today: 99_999, spent_cycle: 99_999 }),
+    ).toBe("active");
   });
 
   it("un proveedor enfermo se distingue de uno apagado a mano", () => {

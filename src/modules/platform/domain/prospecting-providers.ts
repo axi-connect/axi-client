@@ -147,7 +147,12 @@ export const CAPABILITY_LABELS: Record<string, string> = {
  * interruptor.
  */
 export type ProviderStatus =
-  "active" | "disabled" | "unhealthy" | "no_credential" | "capped";
+  | "active"
+  | "disabled"
+  | "unhealthy"
+  | "no_credential"
+  | "capped_day"
+  | "capped_month";
 
 /** Los que no piden llave se reconocen por no tener campos que pedir. */
 function needsCredential(provider: ProviderName): boolean {
@@ -163,7 +168,12 @@ export function providerStatus(account: ProviderAccount): ProviderStatus {
   if (!account.enabled) return "disabled";
   if (!account.healthy) return "unhealthy";
   if (account.daily_cap !== null && account.spent_today >= account.daily_cap)
-    return "capped";
+    return "capped_day";
+  // El mensual se distingue del diario porque el remedio es distinto: uno se
+  // arregla mañana, el otro hay que subirlo o esperar al mes que viene. Y es el
+  // que guarda el cupo gratuito de Places, que se cuenta por mes.
+  if (account.monthly_cap !== null && account.spent_cycle >= account.monthly_cap)
+    return "capped_month";
   return "active";
 }
 
@@ -172,7 +182,8 @@ export const PROVIDER_STATUS_LABELS: Record<ProviderStatus, string> = {
   disabled: "Apagado",
   unhealthy: "Con problemas",
   no_credential: "Sin llave",
-  capped: "Tope diario alcanzado",
+  capped_day: "Tope diario alcanzado",
+  capped_month: "Tope mensual alcanzado",
 };
 
 /** Construye el cuerpo de la credencial desde los campos del formulario. */
