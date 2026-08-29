@@ -1,7 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { Inbox, ShieldCheck, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Gift,
+  Inbox,
+  LoaderCircle,
+  ShieldCheck,
+  TriangleAlert,
+  WandSparkles,
+} from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -21,8 +28,11 @@ import {
 } from "@/shared/components/ui/select";
 
 import type { LeadRow, ProspectingStatsDTO } from "../domain/lead";
-import { canPromote } from "../domain/lead";
-import { promoteLeads } from "../infrastructure/services/prospecting-service.adapter";
+import { canEnrich, canPromote, dataCompleteness } from "../domain/lead";
+import {
+  enrichLeads,
+  promoteLeads,
+} from "../infrastructure/services/prospecting-service.adapter";
 import { CaptureFunnel } from "./components/CaptureFunnel";
 import { buildLeadColumns, fetchLeads } from "./tables/leads.config";
 
@@ -36,6 +46,10 @@ const ANY = "any";
  * la promoción devuelve resultado POR LEAD — un 200 con «3 de 5» y el motivo
  * de los dos que faltaron, en vez de un error global que obligue a adivinar.
  */
+/** Cada cuánto se recarga mientras se buscan datos, y cuándo nos rendimos. */
+const POLL_MS = 5_000;
+const POLL_TIMEOUT_MS = 90_000;
+
 export function LeadsInboxView({
   initialStats,
 }: {
@@ -43,6 +57,7 @@ export function LeadsInboxView({
 }) {
   const { hasPermission } = useAuth();
   const canPromoteLeads = hasPermission("leads:promote");
+  const canManageLeads = hasPermission("leads:manage");
   const { showAlert } = useAlert();
 
   const [status, setStatus] = useState<string>(ANY);
@@ -71,6 +86,15 @@ export function LeadsInboxView({
       extraParams,
     });
 
+  /**
+   * Ids con una búsqueda de datos en curso, con el `filled` que tenían al
+   * pedirla. Cuando sube, el trabajo terminó. Vive en el cliente porque el
+   * servidor NO escribe `enriching`: hacer que un job mute el ciclo de vida
+   * deja leads atascados si el worker muere, y no hay barrido que los rescate.
+   */
+  const [working, setWorking] = useState<Map<string, number>>(new Map());
+  const [enriching, setEnriching] = useState(false);
+
   const toggle = useCallback((id: string) => {
     setSelected((previous) => {
       const next = new Set(previous);
@@ -80,20 +104,102 @@ export function LeadsInboxView({
     });
   }, []);
 
+  const workingIds = useMemo(() => new Set(working.keys()), [working]);
+
   const columns = useMemo(
     () =>
       buildLeadColumns({
-        selectable: canPromoteLeads,
+        // La casilla se ofrece si sirve para ALGUNA de las dos acciones. Con
+        // permiso de gestión, buscar datos aplica a leads que no se pueden
+        // promover — un descartado sigue siendo consultable.
+        selectable: canPromoteLeads || canManageLeads,
         selected,
         onToggle: toggle,
+        selectableRow: (row) =>
+          (canPromoteLeads && canPromote(row)) || (canManageLeads && canEnrich(row)),
+        working: workingIds,
       }),
-    [canPromoteLeads, selected, toggle],
+    [canPromoteLeads, canManageLeads, selected, toggle, workingIds],
   );
+
+  /**
+   * Sondeo mientras se buscan datos. No hay evento de tiempo real por lead
+   * —solo de búsqueda—, y para algo que el usuario acaba de pedir y está
+   * mirando, recargar cada pocos segundos basta.
+   *
+   * Un lead sale del conjunto cuando gana datos. El tope NO es opcional: si un
+   * proveedor se cuelga el trabajo puede no terminar nunca, y un spinner sobre
+   * una fila quieta miente igual que un estado sin barrido.
+   */
+  useEffect(() => {
+    if (working.size === 0) return;
+    const timer = setInterval(() => refresh(), POLL_MS);
+    const giveUp = setTimeout(() => setWorking(new Map()), POLL_TIMEOUT_MS);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(giveUp);
+    };
+  }, [working, refresh]);
+
+  useEffect(() => {
+    if (working.size === 0) return;
+    setWorking((previous) => {
+      const next = new Map(previous);
+      for (const row of items) {
+        const before = next.get(row.id);
+        if (before !== undefined && dataCompleteness(row).filled > before) {
+          next.delete(row.id);
+        }
+      }
+      return next.size === previous.size ? previous : next;
+    });
+  }, [items, working.size]);
 
   const promotable = useMemo(
     () => items.filter((row) => selected.has(row.id) && canPromote(row)),
     [items, selected],
   );
+
+  const enrichable = useMemo(
+    () => items.filter((row) => selected.has(row.id) && canEnrich(row)),
+    [items, selected],
+  );
+
+  /**
+   * Buscarle datos a la selección. **No gasta cuota**: el backend fuerza el
+   * lote a los proveedores gratuitos, porque cien leads contra proveedores de
+   * pago es exactamente cómo se funde el plan de un tenant en un clic.
+   */
+  const onEnrich = useCallback(async () => {
+    if (enrichable.length === 0) return;
+    setEnriching(true);
+    try {
+      const result = await enrichLeads(enrichable.map((row) => row.id));
+      const queued = new Set(result.queued);
+      setWorking((previous) => {
+        const next = new Map(previous);
+        for (const row of enrichable) {
+          if (queued.has(row.id)) next.set(row.id, dataCompleteness(row).filled);
+        }
+        return next;
+      });
+      setSelected(new Set());
+      showAlert({
+        tone: "info",
+        title: `Buscando datos de ${String(result.queued.length)}`,
+        description:
+          "Solo usamos las fuentes gratuitas, así que esto no gasta unidades de tu plan.",
+      });
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo pedir la búsqueda",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setEnriching(false);
+    }
+  }, [enrichable, showAlert]);
 
   const onPromote = useCallback(async () => {
     if (promotable.length === 0) return;
@@ -182,9 +288,26 @@ export function LeadsInboxView({
           </SelectContent>
         </Select>
 
-        {canPromoteLeads && promotable.length > 0 && (
+        {/* `ml-auto` solo en el PRIMERO del grupo: en los dos, los botones se
+            separarían a los extremos de la barra. */}
+        {canManageLeads && enrichable.length > 0 && (
           <Button
             className="ml-auto"
+            variant="outline"
+            onClick={() => void onEnrich()}
+            disabled={enriching}
+          >
+            {enriching ? (
+              <LoaderCircle aria-hidden className="size-4 animate-spin" />
+            ) : (
+              <WandSparkles aria-hidden className="size-4" />
+            )}
+            Buscar datos de {enrichable.length}
+          </Button>
+        )}
+        {canPromoteLeads && promotable.length > 0 && (
+          <Button
+            className={canManageLeads && enrichable.length > 0 ? "" : "ml-auto"}
             onClick={() => void onPromote()}
             disabled={promoting}
           >
@@ -193,6 +316,13 @@ export function LeadsInboxView({
           </Button>
         )}
       </div>
+
+      {canManageLeads && enrichable.length > 0 && (
+        <p className="text-muted-foreground -mt-6 flex items-center gap-1.5 text-[11.5px]">
+          <Gift aria-hidden className="size-3" />
+          Buscar datos usa solo las fuentes gratuitas: no gasta unidades de tu plan.
+        </p>
+      )}
 
       {loading && items.length === 0 ? (
         <TableSkeleton rows={6} />
