@@ -9,7 +9,7 @@
  * - Poll degradado (>10 min) → aviso "sigue en curso".
  */
 import { useState } from "react";
-import { Database, Info, LoaderCircle, OctagonAlert } from "lucide-react";
+import { Info, LoaderCircle, OctagonAlert } from "lucide-react";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
 import { isHttpError } from "@/core/api/problem";
@@ -124,7 +124,7 @@ export function TenantDatabaseView({ tenantId }: { tenantId: string }) {
     <div className="space-y-4">
       {database === null ? (
         <EmptyState
-          icon={Database}
+          glyph="connections"
           title="Sin base de datos dedicada"
           description="Este tenant opera en la base compartida (SBS). Configura una conexión para habilitar el plan Enterprise."
           action={<Button onClick={() => setSheetOpen(true)}>Configurar conexión</Button>}

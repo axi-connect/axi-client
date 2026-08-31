@@ -8,7 +8,7 @@
  * La lista pagina en server, así que los filtros viajan en la query key.
  */
 import { useMemo, useState } from "react";
-import { AlertTriangle, Ban, Clock, Receipt } from "lucide-react";
+import { AlertTriangle, Clock, Receipt } from "lucide-react";
 import { formatMoney } from "@/core/lib/format";
 import { DataTable } from "@/shared/components/features/data-table";
 import { TableSkeleton } from "@/shared/components/features/loading";
@@ -183,8 +183,7 @@ export function PortfolioView() {
 
       {total === 0 ? (
         <EmptyState
-          icon={overdue ? Ban : Receipt}
-          accent="amber"
+          glyph={overdue ? "uptodate" : "money"}
           title={overdue ? "Nadie debe nada" : "Todavía no hay facturas"}
           description={
             overdue

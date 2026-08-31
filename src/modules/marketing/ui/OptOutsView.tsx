@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { BellOff, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { formatShortDate } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -122,8 +122,7 @@ export function OptOutsView() {
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          icon={BellOff}
-          accent="amber"
+          glyph="uptodate"
           title={activeOnly ? "Nadie se ha dado de baja" : "Sin registros de baja"}
           description="Cuando un cliente escriba una de tus palabras de baja, aparecerá aquí y quedará fuera de toda audiencia."
         />

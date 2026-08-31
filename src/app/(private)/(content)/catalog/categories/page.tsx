@@ -10,6 +10,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
 import { TreeView, type TreeNode } from "@/shared/components/features/tree-view";
 import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import {
   flattenCategoryTree,
   MAX_CATEGORY_DEPTH,
@@ -190,7 +191,7 @@ export default function CategoriesPage() {
       <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <FolderTree className="h-10 w-10 text-muted-foreground" aria-hidden />
+            <GlassGlyph kind="catalog" />
             <p className="text-sm text-muted-foreground">Aún no tienes categorías.</p>
             {canManage && (
               <Button variant="outline" className="rounded-full" onClick={() => openCreate()}>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import {
@@ -109,8 +109,7 @@ export function InvoicesView() {
         </div>
       ) : total === 0 ? (
         <EmptyState
-          icon={FileText}
-          accent="amber"
+          glyph="money"
           title="Todavía no tienes facturas"
           description="Aparecerán aquí en cuanto se cierre tu primer ciclo de facturación."
         />

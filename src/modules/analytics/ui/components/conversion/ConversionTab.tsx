@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChartLine } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAnalyticsStore } from "@/modules/analytics/infrastructure/stores/analytics.store";
 import { KpiRowSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { StaggerIn } from "@/modules/analytics/ui/components/StaggerIn";
+import { EmptyState } from "@/shared/components/features/empty-state";
 import { KpiHeroRow } from "./KpiHeroRow";
 import { FunnelCard } from "./FunnelCard";
 import { TrendCard } from "./TrendCard";
@@ -30,16 +30,17 @@ export function ConversionTab({ onGoToQuality }: { onGoToQuality?: () => void })
   // Empty state de tab completo: el período no tuvo NINGUNA conversación.
   if (funnel.status === "ready" && funnel.data?.stages.conversations === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-background px-6 py-16 text-center">
-        <ChartLine aria-hidden className="size-8 text-muted-foreground" />
-        <p className="max-w-md text-sm text-muted-foreground">
-          Aún no hay conversaciones en este período. Cuando tus agentes empiecen a
-          atender clientes, aquí verás cuántas se convierten en ventas.
-        </p>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/admin/agents">Ver mis agentes →</Link>
-        </Button>
-      </div>
+      <EmptyState
+        glyph="metrics"
+        variant="solid"
+        title="Aún no hay conversaciones en este período"
+        description="Cuando tus agentes empiecen a atender clientes, aquí verás cuántas se convierten en ventas."
+        action={
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/agents">Ver mis agentes →</Link>
+          </Button>
+        }
+      />
     );
   }
 

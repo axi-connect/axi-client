@@ -184,7 +184,7 @@ Presets y duraciones exactas en DESIGN-SYSTEM §6.
 
 1. El coral es el único color de acción; violeta y ámbar son acentos, nunca ambos en la misma vista.
 2. Ningún hex fuera de `globals.css`.
-3. Glass solo en superficies flotantes; el contenido de trabajo es sólido.
+3. Glass solo en superficies flotantes; el contenido de trabajo es sólido (un glifo ilustrado no es una superficie — DESIGN-SYSTEM §7).
 4. Radios generosos: 16–20px flotantes, 10–12px controles, pill en badges.
 5. Todo se ve perfecto en light **y** dark — no hay tema "principal".
 6. La jerarquía la hace la tipografía (peso/tamaño), no el color.

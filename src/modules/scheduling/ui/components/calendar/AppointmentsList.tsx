@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { CalendarX2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
@@ -17,6 +17,7 @@ import {
   type DayKey,
 } from "@/modules/scheduling/domain/business-time";
 import { LIST_MAX_DAYS } from "@/modules/scheduling/domain/calendar-range";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 
 /**
  * Vista Lista: citas del rango agrupadas por día (headers sticky). El rango
@@ -85,7 +86,7 @@ export function AppointmentsList({
 
       {groups.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
-          <CalendarX2 aria-hidden className="size-8 text-muted-foreground/50" />
+          <GlassGlyph kind="noresults" tier="sm" />
           <p className="text-sm font-medium">Sin citas en el rango</p>
           <p className="text-xs text-muted-foreground">
             Ajusta las fechas o cambia el filtro de estado.

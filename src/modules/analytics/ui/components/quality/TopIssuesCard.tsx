@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ListChecks } from "lucide-react";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { ChartSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { issueLabel } from "@/modules/analytics/domain/labels";
 import { SectionError, sectionRefetching } from "../conversion/section-states";
@@ -39,7 +39,7 @@ export function TopIssuesCard({
         <ChartSkeleton height={140} />
       ) : section.data.issues.length === 0 ? (
         <CardEmpty
-          icon={<ListChecks aria-hidden className="size-6" />}
+          glyph="uptodate"
           message="Sin problemas detectados en el período. Buen trabajo."
         />
       ) : (

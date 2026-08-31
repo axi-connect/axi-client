@@ -4,18 +4,30 @@ import { pageMetadata } from "@/core/seo/metadata";
 import { JsonLd } from "@/core/seo/json-ld";
 import { breadcrumbSchema } from "@/core/seo/site";
 
-import { PageOutline, type OutlineSection } from "@/modules/landing/ui/components/PageOutline";
+import ProductosHero from "@/modules/landing/ui/sections/productos/ProductosHero";
+import ProductosAgentReveal from "@/modules/landing/ui/sections/productos/ProductosAgentReveal";
+import ProductosCarousel from "@/modules/landing/ui/sections/productos/ProductosCarousel";
+import ProductosInbox from "@/modules/landing/ui/sections/productos/ProductosInbox";
+import ProductosCrmBento from "@/modules/landing/ui/sections/productos/ProductosCrmBento";
+import ProductosCatalogo from "@/modules/landing/ui/sections/productos/ProductosCatalogo";
+import ProductosConversaciones from "@/modules/landing/ui/sections/productos/ProductosConversaciones";
+import ProductosFinalCta from "@/modules/landing/ui/sections/productos/ProductosFinalCta";
 
 /**
- * `/productos` — lo que el producto ya hace, capacidad por capacidad.
+ * `/productos` — F6 del plan GTM: la página más rica de la capa pública.
+ * Hero con video en streaming, escena pineada del agente, carrusel de
+ * capacidades, capturas reales en device frames, bento del CRM y medición.
  *
- * ESTADO: andamio provisional. La versión definitiva es la fase F6 del plan de
- * la capa pública (`docs/plans/public-gtm-plan.md`), que se planifica aparte y
- * reutiliza el fondo estrellado del árbol `layout/site/` como identidad visual
- * de esta página.
+ * Plan de fase: `docs/plans/public-gtm-f6-productos.md`.
  *
- * Las anclas de abajo YA están enlazadas desde el dropdown del navbar: si se
- * renombra una, hay que actualizar `SiteHeader.tsx` en el mismo commit.
+ * Las anclas `#agente #inbox #crm #catalogo` están enlazadas desde el
+ * mega-menú y el footer: si se renombra una, hay que actualizar
+ * `site-nav.content.ts` en el mismo commit. `#medicion` ya no vive aquí:
+ * duplicaba la §6 de la home y su entrada del nav apunta a `/#medicion`.
+ *
+ * La raíz es `w-full` (el `<main>` del layout centra con `items-center`) y
+ * NINGÚN wrapper de página lleva overflow: el pin de `#agente` depende de que
+ * el sticky alcance al scroller `[data-app-scroll]`.
  */
 export const metadata: Metadata = pageMetadata({
   title: "Productos",
@@ -24,50 +36,18 @@ export const metadata: Metadata = pageMetadata({
   path: "/productos",
 });
 
-const SECTIONS: readonly OutlineSection[] = [
-  {
-    id: "agente",
-    title: "El agente vendedor",
-    description:
-      "Se configura, no se programa: instrucciones, personalidad, intención y playbook comercial son datos que editas en el panel. Ejecuta 16 herramientas reales contra tu catálogo, tu agenda y tus medios de pago — y solo carga las que tu negocio puede usar de verdad.",
-  },
-  {
-    id: "inbox",
-    title: "Inbox y handoff",
-    description:
-      "Una sola conversación, dos dimensiones independientes: en qué estado está y quién responde. Tu equipo toma, arrebata o devuelve el control con una nota que el agente lee y aplica — y el cliente nunca repite su historia.",
-  },
-  {
-    id: "crm",
-    title: "CRM, leads y contactos",
-    description:
-      "El pipeline se llena mientras el agente conversa: abre la oportunidad, registra la actividad y programa el seguimiento. El contacto es la misma persona escriba por WhatsApp o por Instagram, con su ciclo de vida y su puntuación explicable.",
-  },
-  {
-    id: "catalogo",
-    title: "Catálogo y agenda",
-    description:
-      "Catálogo de nivel ERP: categorías jerárquicas, variantes con SKU, stock por variante y búsqueda en español que tolera errores de tipeo. Y si lo que vendes es tiempo, la agenda calcula disponibilidad real y manda recordatorios automáticos.",
-  },
-  {
-    id: "medicion",
-    title: "Medición en pesos",
-    description:
-      "Un embudo construido con hechos de tu base de datos —no con opiniones de un modelo— y una evaluación de calidad conversación por conversación. Cuánto vendiste, quién lo vendió y qué corregir primero.",
-  },
-];
-
 export default function ProductosPage() {
   return (
-    <>
+    <div className="w-full">
       <JsonLd data={breadcrumbSchema(["/productos"])} />
-      <PageOutline
-      kicker="Producto construido, en producción"
-      title="Todo lo que Axi ya hace por tu negocio"
-      intro="No es una promesa de roadmap. Es lo que está funcionando hoy, con negocios reales vendiendo por chat todos los días."
-      sections={SECTIONS}
-      footerNote="30 minutos. Te mostramos una venta completa —del «hola» al pago verificado— con un negocio como el tuyo."
-      />
-    </>
+      <ProductosHero />
+      <ProductosAgentReveal />
+      <ProductosCarousel />
+      <ProductosInbox />
+      <ProductosCrmBento />
+      <ProductosCatalogo />
+      <ProductosConversaciones />
+      <ProductosFinalCta />
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { BellOff, CheckCheck, Inbox, LoaderCircle, Volume2, VolumeX } from "lucide-react"
+import { CheckCheck, LoaderCircle, Volume2, VolumeX } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { Separator } from "@/shared/components/ui/separator"
 import { Skeleton } from "@/shared/components/ui/skeleton"
@@ -13,6 +13,7 @@ import {
   type NotificationsTab,
 } from "@/modules/notifications/infrastructure/stores/notifications.store"
 import type { NotificationDTO } from "@/modules/notifications/domain/notification"
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import { NotificationItem } from "./NotificationItem"
 
 type NotificationPanelProps = {
@@ -155,10 +156,9 @@ function NotificationList({ tab, onSelect }: NotificationListProps) {
   }
 
   if (state.initialized && state.items.length === 0) {
-    const Icon = tab === "unread" ? BellOff : Inbox
     return (
       <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-        <Icon aria-hidden className="size-8 text-muted-foreground/60" />
+        <GlassGlyph kind={tab === "unread" ? "uptodate" : "conversation"} tier="sm" />
         <p className="text-sm text-muted-foreground">
           {tab === "unread" ? "Estás al día" : "Sin notificaciones"}
         </p>

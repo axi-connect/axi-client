@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, List, Package, Plus, Search } from "lucide-react";
+import { LayoutGrid, List, Plus, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Input } from "@/shared/components/ui/input";
@@ -13,6 +13,7 @@ import { DataTable } from "@/shared/components/features/data-table";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import BasicPagination from "@/shared/components/ui/pagination";
 import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { EmptyState } from "@/shared/components/features/empty-state";
 import { flattenCategoryTree } from "@/modules/catalog/domain/category";
 import type { ProductListItemDTO } from "@/modules/catalog/domain/product";
 import { listProducts } from "@/modules/catalog/infrastructure/services/product-service.adapter";
@@ -155,23 +156,22 @@ export default function ProductsPage() {
           </Button>
         </div>
       ) : isEmpty ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-background py-20 text-center">
-          <Package className="h-10 w-10 text-muted-foreground" aria-hidden />
-          <div>
-            <p className="font-medium">Aún no tienes productos</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Crea el primero para que tu equipo y la IA puedan ofrecerlo.
-            </p>
-          </div>
-          {canManage && (
-            <Button asChild className="rounded-full">
-              <Link href="/catalog/products/create">
-                <Plus className="h-4 w-4" />
-                Crear producto
-              </Link>
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          glyph="catalog"
+          variant="solid"
+          title="Aún no tienes productos"
+          description="Crea el primero para que tu equipo y la IA puedan ofrecerlo."
+          action={
+            canManage ? (
+              <Button asChild className="rounded-full">
+                <Link href="/catalog/products/create">
+                  <Plus className="h-4 w-4" />
+                  Crear producto
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-4 rounded-2xl border border-border bg-background p-4 md:p-6">
           <ProductFilters

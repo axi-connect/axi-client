@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingCart } from "lucide-react";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useNotificationsStore } from "@/modules/notifications/infrastructure/stores/notifications.store";
 import type { OrderRow } from "@/modules/orders/domain/order";
 import { KANBAN_COLUMNS, type DragAction } from "@/modules/orders/domain/order-state";
 import { useOrdersSocket } from "@/modules/orders/infrastructure/realtime/use-orders-socket";
 import { useOrdersStore } from "@/modules/orders/infrastructure/stores/orders.store";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import { OrdersHeader } from "./components/OrdersHeader";
 import { OrderStatsTiles } from "./components/OrderStatsTiles";
 import { OrdersToaster } from "./components/OrdersToaster";
@@ -106,9 +106,7 @@ export function OrdersView({ initialOrderId }: { initialOrderId?: string }) {
             <OrdersTable onOpenOrder={openOrder} />
           ) : boardEmpty ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-accent text-primary">
-                <ShoppingCart className="size-7" />
-              </span>
+              <GlassGlyph kind="money" />
               <div>
                 <p className="font-medium">Aún no hay pedidos</p>
                 <p className="text-sm text-muted-foreground">

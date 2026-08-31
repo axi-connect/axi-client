@@ -8,7 +8,7 @@
  * refinar la búsqueda.
  */
 import { useEffect, useState } from "react";
-import { MessagesSquare, ShieldAlert, UserSearch } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -88,7 +88,7 @@ export function DebuggerView() {
 
       {!companyId ? (
         <EmptyState
-          icon={UserSearch}
+          glyph="people"
           title="Elige un tenant"
           description="El directorio de contactos y conversaciones se abre por tenant."
         />
@@ -107,7 +107,7 @@ export function DebuggerView() {
               <ProblemAlert error={contactsQuery.error} onRetry={() => void contactsQuery.refetch()} />
             ) : contacts.length === 0 ? (
               <EmptyState
-                icon={UserSearch}
+                glyph="people"
                 title="Sin contactos"
                 description={search ? "Nadie coincide con la búsqueda." : "Este tenant no tiene contactos todavía."}
               />
@@ -137,7 +137,7 @@ export function DebuggerView() {
             </h3>
             {!selectedContact ? (
               <EmptyState
-                icon={MessagesSquare}
+                glyph="conversation"
                 title="Elige un contacto"
                 description="Sus conversaciones aparecen aquí con la descarga del diagnóstico."
               />
@@ -150,7 +150,7 @@ export function DebuggerView() {
               />
             ) : conversations.length === 0 ? (
               <EmptyState
-                icon={MessagesSquare}
+                glyph="conversation"
                 title="Sin conversaciones"
                 description="Este contacto no tiene conversaciones registradas."
               />

@@ -7,7 +7,7 @@ import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { AgentMascot } from "@/modules/landing/ui/components/mockups/AgentMascot";
 import { ChatConversation } from "@/modules/landing/ui/components/mockups/ChatConversation";
 import { SalePaidCard } from "@/modules/landing/ui/components/mockups/SalePaidCard";

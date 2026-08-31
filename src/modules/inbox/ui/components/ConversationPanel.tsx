@@ -1,11 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ArrowDown, MessageSquareDashed } from "lucide-react"
+import { ArrowDown } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send-message"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
+import { GlassGlyph } from "@/shared/components/ui/glyphs"
 import { MessageBubble } from "./MessageBubble"
 import { ConversationHeader } from "./header/ConversationHeader"
 import { Composer } from "./composer/Composer"
@@ -84,7 +85,7 @@ export function ConversationPanel({
           className,
         )}
       >
-        <MessageSquareDashed className="size-12 opacity-30" />
+        <GlassGlyph kind="conversation" />
         <p className="text-sm">Selecciona una conversación para empezar</p>
       </div>
     )

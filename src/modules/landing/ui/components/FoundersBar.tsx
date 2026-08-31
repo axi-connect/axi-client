@@ -1,7 +1,7 @@
 "use client";
 
 import { FlipCountdown } from "@/modules/landing/ui/components/FlipCountdown";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import {
   FOUNDERS,
   formatDeadline,

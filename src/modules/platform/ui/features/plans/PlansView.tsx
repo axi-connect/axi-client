@@ -6,7 +6,7 @@
  * re-siembra a los suscritos (se re-aplica reasignando el plan por tenant).
  */
 import { useMemo, useState } from "react";
-import { Info, Layers, Plus } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { DataTable } from "@/shared/components/features/data-table";
@@ -79,7 +79,7 @@ export function PlansView() {
 
       {plans.length === 0 ? (
         <EmptyState
-          icon={Layers}
+          glyph="money"
           title="Aún no hay planes"
           description="Crea el primer plan comercial con sus límites por defecto."
           action={

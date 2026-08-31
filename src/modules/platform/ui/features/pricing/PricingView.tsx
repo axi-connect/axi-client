@@ -7,7 +7,7 @@
  * "Cerrar vigencia hoy" = PATCH `effective_to: hoy` (Modal simple).
  */
 import { useMemo, useState } from "react";
-import { CircleDollarSign, Mic, MoreVertical, PencilLine, Plus, TimerOff } from "lucide-react";
+import { Mic, MoreVertical, PencilLine, Plus, TimerOff } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -146,7 +146,7 @@ export function PricingView() {
 
       {rates.length === 0 ? (
         <EmptyState
-          icon={CircleDollarSign}
+          glyph="money"
           title="Aún no hay tarifas"
           description="Registra el costo por millón de unidades (MTok, caracteres…) de cada proveedor y modelo; usa * como fallback por proveedor."
           action={

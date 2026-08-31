@@ -169,6 +169,26 @@ src/app/
    añade una `variant` de copy. El backend lo devuelve en los tres puntos de bloqueo.
 8. **Acento del módulo: ámbar.** El violeta queda para el `AiBadge`; nunca los dos en la misma vista.
    El coral es solo acción, y el banner de mora va en `warning` — el coral no significa peligro.
+9. **La estimación es un TIQUETE, no una tile** (`ui/components/EstimateTicket.tsx` +
+   `.ticket-surface` en `globals.css`). Manda la pantalla y con la forma de sus vecinas se leía como
+   una más; el tiquete junta las dos mitades de la misma pregunta —**cuánto** en la cara, **cuándo**
+   en el talón—. Cinco cosas que no se revierten sin pensarlo:
+   - **Informativo, no un control.** Reacciona al puntero como material. Hay test de que no lleva
+     ni un `<a>` ni un `<button>`: un CTA escondido en la tarjeta del dinero se pulsa sin querer.
+   - **Las muescas son agujeros de verdad, con `mask`.** Pintar dos discos del color del fondo NO
+     funciona: detrás de las tarjetas del panel hay `bg-gradient-to-br from-muted/50 to-muted`
+     (`(private)/layout.tsx`), así que el disco no puede acertar el color, y `overflow: hidden`
+     recorta en la caja de *padding*, con lo que la línea del borde seguiría entera por encima.
+     `clip-path` tampoco: no hay arcos en un polígono y `shape()` es Chrome 135+.
+   - **`--ticket-stub` es una sola fuente de verdad**, compartida por la máscara y el `flex-basis`
+     del talón. Se cambia en el CSS, nunca en el TSX, o la muesca deja de caer en la perforación.
+     Y el envoltorio **no puede llevar padding horizontal**: movería el contenido y no la máscara.
+   - **El talón se renderiza siempre**, incluso sin ciclo (`—` + «Sin ciclo abierto»). La muesca
+     está anclada a su ancho: si el talón desaparece, la muesca queda cortando el aire.
+   - **Sin dato no presume.** `--live` cuelga de `hasEstimate`, no del ciclo: sin estimación se
+     apagan el tinte y el cometa. El color señala significado (DESIGN §3.5), y un anillo ámbar
+     alrededor de un «no lo sabemos» promete atención sobre un vacío. La forma y el tilt sí se
+     quedan en los tres estados: son identidad del objeto, no estado del dato.
 
 ### B.2 Las cinco invariantes de negocio
 

@@ -263,6 +263,8 @@ retiró la `GridCard` que vino con la plantilla del mega-menú).
 
 Regla de legibilidad: el glass solo se posa sobre fondos que controla la app; nunca texto largo sobre glass con contenido moviéndose detrás.
 
+La tabla habla de **superficies**. Un glifo ilustrado de cristal (`GlassGlyph`, §7) no es una superficie y no está en ninguna de las dos columnas: no lleva `backdrop-filter`, no aloja contenido y nunca hay texto encima.
+
 ---
 
 ## 6. Movimiento
@@ -294,6 +296,15 @@ Reglas:
   `prefers-reduced-motion`. Cualquier otra superficie del panel sigue quieta: si
   aparece una segunda, esto deja de ser una excepción y pasa a ser la regla nueva
   — y entonces se discute aquí, no en el componente.
+- **Lo que NO cuenta como excepción**: un efecto que solo corre mientras el
+  puntero está encima. En reposo la superficie está quieta, no hay animación ni
+  `requestAnimationFrame` vivo, y el usuario decide cuándo empieza y cuándo
+  acaba. Es el caso del cometa de `.channel-surface` (canales e integraciones),
+  del de `.ticket-surface--live` (el tiquete de facturación) y del tilt de
+  `TiltCard`. La línea que separa una cosa de la otra es *quién lo dispara*: si
+  arranca solo, es un loop y necesita permiso aquí; si lo enciende el ratón, es
+  respuesta a una acción. Los tres se apagan igualmente con
+  `prefers-reduced-motion` y ninguno se engancha sin puntero fino.
 
 ---
 
@@ -302,7 +313,22 @@ Reglas:
 - **lucide-react** es el set único de UI (stroke 2px, tamaño default `size-4` en controles, `size-5` en navegación). `@heroicons/react` y `react-icons` solo para logos de terceros (WhatsApp, Instagram, Messenger) donde lucide no los tenga.
 - Iconos de canal: usar el color oficial del proveedor **solo** en el icono, nunca en superficies propias.
 - Loaders: **sin Lottie** (retirado). El loader de marca es `BrandLoader` (isotipo SVG inline vía `BrandMark` + animación CSS); ver §9.1.
-- Ilustraciones/empty states: línea simple + un acento de la paleta (coral o violeta), fondo transparente.
+- **Ilustración y empty states: dos materiales, y la vista elige uno.**
+  - **Línea simple** — trazo de un pelo + un acento de la paleta (coral o violeta), fondo transparente. Es el default y cubre cualquier ilustración puntual que no tenga glifo propio.
+  - **Cristal ilustrado** (`GlassGlyph`, `shared/components/ui/glyphs/`) — diez glifos propios, uno por familia semántica del inventario de estados vacíos, dibujados como objeto de vidrio en SVG inline. El material vive en el bloque `.glass-glyph` de `globals.css`; el componente es solo geometría.
+
+  **Por qué no contradice el mandamiento 3 (DESIGN §8) ni la tabla de §5.2.** El glass de §5 es un material de SUPERFICIE y está *definido* por `backdrop-filter`: compone lo que hay detrás, y por eso la regla lo prohíbe bajo texto denso. El cristal ilustrado **no lleva `backdrop-filter` en ninguna capa** — su translucidez está pintada en gradientes, no compuesta. No aloja contenido, no tiene nada moviéndose detrás y nunca hay texto encima. Es un glifo, no una superficie: el mismo criterio con el que `.ticket-surface` pone el ámbar fuerte en el anillo de 1px, «que NO es tinte de superficie».
+
+  **Test de revocación, binario:** si un glifo llega a usar `backdrop-filter`, deja de estar autorizado por esta línea y pasa a ser glass sujeto a §5.2. Hay un test que lo comprueba (`glass-glyph.test.tsx`).
+
+  Condiciones de uso, todas obligatorias:
+  1. **Solo estados vacíos e ilustración.** Nunca como icono de un control, de navegación, de un badge o de una fila de tabla: ahí manda lucide.
+  2. **Nunca debajo de texto** ni como fondo de nada.
+  3. **Tres tamaños y un techo de 128px.** `sm` 32px (dentro de una card), `md` 64px (el estado vacío estándar), `lg` 128px (vacío de página completa). El `tier` decide tamaño Y detalle a la vez, a propósito: separarlos permite pedir nueve capas a 32px, que es barro. Un glifo que ocupa media pantalla vuelve a ser una superficie.
+  4. **Cero hex en el componente.** El material sale de las variables `--glass-*` y el acento de `--glyph-accent`, declaradas una sola vez en `globals.css`. Los dos únicos literales del material —blanco de luz y blanco de reflejo— viven ahí: son física, no paleta. Esto es MÁS estricto que `BrandMark`, que sí se declara artwork y lleva sus hex.
+  5. **Un acento por vista (§2.1).** El glifo *consume* el acento de su familia vía `.glass-glyph--{brand|amber|violet|success|muted}`; no lo elige el llamador.
+  6. **Con un glifo, `EmptyState` no pinta el disco teñido.** El glifo ya trae su pedestal y un círculo tintado detrás de un objeto de vidrio se lee como dos platos compitiendo.
+  7. **El reflejo solo lo enciende el puntero** sobre un contenedor marcado con `glass-host`, o un `:focus-visible` dentro. En reposo el glifo está quieto y no hay animación viva — es el caso que §6 excluye expresamente de la regla del loop. Y `glass-host` se pone **solo donde el contenedor es hovereable de verdad**: un estado vacío inerte que brilla al pasar por encima promete una interacción que no existe.
 
 ---
 
@@ -445,6 +471,7 @@ pestañas.
 - [ ] ¿Se ve correcto en light **y** dark?
 - [ ] ¿Radios según §4.1 (controles 12px, flotantes 16–20px, pills)?
 - [ ] ¿Glass solo si es superficie flotante (§5.2)?
+- [ ] ¿Ningún `GlassGlyph` usa `backdrop-filter`, ni va bajo texto, ni pasa de 128px (§7)?
 - [ ] ¿Tipografía de la escala §3.2 — Poppins en cuerpo/UI, Nexa en headings?
 - [ ] ¿Estados cargando/vacío/error cubiertos?
 - [ ] ¿Focus visible, contraste AA, `aria-label` en icon-buttons?

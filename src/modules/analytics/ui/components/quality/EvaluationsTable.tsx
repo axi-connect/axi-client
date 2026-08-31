@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { CheckCheck, ClipboardList, TriangleAlert } from "lucide-react";
+import { CheckCheck, TriangleAlert } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { relativeTime } from "@/core/lib/relative-time";
 import { errorMessage } from "@/core/lib/error-messages";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import BasicPagination from "@/shared/components/ui/pagination";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
@@ -209,7 +210,7 @@ export function EvaluationsTable({
         </div>
       ) : list.items.length === 0 ? (
         <CardEmpty
-          icon={<ClipboardList aria-hidden className="size-6" />}
+          glyph="ai"
           message="Aún no hay evaluaciones. Cada conversación cerrada se evalúa automáticamente para ayudarte a mejorar a tus agentes."
         />
       ) : (

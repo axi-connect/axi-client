@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, FileText, Mic, Paperclip } from "lucide-react";
+import { Download, FileText, Mic } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { formatBytes } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
@@ -16,6 +16,7 @@ import {
 } from "@/modules/inbox/domain/inbox";
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store";
 import { getFreshAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import { AttachmentThumb } from "./AttachmentThumb";
 import type { ContextPanelProps } from "../registry";
 
@@ -168,7 +169,7 @@ export function AttachmentsPanel({ conversation }: ContextPanelProps) {
       <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto p-4">
         {groups.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-10 text-center">
-            <Paperclip className="size-10 opacity-30" aria-hidden />
+            <GlassGlyph kind={filter === "all" ? "conversation" : "noresults"} tier="sm" />
             <p className="text-sm text-muted-foreground">
               {filter === "all"
                 ? "Todavía no se han compartido archivos."

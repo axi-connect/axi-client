@@ -4,7 +4,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AudioLines, DollarSign, Mic, Type } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
-import { CardEmpty, DashboardCard, MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard, MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
 import { ChartSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { SectionError, sectionRefetching } from "./section-states";
@@ -59,7 +60,7 @@ export function VoiceCard({
         <ChartSkeleton />
       ) : noUsage ? (
         <CardEmpty
-          icon={<Mic aria-hidden className="size-6" />}
+          glyph="metrics"
           message="Sin consumo de voz este ciclo."
         />
       ) : (

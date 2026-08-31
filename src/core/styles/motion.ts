@@ -41,6 +41,49 @@ export const durations = {
  * zoom no se congela mientras la página destino hidrata. Estos valores
  * documentan la coreografía y deben mantenerse en sincronía con el CSS.
  */
+/**
+ * Coreografía de la escena pineada de `/productos` (§#agente): una sección
+ * alta con hijo sticky cuyo progreso de scroll (0→1 sobre el contenedor
+ * `[data-app-scroll]`) reparte titular cinético, entrada del dispositivo y la
+ * conversación de la demo. Los rangos viven aquí para que la sección no
+ * defina números ad-hoc.
+ *
+ * La entrada del dispositivo es «Lift & Scale» (opción A elegida por el dueño
+ * sobre el comparador de coreografías, 2026-08-27 — estilo página de producto
+ * de Apple), más un giro en perspectiva que lo endereza: sube, crece, se
+ * aclara y se pone de frente. Solo transform y opacity — DESIGN-SYSTEM §6 sin
+ * excepciones.
+ */
+export const scrollReveal = {
+  /** Offset del useScroll del track: progreso 0→1 mientras la sección está pineada. */
+  offset: ["start start", "end end"] as const,
+  /**
+   * Altura del track (vh) — cuánto scroll “dura” la escena. Doce mensajes
+   * necesitan recorrido: a 280vh cada uno duraba ~70px de scroll y la escena
+   * se sentía nerviosa.
+   */
+  trackVh: 340,
+  /** Titular palabra a palabra. */
+  title: { from: 0.02, step: 0.03, span: 0.1 },
+  /** Subtítulo (y con él, la tarjeta de foco). */
+  sub: { from: 0.1, to: 0.18 },
+  /** Entrada del dispositivo: sube liftPct% mientras escala, aclara y gira. */
+  media: {
+    from: 0.12,
+    to: 0.3,
+    liftPct: 14,
+    scaleFrom: 0.8,
+    opacityFrom: 0.25,
+    rotateFrom: -13,
+  },
+  /**
+   * Un mensaje por paso de scroll. El mensaje `i` entra al cruzar la MITAD de
+   * su tramo: así aparece de golpe, como un mensaje real, en vez de
+   * desvanecerse a medias mientras el dedo sigue bajando.
+   */
+  messages: { from: 0.3, step: 0.052, span: 0.05 },
+} as const
+
 export const splash = {
   /** Entrada del logo (`splash-in`): 0.45s cubic-bezier(0.16, 1, 0.3, 1). */
   enter: { duration: 0.45, ease: [0.16, 1, 0.3, 1] as const },

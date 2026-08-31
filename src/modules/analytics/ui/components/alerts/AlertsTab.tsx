@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { fade } from "@/core/styles/motion";
@@ -14,6 +13,7 @@ import { ackAlert } from "@/modules/analytics/infrastructure/services/analytics-
 import { useAnalyticsStore } from "@/modules/analytics/infrastructure/stores/analytics.store";
 import { ALERT_STATUS_LABELS } from "@/modules/analytics/domain/labels";
 import type { AlertStatus } from "@/modules/analytics/domain/analytics";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import { SectionError } from "../conversion/section-states";
 import { AlertRow } from "./AlertRow";
 
@@ -95,7 +95,7 @@ export function AlertsTab() {
         </div>
       ) : alerts.data.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-background px-6 py-16 text-center">
-          <ShieldCheck aria-hidden className="size-8 text-success" />
+          <GlassGlyph kind="uptodate" />
           <p className="max-w-md text-sm text-muted-foreground">
             {EMPTY_BY_STATUS[alertsStatus]}
           </p>

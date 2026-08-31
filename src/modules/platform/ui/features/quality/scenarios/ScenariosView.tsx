@@ -10,7 +10,7 @@
  * edición (detalle por id, no depende de la página actual).
  */
 import { useEffect, useMemo, useState } from "react";
-import { FlaskConical, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { DataTable } from "@/shared/components/features/data-table";
@@ -132,7 +132,7 @@ export function ScenariosView() {
         <ProblemAlert error={error} onRetry={() => void refetch()} />
       ) : total === 0 && !hasFilters ? (
         <EmptyState
-          icon={FlaskConical}
+          glyph="ai"
           title="Aún no hay escenarios"
           description="Crea el primer escenario o clona uno de los de fábrica."
           action={

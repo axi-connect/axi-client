@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { UserPlus } from "lucide-react";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
 import {
   CONTACT_STAGE_LABELS,
@@ -81,7 +81,7 @@ export function NewCustomersCard({
         </>
       ) : (
         <CardEmpty
-          icon={<UserPlus aria-hidden className="size-6" />}
+          glyph="people"
           message="Sin clientes nuevos en este período."
         />
       )}

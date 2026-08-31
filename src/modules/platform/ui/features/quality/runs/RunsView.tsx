@@ -8,7 +8,7 @@
  */
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Play, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { TableSkeleton } from "@/shared/components/features/loading";
@@ -125,7 +125,7 @@ export function RunsView() {
         <ProblemAlert error={error} onRetry={() => void refetch()} />
       ) : total === 0 ? (
         <EmptyState
-          icon={Play}
+          glyph="ai"
           title={hasFilters ? "Sin resultados" : "Aún no hay ejecuciones"}
           description={
             hasFilters

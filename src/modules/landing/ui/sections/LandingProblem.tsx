@@ -2,7 +2,7 @@ import { Bot, HelpCircle, MoonStar, Smartphone } from "lucide-react";
 
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { PROBLEM } from "@/modules/landing/ui/content/landing.content";
 
 /** Iconos sobrios por dolor (lucide, nada caricaturesco). */

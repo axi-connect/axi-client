@@ -175,6 +175,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .bg-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); }
 .text-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .text-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* Titular plata (hero de /productos): degradado del propio foreground hacia su
+   mezcla con el fondo — premium/corporativo, sin color de marca. Derivado de
+   tokens: funciona en ambos temas y dentro de las islas oscuras. */
+.text-silver-gradient { background-image: linear-gradient(180deg, var(--foreground) 25%, color-mix(in srgb, var(--foreground) 52%, var(--background))); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 /* -------- Ambientación de marca para superficies grandes -------- */
 
@@ -414,6 +418,194 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .glass, .glass-overlay, .glass-menu { background-color: var(--color-background); }
 }
 
+
+/* -------- Cristal ilustrado: glifos de estado vacío (DESIGN-SYSTEM §7) --------
+
+   El material de los diez glifos del set (`shared/components/ui/glyphs`). Vive
+   aquí, junto a `.glass`, y no en ningún módulo: lo consumen billing, crm,
+   catalog, inbox, marketing, platform y el resto.
+
+   Reparto deliberado: el componente TSX es geometría y este bloque es el
+   material. Los colores entran por `data-stop` porque `var()` en un atributo de
+   presentación es frágil, mientras que `stop-color`, `fill` y `stroke` son
+   propiedades CSS de pleno derecho — así el tema entero se resuelve aquí y el
+   SVG no sabe que existen los temas.
+
+   REVOCACIÓN: ningún glifo usa `backdrop-filter`, y eso no es un detalle de
+   implementación. El glass de §5 está *definido* por esa propiedad; la
+   translucidez del glifo está pintada en gradientes, no compuesta con lo que
+   hay detrás. Es lo que sostiene que un glifo no es una superficie y no le
+   aplica el mandamiento 3 (DESIGN §8). Si un glifo llega a usar
+   `backdrop-filter`, deja de estar autorizado por §7 y pasa a ser glass sujeto
+   a §5.2. */
+
+/* El único valor que hay que INTERPOLAR y que no es propiedad CSS de nadie: la
+   intensidad, que alimenta a la vez varios `stop-opacity`. Sin `@property` un
+   custom property no interpola — misma razón que `--comet-angle`. `inherits`
+   sí, al contrario que aquél: tiene que llegar a los `<stop>`. */
+@property --glyph-sheen {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+
+.glass-glyph {
+  --glyph-accent: var(--axi-violet); /* default: violeta = IA */
+  --glyph-sheen: 0;
+
+  /* Pedestal: normaliza el fondo real (el degradado `from-muted/50 to-muted`
+     del panel, una card sólida o el panel del workspace) hacia el fondo de la
+     app. Sobre `--background` puro es invisible. */
+  --glass-plate: color-mix(in srgb, var(--background) 44%, transparent);
+  /* Cuerpo: derivado del texto, así que oscurece lo que hay detrás en claro. */
+  --glass-lo: color-mix(in srgb, var(--foreground) 5%, transparent);
+  --glass-mid: color-mix(in srgb, var(--foreground) 11%, transparent);
+  /* Canto y silueta. El pico llega al 46% y no al 26%: por debajo de ~2,5:1 un
+     glifo se ve roto en un portátil con brillo bajo, no elegante. */
+  --glass-rim: color-mix(in srgb, var(--foreground) 46%, transparent);
+  --glass-rim-lo: color-mix(in srgb, var(--foreground) 10%, transparent);
+  /* Grabado: una línea grabada en vidrio CAPTA la luz, así que va más brillante
+     que el canto. Con el color del rim desaparecía. */
+  --glass-etch: color-mix(in srgb, var(--foreground) 60%, transparent);
+  --glass-cast: color-mix(in srgb, var(--foreground) 13%, transparent);
+  /* Los dos únicos literales del material: luz y reflejo son física, no paleta,
+     y por eso viven aquí y no en la capa 1. */
+  --glass-hi: rgb(255 255 255 / 0.92);
+  --glass-spec: rgb(255 255 255 / 0.55);
+  --glass-hot: rgb(255 255 255 / 0.5);
+  /* Vidrio DICROICO: el cuerpo no es gris, va de cálido a frío. Es el gradiente
+     corto de marca (coral → violeta) que DESIGN §3.2 sanciona para detalles
+     decorativos; a este alfa lee como refracción, no como color. */
+  --glass-warm: color-mix(in srgb, var(--axi-brand) 13%, transparent);
+  --glass-cool: color-mix(in srgb, var(--axi-violet) 11%, transparent);
+  /* Intensidad de la luz de color. Al 0,52 salían MANCHAS: la idea es un objeto
+     de color que se ve A TRAVÉS del vidrio, no un tinte encima del glifo. */
+  --glass-core: 0.33;
+
+  display: block;
+  flex-shrink: 0;
+  transition: --glyph-sheen 260ms ease;
+}
+
+/* En oscuro el vidrio se INVIERTE: el reflejo pasa a ser el protagonista y el
+   charco de debajo deja de ser sombra para ser luz. Los neutros pasan a blanco
+   literal y no a `--foreground`, que en oscuro es #ededed: un gris casi blanco
+   al 13% se ve sucio comparado con blanco puro al 13%. */
+.dark .glass-glyph {
+  /* MEDIDO, no supuesto: en oscuro el pedestal SOBRA. Los tres fondos del panel
+     están a pocos puntos entre sí (#0a0a0a, #18181b, #131313), así que no tiene
+     nada que normalizar y cualquier alfa apaga el contraste del vidrio con un
+     velo gris. La capa se queda en la estructura; el token la apaga. */
+  --glass-plate: transparent;
+  --glass-lo: rgb(255 255 255 / 0.04);
+  --glass-mid: rgb(255 255 255 / 0.13);
+  --glass-rim: rgb(255 255 255 / 0.4);
+  --glass-rim-lo: rgb(255 255 255 / 0.08);
+  --glass-etch: rgb(255 255 255 / 0.62);
+  /* No es sombra: es el charco de luz que deja un objeto translúcido sobre negro. */
+  --glass-cast: color-mix(in srgb, var(--glyph-accent) 12%, transparent);
+  --glass-hi: rgb(255 255 255 / 1);
+  --glass-spec: rgb(255 255 255 / 0.7);
+  --glass-hot: rgb(255 255 255 / 0.62);
+  --glass-warm: color-mix(in srgb, var(--axi-brand) 17%, transparent);
+  --glass-cool: color-mix(in srgb, var(--axi-violet) 15%, transparent);
+  /* En oscuro los acentos de axi son más claros y vivos, así que la misma alfa
+     grita más. */
+  --glass-core: 0.26;
+}
+
+/* El acento entra por clase de conjunto cerrado, no por `bg-[var(--x)]`:
+   Tailwind extrae clases estáticamente y una arbitraria con variable no genera
+   nada. El glifo CONSUME el acento del módulo, no elige el suyo. */
+.glass-glyph--brand { --glyph-accent: var(--axi-brand); }
+.glass-glyph--amber { --glyph-accent: var(--axi-amber); }
+.glass-glyph--success { --glyph-accent: var(--axi-success); }
+/* La familia neutra («sin resultados») casi no lleva luz de color: un núcleo
+   gris dentro del vidrio no lee como luz, lee como suciedad en la lente. */
+.glass-glyph--muted { --glyph-accent: var(--color-muted-foreground); --glass-core: 0.12; }
+
+.glass-glyph [data-stop="lo"] { stop-color: var(--glass-lo); }
+.glass-glyph [data-stop="mid"] { stop-color: var(--glass-mid); }
+.glass-glyph [data-stop="hi"] { stop-color: var(--glass-hi); }
+.glass-glyph [data-stop="rim"] { stop-color: var(--glass-rim); }
+.glass-glyph [data-stop="rim-lo"] { stop-color: var(--glass-rim-lo); }
+.glass-glyph [data-stop="spec"] { stop-color: var(--glass-spec); }
+.glass-glyph [data-stop="hot"] { stop-color: var(--glass-hot); }
+.glass-glyph [data-stop="cast"] { stop-color: var(--glass-cast); }
+.glass-glyph [data-stop="plate"] { stop-color: var(--glass-plate); }
+.glass-glyph [data-stop="warm"] { stop-color: var(--glass-warm); }
+.glass-glyph [data-stop="cool"] { stop-color: var(--glass-cool); }
+.glass-glyph [data-stop="none"] { stop-color: var(--glass-hi); stop-opacity: 0; }
+
+/* La luz de color va DETRÁS del cuerpo, así que el vidrio la apaga: de ahí que
+   el alfa del centro sea alto para lo que acaba viéndose. */
+.glass-glyph [data-stop="accent"] {
+  stop-color: var(--glyph-accent);
+  stop-opacity: calc(var(--glass-core) + 0.17 * var(--glyph-sheen));
+}
+.glass-glyph [data-stop="accent-mid"] {
+  stop-color: var(--glyph-accent);
+  stop-opacity: calc(var(--glass-core) * 0.42 + 0.08 * var(--glyph-sheen));
+}
+
+.glass-glyph [data-layer="rim"] { stroke-opacity: calc(0.86 + 0.14 * var(--glyph-sheen)); }
+.glass-glyph [data-layer="engrave"] {
+  stroke: var(--glass-etch);
+  stroke-opacity: 0.92;
+  stroke-width: 1.3;
+}
+/* A 128px un rim de 1px se pierde; a 32px 1,5px es un dibujo infantil. */
+.glass-glyph--lg [data-layer="rim"] { stroke-width: 1.4; }
+.glass-glyph--lg [data-layer="engrave"] { stroke-width: 1.6; }
+.glass-glyph--lg [data-layer="cast"] { ry: 5; }
+.glass-glyph--sm [data-layer="engrave"] { stroke-width: 1; }
+.glass-glyph--sm [data-layer="hot"] { opacity: 0.8; }
+
+/* El reflejo viajero. La transición vive en el HIJO y no en el host, así solo se
+   recalcula ese nodo por frame y no el subárbol entero.
+
+   Recorre 20 de las 48 unidades y APARCA en su posición autorada, que cae sobre
+   la masa del cuerpo en las diez familias. Con un recorrido mayor el brillo
+   acababa en el borde o fuera de la figura.
+
+   Y el dato que fija el diseño: el `offset` de un `<stop>` y las coordenadas
+   `x1/y1/x2/y2` de un gradiente NO son propiedades CSS y no se pueden
+   transicionar. Por eso el reflejo no se mueve moviendo el gradiente: se mueve
+   trasladando una banda recortada. */
+.glass-glyph [data-layer="sheen"] {
+  transform: translateX(-16px);
+  opacity: 0;
+  transition:
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease;
+}
+
+/* Se enciende SOLO con el puntero encima del contenedor, que es el caso que
+   DESIGN-SYSTEM §6 excluye expresamente de la regla del loop («la línea que
+   separa una cosa de la otra es quién lo dispara»). El `:has(:focus-visible)`
+   cubre al usuario de teclado que tabula al CTA del estado vacío.
+
+   La clase `glass-host` la pone quien SÍ es hovereable: un estado vacío inerte
+   no debe prometer una interacción que no existe. */
+@media (hover: hover) and (pointer: fine) {
+  .glass-host:hover .glass-glyph [data-layer="sheen"],
+  .glass-host:has(:focus-visible) .glass-glyph [data-layer="sheen"] {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+  .glass-host:hover .glass-glyph,
+  .glass-host:has(:focus-visible) .glass-glyph {
+    --glyph-sheen: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* El reflejo aparece encendido en su posición final en vez de viajar: misma
+     degradación silenciosa que el cometa de canales. */
+  .glass-glyph [data-layer="sheen"] { transition: opacity 200ms ease; transform: none; }
+  .glass-glyph { transition: none; }
+}
+
 /* -------- Ajustes de componentes -------- */
 
 /* Bordes suaves para tablas */
@@ -630,6 +822,57 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-flip-top { animation: flip-top 0.14s ease-in forwards; }
 .animate-flip-bottom { animation: flip-bottom 0.14s 0.14s ease-out both; }
 
+/* -------- Marquee vertical (muro de conversaciones de /productos) --------
+   Mismo contrato que `logo-marquee`: CSS puro (compositor), dos copias del
+   contenido y desplazamiento de una copia completa + el gap. La dirección se
+   invierte por columna con [animation-direction:reverse] y el hover del grupo
+   pausa el muro entero. */
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - var(--marquee-gap, 1rem))); }
+}
+
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--marquee-duration, 44s) linear infinite;
+}
+.group\/wall:hover .animate-marquee-vertical { animation-play-state: paused; }
+
+/* -------- Ecualizador del control de sonido (hero de /productos) --------
+   Tres barras que laten mientras el mensaje del video suena — feedback de
+   estado, no decoración: es lo que dice "esto está sonando" sin leer. */
+@keyframes sound-eq {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+.animate-sound-eq {
+  animation: sound-eq 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+/* -------- Chat de la demo del agente (#agente de /productos) --------
+   La burbuja entra al MONTARSE, así que la animación va en CSS y no en
+   framer-motion: durante el scroll de la escena pineada el hilo principal
+   está ocupado y una animación de framer se congelaría a medias
+   (DESIGN-SYSTEM §6, regla 3). Solo transform y opacity. */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(11px) scale(0.985); }
+}
+
+.animate-msg-in {
+  animation: msg-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Los tres puntos de «el agente está escribiendo». */
+@keyframes typing-bob {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+.animate-typing-bob {
+  animation: typing-bob 1.1s ease-in-out infinite;
+}
+
 /* Toda animación decorativa se desactiva con reduced-motion (DESIGN-SYSTEM §6).
    `animate-pulse` (skeletons) se conserva: es feedback esencial y de baja
    intensidad. El splash cae a crossfade puro (el provider maneja la rama JS). */
@@ -638,6 +881,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .animate-splash-in { animation-name: fade-in; }
   .animate-mascot-bob, .animate-hero-float { animation: none; }
   .animate-logo-marquee { animation: none; }
+  .animate-marquee-vertical { animation: none; }
+  .animate-sound-eq { animation: none; }
+  /* La burbuja aparece de golpe; el «escribiendo» deja de latir pero los tres
+     puntos siguen ahí, que es lo que comunica el estado. */
+  .animate-msg-in { animation: none; }
+  .animate-typing-bob { animation: none; opacity: 0.55; }
   .animate-accordion-down, .animate-accordion-up { animation: none; }
   /* El countdown sigue contando: solo desaparece el doblez (la cifra cambia
      de golpe). El componente además no monta las hojas con reduced-motion. */
@@ -1089,4 +1338,204 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .axel-field::before {
     animation: none;
   }
+}
+
+/* ==========================================================================
+   FACTURACIÓN — EL TIQUETE DEL PRÓXIMO COBRO
+   --------------------------------------------------------------------------
+   La estimación del próximo cobro es la pieza que evita la factura sorpresa, y
+   un tiquete con talón es la forma física de «esto es lo que vas a pagar y
+   cuándo se corta». Nada nuevo de raíz: el anillo es la MISMA receta de
+   `.channel-surface::after` (dos máscaras que se excluyen sobre
+   `@property --comet-angle`) con el ámbar del módulo, y el tilt y el brillo los
+   aporta `TiltCard` desde fuera.
+
+   Cuatro decisiones que explican la forma que tiene:
+
+   1. **Las muescas son agujeros DE VERDAD, con `mask`.** Se probaron las dos
+      alternativas y las dos se caen. `clip-path` no puede hacer un mordisco
+      semicircular (un polígono no tiene arcos, `circle()` no se combina con un
+      rectángulo y `shape()` es Chrome 135+). Y pintar dos discos del color del
+      fondo tampoco: detrás de las tarjetas del panel no hay `--background`,
+      hay `bg-gradient-to-br from-muted/50 to-muted` (`(private)/layout.tsx`),
+      así que el disco no puede acertar el color —cambia a lo largo del
+      degradado— y encima `overflow: hidden` recorta en la caja de PADDING, con
+      lo que la línea del borde seguiría entera por encima de la muesca.
+
+   2. **La máscara va en el envoltorio de `TiltCard`, no en un hijo.** Tres
+      cosas salen gratis: el `mask` del grupo y el `mask` del anillo viven en
+      elementos distintos y no se pisan (encadenar `exclude` + `intersect` en
+      cuatro capas es ilegible y en Safari se escribe con otras palabras); el
+      brillo de `TiltCard` es hijo, así que se recorta igual y no pinta un
+      rectángulo teñido sobre el agujero; y todo el tiquete es UN solo grupo
+      enmascarado, o sea una sola rasterización.
+      Efecto lateral a saber: `mask` fuerza `transform-style: flat`, así que el
+      `preserve-3d` del envoltorio queda inerte en esta instancia (hoy es
+      inocuo: nada de dentro usa transforms 3D propias) y **cualquier sombra o
+      halo EXTERIOR desaparece** — se enmascara con el elemento. Por eso el
+      tinte va dentro, como `background-image`, y no hay `box-shadow`.
+
+   3. **`--ticket-stub` es la única fuente de verdad.** La consumen la máscara
+      de aquí y el `flex-basis` del talón en el JSX; si se desincronizan, la
+      muesca deja de caer en la perforación. Va en px/rem y no en %, para que
+      la máscara (que mide sobre la caja de BORDE) y el talón (que mide sobre
+      la de contenido) no discrepen por el ancho del borde.
+
+   4. **En reposo NO se mueve nada.** DESIGN-SYSTEM §6 no admite una segunda
+      superficie del panel animándose en bucle, y esto no lo es: igual que
+      `.channel-surface` —que ya vive en el panel—, el cometa está apagado y
+      solo corre mientras el puntero está encima. Reutiliza `channel-comet`,
+      que es literalmente `to { --comet-angle: 360deg }` y no tiene nada de
+      canales; la duración la pone el shorthand `animation`, no el keyframe.
+
+   El tinte de superficie se queda en el 12 % que ya tenía la tarjeta plana: el
+   ámbar fuerte vive en el anillo de 1px, que NO es tinte de superficie. Por eso
+   esto no pide una tercera excepción al techo de DESIGN-SYSTEM §2.3.
+   ========================================================================== */
+
+.ticket-surface {
+  /* Ancho del talón. Fijo y con un escalón en `sm`: es la medida que comparten
+     la máscara y el `flex-basis`. */
+  --ticket-stub: 6.5rem;
+  --ticket-notch: 10px;
+  /* Color del canto de las muescas. Es una variable porque tiene que seguir al
+     borde: con el tiquete vivo el borde es ámbar, y un arco gris en medio de un
+     borde ámbar se lee como un defecto de render, no como un recorte. */
+  --ticket-edge: var(--color-border);
+  /* X de la perforación, desde el borde derecho de la caja de BORDE. El -1px
+     compensa el borde: el talón mide su base sobre la caja de contenido, un
+     píxel más estrecha por cada lado. */
+  --ticket-cut: calc(100% - var(--ticket-stub) - 1px);
+
+  position: relative;
+  background-color: var(--background);
+
+  /* La silueta. El truco que la hace responsiva sin `mask-composite: intersect`
+     es que cada capa cubre SOLO su mitad (`100% 51%` + `no-repeat`), así que la
+     unión por defecto da la forma completa. El tramo 98%→100% es el
+     antialiasing del corte (a 10px de radio, 0,2px). */
+  -webkit-mask:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 0, #0000 98%, #000 100%)
+      top / 100% 51% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 100%, #0000 98%, #000 100%)
+      bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 0, #0000 98%, #000 100%)
+      top / 100% 51% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 100%, #0000 98%, #000 100%)
+      bottom / 100% 51% no-repeat;
+
+  transition: border-color 0.25s ease;
+}
+
+@media (min-width: 640px) {
+  .ticket-surface {
+    --ticket-stub: 7.5rem;
+  }
+}
+
+/* Contorno de las muescas: un anillo de 1px por muesca, con el MISMO radio que
+   las corta. La mitad de fuera se la come la máscara del grupo, así que queda
+   exactamente el arco interior y la silueta cierra sin costuras. Sin esto la
+   muesca solo se lee por el hueco, y el hueco es sutil.
+
+   Los z-index de esta capa y del anillo son orden de pintado INTRA-componente
+   (§4.4 y `LAYERS` gobiernan overlays y contenido portalado, no esto). El 6 va
+   por encima del brillo de `TiltCard`, que es `z-[5]`, para que el
+   `mix-blend-overlay` no lave el contorno; y no tapa texto porque en los 10px
+   del borde solo hay padding. */
+.ticket-surface::before {
+  content: "";
+  position: absolute;
+  /* `-1px` y no `0`, y es aritmética, no gusto: un absoluto con `inset: 0` se
+     ancla a la caja de PADDING (1px más estrecha por cada lado que la de
+     borde), mientras que la máscara de arriba mide sobre la caja de BORDE
+     (`mask-origin` es `border-box`; el de `background` es `padding-box`). Con
+     `inset: 0` el mismo `--ticket-cut` cae 2px a la izquierda y los arcos no
+     coinciden con los agujeros. Extenderlo 1px —el ancho del borde— iguala las
+     dos cajas en los dos ejes. Si el borde deja de medir 1px, este número
+     cambia con él. */
+  inset: -1px;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 0,
+      #0000 calc(100% - 1px), var(--ticket-edge) calc(100% - 1px),
+      var(--ticket-edge) 100%, #0000 100%),
+    radial-gradient(circle var(--ticket-notch) at var(--ticket-cut) 100%,
+      #0000 calc(100% - 1px), var(--ticket-edge) calc(100% - 1px),
+      var(--ticket-edge) 100%, #0000 100%);
+}
+
+/* El cometa. `z-index: 7` por encima del brillo: por debajo, el reflejo blanco
+   al 35 % en `overlay` lava el núcleo ámbar y el cometa se pierde. */
+.ticket-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--comet-angle),
+    transparent 0deg 228deg,
+    color-mix(in srgb, var(--axi-amber) 45%, transparent) 302deg,
+    var(--axi-amber) 344deg,
+    color-mix(in srgb, var(--axi-amber) 88%, var(--background)) 356deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+/* El tinte cálido y el cometa solo con dato dentro. Una tarjeta que dice «no lo
+   sabemos» y a la vez presume de anillo ámbar promete atención sobre un vacío,
+   y el color señala significado, no decora (DESIGN §3.5). El modificador entra
+   por `className`, patrón de `.axel-comet-card--new`. */
+.ticket-surface--live {
+  /* El mismo 30 % que `border-accent-amber/30` en el TSX: si uno cambia, el otro
+     también, o el arco deja de continuar el borde. */
+  --ticket-edge: color-mix(in srgb, var(--axi-amber) 30%, transparent);
+  background-image:
+    radial-gradient(circle 220px at 8% 0%,
+      color-mix(in srgb, var(--axi-amber) 12%, transparent) 0%,
+      transparent 100%),
+    linear-gradient(to bottom right,
+      color-mix(in srgb, var(--axi-amber) 7%, transparent),
+      transparent 64%);
+}
+
+/* Dentro de `hover: hover` para que en táctiles no se quede encendido pegado */
+@media (hover: hover) {
+  .ticket-surface--live:hover {
+    border-color: color-mix(in srgb, var(--axi-amber) 52%, var(--color-border));
+    --ticket-edge: color-mix(in srgb, var(--axi-amber) 52%, var(--color-border));
+  }
+  .ticket-surface--live:hover::after {
+    opacity: 1;
+    animation: channel-comet 3.4s linear infinite;
+  }
+}
+
+/* Igual que en canales: sin movimiento queda un arco fijo en el borde, que
+   sigue leyéndose como acento. Degradación silenciosa a propósito. */
+@media (prefers-reduced-motion: reduce) {
+  .ticket-surface--live::after {
+    animation: none !important;
+  }
+  .ticket-surface {
+    transition: none;
+  }
+}
+
+/* La perforación: el `border-l border-dotted` del talón, no un gradiente. Así
+   la línea y la muesca comparten la misma medida por construcción, sin
+   porcentajes que se puedan desincronizar. Solo se tiñe de ámbar cuando el
+   tiquete está vivo. */
+.ticket-surface--live .ticket-perforation {
+  border-color: color-mix(in srgb, var(--axi-amber) 42%, transparent);
 }

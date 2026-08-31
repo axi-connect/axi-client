@@ -1,6 +1,6 @@
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
-import { TiltCard } from "@/modules/landing/ui/components/TiltCard";
+import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { InboxPreview } from "@/modules/landing/ui/components/mockups/InboxPreview";
 import { TEAM_CONTROL } from "@/modules/landing/ui/content/landing.content";
 

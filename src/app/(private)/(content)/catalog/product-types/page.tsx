@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Shapes } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { DataTable } from "@/shared/components/features/data-table";
 import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import type { ProductTypeRow } from "@/modules/catalog/domain/product-type";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import {
@@ -90,7 +91,7 @@ export default function ProductTypesPage() {
       <div className="rounded-2xl border border-border bg-background p-4 md:p-6">
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <Shapes className="h-10 w-10 text-muted-foreground" aria-hidden />
+            <GlassGlyph kind="catalog" />
             <p className="text-sm text-muted-foreground">
               Aún no tienes tipos de producto. Son opcionales, pero dan superpoderes a tus fichas.
             </p>

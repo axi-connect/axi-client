@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { PackageOpen, Plus, QrCode, Loader } from "lucide-react"
+import { Plus, QrCode, Loader } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
 import { FaWhatsapp, FaInstagram, FaFacebookMessenger, FaRobot } from "react-icons/fa"
@@ -15,6 +15,7 @@ import {
 // vivía duplicado carácter a carácter aquí y en el ChannelDetailSheet
 import { channelStatusDotClass } from "@/modules/channels/ui/components/ChannelStatusBadge"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
+import { GlassGlyph } from "@/shared/components/ui/glyphs"
 import {
   SidebarMenuAction,
   SidebarMenuButton,
@@ -42,7 +43,7 @@ const ChannelsLoadingState = () => (
 const ChannelsEmptyState = ({ onCreate }: { onCreate: () => void }) => (
   <div>
     <div className="flex flex-col items-center justify-center gap-2">
-      <PackageOpen className="size-7 text-brand-2 opacity-50" />
+      <GlassGlyph kind="connections" tier="sm" />
       <span className="text-muted-foreground">No hay canales disponibles</span>
     </div>
     <Button size="sm" variant="ghost" className="w-full mt-2 text-muted-foreground" onClick={onCreate}>

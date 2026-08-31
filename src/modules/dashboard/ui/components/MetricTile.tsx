@@ -67,19 +67,3 @@ export function DashboardCard({
     </section>
   );
 }
-
-/** Estado vacío interno de una card (icono + frase + acción sugerida). */
-export function CardEmpty({
-  icon,
-  message,
-}: {
-  icon: React.ReactNode;
-  message: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-      <span className="text-muted-foreground">{icon}</span>
-      <p className="text-sm text-muted-foreground">{message}</p>
-    </div>
-  );
-}
