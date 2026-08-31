@@ -335,8 +335,6 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
       }))
   }, [mode, localQuery, searchableFields, rowsToRender, onSearchChange])
 
-  const [searchOpen, setSearchOpen] = useState(false)
-
   const selectionCount = selection?.allMatching?.active
     ? selection.allMatching.count
     : (selection?.selected.size ?? 0)
@@ -359,7 +357,6 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
               }
               actions={searchActions}
               loading={searchLoading}
-              onOpenChange={setSearchOpen}
             />
           )}
           {mode === "basic" && (
@@ -405,19 +402,6 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
         </div>
       )}
 
-      {/* El velo vive DENTRO del contenedor de la tabla, no como overlay fijo:
-          así no negocia z-index con la cabecera del panel ni con el sidebar, que
-          siguen encendidos, y el contexto de lo que se filtra sigue a la vista.
-          Bloquea el clic a propósito — un clic que a la vez cierra el buscador y
-          navega a una fila es una trampa. */}
-      <div className="relative">
-        {searchOpen && mode === "spotlight" && (
-          <div
-            aria-hidden="true"
-            className="bg-background/60 motion-safe:animate-in motion-safe:fade-in-0 absolute inset-0 z-20 rounded-lg"
-            onMouseDown={(event) => event.preventDefault()}
-          />
-        )}
       <TableView
         page={page}
         messages={msgs}
@@ -430,7 +414,6 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
         sortBy={sorting?.by as keyof T & string}
         rowContextMenu={rowContextMenu as RowContextMenuRenderer<T> | undefined}
       />
-      </div>
 
       <div className="flex justify-between items-center">
         <span className="text-muted-foreground mt-4 text-sm">{msgs?.caption?.(page, totalPages, totalCount)}</span>

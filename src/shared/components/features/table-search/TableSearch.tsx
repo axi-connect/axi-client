@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LoaderCircle, Search, X, type LucideIcon } from "lucide-react";
 
@@ -41,8 +41,6 @@ export type TableSearchProps = {
   loading?: boolean;
   emptyLabel?: string;
   className?: string;
-  /** Se avisa al abrir y al cerrar: el velo de la tabla lo pinta quien llama. */
-  onOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -52,6 +50,12 @@ export type TableSearchProps = {
  * que aparece debajo es un panel. La alternativa —un overlay a pantalla
  * completa— tapa justo la tabla cuyo contenido estás filtrando, y encima
  * competiría con la paleta de comandos global que algún día querremos.
+ *
+ * **Y la tabla NO se atenúa.** Hubo un velo semitransparente sobre ella y se
+ * quitó: atenuar la tabla entera para escribir cuatro letras en un campo que
+ * está justo arriba no da foco, tapa filas que se quieren seguir viendo mientras
+ * se teclea. Lo que separa el panel de la tabla es su ELEVACIÓN —superficie
+ * propia y sombra—, y con eso basta.
  *
  * **Nada de anillo de color al enfocar.** El coral es color de ACCIÓN; un campo
  * enfocado no es una acción, es dónde estás. La separación la dan la sombra y el
@@ -83,7 +87,6 @@ export function TableSearch({
   loading = false,
   emptyLabel = "Sin coincidencias",
   className,
-  onOpenChange,
 }: TableSearchProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -97,14 +100,6 @@ export function TableSearch({
     [suggestions, actions],
   );
 
-  const change = useCallback(
-    (next: boolean) => {
-      setOpen(next);
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
-
   useEffect(() => {
     setActive(0);
   }, [value]);
@@ -113,7 +108,7 @@ export function TableSearch({
     const item = items[index];
     if (item === undefined) return;
     item.onSelect();
-    change(false);
+    setOpen(false);
     inputRef.current?.blur();
   };
 
@@ -133,7 +128,7 @@ export function TableSearch({
       // NO se reenfoca el campo: la pulsación viene de él, así que ya lo tiene,
       // y llamar a `focus()` disparaba el `onFocus` que vuelve a abrir el panel
       // — Escape no cerraba nada.
-      change(false);
+      setOpen(false);
     }
   };
 
@@ -192,9 +187,9 @@ export function TableSearch({
           value={value}
           className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-[14.5px] outline-none"
           onChange={(event) => onValueChange(event.target.value)}
-          onFocus={() => change(true)}
+          onFocus={() => setOpen(true)}
           // El retardo deja que el clic en una opción llegue antes de cerrar.
-          onBlur={() => setTimeout(() => change(false), 150)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
           onKeyDown={onKeyDown}
         />
 

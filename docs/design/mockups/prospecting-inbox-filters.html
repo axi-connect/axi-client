@@ -341,14 +341,6 @@ button { font: inherit; color: inherit; }
   .toolbar__rest { transition: opacity .2s ease-out; }
 }
 .toolbar[data-searching="true"] .toolbar__rest { opacity: .34; pointer-events: none; }
-/* El velo vive DENTRO del contenedor de la tabla: no negocia z-index con la
-   cabecera ni con el rail, y bloquea el clic para que cerrar no navegue. */
-.veil {
-  position: absolute; inset: 52px 0 0; z-index: 20;
-  background: color-mix(in srgb, var(--background) 62%, transparent);
-  border-radius: var(--radius-lg);
-}
-@media (prefers-reduced-motion: no-preference) { .veil { animation: fade .15s ease-out; } }
 @keyframes fade { from { opacity: 0; } }
 
 /* Botones */
@@ -1140,14 +1132,12 @@ rows.innerHTML = LEADS.map((l, i) => `
 const search = document.getElementById("search");
 const input = document.getElementById("searchInput");
 const clearBtn = document.getElementById("searchClear");
-const shell = document.getElementById("shell");
 const band = document.getElementById("band");
 const headBox = document.getElementById("headBox");
 const boxes = [...document.querySelectorAll(".rowBox")];
 const selectable = boxes.filter(b => !b.disabled);
 const sheet = document.getElementById("sheet");
 const scrim = document.getElementById("scrim");
-let veil = null;
 let allMatching = false;
 
 function setSearchOpen(open) {
@@ -1164,14 +1154,6 @@ function setSearchOpen(open) {
   } else {
     quick.dataset.shown = "false";
   }
-  if (open && !veil) {
-    veil = document.createElement("div");
-    veil.className = "veil";
-    /* El velo bloquea el clic: cerrar no puede navegar de paso. */
-    veil.addEventListener("mousedown", e => { e.preventDefault(); setSearchOpen(false); });
-    shell.appendChild(veil);
-  }
-  if (!open && veil) { veil.remove(); veil = null; }
   if (open) { input.value = input.value || "koko"; input.focus(); }
   mark(open ? "search" : "rest");
 }
