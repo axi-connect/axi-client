@@ -2740,6 +2740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/settings/agent-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmAgentTaskSettingsController_get_v1"];
+        put: operations["CrmAgentTaskSettingsController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/tags": {
         parameters: {
             query?: never;
@@ -8682,6 +8698,14 @@ export interface components {
                 page: number;
                 page_size: number;
             };
+        };
+        CrmAgentTaskSettingsDto: {
+            enabled: boolean;
+            daily_cap: number;
+            quiet_start_hour: number;
+            quiet_end_hour: number;
+            max_attempts: number;
+            max_defer_hours: number;
         };
         TagsListDto: {
             data: {
@@ -16928,6 +16952,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskRunsListDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTaskSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAgentTaskSettingsDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTaskSettingsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmAgentTaskSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAgentTaskSettingsDto"];
                 };
             };
         };

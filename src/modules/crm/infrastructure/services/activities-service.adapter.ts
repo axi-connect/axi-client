@@ -12,15 +12,6 @@ import type {
 } from "@/modules/crm/domain/activity";
 import type { TaskRunDTO } from "@/modules/crm/domain/task-execution";
 
-import type { OffsetQuery } from "@/core/api/types";
-
-export type ListTaskRunsParams = OffsetQuery & {
-  status?: NonNullable<ActivityDTO["last_run_status"]>;
-  reason?: string;
-  from?: string;
-  to?: string;
-};
-
 /**
  * Adapter HTTP de actividades y tareas. ÚNICO punto de creación/edición de
  * tareas (POST/PATCH `/crm/activities` con `kind: task` — no existe
@@ -105,9 +96,4 @@ export function runAgentTaskNow(id: string): Promise<void> {
 /** Historial de intentos de UNA tarea: alimenta el rail de ejecución. */
 export function listTaskRuns(id: string): Promise<{ data: TaskRunDTO[] }> {
   return http.get<{ data: TaskRunDTO[] }>(`/crm/agent-tasks/${id}/runs`);
-}
-
-/** Feed del tenant: el «¿por qué no salió mi mensaje?» transversal. */
-export function listAllTaskRuns(params: ListTaskRunsParams = {}): Promise<Paginated<TaskRunDTO>> {
-  return http.get<Paginated<TaskRunDTO>>("/crm/task-runs", params);
 }
