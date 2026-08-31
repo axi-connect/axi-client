@@ -45,6 +45,17 @@
   --radius-xl: 20px;
   --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
   --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+
+  /* Superficie del buscador. En claro es un gris muy suave sobre el blanco de
+     la página —la pastilla de la referencia—; en oscuro sube a superficie
+     elevada. Derivado con color-mix de los primitivos, sin hex nuevos. */
+  --surface-search: color-mix(in srgb, var(--axi-muted) 58%, var(--background));
+  /* Fila seleccionada: tinte NEUTRO. El coral es color de acción y pintar seis
+     filas con él las convierte en seis llamadas a la acción a la vez. */
+  --surface-selected: color-mix(in srgb, var(--foreground) 3.5%, var(--background));
+  /* «Elevarse» es ir hacia la luz: al blanco en claro, a un gris claro en
+     oscuro. Con `--background` a secas, en oscuro subir era ir al negro. */
+  --surface-lift: var(--background);
 }
 
 /* El tema oscuro redefine SOLO tokens, nunca componentes, y va guardado para
@@ -64,6 +75,9 @@
     --axi-info: #60a5fa;
     --axi-on-color: #0a0a0a;
     --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+    --surface-search: var(--axi-muted);
+    --surface-selected: color-mix(in srgb, var(--foreground) 6%, var(--background));
+    --surface-lift: color-mix(in srgb, var(--foreground) 11%, var(--background));
   }
 }
 :root[data-theme="dark"] {
@@ -80,9 +94,16 @@
   --axi-info: #60a5fa;
   --axi-on-color: #0a0a0a;
   --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --surface-search: var(--axi-muted);
+  --surface-selected: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --surface-lift: color-mix(in srgb, var(--foreground) 11%, var(--background));
 }
 
 * { box-sizing: border-box; }
+/* Sin esto, cualquier `display` de una clase gana al atributo `hidden` y la
+   hoja, la banda y el botón de limpiar salen siempre. En el Artifact publicado
+   no se nota porque su reset ya lo trae; abriendo el fichero a pelo, sí. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -195,65 +216,135 @@ button { font: inherit; color: inherit; }
 
 .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-/* El buscador: el input NO se desmonta, solo cambia de ancho. */
-.search { position: relative; flex: 1 1 260px; min-width: 220px; max-width: 340px; z-index: 30; }
-.search[data-expanded="true"] { max-width: 560px; }
+/* ── El buscador ────────────────────────────────────────────────────────────
+   Pastilla completa sobre superficie neutra elevada, como la referencia. NADA
+   de anillo coral al enfocar: el coral es color de acción, y un campo enfocado
+   no es una acción — es dónde estás. La separación la dan la sombra y el
+   propio cambio de superficie.
+
+   La sombra va como `drop-shadow` en el CONTENEDOR y no como `box-shadow` en
+   cada parte: al abrirse, campo y panel son dos cajas pegadas, y dos sombras
+   dejan una costura visible justo en la unión. `drop-shadow` sigue la silueta
+   de las dos como si fueran una. */
+.search {
+  position: relative; flex: 1 1 280px; min-width: 240px; max-width: 360px; z-index: 30;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / .05)) drop-shadow(0 4px 12px rgb(0 0 0 / .06));
+}
+.search[data-expanded="true"] {
+  max-width: 620px;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / .06)) drop-shadow(0 14px 40px rgb(0 0 0 / .14));
+}
 @media (prefers-reduced-motion: no-preference) {
-  .search { transition: max-width .42s cubic-bezier(.16,1,.3,1); }
+  .search { transition: max-width .44s cubic-bezier(.16,1,.3,1), filter .3s ease-out; }
 }
+
 .search__box {
-  display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px;
-  border: 1px solid var(--color-input); border-radius: var(--radius-md);
-  background: var(--background);
+  display: flex; align-items: center; gap: 11px; height: 40px; padding: 0 16px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  background: var(--surface-search);
 }
+@media (prefers-reduced-motion: no-preference) {
+  .search__box { transition: border-radius .3s cubic-bezier(.16,1,.3,1), background-color .2s; }
+}
+/* Abierto, campo y panel son UNA tarjeta: el campo pierde las esquinas de
+   abajo y el panel las de arriba. */
 .search[data-expanded="true"] .search__box {
-  border-color: var(--axi-brand);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--axi-brand) 22%, transparent);
-  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
 }
-.search__box svg { color: var(--color-muted-foreground); flex: none; }
+/* Trazo fino y tamaño generoso: es lo que hace que se lea como la referencia
+   y no como un input de formulario. */
+.search__box > svg { color: var(--color-muted-foreground); flex: none; stroke-width: 1.5; }
 .search__box input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
-  color: inherit; font: inherit; font-size: 13.5px;
+  color: inherit; font: inherit; font-size: 14.5px;
 }
 .search__box input::placeholder { color: var(--color-muted-foreground); }
 
 .search__panel {
-  position: absolute; inset-inline: 0; top: 35px;
-  border: 1px solid var(--axi-brand); border-top-color: var(--color-border-soft);
-  border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg);
-  background: var(--background); box-shadow: var(--shadow-overlay);
-  overflow: hidden;
+  position: absolute; inset-inline: 0; top: 39px;
+  border: 1px solid var(--color-border-soft); border-top: 0;
+  border-radius: 0 0 22px 22px;
+  background: var(--surface-search);
+  padding: 4px; overflow: hidden;
 }
 .search[data-expanded="false"] .search__panel { display: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .search[data-expanded="true"] .search__panel { animation: drop .22s cubic-bezier(.16,1,.3,1); }
+  .search[data-expanded="true"] .search__panel { animation: drop .24s cubic-bezier(.16,1,.3,1); }
 }
-@keyframes drop { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes drop { from { opacity: 0; transform: translateY(-8px); } }
 
 .search__caption {
-  padding: 8px 12px 6px; font-size: 10.5px; font-weight: 600;
+  padding: 7px 12px 7px; font-size: 10.5px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-muted-foreground);
 }
+/* La fila se ELEVA al pasar por encima —sube a la superficie de la página y
+   coge sombra— en vez de teñirse. Es el gesto de la referencia y es el que se
+   lee como premium: la opción se levanta hacia ti. */
 .search__opt {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 7px 12px; border: 0; background: transparent; cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 12px; border: 0; border-radius: 14px;
+  background: transparent; cursor: pointer; text-align: left;
 }
-.search__opt:hover, .search__opt[aria-selected="true"] { background: var(--color-accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .search__opt { transition: background-color .16s ease-out, box-shadow .16s ease-out; }
+}
+.search__opt:hover, .search__opt[aria-selected="true"] {
+  background: var(--surface-lift); box-shadow: var(--shadow-float);
+}
+.search__opt:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: -2px; }
 .search__opt-dot { width: 7px; height: 7px; border-radius: 999px; flex: none; }
-.search__opt-name { font-size: 13px; font-weight: 500; }
+.search__opt-name { font-size: 13.5px; font-weight: 500; }
 .search__opt-meta { font-size: 11.5px; color: var(--color-muted-foreground); }
-.search__opt-arrow { margin-left: auto; color: var(--color-muted-foreground); }
-.search__actions { border-top: 1px solid var(--color-border-soft); }
+.search__opt-arrow { margin-left: auto; color: var(--color-muted-foreground); opacity: 0; }
+.search__opt:hover .search__opt-arrow, .search__opt[aria-selected="true"] .search__opt-arrow { opacity: 1; }
+.search__actions { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--color-border-soft); }
 .search__kbd {
-  margin-left: auto; padding: 1px 5px; border-radius: 5px;
+  margin-left: auto; padding: 1px 6px; border-radius: 6px;
   border: 1px solid var(--color-border); font-size: 10.5px;
   color: var(--color-muted-foreground); font-family: "JetBrains Mono", monospace;
 }
+
+/* Accesos rápidos: círculos aparte, del tamaño de la pastilla, atenuados hasta
+   que se los mira. Aparecen al abrir el buscador, que es cuando una acción
+   sobre lo encontrado tiene sentido. */
+.quick { display: flex; align-items: center; gap: 8px; }
+.quick__btn {
+  display: grid; place-items: center; width: 40px; height: 40px; flex: none;
+  border: 1px solid var(--color-border-soft); border-radius: 999px;
+  background: var(--surface-search); cursor: pointer;
+  color: var(--foreground); opacity: .38;
+  box-shadow: var(--shadow-float);
+}
+.quick__btn svg { stroke-width: 1.5; }
+.quick__btn:hover { opacity: 1; }
+.quick__btn:focus-visible { opacity: 1; outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .quick__btn { transition: opacity .2s ease-out, transform .44s cubic-bezier(.16,1,.3,1); }
+  .quick[data-shown="false"] .quick__btn { transform: translateX(-14px) scale(.72); }
+}
+.quick[data-shown="false"] { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .quick[data-shown="mounting"] .quick__btn { transform: translateX(-14px) scale(.72); opacity: 0; }
+  /* Escalonado: salen de detrás de la pastilla uno tras otro, no en bloque. */
+  .quick__btn:nth-child(1) { transition-delay: 0ms; }
+  .quick__btn:nth-child(2) { transition-delay: 45ms; }
+  .quick__btn:nth-child(3) { transition-delay: 90ms; }
+  .quick__btn:nth-child(4) { transition-delay: 135ms; }
+}
+
+/* Lo que no es el buscador se atenúa mientras se busca, sin moverse de sitio:
+   ocultarlo daría un salto de layout justo al enfocar. */
+.toolbar__rest { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+@media (prefers-reduced-motion: no-preference) {
+  .toolbar__rest { transition: opacity .2s ease-out; }
+}
+.toolbar[data-searching="true"] .toolbar__rest { opacity: .34; pointer-events: none; }
 /* El velo vive DENTRO del contenedor de la tabla: no negocia z-index con la
    cabecera ni con el rail, y bloquea el clic para que cerrar no navegue. */
 .veil {
-  position: absolute; inset: 44px 0 0; z-index: 20;
+  position: absolute; inset: 52px 0 0; z-index: 20;
   background: color-mix(in srgb, var(--background) 62%, transparent);
   border-radius: var(--radius-lg);
 }
@@ -297,19 +388,24 @@ button { font: inherit; color: inherit; }
 .chip button:hover { background: color-mix(in srgb, var(--foreground) 10%, transparent); }
 
 /* ── Banda de selección: en el flujo, nunca pegajosa ─────────────────────── */
+/* Superficie propia y elevada, no un bloque coral. Lo único coral de la banda
+   es el botón, que sí es una acción. */
 .band {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  padding: 10px 14px; border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--axi-brand) 30%, transparent);
-  background: var(--color-accent);
+  padding: 11px 14px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--background); box-shadow: var(--shadow-float);
 }
 .band__text { font-size: 13px; }
+.band__text b { font-weight: 600; }
 .band__link {
   border: 0; background: transparent; cursor: pointer; padding: 0;
-  font-size: 13px; font-weight: 600; color: var(--axi-brand-2);
-  text-decoration: underline; text-underline-offset: 3px;
+  font-size: 13px; font-weight: 600; color: var(--foreground);
+  text-decoration: underline; text-decoration-color: var(--axi-brand);
+  text-decoration-thickness: 1.5px; text-underline-offset: 3px;
 }
-:root[data-theme="dark"] .band__link { color: var(--foreground); }
+.band__link:hover { color: var(--axi-brand); }
+.band__link:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 3px; border-radius: 3px; }
 .band__actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 .band__note {
   display: flex; align-items: center; gap: 6px; width: 100%;
@@ -332,7 +428,12 @@ th {
 td { padding: 10px 12px; border-bottom: 1px solid var(--color-border-soft); vertical-align: middle; }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: color-mix(in srgb, var(--axi-muted) 55%, transparent); }
-tr[data-selected="true"] { background: var(--color-accent) !important; }
+/* Tinte NEUTRO, y la única señal coral es la casilla marcada. Seis filas de
+   fondo coral son seis llamadas a la acción compitiendo entre sí, y el coral
+   deja de significar «pulsa aquí». Una guía coral en el borde tampoco: sumada
+   a la casilla son dos señales para lo mismo, y apiladas seis veces vuelven a
+   pintar una franja coral por el costado de la tabla. */
+tr[data-selected="true"] { background: var(--surface-selected); }
 .col-sel { width: 44px; }
 
 input[type="checkbox"] {
@@ -468,7 +569,14 @@ input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .45; }
 }
 .pill:hover { background: var(--color-secondary); }
 .pill:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
-.pill[aria-pressed="true"] { background: var(--color-accent); border-color: color-mix(in srgb, var(--axi-brand) 34%, transparent); font-weight: 500; }
+/* Marcada = ELEVADA, no teñida. Es el mismo gesto que las coincidencias del
+   buscador, y deja el coral para la marquita, que es lo único que aquí actúa.
+   Un relleno coral por cada pastilla marcada convierte la hoja en un semáforo. */
+.pill[aria-pressed="true"] {
+  background: var(--surface-lift); font-weight: 500;
+  border-color: color-mix(in srgb, var(--foreground) 22%, transparent);
+  box-shadow: var(--shadow-float);
+}
 .pill__tick {
   width: 15px; height: 15px; border-radius: 999px; flex: none;
   border: 1.5px solid var(--color-input); display: grid; place-items: center;
@@ -493,10 +601,16 @@ input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .45; }
   transition: background-color .18s, color .18s;
 }
 .seg button:hover { color: var(--foreground); }
-.seg button[aria-checked="true"] { background: var(--color-accent); color: var(--foreground); }
+/* El activo se levanta sobre el carril, que es como se lee un segmentado nativo
+   y no pide teñir nada. */
+.seg button[aria-checked="true"] {
+  background: var(--surface-lift); color: var(--foreground); font-weight: 600;
+  box-shadow: var(--shadow-float);
+}
 .seg button:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
 
-.frow { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.frow { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.frow > :first-child { flex: 1 1 190px; min-width: 0; }
 .frow__label { font-size: 13px; font-weight: 500; }
 .frow__hint { margin-top: 1px; font-size: 11.5px; color: var(--color-muted-foreground); }
 
@@ -518,12 +632,12 @@ select:focus-visible, .textin:focus-visible { outline: 2px solid var(--axi-brand
 .caution svg { flex: none; margin-top: 1px; }
 
 .readout {
-  padding: 9px 11px; border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--axi-violet) 9%, transparent);
-  border: 1px solid color-mix(in srgb, var(--axi-violet) 22%, transparent);
-  font-size: 12px; line-height: 1.5;
+  padding: 10px 12px; border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--axi-muted) 70%, var(--background));
+  border: 1px solid var(--color-border-soft);
+  font-size: 12.5px; line-height: 1.5; color: var(--color-muted-foreground);
 }
-.readout strong { color: var(--axi-violet); font-weight: 600; }
+.readout strong { color: var(--foreground); font-weight: 600; }
 
 /* ── Nota de lectura del mockup ──────────────────────────────────────────── */
 .legend {
@@ -589,16 +703,16 @@ select:focus-visible, .textin:focus-visible { outline: 2px solid var(--axi-brand
       </section>
 
       <section class="tableshell" id="shell">
-        <div class="toolbar">
+        <div class="toolbar" id="toolbar" data-searching="false">
           <div class="search" id="search" data-expanded="false">
             <div class="search__box">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.3-4.3"/></svg>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="11" cy="11" r="7.25"/><path d="M20 20l-4.3-4.3"/></svg>
               <input id="searchInput" type="text" role="combobox" aria-expanded="false"
                      aria-autocomplete="list" aria-controls="searchList" autocomplete="off"
-                     placeholder="Buscar por nombre, correo, teléfono o dominio…"
-                     aria-label="Buscar en la bandeja">
+                     placeholder="Buscar"
+                     aria-label="Buscar por nombre, correo, teléfono o dominio">
               <button class="iconbtn" id="searchClear" hidden aria-label="Limpiar la búsqueda">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>
 
@@ -636,6 +750,22 @@ select:focus-visible, .textin:focus-visible { outline: 2px solid var(--axi-brand
             </div>
           </div>
 
+          <div class="quick" id="quick" data-shown="false" role="group" aria-label="Acciones sobre lo encontrado">
+            <button class="quick__btn" title="Buscar datos de los 2" aria-label="Buscar datos de los 2">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 11.8l-1.4 1.4M3 21l9-9"/></svg>
+            </button>
+            <button class="quick__btn" title="Promover los 2 al CRM" aria-label="Promover los 2 al CRM">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+            </button>
+            <button class="quick__btn" title="Guardar esta búsqueda" aria-label="Guardar esta búsqueda">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+            </button>
+            <button class="quick__btn" title="Limpiar los filtros" aria-label="Limpiar los filtros">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4M19 5L5 19"/></svg>
+            </button>
+          </div>
+
+          <div class="toolbar__rest">
           <button class="btn" id="filterBtn" aria-haspopup="dialog">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
             Filtros
@@ -650,6 +780,7 @@ select:focus-visible, .textin:focus-visible { outline: 2px solid var(--axi-brand
             <span class="chip">60 o más <button aria-label="Quitar filtro 60 o más">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button></span>
             <button class="btn btn--ghost btn--sm">Limpiar</button>
+          </div>
           </div>
         </div>
 
@@ -914,7 +1045,7 @@ select:focus-visible, .textin:focus-visible { outline: 2px solid var(--axi-brand
 
   <div class="sheet__foot">
     <button class="btn btn--ghost" id="clearAll">Limpiar</button>
-    <button class="btn btn--primary" id="applyBtn">Ver <span class="num" id="applyCount">41</span> leads</button>
+    <button class="btn btn--primary" id="applyBtn"><span>Ver <span class="num" id="applyCount">41</span> leads</span></button>
   </div>
 </aside>
 
@@ -1023,6 +1154,16 @@ function setSearchOpen(open) {
   search.dataset.expanded = String(open);
   input.setAttribute("aria-expanded", String(open));
   clearBtn.hidden = !open;
+  document.getElementById("toolbar").dataset.searching = String(open);
+  /* Los círculos se montan y en el siguiente fotograma sueltan la transformada,
+     para que la entrada se anime en vez de aparecer ya colocada. */
+  const quick = document.getElementById("quick");
+  if (open) {
+    quick.dataset.shown = "mounting";
+    requestAnimationFrame(() => { quick.dataset.shown = "true"; });
+  } else {
+    quick.dataset.shown = "false";
+  }
   if (open && !veil) {
     veil = document.createElement("div");
     veil.className = "veil";
@@ -1136,10 +1277,16 @@ function renderDraft() {
   const active = fields.length > 0 ? 3 : 2;
   filterCount.textContent = active;
 }
-requirePills.addEventListener("click", e => {
+/* Delegado en TODO el cuerpo de la hoja, no solo en el primer grupo: antes las
+   pastillas de calidad, origen y estado no se encendían al pulsarlas, y el
+   aviso de «con riesgo» aparecía sin que su pastilla cambiara. */
+sheet.querySelector(".sheet__body").addEventListener("click", e => {
   const pill = e.target.closest(".pill");
   if (!pill) return;
-  pill.setAttribute("aria-pressed", pill.getAttribute("aria-pressed") === "true" ? "false" : "true");
+  const on = pill.getAttribute("aria-pressed") === "true";
+  pill.setAttribute("aria-pressed", on ? "false" : "true");
+  /* El aviso aparece SOLO al exigirlo, no escondido en un tooltip. */
+  if (pill.id === "riskyPill") document.getElementById("riskyCaution").hidden = on;
   renderDraft();
 });
 [modeSeg, document.getElementById("dataSeg")].forEach(seg => {
@@ -1151,12 +1298,9 @@ requirePills.addEventListener("click", e => {
     renderDraft();
   });
 });
-const riskyPill = document.getElementById("riskyPill");
-riskyPill.addEventListener("click", () => {
-  document.getElementById("riskyCaution").hidden = riskyPill.getAttribute("aria-pressed") !== "true";
-});
 document.getElementById("clearAll").addEventListener("click", () => {
-  requirePills.querySelectorAll(".pill").forEach(p => p.setAttribute("aria-pressed", "false"));
+  sheet.querySelectorAll(".pill").forEach(p => p.setAttribute("aria-pressed", "false"));
+  document.getElementById("riskyCaution").hidden = true;
   renderDraft();
 });
 
