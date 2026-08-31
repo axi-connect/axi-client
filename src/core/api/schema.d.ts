@@ -4116,6 +4116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/leads/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_leadIds_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/sources": {
         parameters: {
             query?: never;
@@ -4174,7 +4190,7 @@ export interface paths {
         get: operations["ProspectingController_getSearch_v1"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["ProspectingController_deleteSearch_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4190,6 +4206,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ProspectingController_cancelSearch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_deleteSearches_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4222,7 +4254,7 @@ export interface paths {
         get: operations["ProspectingController_get_v1"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["ProspectingController_deleteLead_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4286,6 +4318,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ProspectingController_discardOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_deleteLeads_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10454,6 +10502,8 @@ export interface components {
                 longitude: number | null;
                 tax_id: string | null;
                 socials: unknown;
+                data_count: number;
+                data_present: string[];
                 category: string | null;
                 quality_score: number;
                 /** @enum {string} */
@@ -10480,6 +10530,11 @@ export interface components {
                 page: number;
                 page_size: number;
             };
+        };
+        LeadIdsDto: {
+            ids: string[];
+            total: number;
+            truncated: boolean;
         };
         SourcesCatalogDto: {
             items: {
@@ -10612,6 +10667,19 @@ export interface components {
             /** Format: uuid */
             search_id: string;
         };
+        DeleteSearchesResultDto: {
+            deleted: number;
+            leads_deleted: number;
+            leads_kept: number;
+            kept: {
+                /** Format: uuid */
+                search_id: string;
+                reason: string;
+            }[];
+        };
+        DeleteSearchesDto: {
+            search_ids: string[];
+        };
         ProspectingStatsDto: {
             discovered: number;
             qualified: number;
@@ -10640,6 +10708,8 @@ export interface components {
             longitude: number | null;
             tax_id: string | null;
             socials: unknown;
+            data_count: number;
+            data_present: string[];
             category: string | null;
             quality_score: number;
             /** @enum {string} */
@@ -10719,12 +10789,25 @@ export interface components {
         };
         EnrichQueuedDto: {
             queued: string[];
+            skipped: string[];
         };
         EnrichLeadsDto: {
             lead_ids: string[];
         };
         DiscardLeadDto: {
             reason?: string;
+        };
+        DeleteLeadsDto: {
+            lead_ids: string[];
+        };
+        DeleteLeadsResultDto: {
+            deleted: number;
+            kept: {
+                /** Format: uuid */
+                lead_id: string;
+                reason: string;
+            }[];
+            missing: number;
         };
         SuppressionDto: {
             /** Format: uuid */
@@ -19121,13 +19204,21 @@ export interface operations {
             query?: {
                 page?: number;
                 page_size?: number;
-                status?: "new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed";
-                source?: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
-                quality_status?: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
+                status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
                 allows?: "whatsapp" | "email" | "manual";
                 min_score?: number;
                 city?: string;
                 q?: string;
+                max_score?: number;
+                legal_basis?: ("consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown")[];
+                min_data?: number;
+                require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                require_mode?: "all" | "any";
+                created_after?: string;
+                created_before?: string;
+                sort?: "score" | "data" | "recent";
             };
             header?: never;
             path?: never;
@@ -19141,6 +19232,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LeadsListDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_leadIds_v1: {
+        parameters: {
+            query?: {
+                status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
+                allows?: "whatsapp" | "email" | "manual";
+                min_score?: number;
+                city?: string;
+                q?: string;
+                max_score?: number;
+                legal_basis?: ("consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown")[];
+                min_data?: number;
+                require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                require_mode?: "all" | "any";
+                created_after?: string;
+                created_before?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadIdsDto"];
                 };
             };
         };
@@ -19249,6 +19374,27 @@ export interface operations {
             };
         };
     };
+    ProspectingController_deleteSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteSearchesResultDto"];
+                };
+            };
+        };
+    };
     ProspectingController_cancelSearch_v1: {
         parameters: {
             query?: never;
@@ -19266,6 +19412,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_deleteSearches_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteSearchesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteSearchesResultDto"];
                 };
             };
         };
@@ -19307,6 +19476,25 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LeadDetailDto"];
                 };
+            };
+        };
+    };
+    ProspectingController_deleteLead_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -19397,6 +19585,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ProspectingController_deleteLeads_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteLeadsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteLeadsResultDto"];
+                };
             };
         };
     };

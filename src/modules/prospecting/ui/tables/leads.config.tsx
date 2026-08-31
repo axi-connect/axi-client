@@ -12,7 +12,6 @@ import { StatusBadge } from "@/shared/components/features/status-badge";
 import {
   QUALITY_STATUS_MAP,
   SOURCE_LABELS,
-  canPromote,
   dataCompleteness,
   mapLeadToRow,
   rowChannelSubject,
@@ -33,7 +32,7 @@ import { QualityIndex } from "../components/QualityIndex";
  * el ojo tiene que separar de un vistazo es «me escribió» de «lo salimos a
  * buscar», no Google de OpenStreetMap.
  */
-const SOURCE_DOTS: Record<LeadSource, string> = {
+export const SOURCE_DOTS: Record<LeadSource, string> = {
   ctwa: "bg-[var(--logo-whatsapp)]",
   meta_lead_ads: "bg-[var(--logo-messenger)]",
   manual: "bg-muted-foreground",
@@ -111,8 +110,12 @@ const BASE_COLUMNS: ColumnDef<LeadRow>[] = [
     cell: ({ row }) => <QualityIndex row={row.original} />,
   },
   {
-    accessorKey: "has_email",
+    accessorKey: "data_count",
     header: "Datos",
+    // Ordenable de verdad: antes el `accessorKey` era `has_email`, una mentira
+    // de conveniencia que hacía que ordenar por «Datos» ordenara por «tiene
+    // correo». Ahora es la columna generada que el servidor cuenta.
+    sortable: true,
     minWidth: 92,
     cell: ({ row }) => <DataDots row={row.original} />,
   },
@@ -169,51 +172,20 @@ function DataDots({ row }: { row: LeadRow }) {
   );
 }
 
-export interface LeadColumnsOptions {
-  /** Solo con `leads:promote`: sin permiso no se ofrece seleccionar nada. */
-  selectable: boolean;
-  selected: ReadonlySet<string>;
-  onToggle: (id: string) => void;
-  /**
-   * Qué filas se pueden marcar. Se pasa en vez de cablear `canPromote` porque
-   * las acciones en lote ya no son una: a un lead se le pueden buscar datos
-   * aunque no sea promovible.
-   */
-  selectableRow?: (row: LeadRow) => boolean;
-  /** Ids con una búsqueda de datos en curso. */
-  working?: ReadonlySet<string>;
-}
-
 /**
- * Columnas por factory y no constante: la casilla necesita leer la selección y
- * `ColumnDef.cell` solo recibe la fila. Mismo criterio que
- * `buildPromotionFormFields` en marketing.
+ * Columnas por factory y no constante: la del nombre necesita saber qué filas
+ * están buscando datos, y `ColumnDef.cell` solo recibe la fila.
+ *
+ * **La casilla de selección ya NO se declara aquí.** La sintetiza `DataTable`
+ * desde su prop `selection`, con `pinned: "start"` — que es lo único que
+ * garantiza que salga primera y no se caiga dentro del panel «Ver más», porque
+ * `useResponsiveColumns` reordena y la posición en el array no era la de
+ * pantalla. Aquí estaba, en efecto, en el sitio equivocado.
  */
 export function buildLeadColumns(
-  options: LeadColumnsOptions,
+  working: ReadonlySet<string> = EMPTY,
 ): ColumnDef<LeadRow>[] {
-  const columns = [nameColumn(options.working ?? EMPTY), ...BASE_COLUMNS];
-  if (!options.selectable) return columns;
-  return [
-    {
-      accessorKey: "id",
-      header: "",
-      minWidth: 44,
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          className="accent-primary size-4 shrink-0"
-          checked={options.selected.has(row.original.id)}
-          // Un lead ya promovido o suprimido no se puede seleccionar: ofrecer
-          // la casilla y que el lote falle después es un botón que miente.
-          disabled={!(options.selectableRow ?? canPromote)(row.original)}
-          onChange={() => options.onToggle(row.original.id)}
-          aria-label={`Seleccionar ${row.original.name}`}
-        />
-      ),
-    },
-    ...columns,
-  ];
+  return [nameColumn(working), ...BASE_COLUMNS];
 }
 
 const EMPTY: ReadonlySet<string> = new Set();

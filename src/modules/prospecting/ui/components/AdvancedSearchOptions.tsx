@@ -19,16 +19,18 @@ import {
 import { Switch } from "@/shared/components/ui/switch";
 
 import {
-  admissionChips,
-  admissionSentence,
   ADMISSION_DATA_FIELDS,
-  hasAdmission,
-  RECORD_CEILINGS,
   REQUIRABLE_LABELS,
   REQUIRABLE_ORDER,
   SCORE_STEPS,
-  type AdmissionDTO,
   type RequirableField,
+} from "../../domain/criteria";
+import {
+  admissionChips,
+  admissionSentence,
+  hasAdmission,
+  RECORD_CEILINGS,
+  type AdmissionDTO,
 } from "../../domain/search";
 
 const ANY = "any";

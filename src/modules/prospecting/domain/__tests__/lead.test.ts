@@ -33,6 +33,9 @@ const BASE: LeadDTO = {
   longitude: null,
   tax_id: null,
   socials: null,
+  /** Los cuenta POSTGRES, en dos columnas generadas. El cliente los LEE. */
+  data_count: 2,
+  data_present: ["phone", "email"],
   category: null,
   quality_score: 92,
   quality_status: "verified",
@@ -243,21 +246,22 @@ describe("readSocials", () => {
 });
 
 describe("dataCompleteness", () => {
-  const row = (over: Partial<ReturnType<typeof mapLeadToRow>> = {}) =>
-    mapLeadToRow({ ...BASE, ...over } as LeadDTO);
-
-  it("cuenta los datos que se conocen, no la calidad", () => {
-    // Este lead está VERIFICADO y aun así solo tiene dos de los cinco datos.
-    // Son dos ejes distintos y por eso se cuentan aparte.
-    expect(dataCompleteness(row())).toEqual({ filled: 2, total: 5 });
+  it("LEE el conteo del servidor, no lo deriva de las columnas", () => {
+    // Este lead está VERIFICADO y aun así solo tiene dos de los cinco datos:
+    // son dos ejes distintos y por eso se cuentan aparte.
+    //
+    // Y el conteo lo hace POSTGRES. Antes se derivaba aquí de cinco booleanos,
+    // y uno de ellos —«tiene web»— miraba `website` e ignoraba `domain`, que es
+    // como el mismo lead acababa contando 3 en la puerta de admisión y 2 en la
+    // bandeja. Tres copias de la regla convergieron en una por eliminación.
+    expect(dataCompleteness(mapLeadToRow(BASE))).toEqual({ filled: 2, total: 5 });
   });
 
-  it("un lead con todo llega a cinco", () => {
+  it("un lead con los cinco llega a cinco", () => {
     const full = mapLeadToRow({
       ...BASE,
-      address: "Cl. 84A #8-75",
-      website: "https://kokoa.co",
-      socials: { instagram: "https://instagram.com/kokoa_co" },
+      data_count: 5,
+      data_present: ["phone", "email", "website", "address", "instagram"],
     } as LeadDTO);
     expect(dataCompleteness(full)).toEqual({ filled: 5, total: 5 });
   });
@@ -265,10 +269,23 @@ describe("dataCompleteness", () => {
   it("un lead de mapa recién descubierto no tiene ninguno", () => {
     const bare = mapLeadToRow({
       ...BASE,
-      email: null,
-      phone: null,
+      data_count: 0,
+      data_present: [],
     } as LeadDTO);
     expect(dataCompleteness(bare)).toEqual({ filled: 0, total: 5 });
+  });
+
+  it("un lead con SOLO dominio cuenta la web, igual que la admisión", () => {
+    // La divergencia que F5 cerró, fijada: el servidor cuenta `website ??
+    // domain`, así que aquí llega ya contada y el cliente no puede discrepar.
+    const onlyDomain = mapLeadToRow({
+      ...BASE,
+      website: null,
+      domain: "kokoa.co",
+      data_count: 3,
+      data_present: ["phone", "email", "website"],
+    } as LeadDTO);
+    expect(dataCompleteness(onlyDomain)).toEqual({ filled: 3, total: 5 });
   });
 });
 
@@ -277,22 +294,43 @@ describe("mapLeadToRow — lo que no se puede caer", () => {
     // Si al añadir dirección y redes alguien reescribe esta función desde el
     // DTO nuevo, `has_email`/`has_phone` se caen y la columna «Puedo contactar
     // por» vuelve a pintar el correo en verde para leads sin correo.
-    const row = mapLeadToRow({ ...BASE, email: null } as LeadDTO);
+    const row = mapLeadToRow({
+      ...BASE,
+      email: null,
+      data_count: 1,
+      data_present: ["phone"],
+    } as LeadDTO);
     expect(row.has_email).toBe(false);
     expect(row.has_phone).toBe(true);
     expect(row.allows_email).toBe(true);
   });
 
-  it("aplana los datos nuevos como booleanos, sin arrastrar el valor", () => {
+  it("NO arrastra valores a la fila: la tabla no pinta PII", () => {
     const row = mapLeadToRow({
       ...BASE,
       address: "Cl. 84A #8-75",
       socials: { instagram: "https://instagram.com/kokoa_co" },
+      data_count: 4,
+      data_present: ["phone", "email", "address", "instagram"],
     } as LeadDTO);
-    expect(row.has_address).toBe(true);
-    expect(row.has_socials).toBe(true);
-    expect(row.has_website).toBe(false);
+    expect(row.data_count).toBe(4);
     expect(Object.values(row)).not.toContain("Cl. 84A #8-75");
+    // `data_present` es un ARREGLO y `DataRow` solo admite primitivos: si
+    // alguien lo aplanara a la fila, `DataTable` dejaría de compilar. Los
+    // booleanos que la tabla necesita se derivan de él, no se copia el arreglo.
+    expect(Object.keys(row)).not.toContain("data_present");
+  });
+
+  it("«tiene correo» sale del vocabulario del SERVIDOR, no de la columna", () => {
+    // Es lo que hace que la ficha y el filtro digan lo mismo. Derivarlo de
+    // `lead.email` era la divergencia de `website`/`domain` esperando repetirse.
+    const row = mapLeadToRow({
+      ...BASE,
+      email: "marcela@sazon.co",
+      data_present: ["phone"],
+    } as LeadDTO);
+    expect(row.has_email).toBe(false);
+    expect(row.has_phone).toBe(true);
   });
 });
 

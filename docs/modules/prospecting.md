@@ -1,8 +1,8 @@
 # Captación de leads (`/marketing/leads`)
 
 > Slice `prospecting` del frontend. Backend: `axi-server/docs/plans/prospecting_module_plan.md`.
-> Estado: **F1–F4c** — bandeja, ficha, calidad, búsquedas con mapa, fuentes, panel de proveedores
-> de plataforma, enriquecimiento de datos y su visor de fuentes en vivo.
+> Estado: **F1–F5** — bandeja con filtros avanzados y selección en lote, ficha, calidad, búsquedas
+> con mapa, fuentes, panel de proveedores de plataforma, enriquecimiento y su visor en vivo.
 
 ## La idea en una frase
 
@@ -160,6 +160,74 @@ salieron». Son dos preguntas y se contestan por separado — fundirlas da una l
 donde no se encuentra nada. Las etiquetas viven en `PROVIDER_LABELS` y `ATTRIBUTE_LABELS`
 (`domain/lead.ts`), no duplicadas en el componente.
 
+## Filtrar la bandeja (F5)
+
+### Las opciones salen del diccionario, y ahí murió un bug de meses
+
+Los tres desplegables anteriores tenían sus `<SelectItem>` escritos a mano en el JSX. El de orígenes
+listaba **tres de los seis** y le faltaban `google_places`, `openstreetmap` y `serp` — o sea todos los
+que produce una búsqueda, que son la mayoría de la bandeja. Al de estados le faltaban tres más.
+Nadie lo vio porque **una opción que no existe no da error**: simplemente no se puede pedir.
+
+Ahora `ui/tables/leads.filters.ts` genera el esquema recorriendo `SOURCE_LABELS`, `STATUS_LABELS`,
+`QUALITY_LABELS`, `LEGAL_BASIS_LABELS` y `CHANNEL_ORDER`, que son `Record<Enum, string>` y el
+compilador ya vigila contra el enum del contrato. Añadir un origen en el backend **rompe la
+compilación aquí** hasta que se le dé etiqueta, y hay un test que cuenta las opciones.
+
+`GET /prospecting/sources` **no sirve** para esto aunque lo parezca: devuelve solo las tres fuentes
+*buscables* y se deja fuera `ctwa`, `meta_lead_ads` y `manual`.
+
+`enriching` no se ofrece, y no es un olvido: es un lead que la puerta de admisión aún no ha juzgado,
+nace invisible y el backend lo excluye de la bandeja. Sería un filtro que siempre devuelve vacío.
+
+### Un solo vocabulario para las dos pantallas
+
+`domain/criteria.ts` tiene `REQUIRABLE_LABELS`, `REQUIRABLE_ORDER`, `SCORE_STEPS`, `SCORE_CEILINGS` y
+`ADMISSION_DATA_FIELDS`. **No es de búsqueda ni de lead: es del slice**, y lo consumen los criterios
+de admisión de una búsqueda y los filtros de la bandeja, que hacen la misma pregunta. Se movió desde
+`domain/search.ts` **sin reexportar**: un reexporte deja dos puertas al mismo símbolo.
+
+Los nombres de los parámetros son los del backend —`min_data`, `require`, `require_mode`,
+`min_score`— y eso no es cosmético: en el servidor la misma regla en dos sitios ya llegó a producción
+contando `website ?? domain` en uno y `website` en el otro.
+
+### El conteo lo hace Postgres
+
+`data_count` y `data_present` son **dos columnas generadas** y viajan en el DTO. El cliente ya no
+cuenta: `dataCompleteness` lee `data_count`, y `has_email`/`has_phone` se derivan de `data_present`,
+que habla el vocabulario de la admisión. Tres copias de la regla convergieron en una **por
+eliminación**, que es la única convergencia que se queda convergida.
+
+Efecto colateral bueno: la columna «Datos» **ya se puede ordenar**. Su `accessorKey` era `has_email`,
+una mentira de conveniencia que hacía que ordenar por «Datos» ordenara por «tiene correo».
+
+### «Seleccionar los N que cumplen» pide los ids de verdad
+
+Dos pasos, y el segundo es explícito. La casilla de cabecera **nunca pasa de la página**; la banda
+ofrece el resto, y al aceptar se piden los ids a `GET /prospecting/leads/ids` en vez de mandar un
+filtro a las acciones de lote. Así lo que se promueve son ids concretos que quedan en la auditoría
+—«los que cumplían un filtro que ya no existe» no se puede reproducir seis meses después— y el
+usuario actúa sobre el mismo conjunto que vio.
+
+Por encima de 50 en ese modo, promover **pide confirmación** con el número real. Promover escribe
+datos de terceros en el CRM y no se deshace.
+
+### Aplicar un filtro hace TRES cosas
+
+Fijar el valor, volver a la página 1 y **tirar la selección**.
+
+Lo de la página 1 es a mano porque `usePaginatedList` dice en su comentario que lo hace al cambiar
+`extraParams` y **no lo hace**; el síntoma es feo: en la página 7 cambias un filtro que deja dos
+páginas y ves una tabla vacía que se lee como «no hay resultados». Lo de la selección es de
+seguridad: una selección «todos los que cumplen» atada a un filtro que el usuario ya cambió es
+exactamente cómo se promueven cuatrocientos leads que nadie quería.
+
+### El embudo NO reacciona a los filtros, y lo dice
+
+Va etiquetado «De toda la base». Si reaccionara sería una tautología: filtra a «nuevos» y el embudo
+informa `promoted: 0` — aritméticamente correcto y engañoso. El número filtrado vive en el pie de la
+tabla, de `meta.total`.
+
 ## Gotchas del contrato
 
 1. **`POST /prospecting/leads/promote` responde 200 con fallos parciales.** El cuerpo trae
@@ -210,5 +278,9 @@ cuatro copias), `MapPreview` + `LocationSearch` (teselas reales de OSM, sin libr
   endpoint de actualización, que sí los acepta. La tarjeta ya los muestra.
 - **Reintentar una pasada fallida** desde el visor. La fila deja el estado escrito, así que el dato
   está; reintentar es una decisión de alguien, no un efecto automático.
+- **Absorber los otros paneles de filtros** en `FilterPanel`: `ContactFilters` del CRM,
+  `ProductFilters` del catálogo, `AdvancedSearchOptions` de la hoja de búsqueda y los `Select` sueltos
+  de cartera y admin. La regla para que no aparezca una quinta copia: **un listado nuevo con filtros
+  usa `FilterPanel` + un `*.filters.ts`, nunca un panel propio.**
 - **La bandeja no tiene visor**, solo el chip de «buscando datos». Es a propósito (ver arriba: no se
   une a las salas por lead), pero si algún día hace falta, la fila ya está escrita.

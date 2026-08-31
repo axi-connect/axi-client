@@ -7,8 +7,6 @@ import type {
   IcpDefinitionDTO,
   LeadDTO,
   LeadDetailDTO,
-  LeadSource,
-  LeadStatus,
   OutreachChannel,
   PromoteResultDTO,
   ProspectingStatsDTO,
@@ -26,18 +24,46 @@ import type {
 
 export type ProspectingSettingsDTO = Schemas["ProspectingSettingsDto"];
 export type SuppressionDTO = Schemas["SuppressionDto"];
+export type LeadIdsDTO = Schemas["LeadIdsDto"];
 
+/**
+ * Los filtros de la bandeja, tal como viajan.
+ *
+ * **Los multivalor van como CSV en un solo parámetro y NO como arreglo**, y no
+ * es capricho: `Params` está tipado a primitivos y `http.ts` hace
+ * `String(value)`, así que un arreglo funcionaría por accidente (`String(['a',
+ * 'b'])` da `"a,b"`) y un objeto se convertiría en `"[object Object]"` sin que
+ * nada avise. Se hace explícito aquí y el backend parte por comas.
+ *
+ * Los nombres son los del backend, que a su vez son los de los criterios de
+ * admisión: `min_data`, `require`, `min_score`. Una sola forma de preguntar lo
+ * mismo.
+ */
 export interface ListLeadsParams extends Params {
   page?: number;
   page_size?: number;
-  status?: LeadStatus;
-  source?: LeadSource;
-  quality_status?: QualityStatus;
-  /** «Enséñame solo los que permiten WhatsApp». */
+  /** CSV de `LeadStatus`. */
+  status?: string;
+  /** CSV de `LeadSource`. */
+  source?: string;
+  /** CSV de `QualityStatus`. */
+  quality_status?: string;
+  /** CSV de `LegalBasis`. */
+  legal_basis?: string;
+  /** «Enséñame solo los que permiten WhatsApp». Uno solo. */
   allows?: OutreachChannel;
   min_score?: number;
+  max_score?: number;
+  /** Cuántos de los cinco datos. Mismo nombre y rango que la admisión. */
+  min_data?: number;
+  /** CSV de `RequirableField`. */
+  require?: string;
+  require_mode?: "all" | "any";
+  created_after?: string;
+  created_before?: string;
   city?: string;
   q?: string;
+  sort?: "score" | "data" | "recent";
 }
 
 /**
@@ -52,6 +78,33 @@ export function listLeads(
   params: ListLeadsParams = {},
 ): Promise<Paginated<LeadDTO>> {
   return http.get<Paginated<LeadDTO>>("/prospecting/leads", params);
+}
+
+/**
+ * Cuántos leads cumplen un filtro, sin traerlos.
+ *
+ * `page_size: 1` y se lee `meta.total`: es el número que la hoja de filtros
+ * pinta en su botón. **No hace falta un endpoint de conteo** — el listado ya lo
+ * devuelve, y usar el mismo camino garantiza que el número y la lista no puedan
+ * discrepar.
+ */
+export async function countLeads(params: ListLeadsParams = {}): Promise<number> {
+  const page = await listLeads({ ...params, page: 1, page_size: 1 });
+  return page.meta.total;
+}
+
+/**
+ * Los ids de TODO lo que cumple el filtro.
+ *
+ * Lo que convierte «seleccionar los 249 que cumplen» en 249 ids reales, para
+ * que las acciones en lote sigan recibiendo ids y la auditoría pueda decir a los
+ * seis meses a QUIÉN se le escribió la PII en el CRM. `total` puede ser mayor
+ * que `ids.length`: el tope acota el array, no el filtro.
+ */
+export function listLeadIds(
+  params: Omit<ListLeadsParams, "page" | "page_size" | "sort"> = {},
+): Promise<LeadIdsDTO> {
+  return http.get<LeadIdsDTO>("/prospecting/leads/ids", params);
 }
 
 export function getLead(leadId: string): Promise<LeadDetailDTO> {

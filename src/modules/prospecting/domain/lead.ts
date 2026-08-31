@@ -318,10 +318,31 @@ export interface QualityAxisScore {
   label: string;
   question: string;
   score: number;
+  /** El PESO del eje, que lo pone el tenant. No es 25 para todos. */
   max: number;
+  /** ¿Se pudo medir algo de este eje? */
+  measured: boolean;
 }
 
-const AXIS_MAX = 25;
+/**
+ * El techo de un eje NO es fijo, y darlo por 25 era un bug con dos caras.
+ *
+ * Los pesos por defecto son `contactability: 25`, `identity: 20`, `fit: 35`,
+ * `provenance: 20`, **y el tenant los edita**. Con 25 a pelo, `fit` se recortaba
+ * de 35 a 25 —un encaje perfecto salía truncado— e `identity` y `provenance`
+ * sobre-informaban sobre 25 cuando su máximo es 20.
+ *
+ * El backend YA escribe el máximo de cada eje en `quality_signals.evaluable`
+ * (es el peso del eje), así que no hace falta nada nuevo del servidor: se lee de
+ * ahí. `FALLBACK_AXIS_MAX` solo cubre las filas viejas puntuadas antes de que
+ * `evaluable` existiera; en cuanto se repuntúan, sobra.
+ *
+ * Y de regalo, `evaluable === 0` es lo único que el frontend no podía decir
+ * hasta ahora: «este eje no se pudo medir», que es exactamente lo que significa
+ * la invariante F2-D1 —una señal no medida no baja la nota, sale del
+ * denominador—.
+ */
+const FALLBACK_AXIS_MAX = 25;
 
 export function readQualityAxes(signals: unknown): QualityAxisScore[] {
   const record =
@@ -332,13 +353,18 @@ export function readQualityAxes(signals: unknown): QualityAxisScore[] {
     typeof record.axes === "object" && record.axes !== null
       ? (record.axes as Record<string, unknown>)
       : {};
-  return QUALITY_AXES.map((axis) => ({
-    key: axis.key,
-    label: axis.label,
-    question: axis.question,
-    score: clampScore(axes[axis.key]),
-    max: AXIS_MAX,
-  }));
+  return QUALITY_AXES.map((axis) => {
+    const max = readAxisEvaluable(signals, axis.key) || FALLBACK_AXIS_MAX;
+    return {
+      key: axis.key,
+      label: axis.label,
+      question: axis.question,
+      score: clampScore(axes[axis.key], max),
+      max,
+      /** `false` = nadie lo pudo medir. La barra va vacía y lo dice. */
+      measured: readAxisEvaluable(signals, axis.key) > 0,
+    };
+  });
 }
 
 /** ¿Ya hay algo medido, o el índice todavía no lo ha tocado nadie? */
@@ -346,9 +372,9 @@ export function hasQualitySignals(signals: unknown): boolean {
   return readQualityAxes(signals).some((axis) => axis.score > 0);
 }
 
-function clampScore(raw: unknown): number {
+function clampScore(raw: unknown, max: number): number {
   if (typeof raw !== "number" || !Number.isFinite(raw)) return 0;
-  return Math.min(AXIS_MAX, Math.max(0, Math.round(raw)));
+  return Math.min(max, Math.max(0, Math.round(raw)));
 }
 
 /**
@@ -404,10 +430,14 @@ export type LeadRow = {
    */
   has_email: boolean;
   has_phone: boolean;
-  /** Los otros tres datos que cuenta la columna «Datos». Booleanos por lo mismo. */
-  has_address: boolean;
-  has_website: boolean;
-  has_socials: boolean;
+  /**
+   * Cuántos de los cinco datos, contado por POSTGRES.
+   *
+   * Antes se derivaba aquí de cinco booleanos, y uno de ellos —«tiene web»—
+   * miraba solo `website` e ignoraba `domain`, que es como el mismo lead
+   * acababa contando distinto en la bandeja y en la puerta de admisión.
+   */
+  data_count: number;
   status: LeadStatus;
   city: string | null;
   created_at: string;
@@ -440,11 +470,12 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
     allows_whatsapp: lead.allowed_channels.includes("whatsapp"),
     allows_email: lead.allowed_channels.includes("email"),
     allows_manual: lead.allowed_channels.includes("manual"),
-    has_email: lead.email !== null,
-    has_phone: lead.phone !== null,
-    has_address: lead.address !== null,
-    has_website: lead.website !== null,
-    has_socials: countSocials(lead.socials) > 0,
+    // Del vocabulario del SERVIDOR y no de las columnas: `data_present` cuenta
+    // «web» si hay `website` o `domain`, que es lo que hace la admisión.
+    // Derivarlo aquí de `lead.website` era la divergencia.
+    has_email: lead.data_present.includes("email"),
+    has_phone: lead.data_present.includes("phone"),
+    data_count: lead.data_count,
     status: lead.status,
     city: lead.city,
     created_at: lead.created_at,
@@ -496,12 +527,16 @@ export function readSocials(socials: unknown): LeadSocial[] {
   });
 }
 
-function countSocials(socials: unknown): number {
-  return readSocials(socials).length;
-}
-
 /**
- * Cuántos de los datos clave conocemos.
+ * Cuántos de los datos clave conocemos, y cuáles.
+ *
+ * **Lo cuenta POSTGRES, en dos columnas generadas.** Antes se contaba aquí, y
+ * la misma regla vivía en tres sitios: este fichero, `countData` del backend y
+ * la expresión que juzga la admisión. Ya habían divergido en producción —el
+ * backend contaba `website ?? domain` y el cliente solo `website`, así que un
+ * lead con dominio y sin web era ADMITIDO por una búsqueda de «3 datos mínimo»
+ * y luego la bandeja lo enseñaba como «2 de 5»—. Tres copias convergen en una
+ * por ELIMINACIÓN, que es la única convergencia que se queda convergida.
  *
  * **No es calidad, y por eso vive aparte del índice.** Un lead puede tener los
  * cinco datos y seguir sin permiso de WhatsApp; y uno con dos datos verificados
@@ -509,42 +544,23 @@ function countSocials(socials: unknown): number {
  */
 export const DATA_FIELDS = 5;
 
-/**
- * Lo mismo, sobre el DTO completo en vez de la fila aplanada. La ficha lo usa
- * para saber si una pasada de enriquecimiento aportó algo: sin comparar antes y
- * después, «terminó» y «encontró algo» serían lo mismo, y no lo son.
- */
-export function leadDataCompleteness(lead: {
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  website: string | null;
-  socials: unknown;
-}): { filled: number; total: number } {
-  return dataCompleteness({
-    has_email: lead.email !== null,
-    has_phone: lead.phone !== null,
-    has_address: lead.address !== null,
-    has_website: lead.website !== null,
-    has_socials: readSocials(lead.socials).length > 0,
-  });
+/** El conteo del servidor, tal como viaja. Ya no se calcula: se lee. */
+export function dataCompleteness(lead: { data_count: number }): {
+  filled: number;
+  total: number;
+} {
+  return { filled: lead.data_count, total: DATA_FIELDS };
 }
 
-export function dataCompleteness(lead: {
-  has_email: boolean;
-  has_phone: boolean;
-  has_address: boolean;
-  has_website: boolean;
-  has_socials: boolean;
-}): { filled: number; total: number } {
-  const filled = [
-    lead.has_email,
-    lead.has_phone,
-    lead.has_address,
-    lead.has_website,
-    lead.has_socials,
-  ].filter(Boolean).length;
-  return { filled, total: DATA_FIELDS };
+/**
+ * ¿Este lead tiene ESTE dato?
+ *
+ * Contra `data_present`, que habla el vocabulario de la admisión. Es lo que
+ * permite que la ficha y el filtro digan lo mismo: antes la ficha derivaba
+ * «tiene web» de la columna `website` e ignoraba `domain`.
+ */
+export function hasData(lead: { data_present: string[] }, field: string): boolean {
+  return lead.data_present.includes(field);
 }
 
 export function rowAllowedChannels(row: LeadRow): OutreachChannel[] {
