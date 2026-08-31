@@ -37,6 +37,11 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   storage_bytes: "Almacenamiento (bytes)",
   tts_characters: "Caracteres de voz",
   cmo_analyses: "Análisis de Axel",
+  // Métricas que trae el merge de prospecting. Las cadenas son LAS SUYAS
+  // (feat/prospecting-frontend) a propósito: dos traducciones distintas del
+  // mismo contador acabarían discrepando en el panel del super admin.
+  lead_discoveries: "Leads descubiertos",
+  lead_enrichments: "Datos de leads verificados",
 };
 
 export const OVERAGE_METRICS = Object.keys(OVERAGE_METRIC_LABELS) as OverageMetric[];

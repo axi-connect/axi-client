@@ -2644,6 +2644,70 @@ export interface paths {
         patch: operations["CrmActivitiesController_assignOwner_v1"];
         trace?: never;
     };
+    "/api/v1/crm/agent-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmAgentTasksController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CrmAgentTasksController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/{taskId}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmAgentTasksController_runs_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/task-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmAgentTasksController_allRuns_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/tags": {
         parameters: {
             query?: never;
@@ -4100,6 +4164,438 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_leadIds_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_sources_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_geocode_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_listSearches_v1"];
+        put?: never;
+        post: operations["ProspectingController_startSearch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/deletion-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_deletionPreview_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_getSearch_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ProspectingController_deleteSearch_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_cancelSearch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/searches/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_deleteSearches_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_get_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["ProspectingController_deleteLead_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_promote_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_enrichOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/enrich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_enrichMany_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_discardOne_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_deleteLeads_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/suppressions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_listSuppressions_v1"];
+        put?: never;
+        post: operations["ProspectingController_addSuppression_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/suppressions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ProspectingController_removeSuppression_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_getSettings_v1"];
+        put: operations["ProspectingController_putSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/icp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_getIcp_v1"];
+        put: operations["ProspectingController_putIcp_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/quality/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_qualitySummary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/prospecting/leads/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProspectingController_verify_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformProspectingController_getCatalog_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformProspectingController_listProviders_v1"];
+        put?: never;
+        post: operations["PlatformProspectingController_createProvider_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers/{id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformProspectingController_rotateCredentials_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformProspectingController_updateProvider_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/prospecting/providers/{id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformProspectingController_probeProvider_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/proposals/{proposal_id}/approve": {
         parameters: {
             query?: never;
@@ -4558,7 +5054,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4582,7 +5078,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4721,7 +5217,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -4756,7 +5252,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4783,7 +5279,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4810,7 +5306,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -4840,7 +5336,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -4962,7 +5458,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 used: number;
                 limit: {
                     value: number;
@@ -4994,7 +5490,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -5026,7 +5522,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -7915,6 +8411,21 @@ export interface components {
                 created_by_type: "user" | "ai_agent" | "system";
                 /** Format: uuid */
                 created_by_user_id: string | null;
+                /** @enum {string|null} */
+                assignee_type: "user" | "agent" | null;
+                /** Format: uuid */
+                assigned_agent_id: string | null;
+                objective: string | null;
+                /** @enum {string} */
+                trigger: "manual" | "scheduled" | "automation" | "agent";
+                /** Format: date-time */
+                next_run_at: string | null;
+                /** Format: date-time */
+                last_run_at: string | null;
+                /** @enum {string|null} */
+                last_run_status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped" | null;
+                last_run_reason: string | null;
+                attempt_count: number;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -7943,6 +8454,8 @@ export interface components {
             due_at?: string;
             /** Format: uuid */
             assigned_user_id?: string | null;
+            /** @enum {string} */
+            assignee_type?: "user" | "agent";
         };
         ActivityDto: {
             /** Format: uuid */
@@ -7973,6 +8486,21 @@ export interface components {
             created_by_type: "user" | "ai_agent" | "system";
             /** Format: uuid */
             created_by_user_id: string | null;
+            /** @enum {string|null} */
+            assignee_type: "user" | "agent" | null;
+            /** Format: uuid */
+            assigned_agent_id: string | null;
+            objective: string | null;
+            /** @enum {string} */
+            trigger: "manual" | "scheduled" | "automation" | "agent";
+            /** Format: date-time */
+            next_run_at: string | null;
+            /** Format: date-time */
+            last_run_at: string | null;
+            /** @enum {string|null} */
+            last_run_status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped" | null;
+            last_run_reason: string | null;
+            attempt_count: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -7993,6 +8521,11 @@ export interface components {
             overdue: number;
             due_today: number;
             unassigned: number;
+            agent: {
+                open: number;
+                deferred: number;
+                failed: number;
+            };
         };
         TimelineDto: {
             data: {
@@ -8028,6 +8561,91 @@ export interface components {
         AssignOwnerDto: {
             /** Format: uuid */
             owner_user_id: string | null;
+        };
+        CreateAgentTaskDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            assigned_agent_id: string;
+            objective: string;
+            /** Format: date-time */
+            due_at: string;
+            title?: string;
+            /** Format: uuid */
+            deal_id?: string | null;
+            /** Format: uuid */
+            conversation_id?: string | null;
+        };
+        UpdateAgentTaskDto: {
+            objective?: string;
+            /** Format: date-time */
+            due_at?: string;
+            /** Format: uuid */
+            assigned_agent_id?: string;
+            title?: string | null;
+        };
+        TaskRunsOfTaskDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                activity_id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                agent_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** @enum {string} */
+                status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                reason: string | null;
+                attempt: number;
+                /** Format: date-time */
+                scheduled_for: string;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: uuid */
+                message_id: string | null;
+                detail: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        TaskRunsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                activity_id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                agent_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** @enum {string} */
+                status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                reason: string | null;
+                attempt: number;
+                /** Format: date-time */
+                scheduled_for: string;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: uuid */
+                message_id: string | null;
+                detail: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
         };
         TagsListDto: {
             data: {
@@ -9826,7 +10444,7 @@ export interface components {
                 is_current: boolean;
                 overage_rates: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                     included_quantity: number | null;
                     unit_size: number;
                     amount_cents_per_unit: number;
@@ -9862,7 +10480,7 @@ export interface components {
             /** @default [] */
             overage_rates: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 /** @default null */
                 included_quantity: number | null;
                 unit_size: number;
@@ -10063,6 +10681,516 @@ export interface components {
         LaunchResultDto: {
             /** @enum {string} */
             status: "scheduled" | "running";
+        };
+        LeadsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
+                external_id: string | null;
+                /** @enum {string} */
+                kind: "person" | "business";
+                display_name: string | null;
+                legal_name: string | null;
+                email: string | null;
+                phone: string | null;
+                website: string | null;
+                domain: string | null;
+                country: string | null;
+                city: string | null;
+                address: string | null;
+                latitude: number | null;
+                longitude: number | null;
+                tax_id: string | null;
+                socials: unknown;
+                data_count: number;
+                data_present: string[];
+                category: string | null;
+                quality_score: number;
+                /** @enum {string} */
+                quality_status: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
+                quality_signals: unknown;
+                /** @enum {string} */
+                legal_basis: "consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown";
+                allowed_channels: ("whatsapp" | "email" | "manual")[];
+                /** @enum {string} */
+                status: "new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed";
+                /** Format: uuid */
+                contact_id: string | null;
+                source_ref: unknown;
+                attributes: unknown;
+                /** Format: date-time */
+                last_enriched_at: string | null;
+                /** Format: date-time */
+                promoted_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        LeadIdsDto: {
+            ids: string[];
+            total: number;
+            truncated: boolean;
+        };
+        SourcesCatalogDto: {
+            items: {
+                /** @enum {string} */
+                source: "google_places" | "openstreetmap" | "serp";
+                provider: string;
+                label: string;
+                available: boolean;
+                free: boolean;
+                allowed_channels: ("whatsapp" | "email" | "manual")[];
+                attribution: string | null;
+            }[];
+            categories: {
+                id: string;
+                label: string;
+            }[];
+        };
+        GeocodeResultsDto: {
+            items: {
+                id: string;
+                name: string;
+                detail: string;
+                lat: number;
+                lng: number;
+                kind: string;
+            }[];
+        };
+        SearchesListDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "google_places" | "openstreetmap" | "serp";
+                label: string | null;
+                /** @enum {string} */
+                status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
+                params: {
+                    text: string | null;
+                    category: string | null;
+                    city: string | null;
+                    country: string;
+                    radius_m: number | null;
+                    limit: number;
+                    admission: {
+                        min_score?: number | null;
+                        min_data?: number | null;
+                        require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                        verified_only?: boolean;
+                        max_records?: number | null;
+                    };
+                };
+                found_count: number;
+                new_count: number;
+                duplicate_count: number;
+                rejected_count: number;
+                filtered_count: number;
+                units_spent: number;
+                estimated_total: number | null;
+                error: string | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        DeletionPreviewDto: {
+            leads_to_delete: number;
+            leads_kept: number;
+            missing: number;
+            by_search: {
+                /** Format: uuid */
+                search_id: string;
+                leads_to_delete: number;
+                leads_kept: number;
+            }[];
+        };
+        SearchDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            source: "google_places" | "openstreetmap" | "serp";
+            label: string | null;
+            /** @enum {string} */
+            status: "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
+            params: {
+                text: string | null;
+                category: string | null;
+                city: string | null;
+                country: string;
+                radius_m: number | null;
+                limit: number;
+                admission: {
+                    min_score?: number | null;
+                    min_data?: number | null;
+                    require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                    verified_only?: boolean;
+                    max_records?: number | null;
+                };
+            };
+            found_count: number;
+            new_count: number;
+            duplicate_count: number;
+            rejected_count: number;
+            filtered_count: number;
+            units_spent: number;
+            estimated_total: number | null;
+            error: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        StartSearchDto: {
+            /** @enum {string} */
+            source: "google_places" | "openstreetmap" | "serp";
+            label?: string;
+            text?: string;
+            category?: string;
+            city?: string;
+            /** @default CO */
+            country: string;
+            center?: {
+                lat: number;
+                lng: number;
+            };
+            radius_m?: number;
+            limit: number;
+            admission?: {
+                min_score?: number | null;
+                min_data?: number | null;
+                require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                verified_only?: boolean;
+                max_records?: number | null;
+            };
+        };
+        StartSearchResultDto: {
+            /** Format: uuid */
+            search_id: string;
+        };
+        DeleteSearchesResultDto: {
+            deleted: number;
+            leads_deleted: number;
+            leads_kept: number;
+            kept: {
+                /** Format: uuid */
+                search_id: string;
+                reason: string;
+            }[];
+        };
+        DeleteSearchesDto: {
+            search_ids: string[];
+        };
+        ProspectingStatsDto: {
+            discovered: number;
+            qualified: number;
+            quarantined: number;
+            promoted: number;
+            suppressed: number;
+        };
+        LeadDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            source: "ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp";
+            external_id: string | null;
+            /** @enum {string} */
+            kind: "person" | "business";
+            display_name: string | null;
+            legal_name: string | null;
+            email: string | null;
+            phone: string | null;
+            website: string | null;
+            domain: string | null;
+            country: string | null;
+            city: string | null;
+            address: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            tax_id: string | null;
+            socials: unknown;
+            data_count: number;
+            data_present: string[];
+            category: string | null;
+            quality_score: number;
+            /** @enum {string} */
+            quality_status: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
+            quality_signals: unknown;
+            /** @enum {string} */
+            legal_basis: "consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown";
+            allowed_channels: ("whatsapp" | "email" | "manual")[];
+            /** @enum {string} */
+            status: "new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed";
+            /** Format: uuid */
+            contact_id: string | null;
+            source_ref: unknown;
+            attributes: unknown;
+            /** Format: date-time */
+            last_enriched_at: string | null;
+            /** Format: date-time */
+            promoted_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            last_run: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                lead_id: string;
+                /** @enum {string} */
+                status: "queued" | "running" | "completed" | "partial" | "failed";
+                steps: {
+                    provider: string;
+                    capability: string;
+                    /** @enum {string} */
+                    state: "pending" | "running" | "found" | "no_data" | "failed" | "no_account";
+                    fields: string[];
+                    units_spent: number;
+                    latency_ms?: number | null;
+                    detail?: string | null;
+                }[];
+                fields_filled: number;
+                units_spent: number;
+                manual: boolean;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            } | null;
+            events: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                type: "discovered" | "enriched" | "verified" | "scored" | "promoted" | "rejected" | "suppressed" | "provider_error";
+                /** @enum {string} */
+                actor_type: "system" | "user" | "provider";
+                provider: string | null;
+                payload: unknown;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        PromoteLeadsDto: {
+            lead_ids: string[];
+        };
+        PromoteResultDto: {
+            promoted: {
+                /** Format: uuid */
+                lead_id: string;
+                /** Format: uuid */
+                contact_id: string;
+            }[];
+            failed: {
+                /** Format: uuid */
+                lead_id: string;
+                code: string;
+                reason: string;
+            }[];
+        };
+        EnrichQueuedDto: {
+            queued: string[];
+            skipped: string[];
+        };
+        EnrichLeadsDto: {
+            lead_ids: string[];
+        };
+        DiscardLeadDto: {
+            reason?: string;
+        };
+        DeleteLeadsDto: {
+            lead_ids: string[];
+        };
+        DeleteLeadsResultDto: {
+            deleted: number;
+            kept: {
+                /** Format: uuid */
+                lead_id: string;
+                reason: string;
+            }[];
+            missing: number;
+        };
+        SuppressionDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "phone" | "email" | "domain";
+            reason: string | null;
+            source: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        CreateSuppressionDto: {
+            /** @enum {string} */
+            kind: "phone" | "email" | "domain";
+            value: string;
+            reason?: string;
+        };
+        ProspectingSettingsDto: {
+            auto_promote_consented: boolean;
+            quarantine_days: number;
+            promote_batch_max: number;
+        };
+        IcpDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            definition: {
+                /** @default [] */
+                categories: string[];
+                /** @default [] */
+                cities: string[];
+                /** @default [] */
+                countries: string[];
+                /** @default [] */
+                keywords: string[];
+                /** @default [] */
+                exclude_keywords: string[];
+            };
+            weights: {
+                contactability: number;
+                identity: number;
+                fit: number;
+                provenance: number;
+            };
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateIcpDto: {
+            name?: string;
+            definition: {
+                /** @default [] */
+                categories: string[];
+                /** @default [] */
+                cities: string[];
+                /** @default [] */
+                countries: string[];
+                /** @default [] */
+                keywords: string[];
+                /** @default [] */
+                exclude_keywords: string[];
+            };
+            weights?: {
+                contactability: number;
+                identity: number;
+                fit: number;
+                provenance: number;
+            };
+        };
+        QualitySummaryDto: {
+            unverified: number;
+            verified: number;
+            risky: number;
+            invalid: number;
+            suppressed: number;
+            unscored: number;
+            average_score: number;
+        };
+        ScoreResultDto: {
+            /** Format: uuid */
+            lead_id: string;
+            score: number;
+            /** @enum {string} */
+            status: "unverified" | "verified" | "risky" | "invalid" | "suppressed";
+        };
+        ProviderCatalogDto: {
+            data: {
+                /** @enum {string} */
+                provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+                capabilities: ("verify_email" | "verify_phone" | "identity_lookup" | "enrich_person" | "enrich_company" | "discover" | "extract_site" | "geocode")[];
+                /** @enum {string} */
+                credential_mode: "api_key" | "key_secret" | "none";
+                unit_cost: {
+                    [key: string]: number;
+                };
+            }[];
+        };
+        ProviderAccountDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+            label: string;
+            enabled: boolean;
+            capabilities: string[];
+            priority: number;
+            config: unknown;
+            daily_cap: number | null;
+            monthly_cap: number | null;
+            spent_today: number;
+            spent_cycle: number;
+            healthy: boolean;
+            last_error: string | null;
+            /** Format: date-time */
+            last_checked_at: string | null;
+            token_last4: string | null;
+            /** Format: date-time */
+            credential_set_at: string | null;
+        };
+        CreateProviderDto: {
+            /** @enum {string} */
+            provider: "millionverifier" | "twilio_lookup" | "rues" | "apollo" | "google_places" | "overpass" | "serper" | "firecrawl" | "site_extractor" | "nominatim";
+            label: string;
+            credentials: {
+                /** @enum {string} */
+                mode: "api_key";
+                api_key: string;
+            } | {
+                /** @enum {string} */
+                mode: "key_secret";
+                key_sid: string;
+                secret: string;
+            } | {
+                /** @enum {string} */
+                mode: "none";
+            };
+            priority?: number;
+            config?: {
+                [key: string]: unknown;
+            };
+            daily_cap?: number;
+            monthly_cap?: number;
+        };
+        RotateProviderCredentialsDto: {
+            credentials: {
+                /** @enum {string} */
+                mode: "api_key";
+                api_key: string;
+            } | {
+                /** @enum {string} */
+                mode: "key_secret";
+                key_sid: string;
+                secret: string;
+            } | {
+                /** @enum {string} */
+                mode: "none";
+            };
+        };
+        UpdateProviderDto: {
+            enabled?: boolean;
+            priority?: number;
+            config?: {
+                [key: string]: unknown;
+            };
+            daily_cap?: number | null;
+            monthly_cap?: number | null;
+        };
+        ProviderHealthDto: {
+            healthy: boolean;
+            balance?: number;
+            detail?: string;
         };
         ApprovalResultDto: {
             applied: {
@@ -11391,7 +12519,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -11415,7 +12543,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -15474,6 +16602,10 @@ export interface operations {
                 assignee?: "me" | "unassigned" | string;
                 status?: "open" | "completed" | "cancelled";
                 due?: "overdue" | "today" | "week";
+                assignee_type?: "user" | "agent";
+                agent_id?: string;
+                trigger?: "manual" | "scheduled" | "automation" | "agent";
+                last_run_status?: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
                 page?: number;
                 page_size?: number;
             };
@@ -15623,6 +16755,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactProfileDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAgentTaskDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAgentTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_runs_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskRunsOfTaskDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_allRuns_v1: {
+        parameters: {
+            query?: {
+                status?: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                reason?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskRunsListDto"];
                 };
             };
         };
@@ -18281,6 +19508,752 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ProspectingController_list_v1: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
+                allows?: "whatsapp" | "email" | "manual";
+                min_score?: number;
+                city?: string;
+                q?: string;
+                max_score?: number;
+                legal_basis?: ("consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown")[];
+                min_data?: number;
+                require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                require_mode?: "all" | "any";
+                created_after?: string;
+                created_before?: string;
+                sort?: "score" | "data" | "recent";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadsListDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_leadIds_v1: {
+        parameters: {
+            query?: {
+                status?: ("new" | "enriching" | "qualified" | "rejected" | "promoted" | "discarded" | "suppressed")[];
+                source?: ("ctwa" | "meta_lead_ads" | "manual" | "google_places" | "openstreetmap" | "serp")[];
+                quality_status?: ("unverified" | "verified" | "risky" | "invalid" | "suppressed")[];
+                allows?: "whatsapp" | "email" | "manual";
+                min_score?: number;
+                city?: string;
+                q?: string;
+                max_score?: number;
+                legal_basis?: ("consent_form" | "consent_ad" | "public_business_data" | "referral" | "unknown")[];
+                min_data?: number;
+                require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                require_mode?: "all" | "any";
+                created_after?: string;
+                created_before?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadIdsDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_sources_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourcesCatalogDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_geocode_v1: {
+        parameters: {
+            query: {
+                q: string;
+                country?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeocodeResultsDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_listSearches_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchesListDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_startSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartSearchDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartSearchResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_deletionPreview_v1: {
+        parameters: {
+            query?: {
+                search_ids?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionPreviewDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_getSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_deleteSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteSearchesResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_cancelSearch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_deleteSearches_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteSearchesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteSearchesResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_stats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProspectingStatsDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetailDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_deleteLead_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_promote_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromoteLeadsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromoteResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_enrichOne_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_enrichMany_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrichLeadsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichQueuedDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_discardOne_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscardLeadDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_deleteLeads_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteLeadsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteLeadsResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_listSuppressions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuppressionDto"][];
+                };
+            };
+        };
+    };
+    ProspectingController_addSuppression_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSuppressionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuppressionDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_removeSuppression_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProspectingController_getSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProspectingSettingsDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_putSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProspectingSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProspectingSettingsDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_getIcp_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IcpDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_putIcp_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIcpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IcpDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_qualitySummary_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySummaryDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_verify_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoreResultDto"];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_getCatalog_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderCatalogDto"];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_listProviders_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderAccountDto"][];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_createProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProviderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderAccountDto"];
+                };
+            };
+        };
+    };
+    PlatformProspectingController_rotateCredentials_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateProviderCredentialsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformProspectingController_updateProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProviderDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformProspectingController_probeProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderHealthDto"];
+                };
             };
         };
     };

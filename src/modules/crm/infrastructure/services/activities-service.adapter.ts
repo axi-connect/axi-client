@@ -3,11 +3,23 @@ import type { Paginated } from "@/core/api/types";
 import type {
   ActivityDTO,
   CreateActivityDTO,
+  CreateAgentTaskDTO,
   ListActivitiesParams,
   ListTasksParams,
   TaskStatsDTO,
   UpdateActivityDTO,
+  UpdateAgentTaskDTO,
 } from "@/modules/crm/domain/activity";
+import type { TaskRunDTO } from "@/modules/crm/domain/task-execution";
+
+import type { OffsetQuery } from "@/core/api/types";
+
+export type ListTaskRunsParams = OffsetQuery & {
+  status?: NonNullable<ActivityDTO["last_run_status"]>;
+  reason?: string;
+  from?: string;
+  to?: string;
+};
 
 /**
  * Adapter HTTP de actividades y tareas. ÚNICO punto de creación/edición de
@@ -54,4 +66,32 @@ export function reopenTask(id: string): Promise<ActivityDTO> {
 
 export function cancelTask(id: string): Promise<ActivityDTO> {
   return http.post<ActivityDTO>(`/crm/tasks/${id}/cancel`, {});
+}
+
+/* ─────────────────── Tareas de agente ──────────────────────────────────── */
+
+/**
+ * Alta de una tarea que ejecuta un agente. Superficie APARTE de
+ * `/crm/activities` porque el permiso es distinto (`crm:automate`): crear una
+ * nota y programar un mensaje de la IA a un cliente no son lo mismo. Enviar
+ * `assignee_type: "agent"` a `/crm/activities` devuelve 400
+ * `crm/agent_task_wrong_endpoint`.
+ */
+export function createAgentTask(dto: CreateAgentTaskDTO): Promise<ActivityDTO> {
+  return http.post<ActivityDTO>("/crm/agent-tasks", dto);
+}
+
+/** Reprogramar mueve `due_at` y `next_run_at` a la vez y reinicia los intentos. */
+export function updateAgentTask(id: string, dto: UpdateAgentTaskDTO): Promise<ActivityDTO> {
+  return http.patch<ActivityDTO>(`/crm/agent-tasks/${id}`, dto);
+}
+
+/** Historial de intentos de UNA tarea: alimenta el rail de ejecución. */
+export function listTaskRuns(id: string): Promise<{ data: TaskRunDTO[] }> {
+  return http.get<{ data: TaskRunDTO[] }>(`/crm/agent-tasks/${id}/runs`);
+}
+
+/** Feed del tenant: el «¿por qué no salió mi mensaje?» transversal. */
+export function listAllTaskRuns(params: ListTaskRunsParams = {}): Promise<Paginated<TaskRunDTO>> {
+  return http.get<Paginated<TaskRunDTO>>("/crm/task-runs", params);
 }
