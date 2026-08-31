@@ -1,8 +1,8 @@
 # Captación de leads (`/marketing/leads`)
 
 > Slice `prospecting` del frontend. Backend: `axi-server/docs/plans/prospecting_module_plan.md`.
-> Estado: **F1–F4b** — bandeja, ficha, calidad, búsquedas con mapa, fuentes, panel de proveedores
-> de plataforma y enriquecimiento de datos.
+> Estado: **F1–F4c** — bandeja, ficha, calidad, búsquedas con mapa, fuentes, panel de proveedores
+> de plataforma, enriquecimiento de datos y su visor de fuentes en vivo.
 
 ## La idea en una frase
 
@@ -68,7 +68,7 @@ Lo siembra `security.seeder.ts` del backend.
 Sin ninguno de los dos permisos de acción, la bandeja **no muestra casillas**: un control que solo
 falla al pulsarlo es un control que miente.
 
-## Enriquecimiento (F4b)
+## Enriquecimiento (F4b y F4c)
 
 Dos botones que llaman a dos endpoints distintos, y la diferencia **no es cosmética**:
 
@@ -79,22 +79,75 @@ Dos botones que llaman a dos endpoints distintos, y la diferencia **no es cosmé
 
 El texto del botón en lote lo dice antes de pulsarlo. No se cambia sin cambiar el endpoint.
 
-### El estado «buscando datos» vive en el cliente
+### «No encontré nada» es un desenlace, no un silencio (F4c)
 
-`status` tiene el valor `enriching` en el enum desde F1, y **nadie lo escribe nunca**. Es
-deliberado: que un job mute el ciclo de vida deja leads atascados si el worker muere, y hay barrido
-de búsquedas estancadas pero no de leads. Un estado de proceso sin barrido no es un estado, es una
-trampa —es exactamente el bug que dejaba una búsqueda en `running` bloqueando esa fuente para
-siempre—.
+Enriquecer era una caja negra. Una pasada que no hallaba nada **no escribía nada** —ni columna, ni
+evento, ni fila— así que desde fuera era idéntica a una que seguía corriendo, y la interfaz esperaba
+para siempre una señal que no iba a llegar. El usuario veía «Estamos preguntando a las fuentes…» y,
+90 s después, mi propio aviso de rendición.
 
-Así que: los ids en curso viven en un `useState` local, se recarga cada 5 s, y un lead sale del
-conjunto cuando **gana datos** (`dataCompleteness` sube, o `last_enriched_at` cambia en la ficha).
-**El tope de 90 s no es opcional**: si un proveedor se cuelga, el trabajo puede no terminar nunca, y
-un spinner girando sobre algo parado miente igual que el estado sin barrido.
+Desde F4c la verdad **es una fila**, `prospecting_enrichment_run`, igual que en las búsquedas: un
+registro por pasada con su estado y sus pasos. `lead.last_run` la trae, `EnrichmentRunCard` la pinta,
+y **se queda como informe** cuando termina — mañana se puede volver a mirar qué se consultó.
 
-Y por eso el indicador va **al lado** del estado del lead, no encima: `LEAD_STATUS_MAP.enriching`
-existe con su spinner, pero usarlo taparía el estado real (`Nuevo`, `Calificado`) con uno que el
-servidor no escribió.
+`prospecting_enrichment` no es eso: sigue siendo el libro de cuentas anti-doble-cobro. Son dos tablas
+porque son dos preguntas, «qué pasó en esta pasada» y «a quién ya le pagamos».
+
+#### Los estados de un paso son SEIS, no dos
+
+Un stepper de catálogo trae `isCompleted: true|false`, y eso pierde justo lo que hay que contar. El
+criterio es el mismo que separó `capped_day` de `capped_month`: **si el remedio es distinto, el
+estado es distinto.**
+
+| Estado | Qué significa | Cómo se arregla |
+|---|---|---|
+| `pending` | Aún no le toca | No se arregla: espera |
+| `running` | Consultando ahora mismo | — |
+| `found` | Trajo N datos, listados al desplegar | — |
+| `no_data` | Respondió y no sabía nada | Con otra fuente |
+| `failed` | El proveedor no respondió | Reintentando |
+| `no_account` | No hay proveedor para esa capacidad | Dando uno de alta |
+
+`no_data` va en **gris y no en rojo**: preguntar y que no haya nada es normal y frecuente. Pintarlo
+como error empuja a reintentar algo que no está roto.
+
+El visor no inventa componente: extiende `Timeline`, que ya es **la única** implementación del
+stepper vertical del proyecto, con dos props aditivas (`state` y `content`). Acaba de pasar lo mismo
+con `ProviderCard`, que absorbió cuatro copias de la misma tarjeta.
+
+### El tiempo real es comodidad; la fila es la verdad
+
+La ficha se une a la **sala del lead** (`inbox.join_lead`) y recibe `prospecting.lead_enrichment_progress`
+y `_completed`. La bandeja **no se une a ninguna**: un lote de cien leads por cinco fuentes son
+quinientos mensajes a todos los paneles abiertos del tenant, que es la misma razón por la que
+`lead_discovered` está deliberadamente fuera del WS.
+
+Y el sondeo **no se retiró, se degradó a respaldo** —igual que en `SearchesView`—: quien recarga,
+quien entra desde otro dispositivo o quien tenía el socket caído tiene que ver lo mismo.
+
+Dos trampas ya pagadas, ambas documentadas en el código:
+
+1. **`joinedRef` solo se fija tras el ack**, y el re-join va en el evento `connect` con un efecto que
+   depende **solo de `socket`, nunca de `connected`**. El token rota cada ~14 min con desconexión, y
+   con la dependencia ingenua el socket se quedaba fuera de la sala para siempre.
+2. **`alert-provider` no memorizaba `showAlert`.** Cualquier aviso que apareciera en cualquier parte
+   de la app recreaba `load`, remontaba el efecto del sondeo y **reiniciaba el tope de 90 s desde
+   cero**: por eso el `GET` se repetía sin fin en vez de rendirse. Era un bug de infraestructura
+   compartida, no del módulo.
+
+### El «buscando datos» de la bandeja se cierra con la marca del intento
+
+`status` tiene el valor `enriching` en el enum desde F1 y el enriquecimiento manual **no lo escribe**:
+usarlo taparía el estado real (`Nuevo`, `Calificado`) con uno que el servidor no puso ahí. Los ids en
+curso viven en un `useState` local.
+
+Un lead sale de ese conjunto cuando **`last_enriched_at` cambia**, no cuando gana datos. Es C-D3 del
+backend: la columna significa «última vez que lo intentamos», y se escribe siempre. Con el criterio
+viejo —datos ganados— una pasada sin hallazgos dejaba la fila girando los 90 s enteros para rendirse
+en silencio: exactamente el bug que F4c mató en la ficha, sobreviviendo en la bandeja.
+
+**El tope de 90 s no es opcional** de todos modos: si un proveedor se cuelga el trabajo puede no
+terminar nunca, y un spinner sobre una fila quieta miente igual.
 
 ### La procedencia es real desde F4b
 
@@ -135,6 +188,7 @@ donde no se encuentra nada. Las etiquetas viven en `PROVIDER_LABELS` y `ATTRIBUT
 - `ui/LeadsInboxView.tsx` · `LeadDetailView.tsx` · `QualityView.tsx` · `SearchesView.tsx` ·
   `SourcesView.tsx`
 - `ui/components/` — `LeadIdentityCard` (los datos, F4b), `LeadProvenance` (de dónde salieron),
+  `EnrichmentRunCard` (qué se consultó y qué dio cada fuente, F4c),
   `CaptureFunnel`, `ChannelPermissions`, `QualityIndex` + `QualityBreakdown`, `QualityEvidence`,
   `QualityDistribution`, `IcpEditor`, `PromotionGate`, `LeadTimeline`, `LeadsNav`, `SearchRun`,
   `StartSearchSheet`.
@@ -154,6 +208,7 @@ cuatro copias), `MapPreview` + `LocationSearch` (teselas reales de OSM, sin libr
 - **Editar los topes del proveedor desde el panel**: `ConnectProviderSheet` solo pide etiqueta y
   credenciales. Ni el diario ni el mensual se pueden fijar desde la interfaz; se hacen por el
   endpoint de actualización, que sí los acepta. La tarjeta ya los muestra.
-- **Tiempo real por lead**: hoy solo hay dos eventos WS, ambos de búsqueda
-  (`prospecting.search_progress` y `search_completed`). El enriquecimiento usa sondeo porque es una
-  acción que el usuario acaba de pedir y está mirando.
+- **Reintentar una pasada fallida** desde el visor. La fila deja el estado escrito, así que el dato
+  está; reintentar es una decisión de alguien, no un efecto automático.
+- **La bandeja no tiene visor**, solo el chip de «buscando datos». Es a propósito (ver arriba: no se
+  une a las salas por lead), pero si algún día hace falta, la fila ya está escrita.

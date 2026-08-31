@@ -182,6 +182,17 @@ describe("mapLeadToRow", () => {
       mapLeadToRow({ ...BASE, email: null, phone: null }).contact_line,
     ).toBe("");
   });
+
+  // La bandeja cierra su chip de «buscando datos» comparando ESTE campo, y el
+  // backend lo mueve aunque la pasada no encuentre nada (C-D3 de F4c). Sin él,
+  // una búsqueda sin hallazgos deja la fila girando hasta rendirse en silencio.
+  it("lleva la marca del último INTENTO, no solo la de los hallazgos", () => {
+    const stamp = "2026-08-31T15:04:00.000Z";
+    expect(
+      mapLeadToRow({ ...BASE, last_enriched_at: stamp }).enriched_at,
+    ).toBe(stamp);
+    expect(mapLeadToRow(BASE).enriched_at).toBeNull();
+  });
 });
 
 describe("etiquetas", () => {

@@ -28,7 +28,7 @@ import {
 } from "@/shared/components/ui/select";
 
 import type { LeadRow, ProspectingStatsDTO } from "../domain/lead";
-import { canEnrich, canPromote, dataCompleteness } from "../domain/lead";
+import { canEnrich, canPromote } from "../domain/lead";
 import {
   enrichLeads,
   promoteLeads,
@@ -87,12 +87,20 @@ export function LeadsInboxView({
     });
 
   /**
-   * Ids con una búsqueda de datos en curso, con el `filled` que tenían al
-   * pedirla. Cuando sube, el trabajo terminó. Vive en el cliente porque el
-   * servidor NO escribe `enriching`: hacer que un job mute el ciclo de vida
-   * deja leads atascados si el worker muere, y no hay barrido que los rescate.
+   * Ids con una búsqueda de datos en curso, con el `enriched_at` que tenían al
+   * pedirla. Cuando cambia, la pasada terminó.
+   *
+   * Se compara la MARCA DEL INTENTO y no los datos ganados, que es lo que se
+   * hacía antes: una pasada que no encuentra nada es un desenlace legítimo y
+   * frecuente, y con el criterio viejo esas filas se quedaban girando los 90 s
+   * enteros para rendirse en silencio — el mismo bug que F4c mató en la ficha,
+   * sobreviviendo aquí. El backend escribe la columna SIEMPRE desde entonces.
+   *
+   * Vive en el cliente porque el detalle en vivo va por la sala del lead, y
+   * unir la bandeja a cien salas para pintar cien spinners cuesta más que
+   * recargar la página cada cinco segundos.
    */
-  const [working, setWorking] = useState<Map<string, number>>(new Map());
+  const [working, setWorking] = useState<Map<string, string | null>>(new Map());
   const [enriching, setEnriching] = useState(false);
 
   const toggle = useCallback((id: string) => {
@@ -123,13 +131,9 @@ export function LeadsInboxView({
   );
 
   /**
-   * Sondeo mientras se buscan datos. No hay evento de tiempo real por lead
-   * —solo de búsqueda—, y para algo que el usuario acaba de pedir y está
-   * mirando, recargar cada pocos segundos basta.
-   *
-   * Un lead sale del conjunto cuando gana datos. El tope NO es opcional: si un
-   * proveedor se cuelga el trabajo puede no terminar nunca, y un spinner sobre
-   * una fila quieta miente igual que un estado sin barrido.
+   * Sondeo mientras se buscan datos. El tope NO es opcional: si un proveedor se
+   * cuelga el trabajo puede no terminar nunca, y un spinner sobre una fila
+   * quieta miente igual que un estado sin barrido.
    */
   useEffect(() => {
     if (working.size === 0) return;
@@ -146,10 +150,8 @@ export function LeadsInboxView({
     setWorking((previous) => {
       const next = new Map(previous);
       for (const row of items) {
-        const before = next.get(row.id);
-        if (before !== undefined && dataCompleteness(row).filled > before) {
-          next.delete(row.id);
-        }
+        if (!next.has(row.id)) continue;
+        if (row.enriched_at !== next.get(row.id)) next.delete(row.id);
       }
       return next.size === previous.size ? previous : next;
     });
@@ -179,7 +181,7 @@ export function LeadsInboxView({
       setWorking((previous) => {
         const next = new Map(previous);
         for (const row of enrichable) {
-          if (queued.has(row.id)) next.set(row.id, dataCompleteness(row).filled);
+          if (queued.has(row.id)) next.set(row.id, row.enriched_at);
         }
         return next;
       });

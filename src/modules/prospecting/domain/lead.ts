@@ -411,6 +411,13 @@ export type LeadRow = {
   status: LeadStatus;
   city: string | null;
   created_at: string;
+  /**
+   * Cuándo se INTENTÓ buscarle datos por última vez, no cuándo se encontraron
+   * (C-D3 del backend). Es la señal con la que la bandeja cierra el «buscando
+   * datos»: una pasada que no halla nada la mueve igual, y sin ella una fila
+   * se quedaba girando hasta rendirse a los 90 s.
+   */
+  enriched_at: string | null;
 };
 
 export function mapLeadToRow(lead: LeadDTO): LeadRow {
@@ -441,6 +448,7 @@ export function mapLeadToRow(lead: LeadDTO): LeadRow {
     status: lead.status,
     city: lead.city,
     created_at: lead.created_at,
+    enriched_at: lead.last_enriched_at,
   };
 }
 
