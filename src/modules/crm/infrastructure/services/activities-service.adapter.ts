@@ -45,6 +45,11 @@ export function deleteActivity(id: string): Promise<void> {
   return http.delete<void>(`/crm/activities/${id}`);
 }
 
+/** Una tarea por id: el enlace profundo de la edición no trae la fila. */
+export function getTask(id: string): Promise<ActivityDTO> {
+  return http.get<ActivityDTO>(`/crm/tasks/${id}`);
+}
+
 /** Bandeja de lectura (`orden due_at asc`); las filas son ActivityDTO. */
 export function listTasks(params: ListTasksParams = {}): Promise<Paginated<ActivityDTO>> {
   return http.get<Paginated<ActivityDTO>>("/crm/tasks", params);

@@ -196,3 +196,42 @@ export function canRunNow(
   if (task.task_status !== "open") return false;
   return task.last_run_status !== "running";
 }
+
+/** Tono del nodo del `Timeline` para una ejecución. Mismo criterio que el
+ *  badge: `deferred` es neutro-activo, nunca ámbar ni rojo. */
+export const TASK_RUN_TIMELINE_TONES: Record<
+  TaskRunStatus,
+  "neutral" | "info" | "success" | "warning" | "destructive" | "violet"
+> = {
+  scheduled: "neutral",
+  running: "violet",
+  done: "success",
+  deferred: "info",
+  failed: "destructive",
+  cancelled: "neutral",
+  skipped: "neutral",
+};
+
+/**
+ * Qué se lee en la línea principal de un intento.
+ *
+ * El número de intento va SIEMPRE, incluso en el primero: sin él, tres filas
+ * que dicen "En espera" parecen un error de renderizado en vez de tres
+ * reintentos reales.
+ */
+export function taskRunTitle(run: Pick<TaskRunDTO, "status" | "attempt">): string {
+  return `Intento ${String(run.attempt)} · ${TASK_RUN_STATUS_LABELS[run.status]}`;
+}
+
+/**
+ * Cuándo ocurrió el intento, con la fecha que corresponde a su estado: uno
+ * cerrado se fecha por `finished_at`, uno vivo por `started_at`, y uno que
+ * todavía no arrancó por la hora para la que estaba previsto.
+ */
+export function taskRunTimestamp(
+  run: Pick<TaskRunDTO, "status" | "scheduled_for" | "started_at" | "finished_at">,
+): string {
+  if (run.finished_at !== null) return run.finished_at;
+  if (run.started_at !== null) return run.started_at;
+  return run.scheduled_for;
+}

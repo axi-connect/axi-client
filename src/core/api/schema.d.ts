@@ -2564,6 +2564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_task_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/tasks/{id}/complete": {
         parameters: {
             query?: never;
@@ -2674,6 +2690,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["CrmAgentTasksController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/{taskId}/run-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmAgentTasksController_runNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/crm/agent-tasks/{taskId}/runs": {
@@ -8583,6 +8615,10 @@ export interface components {
             /** Format: uuid */
             assigned_agent_id?: string;
             title?: string | null;
+        };
+        RunNowDto: {
+            /** Format: date-time */
+            scheduled_for: string;
         };
         TaskRunsOfTaskDto: {
             data: {
@@ -16625,6 +16661,27 @@ export interface operations {
             };
         };
     };
+    CrmActivitiesController_task_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
     CrmActivitiesController_complete_v1: {
         parameters: {
             query?: never;
@@ -16803,6 +16860,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_runNow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunNowDto"];
                 };
             };
         };

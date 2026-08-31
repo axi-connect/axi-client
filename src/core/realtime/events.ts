@@ -300,6 +300,26 @@ export type CrmActivityCreatedEvent = CrmActivityRealtimeSummary;
 
 export type CrmTaskCompletedEvent = CrmActivityRealtimeSummary;
 
+/**
+ * Ejecución de una tarea de agente (T3). Indexa por `activity_id` porque la
+ * bandeja piensa en tareas; el `run_id` es para el rail de intentos, que si
+ * está abierto inserta la fila exacta en vez de recargar la lista.
+ *
+ * No hay evento por diferimiento intermedio: `finished` ya trae estado y razón.
+ */
+export type CrmAgentTaskRunEvent = {
+  company_id: string;
+  run_id: string;
+  activity_id: string;
+  contact_id: string;
+  agent_id: string | null;
+  attempt: number;
+  status: NonNullable<Schemas["ActivityDto"]["last_run_status"]>;
+  reason: string | null;
+  message_id: string | null;
+  conversation_id: string | null;
+};
+
 /** Fin del import CSV (éxito o fallo); con `failed` solo llegan los básicos. */
 export type CrmImportCompletedEvent = {
   company_id: string;
@@ -635,6 +655,8 @@ export type InboxServerEvents = {
   "crm.deal_stalled": (payload: CrmDealStalledEvent) => void;
   "crm.activity_created": (payload: CrmActivityCreatedEvent) => void;
   "crm.task_completed": (payload: CrmTaskCompletedEvent) => void;
+  "crm.agent_task_run_started": (payload: CrmAgentTaskRunEvent) => void;
+  "crm.agent_task_run_finished": (payload: CrmAgentTaskRunEvent) => void;
   "crm.import_completed": (payload: CrmImportCompletedEvent) => void;
   "contact.lifecycle_changed": (payload: ContactLifecycleChangedEvent) => void;
   "contact.merged": (payload: ContactMergedEvent) => void;

@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   CircleUser,
+  History,
   MoreVertical,
+  Pencil,
   Plus,
   RotateCcw,
   Send,
@@ -29,6 +31,7 @@ import {
 import { TableSkeleton } from "@/shared/components/features/loading";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { StatusBadge } from "@/shared/components/features/status-badge";
+import { TaskRunsSheet } from "@/modules/crm/ui/components/TaskRunsSheet";
 import { isOverdue, type ActivityDTO, type TaskDueFilter } from "@/modules/crm/domain/activity";
 import {
   canRunNow,
@@ -119,7 +122,7 @@ function whenLine(task: ActivityDTO): string {
   return task.due_at !== null ? `vence ${relativeTime(task.due_at)}` : "sin vencimiento";
 }
 
-function TaskRow({ task }: { task: ActivityDTO }) {
+function TaskRow({ task, onInspect }: { task: ActivityDTO; onInspect: (task: ActivityDTO) => void }) {
   const { showAlert } = useAlert();
   const act = useTasksStore((s) => s.act);
   const runNow = useTasksStore((s) => s.runNow);
@@ -225,6 +228,18 @@ function TaskRow({ task }: { task: ActivityDTO }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {agent && (
+            <DropdownMenuItem onClick={() => onInspect(task)}>
+              <span className="flex items-center gap-2">
+                <History className="size-4" /> Ver ejecuciones
+              </span>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem>
+            <Link href={`/crm/tasks/update/${task.id}`} className="flex items-center gap-2">
+              <Pencil className="size-4" /> Editar
+            </Link>
+          </DropdownMenuItem>
           {canRunNow(task) && (
             <DropdownMenuItem onClick={() => void launch()}>
               <span className="flex items-center gap-2">
@@ -283,6 +298,12 @@ export function TasksView() {
   useSocketEvent(socket, "crm.task_completed", (payload) => {
     useTasksStore.getState().onTaskCompleted(payload);
   });
+  useSocketEvent(socket, "crm.agent_task_run_started", (payload) => {
+    useTasksStore.getState().onAgentRun(payload);
+  });
+  useSocketEvent(socket, "crm.agent_task_run_finished", (payload) => {
+    useTasksStore.getState().onAgentRun(payload);
+  });
 
   useEffect(() => {
     void fetch();
@@ -296,6 +317,13 @@ export function TasksView() {
   }, [fetch, fetchStats]);
 
   const totalPages = Math.max(1, Math.ceil(total / TASKS_PAGE_SIZE));
+  const [inspected, setInspected] = useState<ActivityDTO | null>(null);
+
+  // La fila del rail se mantiene fresca con la de la lista: si el motor cierra
+  // un intento mientras el panel está abierto, el encabezado no puede quedarse
+  // mostrando el estado anterior.
+  const inspectedTask =
+    inspected === null ? null : (items.find((item) => item.id === inspected.id) ?? inspected);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -405,7 +433,7 @@ export function TasksView() {
         <>
           <ul className="divide-y divide-border rounded-2xl border border-border bg-background">
             {items.map((task) => (
-              <TaskRow key={task.id} task={task} />
+              <TaskRow key={task.id} task={task} onInspect={setInspected} />
             ))}
           </ul>
           {totalPages > 1 && (
@@ -418,6 +446,13 @@ export function TasksView() {
           )}
         </>
       )}
+
+      <TaskRunsSheet
+        task={inspectedTask}
+        onOpenChange={(open) => {
+          if (!open) setInspected(null);
+        }}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { errorMessage } from "@/core/lib/error-messages";
 import type {
   CrmActivityCreatedEvent,
+  CrmAgentTaskRunEvent,
   CrmTaskCompletedEvent,
 } from "@/core/realtime/events";
 import type {
@@ -74,6 +75,7 @@ type TasksStore = {
 
   onActivityCreated: (evt: CrmActivityCreatedEvent) => void;
   onTaskCompleted: (evt: CrmTaskCompletedEvent) => void;
+  onAgentRun: (evt: CrmAgentTaskRunEvent) => void;
 };
 
 const OPTIMISTIC_STATUS: Record<TaskAction, TaskStatus> = {
@@ -203,6 +205,35 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     if (evt.kind !== "task") return;
     void get().fetch();
     void get().fetchStats();
+  },
+
+  /**
+   * Ejecución del motor: parchea la fila en sitio, sin refetch.
+   *
+   * Una tarea de agente puede cambiar de estado varias veces en pocos segundos
+   * (running → deferred → running); recargar la lista en cada una desplazaría
+   * la bandeja bajo el cursor del operador. Solo se toca la fila si YA está en
+   * pantalla: una tarea que el filtro actual no muestra no debe aparecer por un
+   * evento — eso rompería el filtro que el usuario eligió.
+   */
+  onAgentRun: (evt) => {
+    set((state) => {
+      if (!state.items.some((item) => item.id === evt.activity_id)) return state;
+      return {
+        items: state.items.map((item) =>
+          item.id === evt.activity_id
+            ? {
+                ...item,
+                last_run_status: evt.status,
+                last_run_reason: evt.reason,
+                attempt_count: evt.attempt,
+              }
+            : item,
+        ),
+      };
+    });
+    // Los chips sí se recalculan: son un agregado del tenant, no de la lista.
+    if (evt.status !== "running") void get().fetchStats();
   },
 
   onTaskCompleted: (evt) => {
