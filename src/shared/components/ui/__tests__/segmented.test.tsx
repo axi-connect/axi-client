@@ -157,4 +157,41 @@ describe("SegmentedControl", () => {
     fireEvent.keyDown(screen.getByRole("radio", { name: "Tablero" }), { key: "ArrowRight" });
     expect(onValueChange).toHaveBeenCalledWith("calendar");
   });
+
+  /**
+   * El tratamiento del activo es una VARIANTE, no una copia.
+   *
+   * Dentro de un panel de filtros el dueño pidió que «seleccionado» se diga con
+   * elevación y no con relleno de color, y la alternativa a esta prop era una
+   * 24ª implementación a mano del segmentado solo para cambiarle el fondo. Lo
+   * que estos dos tests protegen es que el default siga siendo `bg-accent`: son
+   * 25 pestañas del panel las que dependen de él.
+   */
+  it("por defecto el activo va en `bg-accent`, como las 25 pestañas del panel", () => {
+    const { container } = render(
+      <SegmentedControl
+        value="board"
+        onValueChange={() => undefined}
+        items={[{ value: "board", label: "Tablero" }]}
+        label="Vista"
+      />,
+    );
+    const pill = container.querySelector('[data-slot="segmented-pill"]');
+    expect(pill).toHaveClass("bg-accent");
+  });
+
+  it("con `treatment=\"lift\"` el activo se ELEVA en vez de teñirse", () => {
+    const { container } = render(
+      <SegmentedControl
+        value="board"
+        onValueChange={() => undefined}
+        items={[{ value: "board", label: "Tablero" }]}
+        label="Vista"
+        treatment="lift"
+      />,
+    );
+    const pill = container.querySelector('[data-slot="segmented-pill"]');
+    expect(pill).toHaveClass("bg-background", "shadow-float");
+    expect(pill).not.toHaveClass("bg-accent");
+  });
 });
