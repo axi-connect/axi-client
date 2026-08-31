@@ -8,6 +8,7 @@ import {
   paramsOf,
   progressOf,
   queryOf,
+  searchNotice,
   summaryOf,
   type SearchDTO,
 } from "../search";
@@ -242,5 +243,36 @@ describe("admissionChips", () => {
 
   it("sin criterios no hay chips que enseñar", () => {
     expect(admissionChips({ ...EMPTY_ADMISSION, max_records: 100 })).toEqual([]);
+  });
+});
+
+/**
+ * El aviso de la tarjeta, que el dueño vio DUPLICADO en pantalla: el mismo
+ * motivo dos veces, uno en ámbar y otro en rojo. La tarjeta tenía dos bloques
+ * independientes y una búsqueda `partial` con `error` caía en los dos.
+ */
+describe("searchNotice", () => {
+  it("con motivo del backend, ese texto y el tono del ESTADO", () => {
+    // El tono sale del mismo mapa que la insignia, así que no puede volver a
+    // pasar que la insignia diga «Parcial» en ámbar y el motivo salga en rojo.
+    expect(
+      searchNotice(
+        search({ status: "partial", error: "Se detuvo en tu techo de gasto" }),
+      ),
+    ).toEqual({ text: "Se detuvo en tu techo de gasto", tone: "warning" });
+
+    expect(searchNotice(search({ status: "failed", error: "El proveedor no respondió" })))
+      .toEqual({ text: "El proveedor no respondió", tone: "destructive" });
+  });
+
+  it("parcial SIN motivo: el aviso honesto de reserva", () => {
+    const notice = searchNotice(search({ status: "partial", error: null }));
+    expect(notice?.tone).toBe("warning");
+    expect(notice?.text).toContain("sin teléfono ni correo");
+  });
+
+  it("una búsqueda que fue bien no lleva aviso", () => {
+    expect(searchNotice(search({ status: "completed", error: null }))).toBeNull();
+    expect(searchNotice(search({ status: "running", error: null }))).toBeNull();
   });
 });

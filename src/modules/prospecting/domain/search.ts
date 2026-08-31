@@ -1,6 +1,9 @@
 import type { Schemas } from "@/core/api/types";
 import { ADMISSION_DATA_FIELDS, REQUIRABLE_LABELS } from "./criteria";
-import type { StatusMap } from "@/shared/components/features/status-badge/types";
+import type {
+  StatusEntry,
+  StatusMap,
+} from "@/shared/components/features/status-badge/types";
 
 export type SearchDTO = Schemas["SearchDto"];
 export type SearchStatus = SearchDTO["status"];
@@ -109,6 +112,40 @@ export function paramsOf(search: SearchDTO) {
     // de leads que la búsqueda original.
     admission: search.params.admission,
   };
+}
+
+/**
+ * El aviso de una búsqueda: UNO, y su tono sale del mismo mapa que la insignia.
+ *
+ * Existe por un defecto que el dueño vio en pantalla: el mismo texto —«Se detuvo
+ * por el fallo del 31/08: nadie pidió la página siguiente»— repetido dos veces y
+ * con dos formatos, uno ámbar y otro rojo. La tarjeta tenía dos bloques
+ * independientes: uno pintaba `error` si el estado era `partial` y el otro lo
+ * pintaba otra vez si `error` no era nulo, así que una parcial CON motivo caía en
+ * los dos. Y no era un caso raro: los dos barridos del backend cierran las
+ * búsquedas abandonadas justo así, `partial` con `error`.
+ *
+ * El tono se lee de `SEARCH_STATUS_MAP`, que es el mismo `Record` que pinta la
+ * insignia. Por construcción ya no puede pasar que la insignia diga «Parcial» en
+ * ámbar y el motivo se pinte en rojo, que era la mitad de lo que se veía mal.
+ */
+export function searchNotice(
+  search: SearchDTO,
+): { text: string; tone: StatusEntry["tone"] } | null {
+  if (search.error !== null && search.error.length > 0) {
+    // El texto lo escribe el backend porque solo él sabe si paró por el techo de
+    // gasto, por agotarse la zona o por el tope de páginas.
+    return { text: search.error, tone: SEARCH_STATUS_MAP[search.status].tone };
+  }
+  if (search.status === "partial") {
+    // El aviso honesto cuando nadie dejó motivo: sin esto el dueño cree que ya
+    // tiene una lista con la que llamar a alguien.
+    return {
+      text: "La mayoría de estos negocios llegaron sin teléfono ni correo. Necesitan enriquecimiento para servir de algo.",
+      tone: "warning",
+    };
+  }
+  return null;
 }
 
 /** Lo que se le pregunta a la fuente, en una línea. */

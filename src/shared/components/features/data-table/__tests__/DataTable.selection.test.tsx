@@ -45,7 +45,7 @@ function Harness({
   allMatching,
 }: {
   isSelectable?: (row: Row) => boolean;
-  allMatching?: { count: number; limit?: number };
+  allMatching?: { matchingTotal: number; limit?: number };
 }) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [all, setAll] = useState(false);
@@ -65,9 +65,25 @@ function Harness({
             ? undefined
             : {
                 active: all,
-                count: allMatching.count,
+                matchingTotal: allMatching.matchingTotal,
                 limit: allMatching.limit,
-                onSelectAll: () => setAll(true),
+                /*
+                  PONE LOS IDS, como hace la vista de verdad.
+                  Antes este harness solo subía el flag y dejaba `selected` en
+                  tres, así que el test bendecía un rótulo de 412 que ninguna
+                  selección respaldaba — exactamente el defecto que el dueño
+                  reportó como «Eliminar 175» abriendo «¿Eliminar 24?».
+                */
+                onSelectAll: () => {
+                  setAll(true);
+                  setSelected(
+                    new Set(
+                      Array.from({ length: allMatching.matchingTotal }, (_, i) =>
+                        i < ROWS.length ? ROWS[i]!.id : `otra-pagina-${String(i)}`,
+                      ),
+                    ),
+                  );
+                },
                 onClear: () => setAll(false),
               },
         actions: ({ count }) => <button type="button">{`Promover ${count}`}</button>,
@@ -261,12 +277,12 @@ describe("DataTable · la casilla de cabecera", () => {
 
 describe("DataTable · la banda de selección", () => {
   it("no existe mientras no hay nada marcado", () => {
-    render(<Harness allMatching={{ count: 412 }} />);
+    render(<Harness allMatching={{ matchingTotal: 412 }} />);
     expect(screen.queryByText(/está|están seleccionados/)).toBeNull();
   });
 
   it("ofrecer «los N que cumplen» es un SEGUNDO paso, no un efecto de marcar la cabecera", () => {
-    render(<Harness allMatching={{ count: 412 }} />);
+    render(<Harness allMatching={{ matchingTotal: 412 }} />);
     fireEvent.click(screen.getByRole("checkbox", { name: /^Seleccionar los 3/ }));
     // La cabecera marcó la página: tres, no 412.
     expect(screen.getByText("Seleccionaste los 3 de esta página.")).toBeInTheDocument();
@@ -277,17 +293,41 @@ describe("DataTable · la banda de selección", () => {
     ).toBeInTheDocument();
   });
 
-  it("el botón de lote dice el número REAL en cada modo", () => {
-    render(<Harness allMatching={{ count: 412 }} />);
+  it("el número que se pinta es el de los ids MARCADOS, no el total del servidor", () => {
+    /*
+      EL BUG DEL INFORME: el botón decía «Eliminar 175» y el diálogo que abría
+      preguntaba «¿Eliminar 24 leads?». La banda leía `matchingTotal` —el total
+      del servidor— mientras la acción actuaba sobre `selected`, y nada obligaba
+      a que fueran lo mismo. Ahora la cuenta sale siempre de los ids.
+    */
+    render(<Harness allMatching={{ matchingTotal: 412 }} />);
     fireEvent.click(screen.getByRole("checkbox", { name: /^Seleccionar los 3/ }));
     fireEvent.click(screen.getByRole("button", { name: "Seleccionar los 412 que cumplen el filtro" }));
     expect(screen.getByText("Los 412 que cumplen el filtro están seleccionados.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Promover 412" })).toBeInTheDocument();
   });
 
+  it("tras destildar una fila deja de decir «los N que cumplen» SIN mentir con la página", () => {
+    /*
+      El estado intermedio que nadie había pensado y que produjo el informe: se
+      piden «los 412 que cumplen», se destilda una fila y el modo «todos» cae.
+      Quedan 411 ids marcados, que no son todos los que cumplen pero tampoco
+      caben en una página de tres — decir «los 411 de esta página» es falso.
+    */
+    render(<Harness allMatching={{ matchingTotal: 412 }} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /^Seleccionar los 3/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Seleccionar los 412 que cumplen el filtro" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Seleccionar Kokoa & Co" }));
+
+    expect(screen.getByText("411 seleccionados.")).toBeInTheDocument();
+    expect(screen.queryByText(/de esta página/)).toBeNull();
+    // Y el botón sigue diciendo lo que hay marcado, que es lo que se va a mandar.
+    expect(screen.getByRole("button", { name: "Promover 411" })).toBeInTheDocument();
+  });
+
   it("por encima del tope NO se ofrece seleccionar todos", () => {
     // Sin endpoint que los materialice, ofrecerlo sería un botón que miente.
-    render(<Harness allMatching={{ count: 40_000, limit: 1_000 }} />);
+    render(<Harness allMatching={{ matchingTotal: 40_000, limit: 1_000 }} />);
     fireEvent.click(screen.getByRole("checkbox", { name: /^Seleccionar los 3/ }));
     expect(screen.queryByRole("button", { name: /que cumplen el filtro/ })).toBeNull();
     expect(screen.getByText(/Son demasiados/)).toBeInTheDocument();

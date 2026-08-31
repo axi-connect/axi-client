@@ -57,8 +57,12 @@ export type DataTableSelection<T extends DataRow = DataRow> = {
    */
   allMatching?: {
     active: boolean
-    /** De `meta.total`: es el número que ya está en pantalla. */
-    count: number
+    /**
+     * Cuántos CUMPLEN el filtro, de `meta.total`. Es la cifra de la OFERTA
+     * («seleccionar los 175 que cumplen»), nunca la de lo marcado: lo marcado se
+     * cuenta con `selected.size`, que es lo único respaldado por ids.
+     */
+    matchingTotal: number
     onSelectAll: () => void
     onClear: () => void
     limit?: number
@@ -205,6 +209,18 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
     if (!selection) return null
     const { rowId, selected, onChange, isSelectable, rowLabel } = selection
     const rows = rowsToRender
+
+    /*
+      Tocar una casilla ROMPE el modo «todos los que cumplen», y lo rompe el
+      componente y no cada consumidor.
+      Seguir diciendo «los 412 que cumplen están seleccionados» después de
+      destildar uno es mentira, y dejar la regla en el `onChange` de quien llama
+      es exactamente cómo se llega a un rótulo y un diálogo que no cuadran.
+    */
+    const mark = (next: ReadonlySet<string>) => {
+      if (selection.allMatching?.active === true) selection.allMatching.onClear()
+      onChange(next)
+    }
     const eligible = rows.filter((row) => isSelectable?.(row) ?? true)
     const marked = eligible.filter((row) => selected.has(rowId(row)))
     const allMarked = eligible.length > 0 && marked.length === eligible.length
@@ -217,7 +233,7 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
         if (allMarked) next.delete(rowId(row))
         else next.add(rowId(row))
       }
-      onChange(next)
+      mark(next)
     }
 
     return {
@@ -253,7 +269,7 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
               const next = new Set(selected)
               if (next.has(id)) next.delete(id)
               else next.add(id)
-              onChange(next)
+              mark(next)
             }}
           />
         )
@@ -351,9 +367,16 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
       }))
   }, [mode, localQuery, searchableFields, rowsToRender, onSearchSelect])
 
-  const selectionCount = selection?.allMatching?.active
-    ? selection.allMatching.count
-    : (selection?.selected.size ?? 0)
+  /**
+   * Lo marcado es `selected.size`. SIEMPRE.
+   *
+   * Antes, en modo «todos los que cumplen», se pintaba `allMatching.count` — el
+   * total del servidor— y eso es un número que la selección no respalda con
+   * ids: si la petición de ids trajo menos, o si después se destildó una fila,
+   * el rótulo del botón seguía diciendo el total mientras la acción actuaba
+   * sobre otro conjunto. Es el bug de «Eliminar 175» abriendo «¿Eliminar 24?».
+   */
+  const selectionCount = selection?.selected.size ?? 0
   const showBand = selection !== undefined && selectionCount > 0
 
   return (
@@ -401,8 +424,9 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
         <div className="mb-3">
           <SelectionBanner
             count={selectionCount}
+            pageCount={rowsToRender.length}
             allMatching={selection.allMatching?.active ?? false}
-            matchingTotal={selection.allMatching?.count}
+            matchingTotal={selection.allMatching?.matchingTotal}
             limit={selection.allMatching?.limit}
             onSelectAllMatching={selection.allMatching?.onSelectAll}
             onClear={() => {

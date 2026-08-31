@@ -32,6 +32,7 @@ import {
 
 import type { LeadRow, ProspectingStatsDTO } from "../domain/lead";
 import { canDelete, canEnrich, canPromote } from "../domain/lead";
+import { actionTargets, selectionIsVisible } from "../domain/selection";
 import {
   countLeads,
   deleteLeads,
@@ -256,7 +257,15 @@ export function LeadsInboxView({
    */
   const onSelectAllMatching = useCallback(async () => {
     try {
-      const result = await listLeadIds(serializeLeadFilters(filters));
+      // CON el texto del buscador. Sin él se seleccionaban los que cumplen el
+      // filtro ignorando lo escrito, o sea un superconjunto de lo que se está
+      // viendo — y desde que las acciones actúan sobre TODOS los ids marcados,
+      // eso es borrar leads que la búsqueda había dejado fuera.
+      const q = (searchValue ?? "").trim();
+      const result = await listLeadIds({
+        ...serializeLeadFilters(filters),
+        ...(q.length === 0 ? {} : { q }),
+      });
       setSelected(new Set(result.ids));
       setAllMatching(true);
       if (result.truncated) {
@@ -273,7 +282,7 @@ export function LeadsInboxView({
         description: errorMessage(caught, "Intenta de nuevo."),
       });
     }
-  }, [filters, showAlert]);
+  }, [filters, searchValue, showAlert]);
 
   /** Las acciones que ofrece el buscador cuando hay algo escrito. */
   const searchActions = useMemo(
@@ -292,13 +301,24 @@ export function LeadsInboxView({
     [canManageLeads, total, onSelectAllMatching],
   );
 
-  const promotable = useMemo(
-    () => items.filter((row) => selected.has(row.id) && canPromote(row)),
-    [items, selected],
-  );
-
-  const enrichable = useMemo(
-    () => items.filter((row) => selected.has(row.id) && canEnrich(row)),
+  /**
+   * Sobre qué ACTÚA cada botón. Un solo sitio, y el rótulo lo lee de aquí.
+   *
+   * Antes cada acción se filtraba contra `items`, que es solo la página cargada,
+   * y el rótulo leía otra cuenta. El resultado reportado: «Eliminar 175» abría
+   * «¿Eliminar 24 leads?». Y había dos defectos gemelos que no avisaban —
+   * «Promover 175 al CRM» promovía los 25 de la página y devolvía 25 aciertos y
+   * ningún fallo, así que nada delataba lo que faltó—.
+   *
+   * `actionTargets` deja pasar los ids que no están en pantalla: de esos juzga el
+   * backend, y las tres acciones devuelven resultado por lead.
+   */
+  const targets = useMemo(
+    () => ({
+      promote: actionTargets(selected, items, canPromote),
+      enrich: actionTargets(selected, items, canEnrich),
+      delete: actionTargets(selected, items, canDelete),
+    }),
     [items, selected],
   );
 
@@ -308,14 +328,16 @@ export function LeadsInboxView({
    * pago es exactamente cómo se funde el plan de un tenant en un clic.
    */
   const onEnrich = useCallback(async () => {
-    if (enrichable.length === 0) return;
+    if (targets.enrich.length === 0) return;
     setEnriching(true);
     try {
-      const result = await enrichLeads(enrichable.map((row) => row.id));
+      const result = await enrichLeads(targets.enrich);
       const queued = new Set(result.queued);
+      // El spinner solo se puede poner sobre las filas que se ven; de las de
+      // otras páginas se enterará la recarga.
       setWorking((previous) => {
         const next = new Map(previous);
-        for (const row of enrichable) {
+        for (const row of items) {
           if (queued.has(row.id)) next.set(row.id, row.enriched_at);
         }
         return next;
@@ -336,13 +358,13 @@ export function LeadsInboxView({
     } finally {
       setEnriching(false);
     }
-  }, [enrichable, showAlert]);
+  }, [items, targets.enrich, showAlert]);
 
   const doPromote = useCallback(async () => {
-    if (promotable.length === 0) return;
+    if (targets.promote.length === 0) return;
     setPromoting(true);
     try {
-      const result = await promoteLeads(promotable.map((row) => row.id));
+      const result = await promoteLeads(targets.promote);
       // El 200 puede traer fallos: leerlos es obligatorio, no opcional.
       if (result.failed.length === 0) {
         showAlert({
@@ -376,15 +398,10 @@ export function LeadsInboxView({
     } finally {
       setPromoting(false);
     }
-  }, [promotable, refresh, showAlert]);
-
-  const deletable = useMemo(
-    () => items.filter((row) => selected.has(row.id) && canDelete(row)),
-    [items, selected],
-  );
+  }, [targets.promote, refresh, showAlert]);
 
   const doDelete = useCallback(async () => {
-    const ids = allMatching ? [...selected] : deletable.map((row) => row.id);
+    const ids = targets.delete;
     if (ids.length === 0) return;
     setDeleting(true);
     try {
@@ -429,7 +446,7 @@ export function LeadsInboxView({
     } finally {
       setDeleting(false);
     }
-  }, [allMatching, selected, deletable, items, refresh, showAlert]);
+  }, [targets.delete, items, refresh, showAlert]);
 
   /**
    * La confirmación del borrado: UNA, igual para 1 que para 300.
@@ -439,24 +456,36 @@ export function LeadsInboxView({
    * —el mismo negocio puede volver, y con una fuente de pago se vuelve a
    * pagar—. Se le puso delante con el argumento y eligió la versión breve.
    *
-   * En modo «todos los que cumplen» se dice cuántos sobrevivirán, porque ahí sí
-   * puede haber promovidos dentro: en la selección de una página no, porque un
-   * lead que ya es contacto no se puede ni marcar.
+   * El número del título es `targets.delete.length`, o sea EXACTAMENTE los ids
+   * que va a recibir el backend. Que el rótulo del botón, el título del diálogo y
+   * la petición salieran de tres cuentas distintas es lo que produjo un «Eliminar
+   * 175» abriendo un «¿Eliminar 24 leads?».
    */
   const onDelete = useCallback(() => {
-    const n = allMatching ? selected.size : deletable.length;
+    const n = targets.delete.length;
     if (n === 0) return;
-    const survivors = allMatching ? total - n : 0;
+    /**
+     * Cuántos sobreviven, y solo si se puede afirmar.
+     *
+     * Con toda la selección en pantalla es una resta exacta. En cuanto hay ids
+     * de otras páginas no se puede saber cuántos de ellos ya son contactos, así
+     * que la línea se dice SIN cifra en vez de inventarla; el panel de resultado
+     * los cuenta después con nombre y motivo.
+     */
+    const exact = selectionIsVisible(selected, items);
+    const survivors = exact ? selected.size - n : null;
     showModal({
       title: `¿Eliminar ${String(n)} ${n === 1 ? "lead" : "leads"}?`,
       description: "No se puede deshacer.",
       body:
-        survivors > 0 ? (
+        survivors === null || survivors > 0 ? (
           <p className="border-border-soft bg-muted/60 text-muted-foreground rounded-md border px-3 py-2.5 text-[12.5px] leading-relaxed">
             <span className="text-foreground font-semibold">
-              {survivors} {survivors === 1 ? "ya es contacto" : "ya son contactos"} del CRM
-            </span>{" "}
-            y se {survivors === 1 ? "quedará" : "quedarán"}. Para borrarlos, hazlo desde el CRM.
+              {survivors === null
+                ? "Los que ya sean contactos del CRM se quedarán"
+                : `${String(survivors)} ${survivors === 1 ? "ya es contacto" : "ya son contactos"} del CRM y se ${survivors === 1 ? "quedará" : "quedarán"}`}
+            </span>
+            . Para borrarlos, hazlo desde el CRM.
           </p>
         ) : undefined,
       actions: [
@@ -464,7 +493,7 @@ export function LeadsInboxView({
         { label: `Sí, eliminar ${String(n)}`, variant: "destructive", onClick: () => void doDelete() },
       ],
     });
-  }, [allMatching, selected.size, deletable.length, total, doDelete, showModal]);
+  }, [targets.delete.length, selected, items, doDelete, showModal]);
 
   /**
    * Promover pide confirmación por encima de un umbral, y no es fricción
@@ -479,20 +508,21 @@ export function LeadsInboxView({
    * El texto dice el número REAL, no «varios».
    */
   const onPromote = useCallback(() => {
-    if (promotable.length <= CONFIRM_ABOVE) {
+    const n = targets.promote.length;
+    if (n <= CONFIRM_ABOVE) {
       void doPromote();
       return;
     }
     showModal({
-      title: `¿Promover ${String(promotable.length)} leads al CRM?`,
+      title: `¿Promover ${String(n)} leads al CRM?`,
       description:
         "Se crean como contactos y empiezan a contar en tu CRM. Esto no se puede deshacer.",
       actions: [
         { label: "Cancelar", variant: "outline", asClose: true },
-        { label: `Sí, promover ${String(promotable.length)}`, onClick: () => void doPromote() },
+        { label: `Sí, promover ${String(n)}`, onClick: () => void doPromote() },
       ],
     });
-  }, [promotable.length, doPromote, showModal]);
+  }, [targets.promote.length, doPromote, showModal]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -572,23 +602,24 @@ export function LeadsInboxView({
                   rowId: (row) => row.id,
                   rowLabel: (row) => row.name,
                   selected,
-                  onChange: (next) => {
-                    setSelected(next);
-                    // Tocar una casilla suelta rompe el modo «todos»: seguir
-                    // diciendo 412 después de destildar uno sería mentira.
-                    setAllMatching(false);
-                  },
+                  // El modo «todos» lo rompe el `DataTable` al tocar una
+                  // casilla, así que aquí solo se guarda la selección.
+                  onChange: setSelected,
                   isSelectable,
                   allMatching: {
                     active: allMatching,
-                    count: allMatching ? total : total,
+                    matchingTotal: total,
                     limit: SELECT_ALL_LIMIT,
                     onSelectAll: () => void onSelectAllMatching(),
                     onClear: () => setAllMatching(false),
                   },
-                  actions: ({ count }) => (
+                  /* Cada botón dice SU número, no el de lo marcado: a un lead
+                     promovido no se le buscan datos ni se le vuelve a promover,
+                     así que los tres conjuntos son distintos y el rótulo tiene
+                     que salir del mismo sitio que la petición. */
+                  actions: () => (
                     <>
-                      {canManageLeads && (
+                      {canManageLeads && targets.enrich.length > 0 && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -600,13 +631,13 @@ export function LeadsInboxView({
                           ) : (
                             <WandSparkles aria-hidden className="size-4" />
                           )}
-                          Buscar datos de {count}
+                          Buscar datos de {targets.enrich.length}
                         </Button>
                       )}
-                      {canPromoteLeads && (
+                      {canPromoteLeads && targets.promote.length > 0 && (
                         <Button size="sm" onClick={onPromote} disabled={promoting}>
                           <ShieldCheck className="size-4" aria-hidden />
-                          Promover {count} al CRM
+                          Promover {targets.promote.length} al CRM
                         </Button>
                       )}
                       {/* DE CONTORNO, y no relleno.
@@ -616,7 +647,7 @@ export function LeadsInboxView({
                           rojo. Y una de las dos no se deshace. El relleno rojo
                           se reserva para el botón de CONFIRMAR, donde ya no
                           compite con nada. */}
-                      {canDeleteLeads && (
+                      {canDeleteLeads && targets.delete.length > 0 && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -625,7 +656,7 @@ export function LeadsInboxView({
                           className="border-destructive/45 text-destructive hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="size-4" aria-hidden />
-                          Eliminar {count}
+                          Eliminar {targets.delete.length}
                         </Button>
                       )}
                     </>

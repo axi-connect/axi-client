@@ -5,6 +5,16 @@ import { cn } from "@/core/lib/utils"
 export type SelectionBannerMessages = {
   /** «Seleccionaste los 25 de esta página.» */
   page: (count: number) => string
+  /**
+   * «175 seleccionados.» — cuando lo marcado NO cabe en la página.
+   *
+   * Existe porque hay un estado real entre los otros dos: se pidieron «los 175
+   * que cumplen» y después se destildó una fila, así que ya no son todos los que
+   * cumplen pero siguen siendo más de los que hay en pantalla. Decir «los 175 de
+   * esta página» ahí es mentira, y era la mitad de un informe de que el número
+   * del botón y el del diálogo no cuadraban.
+   */
+  selected: (count: number) => string
   /** «Los 412 leads que cumplen el filtro están seleccionados.» */
   allMatching: (count: number) => string
   /** «Seleccionar los 412 que cumplen el filtro» */
@@ -16,6 +26,7 @@ export type SelectionBannerMessages = {
 
 export const DEFAULT_SELECTION_MESSAGES: SelectionBannerMessages = {
   page: (n) => `Seleccionaste ${n === 1 ? "1 de esta página" : `los ${n} de esta página`}.`,
+  selected: (n) => `${n} seleccionados.`,
   allMatching: (n) => `Los ${n} que cumplen el filtro están seleccionados.`,
   selectAll: (n) => `Seleccionar los ${n} que cumplen el filtro`,
   clear: "Quitar la selección",
@@ -28,6 +39,8 @@ type SelectionBannerProps = {
   count: number
   /** Cuántos cumplen el filtro. De `meta.total`: cero peticiones extra. */
   matchingTotal?: number
+  /** Cuántas filas hay en pantalla. Decide si se puede decir «de esta página». */
+  pageCount?: number
   allMatching: boolean
   onSelectAllMatching?: () => void
   onClear: () => void
@@ -61,6 +74,7 @@ type SelectionBannerProps = {
 export function SelectionBanner({
   count,
   matchingTotal,
+  pageCount,
   allMatching,
   onSelectAllMatching,
   onClear,
@@ -90,7 +104,11 @@ export function SelectionBanner({
     >
       <p className="text-sm" aria-live="polite">
         <span className="font-semibold">
-          {allMatching ? msgs.allMatching(count) : msgs.page(count)}
+          {allMatching
+            ? msgs.allMatching(count)
+            : pageCount !== undefined && count > pageCount
+              ? msgs.selected(count)
+              : msgs.page(count)}
         </span>
       </p>
 

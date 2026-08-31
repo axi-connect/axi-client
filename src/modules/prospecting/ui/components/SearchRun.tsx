@@ -2,6 +2,7 @@
 
 import { LoaderCircle, RotateCw, Trash2, X } from "lucide-react";
 
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress";
@@ -13,9 +14,26 @@ import {
   progressOf,
   queryOf,
   SEARCH_STATUS_MAP,
+  searchNotice,
   summaryOf,
   type SearchDTO,
 } from "../../domain/search";
+import type { StatusTone } from "@/shared/components/features/status-badge/types";
+
+/**
+ * Del tono de estado a la variante del callout del sistema.
+ *
+ * Es la única traducción que hace falta, y vive aquí porque `Alert` es del
+ * sistema y `StatusTone` del dominio. `neutral` cae en `default`: superficie de
+ * tarjeta y texto normal, que es lo que se quiere para una nota sin carga.
+ */
+const NOTICE_VARIANT: Record<StatusTone, "default" | "destructive" | "success" | "warning" | "info"> = {
+  success: "success",
+  warning: "warning",
+  destructive: "destructive",
+  info: "info",
+  neutral: "default",
+};
 
 /**
  * Una ejecución de búsqueda.
@@ -41,6 +59,7 @@ export function SearchRun({
 }) {
   const live = isInFlight(search);
   const pct = Math.round(progressOf(search) * 100);
+  const notice = searchNotice(search);
 
   return (
     <article className="border-border/60 border-b py-5 last:border-0">
@@ -125,19 +144,14 @@ export function SearchRun({
         )}
       </div>
 
-      {search.status === "partial" && (
-        // El aviso honesto: no es un adorno, es lo que evita que el dueño crea
-        // que ya tiene una lista con la que llamar a alguien. Con filtros el
-        // motivo lo escribe el backend, porque solo él sabe si paró por el techo
-        // de gasto, por agotarse la zona o por el tope de páginas.
-        <p className="border-warning/40 bg-warning/10 text-foreground mt-3 rounded-md border px-3 py-2 text-sm">
-          {search.error ??
-            "La mayoría de estos negocios llegaron sin teléfono ni correo. Necesitan enriquecimiento para servir de algo."}
-        </p>
-      )}
-
-      {search.error !== null && (
-        <p className="text-destructive mt-3 text-sm">{search.error}</p>
+      {/* UN aviso, no dos. Antes había dos bloques —uno por `partial` y otro por
+          `error`— y una parcial con motivo caía en los dos, así que el mismo
+          texto salía repetido en ámbar y en rojo. Qué se dice y con qué tono lo
+          decide `searchNotice`, que lee el tono del mismo mapa que la insignia. */}
+      {notice !== null && (
+        <Alert variant={NOTICE_VARIANT[notice.tone]} className="mt-3">
+          <AlertDescription>{notice.text}</AlertDescription>
+        </Alert>
       )}
     </article>
   );
