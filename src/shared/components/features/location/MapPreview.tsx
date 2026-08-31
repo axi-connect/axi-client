@@ -33,6 +33,16 @@ const TILE_PX = 256;
 const COLLAPSED_H = 148;
 const EXPANDED_H = 260;
 
+/**
+ * Ancho que se supone mientras no haya medida.
+ *
+ * **Sin esto el mapa se queda en blanco para siempre** si la medida falla —un
+ * contenedor oculto al montar, un `ResizeObserver` que no llega—, y un mapa
+ * aproximado vale más que un mapa vacío. 640 px es lo que cubría la rejilla
+ * de 3×3 de antes; el coste de equivocarse son dos o tres teselas de más.
+ */
+const FALLBACK_W = 640;
+
 export interface MapPreviewProps {
   lat: number;
   lng: number;
@@ -73,12 +83,11 @@ export function MapPreview({
   const viewport = useRef<HTMLButtonElement>(null);
   const [expanded, setExpanded] = useState(false);
   /**
-   * El ancho del visor. **De él sale cuántas teselas hacen falta**, así que
-   * mientras no se sepa no se pide ninguna: pintar con la rejilla equivocada es
-   * una tanda de peticiones tiradas.
+   * El ancho del visor. **De él sale cuántas teselas hacen falta.**
    *
    * Se mide en `useLayoutEffect`, o sea antes de que el navegador pinte, para
-   * que el primer fotograma ya salga completo.
+   * que el primer fotograma ya salga completo. Mientras no haya medida se pinta
+   * con `FALLBACK_W`: quedarse esperando es quedarse en blanco.
    */
   const [width, setWidth] = useState(0);
 
@@ -111,7 +120,7 @@ export function MapPreview({
     lat,
     lng,
     zoom,
-    width,
+    width: width > 0 ? width : FALLBACK_W,
     height: expanded ? EXPANDED_H : COLLAPSED_H,
   });
 
@@ -179,8 +188,24 @@ export function MapPreview({
               width={TILE_PX}
               height={TILE_PX}
               loading="lazy"
-              className="absolute"
-              style={{ left: tile.left, top: tile.top }}
+              /*
+                `max-w-none` NO ES DECORATIVO, NO SE BORRE.
+                El preflight de Tailwind trae `img { max-width: 100%; height:
+                auto }`, y ese 100% se resuelve contra el ancla, que mide CERO.
+                Con la regla activa cada tesela sale de 0×0: nada pintado y,
+                como van con `loading="lazy"`, una imagen de tamaño cero nunca
+                entra en el visor y el navegador no la pide — así que ni consola
+                ni red delatan nada. Dejó el mapa vacío una vez ya.
+              */
+              className="absolute max-w-none"
+              style={{
+                left: tile.left,
+                top: tile.top,
+                // También en `style` y no solo en los atributos: así ninguna
+                // hoja global puede volver a encogerlas.
+                width: TILE_PX,
+                height: TILE_PX,
+              }}
             />
           ))}
         </span>

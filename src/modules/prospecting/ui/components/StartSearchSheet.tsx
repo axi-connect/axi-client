@@ -21,6 +21,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
@@ -150,6 +151,13 @@ export function StartSearchSheet({
       <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Buscar negocios</SheetTitle>
+          {/* No es relleno: Radix pide que todo diálogo se describa —avisaba en
+              consola por su ausencia— y esta pantalla no decía en ninguna parte
+              qué va a pasar al pulsar «Buscar». */}
+          <SheetDescription>
+            Los negocios de la zona que elijas entran a tu bandeja con su calidad ya
+            medida. Nadie pasa a tu CRM sin que tú lo promuevas.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-5 px-4 pb-6">

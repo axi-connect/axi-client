@@ -109,6 +109,10 @@ export function SiteNavMobile({
       <SheetContent
         side="right"
         className="w-full gap-0 p-0 sm:max-w-md [&>button]:hidden"
+        /* Un cajón de navegación no tiene nada que describir: son enlaces, y una
+           frase explicándolos sería relleno. Esta es la forma que documenta Radix
+           para decir «no hay descripción a propósito» y que deje de avisar. */
+        aria-describedby={undefined}
       >
         {/* El título es obligatorio para el diálogo (lo anuncia el lector de
             pantalla), pero visualmente lo sustituye la marca. */}

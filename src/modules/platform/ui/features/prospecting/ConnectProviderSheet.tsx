@@ -9,6 +9,7 @@ import { Input } from "@/shared/components/ui/input";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/shared/components/ui/sheet";
@@ -118,7 +119,11 @@ export function ConnectProviderSheet({
         </SheetHeader>
 
         <div className="flex flex-col gap-4 px-4 pb-6">
-          <p className="text-muted-foreground text-sm">{descriptor.tagline}</p>
+          {/* `SheetDescription` y no un `<p>`: el texto es el mismo, pero así
+              queda atado al diálogo por `aria-describedby` —que es lo que Radix
+              echaba de menos en consola— y lo lee un lector de pantalla al
+              abrir. */}
+          <SheetDescription>{descriptor.tagline}</SheetDescription>
 
           <section className="border-border bg-secondary rounded-lg border p-3">
             <p className="mb-2 text-xs font-semibold">Antes de empezar</p>
