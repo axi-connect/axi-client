@@ -1,9 +1,9 @@
 "use client";
 
-import { Users } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { Progress } from "@/shared/components/ui/progress";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { SectionError, sectionRefetching } from "./section-states";
@@ -67,7 +67,7 @@ export function GroupBreakdownCard({
         </div>
       ) : groups.length === 0 ? (
         <CardEmpty
-          icon={<Users aria-hidden className="size-6" />}
+          glyph="people"
           message="Sin datos para este desglose en el período."
         />
       ) : (

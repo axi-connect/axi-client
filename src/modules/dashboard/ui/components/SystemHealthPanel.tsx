@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Radio, Sparkles, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Sparkles, XCircle } from "lucide-react";
 import { cn } from "@/core/lib/utils";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import type { HealthLevel, ChannelHealth } from "@/modules/dashboard/domain/health";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import type { UsageSummaryDTO } from "@/modules/dashboard/domain/dashboard";
@@ -63,7 +64,7 @@ export function SystemHealthPanel({
     <DashboardCard title="Estado del sistema">
       {channels.data.length === 0 ? (
         <CardEmpty
-          icon={<Radio aria-hidden className="size-6" />}
+          glyph="connections"
           message="Aún no hay canales conectados. Conecta uno para empezar a recibir conversaciones."
         />
       ) : (

@@ -1,7 +1,8 @@
 "use client";
 
-import { TriangleAlert, Users } from "lucide-react";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { TriangleAlert } from "lucide-react";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ScoreBadge } from "./score-badge";
 import { SectionError, sectionRefetching } from "../conversion/section-states";
@@ -33,7 +34,7 @@ export function AgentQualityTable({
         </div>
       ) : section.data.agents.length === 0 ? (
         <CardEmpty
-          icon={<Users aria-hidden className="size-6" />}
+          glyph="ai"
           message="Aún no tienes agentes IA con actividad en este período."
         />
       ) : (

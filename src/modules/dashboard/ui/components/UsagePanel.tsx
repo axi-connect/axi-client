@@ -2,14 +2,14 @@
 
 import { cn } from "@/core/lib/utils";
 import { Progress } from "@/shared/components/ui/progress";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import {
   HIGHLIGHTED_USAGE_METRICS,
   USAGE_METRIC_LABELS,
   type UsageSummaryDTO,
 } from "@/modules/dashboard/domain/dashboard";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
-import { Gauge } from "lucide-react";
 
 function MetricBar({
   label,
@@ -75,7 +75,7 @@ export function UsagePanel({ section }: { section: Section<UsageSummaryDTO> }) {
     <DashboardCard title="Consumo del plan">
       {highlighted.length === 0 ? (
         <CardEmpty
-          icon={<Gauge aria-hidden className="size-6" />}
+          glyph="metrics"
           message="Sin consumo registrado este ciclo."
         />
       ) : (

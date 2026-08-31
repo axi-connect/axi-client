@@ -1,7 +1,7 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PERIOD_LABELS, type AnalyticsPeriod } from "@/modules/analytics/domain/analytics";
 import { scoreBand } from "@/modules/analytics/domain/labels";
@@ -58,7 +58,7 @@ export function QualityScoreCard({
           if (score === null) {
             return (
               <CardEmpty
-                icon={<Sparkles aria-hidden className="size-6" />}
+                glyph="ai"
                 message="Aún no hay evaluaciones. Cada conversación cerrada se evalúa automáticamente para ayudarte a mejorar a tus agentes."
               />
             );

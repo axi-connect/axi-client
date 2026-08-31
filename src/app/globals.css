@@ -406,6 +406,194 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .glass, .glass-overlay, .glass-menu { background-color: var(--color-background); }
 }
 
+
+/* -------- Cristal ilustrado: glifos de estado vacío (DESIGN-SYSTEM §7) --------
+
+   El material de los diez glifos del set (`shared/components/ui/glyphs`). Vive
+   aquí, junto a `.glass`, y no en ningún módulo: lo consumen billing, crm,
+   catalog, inbox, marketing, platform y el resto.
+
+   Reparto deliberado: el componente TSX es geometría y este bloque es el
+   material. Los colores entran por `data-stop` porque `var()` en un atributo de
+   presentación es frágil, mientras que `stop-color`, `fill` y `stroke` son
+   propiedades CSS de pleno derecho — así el tema entero se resuelve aquí y el
+   SVG no sabe que existen los temas.
+
+   REVOCACIÓN: ningún glifo usa `backdrop-filter`, y eso no es un detalle de
+   implementación. El glass de §5 está *definido* por esa propiedad; la
+   translucidez del glifo está pintada en gradientes, no compuesta con lo que
+   hay detrás. Es lo que sostiene que un glifo no es una superficie y no le
+   aplica el mandamiento 3 (DESIGN §8). Si un glifo llega a usar
+   `backdrop-filter`, deja de estar autorizado por §7 y pasa a ser glass sujeto
+   a §5.2. */
+
+/* El único valor que hay que INTERPOLAR y que no es propiedad CSS de nadie: la
+   intensidad, que alimenta a la vez varios `stop-opacity`. Sin `@property` un
+   custom property no interpola — misma razón que `--comet-angle`. `inherits`
+   sí, al contrario que aquél: tiene que llegar a los `<stop>`. */
+@property --glyph-sheen {
+  syntax: "<number>";
+  initial-value: 0;
+  inherits: true;
+}
+
+.glass-glyph {
+  --glyph-accent: var(--axi-violet); /* default: violeta = IA */
+  --glyph-sheen: 0;
+
+  /* Pedestal: normaliza el fondo real (el degradado `from-muted/50 to-muted`
+     del panel, una card sólida o el panel del workspace) hacia el fondo de la
+     app. Sobre `--background` puro es invisible. */
+  --glass-plate: color-mix(in srgb, var(--background) 44%, transparent);
+  /* Cuerpo: derivado del texto, así que oscurece lo que hay detrás en claro. */
+  --glass-lo: color-mix(in srgb, var(--foreground) 5%, transparent);
+  --glass-mid: color-mix(in srgb, var(--foreground) 11%, transparent);
+  /* Canto y silueta. El pico llega al 46% y no al 26%: por debajo de ~2,5:1 un
+     glifo se ve roto en un portátil con brillo bajo, no elegante. */
+  --glass-rim: color-mix(in srgb, var(--foreground) 46%, transparent);
+  --glass-rim-lo: color-mix(in srgb, var(--foreground) 10%, transparent);
+  /* Grabado: una línea grabada en vidrio CAPTA la luz, así que va más brillante
+     que el canto. Con el color del rim desaparecía. */
+  --glass-etch: color-mix(in srgb, var(--foreground) 60%, transparent);
+  --glass-cast: color-mix(in srgb, var(--foreground) 13%, transparent);
+  /* Los dos únicos literales del material: luz y reflejo son física, no paleta,
+     y por eso viven aquí y no en la capa 1. */
+  --glass-hi: rgb(255 255 255 / 0.92);
+  --glass-spec: rgb(255 255 255 / 0.55);
+  --glass-hot: rgb(255 255 255 / 0.5);
+  /* Vidrio DICROICO: el cuerpo no es gris, va de cálido a frío. Es el gradiente
+     corto de marca (coral → violeta) que DESIGN §3.2 sanciona para detalles
+     decorativos; a este alfa lee como refracción, no como color. */
+  --glass-warm: color-mix(in srgb, var(--axi-brand) 13%, transparent);
+  --glass-cool: color-mix(in srgb, var(--axi-violet) 11%, transparent);
+  /* Intensidad de la luz de color. Al 0,52 salían MANCHAS: la idea es un objeto
+     de color que se ve A TRAVÉS del vidrio, no un tinte encima del glifo. */
+  --glass-core: 0.33;
+
+  display: block;
+  flex-shrink: 0;
+  transition: --glyph-sheen 260ms ease;
+}
+
+/* En oscuro el vidrio se INVIERTE: el reflejo pasa a ser el protagonista y el
+   charco de debajo deja de ser sombra para ser luz. Los neutros pasan a blanco
+   literal y no a `--foreground`, que en oscuro es #ededed: un gris casi blanco
+   al 13% se ve sucio comparado con blanco puro al 13%. */
+.dark .glass-glyph {
+  /* MEDIDO, no supuesto: en oscuro el pedestal SOBRA. Los tres fondos del panel
+     están a pocos puntos entre sí (#0a0a0a, #18181b, #131313), así que no tiene
+     nada que normalizar y cualquier alfa apaga el contraste del vidrio con un
+     velo gris. La capa se queda en la estructura; el token la apaga. */
+  --glass-plate: transparent;
+  --glass-lo: rgb(255 255 255 / 0.04);
+  --glass-mid: rgb(255 255 255 / 0.13);
+  --glass-rim: rgb(255 255 255 / 0.4);
+  --glass-rim-lo: rgb(255 255 255 / 0.08);
+  --glass-etch: rgb(255 255 255 / 0.62);
+  /* No es sombra: es el charco de luz que deja un objeto translúcido sobre negro. */
+  --glass-cast: color-mix(in srgb, var(--glyph-accent) 12%, transparent);
+  --glass-hi: rgb(255 255 255 / 1);
+  --glass-spec: rgb(255 255 255 / 0.7);
+  --glass-hot: rgb(255 255 255 / 0.62);
+  --glass-warm: color-mix(in srgb, var(--axi-brand) 17%, transparent);
+  --glass-cool: color-mix(in srgb, var(--axi-violet) 15%, transparent);
+  /* En oscuro los acentos de axi son más claros y vivos, así que la misma alfa
+     grita más. */
+  --glass-core: 0.26;
+}
+
+/* El acento entra por clase de conjunto cerrado, no por `bg-[var(--x)]`:
+   Tailwind extrae clases estáticamente y una arbitraria con variable no genera
+   nada. El glifo CONSUME el acento del módulo, no elige el suyo. */
+.glass-glyph--brand { --glyph-accent: var(--axi-brand); }
+.glass-glyph--amber { --glyph-accent: var(--axi-amber); }
+.glass-glyph--success { --glyph-accent: var(--axi-success); }
+/* La familia neutra («sin resultados») casi no lleva luz de color: un núcleo
+   gris dentro del vidrio no lee como luz, lee como suciedad en la lente. */
+.glass-glyph--muted { --glyph-accent: var(--color-muted-foreground); --glass-core: 0.12; }
+
+.glass-glyph [data-stop="lo"] { stop-color: var(--glass-lo); }
+.glass-glyph [data-stop="mid"] { stop-color: var(--glass-mid); }
+.glass-glyph [data-stop="hi"] { stop-color: var(--glass-hi); }
+.glass-glyph [data-stop="rim"] { stop-color: var(--glass-rim); }
+.glass-glyph [data-stop="rim-lo"] { stop-color: var(--glass-rim-lo); }
+.glass-glyph [data-stop="spec"] { stop-color: var(--glass-spec); }
+.glass-glyph [data-stop="hot"] { stop-color: var(--glass-hot); }
+.glass-glyph [data-stop="cast"] { stop-color: var(--glass-cast); }
+.glass-glyph [data-stop="plate"] { stop-color: var(--glass-plate); }
+.glass-glyph [data-stop="warm"] { stop-color: var(--glass-warm); }
+.glass-glyph [data-stop="cool"] { stop-color: var(--glass-cool); }
+.glass-glyph [data-stop="none"] { stop-color: var(--glass-hi); stop-opacity: 0; }
+
+/* La luz de color va DETRÁS del cuerpo, así que el vidrio la apaga: de ahí que
+   el alfa del centro sea alto para lo que acaba viéndose. */
+.glass-glyph [data-stop="accent"] {
+  stop-color: var(--glyph-accent);
+  stop-opacity: calc(var(--glass-core) + 0.17 * var(--glyph-sheen));
+}
+.glass-glyph [data-stop="accent-mid"] {
+  stop-color: var(--glyph-accent);
+  stop-opacity: calc(var(--glass-core) * 0.42 + 0.08 * var(--glyph-sheen));
+}
+
+.glass-glyph [data-layer="rim"] { stroke-opacity: calc(0.86 + 0.14 * var(--glyph-sheen)); }
+.glass-glyph [data-layer="engrave"] {
+  stroke: var(--glass-etch);
+  stroke-opacity: 0.92;
+  stroke-width: 1.3;
+}
+/* A 128px un rim de 1px se pierde; a 32px 1,5px es un dibujo infantil. */
+.glass-glyph--lg [data-layer="rim"] { stroke-width: 1.4; }
+.glass-glyph--lg [data-layer="engrave"] { stroke-width: 1.6; }
+.glass-glyph--lg [data-layer="cast"] { ry: 5; }
+.glass-glyph--sm [data-layer="engrave"] { stroke-width: 1; }
+.glass-glyph--sm [data-layer="hot"] { opacity: 0.8; }
+
+/* El reflejo viajero. La transición vive en el HIJO y no en el host, así solo se
+   recalcula ese nodo por frame y no el subárbol entero.
+
+   Recorre 20 de las 48 unidades y APARCA en su posición autorada, que cae sobre
+   la masa del cuerpo en las diez familias. Con un recorrido mayor el brillo
+   acababa en el borde o fuera de la figura.
+
+   Y el dato que fija el diseño: el `offset` de un `<stop>` y las coordenadas
+   `x1/y1/x2/y2` de un gradiente NO son propiedades CSS y no se pueden
+   transicionar. Por eso el reflejo no se mueve moviendo el gradiente: se mueve
+   trasladando una banda recortada. */
+.glass-glyph [data-layer="sheen"] {
+  transform: translateX(-16px);
+  opacity: 0;
+  transition:
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease;
+}
+
+/* Se enciende SOLO con el puntero encima del contenedor, que es el caso que
+   DESIGN-SYSTEM §6 excluye expresamente de la regla del loop («la línea que
+   separa una cosa de la otra es quién lo dispara»). El `:has(:focus-visible)`
+   cubre al usuario de teclado que tabula al CTA del estado vacío.
+
+   La clase `glass-host` la pone quien SÍ es hovereable: un estado vacío inerte
+   no debe prometer una interacción que no existe. */
+@media (hover: hover) and (pointer: fine) {
+  .glass-host:hover .glass-glyph [data-layer="sheen"],
+  .glass-host:has(:focus-visible) .glass-glyph [data-layer="sheen"] {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+  .glass-host:hover .glass-glyph,
+  .glass-host:has(:focus-visible) .glass-glyph {
+    --glyph-sheen: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* El reflejo aparece encendido en su posición final en vez de viajar: misma
+     degradación silenciosa que el cometa de canales. */
+  .glass-glyph [data-layer="sheen"] { transition: opacity 200ms ease; transform: none; }
+  .glass-glyph { transition: none; }
+}
+
 /* -------- Ajustes de componentes -------- */
 
 /* Bordes suaves para tablas */

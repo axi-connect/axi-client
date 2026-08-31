@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { MessagesSquare } from "lucide-react";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import type { ConversationStatsDTO, DashboardPeriod } from "@/modules/dashboard/domain/dashboard";
@@ -89,7 +89,7 @@ export function ConversationsFlowCard({
         </>
       ) : (
         <CardEmpty
-          icon={<MessagesSquare aria-hidden className="size-6" />}
+          glyph="conversation"
           message="Aún no hay conversaciones en este período."
         />
       )}

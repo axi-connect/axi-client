@@ -1,8 +1,8 @@
 "use client";
 
-import { Package } from "lucide-react";
 import { formatMoney } from "@/core/lib/format";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import type { TopProductsDTO } from "@/modules/dashboard/domain/dashboard";
@@ -33,7 +33,7 @@ export function TopProductsCard({ section }: { section: Section<TopProductsDTO> 
     <DashboardCard title="Top productos">
       {items.length === 0 ? (
         <CardEmpty
-          icon={<Package aria-hidden className="size-6" />}
+          glyph="catalog"
           message="Aún no hay productos vendidos en este período."
         />
       ) : (

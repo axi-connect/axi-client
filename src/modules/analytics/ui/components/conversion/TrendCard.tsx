@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { CardEmpty, DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { CardEmpty } from "@/shared/components/features/card-empty";
 import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
-import { TrendingUp } from "lucide-react";
 import { ChartSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { SectionError, sectionRefetching } from "./section-states";
 import type { Section } from "@/modules/analytics/infrastructure/stores/analytics.store";
@@ -40,7 +40,7 @@ export function TrendCard({
         <ChartSkeleton />
       ) : section.data.series.length === 0 ? (
         <CardEmpty
-          icon={<TrendingUp aria-hidden className="size-6" />}
+          glyph="metrics"
           message="Aún no hay actividad en este período."
         />
       ) : (
