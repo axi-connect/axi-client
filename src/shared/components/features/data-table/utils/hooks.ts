@@ -1,11 +1,21 @@
 import type { ColumnDef, DataRow } from "../types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+/**
+ * Los campos que ofrece el selector de búsqueda.
+ *
+ * Descarta las columnas cuya etiqueta resuelve a cadena VACÍA. Antes, una
+ * columna estructural —la casilla de selección, declarada con `accessorKey` y
+ * `header: ""`— metía una entrada en blanco en el desplegable, y la única
+ * defensa era que cada consumidor se acordara de poner `searchable: false`. Una
+ * entrada sin nombre no se puede elegir a propósito.
+ */
 export function useSearchableFields<T extends DataRow>(columns: ColumnDef<T>[], preferred: Array<keyof T & string>) {
   return useMemo(() => {
     const itemsMap = new Map<string, { key: string; label: string }>(
       columns
         .filter((c) => !!c.accessorKey && c.searchable !== false)
+        .filter((c) => (typeof c.header === "string" ? c.header.trim() !== "" : true))
         .map((c) => [
           String(c.accessorKey),
           { key: String(c.accessorKey), label: typeof c.header === "string" ? c.header : String(c.accessorKey) },
@@ -76,10 +86,17 @@ export function useResponsiveColumns<T extends DataRow>(
   const [visibleCount, setVisibleCount] = useState<number>(columns.length)
   // Pre-categorizar columnas (evita recomputar por resize)
   const categorized = useMemo(() => {
-    const actions = columns.filter((c) => c.id === "actions")
-    const always = columns.filter((c) => c.alwaysVisible && c.id !== "actions")
-    const flexible = columns.filter((c) => !c.alwaysVisible && c.id !== "actions")
-    return { actions, always, flexible }
+    // `id === "actions"` sigue siendo `end` sin que nadie lo declare: era el
+    // único anclaje que existía y lo usan varias tablas. Se conserva TAL CUAL
+    // para que este cambio no mueva ninguna de las 17.
+    const isEnd = (c: ColumnDef<T>) => c.pinned === "end" || c.id === "actions"
+    const isStart = (c: ColumnDef<T>) => c.pinned === "start" && !isEnd(c)
+    const start = columns.filter(isStart)
+    const actions = columns.filter(isEnd)
+    const rest = columns.filter((c) => !isStart(c) && !isEnd(c))
+    const always = rest.filter((c) => c.alwaysVisible)
+    const flexible = rest.filter((c) => !c.alwaysVisible)
+    return { start, actions, always, flexible }
   }, [columns])
 
   useEffect(() => {
@@ -90,10 +107,11 @@ export function useResponsiveColumns<T extends DataRow>(
     const compute = () => {
       const minWidth = opts.minColumnWidth
       const containerWidth = el.clientWidth || 0
-      const consumedWidth = [...categorized.always, ...categorized.actions].reduce(
-        (sum, c) => sum + (c.minWidth ?? minWidth),
-        0
-      )
+      const consumedWidth = [
+        ...categorized.start,
+        ...categorized.always,
+        ...categorized.actions,
+      ].reduce((sum, c) => sum + (c.minWidth ?? minWidth), 0)
       const availableForFlexible = Math.max(0, containerWidth - consumedWidth)
       const widths = categorized.flexible.map((c) => c.minWidth ?? minWidth)
       let acc = 0
@@ -127,14 +145,15 @@ export function useResponsiveColumns<T extends DataRow>(
   }, [columns, containerRef, opts.minColumnWidth, categorized])
 
   return useMemo(() => {
-    const { actions, always, flexible } = categorized
-    // Orden: always (izquierda) + flexible (centro) + actions (derecha)
+    const { start, actions, always, flexible } = categorized
+    // Orden: start (ancladas) + always + flexible (centro) + actions (derecha)
     const ordered = [...always, ...flexible]
     const baseVisible = ordered.slice(0, visibleCount)
-    const visibleSet = new Set([...baseVisible, ...actions])
-    // Asegurar actions siempre visibles al final (derecha)
-    const visibleColumns = [...baseVisible, ...actions]
-    const collapsedColumns = columns.filter((c) => !visibleSet.has(c) && c.id !== "actions")
+    const visibleSet = new Set([...start, ...baseVisible, ...actions])
+    const visibleColumns = [...start, ...baseVisible, ...actions]
+    // Ni las ancladas ni las de acciones se colapsan: una casilla dentro del
+    // panel «Ver más» no sirve para nada.
+    const collapsedColumns = columns.filter((c) => !visibleSet.has(c))
     return { visibleColumns, collapsedColumns }
   }, [columns, visibleCount, categorized])
 }
