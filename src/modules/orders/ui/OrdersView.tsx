@@ -106,7 +106,7 @@ export function OrdersView({ initialOrderId }: { initialOrderId?: string }) {
             <OrdersTable onOpenOrder={openOrder} />
           ) : boardEmpty ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-              <GlassGlyph kind="money" />
+              <GlassGlyph kind="money" tier="lg" />
               <div>
                 <p className="font-medium">Aún no hay pedidos</p>
                 <p className="text-sm text-muted-foreground">

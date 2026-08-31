@@ -19,12 +19,17 @@ type CardEmptyProps = CardEmptyBase &
  * `analytics` por ruta interna, que es justo lo que prohíbe la regla 5 de
  * `docs/architecture.md` §3.3. Al ser un primitivo de estado, su sitio es
  * `shared/components/features`.
+ *
+ * El glifo va a tamaño `md`, el mismo que `EmptyState`, y no al pequeño: su
+ * contenedor es una card entera, no un rail ni un popover. El pequeño se reserva
+ * para los sitios de verdad estrechos —el sidebar de canales, la lista del
+ * inbox, el panel de notificaciones, el rail de adjuntos—, donde 96 px no cabe.
  */
 export function CardEmpty({ icon, glyph, message }: CardEmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
       {glyph ? (
-        <GlassGlyph kind={glyph} tier="sm" />
+        <GlassGlyph kind={glyph} tier="md" />
       ) : (
         <span className="text-muted-foreground">{icon}</span>
       )}

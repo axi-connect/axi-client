@@ -44,6 +44,20 @@ describe("GlassGlyph", () => {
     expect(sm.querySelector('[data-layer="plate"]')).toBeNull();
   });
 
+  it("la escala del sistema es 48 / 96 / 176 px", () => {
+    // Decisión del dueño tras ver la primera escala (32/64/128) en el panel: se
+    // veía pequeña. Va con test porque es una decisión de diseño, no un default
+    // — y porque el tamaño lo fija el tier, así que encogerlo es un cambio de
+    //   una línea que nadie notaría en review.
+    const expected = { sm: "size-12", md: "size-24", lg: "size-44" } as const;
+    for (const [tier, size] of Object.entries(expected)) {
+      const { container } = render(
+        <GlassGlyph kind="conversation" tier={tier as "sm" | "md" | "lg"} />,
+      );
+      expect(container.querySelector("svg")?.getAttribute("class")).toContain(size);
+    }
+  });
+
   it("emite las dos clases modificadoras, acento y tier", () => {
     // El tier no es solo tamaño: `.glass-glyph--lg` / `--sm` ajustan el grosor
     // del rim y del grabado en `globals.css`. Sin la clase, esas reglas nunca

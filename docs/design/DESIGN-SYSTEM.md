@@ -324,7 +324,7 @@ Reglas:
   Condiciones de uso, todas obligatorias:
   1. **Solo estados vacíos e ilustración.** Nunca como icono de un control, de navegación, de un badge o de una fila de tabla: ahí manda lucide.
   2. **Nunca debajo de texto** ni como fondo de nada.
-  3. **Tres tamaños y un techo de 128px.** `sm` 32px (dentro de una card), `md` 64px (el estado vacío estándar), `lg` 128px (vacío de página completa). El `tier` decide tamaño Y detalle a la vez, a propósito: separarlos permite pedir nueve capas a 32px, que es barro. Un glifo que ocupa media pantalla vuelve a ser una superficie.
+  3. **Tres tamaños y un techo de 176px.** `sm` 48px (dentro de una card), `md` 96px (el estado vacío estándar), `lg` 176px (vacío de página completa). El `tier` decide tamaño, detalle Y grosor de trazo a la vez, a propósito: separarlos permite pedir nueve capas a 48px (barro) o un trazo de 1px sobre 176 (silueta anémica). La primera escala del set —32/64/128 con trazo único— se quedó corta: un objeto translúcido se lee por su silueta, así que un rim delgado hace que el glifo parezca pequeño aunque no lo sea. Un glifo que ocupa media pantalla vuelve a ser una superficie.
   4. **Cero hex en el componente.** El material sale de las variables `--glass-*` y el acento de `--glyph-accent`, declaradas una sola vez en `globals.css`. Los dos únicos literales del material —blanco de luz y blanco de reflejo— viven ahí: son física, no paleta. Esto es MÁS estricto que `BrandMark`, que sí se declara artwork y lleva sus hex.
   5. **Un acento por vista (§2.1).** El glifo *consume* el acento de su familia vía `.glass-glyph--{brand|amber|violet|success|muted}`; no lo elige el llamador.
   6. **Con un glifo, `EmptyState` no pinta el disco teñido.** El glifo ya trae su pedestal y un círculo tintado detrás de un objeto de vidrio se lee como dos platos compitiendo.
@@ -471,7 +471,7 @@ pestañas.
 - [ ] ¿Se ve correcto en light **y** dark?
 - [ ] ¿Radios según §4.1 (controles 12px, flotantes 16–20px, pills)?
 - [ ] ¿Glass solo si es superficie flotante (§5.2)?
-- [ ] ¿Ningún `GlassGlyph` usa `backdrop-filter`, ni va bajo texto, ni pasa de 128px (§7)?
+- [ ] ¿Ningún `GlassGlyph` usa `backdrop-filter`, ni va bajo texto, ni pasa de 176px (§7)?
 - [ ] ¿Tipografía de la escala §3.2 — Poppins en cuerpo/UI, Nexa en headings?
 - [ ] ¿Estados cargando/vacío/error cubiertos?
 - [ ] ¿Focus visible, contraste AA, `aria-label` en icon-buttons?
