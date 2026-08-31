@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageSquare, Plus, ShieldCheck, ShoppingCart, Target, Zap } from "lucide-react";
+import { MessageSquare, Plus, ShieldCheck, ShoppingCart, Target } from "lucide-react";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -253,8 +253,7 @@ export function AutomationsView() {
         </div>
       ) : isEmpty ? (
         <EmptyState
-          icon={Zap}
-          accent="amber"
+          glyph="ai"
           title="Aún no recuperas ventas"
           description="Cada día se te escapan carritos a medias y conversaciones que se apagaron. Una regla los reengancha sola, a la hora que tú decidas y con el descuento que tú elijas."
           action={

@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Megaphone, MoreHorizontal, Plus } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { formatShortDate } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -182,8 +182,7 @@ export function CampaignsView() {
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          icon={Megaphone}
-          accent="amber"
+          glyph="ai"
           title={hasFilter ? "Ninguna campaña en ese estado" : "Todavía no le has escrito a tu base"}
           description={
             hasFilter

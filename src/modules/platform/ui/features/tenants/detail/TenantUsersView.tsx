@@ -6,7 +6,6 @@
  * tabla; sin facets (el volumen por tenant es bajo).
  */
 import { useMemo, useState } from "react";
-import { Users } from "lucide-react";
 import { DataTable } from "@/shared/components/features/data-table";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import type { TenantUser } from "../../../../domain/tenant";
@@ -40,7 +39,7 @@ export function TenantUsersView({ tenantId }: { tenantId: string }) {
   if (users.length === 0) {
     return (
       <EmptyState
-        icon={Users}
+        glyph="people"
         title="Sin usuarios"
         description="Este tenant aún no tiene usuarios registrados."
       />

@@ -12,7 +12,7 @@
  * qué una factura de junio dice otro importe.
  */
 import { useMemo, useState } from "react";
-import { Plus, Scale } from "lucide-react";
+import { Plus } from "lucide-react";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -68,8 +68,7 @@ export function PricesView() {
   if (planList.length === 0) {
     return (
       <EmptyState
-        icon={Scale}
-        accent="amber"
+        glyph="money"
         title="No hay planes que tarifar"
         description="Crea primero un plan comercial; la tarifa cuelga de él."
       />
@@ -116,8 +115,7 @@ export function PricesView() {
         <ProblemAlert error={prices.error} onRetry={() => void prices.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          icon={Scale}
-          accent="amber"
+          glyph="money"
           title={`${activePlan?.name ?? "Este plan"} no tiene tarifa`}
           description="Sin tarifa vigente el ciclo no puede emitirse: la emisión falla con billing/price_missing."
           action={

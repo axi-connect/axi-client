@@ -21,6 +21,7 @@ import { Button } from "@/shared/components/ui/button"
 import { SegmentedControl } from "@/shared/components/ui/segmented"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
+import { GlassGlyph } from "@/shared/components/ui/glyphs"
 import {
   INBOX_TAB_LABELS,
   MODE_LABELS,
@@ -167,7 +168,7 @@ export function InboxList({ className }: { className?: string }) {
           Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
-            <InboxIcon className="size-8 opacity-40" />
+            <GlassGlyph kind="conversation" tier="sm" />
             <p className="text-sm">No hay conversaciones en “{INBOX_TAB_LABELS[tab]}”</p>
           </div>
         ) : (

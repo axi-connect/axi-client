@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { CopyCheck, Download, Plus, Search, Users } from "lucide-react";
+import { CopyCheck, Download, Plus, Search } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
@@ -11,6 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { DataTable } from "@/shared/components/features/data-table";
 import { TableSkeleton } from "@/shared/components/features/loading";
+import { EmptyState } from "@/shared/components/features/empty-state";
 import type { ContactRow } from "@/modules/crm/domain/contact";
 import {
   ContactFilters,
@@ -152,23 +153,22 @@ export default function CrmContactsPage() {
           </Button>
         </div>
       ) : isEmpty ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-background py-20 text-center">
-          <Users className="size-10 text-muted-foreground" aria-hidden />
-          <div>
-            <p className="font-medium">Aún no tienes contactos</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Los de WhatsApp e Instagram se crean solos al escribirte; también puedes crearlos manualmente.
-            </p>
-          </div>
-          {canManage && (
-            <Button asChild className="rounded-full">
-              <Link href="/crm/contacts/create">
-                <Plus className="size-4" />
-                Crear contacto
-              </Link>
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          glyph="people"
+          variant="solid"
+          title="Aún no tienes contactos"
+          description="Los de WhatsApp e Instagram se crean solos al escribirte; también puedes crearlos manualmente."
+          action={
+            canManage ? (
+              <Button asChild className="rounded-full">
+                <Link href="/crm/contacts/create">
+                  <Plus className="size-4" />
+                  Crear contacto
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="space-y-4 rounded-2xl border border-border bg-background p-4 md:p-6">
           <div className="flex flex-wrap items-center gap-2">

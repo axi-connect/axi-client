@@ -115,8 +115,7 @@ export function MarketingOverviewView() {
 
       {neverUsed ? (
         <EmptyState
-          icon={Megaphone}
-          accent="amber"
+          glyph="ai"
           title="Aún no recuperas ventas"
           description="Cada día se te escapan carritos a medias y conversaciones que se apagaron. Enciende una regla y deja que el agente los reenganche solo."
           action={

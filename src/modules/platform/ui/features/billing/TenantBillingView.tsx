@@ -8,7 +8,7 @@
  * suspensión—, y hoy no existe forma de que el tenant lo ponga por su cuenta.
  */
 import { useEffect, useState } from "react";
-import { CalendarClock, Mail, TriangleAlert } from "lucide-react";
+import { CalendarClock, TriangleAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -87,8 +87,7 @@ export function TenantBillingView({ tenantId }: { tenantId: string }) {
   if (account === null || form === null) {
     return (
       <EmptyState
-        icon={Mail}
-        accent="amber"
+        glyph="money"
         title="Este tenant no tiene cuenta de cobro"
         description="Nace sola al asignarle un plan de pago. Hazlo desde el tab «Plan & Límites» y vuelve aquí para rellenar el correo de cobro."
       />

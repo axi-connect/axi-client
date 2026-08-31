@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Info, PlugZap, RefreshCw } from "lucide-react";
+import { Info, RefreshCw } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -100,8 +100,7 @@ export function MetaTemplatesView() {
   if (channels.length === 0) {
     return (
       <EmptyState
-        icon={PlugZap}
-        accent="amber"
+        glyph="connections"
         title="No tienes ningún canal de WhatsApp Cloud"
         description="Las plantillas de Meta viven en la cuenta de WhatsApp Business de un canal Cloud. Conecta uno para poder escribirle a tus clientes pasadas las 24 horas."
         action={
@@ -169,8 +168,7 @@ export function MetaTemplatesView() {
         <TableSkeleton rows={4} />
       ) : templates.length === 0 ? (
         <EmptyState
-          icon={RefreshCw}
-          accent="amber"
+          glyph="connections"
           variant="solid"
           title="Este canal no tiene plantillas"
           description="Créalas en el administrador de WhatsApp de Meta y pulsa Sincronizar para traerlas aquí."

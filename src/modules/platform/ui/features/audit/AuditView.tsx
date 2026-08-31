@@ -8,7 +8,6 @@
  * libre para las ~70 acciones de dominio (`dominio.verbo`).
  */
 import { useMemo, useState } from "react";
-import { ScrollText } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -160,7 +159,7 @@ export function AuditView({ companyId, lockTenant = false }: AuditViewProps) {
         <ProblemAlert error={error} onRetry={() => void refetch()} />
       ) : logs.length === 0 ? (
         <EmptyState
-          icon={ScrollText}
+          glyph="metrics"
           title="Sin eventos"
           description={
             hasFilters

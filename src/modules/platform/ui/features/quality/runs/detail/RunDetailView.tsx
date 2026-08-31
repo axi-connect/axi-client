@@ -9,7 +9,7 @@
  */
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CircleSlash, Play, Trash2 } from "lucide-react";
+import { ArrowLeft, CircleSlash, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Badge } from "@/shared/components/ui/badge";
@@ -171,7 +171,7 @@ export function RunDetailView({ runId }: { runId: string }) {
         <h3 className="text-base font-semibold">Casos</h3>
         {rows.length === 0 ? (
           <EmptyState
-            icon={Play}
+            glyph="ai"
             title="Sin cases todavía"
             description="La ejecución está encolando su trabajo; esta vista se actualiza sola."
           />

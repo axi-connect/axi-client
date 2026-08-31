@@ -8,7 +8,6 @@
  * Refresco 60 s + focus, pausado con el ReLoginModal.
  */
 import { useState } from "react";
-import { Activity, BellOff } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
@@ -74,7 +73,7 @@ function TriageTab() {
         <ProblemAlert error={error} onRetry={() => void refetch()} />
       ) : data.agents.length === 0 ? (
         <EmptyState
-          icon={Activity}
+          glyph="ai"
           title="Sin actividad de agentes"
           description={`Ningún agente registró turnos en los últimos ${days === 1 ? "1 día" : `${days} días`}.`}
         />
@@ -138,7 +137,7 @@ function AlertsTab() {
       ) : isError ? (
         <ProblemAlert error={error} onRetry={() => void refetch()} />
       ) : data.data.length === 0 ? (
-        <EmptyState icon={BellOff} title={`No hay alertas ${statusLabel}`} />
+        <EmptyState glyph="uptodate" title={`No hay alertas ${statusLabel}`} />
       ) : (
         <AlertsTable alerts={data.data} />
       )}

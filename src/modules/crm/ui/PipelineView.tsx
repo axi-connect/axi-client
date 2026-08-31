@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Target } from "lucide-react";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import type { DealDTO } from "@/modules/crm/domain/deal";
 import { useCrmSocket } from "@/modules/crm/infrastructure/realtime/use-crm-socket";
 import { useBoardStore } from "@/modules/crm/infrastructure/stores/board.store";
@@ -77,9 +77,7 @@ export function PipelineView({ initialDealId }: { initialDealId?: string }) {
             </div>
           ) : boardEmpty ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-accent text-primary">
-                <Target className="size-7" aria-hidden />
-              </span>
+              <GlassGlyph kind="money" />
               <div>
                 <p className="font-medium">Aún no hay oportunidades</p>
                 <p className="text-sm text-muted-foreground">

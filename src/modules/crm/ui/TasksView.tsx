@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import {
   Check,
   CircleUser,
-  ListTodo,
   MoreVertical,
   Plus,
   RotateCcw,
@@ -27,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { TableSkeleton } from "@/shared/components/features/loading";
+import { EmptyState } from "@/shared/components/features/empty-state";
 import { isOverdue, type ActivityDTO, type TaskDueFilter } from "@/modules/crm/domain/activity";
 import {
   TASKS_PAGE_SIZE,
@@ -256,15 +256,12 @@ export function TasksView() {
       ) : loading && items.length === 0 ? (
         <TableSkeleton rows={6} showHeader={false} />
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-background py-20 text-center">
-          <ListTodo className="size-10 text-muted-foreground" aria-hidden />
-          <div>
-            <p className="font-medium">Nada pendiente por aquí</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Crea una tarea o deja que la IA agende los seguimientos por ti.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          glyph="time"
+          variant="solid"
+          title="Nada pendiente por aquí"
+          description="Crea una tarea o deja que la IA agende los seguimientos por ti."
+        />
       ) : (
         <>
           <ul className="divide-y divide-border rounded-2xl border border-border bg-background">

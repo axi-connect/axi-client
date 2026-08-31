@@ -10,7 +10,6 @@ import { TableSkeleton } from "@/shared/components/features/loading";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import BasicPagination from "@/shared/components/ui/pagination";
-import { Ticket } from "lucide-react";
 import type { PromotionDTO, RedemptionDTO } from "@/modules/marketing/domain/promotion";
 import { listRedemptions } from "@/modules/marketing/infrastructure/services/promotions-service.adapter";
 
@@ -79,8 +78,7 @@ export function RedemptionsSheet({
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          icon={Ticket}
-          accent="amber"
+          glyph="money"
           variant="solid"
           title="Todavía nadie la ha usado"
           description="Aquí aparecerá cada pedido al que se le aplicó esta promoción, con el monto que descontó."

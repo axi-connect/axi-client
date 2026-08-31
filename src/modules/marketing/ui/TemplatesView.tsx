@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, MoreHorizontal, Plus } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -140,8 +140,7 @@ export function TemplatesView() {
         <TableSkeleton rows={4} />
       ) : templates.length === 0 ? (
         <EmptyState
-          icon={FileText}
-          accent="amber"
+          glyph="conversation"
           title="Aún no tienes plantillas"
           description="Guarda aquí los mensajes que repites, con variables como el nombre del cliente, y reutilízalos en campañas y reglas."
           action={

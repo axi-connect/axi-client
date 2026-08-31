@@ -7,7 +7,7 @@
  * una suite se abre directo la composición (una suite vacía no se ejecuta).
  */
 import { useEffect, useMemo, useState } from "react";
-import { ListChecks, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { DataTable } from "@/shared/components/features/data-table";
@@ -106,7 +106,7 @@ export function SuitesView() {
         <ProblemAlert error={error} onRetry={() => void refetch()} />
       ) : total === 0 && !hasFilters ? (
         <EmptyState
-          icon={ListChecks}
+          glyph="ai"
           title="Aún no hay suites"
           description="Agrupa escenarios en una suite para lanzarlos juntos."
           action={

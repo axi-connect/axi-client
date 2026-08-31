@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BellOff, BellRing, RotateCcw, Sparkles } from "lucide-react";
+import { BellRing, RotateCcw, Sparkles } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -27,6 +27,7 @@ import {
   type ReminderDTO,
 } from "@/modules/scheduling/domain/reminder";
 import { useCompanySchedule } from "@/modules/scheduling/infrastructure/hooks/use-company-schedule";
+import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import {
   deleteReminder,
   updateReminder,
@@ -176,7 +177,7 @@ export function RemindersView() {
           </div>
         ) : visible.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
-            <BellOff aria-hidden className="size-8 text-muted-foreground/50" />
+            <GlassGlyph kind="time" tier="sm" />
             <p className="text-sm font-medium">Sin recordatorios</p>
             <p className="max-w-sm text-xs text-muted-foreground">
               Los automáticos aparecen solos al agendar citas; los manuales los creas tú para

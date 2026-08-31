@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Clock, Plus, Search, Ticket } from "lucide-react";
+import { Clock, Plus, Search } from "lucide-react";
 import { useDeepLinkTarget } from "@/core/hooks/use-deep-link-target";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -282,8 +282,7 @@ export function PromotionsView() {
         </div>
       ) : isEmpty ? (
         <EmptyState
-          icon={Ticket}
-          accent="amber"
+          glyph="money"
           title="Aún no tienes promociones"
           description="Una promoción es lo que el agente puede ofrecer para cerrar una venta: un descuento, un regalo o el envío gratis. Los cupones que emite vencen de verdad."
           action={
@@ -297,8 +296,7 @@ export function PromotionsView() {
       ) : visible.length === 0 ? (
         // Vacío POR FILTROS ≠ vacío real: el mensaje y la acción son distintos.
         <EmptyState
-          icon={Search}
-          accent="muted"
+          glyph="noresults"
           variant="solid"
           title={hasFilters ? "Ninguna promoción coincide" : "Nada que mostrar"}
           description={

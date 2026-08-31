@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CopyCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { TableSkeleton } from "@/shared/components/features/loading";
+import { EmptyState } from "@/shared/components/features/empty-state";
 import {
   DUPLICATE_REASON_LABELS,
   type DuplicatePairDTO,
@@ -79,15 +80,12 @@ export default function ContactDuplicatesPage() {
       {pairs === null ? (
         <TableSkeleton rows={4} showHeader={false} />
       ) : pairs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-background py-20 text-center">
-          <CopyCheck className="size-10 text-muted-foreground" aria-hidden />
-          <div>
-            <p className="font-medium">Sin duplicados aparentes</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Tu base de contactos está limpia.
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          glyph="uptodate"
+          variant="solid"
+          title="Sin duplicados aparentes"
+          description="Tu base de contactos está limpia."
+        />
       ) : (
         <ul className="divide-y divide-border rounded-2xl border border-border bg-background">
           {pairs.map((pair) => (
