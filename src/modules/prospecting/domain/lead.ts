@@ -276,6 +276,23 @@ export function canDiscard(lead: Pick<LeadDTO, "status">): boolean {
   return lead.status !== "promoted" && lead.status !== "discarded";
 }
 
+/**
+ * ¿Se puede BORRAR de verdad?
+ *
+ * Todo menos los que ya son contactos del CRM: ahí el backend responde 409
+ * («ya es un contacto: bórralo desde el CRM»), porque borrar el lead dejaría al
+ * contacto sin su procedencia. Se comprueba aquí para que la casilla salga
+ * DESHABILITADA en vez de ofrecerse y fallar después — un control que solo falla
+ * al pulsarlo es un control que miente.
+ *
+ * Es más ancho que `canDiscard`: descartar es una decisión reversible sobre el
+ * ciclo de vida, y borrar no tiene marcha atrás, así que un descartado sí se
+ * puede borrar.
+ */
+export function canDelete(lead: Pick<LeadDTO, "status">): boolean {
+  return lead.status !== "promoted";
+}
+
 /** Nombre presentable: un lead puede no tener ninguno de los dos. */
 export function leadDisplayName(
   lead: Pick<LeadDTO, "display_name" | "legal_name" | "email" | "phone">,

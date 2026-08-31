@@ -6,6 +6,7 @@ import {
   Inbox,
   LoaderCircle,
   ShieldCheck,
+  Trash2,
   TriangleAlert,
   WandSparkles,
 } from "lucide-react";
@@ -29,13 +30,20 @@ import {
 } from "@/shared/components/features/filter-panel";
 
 import type { LeadRow, ProspectingStatsDTO } from "../domain/lead";
-import { canEnrich, canPromote } from "../domain/lead";
+import { canDelete, canEnrich, canPromote } from "../domain/lead";
 import {
   countLeads,
+  deleteLeads,
   enrichLeads,
+  getProspectingStats,
   listLeadIds,
   promoteLeads,
 } from "../infrastructure/services/prospecting-service.adapter";
+import {
+  DeleteResultSheet,
+  needsDeleteSheet,
+  type DeleteOutcome,
+} from "./components/DeleteResultSheet";
 import { CaptureFunnel } from "./components/CaptureFunnel";
 import { buildLeadColumns, fetchLeads } from "./tables/leads.config";
 import {
@@ -79,6 +87,7 @@ export function LeadsInboxView({
   const { hasPermission } = useAuth();
   const canPromoteLeads = hasPermission("leads:promote");
   const canManageLeads = hasPermission("leads:manage");
+  const canDeleteLeads = hasPermission("leads:delete");
   const { showAlert, showModal } = useAlert();
 
   const [filters, setFilters] = useState<FilterValues>({});
@@ -89,6 +98,8 @@ export function LeadsInboxView({
   const [allMatching, setAllMatching] = useState(false);
   const [promoting, setPromoting] = useState(false);
   const [stats, setStats] = useState(initialStats);
+  const [deleting, setDeleting] = useState(false);
+  const [outcome, setOutcome] = useState<DeleteOutcome | null>(null);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Contador de turno: la última petición gana, no la última que llega. */
   const draftTurn = useRef(0);
@@ -170,8 +181,10 @@ export function LeadsInboxView({
    */
   const isSelectable = useCallback(
     (row: LeadRow) =>
-      (canPromoteLeads && canPromote(row)) || (canManageLeads && canEnrich(row)),
-    [canPromoteLeads, canManageLeads],
+      (canPromoteLeads && canPromote(row)) ||
+      (canManageLeads && canEnrich(row)) ||
+      (canDeleteLeads && canDelete(row)),
+    [canPromoteLeads, canManageLeads, canDeleteLeads],
   );
 
   /**
@@ -363,6 +376,94 @@ export function LeadsInboxView({
     }
   }, [promotable, refresh, showAlert]);
 
+  const deletable = useMemo(
+    () => items.filter((row) => selected.has(row.id) && canDelete(row)),
+    [items, selected],
+  );
+
+  const doDelete = useCallback(async () => {
+    const ids = allMatching ? [...selected] : deletable.map((row) => row.id);
+    if (ids.length === 0) return;
+    setDeleting(true);
+    try {
+      const result = await deleteLeads(ids);
+      const byId = new Map(items.map((row) => [row.id, row.name]));
+      const next: DeleteOutcome = {
+        asked: ids.length,
+        deleted: result.deleted,
+        kept: result.kept.map((k) => ({
+          name: byId.get(k.lead_id) ?? "Un lead de otra página",
+          reason: k.reason,
+        })),
+        missing: result.missing,
+      };
+      setSelected(new Set());
+      setAllMatching(false);
+      refresh();
+      /**
+       * Los `stats` se RECARGAN, no se estiman.
+       *
+       * Borrar mueve varios pasos del embudo a la vez —cuarentena, calificados,
+       * descartados— y restar a mano acabaría en un embudo que no suma. Promover
+       * sí se puede estimar porque mueve exactamente dos.
+       */
+      getProspectingStats()
+        .then(setStats)
+        .catch(() => undefined);
+
+      // Aviso si salió limpio; panel solo si hay algo que explicar.
+      if (needsDeleteSheet(next)) setOutcome(next);
+      else
+        showAlert({
+          tone: "success",
+          title: `${String(result.deleted)} ${result.deleted === 1 ? "lead eliminado" : "leads eliminados"}`,
+        });
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo eliminar",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }, [allMatching, selected, deletable, items, refresh, showAlert]);
+
+  /**
+   * La confirmación del borrado: UNA, igual para 1 que para 300.
+   *
+   * No hay papelera ni deshacer, así que esto es la única barrera que existe. Y
+   * es deliberadamente CORTA: el dueño quitó el aviso de que borrar no suprime
+   * —el mismo negocio puede volver, y con una fuente de pago se vuelve a
+   * pagar—. Se le puso delante con el argumento y eligió la versión breve.
+   *
+   * En modo «todos los que cumplen» se dice cuántos sobrevivirán, porque ahí sí
+   * puede haber promovidos dentro: en la selección de una página no, porque un
+   * lead que ya es contacto no se puede ni marcar.
+   */
+  const onDelete = useCallback(() => {
+    const n = allMatching ? selected.size : deletable.length;
+    if (n === 0) return;
+    const survivors = allMatching ? total - n : 0;
+    showModal({
+      title: `¿Eliminar ${String(n)} ${n === 1 ? "lead" : "leads"}?`,
+      description: "No se puede deshacer.",
+      body:
+        survivors > 0 ? (
+          <p className="border-border-soft bg-muted/60 text-muted-foreground rounded-md border px-3 py-2.5 text-[12.5px] leading-relaxed">
+            <span className="text-foreground font-semibold">
+              {survivors} {survivors === 1 ? "ya es contacto" : "ya son contactos"} del CRM
+            </span>{" "}
+            y se {survivors === 1 ? "quedará" : "quedarán"}. Para borrarlos, hazlo desde el CRM.
+          </p>
+        ) : undefined,
+      actions: [
+        { label: "Cancelar", variant: "outline", asClose: true },
+        { label: `Sí, eliminar ${String(n)}`, variant: "destructive", onClick: () => void doDelete() },
+      ],
+    });
+  }, [allMatching, selected.size, deletable.length, total, doDelete, showModal]);
+
   /**
    * Promover pide confirmación por encima de un umbral, y no es fricción
    * decorativa.
@@ -460,7 +561,7 @@ export function LeadsInboxView({
             </>
           }
           selection={
-            canPromoteLeads || canManageLeads
+            canPromoteLeads || canManageLeads || canDeleteLeads
               ? {
                   rowId: (row) => row.id,
                   rowLabel: (row) => row.name,
@@ -502,6 +603,25 @@ export function LeadsInboxView({
                           Promover {count} al CRM
                         </Button>
                       )}
+                      {/* DE CONTORNO, y no relleno.
+                          La regla «destructivo ≠ coral» se cumplía —coral de
+                          marca contra rojo semántico— y aun así, al lado de
+                          «Promover», los dos se leían como el mismo rectángulo
+                          rojo. Y una de las dos no se deshace. El relleno rojo
+                          se reserva para el botón de CONFIRMAR, donde ya no
+                          compite con nada. */}
+                      {canDeleteLeads && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={onDelete}
+                          disabled={deleting}
+                          className="border-destructive/45 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                          Eliminar {count}
+                        </Button>
+                      )}
                     </>
                   ),
                   note: canManageLeads ? (
@@ -515,6 +635,13 @@ export function LeadsInboxView({
           }
         />
       )}
+
+      <DeleteResultSheet
+        open={outcome !== null}
+        onOpenChange={(next) => { if (!next) setOutcome(null); }}
+        outcome={outcome}
+        noun={{ one: "lead", many: "leads" }}
+      />
 
       <FilterPanel
         open={panelOpen}

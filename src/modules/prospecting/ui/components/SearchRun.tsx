@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCw, X } from "lucide-react";
+import { LoaderCircle, RotateCw, Trash2, X } from "lucide-react";
 
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import { Button } from "@/shared/components/ui/button";
@@ -29,10 +29,15 @@ export function SearchRun({
   search,
   onRepeat,
   onCancel,
+  onDelete,
+  deleting = false,
 }: {
   search: SearchDTO;
   onRepeat?: (search: SearchDTO) => void;
   onCancel?: (search: SearchDTO) => void;
+  /** Solo con `leads:delete`. Sin el prop, el botón no existe. */
+  onDelete?: (search: SearchDTO) => void;
+  deleting?: boolean;
 }) {
   const live = isInFlight(search);
   const pct = Math.round(progressOf(search) * 100);
@@ -77,6 +82,26 @@ export function SearchRun({
               Repetir
             </Button>
           )}
+          {/* DE CONTORNO y no relleno: al lado de las otras acciones, un botón
+              rojo macizo se lee como la acción principal de la tarjeta, y aquí
+              la principal es repetir. El relleno rojo va en el diálogo. */}
+          {onDelete !== undefined && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={deleting}
+              onClick={() => onDelete(search)}
+              className="border-destructive/45 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              aria-label={`Eliminar «${search.label ?? queryOf(search)}» y sus leads`}
+            >
+              {deleting ? (
+                <LoaderCircle aria-hidden="true" className="animate-spin" />
+              ) : (
+                <Trash2 aria-hidden="true" />
+              )}
+              Eliminar
+            </Button>
+          )}
         </div>
       </div>
 
@@ -87,8 +112,12 @@ export function SearchRun({
       />
 
       <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        {/* «Trajo» y no «tiene»: el contador es HISTÓRICO y no se ajusta al
+            borrar o promover leads. Es la única forma de explicar en qué se
+            gastó el dinero, así que si chirría se arregla la etiqueta y no el
+            número. */}
         <span className="text-foreground font-medium tabular-nums">
-          {search.found_count.toLocaleString("es-CO")} encontrados
+          Trajo {search.found_count.toLocaleString("es-CO")}
         </span>
         <span>{summaryOf(search)}</span>
         {search.finished_at !== null && (

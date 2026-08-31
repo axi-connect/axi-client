@@ -1,8 +1,8 @@
 # Captación de leads (`/marketing/leads`)
 
 > Slice `prospecting` del frontend. Backend: `axi-server/docs/plans/prospecting_module_plan.md`.
-> Estado: **F1–F5** — bandeja con filtros avanzados y selección en lote, ficha, calidad, búsquedas
-> con mapa, fuentes, panel de proveedores de plataforma, enriquecimiento y su visor en vivo.
+> Estado: **F1–F5 + borrado** — bandeja con filtros avanzados, selección en lote y borrado, ficha,
+> calidad, búsquedas con mapa, fuentes, panel de proveedores, enriquecimiento y su visor en vivo.
 
 ## La idea en una frase
 
@@ -227,6 +227,64 @@ exactamente cómo se promueven cuatrocientos leads que nadie quería.
 Va etiquetado «De toda la base». Si reaccionara sería una tautología: filtra a «nuevos» y el embudo
 informa `promoted: 0` — aritméticamente correcto y engañoso. El número filtrado vive en el pie de la
 tabla, de `meta.total`.
+
+## Borrar
+
+**No hay papelera ni deshacer**, así que la confirmación es la única barrera que existe. Plan y
+decisiones en `axi-server/docs/plans/prospecting_delete_frontend.md`; mockup en
+`docs/design/mockups/prospecting-delete.html`.
+
+### Vive SOLO en la barra de selección
+
+Nada en la fila y nada en el menú contextual. Borrar uno cuesta un clic más que un botón de fila, y
+eso es a favor: sin papelera, un clic antes de algo irreversible no es fricción, es margen. Un menú
+contextual además aparece con clic derecho sin avisar, que es el peor sitio posible.
+
+### El destructivo va DE CONTORNO, y relleno solo en el diálogo
+
+Lo destapó **renderizar** el mockup, no razonarlo. La regla del sistema —«destructivo ≠ coral»— se
+cumplía: coral de marca contra rojo semántico. Y aun así, al lado de «Promover», los dos se leían
+**casi iguales**, porque a tamaño de botón ambos son un rectángulo rojo. Dos botones contiguos que se
+parecen y hacen cosas opuestas es el error, no el matiz.
+
+**Es el tratamiento del slice**: un borrado en otra vista sale de aquí y no de una segunda invención.
+
+### Aviso al terminar; panel solo si hay algo que explicar
+
+`needsDeleteSheet(outcome)` decide, y devuelve `true` solo con `kept` o `missing`. Un panel
+obligatorio tras borrar tres filas sin novedad se aprende a cerrar sin leer, y entonces no se lee el
+que sí importa.
+
+El informe se lee sin sumar a mano porque el backend garantiza
+**`deleted + kept.length + missing` = lo enviado**. Y `missing` es un **número y no una lista** a
+propósito: tras un borrado masivo no se puede saber cuál de los ausentes lo borramos nosotros, así
+que dar ids sería inventarse el detalle.
+
+### Una búsqueda enseña el número EXACTO, y el diálogo espera a tenerlo
+
+`new_count` y `found_count` de la tarjeta son **históricos**: dicen lo que la búsqueda trajo y no se
+ajustan al promover o borrar leads (por eso la etiqueta dice «Trajo N» — es la única forma de
+explicar en qué se gastó el dinero). Enseñar 184 y que el resultado diga 120 se lee como que se
+perdió algo, así que se pide `GET /prospecting/searches/deletion-preview` y **el diálogo no abre
+hasta tener la cifra**. Si la previa falla, se dice y **no se ofrece borrar a ciegas**.
+
+Una búsqueda viva avisa en **ámbar y no en rojo**: es un efecto colateral que hay que saber —se
+detiene al borrarla—, no un peligro.
+
+### Lo que el diálogo NO dice, por decisión del dueño
+
+**Borrar no suprime**: el mismo negocio puede volver en otra búsqueda, y con una fuente de pago se
+vuelve a pagar. Se le puso delante en la confirmación con ese argumento y **eligió quitarlo**, dos
+veces preguntado. No es un olvido, y no se cuela por otra pantalla —la sesión del backend se
+comprometió a no marcarlo tampoco en el reporte de una búsqueda—. Vive en el docblock de
+`DeleteLeadsUseCase` y del adapter, para quien toque el código.
+
+### Un lead ya promovido no se puede marcar
+
+La casilla sale **deshabilitada, no ausente**: quitarla descuadra la columna y no dice por qué. El
+backend responde 409 (`prospecting/lead_not_deletable`), así que ofrecerla y fallar después sería un
+control que miente. Consecuencia buena: en la selección de una página el `kept` siempre viene vacío,
+porque no se puede marcar lo que sobrevive.
 
 ## Gotchas del contrato
 

@@ -25,6 +25,9 @@ import type {
 export type ProspectingSettingsDTO = Schemas["ProspectingSettingsDto"];
 export type SuppressionDTO = Schemas["SuppressionDto"];
 export type LeadIdsDTO = Schemas["LeadIdsDto"];
+export type DeleteLeadsResultDTO = Schemas["DeleteLeadsResultDto"];
+export type DeleteSearchesResultDTO = Schemas["DeleteSearchesResultDto"];
+export type DeletionPreviewDTO = Schemas["DeletionPreviewDto"];
 
 /**
  * Los filtros de la bandeja, tal como viajan.
@@ -105,6 +108,64 @@ export function listLeadIds(
   params: Omit<ListLeadsParams, "page" | "page_size" | "sort"> = {},
 ): Promise<LeadIdsDTO> {
   return http.get<LeadIdsDTO>("/prospecting/leads/ids", params);
+}
+
+/**
+ * Borrar de captación. Cinco rutas y ninguna papelera detrás.
+ *
+ * **No hay deshacer**, así que la confirmación de la interfaz es la única
+ * barrera que existe. Y borrar **NO suprime**: el mismo negocio puede volver en
+ * otra búsqueda —y con una fuente de pago, se vuelve a pagar—. Eso está escrito
+ * aquí porque el dueño decidió, con el argumento delante, que la pantalla no lo
+ * diga; que no lo diga la pantalla no significa que deje de ser cierto para
+ * quien toque este código.
+ *
+ * Los resultados de lote cumplen una propiedad que la interfaz usa para leerse
+ * sin contar filas: **`deleted + kept.length + missing` cuadra con lo enviado.**
+ * `missing` es un NÚMERO y no una lista a propósito — después de un borrado
+ * masivo no se puede saber cuál de los ausentes lo borramos nosotros, y dar ids
+ * sería inventarse el detalle.
+ */
+export function deleteLead(leadId: string): Promise<void> {
+  return http.delete<void>(`/prospecting/leads/${leadId}`);
+}
+
+export function deleteLeads(leadIds: readonly string[]): Promise<DeleteLeadsResultDTO> {
+  return http.post<DeleteLeadsResultDTO>("/prospecting/leads/delete", {
+    lead_ids: [...leadIds],
+  });
+}
+
+export function deleteSearch(searchId: string): Promise<DeleteSearchesResultDTO> {
+  return http.delete<DeleteSearchesResultDTO>(`/prospecting/searches/${searchId}`);
+}
+
+export function deleteSearches(
+  searchIds: readonly string[],
+): Promise<DeleteSearchesResultDTO> {
+  return http.post<DeleteSearchesResultDTO>("/prospecting/searches/delete", {
+    search_ids: [...searchIds],
+  });
+}
+
+/**
+ * Cuántos leads caerían al borrar estas búsquedas, y cuántos sobrevivirían.
+ *
+ * Existe porque `new_count` y `found_count` de la tarjeta son **históricos**:
+ * dicen lo que la búsqueda trajo, y no se ajustan cuando se promueven o se
+ * borran leads. En una confirmación irreversible, enseñar 184 y que el resultado
+ * diga 120 se lee como que se perdió algo. El backend tiene un test que fija que
+ * esta previa y el `leads_deleted` posterior coincidan.
+ *
+ * Sin ids devuelve 400 y no ceros, a propósito: un diálogo destructivo que
+ * enseñe «0 leads» porque el parámetro se armó mal es peor que uno que no abra.
+ */
+export function previewSearchDeletion(
+  searchIds: readonly string[],
+): Promise<DeletionPreviewDTO> {
+  return http.get<DeletionPreviewDTO>("/prospecting/searches/deletion-preview", {
+    search_ids: searchIds.join(","),
+  });
 }
 
 export function getLead(leadId: string): Promise<LeadDetailDTO> {

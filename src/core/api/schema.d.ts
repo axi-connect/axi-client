@@ -4180,6 +4180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/prospecting/searches/deletion-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProspectingController_deletionPreview_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/prospecting/searches/{id}": {
         parameters: {
             query?: never;
@@ -10600,6 +10616,17 @@ export interface components {
                 finished_at: string | null;
                 /** Format: date-time */
                 created_at: string;
+            }[];
+        };
+        DeletionPreviewDto: {
+            leads_to_delete: number;
+            leads_kept: number;
+            missing: number;
+            by_search: {
+                /** Format: uuid */
+                search_id: string;
+                leads_to_delete: number;
+                leads_kept: number;
             }[];
         };
         SearchDto: {
@@ -19349,6 +19376,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StartSearchResultDto"];
+                };
+            };
+        };
+    };
+    ProspectingController_deletionPreview_v1: {
+        parameters: {
+            query?: {
+                search_ids?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionPreviewDto"];
                 };
             };
         };
