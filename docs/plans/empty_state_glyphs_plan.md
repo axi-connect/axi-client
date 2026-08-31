@@ -1,6 +1,23 @@
 # Cristal ilustrado — glifos premium para los estados vacíos
 
-> **Estado:** F0 aprobada (mockup) y **F1 implementada** en `feat/empty-state-glyphs`.
+> **Estado:** F0 aprobada (mockup) y **F1 + F2 + F3 implementadas** en la rama
+> `feat/empty-state-glyphs` (`7ab9a51` cimientos, `72f05ce` las 45 migraciones).
+> Queda **F4**, que está fuera de la petición original: son los ~35 vacíos que hoy
+> son texto suelto y los ~15 `DataTable` sin vacío propio — no tienen icono que
+> reemplazar, así que necesitan copy nuevo, no material nuevo.
+>
+> **Cuatro llamadas se quedan a propósito en el material de línea simple:** los tres
+> `Building2` de tenants (no hay familia de «empresa/organización» en el set y
+> forzar «personas» sería mentir) y el `EyeOff` de «datos purgados» (no es un vacío,
+> es un dato borrado). §7 mantiene «línea simple» como default justo para esto.
+>
+> **Dos desviaciones del plan, deliberadas:** `ChannelsEmptyState` y `FlowEmptyState`
+> no se borran, quedan como adaptadores finos sobre `EmptyState`. La deuda que
+> documentaban era el *layout duplicado*, y eso sí desaparece; borrarlos habría
+> empujado su copy y su CTA a ficheros de 400 líneas sin ganar nada. Y `EmptyState`
+> no ensancha `icon` a `ComponentType`: gana `glyph` como prop propia en unión
+> discriminada, que además permite que la primitiva retire el disco teñido por sí
+> misma en vez de dejarlo al criterio de cada llamada.
 > El mockup de aprobación incluye la anatomía por capas y el A/B del disco teñido.
 > Correcciones que salieron de mirar pantallazos y no de razonar, ya incorporadas:
 > el pedestal **sobra en oscuro** (los tres fondos están a pocos puntos entre sí y
