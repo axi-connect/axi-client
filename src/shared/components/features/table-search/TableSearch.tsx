@@ -152,7 +152,18 @@ export function TableSearch({
         className={cn(
           "border-border-soft bg-secondary flex h-10 items-center gap-2.5 rounded-full border px-4",
           "motion-safe:transition-[border-radius] motion-safe:duration-300",
-          showPanel && "rounded-b-none border-b-0",
+          // OJO: `rounded-t-xl` NO es redundante con `rounded-full`.
+          //
+          // CSS escala un radio de 9999px cuando los dos radios de un lado
+          // suman más que ese lado, y el factor es `largo / suma`. Cerrado, el
+          // lado izquierdo suma 9999+9999 contra 40px de alto y cada esquina
+          // queda en 20px: la pastilla. Al poner `rounded-b-none` la suma baja a
+          // 9999, el presupuesto se libera y **la esquina de arriba se DUPLICA**
+          // — medido: la curva arranca a 28,5px en vez de a 11,5px.
+          //
+          // Fijándolo en 20px, que es lo que la pastilla ya medía, las esquinas
+          // de arriba NO CAMBIAN al enfocar: solo se abre el fondo hacia abajo.
+          showPanel && "rounded-t-xl rounded-b-none border-b-0",
         )}
       >
         {/* El icono se cambia por el spinner en el sitio, sin mover nada. */}
@@ -212,7 +223,10 @@ export function TableSearch({
       <AnimatePresence>
         {showPanel && (
           <motion.div
-            className="border-border-soft bg-secondary absolute inset-x-0 top-[39px] overflow-hidden rounded-b-[22px] border border-t-0 p-1"
+            // `rounded-b-xl` (20px) y no un 22px inventado: las dos mitades de
+            // la tarjeta tienen que medir lo MISMO, o las esquinas opuestas
+            // quedan descuadradas 2px.
+            className="border-border-soft bg-secondary absolute inset-x-0 top-[39px] overflow-hidden rounded-b-xl border border-t-0 p-1"
             initial={reduced === true ? false : { opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduced === true ? undefined : { opacity: 0, y: -8 }}
