@@ -3,6 +3,8 @@ import { isOverdue } from "../activity";
 import {
   canRunNow,
   isAgentTask,
+  TASK_BADGE_KEY,
+  taskBadgeMap,
   taskDisplayState,
   taskRunReasonLabel,
 } from "../task-execution";
@@ -195,5 +197,30 @@ describe("canRunNow", () => {
     expect(canRunNow(task({ assignee_type: "agent", last_run_status: "running" }))).toBe(false);
     expect(canRunNow(task({ assignee_type: "agent", task_status: "completed" }))).toBe(false);
     expect(canRunNow(task())).toBe(false);
+  });
+});
+
+describe("taskBadgeMap", () => {
+  it("transporta la decisión de taskDisplayState al contrato de StatusBadge", () => {
+    const state = taskDisplayState(task({ assignee_type: "agent", last_run_status: "running" }));
+
+    expect(taskBadgeMap(state)[TASK_BADGE_KEY]).toEqual({
+      label: "Enviando",
+      tone: "info",
+      transient: true,
+    });
+  });
+
+  it("un diferimiento NO viaja con spinner ni con tono de fallo", () => {
+    // El spinner promete movimiento; una tarea en espera no se está moviendo.
+    const state = taskDisplayState(
+      task({
+        assignee_type: "agent",
+        last_run_status: "deferred",
+        last_run_reason: "outside_service_window",
+      }),
+    );
+
+    expect(taskBadgeMap(state)[TASK_BADGE_KEY]).toMatchObject({ tone: "info", transient: false });
   });
 });

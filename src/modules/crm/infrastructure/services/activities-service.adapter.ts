@@ -86,6 +86,17 @@ export function updateAgentTask(id: string, dto: UpdateAgentTaskDTO): Promise<Ac
   return http.patch<ActivityDTO>(`/crm/agent-tasks/${id}`, dto);
 }
 
+/**
+ * Adelanta la tarea a «ahora». Responde 202: aceptada, no enviada.
+ *
+ * Es un bypass del RELOJ, no del anti-spam — el backend vuelve a pasar todos
+ * los guards (opt-out, horario, cupo, throttle), así que puede acabar en
+ * diferida igual que una ejecución programada.
+ */
+export function runAgentTaskNow(id: string): Promise<void> {
+  return http.post<void>(`/crm/agent-tasks/${id}/run-now`, {});
+}
+
 /** Historial de intentos de UNA tarea: alimenta el rail de ejecución. */
 export function listTaskRuns(id: string): Promise<{ data: TaskRunDTO[] }> {
   return http.get<{ data: TaskRunDTO[] }>(`/crm/agent-tasks/${id}/runs`);

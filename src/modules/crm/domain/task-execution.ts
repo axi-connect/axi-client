@@ -1,4 +1,5 @@
 import type { Schemas } from "@/core/api/types";
+import type { StatusMap, StatusTone } from "@/shared/components/features/status-badge/types";
 
 import type { ActivityDTO } from "./activity";
 
@@ -19,8 +20,9 @@ export type TaskRunStatus = NonNullable<ActivityDTO["last_run_status"]>;
 /** El spec no nombra el DTO suelto: se deriva del listado, que sí es un componente. */
 export type TaskRunDTO = Schemas["TaskRunsListDto"]["data"][number];
 
-/** Tono de `StatusBadge`. El mapa estado→tono lo aporta el slice, no el componente. */
-export type StatusTone = "success" | "warning" | "destructive" | "info" | "neutral";
+/** El tono se REEXPORTA del componente en vez de redeclararse: `types.ts` no
+ *  tiene React justamente para que el `domain/` pueda depender de él. */
+export type { StatusTone };
 
 export const TASK_RUN_STATUS_LABELS: Record<TaskRunStatus, string> = {
   scheduled: "Programada",
@@ -72,6 +74,7 @@ export const TASK_RUN_REASON_LABELS: Partial<Record<string, string>> = {
   contact_not_found: "El contacto ya no existe",
   conversation_not_found: "La conversación ya no existe",
   quiet_hours: "Fuera del horario permitido para escribir",
+  daily_cap: "Se alcanzó el tope diario de tareas automáticas",
   contact_cooldown: "Ya se le escribió hace poco",
   wweb_throttled: "El canal de WhatsApp Web no tuvo cupo (límite anti-bloqueo)",
   conversation_human_active: "Un asesor está atendiendo la conversación",
@@ -161,6 +164,23 @@ export function taskDisplayState(
     tone: TASK_RUN_STATUS_TONES[status],
     transient: isTransientRunStatus(status),
     reason,
+  };
+}
+
+/**
+ * Adapta el estado calculado al contrato de `StatusBadge`, que espera una clave
+ * y un mapa. La clave es fija porque aquí ya no hay estado que elegir: la
+ * decisión la tomó `taskDisplayState()`, y este mapa solo la transporta.
+ */
+export const TASK_BADGE_KEY = "task";
+
+export function taskBadgeMap(state: TaskDisplayState): StatusMap {
+  return {
+    [TASK_BADGE_KEY]: {
+      label: state.label ?? "",
+      tone: state.tone,
+      transient: state.transient,
+    },
   };
 }
 
