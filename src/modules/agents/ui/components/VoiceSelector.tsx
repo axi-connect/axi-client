@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Check, ChevronsUpDown, Loader2, MicOff, Play, Square } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Check, ChevronsUpDown, Loader2, MicOff } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { voiceGenderLabel, type AiVoiceDTO } from "@/modules/agents/domain/voice"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
@@ -13,7 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/shared/components/ui/command"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip"
+import { SamplePlayButton, useAudioSample } from "@/shared/components/features/audio-sample"
 
 /** Valor interno del item "Sin voz" para el filtrado de cmdk. */
 const NO_VOICE = "__none__"
@@ -39,41 +39,14 @@ export function VoiceSelector({
   disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  /** Voz sonando o cargando su muestra; un id a la vez. */
-  const [previewingId, setPreviewingId] = useState<string | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
+  // La pieza compartida (shared/audio-sample): un solo <audio> para todo el
+  // selector — la misma que usa la curaduría de /platform/voices
+  const { playingId, loading, toggle, stop } = useAudioSample()
 
-  const stopPreview = useCallback(() => {
-    audioRef.current?.pause()
-    audioRef.current = null
-    setPreviewingId(null)
-    setPreviewLoading(false)
-  }, [])
-
-  // Cerrar el selector (o desmontarlo) silencia el preview.
+  // Cerrar el selector silencia el preview (el desmontaje lo cubre el hook).
   useEffect(() => {
-    if (!open) stopPreview()
-    return stopPreview
-  }, [open, stopPreview])
-
-  const togglePreview = (voice: AiVoiceDTO) => {
-    const wasPlaying = previewingId === voice.external_voice_id
-    stopPreview()
-    if (wasPlaying || !voice.preview_url) return
-
-    const audio = new Audio(voice.preview_url)
-    audioRef.current = audio
-    setPreviewingId(voice.external_voice_id)
-    setPreviewLoading(true)
-    audio.onplaying = () => setPreviewLoading(false)
-    audio.onended = stopPreview
-    audio.onerror = stopPreview
-    // En jsdom `play()` devuelve undefined (no implementado): el cast evita
-    // un TypeError en tests sin tocar el comportamiento del navegador
-    const playback = audio.play() as Promise<void> | undefined
-    void playback?.catch(stopPreview)
-  }
+    if (!open) stop()
+  }, [open, stop])
 
   const selected = voices?.find((voice) => voice.external_voice_id === value)
   // Voz guardada que ya no está en el catálogo: se muestra, no se esconde
@@ -163,11 +136,13 @@ export function VoiceSelector({
                         {[voiceGenderLabel(voice.gender), voice.accent].filter(Boolean).join(" · ")}
                       </p>
                     </div>
-                    <VoicePreviewButton
-                      voice={voice}
-                      playing={previewingId === voice.external_voice_id}
-                      loading={previewLoading && previewingId === voice.external_voice_id}
-                      onToggle={() => togglePreview(voice)}
+                    <SamplePlayButton
+                      className="mt-0.5"
+                      name={voice.name}
+                      url={voice.preview_url}
+                      playing={playingId === voice.external_voice_id}
+                      loading={loading && playingId === voice.external_voice_id}
+                      onToggle={() => toggle(voice.external_voice_id, voice.preview_url)}
                     />
                   </CommandItem>
                 ))}
@@ -180,61 +155,3 @@ export function VoiceSelector({
   )
 }
 
-/** Play/stop de la muestra. Detiene la propagación para no seleccionar la voz
- * al escucharla; sin `preview_url` queda deshabilitado y explicado. */
-function VoicePreviewButton({
-  voice,
-  playing,
-  loading,
-  onToggle,
-}: {
-  voice: AiVoiceDTO
-  playing: boolean
-  loading: boolean
-  onToggle: () => void
-}) {
-  const button = (
-    <button
-      type="button"
-      disabled={voice.preview_url === null}
-      onClick={(event) => {
-        event.stopPropagation()
-        onToggle()
-      }}
-      onPointerDown={(event) => event.stopPropagation()}
-      className={cn(
-        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border transition-colors",
-        playing
-          ? "border-transparent bg-accent-violet text-white"
-          : "border-accent-violet/30 text-accent-violet hover:bg-accent-violet/10",
-        voice.preview_url === null && "cursor-not-allowed opacity-40",
-      )}
-      aria-label={
-        voice.preview_url === null
-          ? `Muestra de ${voice.name} pendiente`
-          : playing
-            ? `Detener muestra de ${voice.name}`
-            : `Escuchar muestra de ${voice.name}`
-      }
-    >
-      {loading ? (
-        <Loader2 className="size-3.5 animate-spin" aria-hidden />
-      ) : playing ? (
-        <Square className="size-3 fill-current" aria-hidden />
-      ) : (
-        <Play className="size-3.5 translate-x-px fill-current" aria-hidden />
-      )}
-    </button>
-  )
-
-  if (voice.preview_url !== null) return button
-  return (
-    <Tooltip>
-      {/* El disabled mata los eventos de puntero: el wrapper recibe el hover */}
-      <TooltipTrigger asChild>
-        <span className="inline-flex">{button}</span>
-      </TooltipTrigger>
-      <TooltipContent>Muestra pendiente</TooltipContent>
-    </Tooltip>
-  )
-}

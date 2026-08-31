@@ -27,6 +27,13 @@ export const platformKeys = {
     list: () => [...platformKeys.pricing.all, "list"] as const,
   },
 
+  // Curaduría del catálogo de voces (§10.5): una sola lista, sin filtros —
+  // el catálogo es corto por diseño.
+  voices: {
+    all: ["platform", "voices"] as const,
+    list: () => [...platformKeys.voices.all, "list"] as const,
+  },
+
   // Facturación de la licencia (billing_frontend_plan.md F2). La cartera pagina
   // en server: los filtros (page incluido) viajan en la key. La ficha del tenant
   // cuelga de su id para que invalidarla no toque la cartera.

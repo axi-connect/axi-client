@@ -105,6 +105,7 @@ Coral = acción (CTAs, paso activo, tab activa) · **violeta = acento de la cons
 | FE7 Endurecimiento (errores §7, a11y, loading, breadcrumb, QA) | ✅ (E2E pospuesto — deuda) |
 | Calidad F1–F5 (escenarios/suites, ejecuciones + wizard, detalle en vivo, depurador forense) | ✅ (plan: `docs/plans/quality_frontend_implementation_plan.md`) |
 | Voz F3 (pricing con unidad `elevenlabs`/caracteres + límite `tts_characters` con preview en notas) | ✅ (plan: `axi-server/docs/plans/voice_agents_frontend_plan.md`) |
+| Voces IA (`/platform/voices`: curaduría del catálogo — crear/editar con identidad inmutable, retirar/activar, reorden con flechas + replace-set, muestra con frase editable por voz vía `POST …/preview`; el play es la pieza compartida `shared/features/audio-sample`, la misma del `VoiceSelector` del tenant) | ✅ (plan: `axi-server/docs/plans/voice_catalog_admin_plan.md`) |
 
 ## 7. Tests
 
