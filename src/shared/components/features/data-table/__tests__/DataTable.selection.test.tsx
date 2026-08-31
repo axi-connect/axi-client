@@ -111,6 +111,57 @@ describe("DataTable · el buscador se declara, no se adivina", () => {
     expect(screen.queryByRole("textbox")).toBeNull();
   });
 
+  /**
+   * Las coincidencias tienen que LLEVAR a algún sitio.
+   *
+   * Existían sin destino y elegir una re-emitía la búsqueda ya aplicada: un
+   * no-op que solo cerraba el panel, y que se leía como «no deja seleccionar».
+   * El primero de estos dos tests es la aserción que lo habría cazado.
+   */
+  it("elegir una coincidencia llama a `onSearchSelect` con LA FILA", () => {
+    const onSearchSelect = jest.fn();
+    render(
+      <DataTable<Row>
+        data={ROWS}
+        columns={[NAME]}
+        pagination={{ pageSize: 25, total: 3 }}
+        searchMode="spotlight"
+        onSearchChange={() => undefined}
+        onSearchSelect={onSearchSelect}
+      />,
+    );
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "kokoro" } });
+    // Dentro del listbox: el mismo nombre está también en la tabla de abajo. Y
+    // el que escucha es el BOTÓN de la opción, no el `<li role="option">`.
+    const option = within(screen.getByRole("listbox")).getByRole("button");
+    // `mousedown` y no `click`: el blur del input cerraría el panel antes.
+    fireEvent.mouseDown(option);
+    expect(onSearchSelect).toHaveBeenCalledTimes(1);
+    expect(onSearchSelect).toHaveBeenCalledWith(ROWS[1]);
+  });
+
+  it("SIN `onSearchSelect` no ofrece coincidencias, aunque haya filas que casen", () => {
+    // Una lista de opciones inertes es peor que no tener lista: invita a pulsar.
+    render(
+      <DataTable<Row>
+        data={ROWS}
+        columns={[NAME]}
+        pagination={{ pageSize: 25, total: 3 }}
+        searchMode="spotlight"
+        onSearchChange={() => undefined}
+      />,
+    );
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "kokoro" } });
+    // Ninguna opción. La fila de la tabla sigue ahí, claro: lo que no hay es
+    // nada pulsable en el panel.
+    expect(screen.queryByRole("option")).toBeNull();
+    expect(screen.getByText("Sin coincidencias")).toBeInTheDocument();
+  });
+
   it("con un solo campo buscable no ofrece el selector de campo", () => {
     // Un desplegable con una opción no elige nada: repite lo que ya dice el
     // marcador de posición.

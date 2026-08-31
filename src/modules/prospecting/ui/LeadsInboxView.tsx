@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Gift,
   Inbox,
@@ -84,6 +85,7 @@ export function LeadsInboxView({
 }: {
   initialStats: ProspectingStatsDTO;
 }) {
+  const router = useRouter();
   const { hasPermission } = useAuth();
   const canPromoteLeads = hasPermission("leads:promote");
   const canManageLeads = hasPermission("leads:manage");
@@ -547,6 +549,10 @@ export function LeadsInboxView({
           searchMode="spotlight"
           searchPlaceholder="Buscar"
           onSearchChange={({ value }) => setSearch(value)}
+          // Elegir una coincidencia ABRE ESE LEAD. Es el mismo destino que la
+          // celda del nombre, así que buscar y pulsar la fila llevan al mismo
+          // sitio — que es lo que se espera de una lista de resultados.
+          onSearchSelect={(row) => router.push(`/marketing/leads/${row.id}`)}
           search={{ value: searchValue ?? "" }}
           searchActions={searchActions}
           toolbar={

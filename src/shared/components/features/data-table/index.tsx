@@ -100,6 +100,18 @@ type DataTableProps<T extends DataRow = DataRow> = {
    * Quien quiera ir al servidor pasa las suyas.
    */
   searchSuggestions?: readonly TableSearchSuggestion[]
+  /**
+   * Qué pasa al ELEGIR una coincidencia. **Sin esto no se ofrece ninguna.**
+   *
+   * No es un detalle: la lista existía antes sin destino y elegir una fila
+   * re-emitía la búsqueda YA aplicada, o sea un no-op que solo cerraba el panel
+   * — se leía como «no deja seleccionar». Una lista de opciones inertes es peor
+   * que no tener lista, porque invita a pulsar.
+   *
+   * Lo decide quien llama porque el destino es suyo: `DataTable` es compartido y
+   * no conoce rutas.
+   */
+  onSearchSelect?: (row: T) => void
   searchSuggestionsLabel?: string
   searchActions?: readonly TableSearchAction[]
   searchLoading?: boolean
@@ -147,6 +159,7 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
   searchMode,
   searchPlaceholder,
   searchSuggestions,
+  onSearchSelect,
   searchSuggestionsLabel,
   searchActions,
   searchLoading,
@@ -312,7 +325,9 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
    * etiqueta como «en esta página» y no como «en tu base».
    */
   const derivedSuggestions = useMemo<TableSearchSuggestion[]>(() => {
-    if (mode !== "spotlight" || localQuery.trim().length === 0) return []
+    // Sin destino NO hay coincidencias: ver el docblock de `onSearchSelect`.
+    if (mode !== "spotlight" || onSearchSelect === undefined) return []
+    if (localQuery.trim().length === 0) return []
     const needle = localQuery.trim().toLowerCase()
     const fields = searchableFields.map((field) => field.key)
     const primary = fields[0]
@@ -331,9 +346,10 @@ export const DataTable = forwardRef(function DataTableInner<T extends DataRow = 
           .filter((part) => part.length > 0)
           .slice(0, 2)
           .join(" · "),
-        onSelect: () => onSearchChange?.({ field: primary as keyof T & string, value: localQuery }),
+        // La FILA, no el texto de búsqueda: elegir un resultado es ir a él.
+        onSelect: () => onSearchSelect(row),
       }))
-  }, [mode, localQuery, searchableFields, rowsToRender, onSearchChange])
+  }, [mode, localQuery, searchableFields, rowsToRender, onSearchSelect])
 
   const selectionCount = selection?.allMatching?.active
     ? selection.allMatching.count
