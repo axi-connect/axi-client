@@ -46,9 +46,24 @@ export const CONTACT_DOCUMENT_TYPE_LABELS: Record<ContactDocumentType, string> =
   nit: "NIT",
 };
 
+/**
+ * De dónde salió el contacto, en el idioma del dueño del negocio.
+ *
+ * `Record<ContactSource, …>` sobre el tipo generado no es decoración: cuando el
+ * backend añadió `integration` y `prospecting` a la columna, **este mapa rompió
+ * el build** al regenerar los tipos y obligó a nombrarlos. El backend, que
+ * repetía la lista a mano, no tuvo esa suerte y devolvió 500 en toda la página
+ * de Contactos. Aquí se lee este mapa desde la columna «Fuente», la ficha 360,
+ * el filtro de contactos y el constructor de audiencias, así que añadir una
+ * etiqueta es todo lo que hay que hacer.
+ */
 export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {
   inbound_conversation: "Conversación",
   manual: "Manual",
   import: "Import CSV",
   lead_conversion: "Conversión de lead",
+  integration: "Integración",
+  // El mismo nombre que el módulo tiene en el menú: si en el panel se llama
+  // «Captación», en el origen del contacto no puede llamarse otra cosa.
+  prospecting: "Captación",
 };

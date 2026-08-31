@@ -7030,7 +7030,7 @@ export interface components {
             /** @enum {string} */
             lifecycle_stage: "prospect" | "lead" | "customer" | "other";
             /** @enum {string} */
-            source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+            source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
             custom_fields: {
                 [key: string]: unknown;
             };
@@ -7087,7 +7087,7 @@ export interface components {
                 /** @enum {string} */
                 lifecycle_stage: "prospect" | "lead" | "customer" | "other";
                 /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
                 custom_fields: {
                     [key: string]: unknown;
                 };
@@ -8550,7 +8550,7 @@ export interface components {
                 /** @enum {string} */
                 lifecycle_stage: "prospect" | "lead" | "customer" | "other";
                 /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
                 /** Format: date-time */
                 created_at: string;
             } & {
@@ -14649,7 +14649,7 @@ export interface operations {
             query?: {
                 q?: string;
                 lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
-                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion";
+                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
                 city?: string;
                 created_after?: string;
                 created_before?: string;
