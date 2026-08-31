@@ -10660,6 +10660,33 @@ export interface components {
             promoted_at: string | null;
             /** Format: date-time */
             created_at: string;
+            last_run: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                lead_id: string;
+                /** @enum {string} */
+                status: "queued" | "running" | "completed" | "partial" | "failed";
+                steps: {
+                    provider: string;
+                    capability: string;
+                    /** @enum {string} */
+                    state: "pending" | "running" | "found" | "no_data" | "failed" | "no_account";
+                    fields: string[];
+                    units_spent: number;
+                    latency_ms?: number | null;
+                    detail?: string | null;
+                }[];
+                fields_filled: number;
+                units_spent: number;
+                manual: boolean;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            } | null;
             events: {
                 /** Format: uuid */
                 id: string;

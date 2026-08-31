@@ -4,6 +4,39 @@ import type { StatusMap } from "@/shared/components/features/status-badge/types"
 export type LeadDTO = Schemas["LeadsListDto"]["data"][number];
 export type LeadDetailDTO = Schemas["LeadDetailDto"];
 export type LeadEventDTO = LeadDetailDTO["events"][number];
+export type EnrichmentRunDTO = NonNullable<LeadDetailDTO["last_run"]>;
+export type RunStepDTO = EnrichmentRunDTO["steps"][number];
+export type RunStepState = RunStepDTO["state"];
+
+/**
+ * Qué hizo cada fuente, en español y sin eufemismos.
+ *
+ * `no_data` NO es un fallo: preguntamos y esa fuente no sabía nada, que es un
+ * desenlace legítimo y frecuente. Llamarlo «error» empujaría a reintentar algo
+ * que va a volver a no saber.
+ */
+export const RUN_STEP_LABELS: Record<RunStepState, string> = {
+  pending: "En espera",
+  running: "Consultando…",
+  found: "Encontró datos",
+  no_data: "Nada que aportar",
+  failed: "No respondió",
+  no_account: "Sin cuenta configurada",
+};
+
+/** El estado de la pasada entera. `partial` importa: algo llegó y algo falló. */
+export const RUN_STATUS_LABELS: Record<EnrichmentRunDTO["status"], string> = {
+  queued: "En cola",
+  running: "Buscando datos",
+  completed: "Terminada",
+  partial: "Terminada con fallos",
+  failed: "No se pudo completar",
+};
+
+/** ¿Esta pasada sigue viva? Decide si hay que seguir escuchando. */
+export function isRunInFlight(run: EnrichmentRunDTO | null): boolean {
+  return run !== null && (run.status === "queued" || run.status === "running");
+}
 export type ProspectingStatsDTO = Schemas["ProspectingStatsDto"];
 export type PromoteResultDTO = Schemas["PromoteResultDto"];
 export type IcpDTO = Schemas["IcpDto"];

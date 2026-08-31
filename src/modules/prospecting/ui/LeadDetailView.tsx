@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { socketManager } from "@/core/realtime/socket-manager";
+import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
 
@@ -19,8 +22,9 @@ import {
   SOURCE_LABELS,
   canDiscard,
   canPromote,
-  leadDataCompleteness,
+  isRunInFlight,
   leadDisplayName,
+  type EnrichmentRunDTO,
   type LeadDetailDTO,
 } from "../domain/lead";
 import {
@@ -31,15 +35,22 @@ import {
   verifyLead,
 } from "../infrastructure/services/prospecting-service.adapter";
 import { ChannelPermissions } from "./components/ChannelPermissions";
+import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
 import { LeadIdentityCard } from "./components/LeadIdentityCard";
 import { LeadProvenance } from "./components/LeadProvenance";
 import { LeadTimeline } from "./components/LeadTimeline";
 import { PromotionGate } from "./components/PromotionGate";
 import { QualityBreakdown } from "./components/QualityIndex";
 
-/** Cada cuánto se recarga mientras se buscan datos, y cuándo nos rendimos. */
+/**
+ * Cada cuánto se relee la fila mientras hay una pasada viva.
+ *
+ * Es el RESPALDO del WebSocket, no el mecanismo — y ya no hace falta un tope de
+ * rendición: antes la interfaz adivinaba si había terminado mirando una marca
+ * de tiempo, y como esa marca no cambiaba al no encontrar nada, el spinner
+ * giraba para siempre. Ahora la pasada dice cuándo terminó.
+ */
 const POLL_MS = 5_000;
-const POLL_TIMEOUT_MS = 90_000;
 
 export function LeadDetailView({ leadId }: { leadId: string }) {
   const router = useRouter();
@@ -49,16 +60,21 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
   const [lead, setLead] = useState<LeadDetailDTO | null>(null);
   const [busy, setBusy] = useState(false);
   /**
-   * El `last_enriched_at` que había al pedir la búsqueda. Mientras no cambie,
-   * el trabajo sigue en curso. `undefined` = no hay nada pedido.
+   * La pasada en curso. Sale de la fila al cargar y la adelanta el WebSocket.
+   *
+   * Sustituye al truco anterior —comparar `last_enriched_at` para adivinar si
+   * había terminado—, que no podía distinguir «no encontró nada» de «sigue
+   * trabajando» y dejaba el spinner girando para siempre.
    */
-  const [enrichingSince, setEnrichingSince] = useState<string | null | undefined>(undefined);
-  /** Cuántos datos tenía el lead al pedir la búsqueda, para saber si aportó algo. */
-  const filledBeforeRef = useRef(0);
+  const [run, setRun] = useState<EnrichmentRunDTO | null>(null);
+  const { socket } = useSocket("inbox");
+  const joinedRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      setLead(await getLead(leadId));
+      const fresh = await getLead(leadId);
+      setLead(fresh);
+      setRun(fresh.last_run);
     } catch (caught) {
       showAlert({
         tone: "error",
@@ -73,52 +89,88 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     void load();
   }, [load]);
 
-  const working = enrichingSince !== undefined && lead?.last_enriched_at === enrichingSince;
+  const working = isRunInFlight(run);
 
   /**
-   * Sondeo mientras se buscan los datos. No hay evento de tiempo real por lead
-   * —solo de búsqueda—, y para una acción que el usuario acaba de pedir y está
-   * mirando, recargar cada pocos segundos basta.
+   * Suscripción al detalle de ESTE lead, y solo mientras la ficha está abierta.
    *
-   * El tope NO es opcional: si un proveedor se cuelga, el trabajo puede no
-   * terminar nunca, y un spinner girando sobre algo parado miente igual que un
-   * estado sin barrido. A los 90 segundos se rinde y lo dice.
+   * El join se marca SOLO tras el ack: darlo por bueno antes daba por hecho un
+   * join que pudo fallar por permisos o por timeout, y no se reintentaba nunca.
+   *
+   * Depende SOLO de `socket`, jamás de `connected`. Con la dependencia ingenua
+   * el ciclo era: se desconecta → el cleanup quita el listener → el cuerpo sale
+   * por el guard → llega el `connect` sin nadie escuchando, y el socket se
+   * queda fuera de la sala para siempre. El token rota cada ~14 minutos con
+   * desconexión, así que pasaría siempre.
    */
   useEffect(() => {
-    if (!working) return;
-    const timer = setInterval(() => void load(), POLL_MS);
-    const giveUp = setTimeout(() => {
-      setEnrichingSince(undefined);
-      showAlert({
-        tone: "warning",
-        title: "La búsqueda está tardando",
-        description: "Sigue en curso. Recarga en un momento para ver si llegó algo.",
-      });
-    }, POLL_TIMEOUT_MS);
-    return () => {
-      clearInterval(timer);
-      clearTimeout(giveUp);
+    if (socket === null) return;
+
+    const join = () => {
+      socketManager
+        .emitWithAck(socket, "inbox.join_lead", { lead_id: leadId })
+        .then((ack) => {
+          if (ack.ok) joinedRef.current = leadId;
+        })
+        .catch(() => {
+          // Timeout: `joinedRef` queda sin fijar y el próximo `connect` reintenta.
+        });
     };
-  }, [working, load, showAlert]);
+
+    join();
+    // La membresía del room muere con la conexión: olvidarla obliga a
+    // re-unirse en vez de dar por hecho que sigue vigente.
+    const onConnect = () => {
+      join();
+      // Lo que pasó mientras el socket estuvo caído no llegó a nadie: se
+      // recarga la fila, que es la verdad.
+      void load();
+    };
+    const onDisconnect = () => {
+      joinedRef.current = null;
+    };
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      if (joinedRef.current !== null) {
+        const leaving = joinedRef.current;
+        joinedRef.current = null;
+        socketManager
+          .emitWithAck(socket, "inbox.leave_lead", { lead_id: leaving })
+          .catch(() => {
+            // Salir es best-effort: si el socket ya murió, el room murió con él.
+          });
+      }
+    };
+  }, [socket, leadId, load]);
+
+  // El avance mueve la tarjeta en el sitio, sin volver a pedir el lead: son
+  // varios mensajes por pasada y no tiene sentido recargar con cada uno.
+  useSocketEvent(socket, "prospecting.lead_enrichment_progress", (payload) => {
+    if (payload.lead_id !== leadId) return;
+    setRun(payload.run as EnrichmentRunDTO);
+  });
 
   /**
-   * La pasada terminó. Se dice QUÉ pasó, que son dos finales distintos.
-   *
-   * «No encontramos nada» es un desenlace legítimo y frecuente —un negocio de
-   * un mapa puede no tener más rastro público— y callárselo es lo que hacía que
-   * pareciera un fallo. Se distingue comparando cuántos datos había antes:
-   * que el backend haya terminado no significa que haya traído algo.
+   * Al terminar SÍ se recarga: los datos nuevos están en el lead, no en el
+   * evento. Y se dice qué pasó, que son dos finales distintos — «no
+   * encontramos nada» es un desenlace legítimo y callárselo es lo que hacía
+   * que pareciera un fallo.
    */
-  useEffect(() => {
-    if (enrichingSince === undefined || working) return;
-    setEnrichingSince(undefined);
-    const after = lead === null ? 0 : leadDataCompleteness(lead).filled;
-    const ganados = after - filledBeforeRef.current;
+  useSocketEvent(socket, "prospecting.lead_enrichment_completed", (payload) => {
+    if (payload.lead_id !== leadId) return;
+    setRun(payload.run as EnrichmentRunDTO);
+    void load();
+    const ganados = payload.run.fields_filled;
     showAlert(
       ganados > 0
         ? {
             tone: "success",
-            title: ganados === 1 ? "Encontramos un dato nuevo" : `Encontramos ${ganados} datos nuevos`,
+            title:
+              ganados === 1 ? "Encontramos un dato nuevo" : `Encontramos ${String(ganados)} datos nuevos`,
             description: "Abajo tienes lo que hallamos y de qué fuente salió cada cosa.",
           }
         : {
@@ -128,7 +180,20 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
               "Ya preguntamos a todas las fuentes disponibles para este lead. Puedes completarlo a mano.",
           },
     );
-  }, [enrichingSince, working, lead, showAlert]);
+  });
+
+  /**
+   * Respaldo del WebSocket, no el mecanismo.
+   *
+   * Corre SOLO mientras hay una pasada viva y es lo que sostiene la promesa de
+   * que la verdad vive en la fila: si el socket no llegó —pestaña dormida,
+   * token rotando, red mala— la tarjeta se mueve igual.
+   */
+  useEffect(() => {
+    if (!working) return;
+    const timer = setInterval(() => void load(), POLL_MS);
+    return () => clearInterval(timer);
+  }, [working, load]);
 
   const onPromote = useCallback(async () => {
     setBusy(true);
@@ -159,17 +224,31 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
    * Buscarle los datos que le faltan.
    *
    * Responde 202 y el trabajo sigue en una cola, así que no hay nada que
-   * esperar en la petición: se marca «buscando» a mano y se recarga cada pocos
-   * segundos hasta que `last_enriched_at` cambie. No se toca `lead.status` —
-   * ese es el ciclo de vida del lead y el servidor nunca escribe `enriching`;
-   * lo transitorio es nuestra petición, no la vida del lead.
+   * esperar en la petición: el avance llega por la sala de este lead y, de
+   * respaldo, releyendo la fila. No se toca `lead.status` — ese es el ciclo de
+   * vida del lead y el servidor nunca escribe `enriching`; lo transitorio es
+   * nuestra petición, no la vida del lead.
+   *
+   * Se pinta la pasada como encolada en el acto: el 202 ya confirmó que el
+   * trabajo existe, y esperar al primer evento dejaría la tarjeta en blanco
+   * justo en el segundo en que el usuario mira.
    */
   const onEnrich = useCallback(async () => {
     setBusy(true);
     try {
       await enrichLead(leadId);
-      filledBeforeRef.current = lead === null ? 0 : leadDataCompleteness(lead).filled;
-      setEnrichingSince(lead?.last_enriched_at ?? null);
+      setRun({
+        id: "pendiente",
+        lead_id: leadId,
+        status: "queued",
+        steps: [],
+        fields_filled: 0,
+        units_spent: 0,
+        manual: true,
+        started_at: null,
+        finished_at: null,
+        created_at: new Date().toISOString(),
+      });
       showAlert({
         tone: "info",
         title: "Buscando datos",
@@ -185,7 +264,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     } finally {
       setBusy(false);
     }
-  }, [leadId, lead?.last_enriched_at, showAlert]);
+  }, [leadId, showAlert]);
 
   /**
    * Volver a puntuar este lead. SÍ puede gastar cuota —por eso pide
@@ -322,6 +401,10 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
           {/* Los datos primero: es lo que se viene a ver. El índice y la
               procedencia explican y matizan, pero no son la respuesta. */}
           <LeadIdentityCard lead={lead} />
+          {/* Qué se consultó y qué dio cada fuente. Va aquí, entre los datos y
+              el índice: responde «de dónde salió esto» justo después de
+              enseñarlo. */}
+          <EnrichmentRunCard run={run} />
           <section className="border-border shadow-float bg-background rounded-lg border p-5">
             <QualityBreakdown
               score={lead.quality_score}

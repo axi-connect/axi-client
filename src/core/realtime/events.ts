@@ -625,6 +625,41 @@ export type ProspectingSearchProgressEvent = {
   estimated_total: number | null;
 };
 
+/**
+ * El paso a paso de una pasada de enriquecimiento (F4c).
+ *
+ * Llega a la sala del LEAD, no a la del tenant: son varios mensajes por lead y
+ * un lote de cien serían quinientos para todos los paneles abiertos. Hay que
+ * unirse con `inbox.join_lead` y salir al cerrar la ficha.
+ *
+ * El WS es COMODIDAD: la verdad vive en `lead.last_run`, así que quien recarga
+ * a mitad de una búsqueda ve exactamente lo mismo.
+ */
+export type ProspectingRunStep = {
+  provider: string;
+  capability: string;
+  state: "pending" | "running" | "found" | "no_data" | "failed" | "no_account";
+  fields: string[];
+  units_spent: number;
+  latency_ms?: number | null;
+  detail?: string | null;
+};
+
+export type ProspectingEnrichmentRunEvent = {
+  company_id: string;
+  lead_id: string;
+  run: {
+    id: string;
+    lead_id: string;
+    status: "queued" | "running" | "completed" | "partial" | "failed";
+    steps: ProspectingRunStep[];
+    fields_filled: number;
+    units_spent: number;
+    started_at: string | null;
+    finished_at: string | null;
+  };
+};
+
 export type ProspectingSearchCompletedEvent = {
   company_id: string;
   search_id: string;
@@ -675,6 +710,12 @@ export type InboxServerEvents = {
   "marketing.opt_out_created": (payload: MarketingOptOutCreatedEvent) => void;
   "marketing.promotion_redeemed": (payload: MarketingPromotionRedeemedEvent) => void;
   "marketing.promotion_reverted": (payload: MarketingPromotionRevertedEvent) => void;
+  "prospecting.lead_enrichment_progress": (
+    payload: ProspectingEnrichmentRunEvent,
+  ) => void;
+  "prospecting.lead_enrichment_completed": (
+    payload: ProspectingEnrichmentRunEvent,
+  ) => void;
   "prospecting.search_progress": (
     payload: ProspectingSearchProgressEvent,
   ) => void;
@@ -728,6 +769,8 @@ export type CloseConversationPayload = {
 export type SendMessagePayload = { conversation_id: string } & Schemas["SendMessageDto"];
 export type TypingPayload = { conversation_id: string; is_typing: boolean };
 
+export type LeadRefPayload = { lead_id: string };
+
 export type InboxCommands = {
   "inbox.join_conversation": (
     payload: JoinConversationPayload,
@@ -737,6 +780,9 @@ export type InboxCommands = {
     payload: JoinConversationPayload,
     ack: (res: WsAck<null>) => void,
   ) => void;
+  /** F4c: suscribirse al detalle del enriquecimiento de UN lead. */
+  "inbox.join_lead": (payload: LeadRefPayload, ack: (res: WsAck<null>) => void) => void;
+  "inbox.leave_lead": (payload: LeadRefPayload, ack: (res: WsAck<null>) => void) => void;
   "inbox.claim": (
     payload: ClaimPayload,
     ack: (res: WsAck<Schemas["ConversationDto"]>) => void,
