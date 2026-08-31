@@ -468,6 +468,27 @@ function countSocials(socials: unknown): number {
  */
 export const DATA_FIELDS = 5;
 
+/**
+ * Lo mismo, sobre el DTO completo en vez de la fila aplanada. La ficha lo usa
+ * para saber si una pasada de enriquecimiento aportó algo: sin comparar antes y
+ * después, «terminó» y «encontró algo» serían lo mismo, y no lo son.
+ */
+export function leadDataCompleteness(lead: {
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  website: string | null;
+  socials: unknown;
+}): { filled: number; total: number } {
+  return dataCompleteness({
+    has_email: lead.email !== null,
+    has_phone: lead.phone !== null,
+    has_address: lead.address !== null,
+    has_website: lead.website !== null,
+    has_socials: readSocials(lead.socials).length > 0,
+  });
+}
+
 export function dataCompleteness(lead: {
   has_email: boolean;
   has_phone: boolean;

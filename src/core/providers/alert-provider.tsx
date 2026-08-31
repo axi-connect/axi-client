@@ -2,7 +2,7 @@
 
 import { Modal, ModalConfig } from "../../shared/components/ui/modal"
 import { StatusAlert } from "@/shared/components/ui/notice"
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from "react"
 
 type Alert = {
   tone: "success" | "error" | "warning" | "info"
@@ -26,19 +26,37 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const [alert, setAlert] = useState<Alert | null>(null)
   const [modalConfig, setConfigModal] = useState<ModalConfig | null>(null)
 
-  const showAlert = (a: Alert) => setAlert(a)
-  const showModal = (config: ModalConfig) => {
+  /*
+    MEMORIZADAS, Y NO ES COSMÉTICA. Sin esto, cada aviso que aparece o se cierra
+    en CUALQUIER parte de la app cambia la identidad de `showAlert` y del value
+    del contexto, y eso re-crea todo `useCallback`/`useEffect` que los tenga en
+    sus dependencias.
+
+    El síntoma real que lo destapó: la ficha de un lead sondea mientras busca
+    datos, con un temporizador de 90 s para rendirse. Ese temporizador se
+    reiniciaba desde cero con cada alerta de la aplicación, así que nunca
+    saltaba y la petición se repetía indefinidamente. El efecto estaba bien
+    escrito; lo que fallaba era esta identidad inestable, tres capas más arriba.
+  */
+  const showAlert = useCallback((a: Alert) => setAlert(a), [])
+
+  const showModal = useCallback((config: ModalConfig) => {
     setModalOpen(true)
     setConfigModal(config)
-  }
+  }, [])
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModalOpen(false)
     setConfigModal(null)
-  }
+  }, [])
+
+  const value = useMemo(
+    () => ({ showAlert, showModal, closeModal }),
+    [showAlert, showModal, closeModal],
+  )
 
   return (
-    <AlertContext.Provider value={{ showAlert, showModal, closeModal }}>
+    <AlertContext.Provider value={value}>
       {children}
       {alert && (
         <StatusAlert {...alert} onOpenChange={() => setAlert(null)}/>

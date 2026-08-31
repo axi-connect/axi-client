@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
 
@@ -19,6 +19,7 @@ import {
   SOURCE_LABELS,
   canDiscard,
   canPromote,
+  leadDataCompleteness,
   leadDisplayName,
   type LeadDetailDTO,
 } from "../domain/lead";
@@ -52,6 +53,8 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
    * el trabajo sigue en curso. `undefined` = no hay nada pedido.
    */
   const [enrichingSince, setEnrichingSince] = useState<string | null | undefined>(undefined);
+  /** Cuántos datos tenía el lead al pedir la búsqueda, para saber si aportó algo. */
+  const filledBeforeRef = useRef(0);
 
   const load = useCallback(async () => {
     try {
@@ -98,16 +101,34 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     };
   }, [working, load, showAlert]);
 
-  // Llegaron datos nuevos: se deja de sondear y se dice qué cambió.
+  /**
+   * La pasada terminó. Se dice QUÉ pasó, que son dos finales distintos.
+   *
+   * «No encontramos nada» es un desenlace legítimo y frecuente —un negocio de
+   * un mapa puede no tener más rastro público— y callárselo es lo que hacía que
+   * pareciera un fallo. Se distingue comparando cuántos datos había antes:
+   * que el backend haya terminado no significa que haya traído algo.
+   */
   useEffect(() => {
     if (enrichingSince === undefined || working) return;
     setEnrichingSince(undefined);
-    showAlert({
-      tone: "success",
-      title: "Datos actualizados",
-      description: "Abajo tienes lo que encontramos y de qué fuente salió cada cosa.",
-    });
-  }, [enrichingSince, working, showAlert]);
+    const after = lead === null ? 0 : leadDataCompleteness(lead).filled;
+    const ganados = after - filledBeforeRef.current;
+    showAlert(
+      ganados > 0
+        ? {
+            tone: "success",
+            title: ganados === 1 ? "Encontramos un dato nuevo" : `Encontramos ${ganados} datos nuevos`,
+            description: "Abajo tienes lo que hallamos y de qué fuente salió cada cosa.",
+          }
+        : {
+            tone: "info",
+            title: "No encontramos nada nuevo",
+            description:
+              "Ya preguntamos a todas las fuentes disponibles para este lead. Puedes completarlo a mano.",
+          },
+    );
+  }, [enrichingSince, working, lead, showAlert]);
 
   const onPromote = useCallback(async () => {
     setBusy(true);
@@ -147,6 +168,7 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
     setBusy(true);
     try {
       await enrichLead(leadId);
+      filledBeforeRef.current = lead === null ? 0 : leadDataCompleteness(lead).filled;
       setEnrichingSince(lead?.last_enriched_at ?? null);
       showAlert({
         tone: "info",
