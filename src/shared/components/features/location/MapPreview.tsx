@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   motion,
   useMotionValue,
@@ -21,8 +21,17 @@ const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const OSM_ATTRIBUTION = "© Colaboradores de OpenStreetMap";
 
 const TILE_PX = 256;
-/** 3×3 teselas: suficiente contexto sin pedirle nueve imágenes a un donante. */
-const GRID = 3;
+
+/**
+ * El alto del visor, plegado y expandido.
+ *
+ * Son constantes y no una medida, y de eso depende el mosaico: el alto lo anima
+ * un resorte, así que medirlo recalcularía la rejilla en cada fotograma y
+ * pediría teselas a mitad de la transición. El ancho sí se mide, porque es
+ * fluido y nadie lo anima.
+ */
+const COLLAPSED_H = 148;
+const EXPANDED_H = 260;
 
 export interface MapPreviewProps {
   lat: number;
@@ -61,7 +70,30 @@ export function MapPreview({
 }: MapPreviewProps) {
   const reduced = useReducedMotion();
   const container = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLButtonElement>(null);
   const [expanded, setExpanded] = useState(false);
+  /**
+   * El ancho del visor. **De él sale cuántas teselas hacen falta**, así que
+   * mientras no se sepa no se pide ninguna: pintar con la rejilla equivocada es
+   * una tanda de peticiones tiradas.
+   *
+   * Se mide en `useLayoutEffect`, o sea antes de que el navegador pinte, para
+   * que el primer fotograma ya salga completo.
+   */
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    const node = viewport.current;
+    if (node === null) return;
+    setWidth(node.offsetWidth);
+    // En jsdom no existe, y sin él la medida inicial ya basta.
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry !== undefined) setWidth(entry.contentRect.width);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
@@ -75,7 +107,13 @@ export function MapPreview({
   });
 
   const zoom = zoomFor(radiusM ?? null, expanded);
-  const tiles = tilesAround(lat, lng, zoom);
+  const mosaic = tileMosaic({
+    lat,
+    lng,
+    zoom,
+    width,
+    height: expanded ? EXPANDED_H : COLLAPSED_H,
+  });
 
   function onPointerMove(event: React.PointerEvent) {
     if (reduced === true || container.current === null) return;
@@ -96,6 +134,7 @@ export function MapPreview({
       }}
     >
       <motion.button
+        ref={viewport}
         type="button"
         aria-expanded={expanded}
         aria-label={`${label}. ${expanded ? "Reducir" : "Ampliar"} el mapa`}
@@ -106,31 +145,32 @@ export function MapPreview({
             ? undefined
             : { rotateX: tiltX, rotateY: tiltY, transformStyle: "preserve-3d" }
         }
-        animate={{ height: expanded ? 260 : 148 }}
+        animate={{ height: expanded ? EXPANDED_H : COLLAPSED_H }}
         transition={
           reduced === true
             ? { duration: 0 }
             : { type: "spring", stiffness: 400, damping: 35 }
         }
       >
-        {/* Las teselas, centradas en el punto. `-z-10` para que el contenido
-            de abajo no compita con ellas. */}
+        {/* Las teselas. El envoltorio es un ANCLA de tamaño cero en el centro
+            del visor: cada tesela ya trae su posición respecto a ese centro, así
+            que no hay un tamaño de mosaico que pueda quedarse corto — que es
+            exactamente lo que dejaba una franja vacía al lado. `-z-10` para que
+            el contenido de abajo no compita con ellas. */}
         <span
           aria-hidden="true"
           className="pointer-events-none absolute top-1/2 left-1/2 -z-10"
-          style={{
-            width: TILE_PX * GRID,
-            height: TILE_PX * GRID,
-            transform: `translate(calc(-50% - ${String(tiles.offset_x)}px), calc(-50% - ${String(tiles.offset_y)}px))`,
-          }}
         >
-          {tiles.grid.map((tile) => (
+          {mosaic.tiles.map((tile) => (
             /* Tesela de un tercero: next/image la haría pasar por nuestro
                servidor para optimizar un PNG de 256 px que ya viene optimizado.
                eslint-disable-next-line @next/next/no-img-element */
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              key={`${String(tile.x)}-${String(tile.y)}`}
+              /* Por POSICIÓN y no por coordenada de tesela: a zoom bajo un
+                 visor ancho puede dar la vuelta al mundo y repetir la misma
+                 tesela, y dos claves iguales rompen la lista. */
+              key={`${String(tile.left)}-${String(tile.top)}`}
               src={tileUrl
                 .replace("{z}", String(zoom))
                 .replace("{x}", String(tile.x))
@@ -217,34 +257,75 @@ export function tileFor(lat: number, lng: number, zoom: number) {
   };
 }
 
-function tilesAround(lat: number, lng: number, zoom: number) {
-  const center = tileFor(lat, lng, zoom);
-  const half = Math.floor(GRID / 2);
-  const max = 2 ** zoom;
-  const grid: { x: number; y: number; left: number; top: number }[] = [];
+/**
+ * Qué teselas hacen falta para tapar un visor de `width`×`height`, y dónde va
+ * cada una respecto al CENTRO de ese visor.
+ *
+ * Sustituye a una rejilla de 3×3 fija, que es el bug que el dueño vio como una
+ * franja vacía al borde del mapa. La cuenta: el mosaico se corre `offset` para
+ * que el punto quede centrado, y ese corrimiento llega a ±128 px, así que de los
+ * 768 px de un 3×3 lo único GARANTIZADO eran `(3−1)·256 = 512 px` — menos que
+ * cualquier tarjeta del panel. Con las coordenadas del informe el corrimiento
+ * era de 126 px y quedaban ~68 px de tarjeta sin tesela.
+ *
+ * Aquí los rangos salen de la condición de que la tesela toque el visor
+ * `[−W/2, W/2]`, así que cubre por construcción y para cualquier fracción. Y de
+ * paso pide MENOS imágenes que antes —4 en la tarjeta plegada de la captura
+ * frente a 9—, que importa porque las teselas las dona OpenStreetMap: el techo
+ * es `(ceil(W/256)+1) × (ceil(H/256)+1)`.
+ */
+export function tileMosaic({
+  lat,
+  lng,
+  zoom,
+  width,
+  height,
+}: {
+  lat: number;
+  lng: number;
+  zoom: number;
+  /** Del visor. Con 0 —todavía sin medir— no se pide ninguna tesela. */
+  width: number;
+  height: number;
+}): { tiles: { x: number; y: number; left: number; top: number }[] } {
+  const tiles: { x: number; y: number; left: number; top: number }[] = [];
+  if (width <= 0 || height <= 0) return { tiles };
 
-  for (let row = -half; row <= half; row += 1) {
-    for (let col = -half; col <= half; col += 1) {
-      const x = center.x + col;
+  const center = tileFor(lat, lng, zoom);
+  const max = 2 ** zoom;
+  // Cuánto hay que correr el mosaico para que el punto quede en el centro.
+  const offsetX = (center.fraction_x - 0.5) * TILE_PX;
+  const offsetY = (center.fraction_y - 0.5) * TILE_PX;
+  const half = TILE_PX / 2;
+
+  /**
+   * La tesela de columna `c` ocupa `[c·256 − 128 − offset, c·256 + 128 − offset]`
+   * con el cero en el centro del visor, así que toca el visor si su intervalo
+   * corta con `[−W/2, W/2]`. Despejar `c` de esas dos desigualdades da el rango.
+   */
+  const range = (size: number, offset: number) => ({
+    from: Math.ceil((-size / 2 + offset - half) / TILE_PX),
+    to: Math.floor((size / 2 + offset + half) / TILE_PX),
+  });
+  const cols = range(width, offsetX);
+  const rows = range(height, offsetY);
+
+  for (let row = rows.from; row <= rows.to; row += 1) {
+    for (let col = cols.from; col <= cols.to; col += 1) {
       const y = center.y + row;
       // Fuera del planeta no hay tesela que pedir.
       if (y < 0 || y >= max) continue;
-      grid.push({
+      tiles.push({
         // La longitud sí da la vuelta al mundo.
-        x: ((x % max) + max) % max,
+        x: (((center.x + col) % max) + max) % max,
         y,
-        left: (col + half) * TILE_PX,
-        top: (row + half) * TILE_PX,
+        left: col * TILE_PX - half - offsetX,
+        top: row * TILE_PX - half - offsetY,
       });
     }
   }
 
-  // Cuánto hay que correr la rejilla para que el punto quede en el centro.
-  return {
-    grid,
-    offset_x: (center.fraction_x - 0.5) * TILE_PX,
-    offset_y: (center.fraction_y - 0.5) * TILE_PX,
-  };
+  return { tiles };
 }
 
 function formatRadius(meters: number): string {
