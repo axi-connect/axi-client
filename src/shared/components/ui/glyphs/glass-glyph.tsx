@@ -4,16 +4,17 @@ import { GLYPH_GEOMETRY, type GlyphKind } from "./glyph-geometry";
 
 /**
  * Los tres tamaños del sistema, y el ÚNICO mando: el tier decide a la vez el
- * tamaño y qué capas se dibujan. Separarlos permitiría pedir el detalle grande
- * a 32 px (barro) o el pequeño a 128 px (silueta pelada), que es justo el
- * defecto que el tier existe para evitar.
+ * tamaño, qué capas se dibujan y el grosor del trazo (esto último en
+ * `globals.css`). Separarlos permitiría pedir el detalle grande a 48 px (barro)
+ * o un trazo de 1 px sobre 176 (silueta anémica), que es justo el defecto que el
+ * tier existe para evitar.
  */
 export type GlyphTier = "sm" | "md" | "lg";
 
 const TIER_SIZE: Record<GlyphTier, string> = {
-  sm: "size-8", // 32px — dentro de una card, junto a una frase
-  md: "size-16", // 64px — el estado vacío estándar
-  lg: "size-32", // 128px — el vacío de página completa de un tenant nuevo
+  sm: "size-12", // 48px — dentro de una card, junto a una frase
+  md: "size-24", // 96px — el estado vacío estándar
+  lg: "size-44", // 176px — el vacío de página completa de un tenant nuevo
 };
 
 type GlassGlyphProps = Omit<React.SVGProps<SVGSVGElement>, "children"> & {
@@ -62,7 +63,7 @@ export function GlassGlyph({
   const id = (part: string) => `${uid}-${part}`;
 
   const { back, front, engrave, core, accent } = GLYPH_GEOMETRY[kind];
-  // `sm` dibuja cinco capas: a 32 px el caustic, el pedestal, la refracción del
+  // `sm` dibuja cinco capas: a 48 px el caustic, el pedestal, la refracción del
   // canto y el reflejo viajero caen por debajo del píxel o se pisan entre sí.
   // El foco especular fijo SÍ entra — es lo que hace que a tamaño pequeño se
   // siga leyendo como vidrio y no como una silueta.
@@ -178,8 +179,9 @@ export function GlassGlyph({
 
       {/* 8 · rim light — LA SILUETA. Es la red de seguridad: si el pedestal, el
           cuerpo y las luces fallaran, el glifo se sigue reconociendo por aquí.
-          `non-scaling-stroke` lo mantiene en 1px real de 32 a 128 px, y es lo
-          único que permite un solo path para un rango de 4×. */}
+          `non-scaling-stroke` lo mantiene en píxeles reales de 48 a 176 px
+          (el grosor por tier lo pone el CSS), y es lo único que permite un solo
+          path para un rango de 3,7×. */}
       <g data-layer="rim">
         {shapes.map((d) => (
           <path

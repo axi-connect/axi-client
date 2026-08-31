@@ -77,7 +77,7 @@ export function PipelineView({ initialDealId }: { initialDealId?: string }) {
             </div>
           ) : boardEmpty ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-              <GlassGlyph kind="money" />
+              <GlassGlyph kind="money" tier="lg" />
               <div>
                 <p className="font-medium">Aún no hay oportunidades</p>
                 <p className="text-sm text-muted-foreground">

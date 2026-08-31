@@ -5,9 +5,9 @@
  * `data-stop`. Por eso aquí no hay ni un hex.
  *
  * **Rejilla PAR de un `viewBox` de 48×48.** Los tres tamaños del sistema son
- * 32 / 64 / 128 px, así que una unidad mide 2/3, 4/3 y 8/3 de píxel: solo las
- * coordenadas pares caen en frontera de píxel en los tres. Si la geometría se
- * mueve a impares, el tamaño pequeño sale borroso.
+ * 48 / 96 / 176 px, así que una unidad mide 1, 2 y 3,67 píxeles: a 48 y a 96 la
+ * rejilla cae exacta en frontera de píxel, que es donde importa. Si la
+ * geometría se mueve a impares, el tamaño pequeño sale borroso.
  *
  * **`core` es la luz de color, y va DETRÁS del cuerpo translúcido.** No es un
  * tinte encima del glifo: es un objeto de color que se ve *a través* del vidrio.

@@ -85,7 +85,7 @@ export function ConversationPanel({
           className,
         )}
       >
-        <GlassGlyph kind="conversation" />
+        <GlassGlyph kind="conversation" tier="lg" />
         <p className="text-sm">Selecciona una conversación para empezar</p>
       </div>
     )

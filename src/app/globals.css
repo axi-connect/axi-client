@@ -540,14 +540,22 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .glass-glyph [data-layer="engrave"] {
   stroke: var(--glass-etch);
   stroke-opacity: 0.92;
-  stroke-width: 1.3;
 }
-/* A 128px un rim de 1px se pierde; a 32px 1,5px es un dibujo infantil. */
-.glass-glyph--lg [data-layer="rim"] { stroke-width: 1.4; }
-.glass-glyph--lg [data-layer="engrave"] { stroke-width: 1.6; }
-.glass-glyph--lg [data-layer="cast"] { ry: 5; }
-.glass-glyph--sm [data-layer="engrave"] { stroke-width: 1; }
+
+/* Grosor de trazo por tier, explícito en los tres.
+   `non-scaling-stroke` mantiene el trazo en PÍXELES reales sea cual sea el
+   tamaño, así que un valor único adelgaza el glifo a medida que crece: 1px sobre
+   176 es la mitad de presencia relativa que sobre 96. Y esto no es solo estética
+   — un objeto translúcido se lee por su silueta, así que el rim delgado es
+   exactamente lo que hacía que los glifos parecieran pequeños. */
+.glass-glyph--sm [data-layer="rim"] { stroke-width: 1.2; }
+.glass-glyph--sm [data-layer="engrave"] { stroke-width: 1.4; }
 .glass-glyph--sm [data-layer="hot"] { opacity: 0.8; }
+.glass-glyph--md [data-layer="rim"] { stroke-width: 1.6; }
+.glass-glyph--md [data-layer="engrave"] { stroke-width: 2; }
+.glass-glyph--lg [data-layer="rim"] { stroke-width: 2.2; }
+.glass-glyph--lg [data-layer="engrave"] { stroke-width: 2.6; }
+.glass-glyph--lg [data-layer="cast"] { ry: 5; }
 
 /* El reflejo viajero. La transición vive en el HIJO y no en el host, así solo se
    recalcula ese nodo por frame y no el subárbol entero.
