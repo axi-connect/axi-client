@@ -45,12 +45,17 @@ import {
 } from "./tables/leads.filters";
 
 /**
- * Tope de la selección «todos los que cumplen».
+ * Tope de la selección «todos los que cumplen». Por encima, la oferta no se
+ * pinta: un botón que no puede cumplir lo que dice es peor que no tenerlo.
  *
- * Es el mismo que el del endpoint de ids. Por encima, la oferta no se pinta:
- * un botón que no puede cumplir lo que dice es peor que no tenerlo.
+ * **500 y no 1.000, que es lo que aguanta el endpoint de ids**, para que un
+ * lote sea SIEMPRE una sola petición. Trocear en dos deja dos resultados que
+ * fusionar y un fallo parcial que no se sabe contar: si la segunda tanda se
+ * cae, hay 500 filas actuadas y un diálogo que no puede decir la verdad sobre
+ * qué pasó. Con 500, una confirmación es una petición es un resultado, y el
+ * `deleted + kept + missing` sigue cuadrando con lo que se mandó.
  */
-const SELECT_ALL_LIMIT = 1_000;
+const SELECT_ALL_LIMIT = 500;
 /** Por encima de esto, promover en lote pide confirmación. */
 const CONFIRM_ABOVE = 50;
 
