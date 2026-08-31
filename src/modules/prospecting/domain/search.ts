@@ -45,7 +45,11 @@ export function isInFlight(search: SearchDTO): boolean {
 export function progressOf(search: SearchDTO): number {
   if (!isInFlight(search)) return 1;
   if (search.params.limit <= 0) return 0;
-  return Math.min(1, search.found_count / search.params.limit);
+  // CON filtros el tope cuenta admitidos, así que la barra tiene que medir eso:
+  // con la cuenta de encontrados, una búsqueda filtrada llegaría al 100 %
+  // teniendo tres leads en la bandeja.
+  const done = hasAdmission(search.params.admission) ? search.new_count : search.found_count;
+  return Math.min(1, done / search.params.limit);
 }
 
 /**
@@ -55,14 +59,22 @@ export function progressOf(search: SearchDTO): number {
  * orden. La vista pinta.
  */
 export function summaryOf(search: SearchDTO): string {
-  const parts = [`${search.new_count.toLocaleString("es-CO")} nuevos`];
+  const gated = hasAdmission(search.params.admission);
+  const parts = [
+    gated
+      ? // Con filtros, el número que importa es cuántos de los que pediste
+        // llevas: «18 nuevos» no dice si va bien o va corta.
+        `${search.new_count.toLocaleString("es-CO")} de ${search.params.limit.toLocaleString("es-CO")} admitidos`
+      : `${search.new_count.toLocaleString("es-CO")} nuevos`,
+  ];
+  if (search.filtered_count > 0) {
+    parts.push(`${search.filtered_count.toLocaleString("es-CO")} fuera del filtro`);
+  }
   if (search.duplicate_count > 0) {
     parts.push(`${search.duplicate_count.toLocaleString("es-CO")} que ya tenías`);
   }
   if (search.rejected_count > 0) {
-    parts.push(
-      `${search.rejected_count.toLocaleString("es-CO")} fuera de tu cliente ideal`,
-    );
+    parts.push(`${search.rejected_count.toLocaleString("es-CO")} fuera de tu cliente ideal`);
   }
   return parts.join(" · ");
 }
@@ -73,6 +85,13 @@ export function costOf(search: SearchDTO): string {
     ? "gratis"
     : `${search.units_spent.toLocaleString("es-CO")} unidades`;
 }
+
+/**
+ * Ojo con los dos contadores de rechazo, que NO son lo mismo:
+ * `rejected_count` lo vetó el cliente ideal del tenant (una palabra excluida) y
+ * el lead se guardó; `filtered_count` no pasó los criterios de ESTA búsqueda y
+ * el lead no existe. Se dicen con palabras distintas a propósito.
+ */
 
 /** Los parámetros de una búsqueda, para re-lanzarla tal cual. */
 export function paramsOf(search: SearchDTO) {
@@ -85,6 +104,9 @@ export function paramsOf(search: SearchDTO) {
     country: search.params.country,
     radius_m: search.params.radius_m ?? undefined,
     limit: search.params.limit,
+    // Sin esto, «Repetir» perdería los filtros en silencio y traería el triple
+    // de leads que la búsqueda original.
+    admission: search.params.admission,
   };
 }
 
@@ -115,3 +137,144 @@ export const SEARCH_RADII = [
   { value: 8_000, label: "8 km · la zona" },
   { value: 20_000, label: "20 km · la ciudad" },
 ] as const;
+
+// ============================================================================
+// Criterios de admisión
+// ============================================================================
+
+export type AdmissionDTO = SearchDTO["params"]["admission"];
+export type RequirableField = NonNullable<AdmissionDTO["require"]>[number];
+
+/** Cuántos datos cuenta la completitud. Espeja `ADMISSION_DATA_FIELDS` del backend. */
+export const ADMISSION_DATA_FIELDS = 5;
+
+/**
+ * Umbrales que ofrece la interfaz.
+ *
+ * Pasos y no un deslizador libre, por la misma razón que los radios: nadie
+ * distingue un 43 de un 47, y un deslizador promete esa precisión. La etiqueta
+ * dice qué significa el número, que es lo que de verdad se elige.
+ */
+export const SCORE_STEPS = [
+  { value: null, label: "Cualquiera" },
+  { value: 40, label: "40 o más · aprovechable" },
+  { value: 60, label: "60 o más · bueno" },
+  { value: 80, label: "80 o más · excelente" },
+] as const;
+
+/** Techos de gasto. Aparecen solo cuando el tope cuenta admitidos. */
+export const RECORD_CEILINGS = [50, 100, 250, 500, 1_000] as const;
+
+export const REQUIRABLE_LABELS: Record<RequirableField, string> = {
+  phone: "Teléfono",
+  email: "Correo",
+  website: "Sitio web",
+  address: "Dirección",
+  instagram: "Instagram",
+  facebook: "Facebook",
+};
+
+/** El orden en que se ofrecen. Instagram primero porque es el que más se pide. */
+export const REQUIRABLE_ORDER: RequirableField[] = [
+  "instagram",
+  "phone",
+  "email",
+  "website",
+  "address",
+  "facebook",
+];
+
+export const EMPTY_ADMISSION: AdmissionDTO = {
+  min_score: null,
+  min_data: null,
+  require: [],
+  verified_only: false,
+  max_records: null,
+};
+
+/**
+ * ¿Esta búsqueda exige algo?
+ *
+ * El techo de gasto NO cuenta: no rechaza a nadie, solo para de buscar. Si
+ * contara, poner un techo cambiaría el significado del tope sin que el usuario
+ * haya pedido ningún filtro.
+ */
+export function hasAdmission(admission: AdmissionDTO | undefined): boolean {
+  if (admission === undefined) return false;
+  return (
+    admission.min_score != null ||
+    admission.min_data != null ||
+    (admission.require?.length ?? 0) > 0 ||
+    admission.verified_only === true
+  );
+}
+
+/**
+ * Los criterios activos, como los chips del trigger plegado.
+ *
+ * Existe para que **el pliegue no esconda el estado**: un filtro activo detrás
+ * de una sección cerrada es la forma más rápida de que alguien no entienda por
+ * qué su búsqueda trajo cuatro leads.
+ */
+export function admissionChips(admission: AdmissionDTO | undefined): string[] {
+  if (admission === undefined) return [];
+  const chips: string[] = [];
+  if (admission.min_score != null) chips.push(`calidad ≥ ${String(admission.min_score)}`);
+  if (admission.min_data != null) {
+    chips.push(`${String(admission.min_data)} de ${String(ADMISSION_DATA_FIELDS)} datos`);
+  }
+  for (const field of admission.require ?? []) chips.push(REQUIRABLE_LABELS[field]);
+  if (admission.verified_only === true) chips.push("solo verificados");
+  return chips;
+}
+
+/**
+ * Lo que va a pasar, en una frase.
+ *
+ * Se escribe aquí y no en la vista porque es una REGLA de qué se dice y en qué
+ * orden. Un filtro que el usuario no puede leer en llano es un filtro que va a
+ * usar mal.
+ */
+export function admissionSentence(
+  admission: AdmissionDTO,
+  limit: number,
+  categoryLabel: string,
+): string {
+  const demands: string[] = [];
+  if (admission.min_score != null) {
+    demands.push(`calidad ${String(admission.min_score)} o más`);
+  }
+  if (admission.min_data != null) {
+    demands.push(
+      `al menos ${String(admission.min_data)} de ${String(ADMISSION_DATA_FIELDS)} datos`,
+    );
+  }
+  const required = admission.require ?? [];
+  if (required.length > 0) {
+    const names = required.map((field) => REQUIRABLE_LABELS[field]).join(", ");
+    // «y entre ellos» y no «y además»: cuentan DENTRO de la cantidad de arriba.
+    demands.push(admission.min_data != null ? `y entre ellos ${names}` : `${names}`);
+  }
+  if (admission.verified_only === true) demands.push("verificados");
+
+  const what =
+    demands.length === 0
+      ? `Guardaré todos los ${categoryLabel.toLowerCase()} que encuentre.`
+      : `Guardaré solo los ${categoryLabel.toLowerCase()} con ${joinDemands(demands)}.`;
+
+  if (demands.length === 0) return what;
+
+  const ceiling =
+    admission.max_records == null
+      ? ""
+      : `, sin pasar de ${admission.max_records.toLocaleString("es-CO")} registros`;
+  return `${what} Buscaré hasta encontrar ${limit.toLocaleString("es-CO")} así${ceiling}.`;
+}
+
+function joinDemands(demands: string[]): string {
+  if (demands.length === 1) return demands[0];
+  // El «y entre ellos …» ya trae su propia conjunción: no se le pone otra.
+  const last = demands[demands.length - 1];
+  const head = demands.slice(0, -1).join(", ");
+  return last.startsWith("y ") ? `${head} ${last}` : `${head} y ${last}`;
+}

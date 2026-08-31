@@ -10523,11 +10523,19 @@ export interface components {
                     country: string;
                     radius_m: number | null;
                     limit: number;
+                    admission: {
+                        min_score?: number | null;
+                        min_data?: number | null;
+                        require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                        verified_only?: boolean;
+                        max_records?: number | null;
+                    };
                 };
                 found_count: number;
                 new_count: number;
                 duplicate_count: number;
                 rejected_count: number;
+                filtered_count: number;
                 units_spent: number;
                 estimated_total: number | null;
                 error: string | null;
@@ -10554,11 +10562,19 @@ export interface components {
                 country: string;
                 radius_m: number | null;
                 limit: number;
+                admission: {
+                    min_score?: number | null;
+                    min_data?: number | null;
+                    require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                    verified_only?: boolean;
+                    max_records?: number | null;
+                };
             };
             found_count: number;
             new_count: number;
             duplicate_count: number;
             rejected_count: number;
+            filtered_count: number;
             units_spent: number;
             estimated_total: number | null;
             error: string | null;
@@ -10584,6 +10600,13 @@ export interface components {
             };
             radius_m?: number;
             limit: number;
+            admission?: {
+                min_score?: number | null;
+                min_data?: number | null;
+                require?: ("phone" | "email" | "website" | "address" | "instagram" | "facebook")[];
+                verified_only?: boolean;
+                max_records?: number | null;
+            };
         };
         StartSearchResultDto: {
             /** Format: uuid */

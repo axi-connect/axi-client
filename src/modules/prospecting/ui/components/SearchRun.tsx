@@ -98,10 +98,12 @@ export function SearchRun({
 
       {search.status === "partial" && (
         // El aviso honesto: no es un adorno, es lo que evita que el dueño crea
-        // que ya tiene una lista con la que llamar a alguien.
+        // que ya tiene una lista con la que llamar a alguien. Con filtros el
+        // motivo lo escribe el backend, porque solo él sabe si paró por el techo
+        // de gasto, por agotarse la zona o por el tope de páginas.
         <p className="border-warning/40 bg-warning/10 text-foreground mt-3 rounded-md border px-3 py-2 text-sm">
-          La mayoría de estos negocios llegaron sin teléfono ni correo. Necesitan
-          enriquecimiento para servir de algo.
+          {search.error ??
+            "La mayoría de estos negocios llegaron sin teléfono ni correo. Necesitan enriquecimiento para servir de algo."}
         </p>
       )}
 

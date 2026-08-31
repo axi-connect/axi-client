@@ -26,11 +26,15 @@ import {
 } from "@/shared/components/ui/sheet";
 
 import {
+  EMPTY_ADMISSION,
+  hasAdmission,
   SEARCH_RADII,
+  type AdmissionDTO,
   type DiscoveryCategoryDTO,
   type SearchSource,
   type SourceCatalogItemDTO,
 } from "../../domain/search";
+import { AdvancedSearchOptions } from "./AdvancedSearchOptions";
 import {
   geocode,
   startSearch,
@@ -80,10 +84,26 @@ export function StartSearchSheet({
   const [place, setPlace] = useState<LocationSuggestion | null>(null);
   const [radius, setRadius] = useState<number>(initial?.radius_m ?? 3_000);
   const [limit, setLimit] = useState<number>(initial?.limit ?? 50);
+  const [admission, setAdmission] = useState<AdmissionDTO>(
+    initial?.admission ?? EMPTY_ADMISSION,
+  );
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const chosen = usable.find((option) => option.source === source);
   const free = chosen?.free === true;
+  const gated = hasAdmission(admission);
+  const categoryLabel =
+    categories.find((option) => option.id === category)?.label ?? "negocios";
+  /**
+   * ¿Hay un verificador de pago encendido?
+   *
+   * Se deduce de la vitrina: si ninguna fuente disponible cuesta unidades, no
+   * hay proveedor de pago en el panel y nada llegará nunca a «verificado». Es
+   * una aproximación —el verificador es de otra capacidad— pero acierta en el
+   * caso que importa: el tenant que solo tiene las fuentes gratis.
+   */
+  const verifierAvailable = sources.some((option) => option.available && !option.free);
 
   const search = useCallback(async (query: string): Promise<LocationSuggestion[]> => {
     const { items } = await geocode(query);
@@ -109,6 +129,7 @@ export function StartSearchSheet({
         center: { lat: place.lat, lng: place.lng },
         radius_m: radius,
         limit,
+        admission: gated ? admission : undefined,
       });
       showAlert({
         tone: "success",
@@ -210,12 +231,29 @@ export function StartSearchSheet({
             </>
           )}
 
+          <AdvancedSearchOptions
+            value={admission}
+            limit={limit}
+            categoryLabel={categoryLabel}
+            verifierAvailable={verifierAvailable}
+            freeSource={free}
+            open={advancedOpen}
+            onOpenChange={setAdvancedOpen}
+            onChange={setAdmission}
+          />
+
           <div>
+            {/* La etiqueta cambia con los filtros porque el tope cambia de
+                significado: sin ellos cuenta registros —y es un techo de gasto—;
+                con ellos cuenta los que cumplen, y el techo se muda a las
+                avanzadas. Las dos nunca conviven, así que el panel no engorda. */}
             <label className="text-sm font-semibold" htmlFor="search-limit">
-              Cuántos como máximo
+              {gated ? "Cuántos que cumplan" : "Cuántos como máximo"}
             </label>
             <p className="text-muted-foreground text-xs">
-              La búsqueda se detiene aquí. Es tu techo de gasto.
+              {gated
+                ? "La búsqueda sigue hasta reunir esta cantidad."
+                : "La búsqueda se detiene aquí. Es tu techo de gasto."}
             </p>
             <Select value={String(limit)} onValueChange={(value) => setLimit(Number(value))}>
               <SelectTrigger id="search-limit" className="mt-1 w-full">
@@ -247,7 +285,11 @@ export function StartSearchSheet({
             )}
             {free
               ? "Buscar · gratis"
-              : `Buscar · hasta ${limit.toLocaleString("es-CO")} unidades`}
+              : gated
+                ? // Con filtros el tope cuenta admitidos, así que el gasto lo
+                  // manda el techo. Prometer «hasta 25 unidades» sería mentir.
+                  `Buscar · hasta ${(admission.max_records ?? limit).toLocaleString("es-CO")} unidades`
+                : `Buscar · hasta ${limit.toLocaleString("es-CO")} unidades`}
           </Button>
         </div>
       </SheetContent>

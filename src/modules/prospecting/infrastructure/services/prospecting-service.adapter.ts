@@ -16,6 +16,7 @@ import type {
   QualitySummaryDTO,
 } from "../../domain/lead";
 import type {
+  AdmissionDTO,
   DiscoveryCategoryDTO,
   GeocodedPlaceDTO,
   SearchDTO,
@@ -189,6 +190,11 @@ export type StartSearchInput = {
   radius_m?: number;
   /** Obligatorio: no existe «búscame todos». */
   limit: number;
+  /**
+   * Criterios de admisión. CON ellos, `limit` cuenta ADMITIDOS y el gasto lo
+   * manda `admission.max_records`.
+   */
+  admission?: AdmissionDTO;
 };
 
 export function listSearches(): Promise<{ items: SearchDTO[] }> {
