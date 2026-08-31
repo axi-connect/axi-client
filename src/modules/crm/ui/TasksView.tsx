@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Check,
@@ -123,6 +124,7 @@ function whenLine(task: ActivityDTO): string {
 }
 
 function TaskRow({ task, onInspect }: { task: ActivityDTO; onInspect: (task: ActivityDTO) => void }) {
+  const router = useRouter();
   const { showAlert } = useAlert();
   const act = useTasksStore((s) => s.act);
   const runNow = useTasksStore((s) => s.runNow);
@@ -235,10 +237,10 @@ function TaskRow({ task, onInspect }: { task: ActivityDTO; onInspect: (task: Act
               </span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem>
-            <Link href={`/crm/tasks/update/${task.id}`} className="flex items-center gap-2">
+          <DropdownMenuItem onClick={() => router.push(`/crm/tasks/update/${task.id}`)}>
+            <span className="flex items-center gap-2">
               <Pencil className="size-4" /> Editar
-            </Link>
+            </span>
           </DropdownMenuItem>
           {canRunNow(task) && (
             <DropdownMenuItem onClick={() => void launch()}>
@@ -420,7 +422,7 @@ export function TasksView() {
         <TableSkeleton rows={6} showHeader={false} />
       ) : items.length === 0 ? (
         <EmptyState
-          glyph="time"
+          glyph={executor === "agent" ? "ai" : "time"}
           variant="solid"
           title={executor === "agent" ? "Ningún seguimiento programado" : "Nada pendiente por aquí"}
           description={

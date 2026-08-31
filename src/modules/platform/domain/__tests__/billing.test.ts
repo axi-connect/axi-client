@@ -97,8 +97,11 @@ describe("ACCOUNT_STATUS_MAP", () => {
 });
 
 describe("etiquetas de excedentes", () => {
-  it("las 11 métricas del enum están traducidas: nadie debería traducir ai_tokens_input a mano", () => {
-    expect(OVERAGE_METRICS).toHaveLength(11);
+  // El número va a mano A PROPÓSITO: cuando el backend añade una métrica, este
+  // test cae y obliga a escribirle una etiqueta en español. Subió a 13 con las
+  // dos de captación de leads (`lead_discoveries`, `lead_enrichments`).
+  it("las 13 métricas del enum están traducidas: nadie debería traducir ai_tokens_input a mano", () => {
+    expect(OVERAGE_METRICS).toHaveLength(13);
     for (const metric of OVERAGE_METRICS) {
       expect(OVERAGE_METRIC_LABELS[metric]).toBeTruthy();
       expect(OVERAGE_METRIC_LABELS[metric]).not.toContain("_");

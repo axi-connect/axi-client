@@ -150,7 +150,7 @@ export function TaskRunsSheet({
           <TimelineSkeleton rows={3} label="Cargando ejecuciones" />
         ) : runs.length === 0 ? (
           <EmptyState
-            glyph="time"
+            glyph="ai"
             variant="solid"
             title="Todavía no lo ha intentado"
             description="Aquí aparecerá cada intento del agente, con su resultado y su motivo."
