@@ -7,6 +7,8 @@ import type { OffsetQuery, Schemas } from "@/core/api/types";
  */
 
 export type ActivityDTO = Schemas["ActivityDto"];
+export type CreateAgentTaskDTO = Schemas["CreateAgentTaskDto"];
+export type UpdateAgentTaskDTO = Schemas["UpdateAgentTaskDto"];
 export type CreateActivityDTO = Schemas["CreateActivityDto"];
 export type UpdateActivityDTO = Schemas["UpdateActivityDto"];
 export type TaskStatsDTO = Schemas["TaskStatsDto"];
@@ -26,6 +28,12 @@ export type ListTasksParams = OffsetQuery & {
   assignee?: TaskAssigneeFilter;
   status?: TaskStatus;
   due?: TaskDueFilter;
+  /** Quién la ejecuta. Sin él la bandeja mezcla ambos mundos, que es el
+   *  default deliberado: una sola bandeja para el trabajo del equipo. */
+  assignee_type?: "user" | "agent";
+  agent_id?: string;
+  /** Último desenlace del motor: es el filtro de "qué se me está atascando". */
+  last_run_status?: NonNullable<ActivityDTO["last_run_status"]>;
 };
 
 export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
@@ -41,9 +49,29 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   cancelled: "Cancelada",
 };
 
-/** Una tarea abierta con vencimiento en el pasado está vencida. */
-export function isOverdue(task: Pick<ActivityDTO, "task_status" | "due_at">, now: Date = new Date()): boolean {
+/**
+ * Una tarea abierta con vencimiento en el pasado está vencida.
+ *
+ * Una tarea de AGENTE en espera NO cuenta como vencida: el rojo de vencimiento
+ * significa "alguien no hizo algo", y un diferimiento es el motor esperando su
+ * ventana. Pintarlo igual convertiría la operación normal en alarma, que es
+ * justo lo que hace que un tenant apague la automatización.
+ */
+export function isOverdue(
+  task: Pick<
+    ActivityDTO,
+    "task_status" | "due_at" | "kind" | "assignee_type" | "last_run_status"
+  >,
+  now: Date = new Date(),
+): boolean {
   if (task.task_status !== "open" || task.due_at === null) return false;
+  if (task.kind === "task" && task.assignee_type === "agent") {
+    const pendingRun =
+      task.last_run_status === "deferred" ||
+      task.last_run_status === "running" ||
+      task.last_run_status === "scheduled";
+    if (pendingRun) return false;
+  }
   const due = new Date(task.due_at).getTime();
   return Number.isFinite(due) && due < now.getTime();
 }

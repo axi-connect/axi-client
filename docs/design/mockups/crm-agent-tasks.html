@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tareas de agente — mockup Fase 0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+
+<style>
+/* ============================================================================
+   CAPA 1 — PRIMITIVOS DE MARCA (copiados literalmente de src/app/globals.css)
+   Único lugar con valores hex. Este mockup NO inventa paleta.
+   ========================================================================== */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --axi-brand: #e65759;   /* coral — color de acción */
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;  /* acento IA */
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+  --axi-on-color: #ffffff;
+
+  /* CAPA 2 — semánticos derivados */
+  --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft: color-mix(in srgb, var(--border) 50%, transparent);
+  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --accent-foreground: var(--foreground);
+  --input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / .06), 0 16px 48px rgb(0 0 0 / .16);
+
+  --font-body: "Poppins", Helvetica, Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0a0a0a; --foreground: #ededed;
+    --axi-brand: #fb7185; --axi-brand-2: #df4f4f;
+    --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+    --axi-success: #4ade80; --axi-warning: #fbbf24;
+    --axi-destructive: #f87171; --axi-info: #60a5fa;
+    --axi-on-color: #0a0a0a;
+    /* En dark el acento tiene más presencia (42 % vs 14 %) */
+    --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+    --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35);
+    --shadow-overlay: 0 1px 2px rgb(0 0 0 / .5), 0 16px 48px rgb(0 0 0 / .55);
+  }
+}
+:root[data-theme="dark"] {
+  --background: #0a0a0a; --foreground: #ededed;
+  --axi-brand: #fb7185; --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24;
+  --axi-destructive: #f87171; --axi-info: #60a5fa;
+  --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / .5), 0 16px 48px rgb(0 0 0 / .55);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--background); color: var(--foreground);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+/* Nexa es local del proyecto y no se puede cargar aquí: los títulos caen a
+   Poppins semibold con tracking cerrado. */
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; border-radius: 6px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ───────────────────────── Chrome DEL MOCKUP (no del producto) ──────────── */
+.mk-bar {
+  position: sticky; top: 0; z-index: 60;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px;
+  background: color-mix(in srgb, var(--foreground) 92%, var(--background));
+  color: var(--background);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 80%, var(--background));
+}
+.mk-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.mk-tag svg, .mk-theme svg { width: 14px; height: 14px; }
+.mk-views { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.mk-view, .mk-theme {
+  border: 1px solid color-mix(in srgb, var(--background) 26%, transparent);
+  background: transparent; color: inherit; padding: 5px 12px; border-radius: 999px;
+  font-size: 12.5px; cursor: pointer; transition: background .15s, border-color .15s;
+}
+.mk-view:hover, .mk-theme:hover { background: color-mix(in srgb, var(--background) 12%, transparent); }
+.mk-view[aria-pressed="true"] { background: var(--background); color: var(--foreground); border-color: var(--background); font-weight: 500; }
+.mk-theme { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ───────────────────────── Shell del CRM (crm/layout.tsx) ──────────────── */
+.crm-header { flex-shrink: 0; border-bottom: 1px solid var(--border); padding: 10px 16px; }
+@media (min-width: 768px) { .crm-header { padding: 10px 24px; } }
+.crm-header-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.crm-title { font-size: 18px; font-weight: 700; }
+
+/* La pastilla única: segmentedListVariants + segmentedItemVariants */
+.seg { position: relative; display: flex; width: fit-content; max-width: 100%; align-items: center; gap: 2px; border-radius: 999px; overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg[data-size="default"] { padding: 4px; }
+.seg[data-size="sm"] { padding: 2px; }
+.seg[data-surface="raised"] { border: 1px solid var(--border); background: var(--background); box-shadow: var(--shadow-float); }
+.seg[data-surface="inline"] { border: 1px solid var(--border); background: color-mix(in srgb, var(--secondary) 60%, transparent); }
+.seg-pill {
+  position: absolute; z-index: 0; pointer-events: none;
+  background: var(--accent); border-radius: 999px; opacity: 0;
+  transition: transform .22s cubic-bezier(.32,.72,0,1), width .22s cubic-bezier(.32,.72,0,1), opacity .15s;
+}
+.seg-list { display: flex; align-items: center; gap: 2px; list-style: none; margin: 0; padding: 0; }
+.seg-item {
+  position: relative; z-index: 1; display: inline-flex; flex-shrink: 0;
+  align-items: center; justify-content: center; gap: 8px;
+  border: 0; background: transparent; cursor: pointer; border-radius: 999px;
+  font-weight: 500; white-space: nowrap; text-decoration: none;
+  color: var(--muted-foreground); transition: color .2s;
+}
+.seg-item:hover { color: var(--foreground); }
+.seg[data-size="default"] .seg-item { height: 36px; padding: 0 14px; font-size: 14px; }
+.seg[data-size="sm"] .seg-item { height: 28px; padding: 0 12px; font-size: 12px; }
+.seg[data-size="default"] .seg-item svg { width: 16px; height: 16px; }
+.seg[data-size="sm"] .seg-item svg { width: 14px; height: 14px; }
+.seg-item svg { flex-shrink: 0; transition: color .2s; }
+/* ACTIVO = bg-accent + text-accent-foreground + icono text-brand.
+   Nunca coral sólido: blanco sobre coral da ~3.1:1 y no pasa AA a 12–13 px. */
+.seg-item[aria-current="page"], .seg-item[data-active="true"] { color: var(--accent-foreground); }
+.seg-item[aria-current="page"] svg, .seg-item[data-active="true"] svg { color: var(--axi-brand); }
+.seg-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--axi-destructive); color: var(--axi-on-color); font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ───────────────────────── Superficie de la vista ──────────────────────── */
+.view-wrap { max-width: 1280px; margin: 0 auto; padding: 16px; }
+@media (min-width: 768px) { .view-wrap { padding: 24px; } }
+/* TasksView es DOCUMENTAL: mx-auto max-w-4xl, sin data-app-view */
+.tasks { max-width: 896px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.page-head h2 { font-size: 20px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: transparent; cursor: pointer; border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--muted-foreground); transition: background .15s, border-color .15s, color .15s; }
+.chip:hover { background: var(--secondary); color: var(--foreground); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: var(--accent-foreground); }
+.chip b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.chip.warn { border-color: color-mix(in srgb, var(--axi-warning) 40%, transparent); background: color-mix(in srgb, var(--axi-warning) 8%, transparent); color: var(--axi-warning); }
+.chip.ai svg { color: var(--axi-violet); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; padding: 0 16px; height: 36px; font-size: 14px; font-weight: 500; transition: filter .15s, background .15s, border-color .15s; }
+.btn svg { width: 16px; height: 16px; }
+.btn-primary { background: var(--axi-brand); color: var(--axi-on-color); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-outline { border-color: var(--input); background: transparent; }
+.btn-outline:hover { background: var(--secondary); }
+.btn-ghost { background: transparent; }
+.btn-ghost:hover { background: var(--secondary); }
+.btn-ghost.danger { color: var(--axi-destructive); }
+.btn-ghost.danger:hover { background: color-mix(in srgb, var(--axi-destructive) 10%, transparent); }
+.btn-sm { height: 30px; padding: 0 12px; font-size: 12.5px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.filters { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.filters-right { display: flex; align-items: center; gap: 8px; }
+.filters-label { font-size: 12px; color: var(--muted-foreground); }
+
+/* ───────────────────────── Lista de tareas ─────────────────────────────── */
+/* Se mantiene la lista custom (ul/li), no DataTable: la fila lleva objetivo en
+   lenguaje natural, razón de diferido y preview del mensaje enviado. */
+.list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); overflow: hidden; }
+.row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; }
+.row + .row { border-top: 1px solid var(--border); }
+.row-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.row-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; }
+.row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); }
+.row-meta .sep { opacity: .5; }
+.row-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.done .row-title span.txt { text-decoration: line-through; color: var(--muted-foreground); }
+.overdue { color: var(--axi-destructive); font-weight: 500; }
+
+/* Checkbox: SOLO en tareas humanas. En las de agente se QUITA (no se
+   deshabilita en silencio): las cierra el agente, no la persona. */
+.cbox { flex-shrink: 0; margin-top: 2px; width: 18px; height: 18px; border-radius: 6px; border: 1px solid var(--input); background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.cbox svg { width: 12px; height: 12px; }
+.cbox[aria-checked="true"] { background: var(--axi-success); border-color: var(--axi-success); color: var(--axi-on-color); }
+/* Icono de estado de una tarea de agente: ocupa el hueco del checkbox y NO es
+   interactivo (aria-hidden + el texto del badge es la fuente accesible). */
+.state-slot { flex-shrink: 0; width: 18px; margin-top: 2px; display: inline-flex; justify-content: center; }
+.state-slot svg { width: 15px; height: 15px; color: var(--muted-foreground); }
+
+/* Chip del EJECUTOR. El violeta va en icono y texto, nunca en el fondo:
+   el techo de tinte del sistema es 14 % y ya tiene sus dos excepciones. */
+.who { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); flex-shrink: 0; }
+.who.agent { color: var(--axi-violet); font-weight: 500; }
+.who.agent svg { color: var(--axi-violet); }
+.who svg { width: 14px; height: 14px; }
+.avatar { width: 20px; height: 20px; border-radius: 999px; flex-shrink: 0; background: var(--secondary); color: var(--muted-foreground); display: inline-flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 600; }
+
+/* StatusBadge — recetas literales de TONE_CLASSES */
+.badge { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: fit-content; white-space: nowrap; flex-shrink: 0; border: 1px solid; border-radius: 999px; padding: 1px 8px; font-size: 12px; font-weight: 500; }
+.badge svg { width: 12px; height: 12px; }
+.badge.success { border-color: color-mix(in srgb, var(--axi-success) 40%, transparent); background: color-mix(in srgb, var(--axi-success) 10%, transparent); color: var(--axi-success); }
+.badge.destructive { border-color: color-mix(in srgb, var(--axi-destructive) 40%, transparent); background: color-mix(in srgb, var(--axi-destructive) 10%, transparent); color: var(--axi-destructive); }
+.badge.info { border-color: color-mix(in srgb, var(--axi-info) 40%, transparent); background: color-mix(in srgb, var(--axi-info) 10%, transparent); color: var(--axi-info); }
+.badge.neutral { border-color: var(--border); background: var(--axi-muted); color: var(--muted-foreground); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.quote { color: var(--muted-foreground); }
+.link { color: var(--axi-brand); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.icon-btn { border: 0; background: transparent; cursor: pointer; border-radius: 8px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: var(--muted-foreground); }
+.icon-btn:hover { background: var(--secondary); color: var(--foreground); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+.list-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.list-foot span { font-size: 12.5px; color: var(--muted-foreground); }
+
+/* EmptyState */
+.empty { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 40px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.empty svg { width: 28px; height: 28px; color: var(--axi-violet); }
+.empty h4 { font-size: 15px; }
+.empty p { font-size: 13px; color: var(--muted-foreground); max-width: 46ch; }
+
+/* ───────────────────────── Modal (formulario) ──────────────────────────── */
+.scrim { position: fixed; inset: 0; background: color-mix(in srgb, #000 45%, transparent); z-index: 50; }
+.modal {
+  position: relative; z-index: 51; max-width: 672px; margin: 32px auto; padding: 20px;
+  border: 1px solid var(--border); border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4); box-shadow: var(--shadow-overlay);
+}
+@supports not (backdrop-filter: blur(1px)) { .modal { background: var(--background); } }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.modal-head h3 { font-size: 17px; }
+.modal-sub { font-size: 12.5px; color: var(--muted-foreground); margin-top: 2px; }
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px; }
+@media (min-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+.field label { font-size: 12.5px; font-weight: 500; }
+.field .req { color: var(--axi-brand); }
+.ctl { width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--input); border-radius: var(--radius-md); background: var(--background); color: var(--foreground); font: inherit; font-size: 13.5px; }
+textarea.ctl { height: auto; min-height: 84px; padding: 10px 12px; resize: vertical; line-height: 1.55; }
+.hint { font-size: 11.5px; color: var(--muted-foreground); }
+.counter { font-size: 11.5px; color: var(--muted-foreground); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Bloque de ayuda del objetivo. Fondo NEUTRO (bg-secondary) con regla y icono
+   violeta: comunica "IA" sin teñir la superficie (techo de tinte 14 %). */
+.aid { grid-column: 1 / -1; display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--secondary); border-left: 2px solid var(--axi-violet); }
+.aid > svg { width: 16px; height: 16px; color: var(--axi-violet); flex-shrink: 0; margin-top: 2px; }
+.aid p { font-size: 12.5px; color: var(--muted-foreground); }
+.aid strong { color: var(--foreground); font-weight: 600; }
+.examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ex { border: 1px solid var(--border); background: var(--background); cursor: pointer; border-radius: 999px; padding: 3px 10px; font-size: 11.5px; color: var(--muted-foreground); }
+.ex:hover { border-color: var(--axi-violet); color: var(--foreground); }
+
+.notice { grid-column: 1 / -1; display: flex; gap: 10px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--axi-info) 40%, transparent); background: color-mix(in srgb, var(--axi-info) 8%, transparent); border-radius: var(--radius-md); font-size: 12.5px; color: var(--axi-info); }
+.notice svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* ───────────────────────── Rail de ejecución (DetailSheet) ─────────────── */
+.sheet { max-width: 480px; margin: 0 auto; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--background); box-shadow: var(--shadow-overlay); overflow: hidden; }
+.sheet-head { padding: 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.sheet-head-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheet-head h3 { font-size: 16px; }
+.sheet-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.obj { padding: 12px 14px; border-radius: var(--radius-md); background: var(--secondary); border-left: 2px solid var(--axi-violet); }
+.obj-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--axi-violet); display: flex; align-items: center; gap: 6px; }
+.obj-label svg { width: 13px; height: 13px; }
+.obj p { margin-top: 6px; font-size: 13.5px; }
+.obj .tail { margin-top: 6px; font-size: 11.5px; color: var(--muted-foreground); }
+
+/* FieldList — dl etiqueta→valor */
+dl.fields { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; }
+dl.fields dt { color: var(--muted-foreground); font-size: 12.5px; }
+dl.fields dd { margin: 0; display: flex; align-items: center; gap: 6px; min-width: 0; }
+
+.alert-info { display: flex; gap: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--axi-info) 40%, transparent); background: color-mix(in srgb, var(--axi-info) 8%, transparent); border-radius: var(--radius-md); }
+.alert-info svg { width: 16px; height: 16px; color: var(--axi-info); flex-shrink: 0; margin-top: 1px; }
+.alert-info b { display: block; font-size: 13px; color: var(--axi-info); margin-bottom: 2px; }
+.alert-info p { font-size: 12.5px; color: var(--muted-foreground); }
+
+.section-label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); }
+
+/* Timeline — línea conectora + nodo tonal */
+ol.tl { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
+ol.tl li { position: relative; padding: 0 0 16px 30px; }
+ol.tl li:last-child { padding-bottom: 0; }
+ol.tl li::before { content: ""; position: absolute; left: 9px; top: 20px; bottom: 0; width: 1px; background: var(--border); }
+ol.tl li:last-child::before { display: none; }
+.tl-node { position: absolute; left: 0; top: 2px; width: 19px; height: 19px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid; }
+.tl-node svg { width: 11px; height: 11px; }
+.tl-node.success { border-color: color-mix(in srgb, var(--axi-success) 40%, transparent); background: color-mix(in srgb, var(--axi-success) 12%, transparent); color: var(--axi-success); }
+.tl-node.info { border-color: color-mix(in srgb, var(--axi-info) 40%, transparent); background: color-mix(in srgb, var(--axi-info) 12%, transparent); color: var(--axi-info); }
+.tl-node.destructive { border-color: color-mix(in srgb, var(--axi-destructive) 40%, transparent); background: color-mix(in srgb, var(--axi-destructive) 12%, transparent); color: var(--axi-destructive); }
+.tl-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+.tl-desc { font-size: 12.5px; color: var(--muted-foreground); margin-top: 3px; }
+.tl-msg { margin-top: 6px; padding: 8px 10px; font-size: 12.5px; border-radius: var(--radius-sm); background: var(--secondary); color: var(--foreground); }
+.tl-meta { margin-top: 5px; font-size: 12px; }
+.ai-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--axi-violet); }
+.ai-badge svg { width: 11px; height: 11px; }
+.sheet-foot { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ───────────────────────── Notas de diseño (del mockup) ────────────────── */
+.notes { max-width: 896px; margin: 28px auto 0; border: 1px solid var(--border-soft); border-radius: var(--radius-lg); background: var(--secondary); }
+.notes > summary { cursor: pointer; padding: 12px 16px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; list-style: none; }
+.notes > summary::-webkit-details-marker { display: none; }
+.notes > summary svg { width: 14px; height: 14px; color: var(--muted-foreground); }
+.notes-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.note { display: flex; gap: 10px; font-size: 12.5px; color: var(--muted-foreground); }
+.note b { color: var(--foreground); font-weight: 600; }
+.note code { font-family: var(--font-mono); font-size: 11.5px; background: var(--background); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; }
+.note-k { flex-shrink: 0; width: 74px; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--axi-brand); padding-top: 2px; }
+
+.hidden { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-pill, .btn, .chip, .seg-item { transition: none !important; }
+  .spin { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<svg class="hidden" aria-hidden="true">
+  <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-kanban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 7v7M12 7v4M16 7v9"/></symbol>
+  <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-loader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.66a8 8 0 0 1 10 0"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/></symbol>
+</svg>
+
+<!-- ══════════════════ Chrome del mockup (no es parte del producto) ═══════ -->
+<div class="mk-bar">
+  <span class="mk-tag"><svg><use href="#i-sparkles"/></svg> Mockup · Fase 0 · CRM Tareas de agente</span>
+  <div class="mk-views" role="group" aria-label="Vistas del mockup">
+    <button class="mk-view" data-view="inbox" aria-pressed="true">Bandeja</button>
+    <button class="mk-view" data-view="form" aria-pressed="false">Nueva tarea</button>
+    <button class="mk-view" data-view="rail" aria-pressed="false">Ejecución</button>
+  </div>
+  <button class="mk-theme" id="theme-btn" aria-label="Cambiar tema">
+    <svg id="theme-icon"><use href="#i-moon"/></svg><span id="theme-txt">Dark</span>
+  </button>
+</div>
+
+<!-- ══════════════════ Cabecera del CRM (crm/ui/CrmNav.tsx) ══════════════ -->
+<header class="crm-header">
+  <div class="crm-header-row">
+    <h1 class="crm-title">CRM</h1>
+    <nav class="seg" data-size="default" data-surface="raised" aria-label="Secciones del CRM">
+      <span class="seg-pill" data-pill></span>
+      <ul class="seg-list">
+        <li><a class="seg-item" href="#"><svg><use href="#i-users"/></svg>Contactos</a></li>
+        <li><a class="seg-item" href="#"><svg><use href="#i-kanban"/></svg>Pipeline</a></li>
+        <li><a class="seg-item" href="#" aria-current="page"><svg><use href="#i-listchecks"/></svg>Tareas <span class="seg-count tnum">2</span></a></li>
+        <li><a class="seg-item" href="#"><svg><use href="#i-settings"/></svg>Configuración</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- ══════════════════ VISTA 1 — Bandeja mixta ═══════════════════════════ -->
+<main class="view-wrap" id="view-inbox">
+  <div class="tasks">
+    <div class="page-head">
+      <div>
+        <h2>Tareas</h2>
+        <div class="chips" role="group" aria-label="Resumen y filtros rápidos">
+          <button class="chip" aria-pressed="false">Abiertas <b>6</b></button>
+          <button class="chip warn" aria-pressed="false"><svg width="12" height="12"><use href="#i-alert"/></svg>Vencidas <b>2</b></button>
+          <button class="chip" aria-pressed="false">Para hoy <b>1</b></button>
+          <button class="chip" aria-pressed="false">Sin asignar <b>3</b></button>
+          <button class="chip ai" aria-pressed="false"><svg width="12" height="12"><use href="#i-sparkles"/></svg>Programadas <b>4</b></button>
+          <button class="chip" aria-pressed="false"><svg width="12" height="12"><use href="#i-hourglass"/></svg>En espera <b>1</b></button>
+        </div>
+      </div>
+      <button class="btn btn-primary" data-goto="form"><svg><use href="#i-plus"/></svg>Nueva tarea</button>
+    </div>
+
+    <div class="filters">
+      <div class="seg" data-size="sm" data-surface="inline" role="radiogroup" aria-label="Filtrar por quién la hace">
+        <span class="seg-pill" data-pill></span>
+        <ul class="seg-list">
+          <li><button class="seg-item" role="radio" data-active="true" data-filter="all" aria-checked="true">Todas</button></li>
+          <li><button class="seg-item" role="radio" data-filter="mine" aria-checked="false"><svg><use href="#i-user"/></svg>Mis tareas</button></li>
+          <li><button class="seg-item" role="radio" data-filter="agent" aria-checked="false"><svg><use href="#i-sparkles"/></svg>Agentes</button></li>
+          <li><button class="seg-item" role="radio" data-filter="unassigned" aria-checked="false">Sin asignar</button></li>
+        </ul>
+      </div>
+      <div class="filters-right">
+        <span class="filters-label">Vence:</span>
+        <div class="seg" data-size="sm" data-surface="inline" role="radiogroup" aria-label="Filtrar por vencimiento">
+          <span class="seg-pill" data-pill></span>
+          <ul class="seg-list">
+            <li><button class="seg-item" role="radio" data-active="true" aria-checked="true">Todas</button></li>
+            <li><button class="seg-item" role="radio" aria-checked="false">Vencidas</button></li>
+            <li><button class="seg-item" role="radio" aria-checked="false">Hoy</button></li>
+            <li><button class="seg-item" role="radio" aria-checked="false">Semana</button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <ul class="list" id="task-list">
+      <li class="row" data-kind="mine">
+        <button class="cbox" role="checkbox" aria-checked="false" aria-label="Completar «Llamar para confirmar la cotización»"></button>
+        <div class="row-main">
+          <div class="row-title"><span class="txt">Llamar para confirmar la cotización</span></div>
+          <div class="row-meta"><span>Carlos Comprador</span><span class="sep">·</span><span class="overdue">venció hace 1 h</span></div>
+        </div>
+        <span class="who"><span class="avatar">LM</span>Laura M.</span>
+        <div class="row-actions"><button class="icon-btn" aria-label="Más acciones"><svg><use href="#i-dots"/></svg></button></div>
+      </li>
+
+      <li class="row" data-kind="agent">
+        <span class="state-slot"><svg aria-hidden="true"><use href="#i-loader"/></svg></span>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="txt">Preguntar si revisó la cotización</span>
+            <span class="badge info" role="status"><svg class="spin"><use href="#i-loader"/></svg>Enviando</span>
+          </div>
+          <div class="row-meta"><span>Hotel Luz</span><span class="sep">·</span><span>hoy 10:00</span><span class="sep">·</span><span>intento 1</span></div>
+        </div>
+        <span class="who agent"><svg><use href="#i-sparkles"/></svg>Aria</span>
+        <div class="row-actions"><button class="icon-btn" aria-label="Más acciones"><svg><use href="#i-dots"/></svg></button></div>
+      </li>
+
+      <li class="row" data-kind="agent">
+        <span class="state-slot"><svg aria-hidden="true"><use href="#i-hourglass"/></svg></span>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="txt">Recordar la cita de mañana</span>
+            <span class="badge info">En espera</span>
+          </div>
+          <div class="row-meta"><span>Diana Restrepo</span><span class="sep">·</span><span>Fuera de la ventana de 24 h de WhatsApp</span><span class="sep">·</span><span>reintenta hoy 18:00</span></div>
+        </div>
+        <span class="who agent"><svg><use href="#i-sparkles"/></svg>Aria</span>
+        <div class="row-actions"><button class="icon-btn" data-goto="rail" aria-label="Ver ejecución"><svg><use href="#i-dots"/></svg></button></div>
+      </li>
+
+      <li class="row" data-kind="agent">
+        <span class="state-slot"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="txt">Ofrecer recompra del combo</span>
+            <span class="badge success">Enviada 9:02</span>
+          </div>
+          <div class="row-meta"><span>Ana Gómez</span><span class="sep">·</span><span class="quote">«Hola Ana, pasó un mes desde tu último pedido…»</span></div>
+          <div class="row-meta"><a class="link" href="#">Ver conversación en el inbox</a></div>
+        </div>
+        <span class="who agent"><svg><use href="#i-sparkles"/></svg>Vera</span>
+        <div class="row-actions"><button class="icon-btn" aria-label="Más acciones"><svg><use href="#i-dots"/></svg></button></div>
+      </li>
+
+      <li class="row" data-kind="agent">
+        <span class="state-slot"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="txt">Seguimiento del pedido #14</span>
+            <span class="badge destructive">No se pudo enviar</span>
+          </div>
+          <div class="row-meta"><span>Pedro Villa</span><span class="sep">·</span><span>El contacto no tiene ningún canal activo</span><span class="sep">·</span><span>2 intentos</span></div>
+        </div>
+        <span class="who agent"><svg><use href="#i-sparkles"/></svg>Aria</span>
+        <div class="row-actions">
+          <button class="btn btn-outline btn-sm"><svg><use href="#i-play"/></svg>Reintentar</button>
+          <button class="icon-btn" aria-label="Más acciones"><svg><use href="#i-dots"/></svg></button>
+        </div>
+      </li>
+
+      <li class="row" data-kind="unassigned">
+        <button class="cbox" role="checkbox" aria-checked="false" aria-label="Completar «Enviar propuesta de 2 sedes»"></button>
+        <div class="row-main">
+          <div class="row-title"><span class="txt">Enviar propuesta de 2 sedes</span></div>
+          <div class="row-meta"><span>Hotel Luz</span><span class="sep">·</span><span>vence mañana</span></div>
+        </div>
+        <span class="who">Sin asignar</span>
+        <div class="row-actions"><button class="icon-btn" aria-label="Más acciones"><svg><use href="#i-dots"/></svg></button></div>
+      </li>
+
+      <li class="row done" data-kind="mine">
+        <button class="cbox" role="checkbox" aria-checked="true" aria-label="Reabrir «Enviar catálogo»"><svg><use href="#i-check"/></svg></button>
+        <div class="row-main">
+          <div class="row-title"><span class="txt">Enviar catálogo</span></div>
+          <div class="row-meta"><span>Diana Restrepo</span><span class="sep">·</span><span>completada hoy</span></div>
+        </div>
+        <span class="who"><span class="avatar">LM</span>Laura M.</span>
+        <div class="row-actions"><button class="icon-btn" aria-label="Más acciones"><svg><use href="#i-dots"/></svg></button></div>
+      </li>
+    </ul>
+
+    <div class="empty hidden" id="empty-agent">
+      <svg><use href="#i-sparkles"/></svg>
+      <h4>Todavía no delegas nada a tus agentes</h4>
+      <p>Un agente puede escribirle a un cliente por ti: tú dices el objetivo, él redacta, envía y sigue la conversación.</p>
+      <div class="row-actions"><button class="btn btn-primary" data-goto="form">Programar la primera</button></div>
+    </div>
+
+    <div class="list-foot">
+      <span class="tnum">Página 1 de 3 · 62 tareas</span>
+      <div class="row-actions">
+        <button class="btn btn-outline btn-sm" disabled>Anterior</button>
+        <button class="btn btn-outline btn-sm">Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <details class="notes">
+    <summary><svg><use href="#i-chevron"/></svg>Notas de diseño — bandeja</summary>
+    <div class="notes-body">
+      <div class="note"><span class="note-k">Ejecutor</span><p>El chip violeta con nombre es <b>quién ejecuta</b>. El violeta va en icono y texto, nunca en el fondo: el techo de tinte del sistema es 14 % y ya tiene sus dos excepciones declaradas (<code>.channel-surface</code>, <code>.axel-field</code>).</p></div>
+      <div class="note"><span class="note-k">Diferida</span><p>«En espera» usa el tono <b>info</b>, no warning ni destructive. Un tenant que vea rojo cada vez que WhatsApp cierra la ventana de 24 h desactiva la automatización. La fila dice la razón <em>y</em> qué pasa ahora.</p></div>
+      <div class="note"><span class="note-k">Checkbox</span><p>Las tareas de agente <b>no tienen checkbox</b>: se quita, no se deshabilita en silencio. Las cierra el agente. En su hueco va el icono de estado, <code>aria-hidden</code>, y el texto del badge es la fuente accesible.</p></div>
+      <div class="note"><span class="note-k">Ejecutando</span><p>El spinner vive <b>dentro del badge</b> (<code>StatusBadge transient</code>), no como pulso en la fila: nada se anima en bucle en el workspace, y la única excepción declarada es la aurora de Axel.</p></div>
+      <div class="note"><span class="note-k">Pastilla</span><p>Los filtros son <code>SegmentedControl</code> (eligen sin panel), la barra de sección es <code>NavTabs</code> (cambia de ruta). Activo = <code>bg-accent</code> + icono <code>text-brand</code>: coral sólido daría ~3.1:1 y no pasa AA a 12–13 px.</p></div>
+      <div class="note"><span class="note-k">Lista</span><p>Se mantiene <code>ul/li</code> y no se migra a <code>DataTable</code>: la fila lleva objetivo en lenguaje natural, razón de diferido y preview del mensaje real — y <code>DataTable</code> oculta columnas por ancho, empezando justo por esas.</p></div>
+    </div>
+  </details>
+</main>
+
+<!-- ══════════════════ VISTA 2 — Formulario ramificado ═══════════════════ -->
+<div id="view-form" class="hidden">
+  <div class="scrim"></div>
+  <div class="view-wrap">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="form-title">
+      <div class="modal-head">
+        <div>
+          <h3 id="form-title">Nueva tarea</h3>
+          <p class="modal-sub">La hace alguien de tu equipo, o la ejecuta un agente de IA por ti.</p>
+        </div>
+        <button class="icon-btn" data-goto="inbox" aria-label="Cerrar"><svg><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="form-grid">
+        <div class="field wide">
+          <label>¿Quién la hace? <span class="req">*</span></label>
+          <div class="seg" data-size="default" data-surface="inline" role="radiogroup" aria-label="Quién hace la tarea">
+            <span class="seg-pill" data-pill></span>
+            <ul class="seg-list">
+              <li><button class="seg-item" role="radio" data-branch="user" data-active="true" aria-checked="true"><svg><use href="#i-user"/></svg>Una persona</button></li>
+              <li><button class="seg-item" role="radio" data-branch="agent" aria-checked="false"><svg><use href="#i-sparkles"/></svg>Un agente de IA</button></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Rama PERSONA: es exactamente el formulario de hoy -->
+        <div class="field branch-user">
+          <label for="f-kind">Tipo</label>
+          <select class="ctl" id="f-kind"><option>Tarea</option><option>Nota</option><option>Llamada</option><option>Reunión</option></select>
+        </div>
+        <div class="field branch-user">
+          <label for="f-assignee">Asignada a</label>
+          <select class="ctl" id="f-assignee"><option>Sin asignar</option><option selected>Laura Martínez</option><option>Andrés Peña</option></select>
+        </div>
+        <div class="field wide branch-user">
+          <label for="f-title">Título <span class="req">*</span></label>
+          <input class="ctl" id="f-title" value="Llamar para confirmar la cotización">
+        </div>
+        <div class="field wide branch-user">
+          <label for="f-body">Detalle</label>
+          <textarea class="ctl" id="f-body" placeholder="Contexto para quien la haga (opcional)"></textarea>
+        </div>
+        <div class="field wide branch-user">
+          <label for="f-due">Vence <span class="req">*</span></label>
+          <input class="ctl" id="f-due" type="date" value="2026-09-01">
+        </div>
+
+        <!-- Rama AGENTE -->
+        <div class="field branch-agent hidden">
+          <label for="f-contact">Contacto <span class="req">*</span></label>
+          <input class="ctl" id="f-contact" value="Carlos Comprador">
+        </div>
+        <div class="field branch-agent hidden">
+          <label for="f-agent">Agente <span class="req">*</span></label>
+          <select class="ctl" id="f-agent"><option selected>Aria — Ventas</option><option>Vera — Postventa</option></select>
+          <span class="hint">Solo agentes activos.</span>
+        </div>
+        <div class="field wide branch-agent hidden">
+          <label for="f-obj">Objetivo <span class="req">*</span></label>
+          <textarea class="ctl" id="f-obj" maxlength="500" placeholder="Qué quieres lograr con este cliente">Preguntarle si ya revisó la cotización del plan anual y resolver sus dudas de precio</textarea>
+          <div class="counter"><span id="obj-count">0</span>/500</div>
+        </div>
+        <div class="aid branch-agent hidden">
+          <svg><use href="#i-sparkles"/></svg>
+          <div>
+            <p>Escribe <strong>qué quieres lograr</strong>, no el mensaje exacto. Aria lo redacta con su tono, lo envía y sigue la conversación si el cliente responde.</p>
+            <div class="examples">
+              <button class="ex" type="button">Confirmar la cita de mañana</button>
+              <button class="ex" type="button">Preguntar por la cotización</button>
+              <button class="ex" type="button">Ofrecer recompra a los 30 días</button>
+              <button class="ex" type="button">Pedir una reseña del pedido</button>
+            </div>
+          </div>
+        </div>
+        <div class="field branch-agent hidden">
+          <label for="f-date">Enviar el <span class="req">*</span></label>
+          <input class="ctl" id="f-date" type="date" value="2026-09-01">
+        </div>
+        <div class="field branch-agent hidden">
+          <label for="f-time">Hora <span class="req">*</span></label>
+          <input class="ctl" id="f-time" type="time" value="10:00">
+        </div>
+        <div class="notice branch-agent hidden">
+          <svg><use href="#i-info"/></svg>
+          <p>Si a esa hora han pasado más de 24 h desde el último mensaje del cliente, la tarea queda en espera y se envía en cuanto se pueda. No se pierde.</p>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-outline" data-goto="inbox">Cancelar</button>
+        <button class="btn btn-primary" id="submit-btn">Guardar tarea</button>
+      </div>
+    </div>
+  </div>
+
+  <details class="notes">
+    <summary><svg><use href="#i-chevron"/></svg>Notas de diseño — formulario</summary>
+    <div class="notes-body">
+      <div class="note"><span class="note-k">Un config</span><p><code>activity.config.tsx</code> <b>no se duplica</b>: los campos nuevos usan <code>isVisible</code> sobre <code>assignee_type</code>. Con «Una persona» el modal es exactamente el de hoy.</p></div>
+      <div class="note"><span class="note-k">Objetivo</span><p>Es el campo protagonista y el que gestiona la expectativa. Sin ese bloque de ayuda, el primer ticket de soporte será «no envió lo que escribí». Los ejemplos rellenan el textarea de un clic.</p></div>
+      <div class="note"><span class="note-k">Excluyente</span><p><code>toCreateActivityDTO()</code> manda <code>assigned_agent_id</code> <b>o</b> <code>assigned_user_id</code>, nunca ambos: el CHECK de la migración devolvería un 422 críptico.</p></div>
+      <div class="note"><span class="note-k">Select</span><p>El selector de asignatario de hoy es un <code>&lt;select&gt;</code> nativo con clases a mano; el de agente usa el <code>Select</code> del sistema. Es una desviación deliberada <b>al alza</b>, y queda anotada.</p></div>
+      <div class="note"><span class="note-k">Fuera</span><p>«Repetir» (recurrencia RRULE) <b>no está</b>: es v2. El mockup no dibuja lo que la v1 no va a construir.</p></div>
+    </div>
+  </details>
+</div>
+
+<!-- ══════════════════ VISTA 3 — Rail de ejecución ═══════════════════════ -->
+<div id="view-rail" class="hidden">
+  <div class="view-wrap">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rail-title">
+      <div class="sheet-head">
+        <div class="sheet-head-top">
+          <span class="who agent"><svg><use href="#i-sparkles"/></svg>Aria</span>
+          <div class="row-actions">
+            <span class="badge info">En espera</span>
+            <button class="icon-btn" data-goto="inbox" aria-label="Cerrar"><svg><use href="#i-x"/></svg></button>
+          </div>
+        </div>
+        <h3 id="rail-title">Recordar la cita de mañana</h3>
+      </div>
+
+      <div class="sheet-body">
+        <div class="obj">
+          <span class="obj-label"><svg><use href="#i-sparkles"/></svg>Objetivo</span>
+          <p>«Recordarle la cita de mañana a las 3 p. m., confirmar que puede asistir y ofrecer reprogramar si no.»</p>
+          <p class="tail">El agente decide cómo decirlo.</p>
+        </div>
+
+        <dl class="fields">
+          <dt>Contacto</dt><dd><span class="avatar">DR</span>Diana Restrepo <a class="link" href="#">→</a></dd>
+          <dt>Agente</dt><dd><span class="who agent"><svg><use href="#i-sparkles"/></svg>Aria — Ventas</span></dd>
+          <dt>Programada</dt><dd class="tnum">1 sep 2026, 10:00</dd>
+          <dt>Origen</dt><dd>Creada a mano por Laura M.</dd>
+          <dt>Intentos</dt><dd class="tnum">2 de 8 · expira en 68 h</dd>
+        </dl>
+
+        <div class="alert-info">
+          <svg><use href="#i-hourglass"/></svg>
+          <div>
+            <b>Fuera de la ventana de 24 h de WhatsApp</b>
+            <p>Reintenta hoy a las 18:00, o en cuanto Diana escriba. Esto es normal: no se perdió nada.</p>
+          </div>
+        </div>
+
+        <div>
+          <span class="section-label">Intentos</span>
+          <ol class="tl">
+            <li>
+              <span class="tl-node info"><svg><use href="#i-hourglass"/></svg></span>
+              <div class="tl-title">En espera</div>
+              <p class="tl-desc">hoy 10:00 · Fuera de la ventana de 24 h de WhatsApp. Sin gastar tokens: el turno no se ejecutó.</p>
+            </li>
+            <li>
+              <span class="tl-node success"><svg><use href="#i-check"/></svg></span>
+              <div class="tl-title">Enviado <span class="ai-badge"><svg><use href="#i-sparkles"/></svg>IA</span></div>
+              <p class="tl-desc">ayer 09:58 · por WhatsApp</p>
+              <p class="tl-msg">«Hola Diana, te escribo para confirmar tu cita de mañana a las 3 p. m. ¿Te sirve esa hora o la movemos?»</p>
+              <p class="tl-meta"><a class="link" href="#">Ver conversación en el inbox</a></p>
+            </li>
+            <li>
+              <span class="tl-node destructive"><svg><use href="#i-alert"/></svg></span>
+              <div class="tl-title">No se pudo enviar</div>
+              <p class="tl-desc">28 ago 10:00 · El canal de WhatsApp estaba desconectado</p>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="sheet-foot">
+        <button class="btn btn-primary"><svg><use href="#i-play"/></svg>Ejecutar ahora</button>
+        <button class="btn btn-outline"><svg><use href="#i-pencil"/></svg>Editar</button>
+        <button class="btn btn-ghost danger" style="margin-left:auto">Cancelar tarea</button>
+      </div>
+    </div>
+  </div>
+
+  <details class="notes">
+    <summary><svg><use href="#i-chevron"/></svg>Notas de diseño — ejecución</summary>
+    <div class="notes-body">
+      <div class="note"><span class="note-k">Sheet</span><p>Se usa <code>DetailSheet</code> y no un rail incrustado: la bandeja es una columna centrada de <code>max-w-4xl</code>, no una superficie a sangre con hueco lateral.</p></div>
+      <div class="note"><span class="note-k">Historial</span><p>Cada intento muestra <b>el mensaje que de verdad se envió</b>. Es lo que convierte «confía en la IA» en algo auditable, y la razón por la que <code>crm_task_run</code> es tabla y no columnas.</p></div>
+      <div class="note"><span class="note-k">Ejecutar</span><p>«Ejecutar ahora» es un bypass <b>del reloj, no del anti-spam</b>: pasa por opt-out, horario silencioso, límites y throttle igual que el sweep. Y responde 202: el estado optimista es <code>running</code>, nunca <code>done</code>.</p></div>
+      <div class="note"><span class="note-k">Presupuesto</span><p>«2 de 8 · expira en 68 h» hace visible el presupuesto de reintentos. Sin ese dato, una tarea diferida parece colgada para siempre.</p></div>
+    </div>
+  </details>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ── Pastilla deslizante: mide el DOM, igual que segmented.tsx ────────── */
+  var ACTIVE = '[data-active="true"],[aria-current="page"],[data-state="active"]';
+  function placePill(seg) {
+    var pill = seg.querySelector("[data-pill]");
+    var active = seg.querySelector(ACTIVE);
+    if (!pill) return;
+    if (!active) { pill.style.opacity = "0"; return; }
+    var pad = seg.getAttribute("data-size") === "sm" ? 2 : 4;
+    pill.style.width = active.offsetWidth + "px";
+    pill.style.height = active.offsetHeight + "px";
+    pill.style.top = pad + "px";
+    pill.style.left = "0px";
+    pill.style.transform = "translateX(" + (active.offsetLeft - pad) + "px)";
+    pill.style.opacity = "1";
+  }
+  function placeAll() { document.querySelectorAll(".seg").forEach(placePill); }
+
+  /* ── Filtros de la bandeja ────────────────────────────────────────────── */
+  var rows = Array.prototype.slice.call(document.querySelectorAll("#task-list .row"));
+  var emptyAgent = document.getElementById("empty-agent");
+  var list = document.getElementById("task-list");
+
+  function applyFilter(kind) {
+    var shown = 0;
+    rows.forEach(function (row) {
+      var match = kind === "all" || row.getAttribute("data-kind") === kind;
+      row.classList.toggle("hidden", !match);
+      if (match) shown++;
+    });
+    // Sin filas visibles, el vacío toma el sitio de la lista (EmptyState).
+    var vacio = shown === 0;
+    list.classList.toggle("hidden", vacio);
+    emptyAgent.classList.toggle("hidden", !vacio);
+  }
+
+  document.querySelectorAll('.seg [role="radio"]').forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var seg = btn.closest(".seg");
+      seg.querySelectorAll('[role="radio"]').forEach(function (other) {
+        other.setAttribute("aria-checked", "false");
+        other.removeAttribute("data-active");
+      });
+      btn.setAttribute("aria-checked", "true");
+      btn.setAttribute("data-active", "true");
+      placePill(seg);
+      var f = btn.getAttribute("data-filter");
+      if (f) applyFilter(f);
+      var branch = btn.getAttribute("data-branch");
+      if (branch) applyBranch(branch);
+    });
+  });
+
+  /* ── Rama del formulario ──────────────────────────────────────────────── */
+  var submitBtn = document.getElementById("submit-btn");
+  function applyBranch(branch) {
+    document.querySelectorAll(".branch-user").forEach(function (el) {
+      el.classList.toggle("hidden", branch !== "user");
+    });
+    document.querySelectorAll(".branch-agent").forEach(function (el) {
+      el.classList.toggle("hidden", branch !== "agent");
+    });
+    submitBtn.textContent = branch === "agent" ? "Programar tarea" : "Guardar tarea";
+  }
+
+  /* ── Contador y ejemplos del objetivo ─────────────────────────────────── */
+  var obj = document.getElementById("f-obj");
+  var objCount = document.getElementById("obj-count");
+  function sync() { objCount.textContent = String(obj.value.length); }
+  obj.addEventListener("input", sync);
+  sync();
+  document.querySelectorAll(".ex").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      obj.value = chip.textContent.trim();
+      sync();
+      obj.focus();
+    });
+  });
+
+  /* ── Navegación entre vistas del mockup ───────────────────────────────── */
+  var views = { inbox: "view-inbox", form: "view-form", rail: "view-rail" };
+  function show(name) {
+    Object.keys(views).forEach(function (k) {
+      document.getElementById(views[k]).classList.toggle("hidden", k !== name);
+    });
+    document.querySelectorAll(".mk-view").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === name));
+    });
+    window.scrollTo({ top: 0, behavior: "auto" });
+    requestAnimationFrame(placeAll);
+  }
+  document.querySelectorAll(".mk-view").forEach(function (b) {
+    b.addEventListener("click", function () { show(b.getAttribute("data-view")); });
+  });
+  document.querySelectorAll("[data-goto]").forEach(function (b) {
+    b.addEventListener("click", function () { show(b.getAttribute("data-goto")); });
+  });
+
+  /* ── Chips del resumen: son filtros, y se comportan como tales ─────────── */
+  document.querySelectorAll(".chips .chip").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var on = chip.getAttribute("aria-pressed") === "true";
+      document.querySelectorAll(".chips .chip").forEach(function (c) {
+        c.setAttribute("aria-pressed", "false");
+      });
+      chip.setAttribute("aria-pressed", String(!on));
+    });
+  });
+
+  /* ── Checkbox de tareas humanas ───────────────────────────────────────── */
+  document.querySelectorAll('.cbox[role="checkbox"]').forEach(function (box) {
+    box.addEventListener("click", function () {
+      var on = box.getAttribute("aria-checked") === "true";
+      box.setAttribute("aria-checked", String(!on));
+      box.innerHTML = !on ? '<svg><use href="#i-check"/></svg>' : "";
+      box.closest(".row").classList.toggle("done", !on);
+    });
+  });
+
+  /* ── Tema: el gate exige verificar light Y dark ───────────────────────── */
+  var themeBtn = document.getElementById("theme-btn");
+  var themeIcon = document.getElementById("theme-icon");
+  var themeTxt = document.getElementById("theme-txt");
+  function currentIsDark() {
+    var stamp = document.documentElement.getAttribute("data-theme");
+    if (stamp) return stamp === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function paintToggle() {
+    var dark = currentIsDark();
+    themeIcon.innerHTML = '<use href="' + (dark ? "#i-sun" : "#i-moon") + '"/>';
+    themeTxt.textContent = dark ? "Light" : "Dark";
+  }
+  themeBtn.addEventListener("click", function () {
+    document.documentElement.setAttribute("data-theme", currentIsDark() ? "light" : "dark");
+    paintToggle();
+  });
+  paintToggle();
+
+  window.addEventListener("resize", placeAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeAll);
+  requestAnimationFrame(placeAll);
+})();
+</script>
+</body>
+</html>

@@ -2564,6 +2564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_task_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/tasks/{id}/complete": {
         parameters: {
             query?: never;
@@ -2642,6 +2658,102 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["CrmActivitiesController_assignOwner_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmAgentTasksController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CrmAgentTasksController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/{taskId}/run-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CrmAgentTasksController_runNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/{taskId}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmAgentTasksController_runs_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/task-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmAgentTasksController_allRuns_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/settings/agent-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmAgentTaskSettingsController_get_v1"];
+        put: operations["CrmAgentTaskSettingsController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/crm/tags": {
@@ -8347,6 +8459,21 @@ export interface components {
                 created_by_type: "user" | "ai_agent" | "system";
                 /** Format: uuid */
                 created_by_user_id: string | null;
+                /** @enum {string|null} */
+                assignee_type: "user" | "agent" | null;
+                /** Format: uuid */
+                assigned_agent_id: string | null;
+                objective: string | null;
+                /** @enum {string} */
+                trigger: "manual" | "scheduled" | "automation" | "agent";
+                /** Format: date-time */
+                next_run_at: string | null;
+                /** Format: date-time */
+                last_run_at: string | null;
+                /** @enum {string|null} */
+                last_run_status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped" | null;
+                last_run_reason: string | null;
+                attempt_count: number;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -8375,6 +8502,8 @@ export interface components {
             due_at?: string;
             /** Format: uuid */
             assigned_user_id?: string | null;
+            /** @enum {string} */
+            assignee_type?: "user" | "agent";
         };
         ActivityDto: {
             /** Format: uuid */
@@ -8405,6 +8534,21 @@ export interface components {
             created_by_type: "user" | "ai_agent" | "system";
             /** Format: uuid */
             created_by_user_id: string | null;
+            /** @enum {string|null} */
+            assignee_type: "user" | "agent" | null;
+            /** Format: uuid */
+            assigned_agent_id: string | null;
+            objective: string | null;
+            /** @enum {string} */
+            trigger: "manual" | "scheduled" | "automation" | "agent";
+            /** Format: date-time */
+            next_run_at: string | null;
+            /** Format: date-time */
+            last_run_at: string | null;
+            /** @enum {string|null} */
+            last_run_status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped" | null;
+            last_run_reason: string | null;
+            attempt_count: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -8425,6 +8569,11 @@ export interface components {
             overdue: number;
             due_today: number;
             unassigned: number;
+            agent: {
+                open: number;
+                deferred: number;
+                failed: number;
+            };
         };
         TimelineDto: {
             data: {
@@ -8460,6 +8609,103 @@ export interface components {
         AssignOwnerDto: {
             /** Format: uuid */
             owner_user_id: string | null;
+        };
+        CreateAgentTaskDto: {
+            /** Format: uuid */
+            contact_id: string;
+            /** Format: uuid */
+            assigned_agent_id: string;
+            objective: string;
+            /** Format: date-time */
+            due_at: string;
+            title?: string;
+            /** Format: uuid */
+            deal_id?: string | null;
+            /** Format: uuid */
+            conversation_id?: string | null;
+        };
+        UpdateAgentTaskDto: {
+            objective?: string;
+            /** Format: date-time */
+            due_at?: string;
+            /** Format: uuid */
+            assigned_agent_id?: string;
+            title?: string | null;
+        };
+        RunNowDto: {
+            /** Format: date-time */
+            scheduled_for: string;
+        };
+        TaskRunsOfTaskDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                activity_id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                agent_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** @enum {string} */
+                status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                reason: string | null;
+                attempt: number;
+                /** Format: date-time */
+                scheduled_for: string;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: uuid */
+                message_id: string | null;
+                detail: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        TaskRunsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                activity_id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** Format: uuid */
+                agent_id: string | null;
+                /** Format: uuid */
+                conversation_id: string | null;
+                /** @enum {string} */
+                status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                reason: string | null;
+                attempt: number;
+                /** Format: date-time */
+                scheduled_for: string;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                finished_at: string | null;
+                /** Format: uuid */
+                message_id: string | null;
+                detail: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        CrmAgentTaskSettingsDto: {
+            enabled: boolean;
+            daily_cap: number;
+            quiet_start_hour: number;
+            quiet_end_hour: number;
+            max_attempts: number;
+            max_defer_hours: number;
         };
         TagsListDto: {
             data: {
@@ -16432,6 +16678,10 @@ export interface operations {
                 assignee?: "me" | "unassigned" | string;
                 status?: "open" | "completed" | "cancelled";
                 due?: "overdue" | "today" | "week";
+                assignee_type?: "user" | "agent";
+                agent_id?: string;
+                trigger?: "manual" | "scheduled" | "automation" | "agent";
+                last_run_status?: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
                 page?: number;
                 page_size?: number;
             };
@@ -16447,6 +16697,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivitiesListDto"];
+                };
+            };
+        };
+    };
+    CrmActivitiesController_task_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
                 };
             };
         };
@@ -16581,6 +16852,164 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactProfileDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAgentTaskDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAgentTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_runNow_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunNowDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_runs_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskRunsOfTaskDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTasksController_allRuns_v1: {
+        parameters: {
+            query?: {
+                status?: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                reason?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskRunsListDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTaskSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAgentTaskSettingsDto"];
+                };
+            };
+        };
+    };
+    CrmAgentTaskSettingsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmAgentTaskSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAgentTaskSettingsDto"];
                 };
             };
         };

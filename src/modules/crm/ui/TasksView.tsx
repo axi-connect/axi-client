@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Check,
   CircleUser,
+  History,
   MoreVertical,
+  Pencil,
   Plus,
   RotateCcw,
+  Send,
   Sparkles,
   TriangleAlert,
   XCircle,
@@ -27,10 +31,22 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import { EmptyState } from "@/shared/components/features/empty-state";
+import { StatusBadge } from "@/shared/components/features/status-badge";
+import { TaskRunsSheet } from "@/modules/crm/ui/components/TaskRunsSheet";
 import { isOverdue, type ActivityDTO, type TaskDueFilter } from "@/modules/crm/domain/activity";
+import {
+  canRunNow,
+  isAgentTask,
+  TASK_BADGE_KEY,
+  TASK_RUN_STATUS_LABELS,
+  taskBadgeMap,
+  taskDisplayState,
+  type TaskRunStatus,
+} from "@/modules/crm/domain/task-execution";
 import {
   TASKS_PAGE_SIZE,
   useTasksStore,
+  type TasksExecutor,
   type TasksTab,
 } from "@/modules/crm/infrastructure/stores/tasks.store";
 
@@ -52,6 +68,28 @@ const DUE_FILTERS: readonly SegmentedItem<TaskDueFilter | typeof DUE_ALL>[] = [
   { value: "week", label: "Semana" },
 ];
 
+/**
+ * Quién ejecuta. `mixed` va PRIMERO y es el default: la bandeja es una sola.
+ * El centinela existe porque un segmentado trabaja con strings y el store usa
+ * `null` para «mezclado»; la traducción vive en el borde, no en el store.
+ */
+const EXEC_MIXED = "mixed";
+type ExecutorValue = "user" | "agent" | typeof EXEC_MIXED;
+
+const EXECUTORS: readonly SegmentedItem<ExecutorValue>[] = [
+  { value: EXEC_MIXED, label: "Todas" },
+  { value: "user", label: "Del equipo" },
+  { value: "agent", label: "Del agente" },
+];
+
+/** Solo en modo agente: «¿qué se me está atascando?». */
+const RUN_ALL = "all";
+const RUN_FILTERS: readonly SegmentedItem<TaskRunStatus | typeof RUN_ALL>[] = [
+  { value: RUN_ALL, label: "Todas" },
+  { value: "deferred", label: TASK_RUN_STATUS_LABELS.deferred },
+  { value: "failed", label: TASK_RUN_STATUS_LABELS.failed },
+];
+
 function StatChip({ label, value, warn }: { label: string; value: number; warn?: boolean }) {
   return (
     <span
@@ -67,37 +105,86 @@ function StatChip({ label, value, warn }: { label: string; value: number; warn?:
   );
 }
 
-function TaskRow({ task }: { task: ActivityDTO }) {
+/**
+ * Cuándo pasa algo, en una línea.
+ *
+ * Una tarea de agente abierta se describe por `next_run_at` y no por `due_at`:
+ * `due_at` es el compromiso, pero lo que el operador necesita saber es cuándo
+ * lo va a intentar la IA — que con los diferimientos ya no son lo mismo.
+ */
+function whenLine(task: ActivityDTO): string {
+  if (task.task_status === "cancelled") return "Cancelada";
+  if (task.task_status === "completed") {
+    return task.completed_at !== null ? `completada ${relativeTime(task.completed_at)}` : "completada";
+  }
+  if (isAgentTask(task) && task.next_run_at !== null) {
+    return `se ejecuta ${relativeTime(task.next_run_at)}`;
+  }
+  return task.due_at !== null ? `vence ${relativeTime(task.due_at)}` : "sin vencimiento";
+}
+
+function TaskRow({ task, onInspect }: { task: ActivityDTO; onInspect: (task: ActivityDTO) => void }) {
+  const router = useRouter();
   const { showAlert } = useAlert();
   const act = useTasksStore((s) => s.act);
+  const runNow = useTasksStore((s) => s.runNow);
   const overdue = isOverdue(task);
   const open = task.task_status === "open";
   const completed = task.task_status === "completed";
+  const state = taskDisplayState(task);
+  const agent = isAgentTask(task);
 
   const run = async (action: "complete" | "reopen" | "cancel") => {
     const result = await act(task.id, action);
     if (!result.ok) showAlert({ tone: "error", title: result.message, open: true });
   };
 
+  const launch = async () => {
+    const result = await runNow(task.id);
+    showAlert(
+      result.ok
+        ? { tone: "success", title: "Tarea encolada: el agente la ejecutará en breve", open: true }
+        : { tone: "error", title: result.message, open: true },
+    );
+  };
+
   return (
     <li className="flex items-center gap-3 px-4 py-3">
-      <button
-        type="button"
-        role="checkbox"
-        aria-checked={completed}
-        aria-label={completed ? `Reabrir "${task.title ?? "tarea"}"` : `Completar "${task.title ?? "tarea"}"`}
-        disabled={task.task_status === "cancelled"}
-        onClick={() => void run(completed ? "reopen" : "complete")}
-        className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          completed
-            ? "border-success bg-success text-white"
-            : "border-input hover:border-success",
-          task.task_status === "cancelled" && "opacity-40",
-        )}
-      >
-        {completed && <Check className="size-3.5" aria-hidden />}
-      </button>
+      {state.completable ? (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={completed}
+          aria-label={completed ? `Reabrir "${task.title ?? "tarea"}"` : `Completar "${task.title ?? "tarea"}"`}
+          onClick={() => void run(completed ? "reopen" : "complete")}
+          className="flex size-5 shrink-0 items-center justify-center rounded-md border border-input transition-colors hover:border-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      ) : agent ? (
+        // Violeta = IA, y solo en el icono: el techo de tinte del 14 % deja
+        // fuera cualquier superficie violeta en zona de trabajo.
+        <span
+          className="flex size-5 shrink-0 items-center justify-center"
+          aria-label="La ejecuta un agente"
+        >
+          <Sparkles className="size-4 text-accent-violet" aria-hidden />
+        </span>
+      ) : (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={completed}
+          aria-label={completed ? `Reabrir "${task.title ?? "tarea"}"` : `Completar "${task.title ?? "tarea"}"`}
+          disabled={task.task_status === "cancelled"}
+          onClick={() => void run(completed ? "reopen" : "complete")}
+          className={cn(
+            "flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            completed ? "border-success bg-success text-white" : "border-input hover:border-success",
+            task.task_status === "cancelled" && "opacity-40",
+          )}
+        >
+          {completed && <Check className="size-3.5" aria-hidden />}
+        </button>
+      )}
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -110,20 +197,22 @@ function TaskRow({ task }: { task: ActivityDTO }) {
           >
             {task.title ?? "Sin título"}
           </p>
-          {task.created_by_type === "ai_agent" && (
+          {!agent && task.created_by_type === "ai_agent" && (
             <Sparkles className="size-3.5 shrink-0 text-accent-violet" aria-label="Creada por IA" />
+          )}
+          {state.label !== null && (
+            <StatusBadge status={TASK_BADGE_KEY} map={taskBadgeMap(state)} />
           )}
         </div>
         <p className={cn("text-xs", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
-          {task.task_status === "cancelled"
-            ? "Cancelada"
-            : completed && task.completed_at !== null
-              ? `completada ${relativeTime(task.completed_at)}`
-              : task.due_at !== null
-                ? `vence ${relativeTime(task.due_at)}`
-                : "sin vencimiento"}
-          {task.assigned_user_id === null && open && " · sin asignar"}
+          {whenLine(task)}
+          {!agent && task.assigned_user_id === null && open && " · sin asignar"}
         </p>
+        {state.reason !== null && (
+          // La razón es lo que convierte «no salió» en algo accionable; por eso
+          // va en la fila y no escondida en el detalle.
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{state.reason}</p>
+        )}
       </div>
 
       <Link
@@ -141,6 +230,25 @@ function TaskRow({ task }: { task: ActivityDTO }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {agent && (
+            <DropdownMenuItem onClick={() => onInspect(task)}>
+              <span className="flex items-center gap-2">
+                <History className="size-4" /> Ver ejecuciones
+              </span>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => router.push(`/crm/tasks/update/${task.id}`)}>
+            <span className="flex items-center gap-2">
+              <Pencil className="size-4" /> Editar
+            </span>
+          </DropdownMenuItem>
+          {canRunNow(task) && (
+            <DropdownMenuItem onClick={() => void launch()}>
+              <span className="flex items-center gap-2">
+                <Send className="size-4" /> Ejecutar ahora
+              </span>
+            </DropdownMenuItem>
+          )}
           {!open && (
             <DropdownMenuItem onClick={() => void run("reopen")}>
               <span className="flex items-center gap-2"><RotateCcw className="size-4" /> Reabrir</span>
@@ -176,8 +284,12 @@ export function TasksView() {
   const stats = useTasksStore((s) => s.stats);
   const tab = useTasksStore((s) => s.tab);
   const due = useTasksStore((s) => s.due);
+  const executor = useTasksStore((s) => s.executor);
+  const runStatus = useTasksStore((s) => s.runStatus);
   const setTab = useTasksStore((s) => s.setTab);
   const setDue = useTasksStore((s) => s.setDue);
+  const setExecutor = useTasksStore((s) => s.setExecutor);
+  const setRunStatus = useTasksStore((s) => s.setRunStatus);
   const setPage = useTasksStore((s) => s.setPage);
   const fetch = useTasksStore((s) => s.fetch);
   const fetchStats = useTasksStore((s) => s.fetchStats);
@@ -187,6 +299,12 @@ export function TasksView() {
   });
   useSocketEvent(socket, "crm.task_completed", (payload) => {
     useTasksStore.getState().onTaskCompleted(payload);
+  });
+  useSocketEvent(socket, "crm.agent_task_run_started", (payload) => {
+    useTasksStore.getState().onAgentRun(payload);
+  });
+  useSocketEvent(socket, "crm.agent_task_run_finished", (payload) => {
+    useTasksStore.getState().onAgentRun(payload);
   });
 
   useEffect(() => {
@@ -201,6 +319,13 @@ export function TasksView() {
   }, [fetch, fetchStats]);
 
   const totalPages = Math.max(1, Math.ceil(total / TASKS_PAGE_SIZE));
+  const [inspected, setInspected] = useState<ActivityDTO | null>(null);
+
+  // La fila del rail se mantiene fresca con la de la lista: si el motor cierra
+  // un intento mientras el panel está abierto, el encabezado no puede quedarse
+  // mostrando el estado anterior.
+  const inspectedTask =
+    inspected === null ? null : (items.find((item) => item.id === inspected.id) ?? inspected);
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -209,10 +334,23 @@ export function TasksView() {
           <h2 className="text-xl font-semibold tracking-tight">Tareas</h2>
           {stats !== null && (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <StatChip label="abiertas" value={stats.open} />
-              <StatChip label="vencidas" value={stats.overdue} warn />
-              <StatChip label="para hoy" value={stats.due_today} />
-              <StatChip label="sin asignar" value={stats.unassigned} />
+              {executor === "agent" ? (
+                <>
+                  <StatChip label="programadas" value={stats.agent.open} />
+                  {/* `deferred` NO es warn: un diferimiento es operación normal
+                      (la ventana de 24 h se cierra sola) y pintarlo en ámbar
+                      empuja al tenant a apagar la automatización. */}
+                  <StatChip label="en espera" value={stats.agent.deferred} />
+                  <StatChip label="sin enviar" value={stats.agent.failed} warn />
+                </>
+              ) : (
+                <>
+                  <StatChip label="abiertas" value={stats.open} />
+                  <StatChip label="vencidas" value={stats.overdue} warn />
+                  <StatChip label="para hoy" value={stats.due_today} />
+                  <StatChip label="sin asignar" value={stats.unassigned} />
+                </>
+              )}
             </div>
           )}
         </div>
@@ -226,24 +364,51 @@ export function TasksView() {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SegmentedControl
-          value={tab}
-          onValueChange={setTab}
-          label="Filtrar por asignación"
+          value={executor ?? EXEC_MIXED}
+          onValueChange={(value: ExecutorValue) =>
+            setExecutor(value === EXEC_MIXED ? null : (value satisfies TasksExecutor))
+          }
+          label="Filtrar por quién ejecuta"
           size="sm"
-          items={TABS}
+          items={EXECUTORS}
         />
 
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">Vence:</span>
+        {/* En modo agente la asignación a personas no aplica: en su lugar se
+            filtra por desenlace del motor, que es la pregunta real ahí. */}
+        {executor === "agent" ? (
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Última ejecución:</span>
+            <SegmentedControl
+              value={runStatus ?? RUN_ALL}
+              onValueChange={(value) => setRunStatus(value === RUN_ALL ? null : value)}
+              label="Filtrar por desenlace de la última ejecución"
+              size="sm"
+              surface="inline"
+              items={RUN_FILTERS}
+            />
+          </div>
+        ) : (
           <SegmentedControl
-            value={due ?? DUE_ALL}
-            onValueChange={(value) => setDue(value === DUE_ALL ? null : value)}
-            label="Filtrar por vencimiento"
+            value={tab}
+            onValueChange={setTab}
+            label="Filtrar por asignación"
             size="sm"
             surface="inline"
-            items={DUE_FILTERS}
+            items={TABS}
           />
-        </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground text-xs">Vence:</span>
+        <SegmentedControl
+          value={due ?? DUE_ALL}
+          onValueChange={(value) => setDue(value === DUE_ALL ? null : value)}
+          label="Filtrar por vencimiento"
+          size="sm"
+          surface="inline"
+          items={DUE_FILTERS}
+        />
       </div>
 
       {error !== null ? (
@@ -257,16 +422,20 @@ export function TasksView() {
         <TableSkeleton rows={6} showHeader={false} />
       ) : items.length === 0 ? (
         <EmptyState
-          glyph="time"
+          glyph={executor === "agent" ? "ai" : "time"}
           variant="solid"
-          title="Nada pendiente por aquí"
-          description="Crea una tarea o deja que la IA agende los seguimientos por ti."
+          title={executor === "agent" ? "Ningún seguimiento programado" : "Nada pendiente por aquí"}
+          description={
+            executor === "agent"
+              ? "Programa un objetivo y el agente escribirá al cliente por ti."
+              : "Crea una tarea o deja que la IA agende los seguimientos por ti."
+          }
         />
       ) : (
         <>
           <ul className="divide-y divide-border rounded-2xl border border-border bg-background">
             {items.map((task) => (
-              <TaskRow key={task.id} task={task} />
+              <TaskRow key={task.id} task={task} onInspect={setInspected} />
             ))}
           </ul>
           {totalPages > 1 && (
@@ -279,6 +448,13 @@ export function TasksView() {
           )}
         </>
       )}
+
+      <TaskRunsSheet
+        task={inspectedTask}
+        onOpenChange={(open) => {
+          if (!open) setInspected(null);
+        }}
+      />
     </div>
   );
 }
