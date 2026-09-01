@@ -54,6 +54,10 @@ export const settingsFormSchema = z
     reminder_offsets_minutes: z
       .array(z.number().int())
       .max(SETTINGS_LIMITS.reminder_offsets_minutes.maxItems, "Máximo 6 recordatorios"),
+    // calls F3: canal del recordatorio. Sin campo visible todavía (F4-D);
+    // viaja de ida y vuelta porque el PUT es de sección completa y omitirlo
+    // resetearía a whatsapp lo que el dueño configuró por API.
+    reminder_channel: z.enum(["whatsapp", "call", "both"]),
   })
   .superRefine((values, ctx) => {
     const total = unitToMinutes(values.min_notice_value, values.min_notice_unit);
@@ -78,6 +82,7 @@ export function fromSettingsDto(dto: SchedulingSettingsDTO): SettingsFormValues 
     min_notice_value: notice.value,
     min_notice_unit: notice.unit,
     reminder_offsets_minutes: dto.reminder_offsets_minutes,
+    reminder_channel: dto.reminder_channel,
   };
 }
 
@@ -88,6 +93,7 @@ export function toSettingsPayload(values: SettingsFormValues): SchedulingSetting
     default_buffer_minutes: values.default_buffer_minutes,
     min_notice_minutes: unitToMinutes(values.min_notice_value, values.min_notice_unit),
     reminder_offsets_minutes: values.reminder_offsets_minutes,
+    reminder_channel: values.reminder_channel,
   });
 }
 

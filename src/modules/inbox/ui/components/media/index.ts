@@ -1,5 +1,5 @@
 export { MediaAttachment } from "./MediaAttachment"
-export { AudioPlayerCore } from "./AudioPlayerCore"
+export { AudioPlayerCore } from "@/shared/components/features/audio-player"
 export { AudioTranscription } from "./AudioTranscription"
 export { MediaError, MediaSkeleton, MediaUnavailable } from "./MediaStates"
 export { MediaLightbox } from "./MediaLightbox"

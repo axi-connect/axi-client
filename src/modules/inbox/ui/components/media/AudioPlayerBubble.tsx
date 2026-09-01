@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAttachmentUrl } from "@/modules/inbox/infrastructure/hooks/use-attachment-url"
 import type { MessageAttachment } from "@/modules/inbox/domain/inbox"
-import { AudioPlayerCore } from "./AudioPlayerCore"
+import { AudioPlayerCore } from "@/shared/components/features/audio-player"
 import { MediaError } from "./MediaStates"
 
 /**

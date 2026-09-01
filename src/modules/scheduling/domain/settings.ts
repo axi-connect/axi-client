@@ -63,6 +63,8 @@ export function buildSettingsPayload(values: {
   default_buffer_minutes: number;
   min_notice_minutes: number;
   reminder_offsets_minutes: number[];
+  /** calls F3: canal del recordatorio (whatsapp | call | both). */
+  reminder_channel: SchedulingSettingsDTO["reminder_channel"];
 }): SchedulingSettingsDTO {
   return {
     slot_capacity: values.slot_capacity,
@@ -70,5 +72,6 @@ export function buildSettingsPayload(values: {
     default_buffer_minutes: values.default_buffer_minutes,
     min_notice_minutes: values.min_notice_minutes,
     reminder_offsets_minutes: normalizeOffsets(values.reminder_offsets_minutes),
+    reminder_channel: values.reminder_channel,
   };
 }

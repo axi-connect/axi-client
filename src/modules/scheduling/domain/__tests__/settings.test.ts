@@ -33,21 +33,25 @@ describe("settings — helpers puros", () => {
     expect(normalizeOffsets([])).toEqual([]);
   });
 
-  it("buildSettingsPayload SIEMPRE manda los 5 campos (PUT de sección completa)", () => {
+  it("buildSettingsPayload SIEMPRE manda la sección completa (PUT total)", () => {
     const payload = buildSettingsPayload({
       slot_capacity: 2,
       default_duration_minutes: 30,
       default_buffer_minutes: 10,
       min_notice_minutes: 120,
       reminder_offsets_minutes: [60, 1440],
+      reminder_channel: "call",
     });
     expect(Object.keys(payload).sort()).toEqual([
       "default_buffer_minutes",
       "default_duration_minutes",
       "min_notice_minutes",
+      "reminder_channel",
       "reminder_offsets_minutes",
       "slot_capacity",
     ]);
     expect(payload.reminder_offsets_minutes).toEqual([1440, 60]);
+    // calls F3: omitir el canal lo resetearía a whatsapp — por eso viaja siempre
+    expect(payload.reminder_channel).toBe("call");
   });
 });

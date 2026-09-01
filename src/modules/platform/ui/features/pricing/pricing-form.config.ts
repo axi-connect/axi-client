@@ -19,7 +19,7 @@ const optionalCost = z.preprocess(
 
 export const pricingFormSchema = z
   .object({
-    provider: z.enum(["anthropic", "openai_compatible", "elevenlabs"]),
+    provider: z.enum(["anthropic", "openai_compatible", "elevenlabs", "twilio"]),
     unit: z.enum(["tokens", "characters", "seconds", "requests"]),
     model: z.string().min(1, "Ingresa el modelo (o * para el fallback)"),
     /** Nombre que verá el tenant en el selector de modelos del agente. */

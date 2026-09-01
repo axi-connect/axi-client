@@ -8,8 +8,10 @@ import { formatDuration } from "@/core/lib/format"
 const PLAYBACK_RATES = [1, 1.5, 2] as const
 
 /**
- * Player de audio compartido (burbujas de audio + preview del grabador de
- * voz). Controla un <audio> oculto: play/pause, barra seekable, tiempo y
+ * Player de audio compartido (burbujas del inbox, preview del grabador de
+ * voz, grabaciones de llamadas). Vivía en el inbox; se promovió a shared en
+ * calls F4-B porque no depende de NADA del inbox: solo lucide + cn + format.
+ * Controla un <audio> oculto: play/pause, barra seekable, tiempo y
  * velocidad. `src=null` + `onNeedSrc` = carga perezosa: el primer play pide
  * la URL firmada y reproduce al llegar.
  */
