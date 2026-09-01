@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { ArrowRight, RefreshCw, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { cn } from "@/core/lib/utils";
 import type { GovernanceState } from "@/modules/integrations/domain/integration";
 import {
   CAPABILITY_LABELS,
@@ -15,6 +13,12 @@ import {
 } from "@/modules/integrations/domain/integration-providers";
 import { useIntegrationsStore } from "@/modules/integrations/infrastructure/stores/integrations.store";
 import { IntegrationCard } from "./IntegrationCard";
+import {
+  ProviderCard,
+  ProviderCardGrid,
+  type ProviderBrand,
+} from "@/shared/components/features/provider-card";
+
 import { IntegrationProviderIcon } from "./IntegrationProviderIcon";
 
 /**
@@ -93,11 +97,11 @@ export function IntegrationsView() {
       ) : (
         <>
           {items.length > 0 && (
-            <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
+            <ProviderCardGrid>
               {items.map((integration) => (
                 <IntegrationCard key={integration.id} integration={integration} />
               ))}
-            </div>
+            </ProviderCardGrid>
           )}
 
           {available.length > 0 && (
@@ -111,11 +115,11 @@ export function IntegrationsView() {
                   Conecta tu primera integración
                 </h2>
               )}
-              <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
+              <ProviderCardGrid>
                 {available.map((provider) => (
                   <AvailableProviderCard key={provider.kind} provider={provider} />
                 ))}
-              </div>
+              </ProviderCardGrid>
             </section>
           )}
         </>
@@ -128,75 +132,42 @@ export function IntegrationsView() {
 function AvailableProviderCard({ provider }: { provider: IntegrationProviderDescriptor }) {
   const comingSoon = provider.availability === "coming_soon";
 
-  const body = (
-    <>
-      <div className="relative flex items-start gap-3">
-        <IntegrationProviderIcon iconId={provider.icon_id} />
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold">{provider.label}</span>
-            {provider.recommended === true && (
-              <span className="rounded-full bg-accent-violet/12 px-2 py-0.5 text-xs font-medium text-accent-violet">
-                Recomendado
-              </span>
-            )}
-            {comingSoon && (
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                Muy pronto
-              </span>
-            )}
-          </span>
-          {provider.requirement_note !== undefined && (
-            <span className="text-xs text-muted-foreground">{provider.requirement_note}</span>
+  return (
+    <ProviderCard
+      // Inerte pero CON superficie de marca: la hoja de ruta se ve como
+      // producto, no como un hueco punteado.
+      {...(comingSoon
+        ? { inert: true }
+        : { href: `/settings/integrations/connect?provider=${provider.kind}` })}
+      brand={provider.brand_class.replace("brand-", "") as ProviderBrand}
+      icon={<IntegrationProviderIcon iconId={provider.icon_id} bare />}
+      title={
+        <span className="flex flex-wrap items-center gap-2">
+          {provider.label}
+          {provider.recommended === true && (
+            <span className="bg-accent-violet/12 text-accent-violet rounded-full px-2 py-0.5 text-xs font-medium">
+              Recomendado
+            </span>
+          )}
+          {comingSoon && (
+            <span className="bg-secondary text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+              Muy pronto
+            </span>
           )}
         </span>
-        {!comingSoon && (
-          <ArrowRight aria-hidden="true" className="mt-1 size-4 text-muted-foreground" />
-        )}
-      </div>
-      <p className="relative text-sm text-muted-foreground">{provider.tagline}</p>
-      <div className="relative flex flex-wrap gap-1.5">
-        {provider.capabilities.map((capability) => (
-          <span
-            key={capability}
-            className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground"
-          >
-            {CAPABILITY_LABELS[capability]}
-          </span>
-        ))}
-      </div>
-    </>
-  );
-
-  if (comingSoon) {
-    // Inerte pero CON superficie de marca (patrón ProviderGallery de canales):
-    // la hoja de ruta se ve como producto, no como un hueco punteado.
-    return (
-      <div
-        aria-disabled="true"
-        className={cn(
-          "channel-surface flex w-full flex-col gap-3.5 rounded-lg border border-border bg-background p-4 opacity-70",
-          provider.brand_class,
-        )}
-      >
-        {body}
-      </div>
-    );
-  }
-
-  return (
-    <Link
-      href={`/settings/integrations/connect?provider=${provider.kind}`}
-      className={cn(
-        "channel-surface flex w-full flex-col gap-3.5 rounded-lg border border-border bg-background p-4",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
-        provider.brand_class,
-      )}
-    >
-      {body}
-    </Link>
+      }
+      subtitle={provider.requirement_note}
+      badge={
+        comingSoon ? undefined : (
+          <ArrowRight aria-hidden="true" className="text-muted-foreground mt-1 size-4 shrink-0" />
+        )
+      }
+      body={provider.tagline}
+      chips={provider.capabilities.map((capability) => CAPABILITY_LABELS[capability])}
+    />
   );
 }
+
 
 function governanceProblem(catalog: GovernanceState, orders: GovernanceState): string {
   const parts: string[] = [];
@@ -209,7 +180,7 @@ function governanceProblem(catalog: GovernanceState, orders: GovernanceState): s
  * (placa + dos líneas + chips), tantas como proveedores visibles. */
 function IntegrationsGridSkeleton() {
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
+    <ProviderCardGrid>
       {visibleProviders().map((provider) => (
         <div
           key={provider.kind}
@@ -230,6 +201,6 @@ function IntegrationsGridSkeleton() {
           </div>
         </div>
       ))}
-    </div>
+    </ProviderCardGrid>
   );
 }

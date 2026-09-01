@@ -211,7 +211,7 @@ export function AutomationsView() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Recuperación de ventas"
         description="Reglas que reenganchan solas a quien se quedó a medias."

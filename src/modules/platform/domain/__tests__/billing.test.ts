@@ -20,14 +20,20 @@ describe("canVoidInvoice", () => {
     // El backend responde 409. El botón se deshabilita en vez de dejar que el
     // operador lo descubra al pulsarlo: un botón que solo falla al pulsarlo es
     // un botón que miente.
-    expect(canVoidInvoice({ status: "partially_paid", paid_cents: 1 })).toBe(false);
-    expect(canVoidInvoice({ status: "open", paid_cents: 90_000_000 })).toBe(false);
+    expect(canVoidInvoice({ status: "partially_paid", paid_cents: 1 })).toBe(
+      false,
+    );
+    expect(canVoidInvoice({ status: "open", paid_cents: 90_000_000 })).toBe(
+      false,
+    );
   });
 
   it("una factura ya pagada, anulada o incobrable no se anula", () => {
     expect(canVoidInvoice({ status: "paid", paid_cents: 0 })).toBe(false);
     expect(canVoidInvoice({ status: "void", paid_cents: 0 })).toBe(false);
-    expect(canVoidInvoice({ status: "uncollectible", paid_cents: 0 })).toBe(false);
+    expect(canVoidInvoice({ status: "uncollectible", paid_cents: 0 })).toBe(
+      false,
+    );
   });
 });
 
@@ -59,15 +65,21 @@ describe("isSettledAfter", () => {
   });
 
   it("con saldo restante no se anuncia reactivación", () => {
-    expect(isSettledAfter({ ...base, outstanding_cents: 11_000_000 })).toBe(false);
+    expect(isSettledAfter({ ...base, outstanding_cents: 11_000_000 })).toBe(
+      false,
+    );
   });
 });
 
 describe("vigencyKey y PRICE_VIGENCY_MAP", () => {
   it("la vigente se distingue de una programada y de una desactivada", () => {
     expect(vigencyKey({ is_current: true, is_active: true })).toBe("current");
-    expect(vigencyKey({ is_current: false, is_active: true })).toBe("scheduled");
-    expect(vigencyKey({ is_current: false, is_active: false })).toBe("disabled");
+    expect(vigencyKey({ is_current: false, is_active: true })).toBe(
+      "scheduled",
+    );
+    expect(vigencyKey({ is_current: false, is_active: false })).toBe(
+      "disabled",
+    );
   });
 
   it("solo la vigente es verde", () => {
@@ -97,8 +109,13 @@ describe("ACCOUNT_STATUS_MAP", () => {
 });
 
 describe("etiquetas de excedentes", () => {
-  it("las 11 métricas del enum están traducidas: nadie debería traducir ai_tokens_input a mano", () => {
-    expect(OVERAGE_METRICS).toHaveLength(11);
+  it("toda métrica del enum está traducida: nadie debería traducir ai_tokens_input a mano", () => {
+    // Sin número fijo a propósito. La COBERTURA la garantiza el Record
+    // exhaustivo en tiempo de compilación —añadir una métrica al backend rompe
+    // el typecheck, que es donde debe romper— así que un `toHaveLength(N)` aquí
+    // solo obligaba a venir a subir el número cada vez. Lo que este test sí
+    // aporta es que ninguna etiqueta se quedó con el nombre técnico.
+    expect(OVERAGE_METRICS.length).toBeGreaterThan(0);
     for (const metric of OVERAGE_METRICS) {
       expect(OVERAGE_METRIC_LABELS[metric]).toBeTruthy();
       expect(OVERAGE_METRIC_LABELS[metric]).not.toContain("_");
@@ -108,13 +125,15 @@ describe("etiquetas de excedentes", () => {
   it("el bloque se presenta como «por cada N», no como un entero desnudo", () => {
     // Confundir el bloque facturable con la cantidad incluida hace que alguien
     // publique una tarifa mil veces más cara.
-    expect(unitSizeLabel({ unit_size: 1_000_000, metric: "ai_tokens_input" })).toBe(
-      "por cada 1.000.000",
-    );
+    expect(
+      unitSizeLabel({ unit_size: 1_000_000, metric: "ai_tokens_input" }),
+    ).toBe("por cada 1.000.000");
   });
 
   it("`included_quantity: null` significa tomar el tope del plan, y lo dice", () => {
-    expect(includedLabel({ included_quantity: null })).toBe("incluido: el tope del plan");
+    expect(includedLabel({ included_quantity: null })).toBe(
+      "incluido: el tope del plan",
+    );
     expect(includedLabel({ included_quantity: 1_000 })).toBe("incluido: 1.000");
   });
 });

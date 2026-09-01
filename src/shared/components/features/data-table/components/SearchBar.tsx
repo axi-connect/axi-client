@@ -21,11 +21,19 @@ type SearchBarProps = {
   onValueChange: (value: string) => void
   onSubmit?: () => void
   onClear?: () => void
+  /** Reemplaza el marcador derivado del campo. Para búsquedas de servidor, que
+   *  buscan en varias columnas a la vez y no tienen «campo». */
+  placeholder?: string
 }
 
-export function SearchBar({ fields, field, value, trigger, messages, onFieldChange, onValueChange, onSubmit, onClear }: SearchBarProps) {
+export function SearchBar({ fields, field, value, trigger, messages, onFieldChange, onValueChange, onSubmit, onClear, placeholder: placeholderOverride }: SearchBarProps) {
   const fieldLabelMap = useMemo(() => Object.fromEntries(fields.map((f) => [f.key, f.label])), [fields])
-  const placeholder = messages.searchPlaceholder?.(fieldLabelMap[field] || messages.fieldLabelFallback || "campo")
+  const placeholder =
+    placeholderOverride ??
+    messages.searchPlaceholder?.(fieldLabelMap[field] || messages.fieldLabelFallback || "campo")
+  // Con un solo campo, el desplegable no elige nada: es un control que solo
+  // puede repetir lo que ya dice el marcador.
+  const showFieldPicker = fields.length > 1
 
   return (
     <div className="flex items-center gap-2">
@@ -64,6 +72,7 @@ export function SearchBar({ fields, field, value, trigger, messages, onFieldChan
           </Button>
         )}
       </form>
+      {showFieldPicker && (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="gap-2" aria-label="Seleccionar campo">
@@ -79,6 +88,7 @@ export function SearchBar({ fields, field, value, trigger, messages, onFieldChan
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+      )}
     </div>
   )
 }

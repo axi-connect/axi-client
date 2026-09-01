@@ -7,6 +7,7 @@ import {
   FaTiktok,
   FaBehance,
   FaGithub,
+  FaWhatsapp,
 } from "react-icons/fa6";
 
 /**
@@ -25,6 +26,7 @@ const ICONS = {
   tiktok: FaTiktok,
   behance: FaBehance,
   github: FaGithub,
+  whatsapp: FaWhatsapp,
 } as const;
 
 export type SocialIconName = keyof typeof ICONS;

@@ -125,7 +125,7 @@ export function CampaignsView() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Campañas"
         description="Envíos masivos a un segmento de tu base. Al lanzarlas, la audiencia y el contenido quedan congelados."

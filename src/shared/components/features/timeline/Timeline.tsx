@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 
@@ -43,6 +43,23 @@ export interface TimelineItem {
   meta?: React.ReactNode;
   /** Chip a la derecha del título (p. ej. `<AiBadge />`). */
   badge?: React.ReactNode;
+  /**
+   * Nodo hueco en vez de relleno: la entrada todavía NO ha ocurrido.
+   *
+   * El timeline nació como feed de cosas pasadas, donde todo estaba hecho por
+   * definición. Un stepper necesita distinguir lo que va a pasar de lo que ya
+   * pasó, y un nodo relleno para algo pendiente lo da por hecho.
+   */
+  pending?: boolean;
+  /**
+   * Contenido desplegable bajo la entrada.
+   *
+   * Deja el detalle a un clic sin sacarlo de su sitio: la lista se sigue
+   * leyendo de un vistazo y quien quiera saber qué trajo una fuente concreta
+   * lo abre ahí mismo. `defaultOpen` para el paso que está corriendo.
+   */
+  content?: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
 /**
@@ -79,6 +96,37 @@ export function TimelineSkeleton({
   );
 }
 
+/**
+ * El detalle de una entrada, plegado por defecto.
+ *
+ * `<details>` nativo y no un estado en React: trae la accesibilidad y el
+ * teclado resueltos, y no obliga a que el Timeline —que es presentacional
+ * puro— tenga estado propio ni deje de poder renderizarse en el servidor.
+ */
+function TimelineDetail({
+  defaultOpen,
+  children,
+}: {
+  defaultOpen: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="group mt-1.5" open={defaultOpen}>
+      <summary className="text-muted-foreground hover:text-foreground flex cursor-pointer list-none items-center gap-1 text-xs transition-colors">
+        <ChevronDown
+          aria-hidden
+          className="size-3 transition-transform group-open:rotate-180"
+        />
+        <span className="group-open:hidden">Ver detalle</span>
+        <span className="hidden group-open:inline">Ocultar detalle</span>
+      </summary>
+      <div className="border-border-soft bg-secondary/50 mt-2 rounded-md border p-2.5">
+        {children}
+      </div>
+    </details>
+  );
+}
+
 export function Timeline({ items, className }: { items: TimelineItem[]; className?: string }) {
   if (items.length === 0) return null;
 
@@ -98,7 +146,9 @@ export function Timeline({ items, className }: { items: TimelineItem[]; classNam
             <span
               className={cn(
                 "z-10 flex size-7 shrink-0 items-center justify-center rounded-full",
-                TONE_CLASSES[item.tone ?? "neutral"],
+                item.pending === true
+                  ? "border border-border text-muted-foreground"
+                  : TONE_CLASSES[item.tone ?? "neutral"],
               )}
             >
               <Icon className="size-3.5" aria-hidden />
@@ -115,6 +165,11 @@ export function Timeline({ items, className }: { items: TimelineItem[]; classNam
               )}
               {item.meta !== undefined && item.meta !== null && (
                 <p className="text-xs text-muted-foreground">{item.meta}</p>
+              )}
+              {item.content !== undefined && item.content !== null && (
+                <TimelineDetail defaultOpen={item.defaultOpen === true}>
+                  {item.content}
+                </TimelineDetail>
               )}
             </div>
           </li>

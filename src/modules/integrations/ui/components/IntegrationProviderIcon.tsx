@@ -31,13 +31,18 @@ const GLYPH_COLOR: Record<IntegrationIconId, string> = {
 export function IntegrationProviderIcon({
   iconId,
   size = "md",
+  bare = false,
   className,
 }: {
   iconId: IntegrationIconId;
   size?: "sm" | "md";
+  /** Solo el glifo: la placa la pone `ProviderCard`. */
+  bare?: boolean;
   className?: string;
 }) {
   const Icon = ICONS[iconId];
+  const glyph = cn(size === "sm" ? "size-[19px]" : "size-6", GLYPH_COLOR[iconId], className);
+  if (bare) return <Icon className={glyph} />;
   return (
     <span
       className={cn(
@@ -46,7 +51,7 @@ export function IntegrationProviderIcon({
         className,
       )}
     >
-      <Icon className={cn(size === "sm" ? "size-[19px]" : "size-6", GLYPH_COLOR[iconId])} />
+      <Icon className={glyph} />
     </span>
   );
 }

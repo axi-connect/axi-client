@@ -6,6 +6,7 @@ import { ContextMenu } from "@/shared/components/ui/context-menu"
 import { TableCell, TableRow } from "@/shared/components/ui/table"
 import { memo, useMemo, useState, useCallback } from "react"
 import type { ColumnDef, DataRow, RowContextMenuRenderer } from "../types"
+import { cn } from "@/core/lib/utils"
 
 type DataTableRowProps<T extends DataRow> = {
   row: T
@@ -27,7 +28,10 @@ function DataTableRowInner<T extends DataRow>({ row, visibleColumns, collapsedCo
   }, [rowContextMenu])
 
   const visibleCells = useMemo(() => visibleColumns.map((col, idx) => (
-    <TableCell key={(col.accessorKey ?? col.id ?? idx) as string} className="first:pl-3 last:pr-3">
+    <TableCell
+      key={(col.accessorKey ?? col.id ?? idx) as string}
+      className={cn("first:pl-3 last:pr-3", col.cellClassName)}
+    >
       {col.cell ? col.cell({ row: { original: row } }) : formatCell(col.accessorKey ? (row[col.accessorKey] as Parameters<typeof formatCell>[0]) : undefined)}
     </TableCell>
   )), [row, visibleColumns])

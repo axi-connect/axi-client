@@ -1,0 +1,445 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { socketManager } from "@/core/realtime/socket-manager";
+import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Check, LoaderCircle, RefreshCw, WandSparkles, X } from "lucide-react";
+
+import { errorMessage } from "@/core/lib/error-messages";
+import { formatShortDate } from "@/core/lib/format";
+import { useAlert } from "@/core/providers/alert-provider";
+import { useAuth } from "@/shared/auth/auth.hooks";
+import { StatusBadge } from "@/shared/components/features/status-badge";
+import { BrandLoader } from "@/shared/components/ui/brand-loader";
+import { Button } from "@/shared/components/ui/button";
+
+import {
+  LEAD_STATUS_MAP,
+  LEGAL_BASIS_LABELS,
+  QUALITY_STATUS_MAP,
+  SOURCE_LABELS,
+  canDiscard,
+  canPromote,
+  isRunInFlight,
+  leadDisplayName,
+  type EnrichmentRunDTO,
+  type LeadDetailDTO,
+} from "../domain/lead";
+import {
+  discardLead,
+  enrichLead,
+  getLead,
+  promoteLeads,
+  verifyLead,
+} from "../infrastructure/services/prospecting-service.adapter";
+import { ChannelPermissions } from "./components/ChannelPermissions";
+import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
+import { LeadIdentityCard } from "./components/LeadIdentityCard";
+import { LeadProvenance } from "./components/LeadProvenance";
+import { LeadTimeline } from "./components/LeadTimeline";
+import { PromotionGate } from "./components/PromotionGate";
+import { QualityBreakdown } from "./components/QualityIndex";
+
+/**
+ * Cada cuánto se relee la fila mientras hay una pasada viva.
+ *
+ * Es el RESPALDO del WebSocket, no el mecanismo — y ya no hace falta un tope de
+ * rendición: antes la interfaz adivinaba si había terminado mirando una marca
+ * de tiempo, y como esa marca no cambiaba al no encontrar nada, el spinner
+ * giraba para siempre. Ahora la pasada dice cuándo terminó.
+ */
+const POLL_MS = 5_000;
+
+export function LeadDetailView({ leadId }: { leadId: string }) {
+  const router = useRouter();
+  const { hasPermission } = useAuth();
+  const { showAlert } = useAlert();
+
+  const [lead, setLead] = useState<LeadDetailDTO | null>(null);
+  const [busy, setBusy] = useState(false);
+  /**
+   * La pasada en curso. Sale de la fila al cargar y la adelanta el WebSocket.
+   *
+   * Sustituye al truco anterior —comparar `last_enriched_at` para adivinar si
+   * había terminado—, que no podía distinguir «no encontró nada» de «sigue
+   * trabajando» y dejaba el spinner girando para siempre.
+   */
+  const [run, setRun] = useState<EnrichmentRunDTO | null>(null);
+  const { socket } = useSocket("inbox");
+  const joinedRef = useRef<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const fresh = await getLead(leadId);
+      setLead(fresh);
+      setRun(fresh.last_run);
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No pudimos abrir el lead",
+        description: errorMessage(caught, ""),
+      });
+      router.replace("/marketing/leads");
+    }
+  }, [leadId, router, showAlert]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const working = isRunInFlight(run);
+
+  /**
+   * Suscripción al detalle de ESTE lead, y solo mientras la ficha está abierta.
+   *
+   * El join se marca SOLO tras el ack: darlo por bueno antes daba por hecho un
+   * join que pudo fallar por permisos o por timeout, y no se reintentaba nunca.
+   *
+   * Depende SOLO de `socket`, jamás de `connected`. Con la dependencia ingenua
+   * el ciclo era: se desconecta → el cleanup quita el listener → el cuerpo sale
+   * por el guard → llega el `connect` sin nadie escuchando, y el socket se
+   * queda fuera de la sala para siempre. El token rota cada ~14 minutos con
+   * desconexión, así que pasaría siempre.
+   */
+  useEffect(() => {
+    if (socket === null) return;
+
+    const join = () => {
+      socketManager
+        .emitWithAck(socket, "inbox.join_lead", { lead_id: leadId })
+        .then((ack) => {
+          if (ack.ok) joinedRef.current = leadId;
+        })
+        .catch(() => {
+          // Timeout: `joinedRef` queda sin fijar y el próximo `connect` reintenta.
+        });
+    };
+
+    join();
+    // La membresía del room muere con la conexión: olvidarla obliga a
+    // re-unirse en vez de dar por hecho que sigue vigente.
+    const onConnect = () => {
+      join();
+      // Lo que pasó mientras el socket estuvo caído no llegó a nadie: se
+      // recarga la fila, que es la verdad.
+      void load();
+    };
+    const onDisconnect = () => {
+      joinedRef.current = null;
+    };
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      if (joinedRef.current !== null) {
+        const leaving = joinedRef.current;
+        joinedRef.current = null;
+        socketManager
+          .emitWithAck(socket, "inbox.leave_lead", { lead_id: leaving })
+          .catch(() => {
+            // Salir es best-effort: si el socket ya murió, el room murió con él.
+          });
+      }
+    };
+  }, [socket, leadId, load]);
+
+  // El avance mueve la tarjeta en el sitio, sin volver a pedir el lead: son
+  // varios mensajes por pasada y no tiene sentido recargar con cada uno.
+  useSocketEvent(socket, "prospecting.lead_enrichment_progress", (payload) => {
+    if (payload.lead_id !== leadId) return;
+    setRun(payload.run as EnrichmentRunDTO);
+  });
+
+  /**
+   * Al terminar SÍ se recarga: los datos nuevos están en el lead, no en el
+   * evento. Y se dice qué pasó, que son dos finales distintos — «no
+   * encontramos nada» es un desenlace legítimo y callárselo es lo que hacía
+   * que pareciera un fallo.
+   */
+  useSocketEvent(socket, "prospecting.lead_enrichment_completed", (payload) => {
+    if (payload.lead_id !== leadId) return;
+    setRun(payload.run as EnrichmentRunDTO);
+    void load();
+    const ganados = payload.run.fields_filled;
+    showAlert(
+      ganados > 0
+        ? {
+            tone: "success",
+            title:
+              ganados === 1 ? "Encontramos un dato nuevo" : `Encontramos ${String(ganados)} datos nuevos`,
+            description: "Abajo tienes lo que hallamos y de qué fuente salió cada cosa.",
+          }
+        : {
+            tone: "info",
+            title: "No encontramos nada nuevo",
+            description:
+              "Ya preguntamos a todas las fuentes disponibles para este lead. Puedes completarlo a mano.",
+          },
+    );
+  });
+
+  /**
+   * Respaldo del WebSocket, no el mecanismo.
+   *
+   * Corre SOLO mientras hay una pasada viva y es lo que sostiene la promesa de
+   * que la verdad vive en la fila: si el socket no llegó —pestaña dormida,
+   * token rotando, red mala— la tarjeta se mueve igual.
+   */
+  useEffect(() => {
+    if (!working) return;
+    const timer = setInterval(() => void load(), POLL_MS);
+    return () => clearInterval(timer);
+  }, [working, load]);
+
+  const onPromote = useCallback(async () => {
+    setBusy(true);
+    try {
+      const result = await promoteLeads([leadId]);
+      const failure = result.failed[0];
+      if (failure !== undefined) {
+        showAlert({
+          tone: "error",
+          title: "No se pudo promover",
+          description: failure.reason,
+        });
+      } else {
+        showAlert({
+          tone: "success",
+          title: "Lead promovido",
+          description:
+            "Ya es un contacto de tu CRM y tu agente puede atenderlo.",
+        });
+      }
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, load, showAlert]);
+
+  /**
+   * Buscarle los datos que le faltan.
+   *
+   * Responde 202 y el trabajo sigue en una cola, así que no hay nada que
+   * esperar en la petición: el avance llega por la sala de este lead y, de
+   * respaldo, releyendo la fila. No se toca `lead.status` — ese es el ciclo de
+   * vida del lead y el servidor nunca escribe `enriching`; lo transitorio es
+   * nuestra petición, no la vida del lead.
+   *
+   * Se pinta la pasada como encolada en el acto: el 202 ya confirmó que el
+   * trabajo existe, y esperar al primer evento dejaría la tarjeta en blanco
+   * justo en el segundo en que el usuario mira.
+   */
+  const onEnrich = useCallback(async () => {
+    setBusy(true);
+    try {
+      await enrichLead(leadId);
+      setRun({
+        id: "pendiente",
+        lead_id: leadId,
+        status: "queued",
+        steps: [],
+        fields_filled: 0,
+        units_spent: 0,
+        manual: true,
+        started_at: null,
+        finished_at: null,
+        created_at: new Date().toISOString(),
+      });
+      showAlert({
+        tone: "info",
+        title: "Buscando datos",
+        description:
+          "Estamos preguntando a las fuentes. Los datos aparecen aquí en cuanto lleguen.",
+      });
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo pedir la búsqueda",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, showAlert]);
+
+  /**
+   * Volver a puntuar este lead. SÍ puede gastar cuota —por eso pide
+   * `leads:manage`— y se dice en el botón: quien lo pulsa está pidiendo que se
+   * pague por saber.
+   */
+  const onVerify = useCallback(async () => {
+    setBusy(true);
+    try {
+      const result = await verifyLead(leadId);
+      showAlert({
+        tone: "success",
+        title: `Puntaje actualizado: ${String(result.score)}`,
+        description: "Abajo tienes la evidencia de cada señal.",
+      });
+      await load();
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo verificar",
+        description: errorMessage(caught, "Intenta de nuevo."),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, load, showAlert]);
+
+  const onDiscard = useCallback(async () => {
+    setBusy(true);
+    try {
+      await discardLead(leadId);
+      showAlert({
+        tone: "success",
+        title: "Lead descartado",
+        description: "Ya no aparecerá en tu bandeja.",
+      });
+      router.push("/marketing/leads");
+    } catch (caught) {
+      showAlert({
+        tone: "error",
+        title: "No se pudo descartar",
+        description: errorMessage(caught, ""),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [leadId, router, showAlert]);
+
+  if (lead === null) return <BrandLoader label="Cargando lead" />;
+
+  return (
+    <div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mb-4"
+        onClick={() => router.push("/marketing/leads")}
+      >
+        <ArrowLeft className="size-4" aria-hidden />
+        Volver a la bandeja
+      </Button>
+
+      <header className="mb-5 flex flex-wrap items-start gap-4">
+        <div>
+          <h1 className="font-heading text-xl font-bold">
+            {leadDisplayName(lead)}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusBadge
+              status={lead.quality_status}
+              map={QUALITY_STATUS_MAP}
+            />
+            <StatusBadge status={lead.status} map={LEAD_STATUS_MAP} />
+            <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-xs">
+              {LEGAL_BASIS_LABELS[lead.legal_basis]}
+            </span>
+            <ChannelPermissions
+              lead={{
+                allowed_channels: lead.allowed_channels,
+                legal_basis: lead.legal_basis,
+                // El detalle SÍ tiene los valores: pasarlos es lo que
+                // distingue «no te dejan» de «no lo tenemos».
+                email: lead.email,
+                phone: lead.phone,
+              }}
+            />
+          </div>
+          <p className="text-muted-foreground mt-2 text-xs">
+            {SOURCE_LABELS[lead.source]} · descubierto el{" "}
+            {formatShortDate(lead.created_at)}
+          </p>
+        </div>
+
+        <div className="ml-auto flex gap-2">
+          {/* Buscar datos va PRIMERO y en primario: para un lead a medio
+              llenar es la acción que desbloquea a las otras dos. */}
+          {hasPermission("leads:manage") && (
+            <Button size="sm" disabled={busy || working} onClick={() => void onEnrich()}>
+              {working ? (
+                <LoaderCircle aria-hidden className="size-4 animate-spin" />
+              ) : (
+                <WandSparkles aria-hidden className="size-4" />
+              )}
+              {working ? "Buscando…" : "Buscar datos"}
+            </Button>
+          )}
+          {hasPermission("leads:manage") && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy || working}
+              onClick={() => void onVerify()}
+            >
+              <RefreshCw className="size-4" aria-hidden />
+              Volver a revisar
+            </Button>
+          )}
+          {canDiscard(lead) && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => void onDiscard()}
+            >
+              <X className="size-4" aria-hidden />
+              Descartar
+            </Button>
+          )}
+        </div>
+      </header>
+
+      <div className="grid items-start gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="flex flex-col gap-5">
+          {/* Los datos primero: es lo que se viene a ver. El índice y la
+              procedencia explican y matizan, pero no son la respuesta. */}
+          <LeadIdentityCard lead={lead} />
+          {/* Qué se consultó y qué dio cada fuente. Va aquí, entre los datos y
+              el índice: responde «de dónde salió esto» justo después de
+              enseñarlo. */}
+          <EnrichmentRunCard run={run} />
+          <section className="border-border shadow-float bg-background rounded-lg border p-5">
+            <QualityBreakdown
+              score={lead.quality_score}
+              signals={lead.quality_signals}
+            />
+          </section>
+          <section className="border-border shadow-float bg-background rounded-lg border p-5">
+            <LeadProvenance lead={lead} />
+          </section>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          {canPromote(lead) && hasPermission("leads:promote") && (
+            <PromotionGate
+              lead={lead}
+              busy={busy}
+              onPromote={() => void onPromote()}
+            />
+          )}
+          {lead.status === "promoted" && lead.contact_id !== null && (
+            <section className="border-success/35 bg-success/[0.06] rounded-lg border p-4">
+              <p className="text-success flex items-center gap-2 text-sm font-semibold">
+                <Check className="size-4" aria-hidden />
+                Ya es un contacto de tu CRM
+              </p>
+              <Button variant="outline" size="sm" className="mt-3" asChild>
+                <a href={`/crm/contacts/${lead.contact_id}`}>Ver en el CRM</a>
+              </Button>
+            </section>
+          )}
+          <section className="border-border shadow-float bg-background rounded-lg border p-5">
+            <LeadTimeline events={lead.events} />
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
