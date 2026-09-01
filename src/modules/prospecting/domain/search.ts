@@ -105,7 +105,12 @@ export function paramsOf(search: SearchDTO) {
     text: search.params.text ?? undefined,
     category: search.params.category ?? undefined,
     city: search.params.city ?? undefined,
+    zone: search.params.zone ?? undefined,
     country: search.params.country,
+    // EL CENTRO. Faltaba, y no era cosmético: sin él «Repetir» relanzaba la
+    // búsqueda sin zona — en OpenStreetMap eso significa sin área, o sea el país
+    // entero, y en Google Maps sin nada que la acote.
+    center: search.params.center ?? undefined,
     radius_m: search.params.radius_m ?? undefined,
     limit: search.params.limit,
     // Sin esto, «Repetir» perdería los filtros en silencio y traería el triple
@@ -154,7 +159,10 @@ export function queryOf(search: SearchDTO): string {
     SEARCH_SOURCE_LABELS[search.source],
     search.params.category,
     search.params.text,
-    search.params.city,
+    // LA ZONA, y si no la hay la ciudad. Es lo que el dueño eligió en el mapa;
+    // la ciudad es el municipio que se deduce de ella, y repetirla aquí haría
+    // que la línea dijera «Bogotá» donde el dueño escribió «Zona G».
+    search.params.zone ?? search.params.city,
   ].filter(Boolean);
   return parts.join(" · ");
 }

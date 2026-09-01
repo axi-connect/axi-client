@@ -14,6 +14,14 @@ export interface LocationSuggestion {
   name: string;
   /** Lo que desambigua dos sitios homónimos. */
   detail: string;
+  /**
+   * El municipio del sitio, si el proveedor lo sabe.
+   *
+   * `name` NO es una ciudad: para «Zona G» el geocodificador devuelve primero un
+   * hotel que se llama así. Quien lance una búsqueda con este punto necesita las
+   * dos cosas por separado — el nombre para mostrar y el municipio para buscar.
+   */
+  locality?: string | null;
   lat: number;
   lng: number;
   kind?: string;

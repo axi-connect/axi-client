@@ -46,6 +46,21 @@ import {
 const LIMITS = [25, 50, 100, 200, 500];
 
 /**
+ * Por qué no se puede elegir esa fuente, en tres palabras.
+ *
+ * Corto a propósito: va como sufijo de la opción del desplegable, al lado del
+ * nombre. La versión larga vive en la vitrina de fuentes, que es donde hay sitio
+ * para explicarlo.
+ */
+const UNAVAILABLE_SHORT: Record<string, string> = {
+  no_account: "sin dar de alta",
+  disabled: "apagada",
+  unhealthy: "con problemas",
+  capped_day: "tope de hoy alcanzado",
+  capped_month: "tope del mes alcanzado",
+};
+
+/**
  * Lanzar una búsqueda.
  *
  * **El tope es un campo obligatorio, no un ajuste avanzado.** No existe
@@ -82,7 +97,25 @@ export function StartSearchSheet({
     initial?.source ?? usable[0]?.source ?? "openstreetmap",
   );
   const [category, setCategory] = useState(initial?.category ?? categories[0]?.id ?? "");
-  const [place, setPlace] = useState<LocationSuggestion | null>(null);
+  /*
+    «Repetir» llega con el punto ya elegido. Antes no: `center` no viajaba en el
+    contrato, así que repetir una búsqueda obligaba a volver a buscar la zona a
+    mano —y quien no se diera cuenta la relanzaba sin zona, que en OpenStreetMap
+    es el país entero—. El detalle va vacío a propósito: no hay nada que
+    desambiguar cuando el punto ya se eligió una vez.
+  */
+  const [place, setPlace] = useState<LocationSuggestion | null>(
+    initial?.center === undefined
+      ? null
+      : {
+          id: "repetida",
+          name: initial.zone ?? initial.city ?? "Zona elegida",
+          detail: "",
+          locality: initial.city ?? null,
+          lat: initial.center.lat,
+          lng: initial.center.lng,
+        },
+  );
   const [radius, setRadius] = useState<number>(initial?.radius_m ?? 3_000);
   const [limit, setLimit] = useState<number>(initial?.limit ?? 50);
   const [admission, setAdmission] = useState<AdmissionDTO>(
@@ -126,7 +159,16 @@ export function StartSearchSheet({
       await startSearch({
         source,
         category,
-        city: place.name,
+        /*
+          DOS CAMPOS, y no por gusto. Aquí iba `city: place.name`, y `place.name`
+          es el nombre del punto que devolvió el geocodificador: para «Zona G»,
+          Nominatim contesta primero con un hotel que se llama así. Ese nombre
+          acabó dentro de la frase que se le manda a Google —que respondió con
+          los restaurantes DE ese hotel: cinco, sin más páginas— y escrito como
+          ciudad de los leads. La zona se muestra; la ciudad se usa para buscar.
+        */
+        city: place.locality ?? place.name,
+        zone: place.name,
         center: { lat: place.lat, lng: place.lng },
         radius_m: radius,
         limit,
@@ -170,10 +212,24 @@ export function StartSearchSheet({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {usable.map((option) => (
-                  <SelectItem key={option.source} value={option.source}>
+                {/*
+                  SE LISTAN TODAS, incluidas las que no están disponibles. Antes
+                  el desplegable solo iteraba las usables, así que una fuente sin
+                  llave, apagada o con el tope tocado DESAPARECÍA sin dejar
+                  rastro: el dueño la veía «habilitada» en el panel de plataforma
+                  y no la encontraba aquí. Una opción vetada que dice por qué es
+                  información; una opción ausente es un misterio.
+                */}
+                {sources.map((option) => (
+                  <SelectItem
+                    key={option.source}
+                    value={option.source}
+                    disabled={!option.available}
+                  >
                     {option.label}
-                    {option.free && " · gratis"}
+                    {option.available
+                      ? option.free && " · gratis"
+                      : ` · ${UNAVAILABLE_SHORT[option.unavailable_reason ?? "no_account"]}`}
                   </SelectItem>
                 ))}
               </SelectContent>

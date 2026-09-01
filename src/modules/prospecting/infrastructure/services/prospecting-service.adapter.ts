@@ -298,7 +298,17 @@ export type StartSearchInput = {
   label?: string;
   text?: string;
   category?: string;
+  /** El municipio. Distinto de `zone`; ver el comentario de allí. */
   city?: string;
+  /**
+   * La zona elegida en el mapa: «Zona G», «UPZ Chapinero». Solo se muestra.
+   *
+   * Iba mezclada con `city`, y eso hacía que el nombre del punto geocodificado
+   * —para «Zona G», un hotel que se llama así— viajara como si fuera el
+   * municipio: entraba en la consulta que se le manda a Google y se escribía
+   * como ciudad de los leads.
+   */
+  zone?: string;
   country?: string;
   center?: { lat: number; lng: number };
   radius_m?: number;

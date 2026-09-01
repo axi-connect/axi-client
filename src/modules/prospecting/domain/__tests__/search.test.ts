@@ -23,7 +23,9 @@ function search(overrides: Partial<SearchDTO> = {}): SearchDTO {
       text: null,
       category: "panaderia",
       city: "Bogotá",
+      zone: null,
       country: "CO",
+      center: null,
       radius_m: 3000,
       limit: 100,
       admission: {
@@ -120,17 +122,52 @@ describe("paramsOf", () => {
       text: undefined,
       category: "panaderia",
       city: "Bogotá",
+      zone: undefined,
       country: "CO",
+      center: undefined,
       radius_m: 3000,
       limit: 100,
       admission: EMPTY_ADMISSION,
     });
+  });
+
+  /*
+    EL CENTRO. No estaba en el contrato, así que «Repetir» relanzaba la búsqueda
+    SIN el punto: en OpenStreetMap eso deja el área en nada —el país entero— y en
+    Google Maps la deja sin nada que la acote. Se perdía en silencio: la búsqueda
+    corría y devolvía cualquier cosa.
+  */
+  it("ARRASTRA EL PUNTO Y LA ZONA: sin ellos, «Repetir» busca en otro sitio", () => {
+    const conZona = search({
+      params: {
+        ...search().params,
+        zone: "Zona G",
+        city: "Bogotá",
+        center: { lat: 4.6515, lng: -74.0557 },
+      },
+    });
+    const repeat = paramsOf(conZona);
+
+    expect(repeat.center).toEqual({ lat: 4.6515, lng: -74.0557 });
+    expect(repeat.zone).toBe("Zona G");
+    // Y la ciudad sigue siendo el municipio, no la zona.
+    expect(repeat.city).toBe("Bogotá");
   });
 });
 
 describe("queryOf", () => {
   it("resume la búsqueda empezando por la fuente", () => {
     expect(queryOf(search())).toBe("OpenStreetMap · panaderia · Bogotá");
+  });
+
+  it("dice LA ZONA que el dueño eligió, no el municipio que se dedujo", () => {
+    // La tarjeta decía «Google Maps · restaurante · Zona G Hotel Boutique»
+    // porque zona y ciudad eran el mismo campo. Ahora la ciudad es «Bogotá» y lo
+    // que el dueño reconoce —«Zona G»— es lo que se pinta.
+    const conZona = search({
+      params: { ...search().params, zone: "Zona G", city: "Bogotá" },
+    });
+    expect(queryOf(conZona)).toBe("OpenStreetMap · panaderia · Zona G");
   });
 });
 

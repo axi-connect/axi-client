@@ -24,7 +24,9 @@ function search(overrides: Partial<SearchDTO> = {}): SearchDTO {
       text: null,
       category: "panaderia",
       city: "Bogotá",
+      zone: null,
       country: "CO",
+      center: null,
       radius_m: 3000,
       limit: 100,
       admission: {

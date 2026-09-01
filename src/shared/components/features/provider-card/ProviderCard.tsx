@@ -78,8 +78,24 @@ export interface ProviderCardProps {
   onClick?: () => void;
   /** Marca de selección: enciende el cometa, más lento que en hover. */
   selected?: boolean;
-  /** Presente pero sin interacción: hoja de ruta, fuente apagada. */
+  /**
+   * Presente, sin interacción **y apagada**: hoja de ruta, fuente que la
+   * plataforma no ha encendido. Atenúa la tarjeta, y eso es lo que comunica.
+   *
+   * NO es «esta tarjeta no se puede pulsar». Para eso está `static`, y
+   * confundirlos hizo que la vitrina de fuentes pintara OpenStreetMap —gratis y
+   * activa— exactamente igual que una fuente apagada: se pasaba `inert` a las
+   * tres tarjetas solo porque ninguna era clicable.
+   */
   inert?: boolean;
+  /**
+   * Solo muestra: ni enlace, ni botón, ni foco — pero **a plena opacidad**.
+   *
+   * Es la mayoría de las vitrinas: informan de algo que está funcionando y no
+   * hay nada que pulsar. Atenuar eso le dice al dueño que su fuente está
+   * apagada cuando no lo está.
+   */
+  static?: boolean;
   /**
    * Está en el grupo de selección pero no se puede elegir todavía.
    *
@@ -129,16 +145,19 @@ export function ProviderCard({
   onClick,
   selected,
   inert = false,
+  static: isStatic = false,
   disabled = false,
   ariaLabel,
   className,
 }: ProviderCardProps) {
+  // Sin interacción por cualquiera de los dos motivos; atenuada solo por uno.
+  const passive = inert || isStatic;
   const surface = cn(
     SURFACE,
     faulted ? "brand-fault" : BRAND_CLASSES[brand],
     (inert || disabled) && "opacity-70",
     disabled && "cursor-not-allowed",
-    !inert && FOCUS,
+    !passive && FOCUS,
     className,
   );
 
@@ -206,9 +225,12 @@ export function ProviderCard({
     </>
   );
 
-  if (inert) {
+  if (passive) {
     return (
-      <div aria-disabled="true" className={surface}>
+      // `aria-disabled` solo cuando de verdad está apagada: anunciar como
+      // deshabilitada una tarjeta que solo informa es el mismo error que
+      // atenuarla, pero para quien usa lector de pantalla.
+      <div {...(inert ? { "aria-disabled": true as const } : {})} className={surface}>
         {content}
       </div>
     );

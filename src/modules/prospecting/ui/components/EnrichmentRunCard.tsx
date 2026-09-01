@@ -3,10 +3,12 @@
 import {
   Check,
   CircleSlash,
+  History,
   LoaderCircle,
   Minus,
   TriangleAlert,
   WandSparkles,
+  Wallet,
 } from "lucide-react";
 
 import { RelativeDate } from "@/shared/components/ui/relative-date";
@@ -18,6 +20,7 @@ import {
 import {
   ATTRIBUTE_LABELS,
   PROVIDER_LABELS,
+  RUN_CAPABILITY_LABELS,
   RUN_STEP_LABELS,
   isRunInFlight,
   type EnrichmentRunDTO,
@@ -40,6 +43,14 @@ const STEP_STYLE: Record<RunStepState, { icon: TimelineItem["icon"]; tone: Timel
   no_data: { icon: Minus, tone: "neutral" },
   failed: { icon: TriangleAlert, tone: "warning" },
   no_account: { icon: CircleSlash, tone: "neutral" },
+  /*
+    «No se preguntó» va en neutro y NO como pendiente. Es la diferencia que el
+    dueño reportó: con el paso en «En espera», Google Maps parecía no estar en la
+    lista de fuentes aunque estuviera habilitado —el titular descuenta los
+    pendientes—. Ahora sale, dice que no se consultó y dice qué hacer.
+  */
+  skipped_paid: { icon: Wallet, tone: "neutral" },
+  skipped_fresh: { icon: History, tone: "neutral" },
 };
 
 /**
@@ -114,10 +125,18 @@ function Heading() {
 }
 
 /** El titular: cuántas fuentes, cuántos datos y cuándo. */
+/** Los estados en los que NO se le preguntó a la fuente. */
+const NOT_CONSULTED = new Set<RunStepState>([
+  "pending",
+  "no_account",
+  "skipped_paid",
+  "skipped_fresh",
+]);
+
 function summary(run: EnrichmentRunDTO): string {
-  const consulted = run.steps.filter(
-    (step) => step.state !== "pending" && step.state !== "no_account",
-  ).length;
+  // Saltada no es consultada. Contarla como consultada sería el mismo engaño al
+  // revés: el dueño vería «5 fuentes» sobre dos que de verdad respondieron.
+  const consulted = run.steps.filter((step) => !NOT_CONSULTED.has(step.state)).length;
   const fuentes = `${String(consulted)} ${consulted === 1 ? "fuente" : "fuentes"}`;
   if (isRunInFlight(run)) {
     return `${fuentes} de ${String(run.steps.length)} · en curso`;
@@ -160,7 +179,12 @@ function RunPill({ run }: { run: EnrichmentRunDTO }) {
 
 function toTimelineItem(step: RunStepDTO, index: number): TimelineItem {
   const style = STEP_STYLE[step.state];
-  const label = PROVIDER_LABELS[step.provider] ?? step.provider;
+  // Sin proveedor, la fila habla de LA CAPACIDAD: no hay ninguna fuente que la
+  // atienda, así que inventarle un nombre de proveedor sería mentir.
+  const label =
+    step.provider === null
+      ? (RUN_CAPABILITY_LABELS[step.capability] ?? step.capability)
+      : (PROVIDER_LABELS[step.provider] ?? step.provider);
   const seconds =
     step.latency_ms === null || step.latency_ms === undefined
       ? null
@@ -175,7 +199,7 @@ function toTimelineItem(step: RunStepDTO, index: number): TimelineItem {
       : RUN_STEP_LABELS[step.state];
 
   return {
-    id: `${step.capability}-${step.provider}-${String(index)}`,
+    id: `${step.capability}-${step.provider ?? "sin-fuente"}-${String(index)}`,
     icon: style.icon,
     tone: style.tone,
     pending: step.state === "pending",

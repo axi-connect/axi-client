@@ -22,6 +22,31 @@ export const RUN_STEP_LABELS: Record<RunStepState, string> = {
   no_data: "Nada que aportar",
   failed: "No respondió",
   no_account: "Sin cuenta configurada",
+  // Los dos «no se preguntó». Existen porque el backend saltaba estas fuentes
+  // en silencio y sus pasos se quedaban en «En espera» para siempre: una
+  // pasada ya cerrada seguía diciendo que Google Maps estaba trabajando, y el
+  // titular la descontaba de la cuenta de fuentes consultadas.
+  skipped_paid: "No se consultó",
+  skipped_fresh: "Ya la habíamos consultado",
+};
+
+/**
+ * Qué se le iba a preguntar, cuando no hay ninguna fuente que lo atienda.
+ *
+ * Un paso sin proveedor ya no finge tener uno: el backend mandaba la capacidad
+ * en el campo `provider` y el visor imprimía literalmente «enrich_person», un
+ * identificador en inglés, en la lista de fuentes del lead. La redacción es la
+ * del dueño del negocio, no la del catálogo del operador: aquí se lee «qué me
+ * falta», no «qué capacidad no tengo contratada».
+ */
+export const RUN_CAPABILITY_LABELS: Record<string, string> = {
+  verify_email: "Verificación de correo",
+  verify_phone: "Verificación de teléfono",
+  identity_lookup: "Registro mercantil",
+  enrich_person: "Datos de personas",
+  enrich_company: "Datos de empresas",
+  extract_site: "Su sitio web",
+  geocode: "Ubicación en el mapa",
 };
 
 /** El estado de la pasada entera. `partial` importa: algo llegó y algo falló. */

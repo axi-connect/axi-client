@@ -10559,6 +10559,8 @@ export interface components {
                 provider: string;
                 label: string;
                 available: boolean;
+                /** @enum {string|null} */
+                unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | null;
                 free: boolean;
                 allowed_channels: ("whatsapp" | "email" | "manual")[];
                 attribution: string | null;
@@ -10573,6 +10575,7 @@ export interface components {
                 id: string;
                 name: string;
                 detail: string;
+                locality: string | null;
                 lat: number;
                 lng: number;
                 kind: string;
@@ -10591,7 +10594,12 @@ export interface components {
                     text: string | null;
                     category: string | null;
                     city: string | null;
+                    zone: string | null;
                     country: string;
+                    center: {
+                        lat: number;
+                        lng: number;
+                    } | null;
                     radius_m: number | null;
                     limit: number;
                     admission: {
@@ -10641,7 +10649,12 @@ export interface components {
                 text: string | null;
                 category: string | null;
                 city: string | null;
+                zone: string | null;
                 country: string;
+                center: {
+                    lat: number;
+                    lng: number;
+                } | null;
                 radius_m: number | null;
                 limit: number;
                 admission: {
@@ -10674,6 +10687,7 @@ export interface components {
             text?: string;
             category?: string;
             city?: string;
+            zone?: string;
             /** @default CO */
             country: string;
             center?: {
@@ -10765,10 +10779,10 @@ export interface components {
                 /** @enum {string} */
                 status: "queued" | "running" | "completed" | "partial" | "failed";
                 steps: {
-                    provider: string;
+                    provider: string | null;
                     capability: string;
                     /** @enum {string} */
-                    state: "pending" | "running" | "found" | "no_data" | "failed" | "no_account";
+                    state: "pending" | "running" | "found" | "no_data" | "failed" | "no_account" | "skipped_paid" | "skipped_fresh";
                     fields: string[];
                     units_spent: number;
                     latency_ms?: number | null;

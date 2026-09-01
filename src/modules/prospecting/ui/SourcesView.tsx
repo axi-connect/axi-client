@@ -37,6 +37,23 @@ const SUBTITLES: Record<SearchSource, string> = {
   serp: "Serper · resultados de buscador",
 };
 
+/**
+ * Por qué una fuente no está disponible, dicho para el dueño del negocio.
+ *
+ * Antes la tarjeta decía «Tu plataforma todavía no encendió esta fuente» para
+ * los cuatro motivos, y en el desplegable de búsqueda la fuente simplemente
+ * desaparecía. El dueño veía «habilitado» en el panel y no la encontraba al
+ * buscar, sin nada que uniera las dos cosas. El motivo lo calcula el backend
+ * (`unavailable_reason`), que es quien de verdad lo sabe.
+ */
+const UNAVAILABLE_REASONS: Record<string, string> = {
+  no_account: "Tu plataforma todavía no dio de alta esta fuente.",
+  disabled: "Tu plataforma tiene esta fuente apagada.",
+  unhealthy: "Esta fuente está dando problemas; tu plataforma ya lo sabe.",
+  capped_day: "Esta fuente llegó a su tope de consultas de hoy. Vuelve mañana.",
+  capped_month: "Esta fuente llegó a su tope del mes.",
+};
+
 /** Qué aporta cada fuente, dicho por lo que el dueño va a obtener. */
 const PITCH: Record<SearchSource, string> = {
   google_places:
@@ -79,6 +96,10 @@ export function SourcesView() {
       <ProviderCardGrid>
         {sources.map((source) => {
           const Icon = ICONS[source.source];
+          const reason =
+            source.unavailable_reason === null
+              ? undefined
+              : UNAVAILABLE_REASONS[source.unavailable_reason];
           return (
             <ProviderCard
               key={source.source}
@@ -95,11 +116,20 @@ export function SourcesView() {
               // Lo que hay que saber ANTES de descubrir doscientos, no después.
               // Sale de `allowedChannelsFor` en el backend, no de un texto a mano.
               chips={source.allowed_channels.map((channel) => CHANNEL_LABELS[channel])}
-              footnote={
-                source.attribution ??
-                (source.available ? undefined : "Tu plataforma todavía no encendió esta fuente.")
-              }
-              inert
+              /*
+                Los dos, y el motivo primero. Con `??` la atribución de la ODbL
+                tapaba el motivo justo en OpenStreetMap, que es la única fuente
+                que la tiene: la única en la que el aviso no se podría leer.
+              */
+              footnote={[reason, source.attribution].filter(Boolean).join(" ") || undefined}
+              /*
+                ATENUAR SIGNIFICA «APAGADA», y nada más. La vitrina pasaba
+                `inert` a las tres tarjetas —solo porque ninguna es clicable— y
+                el resultado fue que OpenStreetMap, gratis y activa, se veía
+                idéntica a una fuente que la plataforma no ha encendido. `static`
+                es «solo informa»: misma superficie de marca, plena opacidad.
+              */
+              {...(source.available ? { static: true } : { inert: true })}
             />
           );
         })}
