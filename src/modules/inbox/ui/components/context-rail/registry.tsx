@@ -1,8 +1,9 @@
-import { History, Paperclip, UserRound, type LucideIcon } from "lucide-react";
+import { History, Paperclip, PhoneCall, UserRound, type LucideIcon } from "lucide-react";
 import type { ConversationDTO } from "@/modules/inbox/domain/inbox";
 import { ContactPanel } from "./panels/ContactPanel";
 import { AttachmentsPanel } from "./panels/AttachmentsPanel";
 import { HistoryPanel } from "./panels/HistoryPanel";
+import { CallsPanel } from "./panels/CallsPanel";
 
 /**
  * REGISTRY del rail de contexto — el punto de extensión de la vista.
@@ -54,5 +55,12 @@ export const CONTEXT_PANELS: ContextPanelDef[] = [
     icon: History,
     permission: "crm:read",
     Panel: HistoryPanel,
+  },
+  {
+    id: "calls",
+    label: "Llamadas",
+    icon: PhoneCall,
+    permission: "calls:read",
+    Panel: CallsPanel,
   },
 ];

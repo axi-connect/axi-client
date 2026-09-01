@@ -14,6 +14,9 @@ export type CallRecordingUrlDTO = Schemas["CallRecordingUrlDto"];
 export type CallTranscriptSegment = CallSessionDetailDTO["segments"][number];
 export type CallEventItem = CallSessionDetailDTO["events"][number];
 
+export type CallsSettingsDTO = Schemas["CallsSettingsDto"];
+export type TenantCallNumberDTO = Schemas["TenantCallNumberDto"];
+
 export type CallDirection = CallSessionRowDTO["direction"];
 export type CallPurpose = CallSessionRowDTO["purpose"];
 export type CallSessionStatus = CallSessionRowDTO["status"];
@@ -30,6 +33,8 @@ export type ListCallSessionsParams = OffsetQuery & {
   /** Rango ISO sobre created_at (gte / lt). */
   from?: string;
   to?: string;
+  /** Las llamadas de UN contacto (rail del inbox / ficha CRM). */
+  contact_id?: string;
   /** Nombre del contacto o dígitos del número. */
   q?: string;
 };

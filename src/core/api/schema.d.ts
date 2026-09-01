@@ -20415,6 +20415,7 @@ export interface operations {
                 outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred";
                 purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
                 ai_agent_id?: string;
+                contact_id?: string;
                 from?: string;
                 to?: string;
                 q?: string;

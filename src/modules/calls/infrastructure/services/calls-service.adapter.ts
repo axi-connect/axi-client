@@ -6,7 +6,9 @@ import type {
   CallSessionRowDTO,
   CallsOverviewDTO,
   CallsOverviewGranularity,
+  CallsSettingsDTO,
   ListCallSessionsParams,
+  TenantCallNumberDTO,
 } from "@/modules/calls/domain/call";
 
 /** Adapter REST del módulo de llamadas (único punto que toca `http`). */
@@ -43,4 +45,22 @@ export function getCallsOverview(
   granularity: CallsOverviewGranularity = "week",
 ): Promise<CallsOverviewDTO> {
   return http.get<CallsOverviewDTO>("/calls/overview", { granularity });
+}
+
+/** Config resuelta del tenant (`settings.calls`). */
+export function getCallsSettings(): Promise<CallsSettingsDTO> {
+  return http.get<CallsSettingsDTO>("/calls/settings");
+}
+
+/**
+ * PUT de sección completa. A diferencia de agenda, el backend responde 204:
+ * tras guardar hay que RE-CONSULTAR el GET para pintar la vista resuelta.
+ */
+export function putCallsSettings(dto: CallsSettingsDTO): Promise<void> {
+  return http.put<void>("/calls/settings", dto);
+}
+
+/** El número (o números) asignados al tenant. Array plano, sin meta. */
+export function listTenantCallNumbers(): Promise<TenantCallNumberDTO[]> {
+  return http.get<TenantCallNumberDTO[]>("/calls/numbers");
 }
