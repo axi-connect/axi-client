@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownLeft,
@@ -28,9 +28,11 @@ import {
   CALL_PURPOSE_LABELS,
   CALL_STATUS_MAP,
   DIRECTION_LABELS,
+  isLiveCallStatus,
   type CallSessionDetailDTO,
 } from "@/modules/calls/domain/call";
 import { useRecordingUrl } from "@/modules/calls/infrastructure/hooks/use-recording-url";
+import { useLiveCall } from "@/modules/calls/infrastructure/realtime/use-live-call";
 import { getCallSession } from "@/modules/calls/infrastructure/services/calls-service.adapter";
 import { CallTranscript } from "@/modules/calls/ui/components/CallTranscript";
 import { formatCallClock, formatCallCost } from "@/modules/calls/ui/lib/call-format";
@@ -44,21 +46,44 @@ export function CallDetailView({ callId }: { callId: string }) {
   const { showAlert } = useAlert();
   const [call, setCall] = useState<CallSessionDetailDTO | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(() => {
     getCallSession(callId)
-      .then((data) => {
-        if (!cancelled) setCall(data);
-      })
+      .then(setCall)
       .catch((error: unknown) => {
-        if (cancelled) return;
         showAlert({ tone: "error", title: errorMessage(error), open: true });
         router.replace("/calls/history");
       });
-    return () => {
-      cancelled = true;
-    };
   }, [callId, router, showAlert]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Transcript en vivo (F4-C): mientras la llamada siga viva, el room
+  // `call_…` inserta los segmentos y cualquier cambio de estado re-consulta.
+  const live = call !== null && isLiveCallStatus(call.status);
+  useLiveCall({
+    callSessionId: callId,
+    enabled: live,
+    onSegment: (segment) => {
+      setCall((prev) => {
+        if (prev === null) return prev;
+        if (prev.segments.some((existing) => existing.seq === segment.seq)) return prev;
+        const next = [
+          ...prev.segments,
+          {
+            seq: segment.seq,
+            role: segment.role,
+            text: segment.text,
+            at_ms: segment.at_ms,
+            interrupted: false,
+          },
+        ].sort((a, b) => a.seq - b.seq);
+        return { ...prev, segments: next };
+      });
+    },
+    onChanged: load,
+  });
 
   if (call === null) {
     return (
@@ -129,14 +154,24 @@ export function CallDetailView({ callId }: { callId: string }) {
 
           <section className={CARD}>
             <div className="mb-4 flex items-baseline justify-between gap-3">
-              <h2 className="text-sm font-semibold">Transcript</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                Transcript
+                {live && (
+                  <span className="bg-success/10 text-success inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium">
+                    <span className="bg-success size-1.5 animate-pulse rounded-full" aria-hidden />
+                    En vivo
+                  </span>
+                )}
+              </h2>
               <p className="text-muted-foreground text-xs">
                 latencia por turno · toca el badge para ver el desglose
               </p>
             </div>
             {call.segments.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                Esta llamada no tiene transcript (no hubo conversación con la IA).
+                {live
+                  ? "Esperando la conversación…"
+                  : "Esta llamada no tiene transcript (no hubo conversación con la IA)."}
               </p>
             ) : (
               <CallTranscript

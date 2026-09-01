@@ -79,6 +79,18 @@ export const CALL_OUTCOME_MAP: StatusMap = {
   transferred: { label: "Transferida", tone: "info" },
 };
 
+/** Estados en los que la llamada sigue VIVA (espejo del backend F4-A). */
+const LIVE_STATUSES: ReadonlySet<CallSessionStatus> = new Set([
+  "queued",
+  "initiated",
+  "ringing",
+  "in_progress",
+]);
+
+export function isLiveCallStatus(status: CallSessionStatus): boolean {
+  return LIVE_STATUSES.has(status);
+}
+
 /**
  * El pill de "Resultado" de la tabla: el desenlace si ya existe; si no, el
  * estado del ciclo de vida (una llamada viva aún no tiene desenlace).

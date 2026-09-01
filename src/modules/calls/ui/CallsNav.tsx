@@ -1,11 +1,12 @@
 "use client";
 
-import { History } from "lucide-react";
+import { Activity, History } from "lucide-react";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
-// F4-C añade Monitoreo (href /calls, exact) y F4-D Configuración
-// (/calls/settings, gated por calls:manage — el gate vive aquí, no en NavTabs).
+// F4-D añade Configuración (/calls/settings, gated por calls:manage — el
+// gate vive aquí, no en NavTabs).
 const NAV_ITEMS: readonly NavTabItem[] = [
+  { href: "/calls", label: "Monitoreo", icon: Activity, exact: true },
   { href: "/calls/history", label: "Historial", icon: History },
 ];
 

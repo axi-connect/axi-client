@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation";
+import { CallsMonitorView } from "@/modules/calls/ui/CallsMonitorView";
 
-/** El nodo del sidebar apunta a /calls; hasta que llegue el Monitoreo (F4-C),
- * la vista default es el historial. */
+/** El nodo del sidebar apunta a /calls: el Monitoreo es la vista default. */
 export default function CallsPage() {
-  redirect("/calls/history");
+  return <CallsMonitorView />;
 }

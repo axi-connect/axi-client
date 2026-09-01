@@ -26,6 +26,19 @@ export function getCallRecordingUrl(id: string): Promise<CallRecordingUrlDTO> {
   return http.get<CallRecordingUrlDTO>(`/calls/sessions/${id}/recording`);
 }
 
+/** Llamadas vivas (queued/initiated/ringing/in_progress) para el Monitoreo. */
+export function listLiveCallSessions(): Promise<{ data: CallSessionRowDTO[] }> {
+  return http.get<{ data: CallSessionRowDTO[] }>("/calls/sessions/live");
+}
+
+/** Banco de pruebas: origina una llamada real al número dado (calls:place). */
+export function placeTestCall(input: {
+  to: string;
+  objective?: string;
+}): Promise<{ call_session_id: string }> {
+  return http.post<{ call_session_id: string }>("/calls/test-call", input);
+}
+
 export function getCallsOverview(
   granularity: CallsOverviewGranularity = "week",
 ): Promise<CallsOverviewDTO> {
