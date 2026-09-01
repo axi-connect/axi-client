@@ -1,0 +1,809 @@
+<title>Borrar en captación</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ===========================================================================
+   Borrado en captación · Fase 0 (mockup)
+   Contrato: DELETE|POST /prospecting/leads · /prospecting/searches
+             GET /prospecting/searches/deletion-preview
+
+   Tokens COPIADOS de globals.css, igual que el mockup de filtros: si algo no se
+   puede expresar con ellos, es que no se puede construir. Y el lenguaje visual
+   es el que el dueño ya aprobó allí — seleccionado = ELEVADO, nunca teñido, y
+   el coral solo en lo que actúa.
+
+   Decisiones del dueño, ya tomadas:
+   · «Eliminar» vive SOLO en la barra de selección. Nada en la fila.
+   · UN solo diálogo, igual para 1 que para 300.
+   · Aviso al terminar; panel solo si hay algo que explicar.
+   · SIN el aviso de «puede volver y volver a costar».
+   =========================================================================== */
+
+/* ===========================================================================
+   F5 · Fase 0 — Mockup de la bandeja de captación con filtros avanzados
+   Plan: axi-server/docs/plans/prospecting_f5_inbox_ux.md
+
+   Los tokens son los de src/app/globals.css, COPIADOS y no reinventados: si
+   algo aquí no se puede expresar con ellos, es que no se puede construir.
+   Única licencia: Nexa (la de los encabezados) no está en Google Fonts, así
+   que los títulos van en Poppins 600. En el producto serán Nexa.
+   =========================================================================== */
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+  --axi-on-color: #ffffff;
+  --logo-instagram: #e1306c;
+  --logo-messenger: #0084ff;
+  --logo-whatsapp: #25d366;
+  --logo-osm: #7ebc6f;
+  --logo-maps: #4285f4;
+  --logo-serp: #8b5cf6;
+
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-border-soft: color-mix(in srgb, var(--color-border) 50%, transparent);
+  --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --color-muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --color-accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --color-input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+
+  /* Superficie del buscador. En claro es un gris muy suave sobre el blanco de
+     la página —la pastilla de la referencia—; en oscuro sube a superficie
+     elevada. Derivado con color-mix de los primitivos, sin hex nuevos. */
+  --surface-search: color-mix(in srgb, var(--axi-muted) 58%, var(--background));
+  /* Fila seleccionada: tinte NEUTRO. El coral es color de acción y pintar seis
+     filas con él las convierte en seis llamadas a la acción a la vez. */
+  --surface-selected: color-mix(in srgb, var(--foreground) 3.5%, var(--background));
+  /* «Elevarse» es ir hacia la luz: al blanco en claro, a un gris claro en
+     oscuro. Con `--background` a secas, en oscuro subir era ir al negro. */
+  --surface-lift: var(--background);
+}
+
+/* El tema oscuro redefine SOLO tokens, nunca componentes, y va guardado para
+   que una elección explícita de claro gane sobre un sistema oscuro. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --axi-brand: #fb7185;
+    --axi-brand-2: #df4f4f;
+    --axi-violet: #a78bfa;
+    --axi-amber: #fbbf24;
+    --axi-muted: #18181b;
+    --axi-success: #4ade80;
+    --axi-warning: #fbbf24;
+    --axi-destructive: #f87171;
+    --axi-info: #60a5fa;
+    --axi-on-color: #0a0a0a;
+    --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+    --surface-search: var(--axi-muted);
+    --surface-selected: color-mix(in srgb, var(--foreground) 6%, var(--background));
+    --surface-lift: color-mix(in srgb, var(--foreground) 11%, var(--background));
+  }
+}
+:root[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --axi-brand: #fb7185;
+  --axi-brand-2: #df4f4f;
+  --axi-violet: #a78bfa;
+  --axi-amber: #fbbf24;
+  --axi-muted: #18181b;
+  --axi-success: #4ade80;
+  --axi-warning: #fbbf24;
+  --axi-destructive: #f87171;
+  --axi-info: #60a5fa;
+  --axi-on-color: #0a0a0a;
+  --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --surface-search: var(--axi-muted);
+  --surface-selected: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --surface-lift: color-mix(in srgb, var(--foreground) 11%, var(--background));
+}
+
+* { box-sizing: border-box; }
+/* Sin esto, cualquier `display` de una clase gana al atributo `hidden` y la
+   hoja, la banda y el botón de limpiar salen siempre. En el Artifact publicado
+   no se nota porque su reset ya lo trae; abriendo el fichero a pelo, sí. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Poppins, "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.011em; text-wrap: balance; margin: 0; }
+button { font: inherit; color: inherit; }
+.mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ── Andamio del mockup: distinto del producto a propósito ──────────────── */
+.scaffold {
+  position: fixed; z-index: 90; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px; padding: 6px;
+  border-radius: 999px; border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  backdrop-filter: blur(16px); box-shadow: var(--shadow-overlay);
+  max-width: calc(100vw - 24px); overflow-x: auto; scrollbar-width: none;
+}
+.scaffold::-webkit-scrollbar { display: none; }
+.scaffold__label {
+  padding: 0 8px 0 6px; font-size: 10.5px; font-weight: 600; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted-foreground);
+}
+.scaffold button {
+  border: 0; cursor: pointer; white-space: nowrap; height: 30px; padding: 0 12px;
+  border-radius: 999px; background: transparent; color: var(--color-muted-foreground);
+  font-size: 12.5px; font-weight: 500; transition: background-color .2s, color .2s;
+}
+.scaffold button:hover { color: var(--foreground); }
+.scaffold button[aria-current="true"] { background: var(--color-accent); color: var(--foreground); }
+.scaffold button:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+
+/* ── Cromo mínimo ───────────────────────────────────────────────────────── */
+.page { max-width: 1120px; margin: 0 auto; padding: 28px 24px 90px; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 640px) { .page { padding-inline: 14px; } }
+h1 { font-size: 25px; }
+.lede { margin: 5px 0 0; max-width: 64ch; font-size: 13.5px; color: var(--color-muted-foreground); }
+.eyebrow {
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.085em; color: var(--color-muted-foreground);
+}
+
+/* ── Barra de selección ─────────────────────────────────────────────────── */
+.band {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border); background: var(--background);
+  box-shadow: var(--shadow-float);
+}
+.band__text { font-size: 13px; }
+.band__text b { font-weight: 600; }
+.band__link {
+  border: 0; background: transparent; cursor: pointer; padding: 0;
+  font-size: 13px; font-weight: 600; color: var(--foreground);
+  text-decoration: underline; text-decoration-color: var(--axi-brand);
+  text-decoration-thickness: 1.5px; text-underline-offset: 3px;
+}
+.band__link:hover { color: var(--axi-brand); }
+.band__actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+.band__note {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  font-size: 11.5px; color: var(--color-muted-foreground);
+}
+
+/* ── Botones ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
+  border-radius: var(--radius-md); border: 1px solid var(--color-input);
+  background: var(--background); cursor: pointer; font-size: 12.5px; font-weight: 500;
+  transition: background-color .2s, border-color .2s;
+}
+.btn:hover { background: var(--color-secondary); }
+.btn:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+.btn--lg { height: 36px; font-size: 13px; padding: 0 14px; }
+.btn--primary {
+  border-color: transparent; color: var(--axi-on-color);
+  background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2));
+}
+.btn--primary:hover { filter: brightness(1.05); }
+/* DESTRUCTIVO ≠ CORAL: el coral es color de acción de marca y borrar usa el rojo
+   semántico. Pero eso solo no basta, y este mockup lo destapó: al lado de
+   «Promover» —coral relleno— un «Eliminar» rojo relleno se lee CASI IGUAL, y una
+   de las dos es irreversible. Dos botones contiguos que se parecen y hacen cosas
+   opuestas es el error, no el matiz de rojo.
+   Así que el destructivo NO va relleno en una barra: va de contorno, con el
+   texto y el borde en rojo. La jerarquía queda dicha —promover invita, eliminar
+   está disponible— y el relleno rojo se reserva para el botón de CONFIRMAR,
+   donde ya no compite con nada. */
+.btn--danger {
+  border-color: color-mix(in srgb, var(--axi-destructive) 45%, transparent);
+  background: transparent; color: var(--axi-destructive);
+}
+.btn--danger:hover { background: color-mix(in srgb, var(--axi-destructive) 10%, transparent); }
+/* Relleno solo en el diálogo: es el único sitio donde es LA acción. */
+.dialog .btn--danger {
+  border-color: transparent; background: var(--axi-destructive); color: var(--axi-on-color);
+}
+.dialog .btn--danger:hover { filter: brightness(1.06); background: var(--axi-destructive); }
+.btn--ghost { border-color: transparent; color: var(--color-muted-foreground); }
+.btn--ghost:hover { color: var(--foreground); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn--danger .ic, .btn--primary .ic { color: currentColor; }
+.ic { width: 14px; height: 14px; flex: none; }
+
+/* ── Tabla ──────────────────────────────────────────────────────────────── */
+.tablewrap { border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--background); }
+.tablescroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+thead { background: var(--axi-muted); }
+th {
+  text-align: left; padding: 9px 12px; font-size: 11.5px; font-weight: 600;
+  color: var(--color-muted-foreground); white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--color-border-soft); }
+tbody tr:last-child td { border-bottom: 0; }
+tr[data-selected="true"] { background: var(--surface-selected); }
+tr[data-gone="true"] { opacity: .42; }
+.col-sel { width: 44px; }
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--axi-brand); cursor: pointer; margin: 0; display: block; }
+input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .45; }
+.lead__name { font-weight: 500; font-size: 13.5px; }
+.lead__meta { margin-top: 1px; font-size: 11.5px; color: var(--color-muted-foreground); }
+.badge {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 9px;
+  border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.badge--crm { background: color-mix(in srgb, var(--axi-info) 12%, transparent); color: var(--axi-info); border-color: color-mix(in srgb, var(--axi-info) 28%, transparent); }
+.badge--new { background: var(--color-secondary); color: var(--color-muted-foreground); border-color: var(--color-border); }
+
+/* ── Diálogo ────────────────────────────────────────────────────────────── */
+.scrim {
+  position: fixed; inset: 0; z-index: 50;
+  background: color-mix(in srgb, var(--background) 45%, transparent);
+  backdrop-filter: blur(3px);
+}
+@media (prefers-reduced-motion: no-preference) { .scrim { animation: fade .2s ease-out; } }
+@keyframes fade { from { opacity: 0; } }
+
+.dialog {
+  position: fixed; z-index: 51; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(460px, calc(100vw - 28px));
+  border: 1px solid var(--color-border); border-radius: var(--radius-xl);
+  background: var(--background); box-shadow: var(--shadow-overlay); padding: 22px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dialog { animation: pop .26s cubic-bezier(.16,1,.3,1); }
+}
+@keyframes pop { from { opacity: 0; transform: translate(-50%, -46%) scale(.97); } }
+.dialog h2 { font-size: 17px; }
+.dialog__sub { margin: 3px 0 0; font-size: 12.5px; color: var(--color-muted-foreground); }
+.dialog__body { margin: 14px 0 0; font-size: 13.5px; line-height: 1.55; }
+.dialog__body strong { font-weight: 600; }
+.dialog__foot { margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px; }
+
+/* El aviso de que se está deteniendo algo que corre: ámbar, no rojo. Es un
+   efecto colateral que hay que saber, no un peligro. */
+.notice {
+  display: flex; gap: 8px; margin-top: 12px; padding: 9px 11px;
+  border-radius: var(--radius-md); font-size: 12px; line-height: 1.45;
+  border: 1px solid color-mix(in srgb, var(--axi-warning) 25%, transparent);
+  background: color-mix(in srgb, var(--axi-warning) 10%, transparent);
+  color: var(--axi-warning);
+}
+.notice svg { flex: none; margin-top: 1px; }
+.survivors {
+  margin-top: 12px; padding: 9px 11px; border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--axi-muted) 70%, var(--background));
+  border: 1px solid var(--color-border-soft);
+  font-size: 12.5px; line-height: 1.5; color: var(--color-muted-foreground);
+}
+.survivors strong { color: var(--foreground); }
+
+/* ── Aviso flotante ─────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; z-index: 60; right: 20px; bottom: 74px;
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 15px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border); background: var(--background);
+  box-shadow: var(--shadow-overlay); font-size: 13px; font-weight: 500;
+  max-width: calc(100vw - 40px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toast { animation: rise .3s cubic-bezier(.16,1,.3,1); }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+.toast .ic { color: var(--axi-success); width: 16px; height: 16px; }
+
+/* ── Panel de resultado ─────────────────────────────────────────────────── */
+.sheet {
+  position: fixed; z-index: 60; top: 0; right: 0; bottom: 0;
+  width: 460px; max-width: 100vw; display: flex; flex-direction: column;
+  border-left: 1px solid var(--color-border); background: var(--background);
+  box-shadow: var(--shadow-overlay);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { animation: slide .32s cubic-bezier(.16,1,.3,1); }
+}
+@keyframes slide { from { opacity: 0; transform: translateX(22px); } }
+@media (max-width: 520px) {
+  .sheet { top: auto; left: 0; width: auto; height: 86vh; border-left: 0;
+           border-top: 1px solid var(--color-border);
+           border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl); }
+}
+.sheet__head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 18px 20px; border-bottom: 1px solid var(--color-border);
+}
+.sheet__head h2 { font-size: 16px; }
+.sheet__head p { margin: 3px 0 0; font-size: 12.5px; color: var(--color-muted-foreground); }
+/* min-h-0 + flex-1: NUNCA calc(100svh - cabecera). */
+.sheet__body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 20px 20px; }
+.sheet__foot { display: flex; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--color-border); }
+.iconbtn {
+  display: grid; place-items: center; width: 30px; height: 30px; flex: none;
+  border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer;
+  color: var(--color-muted-foreground);
+}
+.iconbtn:hover { background: var(--color-secondary); color: var(--foreground); }
+
+.kept { list-style: none; margin: 9px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.kept li {
+  padding: 10px 12px; border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-soft); background: var(--surface-lift);
+  box-shadow: var(--shadow-float);
+}
+.kept__name { font-size: 13.5px; font-weight: 500; }
+.kept__why { margin-top: 1px; font-size: 11.5px; color: var(--color-muted-foreground); }
+.tally {
+  display: flex; align-items: baseline; gap: 8px; padding: 12px 14px;
+  border-radius: var(--radius-md); border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--axi-muted) 55%, var(--background));
+}
+.tally__n { font-size: 24px; font-weight: 600; }
+.tally__of { font-size: 12.5px; color: var(--color-muted-foreground); }
+.info {
+  display: flex; gap: 8px; margin-top: 14px; padding: 9px 11px;
+  border-radius: var(--radius-md); border: 1px solid var(--color-border-soft);
+  background: color-mix(in srgb, var(--axi-muted) 60%, var(--background));
+  font-size: 12px; line-height: 1.45; color: var(--color-muted-foreground);
+}
+.info svg { flex: none; margin-top: 1px; }
+
+/* ── Tarjeta de búsqueda ────────────────────────────────────────────────── */
+.searchcard {
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  background: var(--background); box-shadow: var(--shadow-float); padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 12px; max-width: 560px;
+}
+.searchcard__top { display: flex; align-items: flex-start; gap: 12px; }
+.searchcard__dot { width: 9px; height: 9px; border-radius: 999px; margin-top: 5px; flex: none; background: var(--logo-osm); }
+.searchcard__t { font-size: 14.5px; font-weight: 600; }
+.searchcard__m { margin-top: 2px; font-size: 12px; color: var(--color-muted-foreground); }
+.searchcard__running {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+  font-size: 11.5px; font-weight: 500; color: var(--axi-info);
+}
+.spin { width: 12px; height: 12px; animation: sp 1s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.searchcard__stats { display: flex; gap: 18px; flex-wrap: wrap; }
+.stat__k { font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted-foreground); }
+.stat__v { margin-top: 2px; font-size: 17px; font-weight: 600; }
+.searchcard__foot { display: flex; gap: 8px; padding-top: 4px; }
+.searchcard__foot .btn:last-child { margin-left: auto; }
+/* El contador es HISTÓRICO y su etiqueta lo dice: es la única forma de explicar
+   en qué se gastó el dinero, así que no se ajusta al borrar leads sueltos. */
+.histnote { font-size: 11px; color: var(--color-muted-foreground); }
+
+/* ── Nota de lectura ────────────────────────────────────────────────────── */
+.legend {
+  border: 1px dashed var(--color-border); border-radius: var(--radius-lg);
+  padding: 14px 16px; background: color-mix(in srgb, var(--axi-muted) 45%, transparent);
+}
+.legend h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--color-muted-foreground); }
+.legend ul { margin: 9px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.legend li { font-size: 12.5px; color: var(--color-muted-foreground); }
+.legend b { color: var(--foreground); font-weight: 600; }
+[hidden] { display: none !important; }
+</style>
+
+<div class="page">
+  <header>
+    <h1>Borrar en captación</h1>
+    <p class="lede">
+      No hay papelera ni deshacer, así que la confirmación es la única barrera que existe.
+      Este mockup es para juzgar qué se lee justo antes y justo después de pulsar.
+    </p>
+  </header>
+
+  <!-- ══ 1 · La barra de selección ══════════════════════════════════════ -->
+  <section>
+    <div class="eyebrow">1 · Dónde vive</div>
+    <p class="lede" style="margin-bottom:12px">
+      «Eliminar» entra en la barra de selección que ya existe, junto a «Buscar datos» y «Promover».
+      Nada en la fila: un clic de más antes de algo irreversible no es fricción, es margen.
+    </p>
+
+    <div class="band">
+      <span class="band__text" id="bandText"><b>Seleccionaste los 3 de esta página.</b></span>
+      <button class="band__link" id="bandAll">Seleccionar los 184 que cumplen el filtro</button>
+      <div class="band__actions">
+        <button class="btn">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 11.8l-1.4 1.4M3 21l9-9"/></svg>
+          <span id="bEnrich">Buscar datos de 3</span>
+        </button>
+        <button class="btn btn--primary">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 3l8 4v5c0 5-3.4 8.3-8 9-4.6-.7-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span id="bPromote">Promover 3 al CRM</span>
+        </button>
+        <!-- Rojo semántico y NO coral: destructivo ≠ marca. -->
+        <button class="btn btn--danger" id="bDelete">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+          <span id="bDeleteLabel">Eliminar 3</span>
+        </button>
+      </div>
+      <span class="band__note">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7"/></svg>
+        Buscar datos usa solo las fuentes gratuitas: no gasta unidades de tu plan.
+      </span>
+    </div>
+
+    <div class="tablewrap" style="margin-top:12px">
+      <div class="tablescroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-sel"><input type="checkbox" id="headBox" aria-label="Seleccionar los 4 de esta página"></th>
+              <th>Lead</th><th>Estado</th><th>Origen</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="lede" style="margin-top:10px">
+      Un lead que ya es contacto del CRM <b>no se puede marcar</b>: la casilla se ofrece deshabilitada
+      en vez de desaparecer, para que la columna no se descuadre y para decir por qué.
+    </p>
+  </section>
+
+  <!-- ══ 5 · La tarjeta de búsqueda ═════════════════════════════════════ -->
+  <section>
+    <div class="eyebrow">2 · Borrar una búsqueda se lleva su trabajo</div>
+    <p class="lede" style="margin-bottom:12px">
+      El botón no puede llamarse «eliminar informe»: se lleva los leads. Y el número que enseña la
+      confirmación es el <b>exacto</b>, no el del contador — que es histórico.
+    </p>
+    <div class="searchcard">
+      <div class="searchcard__top">
+        <span class="searchcard__dot"></span>
+        <div>
+          <div class="searchcard__t">Restaurantes · Chapinero</div>
+          <div class="searchcard__m">OpenStreetMap · lanzada el 29 de agosto</div>
+        </div>
+        <span class="searchcard__running">
+          <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 11-6.2-8.6"/></svg>
+          Buscando
+        </span>
+      </div>
+      <div class="searchcard__stats">
+        <div><div class="stat__k">Trajo</div><div class="stat__v num">184</div></div>
+        <div><div class="stat__k">Descartados</div><div class="stat__v num">31</div></div>
+        <div><div class="stat__k">Páginas</div><div class="stat__v num">8</div></div>
+      </div>
+      <p class="histnote">
+        Los contadores dicen lo que la búsqueda <b>trajo</b>: son históricos y no se ajustan si
+        borras leads sueltos. Es la única forma de explicar en qué se gastó el dinero.
+      </p>
+      <div class="searchcard__foot">
+        <button class="btn">Ver leads</button>
+        <button class="btn">Repetir</button>
+        <button class="btn btn--danger" id="bDeleteSearch">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="legend">
+    <h3>Cómo leer este mockup</h3>
+    <ul>
+      <li><b>Es navegable.</b> Marca filas y pulsa «Eliminar»; prueba también con la selección de 184 y con la búsqueda. La barra de abajo salta a cada estado.</li>
+      <li><b>Un solo diálogo</b>, igual para 1 que para 300, con el número siempre delante.</li>
+      <li><b>Los promovidos sobreviven</b>, y se dice ANTES —«3 ya son contactos y se quedarán»— y DESPUÉS, en el panel.</li>
+      <li><b>Aviso al terminar; panel solo si hay algo que explicar.</b> Un panel obligatorio tras borrar 3 filas sin novedad se aprende a cerrar sin leer, y entonces no se lee el que sí importa.</li>
+      <li><b>Borrar es rojo semántico, nunca coral</b> — y además <b>de contorno en la barra</b>. Relleno al lado de «Promover» se leían casi igual, y una de las dos no se deshace. El rojo relleno se guarda para el botón de confirmar, donde ya no compite.</li>
+      <li><b>Una búsqueda viva se detiene sola</b> al borrarla, y la confirmación lo dice en ámbar: es un efecto colateral que hay que saber, no un peligro.</li>
+      <li>Los encabezados irán en <b>Nexa</b>; aquí van en Poppins porque Nexa no está en Google Fonts.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- ══ 2 · La confirmación ═════════════════════════════════════════════ -->
+<div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle" hidden>
+  <h2 id="dlgTitle">¿Eliminar 3 leads?</h2>
+  <p class="dialog__sub" id="dlgSub" hidden></p>
+  <p class="dialog__body" id="dlgBody"></p>
+  <div class="survivors" id="dlgSurvivors" hidden></div>
+  <div class="notice" id="dlgNotice" hidden>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.8L2 19h20L13.7 3.8a2 2 0 00-3.4 0z"/></svg>
+    <span id="dlgNoticeText"></span>
+  </div>
+  <div class="dialog__foot">
+    <button class="btn btn--lg" id="dlgCancel">Cancelar</button>
+    <button class="btn btn--lg btn--danger" id="dlgOk"></button>
+  </div>
+</div>
+
+<!-- ══ 3 · El aviso limpio ═════════════════════════════════════════════ -->
+<div class="toast" id="toast" hidden>
+  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastText"></span>
+</div>
+
+<!-- ══ 4 · El panel de resultado ═══════════════════════════════════════ -->
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
+  <div class="sheet__head">
+    <div>
+      <h2 id="shTitle">Resultado</h2>
+      <p>Lo que no se borró, y por qué.</p>
+    </div>
+    <button class="iconbtn" id="shClose" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet__body">
+    <div class="tally">
+      <span class="tally__n num" id="shDeleted">181</span>
+      <span class="tally__of">eliminados de <span class="num" id="shAsked">184</span></span>
+    </div>
+    <div id="shKeptWrap">
+      <div class="eyebrow" style="margin-top:18px">Se quedaron (<span class="num" id="shKeptN">3</span>)</div>
+      <ul class="kept" id="shKept"></ul>
+    </div>
+    <div class="info" id="shMissing" hidden>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <span id="shMissingText"></span>
+    </div>
+  </div>
+  <div class="sheet__foot"><button class="btn btn--lg" id="shOk">Entendido</button></div>
+</aside>
+
+<nav class="scaffold" aria-label="Estados del mockup">
+  <span class="scaffold__label">Estado</span>
+  <button data-state="bar" aria-current="true">1 · Selección</button>
+  <button data-state="confirm">2 · Confirmar</button>
+  <button data-state="toast">3 · Todo limpio</button>
+  <button data-state="result">4 · Con novedades</button>
+  <button data-state="search">5 · Borrar búsqueda</button>
+</nav>
+<script>
+/* Datos verosímiles de una búsqueda real de Chapinero. `crm: true` = ya es
+   contacto, así que sobrevive al borrado y no se puede marcar. */
+const LEADS = [
+  { id: "a", name: "Kokoa & Co", meta: "Chapinero · +57 310 448 2290", crm: true },
+  { id: "b", name: "Teriyaki", meta: "Chapinero · teriyaki.co", crm: false },
+  { id: "c", name: "Panadería La Luz", meta: "Chapinero · +57 601 742 1180", crm: false },
+  { id: "d", name: "Café Bienvenido", meta: "Chapinero · contacto@bienvenido.cafe", crm: false },
+  { id: "e", name: "Arepas del Parque", meta: "Usaquén · arepasdelparque.co", crm: false },
+];
+
+const rows = document.getElementById("rows");
+rows.innerHTML = LEADS.map((l) => `
+  <tr data-id="${l.id}" data-selected="false">
+    <td class="col-sel">
+      <input type="checkbox" class="rowBox" ${l.crm ? "disabled" : ""}
+             aria-label="Seleccionar ${l.name}"${l.crm ? ' title="Ya es un contacto del CRM"' : ""}>
+    </td>
+    <td>
+      <div class="lead__name">${l.name}</div>
+      <div class="lead__meta">${l.meta}</div>
+    </td>
+    <td>${l.crm
+      ? '<span class="badge badge--crm">En el CRM</span>'
+      : '<span class="badge badge--new">Nuevo</span>'}</td>
+    <td>OpenStreetMap</td>
+  </tr>`).join("");
+
+const boxes = [...document.querySelectorAll(".rowBox")];
+const selectable = boxes.filter((b) => !b.disabled);
+const headBox = document.getElementById("headBox");
+const scrim = document.getElementById("scrim");
+const dialog = document.getElementById("dialog");
+const toast = document.getElementById("toast");
+const sheet = document.getElementById("sheet");
+let allMatching = false;
+let toastTimer = null;
+
+/* ── Selección ─────────────────────────────────────────────────────────── */
+function count() {
+  return allMatching ? 184 : selectable.filter((b) => b.checked).length;
+}
+function sync() {
+  const on = selectable.filter((b) => b.checked).length;
+  headBox.checked = on === selectable.length && on > 0;
+  headBox.indeterminate = on > 0 && on < selectable.length;
+  headBox.setAttribute("aria-checked", headBox.indeterminate ? "mixed" : String(headBox.checked));
+  boxes.forEach((b) => { b.closest("tr").dataset.selected = String(b.checked); });
+  if (on === 0) allMatching = false;
+
+  const n = count();
+  document.getElementById("bandText").innerHTML = allMatching
+    ? "<b>Los 184 que cumplen el filtro están seleccionados.</b>"
+    : `<b>Seleccionaste ${on === 1 ? "1 de esta página" : `los ${on} de esta página`}.</b>`;
+  const link = document.getElementById("bandAll");
+  link.textContent = allMatching ? "Quitar la selección" : "Seleccionar los 184 que cumplen el filtro";
+  link.hidden = on === 0;
+  document.getElementById("bEnrich").textContent = `Buscar datos de ${n}`;
+  document.getElementById("bPromote").textContent = `Promover ${n} al CRM`;
+  document.getElementById("bDeleteLabel").textContent = `Eliminar ${n}`;
+  for (const id of ["bEnrich", "bPromote", "bDeleteLabel"]) {
+    document.getElementById(id).closest("button").disabled = n === 0;
+  }
+  mark(dialog.hidden && sheet.hidden && toast.hidden ? "bar" : null);
+}
+headBox.addEventListener("click", () => {
+  const every = selectable.every((b) => b.checked);
+  selectable.forEach((b) => { b.checked = !every; });
+  allMatching = false;
+  sync();
+});
+boxes.forEach((b) => b.addEventListener("change", () => { allMatching = false; sync(); }));
+document.getElementById("bandAll").addEventListener("click", () => {
+  allMatching = !allMatching;
+  selectable.forEach((b) => { b.checked = allMatching; });
+  sync();
+});
+
+/* ── El diálogo: UNO, igual para 1 que para 300 ─────────────────────────── */
+function openDialog({ title, sub, body, survivors, notice, ok, onOk }) {
+  document.getElementById("dlgTitle").textContent = title;
+  const subEl = document.getElementById("dlgSub");
+  subEl.textContent = sub ?? "";
+  subEl.hidden = sub === undefined;
+  document.getElementById("dlgBody").innerHTML = body;
+  const surv = document.getElementById("dlgSurvivors");
+  surv.innerHTML = survivors ?? "";
+  surv.hidden = survivors === undefined;
+  const not = document.getElementById("dlgNotice");
+  document.getElementById("dlgNoticeText").textContent = notice ?? "";
+  not.hidden = notice === undefined;
+  const okBtn = document.getElementById("dlgOk");
+  okBtn.textContent = ok;
+  okBtn.onclick = () => { closeAll(); onOk(); };
+  scrim.hidden = false;
+  dialog.hidden = false;
+  document.getElementById("dlgCancel").focus();
+  mark("confirm");
+}
+function closeAll() {
+  scrim.hidden = true;
+  dialog.hidden = true;
+  sheet.hidden = true;
+}
+document.getElementById("dlgCancel").addEventListener("click", () => { closeAll(); sync(); });
+scrim.addEventListener("click", () => { closeAll(); sync(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!dialog.hidden || !sheet.hidden) { closeAll(); sync(); }
+});
+
+/* Borrar leads. El cuerpo dice el número, que no se deshace, y cuántos
+   sobreviven por ser ya contactos. SIN aviso de recompra: decisión del dueño. */
+document.getElementById("bDelete").addEventListener("click", () => {
+  const n = count();
+  const survivors = allMatching ? 3 : selectable.filter((b) => b.checked).length > 2 ? 0 : 0;
+  openDialog({
+    title: `¿Eliminar ${n} lead${n === 1 ? "" : "s"}?`,
+    body: "No se puede deshacer.",
+    survivors: allMatching
+      ? "<strong>3 de ellos ya son contactos del CRM</strong> y se quedarán. Para borrarlos, hazlo desde el CRM."
+      : undefined,
+    ok: `Sí, eliminar ${n}`,
+    onOk: () => (allMatching ? showResult() : showToast(`${n} lead${n === 1 ? "" : "s"} eliminado${n === 1 ? "" : "s"}`)),
+  });
+});
+
+/* Borrar una búsqueda: el número EXACTO de la previa, no el contador. */
+document.getElementById("bDeleteSearch").addEventListener("click", () => {
+  openDialog({
+    title: "¿Eliminar esta búsqueda?",
+    sub: "Restaurantes · Chapinero · OpenStreetMap",
+    body: "Se llevará <strong>120 leads</strong> y su informe. No se puede deshacer.",
+    survivors:
+      "<strong>3 ya son contactos del CRM</strong> y se quedarán en tu bandeja, sin la búsqueda que los trajo.",
+    notice: "Está corriendo ahora mismo: al borrarla se detiene.",
+    ok: "Sí, eliminar",
+    onOk: () => showToast("Búsqueda eliminada · 120 leads"),
+  });
+});
+
+/* ── Los dos finales ───────────────────────────────────────────────────── */
+function showToast(text) {
+  document.getElementById("toastText").textContent = text;
+  toast.hidden = false;
+  mark("toast");
+  if (toastTimer !== null) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; sync(); }, 4200);
+}
+function showResult() {
+  const kept = [
+    { name: "Kokoa & Co", why: "Ya es un contacto del CRM" },
+    { name: "Café Luz", why: "Ya es un contacto del CRM" },
+    { name: "Bar Once", why: "Ya es un contacto del CRM" },
+  ];
+  document.getElementById("shDeleted").textContent = "179";
+  document.getElementById("shAsked").textContent = "184";
+  document.getElementById("shKeptN").textContent = String(kept.length);
+  document.getElementById("shKept").innerHTML = kept
+    .map((k) => `<li><div class="kept__name">${k.name}</div><div class="kept__why">${k.why}</div></li>`)
+    .join("");
+  /* `missing` es un NÚMERO y no una lista: después de un borrado masivo no se
+     puede saber cuál de los ausentes lo borramos nosotros, y dar ids sería
+     inventarse el detalle. 179 + 3 + 2 = 184, y por eso el informe se lee sin
+     contar filas. */
+  document.getElementById("shMissingText").textContent =
+    "2 ya no existían cuando llegamos. Pudo borrarlos otra persona, o la puerta de admisión de una búsqueda.";
+  document.getElementById("shMissing").hidden = false;
+  scrim.hidden = false;
+  sheet.hidden = false;
+  document.getElementById("shClose").focus();
+  mark("result");
+}
+for (const id of ["shClose", "shOk"]) {
+  document.getElementById(id).addEventListener("click", () => {
+    closeAll();
+    selectable.forEach((b) => { b.checked = false; });
+    allMatching = false;
+    sync();
+  });
+}
+
+/* ── Conmutador de estados ─────────────────────────────────────────────── */
+const scaffold = document.querySelector(".scaffold");
+function mark(state) {
+  scaffold.querySelectorAll("button").forEach((b) =>
+    b.setAttribute("aria-current", String(state !== null && b.dataset.state === state)));
+}
+scaffold.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (b === null) return;
+  closeAll();
+  toast.hidden = true;
+  if (toastTimer !== null) clearTimeout(toastTimer);
+  const state = b.dataset.state;
+
+  if (state === "bar") {
+    selectable.forEach((x, i) => { x.checked = i < 2; });
+    allMatching = false;
+    sync();
+  } else if (state === "confirm") {
+    selectable.forEach((x, i) => { x.checked = i < 2; });
+    allMatching = false;
+    sync();
+    document.getElementById("bDelete").click();
+  } else if (state === "toast") {
+    sync();
+    showToast("3 leads eliminados");
+  } else if (state === "result") {
+    selectable.forEach((x) => { x.checked = true; });
+    allMatching = true;
+    sync();
+    showResult();
+  } else if (state === "search") {
+    sync();
+    document.getElementById("bDeleteSearch").click();
+    document.getElementById("bDeleteSearch").scrollIntoView({ block: "center" });
+  }
+  mark(state);
+});
+
+selectable.forEach((b, i) => { b.checked = i < 2; });
+sync();
+mark("bar");
+</script>

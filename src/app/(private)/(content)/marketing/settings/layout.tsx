@@ -10,7 +10,7 @@ export default function MarketingSettingsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         title="Configuración"
         description="Los límites que protegen a tus clientes y a tus números de WhatsApp."

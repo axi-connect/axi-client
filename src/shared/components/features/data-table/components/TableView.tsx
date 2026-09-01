@@ -1,4 +1,5 @@
 import { useRef } from "react"
+import { cn } from "@/core/lib/utils"
 import { DataTableRow } from "./Row"
 import { ariaSortFrom } from "../utils/helpers"
 import { Button } from "@/shared/components/ui/button"
@@ -38,8 +39,10 @@ export function TableView<T extends DataRow>({ data, columns, page, pageSize, to
               const isActive = !!(sortBy && sortBy === col.accessorKey)
               const Icon = isActive ? (sortDir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown
               return (
-                <TableHead key={String(key)} className="first:pl-3 last:pr-3">
-                  {col.sortable && col.accessorKey && onSortChange ? (
+                <TableHead key={String(key)} className={cn("first:pl-3 last:pr-3", col.headClassName)}>
+                  {col.headerCell ? (
+                    col.headerCell()
+                  ) : col.sortable && col.accessorKey && onSortChange ? (
                     <Button
                       variant="ghost"
                       className="flex items-center gap-2 p-0"

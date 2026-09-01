@@ -76,6 +76,27 @@ export const segmentedItemVariants = cva(
 export type SegmentedSize = NonNullable<VariantProps<typeof segmentedItemVariants>["size"]>;
 
 /**
+ * Cómo se marca el activo.
+ *
+ * - `accent` — `bg-accent` (coral al 14 %). El recetario de §9.3 y el DEFAULT:
+ *   lo usan las 25 pestañas del panel y no se toca.
+ * - `lift` — la pastilla SUBE a la superficie de la página y coge sombra, sin
+ *   teñir nada. Existe porque el dueño rechazó los rellenos de color dentro de
+ *   los paneles de filtros: ahí «seleccionado» se dice con elevación. Es una
+ *   variante del MISMO componente y no una copia: la alternativa era una 24ª
+ *   implementación a mano del segmentado solo para cambiarle el fondo.
+ *
+ * Diccionario cerrado de clases LITERALES: Tailwind v4 extrae en compilación y
+ * una clase calculada no existiría en el CSS final.
+ */
+const PILL_TREATMENT = {
+  accent: "bg-accent",
+  lift: "bg-background shadow-float",
+} as const;
+
+export type SegmentedTreatment = keyof typeof PILL_TREATMENT;
+
+/**
  * Modo de etiqueta (decisión D3 del plan).
  * - `always`: siempre visibles.
  * - `active`: solo la del ítem activo; el resto queda como icono.
@@ -155,9 +176,11 @@ function useActivePill(
 export function SegmentedPill({
   listRef,
   size = "default",
+  treatment = "accent",
 }: {
   listRef: React.RefObject<HTMLElement | null>;
   size?: SegmentedSize;
+  treatment?: SegmentedTreatment;
 }) {
   const pillRef = React.useRef<HTMLSpanElement>(null);
   useActivePill(listRef, pillRef);
@@ -168,7 +191,8 @@ export function SegmentedPill({
       aria-hidden="true"
       data-slot="segmented-pill"
       className={cn(
-        "bg-accent pointer-events-none absolute z-0 rounded-full opacity-0",
+        "pointer-events-none absolute z-0 rounded-full opacity-0",
+        PILL_TREATMENT[treatment],
         "transition-[transform,width,opacity] duration-300 ease-out motion-reduce:transition-none",
         size === "sm" ? "top-0.5 bottom-0.5" : "top-1 bottom-1",
       )}
@@ -251,6 +275,7 @@ export function SegmentedControl<TValue extends string>({
   size = "default",
   surface = "raised",
   labels = "always",
+  treatment = "accent",
   className,
 }: {
   value: TValue;
@@ -261,6 +286,8 @@ export function SegmentedControl<TValue extends string>({
   size?: SegmentedSize;
   surface?: "raised" | "inline";
   labels?: SegmentedLabels;
+  /** Cómo se marca el activo. `accent` por defecto: no mueve nada existente. */
+  treatment?: SegmentedTreatment;
   className?: string;
 }) {
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -305,7 +332,7 @@ export function SegmentedControl<TValue extends string>({
       data-slot="segmented-control"
       className={cn(segmentedListVariants({ size, surface }), className)}
     >
-      <SegmentedPill listRef={listRef} size={size} />
+      <SegmentedPill listRef={listRef} size={size} treatment={treatment} />
 
       {items.map((item, index) => {
         const active = item.value === value;

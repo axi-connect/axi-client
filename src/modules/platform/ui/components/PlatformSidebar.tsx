@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Plug,
   Receipt,
   ScrollText,
   type LucideIcon,
@@ -68,6 +69,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "scroll-text": ScrollText,
   activity: Activity,
   "flask-conical": FlaskConical,
+  plug: Plug,
 };
 
 /** Indicador de navegación pendiente (mismo patrón que el sidebar de tenant). */

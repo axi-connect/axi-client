@@ -22,4 +22,8 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Auditoría", path: "/platform/audit", icon: "scroll-text" },
   { label: "Analytics", path: "/platform/analytics", icon: "activity" },
   { label: "Calidad", path: "/platform/quality", icon: "flask-conical" },
+  // Proveedores externos de la captación (prospecting F3): aquí se pegan las
+  // llaves de MillionVerifier, Twilio y compañía. Va al final porque es
+  // configuración que se toca una vez, no una consola que se vigila.
+  { label: "Proveedores", path: "/platform/prospecting", icon: "plug" },
 ];

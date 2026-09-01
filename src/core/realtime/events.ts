@@ -627,6 +627,70 @@ export type CompanySuspendedEvent = {
 // ---------------------------------------------------------------------------
 
 /** Namespace `/inbox`. Incluye usage.* y notification.* (base para módulos futuros). */
+/**
+ * Progreso de una búsqueda de captación (prospecting F4).
+ *
+ * El WS es COMODIDAD: la verdad vive en la fila de la búsqueda y la vista hace
+ * polling derivado del estado como respaldo. Quien recarga a mitad de búsqueda
+ * ve exactamente lo mismo que antes de recargar.
+ */
+export type ProspectingSearchProgressEvent = {
+  company_id: string;
+  search_id: string;
+  found_count: number;
+  new_count: number;
+  duplicate_count: number;
+  rejected_count: number;
+  units_spent: number;
+  estimated_total: number | null;
+};
+
+/**
+ * El paso a paso de una pasada de enriquecimiento (F4c).
+ *
+ * Llega a la sala del LEAD, no a la del tenant: son varios mensajes por lead y
+ * un lote de cien serían quinientos para todos los paneles abiertos. Hay que
+ * unirse con `inbox.join_lead` y salir al cerrar la ficha.
+ *
+ * El WS es COMODIDAD: la verdad vive en `lead.last_run`, así que quien recarga
+ * a mitad de una búsqueda ve exactamente lo mismo.
+ */
+export type ProspectingRunStep = {
+  provider: string;
+  capability: string;
+  state: "pending" | "running" | "found" | "no_data" | "failed" | "no_account";
+  fields: string[];
+  units_spent: number;
+  latency_ms?: number | null;
+  detail?: string | null;
+};
+
+export type ProspectingEnrichmentRunEvent = {
+  company_id: string;
+  lead_id: string;
+  run: {
+    id: string;
+    lead_id: string;
+    status: "queued" | "running" | "completed" | "partial" | "failed";
+    steps: ProspectingRunStep[];
+    fields_filled: number;
+    units_spent: number;
+    started_at: string | null;
+    finished_at: string | null;
+  };
+};
+
+export type ProspectingSearchCompletedEvent = {
+  company_id: string;
+  search_id: string;
+  status: "completed" | "partial" | "failed" | "cancelled";
+  found_count: number;
+  new_count: number;
+  duplicate_count: number;
+  rejected_count: number;
+  units_spent: number;
+};
+
 export type InboxServerEvents = {
   "conversation.created": (payload: ConversationCreatedEvent) => void;
   "conversation.message_received": (payload: MessageReceivedEvent) => void;
@@ -668,6 +732,18 @@ export type InboxServerEvents = {
   "marketing.opt_out_created": (payload: MarketingOptOutCreatedEvent) => void;
   "marketing.promotion_redeemed": (payload: MarketingPromotionRedeemedEvent) => void;
   "marketing.promotion_reverted": (payload: MarketingPromotionRevertedEvent) => void;
+  "prospecting.lead_enrichment_progress": (
+    payload: ProspectingEnrichmentRunEvent,
+  ) => void;
+  "prospecting.lead_enrichment_completed": (
+    payload: ProspectingEnrichmentRunEvent,
+  ) => void;
+  "prospecting.search_progress": (
+    payload: ProspectingSearchProgressEvent,
+  ) => void;
+  "prospecting.search_completed": (
+    payload: ProspectingSearchCompletedEvent,
+  ) => void;
   "cmo.briefing_ready": (payload: CmoBriefingReadyEvent) => void;
   "cmo.proposal_created": (payload: CmoProposalCreatedEvent) => void;
   "cmo.proposal_decided": (payload: CmoProposalDecidedEvent) => void;
@@ -715,6 +791,8 @@ export type CloseConversationPayload = {
 export type SendMessagePayload = { conversation_id: string } & Schemas["SendMessageDto"];
 export type TypingPayload = { conversation_id: string; is_typing: boolean };
 
+export type LeadRefPayload = { lead_id: string };
+
 export type InboxCommands = {
   "inbox.join_conversation": (
     payload: JoinConversationPayload,
@@ -724,6 +802,9 @@ export type InboxCommands = {
     payload: JoinConversationPayload,
     ack: (res: WsAck<null>) => void,
   ) => void;
+  /** F4c: suscribirse al detalle del enriquecimiento de UN lead. */
+  "inbox.join_lead": (payload: LeadRefPayload, ack: (res: WsAck<null>) => void) => void;
+  "inbox.leave_lead": (payload: LeadRefPayload, ack: (res: WsAck<null>) => void) => void;
   "inbox.claim": (
     payload: ClaimPayload,
     ack: (res: WsAck<Schemas["ConversationDto"]>) => void,

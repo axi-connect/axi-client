@@ -261,7 +261,7 @@ export function CampaignDetailView({ campaignId }: { campaignId: string }) {
   const stillMoving = stats !== null && campaignPending(stats) > 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3">
         <BackLink />
         <PageHeader

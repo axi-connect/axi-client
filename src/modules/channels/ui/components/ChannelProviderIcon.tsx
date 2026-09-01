@@ -33,13 +33,21 @@ const GLYPH_COLOR: Record<ChannelIconId, string> = {
 export function ChannelProviderIcon({
   iconId,
   size = "md",
+  bare = false,
   className,
 }: {
   iconId: ChannelIconId;
   size?: "sm" | "md";
+  /**
+   * Solo el glifo, sin la placa. Lo usa `ProviderCard`, que pone la placa él
+   * mismo para que todas las tarjetas del panel la tengan idéntica.
+   */
+  bare?: boolean;
   className?: string;
 }) {
   const Icon = ICONS[iconId];
+  const glyph = cn(size === "sm" ? "size-[19px]" : "size-6", GLYPH_COLOR[iconId], className);
+  if (bare) return <Icon className={glyph} />;
   return (
     <span
       className={cn(
@@ -48,7 +56,7 @@ export function ChannelProviderIcon({
         className,
       )}
     >
-      <Icon className={cn(size === "sm" ? "size-[19px]" : "size-6", GLYPH_COLOR[iconId])} />
+      <Icon className={glyph} />
     </span>
   );
 }

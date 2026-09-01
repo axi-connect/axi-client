@@ -21,9 +21,11 @@ export type BillingInterval = BillingPrice["interval"];
 export type TaxTreatment = BillingPrice["tax_treatment"];
 
 /**
- * Etiquetas de las métricas facturables. El enum del backend son 11 y el
- * operador que publica una tarifa no debería tener que traducir
- * `ai_tokens_input` mentalmente.
+ * Etiquetas de las métricas facturables. El operador que publica una tarifa no
+ * debería tener que traducir `ai_tokens_input` mentalmente.
+ *
+ * El Record es exhaustivo a propósito: cuando el backend añade una métrica, el
+ * typecheck rompe aquí en vez de dejar que el panel muestre el nombre técnico.
  */
 export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   ai_tokens_input: "Tokens de entrada IA",
@@ -37,14 +39,13 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   storage_bytes: "Almacenamiento (bytes)",
   tts_characters: "Caracteres de voz",
   cmo_analyses: "Análisis de Axel",
-  // Métricas que trae el merge de prospecting. Las cadenas son LAS SUYAS
-  // (feat/prospecting-frontend) a propósito: dos traducciones distintas del
-  // mismo contador acabarían discrepando en el panel del super admin.
   lead_discoveries: "Leads descubiertos",
   lead_enrichments: "Datos de leads verificados",
 };
 
-export const OVERAGE_METRICS = Object.keys(OVERAGE_METRIC_LABELS) as OverageMetric[];
+export const OVERAGE_METRICS = Object.keys(
+  OVERAGE_METRIC_LABELS,
+) as OverageMetric[];
 
 export const INTERVAL_LABELS: Record<BillingInterval, string> = {
   monthly: "Mensual",
@@ -74,7 +75,9 @@ export const ACCOUNT_STATUS_MAP: StatusMap = {
   cancelled: { label: "Dado de baja", tone: "neutral" },
 };
 
-export function vigencyKey(price: Pick<BillingPrice, "is_current" | "is_active">): string {
+export function vigencyKey(
+  price: Pick<BillingPrice, "is_current" | "is_active">,
+): string {
   if (price.is_current) return "current";
   return price.is_active ? "scheduled" : "disabled";
 }
@@ -90,11 +93,17 @@ export function canVoidInvoice(
   invoice: Pick<PlatformInvoice, "status" | "paid_cents">,
 ): boolean {
   if (invoice.paid_cents > 0) return false;
-  return invoice.status === "open" || invoice.status === "partially_paid" || invoice.status === "draft";
+  return (
+    invoice.status === "open" ||
+    invoice.status === "partially_paid" ||
+    invoice.status === "draft"
+  );
 }
 
 /** Una factura ya anulada o incobrable no admite más administración. */
-export function isInvoiceClosed(invoice: Pick<PlatformInvoice, "status">): boolean {
+export function isInvoiceClosed(
+  invoice: Pick<PlatformInvoice, "status">,
+): boolean {
   return invoice.status === "void" || invoice.status === "uncollectible";
 }
 
@@ -114,13 +123,17 @@ export function isSettledAfter(result: InvoiceAdministration): boolean {
  * `unit_size` es el bloque facturable, no el total incluido — confundirlos hace
  * que alguien publique una tarifa mil veces más cara.
  */
-export function unitSizeLabel(rate: Pick<OverageRate, "unit_size" | "metric">): string {
+export function unitSizeLabel(
+  rate: Pick<OverageRate, "unit_size" | "metric">,
+): string {
   const size = new Intl.NumberFormat("es-CO").format(rate.unit_size);
   return `por cada ${size}`;
 }
 
 /** `included_quantity: null` = tomar el tope del plan del tenant. */
-export function includedLabel(rate: Pick<OverageRate, "included_quantity">): string {
+export function includedLabel(
+  rate: Pick<OverageRate, "included_quantity">,
+): string {
   return rate.included_quantity === null
     ? "incluido: el tope del plan"
     : `incluido: ${new Intl.NumberFormat("es-CO").format(rate.included_quantity)}`;
