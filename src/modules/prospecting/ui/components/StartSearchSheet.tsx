@@ -11,6 +11,7 @@ import {
   type LocationSuggestion,
 } from "@/shared/components/features/location";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -98,6 +99,13 @@ export function StartSearchSheet({
   );
   const [category, setCategory] = useState(initial?.category ?? categories[0]?.id ?? "");
   /*
+    LA CONSULTA del buscador web. Existía en el contrato desde F4 y el formulario
+    dejó de mandarla al cerrar las categorías contra el diccionario de OSM: sin
+    ella, a Serper se le preguntaba «restaurante Bogotá ciudad» —un tema— y
+    contestaba con artículos de prensa que se guardaban como negocios.
+  */
+  const [text, setText] = useState(initial?.text ?? "");
+  /*
     «Repetir» llega con el punto ya elegido. Antes no: `center` no viajaba en el
     contrato, así que repetir una búsqueda obligaba a volver a buscar la zona a
     mano —y quien no se diera cuenta la relanzaba sin zona, que en OpenStreetMap
@@ -126,9 +134,20 @@ export function StartSearchSheet({
 
   const chosen = usable.find((option) => option.source === source);
   const free = chosen?.free === true;
+  /*
+    LA FORMA DEL FORMULARIO LA DICE LA FUENTE, no un `if (source === "serp")`
+    escrito aquí. A un mapa se le pide categoría, punto y radio; a un buscador se
+    le escribe una frase. Hasta ahora era el formulario del mapa para las tres, y
+    el buscador ignoraba los tres campos.
+  */
+  const shape = chosen?.query_shape ?? "map";
+  const isWeb = shape === "web";
   const gated = hasAdmission(admission);
   const categoryLabel =
     categories.find((option) => option.id === category)?.label ?? "negocios";
+  /** La etiqueta de una categoría, que es lo que se le escribe al buscador. */
+  const labelOfCategory = (id: string): string =>
+    categories.find((option) => option.id === id)?.label ?? id;
   /**
    * ¿Hay un verificador de pago encendido?
    *
@@ -144,8 +163,50 @@ export function StartSearchSheet({
     return items;
   }, []);
 
+  /**
+   * Lo que viaja según la forma de la fuente.
+   *
+   * `city` y `zone` son dos campos, y no por gusto: `place.name` es el nombre
+   * del punto que devolvió el geocodificador —para «Zona G», un hotel que se
+   * llama así—, y ese nombre acabó dentro de la consulta que se le manda a
+   * Google y escrito como ciudad de los leads. La zona se muestra; la ciudad se
+   * usa para buscar.
+   */
+  function payloadOf(): Partial<StartSearchInput> {
+    if (isWeb) {
+      // Ni punto ni radio: el buscador no los usa, y enseñarlos sería prometer
+      // una precisión que no existe. De la ubicación solo sirve su nombre.
+      return {
+        text: text.trim(),
+        ...(place === null ? {} : { city: place.locality ?? place.name, zone: place.name }),
+      };
+    }
+    return {
+      category,
+      ...(text.trim().length === 0 ? {} : { text: text.trim() }),
+      ...(place === null
+        ? {}
+        : {
+            city: place.locality ?? place.name,
+            zone: place.name,
+            center: { lat: place.lat, lng: place.lng },
+          }),
+      radius_m: radius,
+    };
+  }
+
   async function submit() {
-    if (place === null) {
+    // Cada forma tiene su requisito, y son distintos: un mapa no puede buscar sin
+    // un punto, y un buscador no puede buscar sin una pregunta.
+    if (isWeb && text.trim().length === 0) {
+      showAlert({
+        tone: "error",
+        title: "Falta qué buscar",
+        description: "Escribe lo que le dirías a Google: «distribuidores de dotación industrial».",
+      });
+      return;
+    }
+    if (!isWeb && place === null) {
       showAlert({
         tone: "error",
         title: "Falta la ubicación",
@@ -158,19 +219,7 @@ export function StartSearchSheet({
     try {
       await startSearch({
         source,
-        category,
-        /*
-          DOS CAMPOS, y no por gusto. Aquí iba `city: place.name`, y `place.name`
-          es el nombre del punto que devolvió el geocodificador: para «Zona G»,
-          Nominatim contesta primero con un hotel que se llama así. Ese nombre
-          acabó dentro de la frase que se le manda a Google —que respondió con
-          los restaurantes DE ese hotel: cinco, sin más páginas— y escrito como
-          ciudad de los leads. La zona se muestra; la ciudad se usa para buscar.
-        */
-        city: place.locality ?? place.name,
-        zone: place.name,
-        center: { lat: place.lat, lng: place.lng },
-        radius_m: radius,
+        ...payloadOf(),
         limit,
         admission: gated ? admission : undefined,
       });
@@ -197,8 +246,9 @@ export function StartSearchSheet({
               consola por su ausencia— y esta pantalla no decía en ninguna parte
               qué va a pasar al pulsar «Buscar». */}
           <SheetDescription>
-            Los negocios de la zona que elijas entran a tu bandeja con su calidad ya
-            medida. Nadie pasa a tu CRM sin que tú lo promuevas.
+            {isWeb
+              ? "Lo que el buscador encuentre entra a tu bandeja con su calidad ya medida. Sirve para el negocio que existe en la web y en ningún mapa. Nadie pasa a tu CRM sin que tú lo promuevas."
+              : "Los negocios de la zona que elijas entran a tu bandeja con su calidad ya medida. Nadie pasa a tu CRM sin que tú lo promuevas."}
           </SheetDescription>
         </SheetHeader>
 
@@ -236,32 +286,86 @@ export function StartSearchSheet({
             </Select>
           </div>
 
-          <div>
-            <label className="text-sm font-semibold" htmlFor="search-category">
-              Qué negocios
-            </label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger id="search-category" className="mt-1 w-full">
-                <SelectValue placeholder="Elige una categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isWeb ? (
+            /*
+              EL FORMULARIO DEL BUSCADOR. Una frase, no un punto en el mapa: es
+              para lo que sirve un buscador, y es lo que encuentra al mayorista o
+              a la agencia que no está en ningún mapa. La categoría se queda como
+              ATAJO —rellena el campo— y no como un segundo criterio: combinar
+              las dos en la consulta es justo el enredo del que venimos.
+            */
+            <>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="search-text">
+                  Qué buscas
+                </label>
+                <p className="text-muted-foreground text-xs">
+                  Tus palabras, como se las dirías a Google.
+                </p>
+                <Input
+                  id="search-text"
+                  className="mt-1"
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  placeholder="distribuidores de dotación industrial"
+                />
+              </div>
 
-          <LocationSearch
-            label="Dónde"
-            value={place}
-            onSearch={search}
-            onSelect={setPlace}
-          />
+              <div>
+                <label className="text-sm font-semibold" htmlFor="search-category-hint">
+                  ¿No sabes qué escribir?
+                </label>
+                <Select value="" onValueChange={(value) => setText(labelOfCategory(value))}>
+                  <SelectTrigger id="search-category-hint" className="mt-1 w-full">
+                    <SelectValue placeholder="Elegir una categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {place !== null && (
+              <LocationSearch
+                label="Ciudad"
+                value={place}
+                onSearch={search}
+                onSelect={setPlace}
+              />
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="search-category">
+                  Qué negocios
+                </label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="search-category" className="mt-1 w-full">
+                    <SelectValue placeholder="Elige una categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <LocationSearch
+                label="Dónde"
+                value={place}
+                onSearch={search}
+                onSelect={setPlace}
+              />
+            </>
+          )}
+
+          {!isWeb && place !== null && (
             <>
               <div>
                 <label className="text-sm font-semibold" htmlFor="search-radius">
@@ -301,6 +405,7 @@ export function StartSearchSheet({
             categoryLabel={categoryLabel}
             verifierAvailable={verifierAvailable}
             freeSource={free}
+            webSource={isWeb}
             open={advancedOpen}
             onOpenChange={setAdvancedOpen}
             onChange={setAdmission}

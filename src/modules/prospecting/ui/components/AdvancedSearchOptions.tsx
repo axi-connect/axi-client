@@ -52,6 +52,7 @@ export function AdvancedSearchOptions({
   categoryLabel,
   verifierAvailable,
   freeSource,
+  webSource = false,
   open,
   onOpenChange,
   onChange,
@@ -62,12 +63,23 @@ export function AdvancedSearchOptions({
   /** ¿Hay un verificador de pago encendido? Sin él, «solo verificados» admite cero. */
   verifierAvailable: boolean;
   freeSource: boolean;
+  /**
+   * ¿La fuente es un buscador web?
+   *
+   * Entonces exigir «tiene web» no filtra a nadie: todo resultado de un buscador
+   * ES un dominio, por construcción. Un criterio que no puede rechazar a nadie
+   * ocupa sitio y hace creer que la búsqueda está más apretada de lo que está.
+   */
+  webSource?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onChange: (next: AdmissionDTO) => void;
 }) {
   const active = hasAdmission(value);
   const chips = admissionChips(value);
+  const requirable = webSource
+    ? REQUIRABLE_ORDER.filter((field) => field !== "website")
+    : REQUIRABLE_ORDER;
   const required = value.require ?? [];
 
   const patch = (next: Partial<AdmissionDTO>) => onChange({ ...value, ...next });
@@ -196,7 +208,7 @@ export function AdvancedSearchOptions({
                 : "Cuentan dentro de los de arriba"}
             </p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {REQUIRABLE_ORDER.map((field) => {
+              {requirable.map((field) => {
                 const on = required.includes(field);
                 return (
                   <button

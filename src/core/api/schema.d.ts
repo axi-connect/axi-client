@@ -10558,6 +10558,8 @@ export interface components {
                 source: "google_places" | "openstreetmap" | "serp";
                 provider: string;
                 label: string;
+                /** @enum {string} */
+                query_shape: "map" | "web";
                 available: boolean;
                 /** @enum {string|null} */
                 unavailable_reason: "no_account" | "disabled" | "unhealthy" | "capped_day" | "capped_month" | null;
