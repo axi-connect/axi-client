@@ -1,6 +1,6 @@
 # Plan — Paquetes + Módulos en precios y onboarding autoservicio (frontend)
 
-> **Estado (2026-09-01):** F0-A y F0-B aprobados. **F1 (precios), F2 (`/comenzar`), F3 (`/onboarding`: shell, nicho, horarios, banner) y F4 (paso catálogo: subida → job → revisión → commit) implementadas y commiteadas** en `feat/onboarding-self-service`, sin push. Sigue F5 (agentes desde plantilla), que depende del backend B3. Notas: los nichos son catálogo cerrado en `domain/niches.ts`; agentes y WhatsApp son `PendingStep` hasta F5–F6.
+> **Estado (2026-09-02):** F0-A y F0-B aprobados. **F1 (precios), F2 (`/comenzar`), F3 (`/onboarding`: shell, nicho, horarios, banner), F4 (catálogo con IA) y F5 (agentes desde plantilla) implementadas y commiteadas** en `feat/onboarding-self-service`, sin push. Sigue F6 (WhatsApp embebido + «Listo» con entitlements), que depende del backend B1. Notas: los nichos son catálogo cerrado en `domain/niches.ts`; WhatsApp es `PendingStep` hasta F6; el sheet de plantilla expone nombre, tono, personalidad y datos clave (voz y traspaso quedan en Agentes, según el `CreateAgentFromTemplateDto` del contrato).
 >
 > Mockups (Artifacts privados): precios → https://claude.ai/code/artifact/47a257c5-171c-48b3-8a3c-8c286f262ba4 · onboarding → https://claude.ai/code/artifact/7655655c-3083-4d7d-b805-165727992f8c
 >

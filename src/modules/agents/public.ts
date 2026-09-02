@@ -8,6 +8,10 @@
  * deuda anotada: migrarlo aquí es un cambio de import, pero no es de este PR.
  *
  * Se publican tipos y datos, no componentes: lo que entra aquí queda acoplado.
+ *
+ * `onboarding` (F5) consume el catálogo de personajes para el sheet de
+ * personalización del agente creado desde plantilla, y el tipo del agente que
+ * devuelve `POST /onboarding/agents/from-template`.
  */
 
 export type {
@@ -22,3 +26,11 @@ export {
   getTenantAgents,
   type AssignableAgent,
 } from "@/modules/agents/infrastructure/services/tenant-agents.cache";
+
+export type { AiAgentDTO } from "@/modules/agents/domain/agent";
+export {
+  characterHasVoice,
+  characterStyle,
+  type CharacterDTO,
+} from "@/modules/agents/domain/character";
+export { listCharacters } from "@/modules/agents/infrastructure/services/character-service.adapter";

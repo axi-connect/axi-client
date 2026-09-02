@@ -10,17 +10,11 @@ import type { OnboardingStep } from "@/modules/onboarding/domain/onboarding-prog
 type PendingCopy = { title: string; lead: string; where: string; glyph: GlyphKind; tips: readonly string[] };
 
 /**
- * Pasos cuya pantalla guiada llega en fases posteriores (agentes F5, WhatsApp F6). Mientras, el paso se cierra como «omitido» y el panel
- * ofrece el mismo resultado por el camino manual: sin CTA muertos ni «pronto».
+ * Paso cuya pantalla guiada llega en F6 (WhatsApp). Mientras, el paso se cierra
+ * como «omitido» y el panel ofrece el mismo resultado por el camino manual: sin
+ * CTA muertos ni «pronto».
  */
-const COPY: Record<"agents" | "whatsapp", PendingCopy> = {
-  agents: {
-    title: "Tu agente de IA",
-    lead: "Crea el agente que atenderá a tus clientes. Lo configuras desde el panel con tu catálogo y tu horario ya cargados.",
-    where: "Ajustes → Agentes IA",
-    glyph: "ai",
-    tips: ["Instrucciones, tono y personalidad", "Traspaso a una persona cuando hace falta", "Notas de voz si tu cliente escribe por voz"],
-  },
+const COPY: Record<"whatsapp", PendingCopy> = {
   whatsapp: {
     title: "Conecta tu WhatsApp",
     lead: "Es lo que pone a trabajar a tu agente. Se conecta desde Canales con la API oficial de Meta o con tu número actual.",
@@ -37,7 +31,7 @@ export function PendingStep({
   onBack,
   onSkip,
 }: {
-  step: Extract<OnboardingStep, "agents" | "whatsapp">;
+  step: Extract<OnboardingStep, "whatsapp">;
   stepNumber: number;
   saving: boolean;
   onBack: () => void;

@@ -19,6 +19,7 @@ import { useOnboardingStore } from "@/modules/onboarding/infrastructure/stores/o
 import { OnboardingShell } from "@/modules/onboarding/ui/onboarding/OnboardingShell";
 import { OnboardingSkeleton } from "@/modules/onboarding/ui/onboarding/OnboardingSkeleton";
 import { BusinessHoursStep } from "@/modules/onboarding/ui/onboarding/steps/BusinessHoursStep";
+import { AgentTemplatesStep } from "@/modules/onboarding/ui/onboarding/steps/AgentTemplatesStep";
 import { CatalogImportStep } from "@/modules/onboarding/ui/onboarding/steps/CatalogImportStep";
 import { DoneStep } from "@/modules/onboarding/ui/onboarding/steps/DoneStep";
 import { NicheStep } from "@/modules/onboarding/ui/onboarding/steps/NicheStep";
@@ -153,7 +154,17 @@ export function OnboardingView() {
           onDone={(result) => void closeStep(() => markDone("catalog", result))}
         />
       ) : null}
-      {current === "agents" || current === "whatsapp" ? (
+      {current === "agents" ? (
+        <AgentTemplatesStep
+          nicheCode={progress.niche_code}
+          companyName={companyName}
+          saving={saving}
+          onBack={() => setCurrent("catalog")}
+          onSkip={() => void closeStep(() => skip("agents"))}
+          onDone={(result) => void closeStep(() => markDone("agents", result))}
+        />
+      ) : null}
+      {current === "whatsapp" ? (
         <PendingStep
           step={current}
           stepNumber={stepIndex(current) + 1}
