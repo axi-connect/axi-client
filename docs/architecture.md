@@ -64,7 +64,7 @@ El artefacto `.codebase-memory/graph.db.zst` está en **`.gitignore`**: cada dev
 
 ## 1. Visión y principios
 
-**axi-connect** es una plataforma SaaS multi-tenant de atención al cliente omnicanal (WhatsApp, Instagram, Messenger) con agentes de IA, handoff a operadores humanos, CRM y marketplace de influencia. Este repositorio (`axi-client`) es la **aplicación web**: landing pública, marketplace, y el panel privado (dashboard, workspace/inbox en vivo, administración de empresas, agentes, usuarios y RBAC).
+**axi-connect** es una plataforma SaaS multi-tenant de atención al cliente omnicanal (WhatsApp, Instagram, Messenger) con agentes de IA, handoff a operadores humanos, CRM y marketplace de influencia. Este repositorio (`axi-client`) es la **aplicación web**: landing pública, marketplace, registro autoservicio y onboarding guiado (`docs/modules/onboarding.md`), y el panel privado (dashboard, workspace/inbox en vivo, administración de empresas, agentes, usuarios y RBAC).
 
 Principios rectores (ordenados por prioridad):
 
@@ -222,7 +222,11 @@ Entre slices:
    - Barrels existentes:
      - `modules/crm/public.ts` — consumido por `inbox` (rail de contexto de la conversación), `dashboard` (labels de ciclo de vida) y `marketing` (el DSL de audiencia: `AudienceFilterBuilder`, `describeSegmentFilters`, `compactSegmentFilters`, `listSegments`, `listTags`).
      - `modules/catalog/public.ts` — consumido por `marketing` para el `VariantPicker` del regalo de una promoción.
-     - `modules/channels/public.ts` — consumido por `marketing` para elegir el canal cloud del que cuelgan las plantillas de Meta. Se creó en vez de duplicar la llamada a `/channels`: el dueño del recurso es uno solo.
+     - `modules/channels/public.ts` — consumido por `marketing` para elegir el canal cloud del que cuelgan las plantillas de Meta (se creó en vez de duplicar la llamada a `/channels`: el dueño del recurso es uno solo) y por `onboarding`, que embebe el wizard de conexión (`ConnectChannelFlow`) en su paso «WhatsApp»: es el MISMO flujo de `/settings/channels/connect`, no una copia.
+     - `modules/companies/public.ts` — `SchedulesEditor`, `loadMyCompanyOnce`, `invalidateMyCompanyCache`; consumido por `scheduling` y `onboarding`.
+     - `modules/agents/public.ts` — tipos y caché de agentes (para `crm`) y, desde el onboarding, el catálogo de personajes (`listCharacters`, `characterStyle`) y `AiAgentDTO`.
+     - `modules/landing/public.ts` — la oferta comercial (`PRICING`, `MODULES`, precios y helpers, `MODULE_ICONS`); consumido por `onboarding` para preseleccionar y resumir lo elegido en `/comenzar`. La landing es la única dueña de ese copy y de esas cifras.
+     - `modules/onboarding/public.ts` — `OnboardingResumeBanner` (autosuficiente) para el `dashboard`.
 6. `workspace` es la única capa de composición: puede consumir `channels` para montar el sidebar del workspace (documentado).
 7. `core/` y `shared/` **nunca** importan de `modules/`. Comunicación desacoplada preferente: `WebSocketEventBus` (§10), stores compartidos, o CustomEvents del DOM (§9).
 
@@ -312,11 +316,17 @@ Estas reglas son la política del proyecto; el objetivo es hacerlas cumplir con 
 
 ## 6. Enrutamiento (App Router)
 
-Tres grupos de ruta bajo `src/app/`, más la capa BFF (`api/`) y slots paralelos.
+Grupos de ruta bajo `src/app/`, más la capa BFF (`api/`), slots paralelos y tres superficies de primer nivel con shell propio.
 
 **Grupos de ruta** (`(...)` no afectan la URL, solo el layout):
-- **`(public)`** — shell de marketing (`SiteHeader`/`SiteFooter`). Páginas: `/` (landing), `/marketplace`, `/auth/{login,logout,forgot-password,reset-password}`.
+- **`(public)`** — shell de marketing (`SiteHeader`/`SiteFooter`). Páginas: `/` (landing), `/precios`, `/marketplace`, `/auth/{login,logout}`.
 - **`(private)`** — shell autenticado (`SidebarProvider` + `AppSidebar` + `PrivateHeader` + superficie full-width). Dentro, el sub-grupo **`(content)`** centra el contenido (`mx-auto max-w-7xl p-4 md:p-6`, DESIGN-SYSTEM §4.2) para `/dashboard`, `/admin/agents` y `/settings/{company,users,roles}`; `/workspace/{inbox,inbox/[id]}` queda fuera del grupo y es full-bleed.
+- **`(onboarding)`** — `/onboarding`, la configuración guiada tras el registro (`docs/modules/onboarding.md`). Es privada (el middleware exige sesión) pero **fuera de `(private)`** a propósito: el shell del panel precarga `/me/navigation` y pintaría un sidebar de módulos que el usuario aún no configuró. El cromo lo pone `OnboardingShell`; `AppReadySignal` cierra el splash abierto por `/comenzar`.
+
+**Superficies de primer nivel** (ni `(public)` ni `(private)`; heredan solo el layout raíz):
+- **`/platform`** — consola super admin, auth aislado (§8.1).
+- **`/pay`** — pago sin sesión (billing).
+- **`/comenzar`** — registro autoservicio en tres pasos. Público (`PUBLIC_PATHS`) y `noindex`; monta `PublicAnalytics` porque es la superficie de conversión y no expone datos de tenants. Al crear la cuenta, `POST /api/auth/signup` siembra las cookies de sesión y manda a `/onboarding`.
 
 **Rutas paralelas** (slots como props del layout):
 - `@modal` — en la raíz (logout interceptado) y en `workspace` (crear/ver canal).
@@ -488,9 +498,12 @@ NEXT_PUBLIC_APP_URL=http://localhost:3001        # Origen público del sitio. OB
                                                  #   aborta (§13.2). En producción https://axi-connect.co
 NEXT_PUBLIC_GA_ID=                               # GA4 (G-XXXXXXX). OPCIONAL: si falta, no hay analítica
 NEXT_PUBLIC_META_PIXEL_ID=                       # Píxel de Meta. OPCIONAL, mismo criterio
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=                  # Captcha del registro /comenzar. OPCIONAL: sin ella el widget
+                                                 #   no se monta y el backend valida con su verificador noop
+                                                 #   (prohibido en producción); mal formada aborta el build
 ```
 
-**§13.1 — El WhatsApp comercial tiene un único punto de definición.** `core/config/env.ts` expone `SALES_WHATSAPP` (normalizado), `salesWhatsAppUrl(message?)` y `formatSalesWhatsApp()`; **nadie más construye un `wa.me` ni escribe el número**. De ahí cuelgan los seis puntos donde aparece: hero y CTA final de la landing, enlace y texto de `/contacto`, `TrialCountdownBanner`, `CompanySuspendedScreen` y el `PrerequisitesChecklist` de canales.
+**§13.1 — El WhatsApp comercial tiene un único punto de definición.** `core/config/env.ts` expone `SALES_WHATSAPP` (normalizado), `salesWhatsAppUrl(message?)` y `formatSalesWhatsApp()`; **nadie más construye un `wa.me` ni escribe el número**. De ahí cuelgan los cinco puntos donde aparece: hero y CTA final de la landing, enlace y texto de `/contacto`, `CompanySuspendedScreen` y el `PrerequisitesChecklist` de canales. (`TrialCountdownBanner` dejó de usarlo en 2026-09: con el registro autoservicio la conversión al fin de la prueba es del tenant y su CTA lleva a `/billing`.)
 
 Se resuelve en carga del módulo y **lanza si la variable falta**, en vez de degradar a cadena vacía. La razón es que las `NEXT_PUBLIC_*` se hornean en el bundle en tiempo de build: una variable ausente no produce error en ningún sitio, solo deja la app desplegada sin ningún CTA de ventas y sin señal alguna. Consecuencias operativas de ese contrato:
 
