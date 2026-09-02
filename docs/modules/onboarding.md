@@ -70,7 +70,7 @@ el resumen y para plataforma.
 
 | Ruta | Dónde | Auth | Por qué así |
 |---|---|---|---|
-| `/comenzar` | `src/app/comenzar/` (primer nivel, como `/pay`) | pública (`PUBLIC_PATHS`), `noindex` | Un funnel no lleva mega-menú ni shell de panel. Monta `PublicAnalytics` a propósito: es la superficie de conversión y no hay datos de tenants |
+| `/comenzar` | `src/app/comenzar/` (primer nivel, como `/pay`) | pública (`PUBLIC_PATHS`), `noindex` | Un funnel no lleva mega-menú ni shell de panel. Monta `PublicAnalytics` a propósito: es la superficie de conversión y no hay datos de tenants. La cabecera lleva el mismo `BrandLockup` que el header público: la marca no cambia al cruzar desde la landing |
 | `/onboarding` | `src/app/(onboarding)/onboarding/` | privada (middleware) pero **fuera de `(private)`** | El shell privado pintaría un sidebar de módulos aún sin configurar. `AppReadySignal` cierra el splash que abrió `/comenzar` |
 | `POST /api/auth/signup` | `src/app/api/auth/signup/route.ts` | BFF | Un solo viaje: el backend devuelve `AuthTokensDto`, el BFF siembra las mismas cookies HttpOnly que el login y el browser nunca ve el token |
 
@@ -136,7 +136,8 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
 
 ### B.4 Piezas compartidas que nacieron o crecieron aquí
 
-`core/lib/commercial-units.ts` · `shared/data/countries.ts` (promovido desde `platform`) ·
+`core/lib/commercial-units.ts` · `shared/components/ui/brand-lockup.tsx` (`BrandLockup`, nació al
+unificar la marca de `/comenzar` con la landing) · `shared/data/countries.ts` (promovido desde `platform`) ·
 `DraftBackButton` en `shared/components/features/dynamic-form` · `ProviderCard.selectionRole`
 (`radio` | `checkbox`) · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
 `core/lib/error-messages.ts` · `AuthProvider.signup()` · barrels `landing/public.ts` y

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { PublicAnalytics } from "@/core/analytics/ui/PublicAnalytics";
 import { noindexMetadata } from "@/core/seo/metadata";
-import { BrandMark } from "@/shared/components/ui/brand-mark";
+import { BrandLockup } from "@/shared/components/ui/brand-lockup";
 
 /**
  * `/comenzar` — registro autoservicio, de primer nivel: ni `(public)` ni
@@ -22,10 +22,10 @@ export default function ComenzarLayout({ children }: { children: React.ReactNode
     <div className="bg-brand-ambient flex min-h-svh w-full flex-col">
       <PublicAnalytics />
       <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-4 px-6 py-5">
-        <Link href="/" className="font-heading flex items-center gap-2.5 text-base font-bold" aria-label="Axi Connect, ir al inicio">
-          <BrandMark className="size-6" />
-          Axi Connect
-        </Link>
+        {/* El mismo lockup que el header público: el funnel es la continuación
+            de la landing y la marca no puede cambiar de tamaño ni de wordmark
+            al cruzar a /comenzar. */}
+        <BrandLockup />
         <p className="text-muted-foreground text-[0.8125rem]">
           ¿Ya tienes cuenta?{" "}
           <Link href="/auth/login" className="text-brand font-medium hover:underline">

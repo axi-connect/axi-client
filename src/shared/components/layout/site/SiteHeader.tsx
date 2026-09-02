@@ -9,7 +9,7 @@ import { spring, fade } from '@/core/styles/motion';
 import { useAuthContext } from '@/core/providers/auth-provider';
 import { useSplashOptional } from '@/core/providers/splash-provider';
 import { ThemeToggle } from '@/shared/components/layout/theme-toggle';
-import { BrandMark } from '@/shared/components/ui/brand-mark';
+import { BrandLockup } from '@/shared/components/ui/brand-lockup';
 import { SiteNavList, SiteNavShell } from '@/shared/components/layout/site/SiteNavDesktop';
 import { SiteNavMobile } from '@/shared/components/layout/site/SiteNavMobile';
 import {
@@ -100,16 +100,10 @@ export default function SiteHeader({
                                 whileHover={{ scale: 1.05 }}
                                 transition={spring.snappy}
                             >
-                                {/* BrandMark (SVG inline) en lugar de <Image> remota: el
-                                    isotipo se servía desde Cloudinary — request externo en
-                                    el critical path del LCP — y el PNG local pesa 423 KB
-                                    para renderizar 32px. */}
-                                <Link prefetch={false} href="/" className="flex items-center space-x-2">
-                                    <BrandMark className="size-8" />
-                                    <span className="text-brand-gradient font-heading bg-clip-text text-xl font-bold text-transparent">
-                                        axi connect
-                                    </span>
-                                </Link>
+                                {/* Lockup compartido (SVG inline, no <Image> remota: el
+                                    isotipo se servía desde Cloudinary en el critical path
+                                    del LCP). Es la misma pieza que pinta /comenzar. */}
+                                <BrandLockup />
                             </motion.div>
 
                             <SiteNavList />

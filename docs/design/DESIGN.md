@@ -43,6 +43,7 @@ El isotipo es una **"α" (alfa) tricolor** construida con tres cintas entrelazad
 - Sobre fondos claros: versión a color. Sobre fondos oscuros: versión a color (los tres tonos funcionan en dark) o monocroma blanca.
 - **Nunca** recolorear las cintas, rotar, estirar, aplicar sombras duras ni colocar sobre fondos que compitan (fotografías saturadas, gradientes de otros colores).
 - En tamaños < 24px usar solo el isotipo, nunca el logotipo con texto.
+- **Isotipo + wordmark = `BrandLockup`** (`shared/components/ui/brand-lockup.tsx`): toda cabecera con marca (header público, menú móvil, `/comenzar`) monta esta pieza, nunca compone el lockup a mano. Wordmark «axi connect» en minúsculas con `text-brand-gradient`, dos tamaños (`md` 32 px / `sm` 28 px), enlace al inicio cuyo nombre accesible es el propio wordmark. Antes cada superficie lo armaba por su cuenta y `/comenzar` divergió (isotipo más pequeño y «Axi Connect» en texto plano).
 
 ### 2.3 Inventario de assets (objetivo)
 

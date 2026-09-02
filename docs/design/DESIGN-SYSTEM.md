@@ -358,6 +358,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Confirmación / alerta | `useAlert()` (`showModal` / `showAlert`) |
 | Selección múltiple | `MultiSelect` |
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
+| Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |

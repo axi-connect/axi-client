@@ -6,7 +6,7 @@ import { ArrowRight, Menu, MessageCircle, X } from "lucide-react";
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { BrandMark } from "@/shared/components/ui/brand-mark";
+import { BrandLockup } from "@/shared/components/ui/brand-lockup";
 import {
   Accordion,
   AccordionContent,
@@ -120,12 +120,7 @@ export function SiteNavMobile({
 
         <div className="border-border/60 flex h-16 items-center justify-between border-b px-4">
           <SheetClose asChild>
-            <Link href="/" prefetch={false} className="flex items-center gap-2">
-              <BrandMark className="size-7" />
-              <span className="text-brand-gradient font-heading bg-clip-text text-lg font-bold text-transparent">
-                axi connect
-              </span>
-            </Link>
+            <BrandLockup size="sm" />
           </SheetClose>
           <SheetClose asChild>
             <Button variant="ghost" size="icon" className="rounded-full" aria-label="Cerrar menú">
