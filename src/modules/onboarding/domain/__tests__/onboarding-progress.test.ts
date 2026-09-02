@@ -7,6 +7,8 @@ import {
   resolveEntryStep,
   shouldShowResumeBanner,
   type OnboardingProgressDTO,
+  isFreshProgress,
+  ONBOARDING_WELCOME_PATH,
 } from "../onboarding-progress"
 import { NICHES, nicheByCode } from "../niches"
 
@@ -74,5 +76,19 @@ describe("nichos", () => {
     expect(nicheByCode("restaurants")?.name).toBe("Restaurantes y comida")
     expect(nicheByCode("inventado")).toBeNull()
     expect(nicheByCode(null)).toBeNull()
+  })
+})
+
+describe("isFreshProgress", () => {
+  it("solo es fresco sin nicho, sin pasos cerrados y sin completar", () => {
+    const fresh = emptyProgress("c1", "2026-09-01T10:00:00Z")
+    expect(isFreshProgress(fresh)).toBe(true)
+    expect(isFreshProgress({ ...fresh, niche_code: "restaurants" })).toBe(false)
+    expect(isFreshProgress({ ...fresh, steps: { business_hours: { status: "skipped", completed_at: null } } })).toBe(false)
+    expect(isFreshProgress({ ...fresh, completed_at: "2026-09-01T11:00:00Z" })).toBe(false)
+  })
+
+  it("la ruta de bienvenida lleva el query que la vista honra", () => {
+    expect(ONBOARDING_WELCOME_PATH).toBe("/onboarding?welcome=1")
   })
 })

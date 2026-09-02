@@ -28,12 +28,18 @@ export type EntitlementsDTO = {
   included: EntitlementIncluded[];
 };
 
-/** «Vence el 8 de septiembre» para el pie del bloque; `null` sin trial. */
-export function trialEndsLabel(entitlements: EntitlementsDTO, locale = "es-CO"): string | null {
+/** «8 de septiembre»: la fecha de fin de la prueba, para meterla en una frase; `null` sin trial. */
+export function trialEndsDate(entitlements: EntitlementsDTO, locale = "es-CO"): string | null {
   if (!entitlements.trial.active || !entitlements.trial.ends_at) return null;
   const date = new Date(entitlements.trial.ends_at);
   if (Number.isNaN(date.getTime())) return null;
-  return `Vence el ${new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(date)}`;
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(date);
+}
+
+/** «Vence el 8 de septiembre» para el pie del bloque; `null` sin trial. */
+export function trialEndsLabel(entitlements: EntitlementsDTO, locale = "es-CO"): string | null {
+  const date = trialEndsDate(entitlements, locale);
+  return date ? `Vence el ${date}` : null;
 }
 
 /** Nombre comercial de lo elegido: el paquete, o «N módulos». */

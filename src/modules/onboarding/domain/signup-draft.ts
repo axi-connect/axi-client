@@ -8,6 +8,7 @@
  * Lee la oferta comercial del barrel de `landing` (datos puros): la landing es
  * la dueña del copy y de los precios, y aquí no se duplica ni una cifra.
  */
+import { ONBOARDING_WELCOME_PATH } from "@/modules/onboarding/domain/onboarding-progress";
 import type { SignupPayload } from "@/shared/auth/auth.types";
 import {
   MODULES,
@@ -104,8 +105,8 @@ export const SIGNUP_STEPS = [
 export type SignupStep = (typeof SIGNUP_STEPS)[number]["code"];
 export const SIGNUP_STEP_LABELS: readonly string[] = SIGNUP_STEPS.map((step) => step.label);
 
-/** A dónde va el usuario con la sesión recién abierta. La ruta la entrega F3. */
-export const SIGNUP_NEXT_PATH = "/onboarding";
+/** A dónde va el usuario con la sesión recién abierta: la bienvenida de `/onboarding`. */
+export const SIGNUP_NEXT_PATH = ONBOARDING_WELCOME_PATH;
 
 export type CompanyDraft = {
   name: string;

@@ -6,10 +6,14 @@ import { useCallback, useEffect, useState } from "react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
+import { useSession } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { invalidateMyCompanyCache, loadMyCompanyOnce } from "@/modules/companies/public";
 import {
+  ONBOARDING_PATH,
+  WELCOME_QUERY,
   firstOpenStep,
+  isFreshProgress,
   isOnboardingComplete,
   resolveEntryStep,
   type OnboardingStep,
@@ -17,6 +21,7 @@ import {
 import { useOnboardingStore } from "@/modules/onboarding/infrastructure/stores/onboarding.store";
 import { OnboardingShell } from "@/modules/onboarding/ui/onboarding/OnboardingShell";
 import { OnboardingSkeleton } from "@/modules/onboarding/ui/onboarding/OnboardingSkeleton";
+import { WelcomeView } from "@/modules/onboarding/ui/onboarding/WelcomeView";
 import { BusinessHoursStep } from "@/modules/onboarding/ui/onboarding/steps/BusinessHoursStep";
 import { AgentTemplatesStep } from "@/modules/onboarding/ui/onboarding/steps/AgentTemplatesStep";
 import { CatalogImportStep } from "@/modules/onboarding/ui/onboarding/steps/CatalogImportStep";
@@ -34,11 +39,16 @@ const DASHBOARD_PATH = "/dashboard";
  * primero abierto; con todo cerrado, la pantalla final. Un onboarding ya
  * completado redirige al panel. Cada paso persiste su cierre antes de avanzar,
  * y un fallo al guardar no pierde lo elegido: se muestra y se reintenta.
+ *
+ * Con `?welcome=1` (lo pone el registro al crear la cuenta) y un progreso
+ * recién nacido se antepone la bienvenida; si ya hay algo cerrado, el query se
+ * ignora: una recarga a mitad de camino vuelve al paso, no a la fiesta.
  */
 export function OnboardingView() {
   const router = useRouter();
   const search = useSearchParams();
   const { showAlert } = useAlert();
+  const { user } = useSession();
 
   const status = useOnboardingStore((state) => state.status);
   const progress = useOnboardingStore((state) => state.progress);
@@ -51,6 +61,7 @@ export function OnboardingView() {
   const update = useOnboardingStore((state) => state.update);
 
   const [current, setCurrent] = useState<OnboardingStep | null | undefined>(undefined);
+  const [welcome, setWelcome] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
 
@@ -71,7 +82,9 @@ export function OnboardingView() {
       router.replace(DASHBOARD_PATH);
       return;
     }
-    setCurrent(resolveEntryStep(progress, search.get("step")));
+    const showWelcome = search.get(WELCOME_QUERY) === "1" && isFreshProgress(progress);
+    setWelcome(showWelcome);
+    setCurrent(resolveEntryStep(progress, showWelcome ? null : search.get("step")));
   }, [status, progress, current, router, search]);
 
   // Tras cerrar un paso se sigue por el primero abierto: los cerrados no se
@@ -120,6 +133,20 @@ export function OnboardingView() {
   }
 
   if (!progress || current === undefined) return <OnboardingSkeleton />;
+
+  if (welcome) {
+    return (
+      <WelcomeView
+        firstName={firstNameOf(user?.name)}
+        companyName={companyName}
+        onStart={() => {
+          setWelcome(false);
+          // Limpia el query: volver atrás o recargar ya no reabre la bienvenida.
+          router.replace(ONBOARDING_PATH);
+        }}
+      />
+    );
+  }
 
   return (
     <OnboardingShell progress={progress} current={current} onStepChange={(step) => { setStepError(null); setCurrent(step); }}>
@@ -181,6 +208,12 @@ export function OnboardingView() {
       ) : null}
     </OnboardingShell>
   );
+}
+
+/** Primer nombre para el saludo; `null` si no hay nombre utilizable. */
+function firstNameOf(name: string | null | undefined): string | null {
+  const first = name?.trim().split(/\s+/)[0];
+  return first ? first : null;
 }
 
 /** `steps.catalog.data.import_id`, si el progreso guardó un job para reanudar. */

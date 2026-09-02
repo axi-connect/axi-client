@@ -8,6 +8,11 @@
  * abierto, a cuál se puede saltar y cuánto falta.
  */
 
+export const ONBOARDING_PATH = "/onboarding";
+/** `?welcome=1`: el registro acaba de crear la cuenta y se muestra la bienvenida antes del primer paso. */
+export const WELCOME_QUERY = "welcome";
+export const ONBOARDING_WELCOME_PATH = `${ONBOARDING_PATH}?${WELCOME_QUERY}=1`;
+
 export const ONBOARDING_STEPS = [
   { code: "niche", label: "Negocio" },
   { code: "business_hours", label: "Horarios" },
@@ -100,6 +105,15 @@ export function pendingCount(progress: OnboardingProgressDTO): number {
 /** 0–100 sobre los pasos cerrados; un paso omitido también cierra. */
 export function progressPercent(progress: OnboardingProgressDTO): number {
   return Math.round((closedCount(progress) / ONBOARDING_STEP_CODES.length) * 100);
+}
+
+/**
+ * Recién creado: sin nicho y sin ningún paso cerrado. Es la condición para
+ * mostrar la bienvenida aunque la URL traiga `?welcome=1`: quien recarga a
+ * mitad de camino vuelve a su paso, no a la fiesta.
+ */
+export function isFreshProgress(progress: OnboardingProgressDTO): boolean {
+  return progress.niche_code === null && closedCount(progress) === 0 && !isOnboardingComplete(progress);
 }
 
 export function isOnboardingComplete(progress: OnboardingProgressDTO): boolean {

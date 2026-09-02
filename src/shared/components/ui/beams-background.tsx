@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
 
+import { readBrandPalette, type Rgb } from "@/core/lib/brand-palette";
 import { cn } from "@/core/lib/utils";
 
 /**
@@ -45,26 +46,8 @@ type Beam = {
   color: Rgb;
 };
 
-type Rgb = readonly [number, number, number];
-
 const INTENSITY: Record<Intensity, number> = { subtle: 0.7, medium: 0.85, strong: 1 };
-const TOKENS = ["--axi-brand", "--axi-amber", "--axi-violet"] as const;
-/** Coral por si el token no llegara (nunca debería: está en `:root`). */
-const FALLBACK: Rgb = [230, 87, 89];
 const MAX_DPR = 2;
-
-function hexToRgb(hex: string): Rgb | null {
-  const clean = hex.trim().replace("#", "");
-  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
-  if (!/^[0-9a-f]{6}$/i.test(full)) return null;
-  const n = Number.parseInt(full, 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
-function readPalette(el: Element): Rgb[] {
-  const styles = getComputedStyle(el);
-  return TOKENS.map((token) => hexToRgb(styles.getPropertyValue(token)) ?? FALLBACK);
-}
 
 function isDark(): boolean {
   return document.documentElement.classList.contains("dark");
@@ -108,7 +91,7 @@ export function BeamsBackground({
     let width = 0;
     let height = 0;
     let beams: Beam[] = [];
-    let palette = readPalette(host);
+    let palette = readBrandPalette(host);
     let raf = 0;
     const scale = INTENSITY[intensity];
 
@@ -184,7 +167,7 @@ export function BeamsBackground({
 
     // El tema cambia por clase en <html> (next-themes): se releen los tokens.
     const theme = new MutationObserver(() => {
-      palette = readPalette(host);
+      palette = readBrandPalette(host);
       beams.forEach((beam, i) => {
         beam.color = palette[i % palette.length];
       });

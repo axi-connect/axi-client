@@ -96,7 +96,7 @@ infrastructure/
 ui/
   signup/                        SignupFunnelView, OfferStep, CompanyStep, AccountStep, SignupSummaryRail,
                                  PasswordField, TurnstileWidget, config/*.config.tsx
-  onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton,
+  onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton, WelcomeView,
                                  steps/{Niche,BusinessHours,CatalogImport,AgentTemplates,WhatsApp,Done}Step
   catalog-import/                ImportDropzone, ImportJobProgress, ExtractedProductsReview
   agents/                        TemplateCard, TemplateCustomizeSheet
@@ -137,7 +137,8 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
 ### B.4 Piezas compartidas que nacieron o crecieron aquí
 
 `core/lib/commercial-units.ts` · `shared/components/ui/brand-lockup.tsx` (`BrandLockup`, nació al
-unificar la marca de `/comenzar` con la landing) · `shared/data/countries.ts` (promovido desde `platform`) ·
+unificar la marca de `/comenzar` con la landing) · `shared/components/ui/confetti.tsx` + `core/lib/brand-palette.ts`
+(extraído de `beams-background`) · `SplashContext.phase` · `shared/data/countries.ts` (promovido desde `platform`) ·
 `DraftBackButton` en `shared/components/features/dynamic-form` · `ProviderCard.selectionRole`
 (`radio` | `checkbox`) · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
 `core/lib/error-messages.ts` · `AuthProvider.signup()` · barrels `landing/public.ts` y
@@ -169,6 +170,32 @@ costaron tiempo:
 - Un campo custom de `DynamicForm` necesita `htmlFor` + `id` para que `getByLabelText` lo encuentre.
 
 ---
+
+### B.7 Bienvenida tras crear la cuenta (2026-09-02)
+
+El registro termina en `SIGNUP_NEXT_PATH = /onboarding?welcome=1`. `OnboardingView` antepone
+`WelcomeView` **solo si** el query viene **y** el progreso está recién nacido (`isFreshProgress`: sin
+nicho, sin pasos cerrados, sin completar). Quien recarga a mitad de camino vuelve a su paso: el query no
+es una orden, es una pista. «Configurar mi empresa» hace `router.replace("/onboarding")` para limpiar el
+query y entra en Negocio; «ve directo a tu panel» deja el onboarding pendiente y lo recuerda el banner.
+
+Contenido: `BrandLockup` (la misma marca que `/comenzar`), isotipo grande con resplandor tricolor,
+«Bienvenido a Axi Connect, {primer nombre}», empresa y fecha de fin de la prueba (`trialEndsDate` de
+`GET /me/entitlements`; si falla, la frase sigue sin fecha), pastilla con `offerLabel`, los cinco pasos con
+una línea cada uno, CTA primaria y enlace secundario. Sin barra de progreso ni stepper: aún no se empezó.
+
+**Confeti** (`shared/components/ui/confetti.tsx`, `canvas-confetti` cargado en diferido): una ráfaga
+finita de ~2,5 s (`brandCelebration`: dos cañones laterales + estallido central) con los tres colores de
+marca leídos de los tokens (`core/lib/brand-palette.ts`). Se dispara **una vez** y solo cuando el splash
+llega a `phase === "idle"` (`SplashContext.phase`, aditivo): nunca debajo del overlay ni durante la
+hidratación. Con `prefers-reduced-motion` el componente no pinta canvas y `fire` es no-op. No es un loop
+(DESIGN-SYSTEM §6): lo dispara la acción de crear la cuenta y termina sola.
+
+Tests: `WelcomeView.test.tsx` (nombre/empresa/oferta/fecha; confeti una vez y solo con splash `idle`),
+`OnboardingView.test.tsx` (con `?welcome=1` + fresco → bienvenida → Negocio; con un paso cerrado la
+ignora), `confetti.test.tsx` (instancia perezosa, `at`, limpieza al desmontar, reduced-motion),
+`onboarding-progress.test.ts` (`isFreshProgress`). El canvas no existe en jsdom: en las vistas se mockea
+`@/shared/components/ui/confetti`; en su propio test se mockea `canvas-confetti`.
 
 ## Parte C — Lo que aún es contrato a mano y lo que falta
 

@@ -29,13 +29,19 @@ import { BrandMark } from "@/shared/components/ui/brand-mark"
  * Con `prefers-reduced-motion` el zoom se sustituye por un crossfade.
  */
 
-type SplashPhase = "idle" | "covering" | "leaving"
+export type SplashPhase = "idle" | "covering" | "leaving"
 
 type SplashContextType = {
   /** Muestra el overlay. Llamar justo antes de navegar hacia la app. */
   start: () => void
   /** La vista destino está montada: dispara la salida animada del overlay. */
   markReady: () => void
+  /**
+   * En qué punto está el overlay. `idle` = ya no cubre nada: lo que quiera
+   * arrancar cuando la app queda a la vista (la celebración de la bienvenida)
+   * espera a este valor en vez de adivinar la duración de la salida.
+   */
+  phase: SplashPhase
 }
 
 const SplashContext = createContext<SplashContextType | null>(null)
@@ -109,7 +115,7 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   const leaving = phase === "leaving"
 
   return (
-    <SplashContext.Provider value={{ start, markReady }}>
+    <SplashContext.Provider value={{ start, markReady, phase }}>
       {children}
       {phase !== "idle" && (
         <div
@@ -168,5 +174,5 @@ export function useSplash(): SplashContextType {
  */
 export function useSplashOptional(): SplashContextType {
   const ctx = useContext(SplashContext)
-  return ctx ?? { start: () => {}, markReady: () => {} }
+  return ctx ?? { start: () => {}, markReady: () => {}, phase: "idle" }
 }

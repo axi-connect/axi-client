@@ -41,6 +41,12 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: jest.fn() }),
 }))
 
+// El canvas de confeti no existe en jsdom; la bienvenida se prueba por su contenido.
+jest.mock("@/shared/components/ui/confetti", () => ({
+  Confetti: () => null,
+  brandCelebration: () => [],
+}))
+
 const NOW = "2026-09-01T10:00:00Z"
 const fresh = (): OnboardingProgressDTO => emptyProgress("c1", NOW)
 const withNiche = (): OnboardingProgressDTO => ({
@@ -81,6 +87,29 @@ describe("OnboardingView", () => {
       steps: { niche: { status: "done", data: { niche_code: "restaurants" } } },
     })
     expect(await screen.findByRole("heading", { name: /tu horario de atención/i })).toBeInTheDocument()
+  })
+
+  it("con ?welcome=1 y progreso recién nacido antepone la bienvenida y luego entra en Negocio", async () => {
+    search = new URLSearchParams("welcome=1")
+    getOnboardingProgress.mockResolvedValueOnce(fresh())
+    render(<OnboardingView />)
+
+    expect(await screen.findByRole("heading", { level: 1, name: /bienvenido a axi connect/i })).toBeInTheDocument()
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: /configurar mi empresa/i }))
+
+    expect(replace).toHaveBeenCalledWith("/onboarding")
+    expect(await screen.findByRole("radiogroup", { name: /tipo de negocio/i })).toBeInTheDocument()
+  })
+
+  it("con ?welcome=1 pero un paso ya cerrado ignora la bienvenida y retoma el paso", async () => {
+    search = new URLSearchParams("welcome=1")
+    getOnboardingProgress.mockResolvedValueOnce(withNiche())
+    render(<OnboardingView />)
+
+    expect(await screen.findByRole("heading", { name: /tu horario de atención/i })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { level: 1, name: /bienvenido/i })).not.toBeInTheDocument()
   })
 
   it("con ?step= inalcanzable cae al primer paso abierto", async () => {

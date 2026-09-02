@@ -305,6 +305,14 @@ Reglas:
   arranca solo, es un loop y necesita permiso aquí; si lo enciende el ratón, es
   respuesta a una acción. Los tres se apagan igualmente con
   `prefers-reduced-motion` y ninguno se engancha sin puntero fino.
+- **Celebraciones**: una ráfaga de confeti **finita** (`Confetti` +
+  `brandCelebration`, ~2,5 s, termina sola) tampoco es un loop: la dispara una
+  acción del usuario que merece celebrarse y acaba. Hoy hay una sola: la
+  bienvenida tras crear la cuenta (`/onboarding?welcome=1`). Condiciones para
+  cualquier otra: colores de marca leídos de los tokens, disparo **después** de
+  que el splash se haya ido (`SplashContext.phase === "idle"`), una sola vez por
+  pantalla, y con `prefers-reduced-motion` no se pinta nada. El workspace
+  (inbox, CRM, tablas) no celebra: sigue quieto.
 
 ---
 
@@ -359,6 +367,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Selección múltiple | `MultiSelect` |
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
+| Celebración puntual (una ráfaga, no un loop) | `Confetti` + `brandCelebration` (`shared/components/ui/confetti.tsx`) — canvas-confetti en diferido, colores de `readBrandPaletteCss`, reduced-motion lo apaga; ver §6 |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |

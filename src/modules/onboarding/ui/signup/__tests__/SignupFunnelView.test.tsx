@@ -96,7 +96,7 @@ describe("SignupFunnelView", () => {
     expect(payload.company).toMatchObject({ name: "La Parrilla de Joao", nit: "901234567-8", country_code: "CO", city: "Medellín" })
     expect(payload.owner).toMatchObject({ email: "joao@laparrilla.co" })
     expect(payload.accepted_terms).toBe(true)
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding"))
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/onboarding?welcome=1"))
     expect(window.sessionStorage.getItem("axi.signup.draft.v1")).toBeNull()
   })
 
