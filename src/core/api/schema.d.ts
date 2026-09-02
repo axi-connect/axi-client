@@ -11518,6 +11518,8 @@ export interface components {
                 start_hour: number;
                 end_hour: number;
             };
+            /** @default false */
+            hangup_on_machine: boolean;
         };
         TestCallDto: {
             to: string;

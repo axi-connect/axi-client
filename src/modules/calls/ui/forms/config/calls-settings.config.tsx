@@ -27,6 +27,7 @@ import type { CallsSettingsDTO } from "@/modules/calls/domain/call";
 export const callsSettingsFormSchema = z.object({
   ai_enabled: z.boolean(),
   recording_enabled: z.boolean(),
+  hangup_on_machine: z.boolean(),
   legal_notice_text: z
     .string()
     .trim()
@@ -52,6 +53,7 @@ export function fromCallsSettingsDto(dto: CallsSettingsDTO): CallsSettingsFormVa
   return {
     ai_enabled: dto.ai_enabled,
     recording_enabled: dto.recording_enabled,
+    hangup_on_machine: dto.hangup_on_machine,
     legal_notice_text: dto.legal_notice_text,
     max_duration_minutes: Math.round(dto.max_duration_seconds / 60),
     max_concurrent: dto.max_concurrent,
@@ -64,6 +66,7 @@ export function toCallsSettingsPayload(values: CallsSettingsFormValues): CallsSe
   return {
     ai_enabled: values.ai_enabled,
     recording_enabled: values.recording_enabled,
+    hangup_on_machine: values.hangup_on_machine,
     legal_notice_text: values.legal_notice_text.trim(),
     max_duration_seconds: values.max_duration_minutes * 60,
     max_concurrent: values.max_concurrent,
@@ -149,6 +152,22 @@ export function buildCallsSettingsFields(opts: {
         label: "Grabar las llamadas",
         description:
           "Guarda el audio junto al transcript. Puedes apagarlo y conservar solo el transcript.",
+      },
+    ),
+    createCustomField<CallsSettingsFormValues>(
+      "hangup_on_machine",
+      ({ value, setValue }) => (
+        <Switch
+          checked={value === true}
+          onCheckedChange={(checked) => setValue("hangup_on_machine", checked)}
+          disabled={!opts.canManage}
+          aria-label="Colgar si contesta un buzón de voz"
+        />
+      ),
+      {
+        label: "Colgar si contesta un buzón de voz",
+        description:
+          "En llamadas salientes automáticas, si contesta un contestador el agente cuelga sin dejar mensaje (ahorra costo). Añade unos segundos de detección y, en raros casos, puede colgarle a una persona que contesta lento.",
       },
     ),
     createCustomField<CallsSettingsFormValues>(
