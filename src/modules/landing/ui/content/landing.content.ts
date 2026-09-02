@@ -598,8 +598,8 @@ export const PRICING = {
         "Si no sigues, tus datos quedan intactos",
         "Te acompañamos en la activación",
       ],
-      cta: "Empieza tus 7 días gratis",
-      ctaMicrocopy: "Sin tarjeta — la activamos contigo.",
+      cta: { label: "Empieza tus 7 días gratis", href: "/comenzar?plan=free_trial" },
+      ctaMicrocopy: "Sin tarjeta. Tu cuenta queda lista hoy.",
     },
     {
       id: "sbs",
@@ -620,8 +620,8 @@ export const PRICING = {
         "Medición completa: embudo en pesos y calidad de cada conversación",
         "Inbox, roles y permisos para todo tu equipo",
       ],
-      cta: "Reclama tu cupo fundador",
-      ctaMicrocopy: null,
+      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=sbs" },
+      ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
     },
     {
       id: "enterprise",
@@ -639,12 +639,13 @@ export const PRICING = {
         "Límites ampliados y soporte prioritario",
         "Acompañamiento en la implementación",
       ],
-      cta: "Hablemos",
+      // Enterprise exige base dedicada: se activa con ventas, nunca por autoservicio.
+      cta: { label: "Hablemos", href: "/contacto" },
       ctaMicrocopy: "Te respondemos el mismo día.",
     },
   ],
   microcopy:
-    "Un Paquete se define por volumen, no por funciones: todos incluyen el producto completo. Si solo te falta una capacidad, mira los Módulos.",
+    "Un Paquete se define por volumen, no por funciones: todos incluyen el producto completo. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
 } as const;
 
 export type PricingPlan = (typeof PRICING)["plans"][number];
@@ -659,7 +660,9 @@ export type PricingPlan = (typeof PRICING)["plans"][number];
  *
  * La cuota se comunica en unidades comerciales (`allowance`), jamás en tokens:
  * el formateo lo hace `core/lib/commercial-units`. `offer_code` es la clave que
- * el backend valida en el alta; el precio de la landing es estático a propósito
+ * el backend valida en el alta (es el `public_slug` del plan) y `id` lo que
+ * viaja en la URL del CTA (`/comenzar?modulo=<id>`); el precio de la landing es
+ * estático a propósito
  * (la sección más vista del sitio no espera a ningún fetch).
  *
  * `priceStatus` gobierna lo que se PUBLICA: mientras sea `draft`, la cifra se
@@ -691,7 +694,7 @@ export type ModuleOffer = {
 export const MODULES: readonly ModuleOffer[] = [
   {
     id: "calls",
-    offer_code: "module_calls_v1",
+    offer_code: "calls",
     name: "Llamadas con IA",
     tagline:
       "Tu agente llama y contesta con voz natural: confirma citas, cobra y hace seguimiento por teléfono, con tu propio número.",
@@ -709,14 +712,12 @@ export const MODULES: readonly ModuleOffer[] = [
       "Grabación, transcripción y monitoreo en vivo",
       "Si nadie contesta, el seguimiento sigue por WhatsApp",
     ],
-    // TODO F2: `/comenzar?modulo=calls` cuando exista el registro autoservicio.
-    // Hasta entonces el destino es el mismo que el de los Paquetes: la demo.
-    cta: { label: "Prueba 7 días gratis", href: "#demo" },
-    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+    cta: { label: "Prueba 7 días gratis", href: "/comenzar?modulo=calls" },
+    ctaMicrocopy: "Sin tarjeta. Se activa en minutos.",
   },
   {
     id: "leads",
-    offer_code: "module_leads_v1",
+    offer_code: "leads",
     name: "Captación de leads",
     tagline:
       "Encuentra empresas y contactos por zona y rubro, verifica sus datos y escríbeles por WhatsApp con campañas que aprueba tu CMO con IA.",
@@ -734,12 +735,12 @@ export const MODULES: readonly ModuleOffer[] = [
       "Enriquecimiento y verificación antes de escribir",
       "Campañas con plantillas aprobadas y Axel, tu CMO con IA",
     ],
-    cta: { label: "Prueba 7 días gratis", href: "#demo" },
-    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+    cta: { label: "Prueba 7 días gratis", href: "/comenzar?modulo=leads" },
+    ctaMicrocopy: "Sin tarjeta. Se activa en minutos.",
   },
   {
     id: "crm",
-    offer_code: "module_crm_v1",
+    offer_code: "crm",
     name: "CRM con IA",
     tagline:
       "Contactos, embudo y seguimiento con un copiloto que resume cada cliente, sugiere el siguiente paso y ejecuta tareas por ti.",
@@ -757,12 +758,12 @@ export const MODULES: readonly ModuleOffer[] = [
       "Historial 360 de cada cliente dentro del inbox",
       "Importa tus contactos desde Excel en un paso",
     ],
-    cta: { label: "Prueba 7 días gratis", href: "#demo" },
-    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+    cta: { label: "Prueba 7 días gratis", href: "/comenzar?modulo=crm" },
+    ctaMicrocopy: "Sin tarjeta. Se activa en minutos.",
   },
   {
     id: "scheduling",
-    offer_code: "module_scheduling_v1",
+    offer_code: "scheduling",
     name: "Agenda y reservas",
     tagline:
       "Tu agente agenda, confirma y reagenda por WhatsApp, y recuerda cada cita para que nadie falte.",
@@ -776,8 +777,8 @@ export const MODULES: readonly ModuleOffer[] = [
       "Recordatorios automáticos que reducen las ausencias",
       "Calendario del equipo por día, semana y mes",
     ],
-    cta: { label: "Prueba 7 días gratis", href: "#demo" },
-    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+    cta: { label: "Prueba 7 días gratis", href: "/comenzar?modulo=scheduling" },
+    ctaMicrocopy: "Sin tarjeta. Se activa en minutos.",
   },
 ];
 

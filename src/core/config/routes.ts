@@ -20,6 +20,9 @@ export const PUBLIC_PATHS = [
   "/integraciones",
   "/demo", // redirige a /contacto (next.config.ts)
   "/marketplace",
+  // Registro autoservicio (docs/plans/onboarding_self_service_plan.md F2): el
+  // funnel es público hasta que el alta crea la sesión y manda a /onboarding.
+  "/comenzar",
   "/auth",
   // Pago sin sesión (billing_frontend_plan.md F4/F5): el retorno del checkout y
   // el enlace de una factura. A los dos llega gente sin sesión —incluido un

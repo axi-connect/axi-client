@@ -50,7 +50,9 @@ const nextConfig: NextConfig = {
       { source: "/products", destination: "/productos", permanent: true },
       { source: "/solutions", destination: "/soluciones", permanent: true },
       { source: "/login", destination: "/auth/login", permanent: true },
-      { source: "/signup", destination: "/contacto", permanent: true },
+      // El registro autoservicio vive en /comenzar (onboarding_self_service_plan.md).
+      { source: "/signup", destination: "/comenzar", permanent: true },
+      { source: "/registro", destination: "/comenzar", permanent: true },
       { source: "/legal", destination: "/legal/terminos", permanent: true },
       // Canales: las rutas interceptadas del workspace (`@modal/(.)channels/*`)
       // se borraron en F1 porque no tenían página subyacente y una recarga daba

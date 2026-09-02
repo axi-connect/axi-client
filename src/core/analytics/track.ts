@@ -15,12 +15,19 @@ export type CtaLocation =
   | "contact"
   | "demo_form"
   | "footer"
+  | "modules"
+  | "signup"
   | "unknown";
 
 export type AnalyticsEvent =
   | { name: "whatsapp_click"; params: { location: CtaLocation; path: string } }
   | { name: "demo_anchor_click"; params: { location: CtaLocation; path: string } }
-  | { name: "demo_form_submit"; params: { volume: string } };
+  | { name: "demo_form_submit"; params: { volume: string } }
+  // Funnel de registro autoservicio (/comenzar). `offer_codes` va como cadena
+  // separada por comas: GA4 y Meta solo aceptan parámetros escalares.
+  | { name: "signup_start_click"; params: { offer_codes: string; location: CtaLocation; path: string } }
+  | { name: "signup_step_view"; params: { step: string } }
+  | { name: "signup_completed"; params: { offer_codes: string } };
 
 /**
  * Traducción de cada evento del dominio a los dos destinos.
@@ -40,6 +47,10 @@ const EVENT_MAP: Record<
   whatsapp_click: { ga: "whatsapp_click", meta: { method: "track", name: "Contact" } },
   demo_anchor_click: { ga: "demo_anchor_click", meta: { method: "trackCustom", name: "DemoAnchorClick" } },
   demo_form_submit: { ga: "generate_lead", meta: { method: "track", name: "Lead" } },
+  signup_start_click: { ga: "signup_start_click", meta: { method: "trackCustom", name: "SignupStart" } },
+  signup_step_view: { ga: "signup_step_view", meta: null },
+  // `sign_up` y `CompleteRegistration` son los estándar de GA4 y de Meta.
+  signup_completed: { ga: "sign_up", meta: { method: "track", name: "CompleteRegistration" } },
 };
 
 /**

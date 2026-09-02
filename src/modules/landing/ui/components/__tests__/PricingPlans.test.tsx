@@ -111,12 +111,26 @@ describe("PricingPlans", () => {
     expect(screen.queryByText(VOLUME_ESTIMATOR.recommendedBadge)).not.toBeInTheDocument()
   })
 
-  it("lleva los tres planes al mismo destino de conversión", () => {
+  it("cada paquete lleva al destino que declara el content", () => {
     render(<PricingPlans />)
 
     for (const plan of PRICING.plans) {
-      expect(screen.getByRole("link", { name: plan.cta })).toHaveAttribute("href", "#demo")
+      expect(screen.getByRole("link", { name: plan.cta.label })).toHaveAttribute("href", plan.cta.href)
     }
+  })
+
+  it("los paquetes autoservicio abren el registro con la oferta preseleccionada", () => {
+    render(<PricingPlans />)
+
+    for (const id of ["free_trial", "sbs"]) {
+      const plan = byId(PRICING.plans, id)
+      expect(screen.getByRole("link", { name: plan.cta.label })).toHaveAttribute("href", `/comenzar?plan=${id}`)
+    }
+  })
+
+  it("Enterprise sigue en ventas: nunca entra al registro autoservicio", () => {
+    render(<PricingPlans />)
+    expect(screen.getByRole("link", { name: ENTERPRISE_PLAN.cta.label })).toHaveAttribute("href", "/contacto")
   })
 
   it("publica el estado real de los cupos y la fecha de cierre", () => {

@@ -162,7 +162,7 @@ describe("catálogo de módulos", () => {
 
   it("resuelve Paquetes por id y Módulos por offer_code", () => {
     expect(offerByCode("sbs")).toBe(PRICING.plans[1])
-    expect(offerByCode("module_calls_v1")).toBe(MODULES[0])
+    expect(offerByCode("calls")).toBe(MODULES[0])
     expect(offerByCode("no-existe")).toBeNull()
   })
 
@@ -173,9 +173,9 @@ describe("catálogo de módulos", () => {
     }
   })
 
-  it("todo módulo tiene un destino de conversión y un precio positivo", () => {
+  it("todo módulo abre el registro con su id preseleccionado y tiene precio positivo", () => {
     for (const offer of MODULES) {
-      expect(offer.cta.href.length).toBeGreaterThan(0)
+      expect(offer.cta.href).toBe(`/comenzar?modulo=${offer.id}`)
       expect(offer.listCop).toBeGreaterThan(0)
     }
   })

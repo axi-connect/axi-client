@@ -36,15 +36,15 @@ import { PRICING } from "@/modules/landing/ui/content/landing.content";
  * desincronizarse. Lo que añade es lo que la home no
  * tiene espacio para explicar: cómo se mide el consumo y qué pasa al pasarse.
  *
- * HONESTIDAD: mientras no exista el registro autoservicio (`/comenzar`, F2 del
- * plan onboarding_self_service_plan.md), ningún CTA de esta página dice
- * «regístrate»: todos llevan a la demo o al WhatsApp comercial. El copy de la
- * FAQ sobre el alta cambia en el mismo PR que abra `/comenzar`.
+ * El alta es AUTOSERVICIO desde el registro (`/comenzar`, plan
+ * onboarding_self_service_plan.md): los paquetes Free Trial y SBS y los cuatro
+ * Módulos abren el registro con la oferta preseleccionada; Enterprise sigue
+ * siendo asistido porque exige base de datos dedicada.
  */
 export const metadata: Metadata = pageMetadata({
   title: "Precios",
   description:
-    "Pagas por el volumen de conversaciones que maneja tu negocio, no por funciones: todos los planes incluyen el producto completo. Prueba de 7 días con acompañamiento.",
+    "Paquetes por volumen de conversaciones con el producto completo, o Módulos de una sola capacidad. Empieza con 7 días gratis, sin tarjeta.",
   path: "/precios",
 });
 
@@ -78,7 +78,11 @@ const GUARANTEES = [
 const PRICING_FAQ = [
   {
     q: "¿Cómo empiezo? ¿Puedo registrarme solo?",
-    a: "El alta es asistida: creamos tu empresa contigo en la demo, dejamos tu catálogo cargado y tu agente configurado. No hay auto-registro a propósito — la primera configuración decide si el producto te funciona, y no queremos dejarte solo en ella.",
+    a: "Sí. En «Comenzar» creas tu empresa y tu cuenta en tres pasos y entras directo a configurarla con guía: eliges tu tipo de negocio, subes tu catálogo en Excel, PDF o una foto para que la IA lo arme, creas tu agente desde una plantilla y conectas tu WhatsApp. Sin tarjeta y con 7 días de prueba. Enterprise se activa con nuestro equipo.",
+  },
+  {
+    q: "¿Qué es un Módulo y en qué se diferencia de un Paquete?",
+    a: "Un Paquete trae el producto completo y su precio depende del volumen de conversaciones. Un Módulo abre una sola capacidad —llamadas, captación de leads, CRM o agenda— con su propio volumen mensual, para negocios que ya operan con otra herramienta y solo necesitan lo que les falta. Se contratan sueltos y no se combinan con un Paquete: si necesitas dos o más capacidades, el Paquete sale mejor.",
   },
   {
     q: "¿Qué incluye la prueba de 7 días?",

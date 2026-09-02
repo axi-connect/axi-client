@@ -19,7 +19,7 @@ const SECTION_TO_LOCATION: Record<string, CtaLocation> = {
   hero: "hero",
   demo: "final_cta",
   planes: "pricing",
-  modulos: "pricing",
+  modulos: "modules",
   casos: "cases",
   faq: "unknown",
 };
@@ -36,6 +36,14 @@ function locationFromAnchor(anchor: HTMLAnchorElement, path: string): CtaLocatio
   if (path.startsWith("/integraciones")) return "integrations";
   if (path.startsWith("/casos")) return "cases";
   return "unknown";
+}
+
+/** `/comenzar?plan=sbs` → "sbs"; `/comenzar?modulo=calls,crm` → "calls,crm"; sin query → "". */
+function offerCodesFromHref(href: string): string {
+  const query = href.split("?")[1];
+  if (!query) return "";
+  const params = new URLSearchParams(query);
+  return params.get("plan") ?? params.get("modulo") ?? "";
 }
 
 /**
@@ -63,6 +71,15 @@ export function attachOutboundTracking(getPath: () => string): () => void {
 
     if (href.endsWith("#demo")) {
       track({ name: "demo_anchor_click", params: { location: locationFromAnchor(anchor, path), path } });
+      return;
+    }
+
+    // CTA de registro: la oferta va en la query (`?plan=sbs`, `?modulo=calls,crm`).
+    if (href.startsWith("/comenzar")) {
+      track({
+        name: "signup_start_click",
+        params: { offer_codes: offerCodesFromHref(href), location: locationFromAnchor(anchor, path), path },
+      });
     }
   };
 

@@ -15,7 +15,7 @@ import {
  * Icono de cada Módulo. Mapa cerrado por `id` a propósito: un nombre de icono
  * en el content obligaría a un diccionario dinámico y a arrastrar todo lucide.
  */
-const MODULE_ICONS: Record<ModuleId, LucideIcon> = {
+export const MODULE_ICONS: Record<ModuleId, LucideIcon> = {
   calls: Phone,
   leads: Radar,
   crm: Users,

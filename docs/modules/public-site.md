@@ -73,7 +73,7 @@ El hero del marketplace vive aparte: `src/shared/components/layout/marketplace-h
 
 - Tokens en **cookies HttpOnly** (`accessToken` 15 min, `refreshToken` 7 d); el browser nunca ve el JWT. BFF en `src/app/api/auth/*` + proxy autenticado `src/app/api/proxy/[...path]/route.ts`.
 - No autenticado en ruta privada → middleware → `/auth/login?next=...`. Tras login: splash → `next` o `/dashboard`.
-- **No hay auto-registro**: el alta de empresas es por la consola platform (modelo SaaS multi-tenant); el login dice "¿No tienes cuenta? Contáctanos".
+- **Alta autoservicio en `/comenzar`** (desde 2026-09, `docs/plans/onboarding_self_service_plan.md`): tres pasos (oferta → empresa → cuenta) y `POST /api/auth/signup`, que siembra las mismas cookies que el login con los tokens que devuelve el backend y manda a `/onboarding`. Enterprise sigue siendo asistido (`/contacto`). El login dice "¿No tienes cuenta? Crea tu cuenta". La consola `/platform` conserva su alta manual.
 - Empresa suspendida (F15) → `CompanySuspendedScreen`, nunca al login.
 
 ## 4. Convenciones aplicables a nuevas páginas públicas
@@ -141,6 +141,26 @@ Debajo de los Paquetes, `ModulePlans` vende cuatro Módulos de una sola capacida
 - Las tarjetas llevan tilt, así que la superficie es `.glass-flat` (misma razón que §4.1). El
   fondo de la banda es `BeamsBackground` (`shared/ui`), canvas que lee los tokens de marca: la
   única animación en bucle sancionada fuera del CMO, por ser superficie de marketing.
+
+### 4.3 Registro autoservicio (`/comenzar`)
+
+Ruta de primer nivel (ni `(public)` ni `(private)`, como `/pay`), `noindex`, en `PUBLIC_PATHS` y en
+`DISALLOWED_PREFIXES`. Vive en el slice `modules/onboarding` (`ui/signup/*`) y su máquina de pasos
+es dominio puro (`domain/signup-draft.ts`, con test). Reglas:
+
+- **La URL preselecciona la oferta** (`?plan=free_trial|sbs`, `?modulo=calls,crm`) y gana sobre el
+  borrador guardado; `?plan=enterprise` redirige a `/contacto`. Los CTA de precios se construyen
+  desde `plan.cta.href` / `module.cta.href` del content — nunca a mano.
+- **Paquete XOR Módulos** por tipo (`OfferSelection`): cambiar de pestaña descarta lo otro.
+- **La ciudad es obligatoria**; el país autollenan zona horaria (catálogo `shared/data/countries`).
+- El borrador se guarda en `sessionStorage` **sin la contraseña**.
+- Errores por `code`: `identities/nit_taken` y `onboarding/nit_invalid` vuelven a Empresa con el
+  error en NIT; `onboarding/email_in_use` y `email_disposable` marcan el correo; el resto se muestra
+  sobre el botón. Mensajes en `core/lib/error-messages.ts`.
+- Captcha: `TurnstileWidget` solo con `NEXT_PUBLIC_TURNSTILE_SITE_KEY`; sin ella el backend valida con
+  su verificador `noop` (prohibido en producción).
+- Analítica: `signup_start_click` (delegado en `outbound.ts` sobre `href^="/comenzar"`),
+  `signup_step_view` y `signup_completed` (`sign_up` / `CompleteRegistration`).
 
 ## 5. Estado de la capa GTM y brechas abiertas
 
