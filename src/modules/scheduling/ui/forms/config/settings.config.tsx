@@ -54,6 +54,8 @@ export const settingsFormSchema = z
     reminder_offsets_minutes: z
       .array(z.number().int())
       .max(SETTINGS_LIMITS.reminder_offsets_minutes.maxItems, "Máximo 6 recordatorios"),
+    // calls F3/F4-D: canal del recordatorio (las llamadas cuestan — opt-in).
+    reminder_channel: z.enum(["whatsapp", "call", "both"]),
   })
   .superRefine((values, ctx) => {
     const total = unitToMinutes(values.min_notice_value, values.min_notice_unit);
@@ -78,6 +80,7 @@ export function fromSettingsDto(dto: SchedulingSettingsDTO): SettingsFormValues 
     min_notice_value: notice.value,
     min_notice_unit: notice.unit,
     reminder_offsets_minutes: dto.reminder_offsets_minutes,
+    reminder_channel: dto.reminder_channel,
   };
 }
 
@@ -88,6 +91,7 @@ export function toSettingsPayload(values: SettingsFormValues): SchedulingSetting
     default_buffer_minutes: values.default_buffer_minutes,
     min_notice_minutes: unitToMinutes(values.min_notice_value, values.min_notice_unit),
     reminder_offsets_minutes: values.reminder_offsets_minutes,
+    reminder_channel: values.reminder_channel,
   });
 }
 
@@ -204,6 +208,33 @@ export function buildSettingsFormFields(opts: {
         label: "Recordatorios automáticos de cita",
         description:
           "Se envían al contacto antes de cada cita y se regeneran al reagendar (máximo 6).",
+        colSpan: { base: 1, md: 2 },
+      },
+    ),
+    createCustomField<SettingsFormValues>(
+      "reminder_channel",
+      ({ value, setValue }) => (
+        <Select
+          value={value as string}
+          onValueChange={(next) =>
+            setValue("reminder_channel", next as SettingsFormValues["reminder_channel"])
+          }
+          disabled={!opts.canManage}
+        >
+          <SelectTrigger className="w-full sm:w-72" aria-label="Canal del recordatorio">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="whatsapp">WhatsApp (texto)</SelectItem>
+            <SelectItem value="call">Llamada, con respaldo por WhatsApp</SelectItem>
+            <SelectItem value="both">WhatsApp inmediato + llamada</SelectItem>
+          </SelectContent>
+        </Select>
+      ),
+      {
+        label: "Canal del recordatorio",
+        description:
+          "Las llamadas consumen minutos del plan y solo aplican a recordatorios con 3+ horas de antelación (los demás van por WhatsApp). En «Llamada», si nadie contesta se reintenta a las 2 h y luego llega el WhatsApp.",
         colSpan: { base: 1, md: 2 },
       },
     ),

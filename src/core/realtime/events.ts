@@ -623,6 +623,38 @@ export type CompanySuspendedEvent = {
 };
 
 // ---------------------------------------------------------------------------
+// Llamadas (calls F4) — payloads espejo de lo que publica axi-server
+// (voice_call_orchestrator / ingest_twilio_webhook / call_postprocess).
+// El WS AVISA, no sincroniza: al recibir un evento la vista re-consulta REST
+// (GET /calls/sessions/live o el detalle). La excepción es el transcript en
+// vivo, que solo viaja al room `call_{company}_{session}` (join explícito).
+// ---------------------------------------------------------------------------
+
+export type CallRealtimeRef = {
+  company_id: string;
+  call_session_id: string;
+};
+
+/** El relay conectó: la llamada pasó a conversación real. */
+export type CallStartedEvent = CallRealtimeRef;
+
+/** Transición reportada por Twilio (initiated/ringing/in-progress/…). */
+export type CallStatusChangedEvent = CallRealtimeRef & { provider_status: string };
+
+export type CallEndedEvent = CallStatusChangedEvent;
+
+/** Solo al room de la llamada — varios por minuto durante la conversación. */
+export type CallTranscriptSegmentEvent = CallRealtimeRef & {
+  seq: number;
+  role: "caller" | "agent" | "system";
+  text: string;
+  at_ms: number;
+};
+
+/** El resumen post-llamada quedó persistido: el detalle abierto lo re-consulta. */
+export type CallSummaryReadyEvent = CallRealtimeRef;
+
+// ---------------------------------------------------------------------------
 // Eventos server → client
 // ---------------------------------------------------------------------------
 
@@ -759,6 +791,11 @@ export type InboxServerEvents = {
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;
   "analytics.evaluation_completed": (payload: AnalyticsEvaluationCompletedEvent) => void;
+  "call.started": (payload: CallStartedEvent) => void;
+  "call.status_changed": (payload: CallStatusChangedEvent) => void;
+  "call.transcript_segment": (payload: CallTranscriptSegmentEvent) => void;
+  "call.ended": (payload: CallEndedEvent) => void;
+  "call.summary_ready": (payload: CallSummaryReadyEvent) => void;
   "notification.created": (payload: NotificationCreatedEvent) => void;
   "company.suspended": (payload: CompanySuspendedEvent) => void;
 };
@@ -793,6 +830,8 @@ export type TypingPayload = { conversation_id: string; is_typing: boolean };
 
 export type LeadRefPayload = { lead_id: string };
 
+export type CallRefPayload = { call_session_id: string };
+
 export type InboxCommands = {
   "inbox.join_conversation": (
     payload: JoinConversationPayload,
@@ -805,6 +844,9 @@ export type InboxCommands = {
   /** F4c: suscribirse al detalle del enriquecimiento de UN lead. */
   "inbox.join_lead": (payload: LeadRefPayload, ack: (res: WsAck<null>) => void) => void;
   "inbox.leave_lead": (payload: LeadRefPayload, ack: (res: WsAck<null>) => void) => void;
+  /** calls F4: transcript en vivo de UNA llamada (room call_{company}_{session}). */
+  "inbox.join_call": (payload: CallRefPayload, ack: (res: WsAck<null>) => void) => void;
+  "inbox.leave_call": (payload: CallRefPayload, ack: (res: WsAck<null>) => void) => void;
   "inbox.claim": (
     payload: ClaimPayload,
     ack: (res: WsAck<Schemas["ConversationDto"]>) => void,

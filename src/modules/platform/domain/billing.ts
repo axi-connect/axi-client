@@ -41,6 +41,7 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   cmo_analyses: "Análisis de Axel",
   lead_discoveries: "Leads descubiertos",
   lead_enrichments: "Datos de leads verificados",
+  call_seconds: "Segundos de llamada",
 };
 
 export const OVERAGE_METRICS = Object.keys(

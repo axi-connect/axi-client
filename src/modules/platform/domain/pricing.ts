@@ -24,6 +24,8 @@ export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   { value: "anthropic", label: "Anthropic" },
   { value: "openai_compatible", label: "OpenAI compatible" },
   { value: "elevenlabs", label: "ElevenLabs" },
+  // calls F2: tarifas por segundo de llamada (voice_out_co / voice_in)
+  { value: "twilio", label: "Twilio" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {

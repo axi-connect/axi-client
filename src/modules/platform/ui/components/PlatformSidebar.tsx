@@ -11,6 +11,7 @@ import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  AudioLines,
   Building2,
   CircleDollarSign,
   FlaskConical,
@@ -18,6 +19,7 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Phone,
   Plug,
   Receipt,
   ScrollText,
@@ -65,10 +67,12 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "building-2": Building2,
   layers: Layers,
   "circle-dollar-sign": CircleDollarSign,
+  "audio-lines": AudioLines,
   receipt: Receipt,
   "scroll-text": ScrollText,
   activity: Activity,
   "flask-conical": FlaskConical,
+  phone: Phone,
   plug: Plug,
 };
 

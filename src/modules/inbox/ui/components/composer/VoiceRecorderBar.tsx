@@ -5,7 +5,7 @@ import { cn } from "@/core/lib/utils"
 import { formatDuration } from "@/core/lib/format"
 import { Button } from "@/shared/components/ui/button"
 import type { useVoiceRecorder } from "@/modules/inbox/infrastructure/hooks/use-voice-recorder"
-import { AudioPlayerCore } from "../media/AudioPlayerCore"
+import { AudioPlayerCore } from "@/shared/components/features/audio-player"
 
 /**
  * Barra de grabación/preview de nota de voz (W3): sustituye la fila del

@@ -15,6 +15,7 @@ import {
   Megaphone,
   Mic,
   Package,
+  Phone,
   Plug,
   Puzzle,
   Receipt,
@@ -55,6 +56,9 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   megaphone: Megaphone,
   mic: Mic,
   package: Package,
+  // Módulo de llamadas (slice calls, F4). El seeder del backend lo pide por
+  // este nombre; sin la entrada el ítem del sidebar caería a `Circle`.
+  phone: Phone,
   plug: Plug,
   puzzle: Puzzle,
   // Facturación de la licencia (slice billing). El seeder del backend lo pide
