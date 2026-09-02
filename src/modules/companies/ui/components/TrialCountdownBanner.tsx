@@ -1,16 +1,18 @@
 "use client"
 
+import Link from "next/link"
 import { TriangleAlert } from "lucide-react"
-import { salesWhatsAppUrl } from "@/core/config/env"
 import { Button } from "@/shared/components/ui/button"
 import { useTrialStatus } from "@/modules/companies/infrastructure/hooks/use-trial-status"
 
-const CTA_MESSAGE = "Hola, mi prueba de axi connect está por terminar y quiero activar mi plan."
-
 /**
  * Banner de los últimos 2 días del trial (patrón SessionBanner de /platform):
- * ámbar, no bloqueante, con CTA al WhatsApp comercial. Tono warning: el rojo
- * de marca nunca significa peligro.
+ * ámbar, no bloqueante. Tono warning: el rojo de marca nunca significa peligro.
+ *
+ * El CTA lleva a Facturación y ya no al WhatsApp comercial: desde el registro
+ * autoservicio (onboarding_self_service_plan.md, F6) la conversión al terminar
+ * la prueba es del propio tenant, no de ventas. Enterprise sigue teniendo a
+ * ventas en /contacto.
  *
  * Se renderiza dentro del grupo pegado de `(private)/layout.tsx`, justo bajo
  * el header, así que no necesita `sticky` ni conocer la altura del header: el
@@ -26,8 +28,6 @@ export function TrialCountdownBanner() {
       : daysLeft === 1
         ? "Tu prueba gratuita termina mañana."
         : `Tu prueba gratuita termina en ${daysLeft} días.`
-  const cta = salesWhatsAppUrl(CTA_MESSAGE)
-
   return (
     <div
       role="alert"
@@ -35,12 +35,10 @@ export function TrialCountdownBanner() {
     >
       <p className="flex items-center gap-2 text-sm text-foreground">
         <TriangleAlert aria-hidden="true" className="size-4 shrink-0 text-warning" />
-        {message} Activa tu plan para no perder el acceso.
+        {message} Elige cómo continuar para no perder el acceso.
       </p>
       <Button size="sm" variant="outline" asChild>
-        <a href={cta} target="_blank" rel="noopener noreferrer">
-          Hablar con ventas
-        </a>
+        <Link href="/billing">Elegir mi plan</Link>
       </Button>
     </div>
   )

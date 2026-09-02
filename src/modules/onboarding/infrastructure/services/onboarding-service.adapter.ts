@@ -1,4 +1,5 @@
 import { http } from "@/core/services/http";
+import type { EntitlementsDTO } from "@/modules/onboarding/domain/entitlements";
 import type {
   OnboardingProgressDTO,
   UpdateOnboardingProgressDTO,
@@ -21,4 +22,17 @@ export function updateOnboardingProgress(patch: UpdateOnboardingProgressDTO): Pr
 /** Idempotente: repetirlo con el onboarding ya cerrado responde 200. */
 export function completeOnboarding(): Promise<OnboardingProgressDTO> {
   return http.post<OnboardingProgressDTO>("/onboarding/complete", {});
+}
+
+/** Contrato B1: capacidades y cuotas del tenant en unidades comerciales. */
+export function getMyEntitlements(): Promise<EntitlementsDTO> {
+  return http.get<EntitlementsDTO>("/me/entitlements");
+}
+
+/**
+ * Reenvía el correo de verificación (contrato B2). Público y con respuesta
+ * idéntica exista o no la cuenta: 202 sin cuerpo.
+ */
+export function resendVerificationEmail(email: string): Promise<void> {
+  return http.post<void>("/public/onboarding/resend-verification", { email }, { authenticate: false });
 }

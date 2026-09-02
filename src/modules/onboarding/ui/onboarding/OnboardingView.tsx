@@ -12,7 +12,6 @@ import {
   firstOpenStep,
   isOnboardingComplete,
   resolveEntryStep,
-  stepIndex,
   type OnboardingStep,
 } from "@/modules/onboarding/domain/onboarding-progress";
 import { useOnboardingStore } from "@/modules/onboarding/infrastructure/stores/onboarding.store";
@@ -23,7 +22,7 @@ import { AgentTemplatesStep } from "@/modules/onboarding/ui/onboarding/steps/Age
 import { CatalogImportStep } from "@/modules/onboarding/ui/onboarding/steps/CatalogImportStep";
 import { DoneStep } from "@/modules/onboarding/ui/onboarding/steps/DoneStep";
 import { NicheStep } from "@/modules/onboarding/ui/onboarding/steps/NicheStep";
-import { PendingStep } from "@/modules/onboarding/ui/onboarding/steps/PendingStep";
+import { WhatsAppStep } from "@/modules/onboarding/ui/onboarding/steps/WhatsAppStep";
 
 const DASHBOARD_PATH = "/dashboard";
 
@@ -165,12 +164,11 @@ export function OnboardingView() {
         />
       ) : null}
       {current === "whatsapp" ? (
-        <PendingStep
-          step={current}
-          stepNumber={stepIndex(current) + 1}
+        <WhatsAppStep
           saving={saving}
-          onBack={() => setCurrent(previousOf(current))}
-          onSkip={() => void closeStep(() => skip(current))}
+          onBack={() => setCurrent("agents")}
+          onSkip={() => void closeStep(() => skip("whatsapp"))}
+          onDone={(result) => void closeStep(() => markDone("whatsapp", result))}
         />
       ) : null}
       {current === null ? (
@@ -191,7 +189,3 @@ function readImportId(data: Record<string, unknown> | undefined): string | null 
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-function previousOf(step: OnboardingStep): OnboardingStep {
-  const order: OnboardingStep[] = ["niche", "business_hours", "catalog", "agents", "whatsapp"];
-  return order[Math.max(0, order.indexOf(step) - 1)];
-}

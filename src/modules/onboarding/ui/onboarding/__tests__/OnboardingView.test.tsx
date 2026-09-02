@@ -19,6 +19,8 @@ jest.mock("@/modules/onboarding/infrastructure/services/onboarding-service.adapt
   getOnboardingProgress: (...args: unknown[]) => getOnboardingProgress(...args),
   updateOnboardingProgress: (...args: unknown[]) => updateOnboardingProgress(...args),
   completeOnboarding: (...args: unknown[]) => completeOnboarding(...args),
+  getMyEntitlements: () => Promise.reject(new Error("sin entitlements en este test")),
+  resendVerificationEmail: jest.fn(),
 }))
 
 jest.mock("@/modules/companies/public", () => ({

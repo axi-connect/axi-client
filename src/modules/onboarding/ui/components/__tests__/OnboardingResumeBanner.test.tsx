@@ -10,6 +10,8 @@ jest.mock("@/modules/onboarding/infrastructure/services/onboarding-service.adapt
   getOnboardingProgress: (...args: unknown[]) => getOnboardingProgress(...args),
   updateOnboardingProgress: (...args: unknown[]) => updateOnboardingProgress(...args),
   completeOnboarding: jest.fn(),
+  getMyEntitlements: () => Promise.reject(new Error("sin entitlements en este test")),
+  resendVerificationEmail: jest.fn(),
 }))
 
 const NOW = "2026-09-01T10:00:00Z"
