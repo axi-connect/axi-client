@@ -126,6 +126,22 @@ el filtro captura otro backdrop (la superficie se desatura) y recalcularlo por f
 el frame rate: el reloj se ve congelado mientras haya hover. Por eso las fichas usan
 `.glass-flat` —mismo aspecto, sin filtro— y hay un test que lo protege.
 
+### 4.2 Módulos (§9b Planes)
+
+Debajo de los Paquetes, `ModulePlans` vende cuatro Módulos de una sola capacidad
+(`MODULES` en `landing.content.ts`). Reglas de mantenimiento:
+
+- **`priceStatus`** decide qué se publica: la tarjeta siempre pinta `listCop`, pero el JSON-LD
+  (`pricingSchema`) solo declara los módulos en `final`. Pasar un precio de `draft` a `final` es
+  la decisión comercial, no un cambio de UI. Hay test que lo blinda.
+- **La cuota se escribe en unidades comerciales** (`allowance`, formateada por
+  `core/lib/commercial-units`): minutos, leads, conversaciones. Nunca tokens.
+- **`offer_code`** es la clave que validará el backend en el alta autoservicio (F2); no se
+  renombra sin coordinar con `axi-server/docs/plans/onboarding_self_service_backend_plan.md`.
+- Las tarjetas llevan tilt, así que la superficie es `.glass-flat` (misma razón que §4.1). El
+  fondo de la banda es `BeamsBackground` (`shared/ui`), canvas que lee los tokens de marca: la
+  única animación en bucle sancionada fuera del CMO, por ser superficie de marketing.
+
 ## 5. Estado de la capa GTM y brechas abiertas
 
 Plan maestro y fases: **`docs/plans/public-gtm-plan.md`**.

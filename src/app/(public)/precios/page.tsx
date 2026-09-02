@@ -19,6 +19,7 @@ import { BrandCard } from "@/shared/components/ui/brand-card";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { PricingPlans } from "@/modules/landing/ui/components/PricingPlans";
+import { ModulePlans } from "@/modules/landing/ui/components/ModulePlans";
 import { PRICING } from "@/modules/landing/ui/content/landing.content";
 
 /**
@@ -30,13 +31,15 @@ import { PRICING } from "@/modules/landing/ui/content/landing.content";
  * aterrizar a media página, sin URL compartible ni superficie de SEO propia.
  *
  * Reutiliza `PricingPlans` **entero** (franja de fundadores + estimador de
- * volumen + las tres tarjetas): el precio vive en un solo sitio, así que la home
- * y esta página no pueden desincronizarse. Lo que añade es lo que la home no
+ * volumen + las tres tarjetas de Paquete) y `ModulePlans` (los Módulos): el
+ * precio vive en un solo sitio, así que la home y esta página no pueden
+ * desincronizarse. Lo que añade es lo que la home no
  * tiene espacio para explicar: cómo se mide el consumo y qué pasa al pasarse.
  *
- * HONESTIDAD: el alta es asistida, no hay auto-registro (knowledge-base §19.2).
- * Ningún CTA de esta página dice «regístrate»: todos llevan a la demo o al
- * WhatsApp comercial.
+ * HONESTIDAD: mientras no exista el registro autoservicio (`/comenzar`, F2 del
+ * plan onboarding_self_service_plan.md), ningún CTA de esta página dice
+ * «regístrate»: todos llevan a la demo o al WhatsApp comercial. El copy de la
+ * FAQ sobre el alta cambia en el mismo PR que abra `/comenzar`.
  */
 export const metadata: Metadata = pageMetadata({
   title: "Precios",
@@ -106,7 +109,7 @@ export default function PreciosPage() {
       <JsonLd data={faqSchema(PRICING_FAQ)} />
       <JsonLd data={breadcrumbSchema(["/precios"])} />
       <section className="mx-auto w-full max-w-[1200px] px-6 pt-32 pb-4 sm:pt-40">
-        <SectionHeading as="h1" title={PRICING.title} intro={PRICING.intro} align="center" className="mx-auto" />
+        <SectionHeading as="h1" kicker={PRICING.kicker} title={PRICING.title} intro={PRICING.intro} align="center" className="mx-auto" />
       </section>
 
       <section className="mx-auto w-full max-w-[1200px] px-6 pb-16">
@@ -118,6 +121,8 @@ export default function PreciosPage() {
           </p>
         </Reveal>
       </section>
+
+      <ModulePlans />
 
       {/* ── Lo que la home no tiene espacio para explicar ── */}
       <section className="border-border/60 w-full border-t">

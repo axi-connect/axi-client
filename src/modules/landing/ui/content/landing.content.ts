@@ -13,6 +13,7 @@
  */
 
 import { formatSalesWhatsApp, salesWhatsAppUrl } from "@/core/config/env";
+import type { Allowance } from "@/core/lib/commercial-units";
 
 /* ────────────────────────────── WhatsApp ────────────────────────────── */
 
@@ -34,6 +35,7 @@ export const LANDING_ANCHORS = {
   metrics: "medicion",
   cases: "casos",
   pricing: "planes",
+  modules: "modulos",
   faq: "preguntas",
   demo: "demo",
 } as const;
@@ -508,7 +510,7 @@ const FOUNDERS_DISCOUNT_LABEL = `−${Math.round(FOUNDERS_DISCOUNT * 100)} %`;
 export const FOUNDERS = {
   kicker: "Programa Fundadores",
   slots: FOUNDERS_SLOTS,
-  claimed: 13,
+  claimed: 3,
   discount: FOUNDERS_DISCOUNT,
   /**
    * Cierre del programa, ISO sin hora: cuenta hasta el final de ese día.
@@ -567,10 +569,17 @@ export const VOLUME_ESTIMATOR = {
 
 export type VolumeChoiceId = (typeof VOLUME_ESTIMATOR)["choices"][number]["id"];
 
+/**
+ * §9 Paquetes. Los tres planes históricos pasan a llamarse «Paquetes»
+ * (2026-09-01): heredan el producto completo y límites altos. Debajo se venden
+ * los `MODULES`, planes de una sola capacidad. Los nombres de plan (`name`)
+ * siguen siendo los del backend: solo cambia cómo se agrupa la oferta.
+ */
 export const PRICING = {
+  kicker: "Paquetes",
   title: "Pagas por lo que tu negocio conversa y vende. No por funciones.",
   intro:
-    "Todos los planes incluyen el producto completo: tu agente vendedor, el catálogo, los pedidos, el inbox de tu equipo y la medición de ventas. Lo único que cambia es el volumen de conversaciones que tu negocio maneja.",
+    "Un Paquete trae el producto completo: tu agente vendedor, el catálogo, los pedidos, el inbox de tu equipo, la agenda, el CRM y la medición de ventas. Lo único que cambia es el volumen de conversaciones que tu negocio maneja.",
   plans: [
     {
       id: "free_trial",
@@ -635,10 +644,182 @@ export const PRICING = {
     },
   ],
   microcopy:
-    "El plan se define por volumen, no por funciones: todos incluyen el producto completo. Si no sabes cuántas conversaciones manejas, lo estimamos contigo en la demo.",
+    "Un Paquete se define por volumen, no por funciones: todos incluyen el producto completo. Si solo te falta una capacidad, mira los Módulos.",
 } as const;
 
 export type PricingPlan = (typeof PRICING)["plans"][number];
+
+/* ───────────────────────────── §9b Módulos ──────────────────────────── */
+
+/**
+ * Módulos: planes de UNA capacidad para el negocio que ya opera con otra
+ * herramienta y solo necesita lo que le falta. Se contratan sueltos y **nunca se
+ * combinan con un Paquete** (decisión del dueño, 2026-09-01): una empresa tiene
+ * un Paquete o uno o varios Módulos.
+ *
+ * La cuota se comunica en unidades comerciales (`allowance`), jamás en tokens:
+ * el formateo lo hace `core/lib/commercial-units`. `offer_code` es la clave que
+ * el backend valida en el alta; el precio de la landing es estático a propósito
+ * (la sección más vista del sitio no espera a ningún fetch).
+ *
+ * `priceStatus` gobierna lo que se PUBLICA: mientras sea `draft`, la cifra se
+ * ve en la tarjeta como propuesta pero el JSON-LD la omite. Pasarlo a `final`
+ * es la decisión comercial, no un cambio de UI.
+ */
+// TODO [A VALIDAR]: precios y cuotas propuestos desde el costo (plan
+// onboarding_self_service_plan.md §4.3). El dueño fija las cifras definitivas.
+export const MODULE_IDS = ["calls", "leads", "crm", "scheduling"] as const;
+export type ModuleId = (typeof MODULE_IDS)[number];
+
+export type ModuleOffer = {
+  id: ModuleId;
+  /** Clave que valida el backend en el alta. */
+  offer_code: string;
+  name: string;
+  tagline: string;
+  allowance: Allowance;
+  /** Lo que acompaña a la cuota principal, ya redactado. */
+  extras: string;
+  listCop: number;
+  priceStatus: "draft" | "final";
+  priceUnit: string;
+  bullets: readonly string[];
+  cta: { label: string; href: string };
+  ctaMicrocopy: string;
+};
+
+export const MODULES: readonly ModuleOffer[] = [
+  {
+    id: "calls",
+    offer_code: "module_calls_v1",
+    name: "Llamadas con IA",
+    tagline:
+      "Tu agente llama y contesta con voz natural: confirma citas, cobra y hace seguimiento por teléfono, con tu propio número.",
+    allowance: {
+      quantity: 200,
+      unit: "minutes",
+      equivalent: { quantity: 60, unit: "calls" },
+    },
+    extras: "Incluye 100 conversaciones de chat",
+    listCop: 189_900,
+    priceStatus: "draft",
+    priceUnit: "COP/mes",
+    bullets: [
+      "Llamadas entrantes y salientes con tu número",
+      "Grabación, transcripción y monitoreo en vivo",
+      "Si nadie contesta, el seguimiento sigue por WhatsApp",
+    ],
+    // TODO F2: `/comenzar?modulo=calls` cuando exista el registro autoservicio.
+    // Hasta entonces el destino es el mismo que el de los Paquetes: la demo.
+    cta: { label: "Prueba 7 días gratis", href: "#demo" },
+    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+  },
+  {
+    id: "leads",
+    offer_code: "module_leads_v1",
+    name: "Captación de leads",
+    tagline:
+      "Encuentra empresas y contactos por zona y rubro, verifica sus datos y escríbeles por WhatsApp con campañas que aprueba tu CMO con IA.",
+    allowance: {
+      quantity: 500,
+      unit: "leads",
+      equivalent: { quantity: 150, unit: "verified_leads" },
+    },
+    extras: "Campañas incluidas · 200 conversaciones",
+    listCop: 149_900,
+    priceStatus: "draft",
+    priceUnit: "COP/mes",
+    bullets: [
+      "Búsqueda en Google Maps, directorios y LinkedIn",
+      "Enriquecimiento y verificación antes de escribir",
+      "Campañas con plantillas aprobadas y Axel, tu CMO con IA",
+    ],
+    cta: { label: "Prueba 7 días gratis", href: "#demo" },
+    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+  },
+  {
+    id: "crm",
+    offer_code: "module_crm_v1",
+    name: "CRM con IA",
+    tagline:
+      "Contactos, embudo y seguimiento con un copiloto que resume cada cliente, sugiere el siguiente paso y ejecuta tareas por ti.",
+    allowance: {
+      quantity: 500,
+      unit: "conversations",
+      equivalent: { quantity: 2000, unit: "contacts" },
+    },
+    extras: "Copiloto y tareas automáticas incluidos",
+    listCop: 129_900,
+    priceStatus: "draft",
+    priceUnit: "COP/mes",
+    bullets: [
+      "Scoring automático por hitos reales de compra",
+      "Historial 360 de cada cliente dentro del inbox",
+      "Importa tus contactos desde Excel en un paso",
+    ],
+    cta: { label: "Prueba 7 días gratis", href: "#demo" },
+    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+  },
+  {
+    id: "scheduling",
+    offer_code: "module_scheduling_v1",
+    name: "Agenda y reservas",
+    tagline:
+      "Tu agente agenda, confirma y reagenda por WhatsApp, y recuerda cada cita para que nadie falte.",
+    allowance: { quantity: 300, unit: "conversations" },
+    extras: "Citas ilimitadas · recordatorios incluidos",
+    listCop: 89_900,
+    priceStatus: "draft",
+    priceUnit: "COP/mes",
+    bullets: [
+      "Horarios, capacidad y duración por servicio",
+      "Recordatorios automáticos que reducen las ausencias",
+      "Calendario del equipo por día, semana y mes",
+    ],
+    cta: { label: "Prueba 7 días gratis", href: "#demo" },
+    ctaMicrocopy: "Sin tarjeta. Lo activamos contigo.",
+  },
+];
+
+export const MODULES_SECTION = {
+  kicker: "Módulos",
+  title: "¿Ya operas con otra herramienta? Contrata solo lo que te falta.",
+  intro:
+    "Cada Módulo abre una capacidad de Axi Connect con su propio volumen mensual, se activa en minutos y empieza con 7 días de prueba. Se contratan sueltos: si necesitas varias capacidades, un Paquete sale mejor.",
+  /** Lo que trae cualquier Módulo, además de su capacidad. */
+  includes: [
+    "Inbox para tu equipo",
+    "Tu WhatsApp conectado",
+    "Un agente de IA para esa función",
+    "Usuarios y permisos",
+    "7 días de prueba sin tarjeta",
+  ],
+  includesLabel: "Incluido en todos los módulos",
+  allowanceLabel: "Incluye cada mes",
+  note: "Los Módulos no se combinan con un Paquete. ¿Necesitas dos o más capacidades?",
+  noteLink: "Compara con Small Business Suite",
+  noteTail: ": sale mejor y trae el producto completo.",
+} as const;
+
+/** Un código de oferta es un id de Paquete o el `offer_code` de un Módulo. */
+export type OfferCode = PricingPlan["id"] | ModuleOffer["offer_code"];
+
+export function offerByCode(code: string): PricingPlan | ModuleOffer | null {
+  return (
+    PRICING.plans.find((plan) => plan.id === code) ??
+    MODULES.find((offer) => offer.offer_code === code) ??
+    null
+  );
+}
+
+/**
+ * Módulos cuya cifra ya es definitiva: los únicos que el JSON-LD declara. Un
+ * precio en borrador se ve en la tarjeta como propuesta, pero publicarlo a
+ * Google como oferta sería afirmar algo que aún no se decidió.
+ */
+export function publishableModules(): ModuleOffer[] {
+  return MODULES.filter((offer) => offer.priceStatus === "final");
+}
 
 /** Formato de moneda de la landing: pesos sin decimales ("$250.000"). */
 const COP_FORMAT = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
