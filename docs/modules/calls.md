@@ -104,10 +104,20 @@ con `loading.tsx` por segmento y `data-app-view` en el layout.
 - Visual: `next dev` contra el backend con `CALLS_*` configurado; la
   test-call llena Monitoreo → transcript en vivo → historial → detalle.
 
-### B.4 Pendientes conocidos
+### B.4 /platform (F4-E)
 
-- F4-E: aprovisionamiento en `/platform` (cuenta madre Twilio + números),
-  molde `prospecting/ProvidersView` + react-query.
+`src/modules/platform/ui/features/calls/` (aislado del panel tenant; react-query
++ `platformClient`): `CallsView` = cuenta madre (`CallAccountCard` con switch de
+encendido, sonda, `RotateTwilioCredentialsSheet`) + tabla de números
+(`callNumberColumns` + `NumberRowActions`: asignar con `TenantSelect` y el
+selector de agentes de `GET /platform/calls/tenants/{companyId}/agents`,
+devolver al stock, liberar con `ConfirmTyped` tipeando el E.164) +
+`BuyNumberSheet` (search → buy, exige cuenta ENCENDIDA). Nav en `PLATFORM_NAV`
+(`/platform/calls`, icono `phone` en el mapa local del sidebar). Claves
+react-query: `platformKeys.calls.*`.
+
+### B.5 Pendientes conocidos
+
 - URL firmada de 300 s: un seek muy tardío en grabaciones largas puede
   encontrarla vencida (post-v1: refresh desde el onError del `<audio>`).
 - F5 entrantes y F6 tareas CRM añaden purposes ya contemplados en los labels.

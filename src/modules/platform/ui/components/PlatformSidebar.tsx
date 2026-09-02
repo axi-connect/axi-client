@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   LoaderCircle,
   LogOut,
+  Phone,
   Plug,
   Receipt,
   ScrollText,
@@ -69,6 +70,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "scroll-text": ScrollText,
   activity: Activity,
   "flask-conical": FlaskConical,
+  phone: Phone,
   plug: Plug,
 };
 

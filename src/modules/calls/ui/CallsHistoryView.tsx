@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Phone, PhoneCall, Search, Target, Timer } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
+import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { formatDuration } from "@/core/lib/format";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { Button } from "@/shared/components/ui/button";
@@ -23,6 +24,7 @@ import { callColumns, fetchCalls } from "@/modules/calls/ui/tables/calls.config"
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 400;
+const REFRESH_DEBOUNCE_MS = 400;
 
 /**
  * Historial de llamadas (`/calls/history`): KPIs del ciclo, filtros y tabla
@@ -33,18 +35,16 @@ export function CallsHistoryView() {
   const [filters, setFilters] = useState<CallFiltersValue>({});
   const [searchDraft, setSearchDraft] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadOverview = useCallback(() => {
     getCallsOverview("week")
-      .then((data) => {
-        if (!cancelled) setOverview(data);
-      })
+      .then(setOverview)
       // Sin overview la tabla sigue: los KPIs simplemente no se pintan.
       .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    loadOverview();
+  }, [loadOverview]);
 
   const extraParams = useMemo(
     () => ({
@@ -63,6 +63,31 @@ export function CallsHistoryView() {
       searchField: "q",
       extraParams,
     });
+
+  // El WS avisa, no sincroniza: cualquier evento de llamada re-consulta la
+  // página vigente (y los KPIs) con debounce — molde del listado de contactos.
+  const { socket } = useSocket("inbox");
+  const refreshTimer = useRef<number | null>(null);
+  const scheduleRefresh = useCallback(() => {
+    if (refreshTimer.current !== null) window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => {
+      refreshTimer.current = null;
+      void refresh();
+      loadOverview();
+    }, REFRESH_DEBOUNCE_MS);
+  }, [refresh, loadOverview]);
+  useEffect(
+    () => () => {
+      if (refreshTimer.current !== null) window.clearTimeout(refreshTimer.current);
+    },
+    [],
+  );
+  useSocketEvent(socket, "call.started", scheduleRefresh);
+  useSocketEvent(socket, "call.status_changed", scheduleRefresh);
+  useSocketEvent(socket, "call.ended", scheduleRefresh);
+  // El outcome definitivo llega con el resumen: sin este evento el chip queda
+  // en el estado del colgado hasta el siguiente refetch manual.
+  useSocketEvent(socket, "call.summary_ready", scheduleRefresh);
 
   // Búsqueda con debounce (escribir filtra sin Enter, sin spamear al backend).
   useEffect(() => {

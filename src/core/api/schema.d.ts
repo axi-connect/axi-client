@@ -4228,6 +4228,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/calls/tenants/{companyId}/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listTenantAgents_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/owned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listOwnedNumbers_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_importNumber_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/calls/numbers/search": {
         parameters: {
             query?: never;
@@ -11077,6 +11125,23 @@ export interface components {
             assigned_at: string | null;
             /** Format: date-time */
             created_at: string;
+        };
+        PlatformTenantAgentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        OwnedCallNumberDto: {
+            provider_sid: string;
+            phone_number: string;
+            friendly_name: string;
+            voice_capable: boolean;
+            imported: boolean;
+        };
+        ImportCallNumberDto: {
+            /** Format: uuid */
+            provider_account_id: string;
+            provider_sid: string;
         };
         SearchCallNumbersDto: {
             /** Format: uuid */
@@ -20310,6 +20375,69 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BuyCallNumberDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_listTenantAgents_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformTenantAgentDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_listOwnedNumbers_v1: {
+        parameters: {
+            query: {
+                provider_account_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnedCallNumberDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_importNumber_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCallNumberDto"];
             };
         };
         responses: {

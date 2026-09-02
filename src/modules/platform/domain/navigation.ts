@@ -26,4 +26,5 @@ export const PLATFORM_NAV: PlatformNavItem[] = [
   // llaves de MillionVerifier, Twilio y compañía. Va al final porque es
   // configuración que se toca una vez, no una consola que se vigila.
   { label: "Proveedores", path: "/platform/prospecting", icon: "plug" },
+  { label: "Llamadas", path: "/platform/calls", icon: "phone" },
 ];

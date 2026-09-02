@@ -91,4 +91,13 @@ export const platformKeys = {
     catalog: () => [...platformKeys.prospecting.all, "catalog"] as const,
     providers: () => [...platformKeys.prospecting.all, "providers"] as const,
   },
+
+  calls: {
+    all: ["platform", "calls"] as const,
+    accounts: () => [...platformKeys.calls.all, "accounts"] as const,
+    numbers: () => [...platformKeys.calls.all, "numbers"] as const,
+    owned: (accountId: string) => [...platformKeys.calls.all, "owned", accountId] as const,
+    tenantAgents: (companyId: string) =>
+      [...platformKeys.calls.all, "tenants", companyId, "agents"] as const,
+  },
 } as const;
