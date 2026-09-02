@@ -1,6 +1,6 @@
 # Plan — Paquetes + Módulos en precios y onboarding autoservicio (frontend)
 
-> **Estado (2026-09-01):** plan aprobado por el dueño. **F0-A (mockup de precios) aprobado en su v3**; **F0-B (mockup de `/comenzar` + `/onboarding`) publicado y en gate de aprobación**. Ninguna fase de código ha empezado.
+> **Estado (2026-09-01):** F0-A y F0-B aprobados. **F1 (precios), F2 (`/comenzar`) y F3 (`/onboarding`: shell, nicho, horarios, banner) implementadas y commiteadas** en `feat/onboarding-self-service`, sin push. Sigue F4 (import de catálogo con IA), que depende del backend B4. Nota F3: los nichos son un catálogo cerrado en `domain/niches.ts`; catálogo, agentes y WhatsApp son `PendingStep` (se cierran como omitidos) hasta F4–F6.
 >
 > Mockups (Artifacts privados): precios → https://claude.ai/code/artifact/47a257c5-171c-48b3-8a3c-8c286f262ba4 · onboarding → https://claude.ai/code/artifact/7655655c-3083-4d7d-b805-165727992f8c
 >
