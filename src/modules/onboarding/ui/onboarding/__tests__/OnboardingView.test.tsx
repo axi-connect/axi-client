@@ -99,7 +99,7 @@ describe("OnboardingView", () => {
     fireEvent.click(await screen.findByRole("button", { name: /mantener este horario/i }))
 
     await waitFor(() => expect(updateOnboardingProgress).toHaveBeenCalledWith({ steps: { business_hours: { status: "skipped" } } }))
-    expect(await screen.findByRole("heading", { name: /tu catálogo/i })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: /carga tu catálogo/i })).toBeInTheDocument()
   })
 
   it("con todo cerrado muestra el resumen y cierra el onboarding", async () => {

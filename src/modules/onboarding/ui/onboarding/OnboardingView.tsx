@@ -19,6 +19,7 @@ import { useOnboardingStore } from "@/modules/onboarding/infrastructure/stores/o
 import { OnboardingShell } from "@/modules/onboarding/ui/onboarding/OnboardingShell";
 import { OnboardingSkeleton } from "@/modules/onboarding/ui/onboarding/OnboardingSkeleton";
 import { BusinessHoursStep } from "@/modules/onboarding/ui/onboarding/steps/BusinessHoursStep";
+import { CatalogImportStep } from "@/modules/onboarding/ui/onboarding/steps/CatalogImportStep";
 import { DoneStep } from "@/modules/onboarding/ui/onboarding/steps/DoneStep";
 import { NicheStep } from "@/modules/onboarding/ui/onboarding/steps/NicheStep";
 import { PendingStep } from "@/modules/onboarding/ui/onboarding/steps/PendingStep";
@@ -47,6 +48,7 @@ export function OnboardingView() {
   const markDone = useOnboardingStore((state) => state.markDone);
   const skip = useOnboardingStore((state) => state.skip);
   const complete = useOnboardingStore((state) => state.complete);
+  const update = useOnboardingStore((state) => state.update);
 
   const [current, setCurrent] = useState<OnboardingStep | null | undefined>(undefined);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -140,7 +142,18 @@ export function OnboardingView() {
           onError={(message) => showAlert({ tone: "error", title: "No se pudo guardar el horario", description: message })}
         />
       ) : null}
-      {current === "catalog" || current === "agents" || current === "whatsapp" ? (
+      {current === "catalog" ? (
+        <CatalogImportStep
+          nicheCode={progress.niche_code}
+          initialImportId={readImportId(progress.steps.catalog?.data)}
+          saving={saving}
+          onBack={() => setCurrent("business_hours")}
+          onSkip={() => void closeStep(() => skip("catalog"))}
+          onImportStarted={(importId) => void update({ steps: { catalog: { status: "pending", data: { import_id: importId } } } }).catch(() => {})}
+          onDone={(result) => void closeStep(() => markDone("catalog", result))}
+        />
+      ) : null}
+      {current === "agents" || current === "whatsapp" ? (
         <PendingStep
           step={current}
           stepNumber={stepIndex(current) + 1}
@@ -159,6 +172,12 @@ export function OnboardingView() {
       ) : null}
     </OnboardingShell>
   );
+}
+
+/** `steps.catalog.data.import_id`, si el progreso guardó un job para reanudar. */
+function readImportId(data: Record<string, unknown> | undefined): string | null {
+  const value = data?.import_id;
+  return typeof value === "string" && value.length > 0 ? value : null;
 }
 
 function previousOf(step: OnboardingStep): OnboardingStep {
