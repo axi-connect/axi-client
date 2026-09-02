@@ -8,7 +8,12 @@
  * - `modules/scheduling`: selector de canal de los recordatorios — filtrado a
  *   canales conectados — y nombre del canal en la tabla.
  *
- * Se expone la LECTURA y nada más: conectar, editar o borrar un canal sigue
+ * - `modules/onboarding` (F6): el paso «WhatsApp» embebe el wizard de conexión
+ *   (`ConnectChannelFlow`) dentro de su propio marco. Es el MISMO flujo que
+ *   `/settings/channels/connect`, no una copia: el popup de Meta, el `code` de
+ *   30 segundos y el PIN tienen que cambiar en un solo sitio.
+ *
+ * Fuera de eso se expone la LECTURA y nada más: editar o borrar un canal sigue
  * siendo asunto exclusivo de este slice.
  */
 
@@ -21,3 +26,5 @@ export {
 } from "./domain/channel";
 
 export { listChannels } from "./infrastructure/services/channels-service.adapter";
+
+export { ConnectChannelFlow } from "./ui/components/connect/ConnectChannelFlow";

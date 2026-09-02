@@ -19,7 +19,15 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.invalidTransition]: "La conversación no admite esa transición",
   [API_ERROR_CODES.handoffConflict]: "Otro operador tomó la conversación primero",
   [API_ERROR_CODES.notFound]: "El recurso ya no existe",
-  "identities/nit_taken": "Ya existe una empresa con ese NIT",
+  [API_ERROR_CODES.nitTaken]: "Este NIT ya tiene una cuenta en Axi Connect",
+  // Registro autoservicio (/comenzar). Dicen qué hacer, no qué falló.
+  [API_ERROR_CODES.nitInvalid]: "Revisa el NIT: el dígito de verificación no coincide",
+  [API_ERROR_CODES.emailInUse]: "Este correo ya tiene una cuenta. Inicia sesión o usa otro",
+  [API_ERROR_CODES.emailDisposable]: "Usa un correo de tu empresa: los correos temporales no sirven para crear la cuenta",
+  [API_ERROR_CODES.offerInvalid]: "La oferta elegida no está disponible. Vuelve a elegir tu paquete o módulos",
+  [API_ERROR_CODES.offerNotSelfService]: "Enterprise se activa con nuestro equipo. Escríbenos y lo hacemos contigo",
+  [API_ERROR_CODES.captchaFailed]: "No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo",
+  [API_ERROR_CODES.signupRateLimited]: "Demasiados intentos desde esta conexión. Espera unos minutos",
   "identities/email_taken": "Ya existe un usuario con ese correo",
   // Panel de plataforma (super admin) — tabla §7 de frontend_platform_plan.md
   "tenant_db/not_found": "El tenant no tiene base de datos dedicada configurada",
@@ -276,6 +284,15 @@ const MESSAGES_BY_CODE: Record<string, string> = {
  * todos los códigos duplicaría el mensaje en los demás.
  */
 const CODES_WITH_USEFUL_DETAIL = new Set(["channels/meta_missing_scopes"]);
+
+/**
+ * Mensaje por `code` cuando el error NO es un `HttpError`: los errores que
+ * devuelve el BFF de auth (`LoginError` de login y signup) conservan el `code`
+ * RFC 7807 del backend pero no el problema completo. Misma tabla, misma voz.
+ */
+export function messageForCode(code: string, fallback = "Ocurrió un error inesperado"): string {
+  return MESSAGES_BY_CODE[code] ?? fallback;
+}
 
 export function errorMessage(error: unknown, fallback = "Ocurrió un error inesperado"): string {
   if (isHttpError(error)) {

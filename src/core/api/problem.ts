@@ -42,6 +42,15 @@ export const API_ERROR_CODES = {
   handoffConflict: "conversations/handoff_conflict",
   notFound: "resource/not_found",
   unexpected: "internal/unexpected",
+  // Registro autoservicio (contrato B2, onboarding_self_service_backend_plan.md)
+  nitTaken: "identities/nit_taken",
+  nitInvalid: "onboarding/nit_invalid",
+  emailInUse: "onboarding/email_in_use",
+  emailDisposable: "onboarding/email_disposable",
+  offerInvalid: "onboarding/offer_invalid",
+  offerNotSelfService: "onboarding/offer_not_self_service",
+  captchaFailed: "onboarding/captcha_failed",
+  signupRateLimited: "onboarding/signup_rate_limited",
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];

@@ -16,6 +16,7 @@ import { UsagePanel } from "@/modules/dashboard/ui/components/UsagePanel";
 import { ConversationsFlowCard } from "@/modules/dashboard/ui/components/ConversationsFlowCard";
 import { NewCustomersCard } from "@/modules/dashboard/ui/components/NewCustomersCard";
 import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCard";
+import { OnboardingResumeBanner } from "@/modules/onboarding/public";
 
 /**
  * Vista del dashboard. Orquesta el fetch condicional por permiso (RBAC natural,
@@ -58,6 +59,8 @@ export function DashboardView() {
 
   return (
     <div className="space-y-6">
+      {/* Configuración pendiente: informa y enlaza, nunca bloquea (onboarding_self_service_plan.md §5.3). */}
+      <OnboardingResumeBanner />
       <DashboardBanner period={period} onPeriodChange={changePeriod} />
 
       {perms.orders && <SalesTiles section={sales} />}

@@ -8,6 +8,7 @@ import {
   SBS_TIERS,
   founderCop,
   foundersRemaining,
+  publishableModules,
 } from "@/modules/landing/ui/content/landing.content";
 
 /**
@@ -22,6 +23,9 @@ import {
  * Qué NO se declara, a propósito:
  *  - El plan Enterprise (`priceKind: "custom"`) no genera `Offer`: no tiene
  *    precio publicable y un `Offer` sin precio no aporta nada.
+ *  - Los Módulos con `priceStatus: "draft"`: la tarjeta muestra la cifra como
+ *    propuesta, pero afirmársela a Google sería publicar un precio no decidido.
+ *    Entran solos al pasar a `final` (`publishableModules()`).
  *  - Sin `aggregateRating`: no hay reseñas. Search Console lo marcará como
  *    "campo recomendado ausente"; es un aviso, no un error, y es preferible a
  *    inventar una valoración.
@@ -51,6 +55,15 @@ export function pricingSchema(): WithContext<SoftwareApplication> {
     availability: "https://schema.org/InStock",
   };
 
+  const moduleOffers: Offer[] = publishableModules().map((offer) => ({
+    "@type": "Offer",
+    name: `Módulo ${offer.name}`,
+    price: String(offer.listCop),
+    priceCurrency: "COP",
+    url: siteUrl("/precios"),
+    availability: "https://schema.org/InStock",
+  }));
+
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -61,6 +74,6 @@ export function pricingSchema(): WithContext<SoftwareApplication> {
     description: PRICING.intro,
     inLanguage: "es-CO",
     publisher: { "@id": ORG_ID },
-    offers: [trialOffer, ...tierOffers],
+    offers: [trialOffer, ...tierOffers, ...moduleOffers],
   };
 }

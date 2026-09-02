@@ -232,6 +232,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     radial-gradient(65% 110% at 95% 12%, color-mix(in srgb, var(--axi-amber) 7%, transparent), transparent 70%);
 }
 
+/**
+ * Velo para una sección con `BeamsBackground` detrás (`shared/ui`): funde los
+ * haces con la página en los bordes superior e inferior y aclara el centro,
+ * donde va el texto. Deriva del fondo, así que sirve en ambos temas. El
+ * contenedor lleva `relative isolate`; el canvas va en `-z-20` y este velo en
+ * `-z-10`, ambos debajo del contenido.
+ */
+.beams-veil {
+  background:
+    linear-gradient(180deg, var(--background) 0%, transparent 18%, transparent 82%, var(--background) 100%),
+    radial-gradient(60% 50% at 50% 38%, color-mix(in srgb, var(--background) 55%, transparent), transparent 70%);
+}
+
 /* -------- Superficie de tarjeta de canal (F1 de canales Meta) -------- */
 
 /**

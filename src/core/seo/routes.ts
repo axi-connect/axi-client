@@ -10,7 +10,7 @@
  * no puedan desincronizarse.
  *
  * NO listar aquí los redirects 308 declarados en `next.config.ts` (`/demo`,
- * `/products`, `/solutions`, `/login`, `/signup`, `/legal` a secas): una URL
+ * `/products`, `/solutions`, `/login`, `/signup`, `/registro`, `/legal` a secas): una URL
  * que redirige no es canónica y ensucia el informe de cobertura.
  */
 export type IndexableRoute = {
@@ -54,6 +54,9 @@ export const DISALLOWED_PREFIXES = [
   "/integrations/",
   // Pago sin sesión: la URL lleva un token de un solo recurso.
   "/pay/",
+  // Funnel de registro y onboarding: páginas de proceso, no de contenido.
+  "/comenzar",
+  "/onboarding",
 ] as const;
 
 /** Etiqueta legible de un path indexable, para migas de pan. */

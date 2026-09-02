@@ -79,6 +79,12 @@ export interface ProviderCardProps {
   /** Marca de selección: enciende el cometa, más lento que en hover. */
   selected?: boolean;
   /**
+   * Semántica del grupo de selección. `radio` (default) cuando se elige UNA
+   * opción; `checkbox` cuando se pueden elegir varias (los Módulos de
+   * `/comenzar`). Solo aplica con `selected` definido.
+   */
+  selectionRole?: "radio" | "checkbox";
+  /**
    * Presente, sin interacción **y apagada**: hoja de ruta, fuente que la
    * plataforma no ha encendido. Atenúa la tarjeta, y eso es lo que comunica.
    *
@@ -144,6 +150,7 @@ export function ProviderCard({
   href,
   onClick,
   selected,
+  selectionRole = "radio",
   inert = false,
   static: isStatic = false,
   disabled = false,
@@ -254,7 +261,7 @@ export function ProviderCard({
       // `role="radio"` solo cuando hay selección de por medio: un botón suelto
       // que se anuncia como radio le miente al lector de pantalla sobre que
       // pertenece a un grupo.
-      {...(selected === undefined ? {} : { role: "radio", "aria-checked": selected })}
+      {...(selected === undefined ? {} : { role: selectionRole, "aria-checked": selected })}
       data-selected={selected === true ? "true" : undefined}
       className={surface}
     >

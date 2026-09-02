@@ -16,6 +16,29 @@ export type LoginPayload = {
   company_nit?: string;
 };
 
+/**
+ * Alta autoservicio (`POST /api/auth/signup` → backend `/public/onboarding/signups`).
+ * Wire en `snake_case`, 1:1 con el contrato B2 de
+ * `axi-server/docs/plans/onboarding_self_service_backend_plan.md`.
+ */
+export type SignupPayload = {
+  offer: { kind: "package" | "module"; codes: string[] };
+  company: { name: string; nit: string; country_code: string; city: string; timezone?: string };
+  owner: { name: string; email: string; password: string; phone?: string };
+  captcha_token: string;
+  accepted_terms: true;
+  /** Honeypot: siempre vacío; un valor aquí delata a un bot. */
+  website: string;
+};
+
+/** Lo que el BFF devuelve al browser tras sembrar las cookies (sin tokens). */
+export type SignupResult = {
+  success: true;
+  company_id: string;
+  user_id: string;
+  trial_ends_at: string;
+};
+
 export type SessionResponse = {
   isAuthenticated: boolean;
   user?: AuthUser;

@@ -172,6 +172,18 @@ export const META_PIXEL_ID = resolveOptionalId(
 );
 
 /**
+ * Clave PÚBLICA del widget de Cloudflare Turnstile del registro autoservicio
+ * (`/comenzar`), o `null`: sin ella el widget no se monta y el backend valida
+ * el alta con su verificador `noop`, que está prohibido en producción. Mismo
+ * criterio que los ids de analítica — ausente degrada, mal formada aborta.
+ */
+export const TURNSTILE_SITE_KEY = resolveOptionalId(
+  "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+  /^0x[0-9A-Za-z_-]{8,}$/,
+  "0x4AAAAAAABkMYinukE8nzYw",
+);
+
+/**
  * La analítica solo se monta en producción y solo si hay algo que medir: en
  * desarrollo no se ensucia la propiedad de GA con navegación de trabajo.
  */

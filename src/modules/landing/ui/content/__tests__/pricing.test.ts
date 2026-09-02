@@ -1,5 +1,6 @@
 import {
   FOUNDERS,
+  MODULES,
   PRICING,
   SBS_TIERS,
   VOLUME_ESTIMATOR,
@@ -10,6 +11,8 @@ import {
   formatDeadlineLong,
   founderCop,
   foundersRemaining,
+  offerByCode,
+  publishableModules,
   sbsTier,
 } from "../landing.content"
 
@@ -147,5 +150,38 @@ describe("catálogo de planes", () => {
   it("el plan por tramos no lleva su volumen en los bullets (lo aporta el tramo)", () => {
     const sbs = PRICING.plans.find((plan) => plan.priceKind === "tiered")
     expect(sbs?.bullets.some((bullet) => bullet.includes("conversaciones/mes"))).toBe(false)
+  })
+})
+
+describe("catálogo de módulos", () => {
+  it("cada módulo tiene un offer_code único que no choca con un Paquete", () => {
+    const codes = MODULES.map((offer) => offer.offer_code)
+    expect(new Set(codes).size).toBe(codes.length)
+    for (const plan of PRICING.plans) expect(codes).not.toContain(plan.id)
+  })
+
+  it("resuelve Paquetes por id y Módulos por offer_code", () => {
+    expect(offerByCode("sbs")).toBe(PRICING.plans[1])
+    expect(offerByCode("calls")).toBe(MODULES[0])
+    expect(offerByCode("no-existe")).toBeNull()
+  })
+
+  it("la equivalencia de una cuota usa otra unidad, o no dice nada", () => {
+    for (const offer of MODULES) {
+      const { allowance } = offer
+      if (allowance.equivalent) expect(allowance.equivalent.unit).not.toBe(allowance.unit)
+    }
+  })
+
+  it("todo módulo abre el registro con su id preseleccionado y tiene precio positivo", () => {
+    for (const offer of MODULES) {
+      expect(offer.cta.href).toBe(`/comenzar?modulo=${offer.id}`)
+      expect(offer.listCop).toBeGreaterThan(0)
+    }
+  })
+
+  it("solo publica al JSON-LD los módulos con precio final", () => {
+    for (const offer of publishableModules()) expect(offer.priceStatus).toBe("final")
+    expect(publishableModules().length).toBeLessThanOrEqual(MODULES.length)
   })
 })

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
@@ -12,7 +13,6 @@ import { FoundersBar } from "@/modules/landing/ui/components/FoundersBar";
 import { VolumeEstimator } from "@/modules/landing/ui/components/VolumeEstimator";
 import {
   FOUNDERS,
-  LANDING_ANCHORS,
   PRICING,
   SBS_TIERS,
   VOLUME_ESTIMATOR,
@@ -152,7 +152,9 @@ function PlanCard({
             variant={plan.featured ? "default" : "outline"}
             className="h-11 w-full"
           >
-            <a href={`#${LANDING_ANCHORS.demo}`}>{plan.cta}</a>
+            {/* El destino lo declara el content: los paquetes autoservicio abren
+                el registro con la oferta preseleccionada; Enterprise va a ventas. */}
+            <Link href={plan.cta.href}>{plan.cta.label}</Link>
           </Button>
           {plan.ctaMicrocopy ? (
             <p className="text-muted-foreground text-center text-xs leading-relaxed">

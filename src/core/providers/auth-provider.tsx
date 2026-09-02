@@ -4,7 +4,7 @@ import { isPublicPath } from "@/core/config/routes"
 import { socketManager } from "@/core/realtime/socket-manager"
 import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT, isSuspensionCode } from "@/core/api/problem"
 import { CompanySuspendedScreen } from "@/core/providers/company-suspended-screen"
-import type { AuthUser, LoginPayload, SessionResponse } from "@/shared/auth/auth.types"
+import type { AuthUser, LoginPayload, SessionResponse, SignupPayload, SignupResult } from "@/shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
 /** `suspended`: la empresa del usuario fue suspendida (F15) — pantalla bloqueante. */
@@ -40,6 +40,12 @@ type AuthContextValue = {
   logout: () => Promise<void>
   refresh: () => Promise<void>
   login: (payload: LoginPayload) => Promise<void>
+  /**
+   * Alta autoservicio: crea empresa + owner en trial y deja la sesión abierta
+   * en el mismo viaje (el BFF siembra las cookies con los tokens que devuelve
+   * el backend). Lanza `LoginError` con el `code` del backend, igual que `login`.
+   */
+  signup: (payload: SignupPayload) => Promise<SignupResult>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -139,6 +145,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await hydrate()
   }, [hydrate])
 
+  const signup = useCallback(
+    async (payload: SignupPayload) => {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const retryAfter = res.headers.get("Retry-After")
+        let body: { code?: string; message?: string } = {}
+        try {
+          body = await res.json()
+        } catch {
+          // Sin cuerpo JSON → error genérico.
+        }
+        throw new LoginError({
+          code: body.code ?? `http/${res.status}`,
+          status: res.status,
+          message: body.message ?? "No se pudo crear la cuenta",
+          retryAfterSeconds: retryAfter ? Number(retryAfter) : undefined,
+        })
+      }
+      const result = (await res.json()) as SignupResult
+      socketManager.reset()
+      await hydrate()
+      return result
+    },
+    [hydrate],
+  )
+
   const refresh = useCallback(async () => {
     await fetch("/api/auth/refresh", { method: "POST" })
     await hydrate()
@@ -159,8 +195,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, hasPermission, login, refresh, logout }),
-    [status, user, hasPermission, login, refresh, logout],
+    () => ({ status, user, hasPermission, login, signup, refresh, logout }),
+    [status, user, hasPermission, login, signup, refresh, logout],
   )
 
   return (
