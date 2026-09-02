@@ -1268,6 +1268,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/ai-voices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformAiVoicesController_list_v1"];
+        put?: never;
+        post: operations["PlatformAiVoicesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/ai-voices/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformAiVoicesController_reorder_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/ai-voices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformAiVoicesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/ai-voices/{id}/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformAiVoicesController_setActive_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/ai-voices/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformAiVoicesController_generatePreview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-voice-credential": {
         parameters: {
             query?: never;
@@ -6751,6 +6831,82 @@ export interface components {
                 preview_url: string | null;
                 sort_order: number;
             }[];
+        };
+        PlatformAiVoiceListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                provider: string;
+                external_voice_id: string;
+                name: string;
+                description: string | null;
+                gender: string | null;
+                accent: string | null;
+                default_model_id: string;
+                default_settings: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+                preview_url: string | null;
+                preview_text: string | null;
+                /** Format: date-time */
+                preview_generated_at: string | null;
+                is_active: boolean;
+                sort_order: number;
+                characters_count: number;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        CreateAiVoiceDto: {
+            /**
+             * @default elevenlabs
+             * @enum {string}
+             */
+            provider: "elevenlabs";
+            external_voice_id: string;
+            name: string;
+            description?: string | null;
+            gender?: string | null;
+            accent?: string | null;
+            default_model_id: string;
+            default_settings?: {
+                stability?: number;
+                similarity_boost?: number;
+                style?: number;
+                speed?: number;
+            };
+        };
+        CreatedAiVoiceDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        ReorderAiVoicesDto: {
+            ids: string[];
+        };
+        UpdateAiVoiceDto: {
+            name?: string;
+            description?: string | null;
+            gender?: string | null;
+            accent?: string | null;
+            default_model_id?: string;
+            default_settings?: {
+                stability?: number;
+                similarity_boost?: number;
+                style?: number;
+                speed?: number;
+            };
+        };
+        SetAiVoiceActiveDto: {
+            is_active: boolean;
+        };
+        GenerateVoicePreviewDto: {
+            text?: string;
+        };
+        VoicePreviewResultDto: {
+            preview_url: string;
         };
         TtsCredentialStatusDto: {
             configured: boolean;
@@ -14455,6 +14611,140 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiVoiceListDto"];
+                };
+            };
+        };
+    };
+    PlatformAiVoicesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAiVoiceListDto"];
+                };
+            };
+        };
+    };
+    PlatformAiVoicesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAiVoiceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedAiVoiceDto"];
+                };
+            };
+        };
+    };
+    PlatformAiVoicesController_reorder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderAiVoicesDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformAiVoicesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAiVoiceDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformAiVoicesController_setActive_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAiVoiceActiveDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformAiVoicesController_generatePreview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateVoicePreviewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoicePreviewResultDto"];
                 };
             };
         };
