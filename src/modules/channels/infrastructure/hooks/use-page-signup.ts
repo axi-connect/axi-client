@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
-import type { EmbeddedSignupPhase } from "@/modules/channels/domain/meta-signup";
+import { SIGNUP_ERRORS, type EmbeddedSignupPhase } from "@/modules/channels/domain/meta-signup";
 import type { Schemas } from "@/core/api/types";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
 import {
@@ -13,6 +13,7 @@ import {
   listMetaPageAssets,
 } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
 import { logSignup, useMetaPopup, type MetaPopupError } from "./use-meta-popup";
+import { useSignupPhase } from "./use-signup-phase";
 
 /**
  * Alta por botón de Instagram y Messenger (F7).
@@ -54,40 +55,19 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
   const { open: openPopup, clearWatchdog } = popup;
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
 
-  const [phase, setPhase] = useState<EmbeddedSignupPhase>("preparing");
-  const [error, setError] = useState<MetaPopupError | null>(null);
   const [channel, setChannel] = useState<ChannelDTO | null>(null);
   const [assets, setAssets] = useState<PageAsset[]>([]);
   const [connecting, setConnecting] = useState(false);
 
   const sessionRef = useRef<string | null>(null);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      clearWatchdog();
-    };
-  }, [clearWatchdog]);
-
-  useEffect(() => {
-    if (popup.status === "preparing") return;
-    setPhase((current) =>
-      current === "preparing" || current === "unavailable"
-        ? popup.status === "ready"
-          ? "ready"
-          : "unavailable"
-        : current,
-    );
-    if (popup.error !== null) setError(popup.error);
-  }, [popup.status, popup.error]);
+  // Fase, error y `mountedRef`: el mismo código que WhatsApp, una sola vez
+  const { phase, setPhase, error, setError, mountedRef } = useSignupPhase(popup);
 
   const fail = useCallback((failure: MetaPopupError) => {
     if (!mountedRef.current) return;
     setPhase(failure.code === "channels/meta_signup_disabled" ? "unavailable" : "error");
     setError(failure);
-  }, []);
+  }, [mountedRef, setError, setPhase]);
 
   /** Paso 1: el `code` se canjea en el servidor y vuelven los activos. */
   const exchange = useCallback(
@@ -107,7 +87,7 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
         });
       }
     },
-    [fail, product],
+    [fail, mountedRef, product, setError, setPhase],
   );
 
   const start = useCallback(() => {
@@ -123,32 +103,27 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
       onResult: (result) => {
         clearWatchdog();
         if (result.outcome === "unavailable") {
-          fail({
-            code: "channels/meta_signup_disabled",
-            message: "La conexión automática con Meta no está disponible ahora mismo.",
-          });
+          fail(SIGNUP_ERRORS.disabled);
           return;
         }
         if (result.outcome === "config_ignored") {
-          fail({
-            code: "meta/config_not_applied",
-            message:
-              "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
-          });
+          fail(SIGNUP_ERRORS.config_not_applied);
           return;
         }
+        // Por la guarda: el watchdog de abandono dispara hasta 180 s después,
+        // con el componente posiblemente desmontado
         if (result.outcome === "blocked") {
-          setPhase("popup_blocked");
+          if (mountedRef.current) setPhase("popup_blocked");
           return;
         }
         if (result.outcome === "cancelled") {
-          setPhase("cancelled");
+          if (mountedRef.current) setPhase("cancelled");
           return;
         }
         void exchange(result.code);
       },
     });
-  }, [clearWatchdog, exchange, fail, openPopup, product]);
+  }, [clearWatchdog, exchange, fail, mountedRef, openPopup, product, setError, setPhase]);
 
   /**
    * Paso 2. El `asset_id` viaja opaco: el servidor lo valida contra la sesión,
@@ -185,7 +160,7 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
         }
       })();
     },
-    [connecting, fail, onConnected, upsertChannel],
+    [connecting, fail, mountedRef, onConnected, setError, setPhase, upsertChannel],
   );
 
   const reset = useCallback(() => {
@@ -195,7 +170,7 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
     setAssets([]);
     setError(null);
     setPhase(popup.ready ? "ready" : "unavailable");
-  }, [clearWatchdog, popup.ready]);
+  }, [clearWatchdog, popup.ready, setError, setPhase]);
 
   return {
     phase,

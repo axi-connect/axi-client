@@ -246,6 +246,42 @@ export function channelProvider(kind: ChannelKind): ChannelProvider {
 }
 
 /**
+ * Qué botón pinta el paso 3. Son tres flujos y no uno con ramas dentro: el
+ * popup de WhatsApp devuelve los identificadores por `postMessage`, el de
+ * páginas solo el `code` (y añade elegir activo), y el manual no abre nada.
+ * Antes era un `if (meta_product === …)` en la vista.
+ */
+export type SignupFlavor = "whatsapp" | "page" | "manual";
+
+export function signupFlavor(provider: ChannelProvider): SignupFlavor {
+  if (effectiveConnectStrategy(provider) === "manual") return "manual";
+  if (provider.meta_product === "whatsapp") return "whatsapp";
+  if (provider.meta_product === undefined) return "manual";
+  return "page";
+}
+
+/** Kinds que el formulario manual sabe crear. */
+export type ManualChannelKind = "whatsapp_cloud" | "instagram_dm" | "facebook_messenger";
+
+/**
+ * El kind que fija el formulario manual para este proveedor. Antes la vista
+ * hacía `kind === "instagram_dm" ? … : "facebook_messenger"`, que mandaba a
+ * WhatsApp por el formulario de Messenger.
+ */
+export function manualKind(provider: ChannelProvider): ManualChannelKind | undefined {
+  return provider.kind === "whatsapp_cloud" ||
+    provider.kind === "instagram_dm" ||
+    provider.kind === "facebook_messenger"
+    ? provider.kind
+    : undefined;
+}
+
+/** Producto del alta por páginas. Messenger es el respaldo: es la página a secas. */
+export function pageSignupProduct(provider: ChannelProvider): "instagram" | "messenger" {
+  return provider.meta_product === "instagram" ? "instagram" : "messenger";
+}
+
+/**
  * Proveedores que el tenant puede elegir, recomendados primero.
  *
  * Excluye los `internal`: el simulador es del módulo de calidad y ofrecerlo

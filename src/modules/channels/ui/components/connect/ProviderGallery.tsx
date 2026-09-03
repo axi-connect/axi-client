@@ -29,11 +29,13 @@ import { ChannelProviderIcon } from "../ChannelProviderIcon";
 export function ProviderGallery({
   selected,
   onSelect,
+  providers = connectableProviders(),
 }: {
   selected: ChannelProvider | null;
   onSelect: (provider: ChannelProvider) => void;
+  /** Subconjunto a ofrecer. Por defecto, todo lo conectable del registry. */
+  providers?: readonly ChannelProvider[];
 }) {
-  const providers = connectableProviders();
 
   return (
     <div

@@ -237,10 +237,31 @@ export type ChannelActions = {
   hint: string;
 };
 
-const ACTIVE_HINT =
-  "Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración. " +
-  "Desconectar detiene el canal sin borrarlo. Al eliminar, este número deja de recibir " +
-  "mensajes en Axi y las conversaciones quedan archivadas.";
+/**
+ * «Este número» solo tiene sentido en WhatsApp: en Instagram y Messenger lo que
+ * se elimina es una cuenta o una página. Se compone por kind en vez de compartir
+ * una frase que en dos de tres canales era falsa.
+ */
+function activeHint(kind: ChannelDTO["kind"]): string {
+  const subject = kind === "whatsapp_cloud" ? "este número" : "este canal";
+  return (
+    "Renovar vuelve a pedir tu autorización en Meta; no pierdes historial ni configuración. " +
+    `Desconectar detiene el canal sin borrarlo. Al eliminar, ${subject} deja de recibir ` +
+    "mensajes en Axi y las conversaciones quedan archivadas."
+  );
+}
+
+/**
+ * La confirmación de borrado, UNA vez: la página de detalle y el panel del
+ * workspace la tenían escrita cada uno a su manera y ya habían divergido en lo
+ * que prometían («las conversaciones quedan archivadas» frente a «dejarán de
+ * recibir mensajes»).
+ */
+export const DELETE_CONFIRMATION = {
+  title: "Eliminar canal",
+  describe: (channelName: string): string =>
+    `¿Seguro que deseas eliminar “${channelName}”? Este canal deja de recibir mensajes en Axi y las conversaciones quedan archivadas.`,
+} as const;
 
 /**
  * Decide las acciones del detalle (F6).
@@ -273,7 +294,7 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
       can_disconnect: true,
       can_reconnect: false,
       can_register_pin: canRegisterPin,
-      hint: ACTIVE_HINT,
+      hint: activeHint(channel.kind),
     };
   }
 

@@ -1,5 +1,6 @@
 import type { ChannelDTO } from "../channel";
 import {
+  DELETE_CONFIRMATION,
   readChannelActions,
   readConnectionMethod,
   readLastCheck,
@@ -282,5 +283,18 @@ describe("readChannelActions — las acciones del detalle (F6)", () => {
 
     expect(actions.hint).toContain("está desconectado");
     expect(actions.hint).not.toContain("Invalid Date");
+  });
+
+  it("«este número» solo en WhatsApp: en Instagram y Messenger se elimina un canal", () => {
+    expect(readChannelActions(channel()).hint).toContain("este número deja de recibir");
+    expect(readChannelActions(channel({ kind: "instagram_dm" })).hint).toContain("este canal deja de recibir");
+    expect(readChannelActions(channel({ kind: "facebook_messenger" })).hint).not.toContain("número");
+  });
+
+  it("la confirmación de borrado nombra el canal y promete lo mismo en todas las superficies", () => {
+    expect(DELETE_CONFIRMATION.title).toBe("Eliminar canal");
+    const text = DELETE_CONFIRMATION.describe("Ventas");
+    expect(text).toContain("“Ventas”");
+    expect(text).toContain("las conversaciones quedan archivadas");
   });
 })

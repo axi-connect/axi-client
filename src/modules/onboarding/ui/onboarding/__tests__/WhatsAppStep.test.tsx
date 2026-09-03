@@ -15,12 +15,14 @@ jest.mock("@/modules/channels/public", () => ({
     embedded,
     onConnected,
     onManualCreated,
+    only,
   }: {
     embedded?: boolean
     onConnected?: (channel: { id: string }) => void
     onManualCreated: () => void
+    only?: readonly string[]
   }) => (
-    <div data-testid="connect-flow" data-embedded={String(Boolean(embedded))}>
+    <div data-testid="connect-flow" data-embedded={String(Boolean(embedded))} data-only={only?.join(",")}>
       <button type="button" onClick={() => onConnected?.({ id: "ch1" })}>
         Simular conexión
       </button>
@@ -31,8 +33,10 @@ jest.mock("@/modules/channels/public", () => ({
   ),
 }))
 
+// El gate de correo es compartido (`shared/components/features/email-verification-gate`)
+// y el reenvío vive en `shared/auth`: es lo que se dobla
 const resendVerificationEmail = jest.fn()
-jest.mock("@/modules/onboarding/infrastructure/services/onboarding-service.adapter", () => ({
+jest.mock("@/shared/auth/email-verification", () => ({
   resendVerificationEmail: (...args: unknown[]) => resendVerificationEmail(...args),
 }))
 
@@ -49,6 +53,8 @@ describe("WhatsAppStep", () => {
     render(<WhatsAppStep {...p} />)
 
     expect(screen.getByTestId("connect-flow")).toHaveAttribute("data-embedded", "true")
+    // El paso se titula «Conecta tu WhatsApp»: el flujo va acotado a WhatsApp
+    expect(screen.getByTestId("connect-flow")).toHaveAttribute("data-only", "whatsapp_cloud")
     expect(screen.queryByRole("button", { name: /^continuar/i })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: /simular conexión/i }))

@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { MetaProduct, MetaSignupConfigDTO } from "@/modules/channels/domain/meta-signup";
-import { FacebookSdkError } from "@/modules/channels/domain/meta-signup";
+import type {
+  MetaProduct,
+  MetaSignupConfigDTO,
+  SignupError,
+} from "@/modules/channels/domain/meta-signup";
+import { FacebookSdkError, SIGNUP_ERRORS } from "@/modules/channels/domain/meta-signup";
 import {
   getFacebookSdk,
   loadFacebookSdk,
@@ -25,15 +29,42 @@ import { getMetaSignupConfig } from "@/modules/channels/infrastructure/services/
  * no, así que esa parte es de cada flujo.
  */
 
+/** Clave de `localStorage` que enciende la traza en un navegador concreto. */
+export const SIGNUP_DEBUG_STORAGE_KEY = "axi:debug:meta-signup";
+
 /**
- * Traza del intento de conexión.
+ * La traza está apagada por defecto. Se enciende con
+ * `NEXT_PUBLIC_META_SIGNUP_DEBUG=1` en el build o, para un cliente concreto sin
+ * redesplegar, con `localStorage.setItem("axi:debug:meta-signup", "1")`.
  *
- * Siempre activa y en `info`, no detrás de un flag: el modo de fallo de este
- * flujo es **no hacer nada** —sin popup, sin error, sin excepción— y sin estas
- * líneas es indistinguible desde fuera. Son unas pocas por clic, solo durante
- * un intento, nunca en render.
+ * El accesor de `localStorage` puede LANZAR (modo privado, política de sitio):
+ * una traza jamás debe tumbar el clic que intenta observar.
+ */
+export function signupDebugEnabled(): boolean {
+  if (process.env.NEXT_PUBLIC_META_SIGNUP_DEBUG === "1") return true;
+  try {
+    return (
+      typeof window !== "undefined" &&
+      window.localStorage.getItem(SIGNUP_DEBUG_STORAGE_KEY) === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Traza del intento de conexión, detrás del flag de arriba.
+ *
+ * Existió «siempre activa» mientras se diagnosticaba el popup que no abría: el
+ * modo de fallo de este flujo es no hacer nada —sin popup, sin error, sin
+ * excepción— y estas líneas eran la única forma de verlo. Diagnosticado, la
+ * traza se queda para el siguiente cliente con el problema, pero apagada: en
+ * producción llenaba la consola de cada tenant con la configuración del
+ * popup. Los `console.warn` de fallo real NO pasan por aquí y siguen siempre
+ * activos.
  */
 export function logSignup(step: string, fields: Record<string, unknown> = {}): void {
+  if (!signupDebugEnabled()) return;
   console.info(`[meta-signup] ${step}`, fields);
 }
 
@@ -43,11 +74,8 @@ const POPUP_BLOCKED_THRESHOLD_MS = 600;
 
 export type MetaPopupStatus = "preparing" | "ready" | "unavailable";
 
-export type MetaPopupError = {
-  /** `code` RFC 7807 del backend, o un código local del cliente. */
-  code: string;
-  message: string;
-};
+/** Alias: el error es el del dominio (`SignupError`); se conserva el nombre. */
+export type MetaPopupError = SignupError;
 
 export type MetaPopupResult =
   | { outcome: "code"; code: string }
@@ -148,10 +176,7 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       // error: es el disparador del camino manual.
       if (configResult === null || !configResult.enabled) {
         setStatus("unavailable");
-        setError({
-          code: "channels/meta_signup_disabled",
-          message: "La conexión automática con Meta no está disponible ahora mismo.",
-        });
+        setError(SIGNUP_ERRORS.disabled);
         return;
       }
       setConfig(configResult);
@@ -192,12 +217,12 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       const sdk = getFacebookSdk();
       const configId = config?.config_id ?? null;
 
+      // Sin `app_id` ni `config_id`: identifican la app del tenant y no hacen
+      // falta para diagnosticar; con que estén o no, basta
       logSignup("open() llamado", {
         sdk_cargado: sdk !== null,
         carga_completada: loadedRef.current,
-        config_id: configId,
-        tipo_config_id: typeof configId,
-        app_id: config?.app_id ?? null,
+        tiene_config_id: configId !== null,
         graph_api_version: config?.graph_api_version ?? null,
         enabled: config?.enabled ?? null,
       });

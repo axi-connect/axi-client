@@ -4,9 +4,11 @@ import { useState } from "react";
 
 import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import { Button } from "@/shared/components/ui/button";
-import type { ChannelDTO } from "@/modules/channels/domain/channel";
+import type { ChannelDTO, ChannelKind } from "@/modules/channels/domain/channel";
 import {
-  effectiveConnectStrategy,
+  connectableProviders,
+  manualKind,
+  signupFlavor,
   type ChannelProvider,
 } from "@/modules/channels/domain/channel-providers";
 import { EmbeddedSignupButton } from "./EmbeddedSignupButton";
@@ -33,11 +35,19 @@ const STEPS = ["Canal", "Requisitos", "Conexión", "Listo"] as const;
 
 export function ConnectChannelFlow({
   embedded = false,
+  only,
   onConnected,
   onManualCreated,
 }: {
   /** Dentro de otro marco: cabecera en `h2` y sin márgenes de página. */
   embedded?: boolean;
+  /**
+   * Acota los proveedores ofrecidos. Con uno solo, el paso «Canal» se salta:
+   * elegir entre uno no informa de nada. Lo usa el paso «WhatsApp» del
+   * onboarding, que antes ofrecía Instagram y Messenger bajo un título que
+   * decía «Conecta tu WhatsApp».
+   */
+  only?: readonly ChannelKind[];
   /** El canal quedó conectado (paso 4). El flujo sigue mostrando el éxito. */
   onConnected?: (channel: ChannelDTO) => void;
   /**
@@ -46,8 +56,15 @@ export function ConnectChannelFlow({
    */
   onManualCreated: () => void;
 }) {
-  const [step, setStep] = useState(0);
-  const [provider, setProvider] = useState<ChannelProvider | null>(null);
+  const providers = connectableProviders().filter(
+    (candidate) => only === undefined || only.includes(candidate.kind),
+  );
+  const single = providers.length === 1 ? providers[0] : null;
+  // Los `useState` leen el valor inicial UNA vez: con un solo proveedor el
+  // flujo arranca ya elegido y en «Requisitos»
+  const firstStep = single === null ? 0 : 1;
+  const [step, setStep] = useState(firstStep);
+  const [provider, setProvider] = useState<ChannelProvider | null>(single);
   const [connected, setConnected] = useState<ChannelDTO | null>(null);
 
   const goToSuccess = (channel: ChannelDTO) => {
@@ -56,34 +73,49 @@ export function ConnectChannelFlow({
     onConnected?.(channel);
   };
 
-  function renderConnectStep() {
-    if (provider === null) return null;
-    const strategy = effectiveConnectStrategy(provider);
-
-    if (strategy === "manual") {
-      return (
-        <ManualCredentialsFallback
-          prominent
-          kind={provider.kind === "instagram_dm" ? "instagram_dm" : "facebook_messenger"}
-          onCreated={onManualCreated}
-        />
-      );
+  function renderConnectStep(current: ChannelProvider) {
+    // Tres botones y no uno con tres flujos dentro: el popup de WhatsApp
+    // devuelve los identificadores y el de páginas no, así que este último añade
+    // un paso —elegir activo— que allí no existe, y no tiene el PIN que aquel sí
+    // pide. Qué flujo toca lo decide `domain/`, no esta vista.
+    switch (signupFlavor(current)) {
+      case "manual":
+        return (
+          <ManualCredentialsFallback
+            prominent
+            kind={manualKind(current)}
+            onCreated={onManualCreated}
+          />
+        );
+      case "page":
+        return (
+          <PageSignupButton
+            provider={current}
+            onConnected={goToSuccess}
+            onManualCreated={onManualCreated}
+          />
+        );
+      case "whatsapp":
+        return (
+          <EmbeddedSignupButton
+            provider={current}
+            onConnected={goToSuccess}
+            onManualCreated={onManualCreated}
+          />
+        );
     }
-    // Dos botones y no uno con dos flujos dentro: el popup de WhatsApp devuelve
-    // los identificadores y el de páginas no, así que este último añade un paso
-    // —elegir activo— que allí no existe, y no tiene el PIN que aquel sí pide.
-    if (provider.meta_product === "instagram" || provider.meta_product === "messenger") {
-      return <PageSignupButton provider={provider} onConnected={goToSuccess} onManualCreated={onManualCreated} />;
-    }
-    return <EmbeddedSignupButton provider={provider} onConnected={goToSuccess} onManualCreated={onManualCreated} />;
   }
 
   const Heading = embedded ? "h2" : "h1";
 
   return (
-    <div className={embedded ? "space-y-6" : "space-y-6"}>
+    <div className="space-y-6">
       <header>
-        <Heading className={embedded ? "text-xl font-semibold tracking-tight" : "text-3xl font-semibold tracking-tight"}>
+        <Heading
+          className={
+            embedded ? "text-xl font-semibold tracking-tight" : "text-3xl font-semibold tracking-tight"
+          }
+        >
           {title(step, provider)}
         </Heading>
         <p className="text-muted-foreground">{subtitle(step, provider)}</p>
@@ -94,8 +126,10 @@ export function ConnectChannelFlow({
         current={step}
         ariaLabel="Progreso de la conexión"
         // Volver atrás sí, saltar adelante no: el `StepIndicator` solo permite
-        // pulsar pasos ya completados
-        onStepClick={connected === null ? setStep : undefined}
+        // pulsar pasos ya completados. Y nunca por debajo del primero real.
+        onStepClick={
+          connected === null ? (target) => setStep(Math.max(target, firstStep)) : undefined
+        }
       />
 
       {step === 0 && (
@@ -103,18 +137,18 @@ export function ConnectChannelFlow({
           {/* Aquí NO se pide el nombre del canal. El alta ya lo pone —el número o
               la página que se acaba de autorizar— y el paso 4 deja cambiarlo con
               el mismo formulario del detalle. */}
-          <ProviderGallery selected={provider} onSelect={setProvider} />
+          <ProviderGallery selected={provider} onSelect={setProvider} providers={providers} />
           <Button disabled={provider === null} onClick={() => setStep(1)}>
             Continuar
           </Button>
         </div>
       )}
 
-      {step === 1 && provider !== null && <PrerequisitesChecklist provider={provider} onContinue={() => setStep(2)} />}
+      {step === 1 && provider !== null && (
+        <PrerequisitesChecklist provider={provider} onContinue={() => setStep(2)} />
+      )}
 
-      {/* El paso 3 se elige por la estrategia EFECTIVA, que sale del registry: no
-          hay un `if (kind === ...)` en esta vista. */}
-      {step === 2 && provider !== null && renderConnectStep()}
+      {step === 2 && provider !== null && renderConnectStep(provider)}
 
       {step === 3 && connected !== null && <ConnectSuccess channel={connected} />}
     </div>
@@ -140,8 +174,7 @@ function subtitle(step: number, provider: ChannelProvider | null): string {
   }
   if (step === 2) {
     if (provider === null) return "";
-    const strategy = effectiveConnectStrategy(provider);
-    if (strategy === "manual") {
+    if (signupFlavor(provider) === "manual") {
       return "Este canal se conecta con las credenciales de tu app de Meta.";
     }
     return "Se abrirá una ventana de Meta. Autoriza ahí y nosotros hacemos el resto.";

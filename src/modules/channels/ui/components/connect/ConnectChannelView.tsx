@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
+import { EmailVerificationGate } from "@/shared/components/features/email-verification-gate";
 import { ConnectChannelFlow } from "./ConnectChannelFlow";
 
 /**
@@ -13,6 +14,10 @@ import { ConnectChannelFlow } from "./ConnectChannelFlow";
  * el cromo de página: el enlace de vuelta y el cierre del camino manual, que
  * lleva al listado porque ese camino no devuelve el canal creado y el listado
  * ya refresca desde el store.
+ *
+ * El gate de correo es el MISMO que el del onboarding: sin él, el usuario con el
+ * correo sin verificar abría el popup, quemaba el `code` de un solo uso y
+ * recibía «No pudimos conectar el canal» sin ninguna pista de por qué.
  */
 export function ConnectChannelView() {
   const router = useRouter();
@@ -26,7 +31,12 @@ export function ConnectChannelView() {
         </Link>
       </Button>
 
-      <ConnectChannelFlow onManualCreated={() => router.push("/settings/channels")} />
+      <EmailVerificationGate
+        title="Verifica tu correo para conectar un canal"
+        reason="Conectar un canal de Meta exige un correo verificado."
+      >
+        <ConnectChannelFlow onManualCreated={() => router.push("/settings/channels")} />
+      </EmailVerificationGate>
     </div>
   );
 }

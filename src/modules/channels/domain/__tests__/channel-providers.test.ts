@@ -6,6 +6,9 @@ import {
   effectiveConnectStrategy,
   type ChannelBrandClass,
   type ChannelIconId,
+  manualKind,
+  pageSignupProduct,
+  signupFlavor,
 } from "../channel-providers";
 
 /**
@@ -134,5 +137,28 @@ describe("registry de proveedores de canal", () => {
     expect(critical[0].id).toBe("phone_not_in_whatsapp");
     // El aviso tiene que decir la consecuencia, no solo la condición
     expect(critical[0].detail).toContain("deja de funcionar en el celular");
+  });
+
+  it("`signupFlavor` decide el botón del paso 3 desde el registry, no desde la vista", () => {
+    expect(signupFlavor(channelProvider("whatsapp_cloud"))).toBe("whatsapp");
+    expect(signupFlavor(channelProvider("instagram_dm"))).toBe("page");
+    expect(signupFlavor(channelProvider("facebook_messenger"))).toBe("page");
+    // Sin alta por botón (manual_only) el flujo cae al formulario, sea el producto que sea
+    expect(signupFlavor({ ...channelProvider("instagram_dm"), availability: "manual_only" })).toBe("manual");
+    expect(signupFlavor(channelProvider("whatsapp_web"))).toBe("manual");
+  });
+
+  it("`manualKind` fija el kind REAL del proveedor en el formulario manual", () => {
+    // Antes la vista hacía `kind === "instagram_dm" ? … : "facebook_messenger"`,
+    // que mandaba a WhatsApp por el formulario de Messenger
+    expect(manualKind(channelProvider("whatsapp_cloud"))).toBe("whatsapp_cloud");
+    expect(manualKind(channelProvider("instagram_dm"))).toBe("instagram_dm");
+    expect(manualKind(channelProvider("facebook_messenger"))).toBe("facebook_messenger");
+    expect(manualKind(channelProvider("simulator"))).toBeUndefined();
+  });
+
+  it("`pageSignupProduct`: Instagram es Instagram y todo lo demás es la página", () => {
+    expect(pageSignupProduct(channelProvider("instagram_dm"))).toBe("instagram");
+    expect(pageSignupProduct(channelProvider("facebook_messenger"))).toBe("messenger");
   });
 });

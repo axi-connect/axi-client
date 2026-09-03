@@ -15,12 +15,13 @@ import { channelProvider } from "@/modules/channels/domain/channel-providers";
 import { readChannelActions } from "@/modules/channels/domain/channel-health";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
 import { useChannelsRealtime } from "@/modules/channels/infrastructure/hooks/use-channels-realtime";
+import { useDeleteChannel } from "@/modules/channels/infrastructure/hooks/use-delete-channel";
 import {
-  deleteChannel,
   disconnectChannel,
   getChannelById,
 } from "@/modules/channels/infrastructure/services/channels-service.adapter";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
+import { ChannelFormSubmitButton } from "@/modules/channels/ui/forms/ChannelFormSubmitButton";
 import { ChannelHealthCard } from "./ChannelHealthCard";
 import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
@@ -45,8 +46,11 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   const router = useRouter();
   const { showAlert, showModal, closeModal } = useAlert();
   const liveChannels = useChannelStore((s) => s.channels);
-  const removeChannel = useChannelStore((s) => s.removeChannel);
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
+  // Borrar es el MISMO procedimiento que en el panel del workspace; aquí, además, se navega
+  const { confirmDelete, deleting } = useDeleteChannel({
+    onDeleted: () => router.replace("/settings/channels"),
+  });
   const [fetched, setFetched] = useState<ChannelDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
@@ -123,39 +127,6 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
     });
   };
 
-  const confirmDelete = () => {
-    if (!channel) return;
-    showModal({
-      title: "Eliminar canal",
-      description: `¿Seguro que deseas eliminar “${channel.name}”? Este número deja de recibir mensajes en Axi y las conversaciones quedan archivadas.`,
-      className: "sm:max-w-md",
-      actions: [
-        { label: "Cancelar", variant: "outline", asClose: true, id: "channel-delete-cancel" },
-        {
-          label: "Eliminar",
-          variant: "destructive",
-          asClose: false,
-          id: "channel-delete-confirm",
-          onClick: async () => {
-            try {
-              await deleteChannel(channel.id);
-              removeChannel(channel.id);
-              closeModal();
-              showAlert({ tone: "success", title: "Canal eliminado", open: true, autoCloseMs: 3500 });
-              router.replace("/settings/channels");
-            } catch (err) {
-              showAlert({
-                tone: "error",
-                title: errorMessage(err, "No se pudo eliminar el canal"),
-                open: true,
-              });
-            }
-          },
-        },
-      ],
-    });
-  };
-
   if (loadError !== null) {
     return (
       <div className="space-y-4">
@@ -207,18 +178,15 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
             Quien atiende primero los mensajes de este canal.
           </p>
         </div>
-        <ChannelForm host={{ channel }} />
-        {/* `ChannelForm` no trae botón propio: lo dispara el host con
-            requestSubmit(), igual que hace el modal del listado con su footer */}
-        <Button
-          variant="outline"
-          onClick={() => {
-            const form = document.getElementById("channels-form");
-            (form as HTMLFormElement | null)?.requestSubmit();
-          }}
-        >
-          Guardar cambios
-        </Button>
+        {/* `ChannelForm` no trae botón propio: lo pinta el host con el estado
+            de envío a la vista, para que un doble clic no mande dos PATCH */}
+        <ChannelForm
+          host={{ channel }}
+          formId="channel-detail-form"
+          renderSubmit={(state) => (
+            <ChannelFormSubmitButton {...state}>Guardar cambios</ChannelFormSubmitButton>
+          )}
+        />
       </section>
 
       <section className="space-y-4 rounded-lg border border-border p-4">
@@ -260,7 +228,12 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
               Reconectar
             </Button>
           )}
-          <Button variant="outline" className="text-destructive" onClick={confirmDelete}>
+          <Button
+            variant="outline"
+            className="text-destructive"
+            disabled={deleting}
+            onClick={() => confirmDelete(channel)}
+          >
             <Trash2 aria-hidden="true" className="size-4" />
             Eliminar canal
           </Button>

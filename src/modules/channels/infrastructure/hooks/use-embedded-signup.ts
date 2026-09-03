@@ -8,6 +8,7 @@ import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import {
   isTrustedMetaOrigin,
   parseWaSignupMessage,
+  SIGNUP_ERRORS,
   type EmbeddedSignupPhase,
   type MetaEmbeddedSignupDTO,
   type MetaOnboardingStatus,
@@ -21,6 +22,7 @@ import {
   registerMetaPhoneNumber,
 } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
 import { logSignup, useMetaPopup, type MetaPopupError } from "./use-meta-popup";
+import { useSignupPhase } from "./use-signup-phase";
 
 /**
  * Máquina de estados del Embedded Signup (F2). Sin UI: F3 la consume.
@@ -85,8 +87,6 @@ export function useEmbeddedSignup({
   const popup = useMetaPopup(product);
   const { open: openPopup, clearWatchdog } = popup;
 
-  const [phase, setPhase] = useState<EmbeddedSignupPhase>("preparing");
-  const [error, setError] = useState<EmbeddedSignupError | null>(null);
   const [channel, setChannel] = useState<ChannelDTO | null>(null);
   const [submittingPin, setSubmittingPin] = useState(false);
 
@@ -99,8 +99,6 @@ export function useEmbeddedSignup({
   const listenerRef = useRef<((event: MessageEvent) => void) | null>(null);
   const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settledRef = useRef(false);
-  /** Evita `setState` sobre un componente desmontado tras un POST en vuelo. */
-  const mountedRef = useRef(true);
   /** Solo para la traza: meter `phase` en las deps recrearía `start` en cada cambio. */
   const phaseRef = useRef<EmbeddedSignupPhase>("preparing");
 
@@ -121,31 +119,10 @@ export function useEmbeddedSignup({
     // re-disparando el efecto que lo usa y borrando listeners a cada render
   }, [clearWatchdog]);
 
-  // Montaje y desmontaje, y NADA más: la limpieza va aquí y en el finally de
-  // cada intento. Sin esto, tres intentos dejan tres listeners vivos.
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      clearAttempt();
-    };
-  }, [clearAttempt]);
-
-  /**
-   * La fase espeja el estado de la base mientras no hay intento en curso. Una
-   * vez arranca el popup, la máquina de este flujo manda.
-   */
-  useEffect(() => {
-    if (popup.status === "preparing") return;
-    setPhase((current) =>
-      current === "preparing" || current === "unavailable"
-        ? popup.status === "ready"
-          ? "ready"
-          : "unavailable"
-        : current,
-    );
-    if (popup.error !== null) setError(popup.error);
-  }, [popup.status, popup.error]);
+  // Fase, error y `mountedRef` son los mismos que en el flujo de páginas. La
+  // limpieza del intento va en el desmontaje y en el finally de cada intento:
+  // sin esto, tres intentos dejan tres listeners vivos.
+  const { phase, setPhase, error, setError, mountedRef } = useSignupPhase(popup, clearAttempt);
 
   // ------------------------------------------------------------ resolución
   useEffect(() => {
@@ -161,7 +138,7 @@ export function useEmbeddedSignup({
       setError(failure);
       setPhase(next);
     },
-    [clearAttempt],
+    [clearAttempt, mountedRef, setError, setPhase],
   );
 
   /**
@@ -214,7 +191,7 @@ export function useEmbeddedSignup({
       setPhase(failureCode === "channels/meta_signup_disabled" ? "unavailable" : "error");
       setError({ code: failureCode, message: errorMessage(err, "No se pudo conectar el canal") });
     }
-  }, [channelName, clearAttempt, onConnected, upsertChannel]);
+  }, [channelName, clearAttempt, mountedRef, onConnected, setError, setPhase, upsertChannel]);
 
   /**
    * Convergencia de las dos fuentes asíncronas: se llama desde AMBAS y solo
@@ -281,18 +258,11 @@ export function useEmbeddedSignup({
       },
       onResult: (result) => {
         if (result.outcome === "unavailable") {
-          settle("unavailable", {
-            code: "channels/meta_signup_disabled",
-            message: "La conexión automática con Meta no está disponible ahora mismo.",
-          });
+          settle("unavailable", SIGNUP_ERRORS.disabled);
           return;
         }
         if (result.outcome === "config_ignored") {
-          settle("error", {
-            code: "meta/config_not_applied",
-            message:
-              "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
-          });
+          settle("error", SIGNUP_ERRORS.config_not_applied);
           return;
         }
         if (result.outcome === "blocked") {
@@ -326,7 +296,7 @@ export function useEmbeddedSignup({
         tryComplete();
       },
     });
-  }, [clearAttempt, openPopup, settle, submit, tryComplete]);
+  }, [clearAttempt, openPopup, setError, setPhase, settle, submit, tryComplete]);
 
   // -------------------------------------------------------------- PIN (409)
   const submitPin = useCallback(
@@ -351,7 +321,7 @@ export function useEmbeddedSignup({
         if (mountedRef.current) setSubmittingPin(false);
       }
     },
-    [channel, onConnected, submittingPin, upsertChannel],
+    [channel, mountedRef, onConnected, setError, setPhase, submittingPin, upsertChannel],
   );
 
   const reset = useCallback(() => {
@@ -360,7 +330,7 @@ export function useEmbeddedSignup({
     setChannel(null);
     setError(null);
     setPhase(popup.ready ? "ready" : "unavailable");
-  }, [clearAttempt, popup.ready]);
+  }, [clearAttempt, popup.ready, setError, setPhase]);
 
   return {
     phase,

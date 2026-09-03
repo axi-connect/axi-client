@@ -118,6 +118,9 @@ const ACCOUNT_HINT: Record<string, string> = {
   facebook_messenger: "Requerido para Messenger (id de la página)",
 }
 
+/** Id por defecto del `<form>`: el que los hosts históricos disparan. */
+export const CHANNEL_FORM_ID = "channels-form"
+
 export type ChannelFormHost = {
   /** Canal existente → modo edición (name + agente por defecto). */
   channel?: ChannelDTO | null
@@ -134,10 +137,26 @@ export function ChannelForm({
   host,
   onSuccess,
   fixedKind,
+  formId = CHANNEL_FORM_ID,
+  renderSubmit,
 }: {
   host?: ChannelFormHost
   onSuccess?: (channel: ChannelDTO) => void
   fixedKind?: (typeof CREATABLE_KINDS)[number]
+  /**
+   * Id del `<form>`. Cada host que pueda convivir con otro en el mismo DOM
+   * (el éxito del wizard y el camino manual, por ejemplo) pasa el suyo: dos
+   * formularios con el mismo id hacían que `getElementById` disparase el que
+   * no era.
+   */
+  formId?: string
+  /**
+   * El botón de envío lo pinta el host —cada uno lo coloca donde le toca—,
+   * pero con el estado del formulario a la vista: sin `submitting`, los tres
+   * hosts pintaban un botón siempre habilitado y un doble clic mandaba dos
+   * peticiones. Lo habitual es devolver `<ChannelFormSubmitButton />`.
+   */
+  renderSubmit?: (state: { formId: string; submitting: boolean }) => React.ReactNode
 }) {
   const { showAlert } = useAlert()
   const upsertChannel = useChannelStore((s) => s.upsertChannel)
@@ -238,7 +257,7 @@ export function ChannelForm({
 
   return (
     <Form {...form}>
-      <form id="channels-form" onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="space-y-4">
+      <form id={formId} onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="space-y-4">
         <FormField
           name="name"
           control={form.control}
@@ -369,6 +388,7 @@ export function ChannelForm({
           )}
         />
       </form>
+      {renderSubmit?.({ formId, submitting })}
     </Form>
   )
 }

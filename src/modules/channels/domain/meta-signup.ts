@@ -53,6 +53,49 @@ export type EmbeddedSignupPhase =
   | "cancelled"
   | "error";
 
+/** Fases con un intento en curso: el botón se bloquea y se anuncia el progreso. */
+export const IN_PROGRESS_PHASES: readonly EmbeddedSignupPhase[] = [
+  "preparing",
+  "popup_open",
+  "exchanging",
+];
+
+/**
+ * Fases en las que el intento terminó sin canal. El foco vuelve al botón (o al
+ * aviso) porque al cerrarse el popup estaba en una ventana que ya no existe.
+ */
+export const TERMINAL_PHASES: readonly EmbeddedSignupPhase[] = [
+  "cancelled",
+  "error",
+  "popup_blocked",
+  "unavailable",
+];
+
+/** Error del flujo: `code` RFC 7807 del backend, o un código local del cliente. */
+export type SignupError = {
+  code: string;
+  message: string;
+};
+
+/**
+ * Los dos errores que ambos flujos (WhatsApp y páginas) producen por su cuenta,
+ * sin backend. Vivían como literales repetidos —tres copias de uno, dos del
+ * otro— y una cuarta variante en `core/lib/error-messages.ts` que nadie usaba.
+ * Un solo texto, alineado con el de ahí.
+ */
+export const SIGNUP_ERRORS = {
+  disabled: {
+    code: "channels/meta_signup_disabled",
+    message:
+      "La conexión automática con Meta no está disponible ahora mismo. Puedes usar el camino manual o intentarlo más tarde",
+  },
+  config_not_applied: {
+    code: "meta/config_not_applied",
+    message:
+      "Meta no aplicó la configuración de conexión. Suele ser que el identificador de configuración no corresponde a la aplicación. Avísanos para revisarlo.",
+  },
+} as const satisfies Record<string, SignupError>;
+
 /**
  * Sub-estado de DIAGNÓSTICO que devuelve el backend en `ChannelDto.onboarding`.
  * No es una segunda máquina de estados: la máquina sigue siendo `ChannelStatus`.

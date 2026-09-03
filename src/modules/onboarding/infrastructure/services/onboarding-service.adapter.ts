@@ -42,9 +42,9 @@ export function getMyEntitlements(): Promise<EntitlementsDTO> {
  * Reenvía el correo de verificación (contrato B2). Público y con respuesta
  * idéntica exista o no la cuenta: 202 sin cuerpo.
  */
-export function resendVerificationEmail(email: string): Promise<void> {
-  return http.post<void>("/public/onboarding/resend-verification", { email }, { authenticate: false });
-}
+// La implementación vive en `shared/auth`: la consumen el paso «WhatsApp» y el
+// wizard de canales a través de `EmailVerificationGate`
+export { resendVerificationEmail } from "@/shared/auth/email-verification";
 
 /**
  * Confirma el correo con el token que viajó en el enlace (contrato B2).

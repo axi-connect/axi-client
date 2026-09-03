@@ -4,15 +4,11 @@ import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 import { ArrowUpRight, Trash2 } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
-import { useAlert } from "@/core/providers/alert-provider"
-import { errorMessage } from "@/core/lib/error-messages"
 import { DetailSheet } from "@/shared/components/features/detail-sheet"
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store"
+import { useDeleteChannel } from "@/modules/channels/infrastructure/hooks/use-delete-channel"
 import { type ChannelDTO } from "@/modules/channels/domain/channel"
-import {
-  deleteChannel,
-  getChannelById,
-} from "@/modules/channels/infrastructure/services/channels-service.adapter"
+import { getChannelById } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import { ChannelHealthCard } from "./ChannelHealthCard"
 import { ChannelStatusBadge } from "./ChannelStatusBadge"
 
@@ -25,11 +21,13 @@ export function ChannelDetailSheet() {
   const [open, setOpen] = useState(false)
   const [id, setId] = useState<string | undefined>(undefined)
   const [detail, setDetail] = useState<ChannelDTO | null>(null)
-  const { showModal, closeModal, showAlert } = useAlert()
   // Selectores estables: los `set` frecuentes del WS solo re-renderizan si
   // cambia lo que el sheet consume, no todo el store.
   const channels = useChannelStore((s) => s.channels)
-  const fetchChannels = useChannelStore((s) => s.fetchChannels)
+  // El MISMO borrado que la página de detalle (confirmación, DELETE, store,
+  // aviso); aquí, además, se cierra el panel. El store ya quita el canal: no
+  // hace falta volver a pedir la lista.
+  const { confirmDelete, deleting } = useDeleteChannel({ onDeleted: () => setOpen(false) })
 
   // El estado en vivo del store manda sobre el snapshot del fetch.
   const live = channels.find((c) => c.id === id)
@@ -53,35 +51,6 @@ export function ChannelDetailSheet() {
     setDetail(data)
     return data
   }, [])
-
-  const confirmDelete = () => {
-    if (!channel) return
-    showModal({
-      title: "Eliminar canal",
-      description: `¿Seguro que deseas eliminar “${channel.name}”? Las conversaciones asociadas dejarán de recibir mensajes.`,
-      actions: [
-        { label: "Cancelar", variant: "outline", asClose: true, id: "channel-delete-cancel" },
-        {
-          label: "Eliminar",
-          variant: "destructive",
-          asClose: false,
-          id: "channel-delete-confirm",
-          onClick: async () => {
-            try {
-              await deleteChannel(channel.id)
-              closeModal()
-              setOpen(false)
-              await fetchChannels()
-              showAlert({ tone: "success", title: "Canal eliminado", open: true, autoCloseMs: 3500 })
-            } catch (err) {
-              showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el canal"), open: true })
-            }
-          },
-        },
-      ],
-      className: "sm:max-w-md",
-    })
-  }
 
   return (
     <DetailSheet
@@ -114,7 +83,7 @@ export function ChannelDetailSheet() {
                 Ver todo el detalle <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button size="sm" variant="destructive" onClick={confirmDelete}>
+            <Button size="sm" variant="destructive" disabled={deleting} onClick={() => confirmDelete(channel)}>
               <Trash2 className="h-4 w-4" /> Eliminar canal
             </Button>
           </div>

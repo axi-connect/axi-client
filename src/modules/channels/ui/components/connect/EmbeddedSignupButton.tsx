@@ -16,7 +16,9 @@ import { Button } from "@/shared/components/ui/button";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import type { ChannelProvider } from "@/modules/channels/domain/channel-providers";
 import {
+  IN_PROGRESS_PHASES,
   SIGNUP_STEPS,
+  TERMINAL_PHASES,
   signupStepIndex,
   type EmbeddedSignupPhase,
   type MetaProduct,
@@ -43,16 +45,25 @@ import { MetaPinForm } from "./MetaPinForm";
  *   cierra, el foco estaba en una ventana que ya no existe: sin esto, quien
  *   navega con teclado se queda sin punto de partida.
  */
-/** Exportadas para que el botón de páginas (F7) muestre los MISMOS avisos:
- *  dos copias divergirían y el usuario vería mensajes distintos ante el mismo
- *  fallo según el canal. */
-export const IN_PROGRESS: readonly EmbeddedSignupPhase[] = ["preparing", "popup_open", "exchanging"];
-export const TERMINAL: readonly EmbeddedSignupPhase[] = [
-  "cancelled",
-  "error",
-  "popup_blocked",
-  "unavailable",
-];
+/**
+ * Dónde va el foco al terminar un intento. Al botón, salvo cuando el botón está
+ * deshabilitado —`unavailable` sin reintento posible—: `focus()` sobre un
+ * `disabled` es un no-op y quien navega con teclado se quedaba sin punto de
+ * partida. Ahí el foco va al contenedor del aviso, que además lo lee.
+ * Compartido con el botón de páginas.
+ */
+export function focusAfterTerminal(
+  phase: EmbeddedSignupPhase,
+  error: { code: string } | null,
+  refs: { button: HTMLElement | null; alert: HTMLElement | null },
+): void {
+  if (!TERMINAL_PHASES.includes(phase)) return;
+  if (phase === "unavailable" && !isConfigUnreachable(error)) {
+    refs.alert?.focus();
+    return;
+  }
+  refs.button?.focus();
+}
 
 export function EmbeddedSignupButton({
   provider,
@@ -80,13 +91,14 @@ export function EmbeddedSignupButton({
   intro?: React.ReactNode;
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
   const product: MetaProduct = provider.meta_product ?? "whatsapp";
   const { phase, error, channel, start, submitPin, submittingPin, reset, retryConfig } =
     useEmbeddedSignup({ product, channelName, onConnected });
 
   useEffect(() => {
-    if (TERMINAL.includes(phase)) buttonRef.current?.focus();
-  }, [phase]);
+    focusAfterTerminal(phase, error, { button: buttonRef.current, alert: alertRef.current });
+  }, [phase, error]);
 
   if (phase === "awaiting_pin" && channel !== null) {
     return (
@@ -108,12 +120,19 @@ export function EmbeddedSignupButton({
         {/* Región viva para lo que está EN CURSO: `polite` no interrumpe al
             lector de pantalla en mitad de una frase */}
         <div role="status" aria-live="polite" className="space-y-4">
-          {IN_PROGRESS.includes(phase) && renderProgress(phase, product)}
+          {IN_PROGRESS_PHASES.includes(phase) && renderProgress(phase, product)}
         </div>
 
         {/* Y `assertive` para lo terminal: si el intento se cayó, hay que
-            interrumpir, porque el usuario está esperando algo que no va a pasar */}
-        <div role="alert" aria-live="assertive" className="space-y-4">
+            interrumpir, porque el usuario está esperando algo que no va a pasar.
+            `tabIndex=-1`: enfocable por script cuando el botón no puede serlo */}
+        <div
+          ref={alertRef}
+          role="alert"
+          aria-live="assertive"
+          tabIndex={-1}
+          className="space-y-4 outline-none"
+        >
           {phase === "popup_blocked" && <PopupBlockedNotice />}
           {phase === "cancelled" && <CancelledNotice />}
           {phase === "error" && <ErrorNotice error={error} />}
@@ -178,6 +197,16 @@ function renderAction({
       <Button ref={buttonRef} size="lg" disabled>
         <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
         Activando el canal…
+      </Button>
+    );
+  }
+  // El host normalmente desmonta este botón al conectar; si no lo hace (o
+  // tarda un render), «Volver a intentar» sobre un canal conectado es mentira
+  if (phase === "success") {
+    return (
+      <Button ref={buttonRef} size="lg" disabled>
+        <Check aria-hidden="true" className="size-4" />
+        Conectado
       </Button>
     );
   }

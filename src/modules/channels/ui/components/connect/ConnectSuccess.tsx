@@ -10,6 +10,7 @@ import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { channelProvider } from "@/modules/channels/domain/channel-providers";
 import { readOnboardingNotice } from "@/modules/channels/domain/channel-health";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
+import { ChannelFormSubmitButton } from "@/modules/channels/ui/forms/ChannelFormSubmitButton";
 import { ChannelProviderIcon } from "../ChannelProviderIcon";
 import { ChannelStatusBadge } from "../ChannelStatusBadge";
 
@@ -32,11 +33,6 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
   // El copy de los sub-estados pendientes vive en `domain/channel-health`, una
   // sola vez: aquí y en la tarjeta de salud tienen que decir lo mismo
   const notice = readOnboardingNotice(channel.onboarding?.status);
-
-  const submit = () => {
-    const form = document.getElementById("channels-form");
-    (form as HTMLFormElement | null)?.requestSubmit();
-  };
 
   return (
     <div className="space-y-5">
@@ -65,12 +61,16 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
 
         <hr className="border-border" />
 
-        <ChannelForm host={{ channel, onSuccess: setChannel }} />
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={submit}>
-            Guardar cambios
-          </Button>
-        </div>
+        {/* Id propio: el camino manual puede seguir montado en el mismo DOM */}
+        <ChannelForm
+          host={{ channel, onSuccess: setChannel }}
+          formId="connect-success-form"
+          renderSubmit={(state) => (
+            <div className="flex flex-wrap gap-2">
+              <ChannelFormSubmitButton {...state}>Guardar cambios</ChannelFormSubmitButton>
+            </div>
+          )}
+        />
 
         {notice !== null && (
           <div

@@ -2,8 +2,9 @@
 
 import { ChevronRight } from "lucide-react";
 
-import { Button } from "@/shared/components/ui/button";
+import type { ManualChannelKind } from "@/modules/channels/domain/channel-providers";
 import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
+import { ChannelFormSubmitButton } from "@/modules/channels/ui/forms/ChannelFormSubmitButton";
 
 /**
  * Camino manual: el `ChannelForm` de siempre, **sin tocar su lógica**.
@@ -22,16 +23,11 @@ export function ManualCredentialsFallback({
 }: {
   prominent?: boolean;
   /** Fija el proveedor: el wizard ya lo eligió en el paso 1 (F5). */
-  kind?: "whatsapp_cloud" | "instagram_dm" | "facebook_messenger";
+  kind?: ManualChannelKind;
   /** Sin argumento: `ChannelForm.onSuccess` no expone el canal creado y su
    *  lógica no se toca en esta fase. El host recarga la lista. */
   onCreated: () => void;
 }) {
-  const submit = () => {
-    const form = document.getElementById("channels-form");
-    (form as HTMLFormElement | null)?.requestSubmit();
-  };
-
   const body = (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
@@ -39,12 +35,16 @@ export function ManualCredentialsFallback({
           ? "Necesitas el identificador de la cuenta y un token permanente de tu app en el portal de desarrolladores de Meta."
           : "Solo si ya creaste una app en el portal de desarrolladores de Meta y generaste un token permanente."}
       </p>
-      {/* El formulario NO trae botón propio: lo dispara el host con
-          requestSubmit(), igual que el modal del listado */}
-      <ChannelForm fixedKind={kind} onSuccess={onCreated} />
-      <Button variant="outline" onClick={submit}>
-        Guardar credenciales
-      </Button>
+      {/* El formulario NO trae botón propio: lo pinta el host con el estado
+          de envío a la vista. Id propio: el éxito del wizard puede convivir */}
+      <ChannelForm
+        fixedKind={kind}
+        onSuccess={onCreated}
+        formId="manual-credentials-form"
+        renderSubmit={(state) => (
+          <ChannelFormSubmitButton {...state}>Guardar credenciales</ChannelFormSubmitButton>
+        )}
+      />
     </div>
   );
 
