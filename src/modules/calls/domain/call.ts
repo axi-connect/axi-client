@@ -73,8 +73,11 @@ export const CALL_STATUS_MAP: StatusMap = {
 };
 
 /** Desenlaces de negocio (columna `outcome`). La escala semántica vive fuera
- * de la marca: el coral de axi jamás significa error. */
-export const CALL_OUTCOME_MAP: StatusMap = {
+ * de la marca: el coral de axi jamás significa error. `hangup` es «colgó el
+ * cliente»; los cierres decididos por el sistema tienen etiqueta propia
+ * (hardening P0.2) — antes todos se veían como «Colgó». El `Record` sobre el
+ * enum del contrato obliga a etiquetar cada valor nuevo. */
+const OUTCOME_ENTRIES: Record<CallOutcome, StatusMap[string]> = {
   goal_met: { label: "Objetivo cumplido", tone: "success" },
   callback_requested: { label: "Pidió callback", tone: "info" },
   voicemail: { label: "Buzón de voz", tone: "warning" },
@@ -82,7 +85,13 @@ export const CALL_OUTCOME_MAP: StatusMap = {
   no_answer: { label: "Sin respuesta", tone: "neutral" },
   error: { label: "Error", tone: "destructive" },
   transferred: { label: "Transferida", tone: "info" },
+  agent_closed: { label: "Cerrada por el agente", tone: "neutral" },
+  silence_timeout: { label: "Sin respuesta en línea", tone: "warning" },
+  max_duration: { label: "Tiempo máximo", tone: "info" },
+  quota_exhausted: { label: "Cuota agotada", tone: "warning" },
+  system_error: { label: "Error del sistema", tone: "destructive" },
 };
+export const CALL_OUTCOME_MAP: StatusMap = OUTCOME_ENTRIES;
 
 /** Estados en los que la llamada sigue VIVA (espejo del backend F4-A). */
 const LIVE_STATUSES: ReadonlySet<CallSessionStatus> = new Set([

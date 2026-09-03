@@ -46,17 +46,24 @@ export function CallDetailView({ callId }: { callId: string }) {
   const { showAlert } = useAlert();
   const [call, setCall] = useState<CallSessionDetailDTO | null>(null);
 
-  const load = useCallback(() => {
-    getCallSession(callId)
-      .then(setCall)
-      .catch((error: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(error), open: true });
-        router.replace("/calls/history");
-      });
-  }, [callId, router, showAlert]);
+  // Solo la carga INICIAL expulsa al historial (la llamada no existe o no es
+  // nuestra). Un re-fetch por evento del WS que falle (401 de rotación, 429,
+  // red) avisa y conserva la pantalla — antes sacaba al usuario a mitad de
+  // una llamada en vivo.
+  const load = useCallback(
+    (options: { initial: boolean } = { initial: false }) => {
+      getCallSession(callId)
+        .then(setCall)
+        .catch((error: unknown) => {
+          showAlert({ tone: "error", title: errorMessage(error), open: true });
+          if (options.initial) router.replace("/calls/history");
+        });
+    },
+    [callId, router, showAlert],
+  );
 
   useEffect(() => {
-    load();
+    load({ initial: true });
   }, [load]);
 
   // Transcript en vivo (F4-C): mientras la llamada siga viva, el room
@@ -82,7 +89,7 @@ export function CallDetailView({ callId }: { callId: string }) {
         return { ...prev, segments: next };
       });
     },
-    onChanged: load,
+    onChanged: () => load(),
   });
 
   if (call === null) {
