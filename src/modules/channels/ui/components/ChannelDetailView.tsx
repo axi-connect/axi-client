@@ -25,7 +25,6 @@ import { ChannelHealthCard } from "./ChannelHealthCard";
 import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
 import { ReconnectChannelDialog } from "./ReconnectChannelDialog";
-import { WwebSessionActions } from "./WwebSessionActions";
 
 /**
  * `/settings/channels/[id]` — la versión completa del detalle, para quien
@@ -44,7 +43,6 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   const router = useRouter();
   const { showAlert, showModal, closeModal } = useAlert();
   const liveChannels = useChannelStore((s) => s.channels);
-  const pairingByChannel = useChannelStore((s) => s.pairingByChannel);
   const removeChannel = useChannelStore((s) => s.removeChannel);
   const [fetched, setFetched] = useState<ChannelDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -68,7 +66,6 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   // `channel.status_changed` mientras la página está abierta, se ve.
   const live = liveChannels.find((item) => item.id === channelId);
   const channel = live ?? fetched;
-  const pairing = pairingByChannel[channelId];
   // La decisión vive en `domain` (F6): son reglas de producto, no de pintado
   const actions = channel === null ? null : readChannelActions(channel);
 
@@ -194,18 +191,6 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
             ven distintas, la duplicación que F4 vino a matar volvió */}
         <ChannelHealthCard channel={channel} />
       </section>
-
-      {channel.kind === "whatsapp_web" && (
-        <section className="space-y-4 rounded-lg border border-border p-6">
-          <div>
-            <h2 className="text-base font-semibold">Sesión del dispositivo</h2>
-            <p className="text-xs text-muted-foreground">
-              La vinculación depende de que el celular siga encendido y con internet.
-            </p>
-          </div>
-          <WwebSessionActions channel={channel} pairing={pairing} />
-        </section>
-      )}
 
       <section className="space-y-4 rounded-lg border border-border p-6">
         <div>

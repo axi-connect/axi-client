@@ -54,13 +54,6 @@ describe("ChannelCard — métricas por kind", () => {
     expect(screen.queryByText(/Vinculada al celular/i)).toBeNull();
   });
 
-  it("whatsapp_web SÍ la anuncia: ahí la sesión es real", () => {
-    render(<ChannelCard channel={channel({ kind: "whatsapp_web" })} />);
-
-    expect(screen.getByText("Sesión")).toBeInTheDocument();
-    expect(screen.getByText("Vinculada al celular")).toBeInTheDocument();
-  });
-
   it("whatsapp_cloud muestra calidad y límite, no sesión", () => {
     render(<ChannelCard channel={channel({ kind: "whatsapp_cloud", quality_rating: "GREEN" })} />);
 

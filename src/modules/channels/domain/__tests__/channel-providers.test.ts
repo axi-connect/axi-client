@@ -35,7 +35,7 @@ describe("registry de proveedores de canal", () => {
       "brand-messenger",
       "brand-fault",
     ];
-    const allowedIcons: ChannelIconId[] = ["whatsapp", "qr", "instagram", "messenger", "robot"];
+    const allowedIcons: ChannelIconId[] = ["whatsapp", "instagram", "messenger", "robot"];
 
     for (const provider of Object.values(CHANNEL_PROVIDERS)) {
       expect(allowedBrandClasses).toContain(provider.brand_class);
@@ -114,7 +114,8 @@ describe("registry de proveedores de canal", () => {
     for (const kind of ["whatsapp_cloud", "instagram_dm", "facebook_messenger"] as const) {
       expect(effectiveConnectStrategy(channelProvider(kind))).toBe("embedded_signup");
     }
-    expect(effectiveConnectStrategy(channelProvider("whatsapp_web"))).toBe("qr");
+    // Retirado: sin alta posible, la única estrategia que le queda es la manual
+    expect(effectiveConnectStrategy(channelProvider("whatsapp_web"))).toBe("manual");
   });
 
   it("declarar `available` no promete lo que el entorno no pueda cumplir", () => {

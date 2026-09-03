@@ -1,11 +1,10 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { Plus, QrCode, Loader } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
 import { FaWhatsapp, FaInstagram, FaFacebookMessenger, FaRobot } from "react-icons/fa"
-import { startWwebSession } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import {
   CHANNEL_STATUS_LABELS,
   type ChannelDTO,
@@ -17,7 +16,6 @@ import { channelStatusDotClass } from "@/modules/channels/ui/components/ChannelS
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/ui/tooltip"
 import { GlassGlyph } from "@/shared/components/ui/glyphs"
 import {
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
@@ -61,9 +59,6 @@ function ChannelItem({
   onOpenDetail: (channel: ChannelDTO) => void
 }) {
   const Icon = KIND_ICONS[channel.kind]
-  const canPair =
-    channel.kind === "whatsapp_web" &&
-    (channel.status === "disconnected" || channel.status === "pending_setup" || channel.status === "error")
 
   return (
     <SidebarMenuItem>
@@ -86,21 +81,6 @@ function ChannelItem({
           </TooltipContent>
         </Tooltip>
       </SidebarMenuButton>
-
-      {channel.kind === "whatsapp_web" && (
-        <SidebarMenuAction
-          aria-label={canPair ? "Vincular con código QR" : "Estado de conexión"}
-          onClick={(e) => {
-            e.stopPropagation()
-            if (canPair) {
-              // 202: el QR llega por WS channel.qr_code y lo pinta QRCodeSection.
-              void startWwebSession(channel.id)
-            }
-          }}
-        >
-          {channel.status === "connecting" ? <Loader className="animate-spin" /> : <QrCode className={cn(canPair && "cursor-pointer hover:text-brand")} />}
-        </SidebarMenuAction>
-      )}
     </SidebarMenuItem>
   )
 }

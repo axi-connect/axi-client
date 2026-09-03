@@ -17,7 +17,7 @@ import {
 /**
  * Sección de canales del sidebar del workspace. El estado de conexión llega
  * en vivo por el namespace WS `/channels` (conectado en el layout); aquí solo
- * se lista, se abre el detalle y se lanza el pairing.
+ * se lista y se abre el detalle.
  */
 export default function ChannelSection() {
   const router = useRouter()

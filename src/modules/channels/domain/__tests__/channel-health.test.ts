@@ -135,7 +135,7 @@ describe("readMetaAccess", () => {
 describe("readConnectionMethod", () => {
   it("traduce los tres métodos", () => {
     expect(readConnectionMethod("embedded_signup")).toBe("Con un botón");
-    expect(readConnectionMethod("qr_pairing")).toBe("Con código QR");
+    expect(readConnectionMethod("qr_pairing")).toBe("Con código QR (canal retirado)");
     expect(readConnectionMethod("manual_token")).toBe("Credenciales pegadas a mano");
   });
 });
@@ -217,11 +217,6 @@ describe("readChannelActions — las acciones del detalle (F6)", () => {
     expect(actions.can_reconnect).toBe(false);
     // Sin esta promesa explícita, nadie pulsa un botón que suena a apagar
     expect(actions.hint).toContain("sin borrarlo");
-  });
-
-  it("whatsapp_web NO ofrece desconectar: ya tiene «Cerrar sesión»", () => {
-    // Dos botones para la misma acción es peor que uno
-    expect(readChannelActions(channel({ kind: "whatsapp_web" })).can_disconnect).toBe(false);
   });
 
   it("desconectado por el tenant: lo dice con fecha, no como una avería", () => {

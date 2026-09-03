@@ -1,23 +1,17 @@
 import { create } from "zustand"
 import { errorMessage } from "@/core/lib/error-messages"
 import { listChannels } from "@/modules/channels/infrastructure/services/channels-service.adapter"
-import type {
-  ChannelDTO,
-  ChannelStatus,
-  WwebPairingState,
-} from "@/modules/channels/domain/channel"
+import type { ChannelDTO, ChannelStatus } from "@/modules/channels/domain/channel"
 
 /**
  * Store del slice channels. Los canales vienen de REST; el estado de
- * conexión y el pairing de WhatsApp Web se actualizan en vivo desde el
- * namespace WS `/channels` (via use-channels-realtime).
+ * conexión se actualiza en vivo desde el namespace WS `/channels` (via
+ * use-channels-realtime).
  */
 type ChannelStore = {
   loading: boolean
   channels: ChannelDTO[]
   error: string | null
-  /** Estado efímero de pairing por canal (QR/pairing code), alimentado por WS. */
-  pairingByChannel: Record<string, WwebPairingState>
 
   fetchChannels: () => Promise<void>
   /** Inserta o reemplaza un canal sin volver a pedir la lista completa. */
@@ -25,15 +19,12 @@ type ChannelStore = {
   /** Lo quita del store tras un DELETE, para no esperar al refetch. */
   removeChannel: (channelId: string) => void
   setChannelStatus: (channelId: string, status: ChannelStatus, phoneNumber?: string | null) => void
-  setPairingState: (channelId: string, state: Partial<WwebPairingState>) => void
-  clearPairingState: (channelId: string) => void
 }
 
 export const useChannelStore = create<ChannelStore>((set) => ({
   error: null,
   channels: [],
   loading: true,
-  pairingByChannel: {},
 
   fetchChannels: async () => {
     set({ loading: true, error: null })
@@ -58,16 +49,7 @@ export const useChannelStore = create<ChannelStore>((set) => ({
   },
 
   removeChannel: (channelId) => {
-    set((state) => {
-      const next = { ...state.pairingByChannel }
-      delete next[channelId]
-      return {
-        channels: state.channels.filter((item) => item.id !== channelId),
-        // El pairing del canal borrado no puede sobrevivirle: sin esto, un canal
-        // nuevo que reutilizara el id vería un QR fantasma
-        pairingByChannel: next,
-      }
-    })
+    set((state) => ({ channels: state.channels.filter((item) => item.id !== channelId) }))
   },
 
   setChannelStatus: (channelId, status, phoneNumber) => {
@@ -81,39 +63,6 @@ export const useChannelStore = create<ChannelStore>((set) => ({
             }
           : channel,
       ),
-      // El status del pairing sigue al del canal.
-      pairingByChannel: state.pairingByChannel[channelId]
-        ? {
-            ...state.pairingByChannel,
-            [channelId]: { ...state.pairingByChannel[channelId], status },
-          }
-        : state.pairingByChannel,
     }))
-  },
-
-  setPairingState: (channelId, update) => {
-    set((state) => {
-      const current: WwebPairingState = state.pairingByChannel[channelId] ?? {
-        status: "connecting",
-        qr: null,
-        qr_image: null,
-        pairing_code: null,
-        phone_number: null,
-      }
-      return {
-        pairingByChannel: {
-          ...state.pairingByChannel,
-          [channelId]: { ...current, ...update },
-        },
-      }
-    })
-  },
-
-  clearPairingState: (channelId) => {
-    set((state) => {
-      const next = { ...state.pairingByChannel }
-      delete next[channelId]
-      return { pairingByChannel: next }
-    })
   },
 }))

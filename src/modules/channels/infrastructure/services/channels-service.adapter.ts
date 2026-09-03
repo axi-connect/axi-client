@@ -1,11 +1,6 @@
 import { http } from "@/core/services/http";
 import type { Schemas } from "@/core/api/types";
-import type {
-  ChannelDTO,
-  CreateChannelDTO,
-  UpdateChannelDTO,
-  WwebPairingStateDTO,
-} from "@/modules/channels/domain/channel";
+import type { ChannelDTO, CreateChannelDTO, UpdateChannelDTO } from "@/modules/channels/domain/channel";
 
 /** Adapter HTTP del slice channels → `/channels`. */
 export function listChannels(): Promise<Schemas["ChannelListDto"]> {
@@ -40,34 +35,4 @@ export function disconnectChannel(id: string): Promise<ChannelDTO> {
 
 export function deleteChannel(id: string): Promise<void> {
   return http.delete(`/channels/${id}`);
-}
-
-// ---------------------------------------------------------------------------
-// Subrecurso WhatsApp Web — TODO asíncrono (202): el estado final llega por
-// WS `/channels` (channel.qr_code / channel.status_changed / session_failed).
-// ---------------------------------------------------------------------------
-
-/** Inicia (o retoma) la sesión del worker → 202 { status: "connecting" }. */
-export function startWwebSession(id: string): Promise<{ status: string }> {
-  return http.post<{ status: string }>(`/channels/${id}/whatsapp-web/session`);
-}
-
-/** Detiene el socket conservando la sesión (202). */
-export function stopWwebSession(id: string): Promise<void> {
-  return http.delete(`/channels/${id}/whatsapp-web/session`);
-}
-
-/** Snapshot del pairing para polling (~2 s) como fallback del WS. */
-export function getWwebPairingState(id: string): Promise<WwebPairingStateDTO> {
-  return http.get<WwebPairingStateDTO>(`/channels/${id}/whatsapp-web/qr`);
-}
-
-/** Pide código de 8 dígitos (phone E.164 sin `+`) → 202. */
-export function requestWwebPairingCode(id: string, phoneNumber: string): Promise<void> {
-  return http.post<void>(`/channels/${id}/whatsapp-web/pairing-code`, { phone_number: phoneNumber });
-}
-
-/** Desvincula el dispositivo y borra la sesión (202). */
-export function logoutWweb(id: string): Promise<void> {
-  return http.post<void>(`/channels/${id}/whatsapp-web/logout`);
 }

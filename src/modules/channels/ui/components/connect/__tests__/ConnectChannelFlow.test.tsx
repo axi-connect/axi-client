@@ -32,7 +32,6 @@ jest.mock("../EmbeddedSignupButton", () => ({
 }))
 jest.mock("../PageSignupButton", () => ({ PageSignupButton: () => null }))
 jest.mock("../ManualCredentialsFallback", () => ({ ManualCredentialsFallback: () => null }))
-jest.mock("../QrPairingPanel", () => ({ QrPairingPanel: () => null }))
 jest.mock("../ConnectSuccess", () => ({
   ConnectSuccess: ({ channel }: { channel: { name: string } }) => <p>Conectado: {channel.name}</p>,
 }))

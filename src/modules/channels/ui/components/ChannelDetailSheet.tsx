@@ -15,29 +15,25 @@ import {
 } from "@/modules/channels/infrastructure/services/channels-service.adapter"
 import { ChannelHealthCard } from "./ChannelHealthCard"
 import { ChannelStatusBadge } from "./ChannelStatusBadge"
-import { WwebSessionActions } from "./WwebSessionActions"
 
 /**
  * Detalle de canal (panel lateral). Se abre con el CustomEvent
  * `channels:detail:open` (detail: { id }). El estado de conexión se pinta
- * en vivo desde el store (eventos WS `/channels`); las acciones de sesión
- * wweb son 202 → la confirmación llega por WS.
+ * en vivo desde el store (eventos WS `/channels`).
  */
 export function ChannelDetailSheet() {
   const [open, setOpen] = useState(false)
   const [id, setId] = useState<string | undefined>(undefined)
   const [detail, setDetail] = useState<ChannelDTO | null>(null)
   const { showModal, closeModal, showAlert } = useAlert()
-  // Selectores estables: los `set` frecuentes del WS (QR/status) solo
-  // re-renderizan si cambia lo que el sheet consume, no todo el store.
+  // Selectores estables: los `set` frecuentes del WS solo re-renderizan si
+  // cambia lo que el sheet consume, no todo el store.
   const channels = useChannelStore((s) => s.channels)
-  const pairingByChannel = useChannelStore((s) => s.pairingByChannel)
   const fetchChannels = useChannelStore((s) => s.fetchChannels)
 
   // El estado en vivo del store manda sobre el snapshot del fetch.
   const live = channels.find((c) => c.id === id)
   const channel = live ?? detail
-  const pairing = id ? pairingByChannel[id] : undefined
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -107,13 +103,6 @@ export function ChannelDetailSheet() {
               había que añadirlo también en la página de detalle, y el primero en
               olvidarse mostraba menos información sin que nadie se enterara */}
           <ChannelHealthCard channel={channel} compact />
-
-          {/* QR y acciones de sesión: la MISMA pieza que usa
-              /settings/channels/[id], para que el ciclo de vinculación no viva
-              en dos copias que se desincronizan */}
-          {channel.kind === "whatsapp_web" && (
-            <WwebSessionActions channel={channel} pairing={pairing} />
-          )}
 
           <div className="flex flex-wrap gap-2 border-t border-border pt-3">
             {/* Renovar la conexión abre un Modal, y en este proyecto un Modal NO

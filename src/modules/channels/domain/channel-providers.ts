@@ -21,10 +21,10 @@ import type { ChannelKind } from "./channel";
  */
 
 /** Cómo se conecta el canal. `manual` es el escape hatch de soporte. */
-export type ChannelConnectStrategy = "embedded_signup" | "qr" | "manual";
+export type ChannelConnectStrategy = "embedded_signup" | "manual";
 
 /** Iconos permitidos. El diccionario que los resuelve vive en `ui/`. */
-export type ChannelIconId = "whatsapp" | "qr" | "instagram" | "messenger" | "robot";
+export type ChannelIconId = "whatsapp" | "instagram" | "messenger" | "robot";
 
 /** Clases de resplandor definidas en `globals.css`. Conjunto cerrado. */
 export type ChannelBrandClass =
@@ -155,16 +155,6 @@ const MESSENGER_PREREQUISITES: readonly ChannelPrerequisite[] = [
   NO_HSM_PREREQUISITE,
 ];
 
-const WHATSAPP_WEB_PREREQUISITES: readonly ChannelPrerequisite[] = [
-  {
-    id: "phone_powered_on",
-    label: "Tengo el celular a mano, encendido y con internet",
-    detail:
-      "La vinculación funciona como WhatsApp Web: si el celular se queda sin batería o sin datos, el canal deja de responder.",
-    critical: true,
-  },
-];
-
 /**
  * Un descriptor por cada `ChannelKind`. El test del registry comprueba que no
  * falte ninguno: un kind sin descriptor rompería la vista al pintarlo.
@@ -186,24 +176,18 @@ export const CHANNEL_PROVIDERS: Readonly<Record<ChannelKind, ChannelProvider>> =
   },
   whatsapp_web: {
     kind: "whatsapp_web",
-    label: "WhatsApp con código QR",
-    tagline:
-      "Vinculas tu WhatsApp actual escaneando un código, como en WhatsApp Web. Útil para empezar rápido.",
-    icon_id: "qr",
+    label: "WhatsApp Web (retirado)",
+    tagline: "Canal retirado. Conecta WhatsApp por la API oficial de Meta.",
+    icon_id: "whatsapp",
     brand_class: "brand-whatsapp",
-    connect_strategy: "qr",
-    // `internal` y no `available`: vincular por QR usa un cliente NO oficial de
-    // WhatsApp, que las condiciones de la plataforma de Meta no permiten.
-    // Ofrecerlo en la misma pantalla desde la que se conecta la Cloud API es un
-    // riesgo real durante el App Review —el revisor graba y navega el producto—
-    // y también después.
-    //
-    // No se borra: los canales QR ya conectados siguen operando y visibles en
-    // la lista. Lo que desaparece es la OPCIÓN DE ALTA, que además concuerda
-    // con cómo se habilita de verdad (por base de datos, no por autoservicio).
+    connect_strategy: "manual",
+    // El cliente no oficial se retiró con la app ya aprobada por Meta (código en
+    // la rama `archive/whatsapp-web`). El kind sigue en el enum del backend como
+    // valor histórico sin filas vivas, y el record de descriptores es TOTAL por
+    // diseño — de ahí esta entrada mínima, `internal` para que ninguna galería la
+    // ofrezca.
     availability: "internal",
-    requirement_note: "Necesita un celular encendido y con internet",
-    prerequisites: WHATSAPP_WEB_PREREQUISITES,
+    prerequisites: [],
   },
   instagram_dm: {
     kind: "instagram_dm",

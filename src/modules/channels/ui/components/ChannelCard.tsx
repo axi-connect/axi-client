@@ -61,15 +61,7 @@ export function ChannelCard({ channel }: { channel: ChannelDTO }) {
                 value: readMessagingLimit(channel.messaging_limit).label,
               },
             ]
-          : channel.kind === "whatsapp_web"
-            ? [
-                {
-                  label: "Sesión",
-                  value:
-                    channel.status === "connected" ? "Vinculada al celular" : "Sin vincular",
-                },
-              ]
-            : []),
+          : []),
         {
           label: faulted ? "Última comprobación" : "Acceso de Meta",
           value: faulted

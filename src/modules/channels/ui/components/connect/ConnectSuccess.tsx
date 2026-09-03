@@ -50,9 +50,7 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
           <ChannelProviderIcon iconId={provider.icon_id} />
           <div className="min-w-0 flex-1 basis-64">
             <h2 className="text-xl font-semibold tracking-tight">
-              {provider.kind === "whatsapp_web"
-                ? "Tu WhatsApp quedó vinculado"
-                : `Tu ${provider.label} ya está conectado`}
+              {`Tu ${provider.label} ya está conectado`}
             </h2>
             <p className="text-muted-foreground">
               Desde ahora los mensajes que lleguen a{" "}

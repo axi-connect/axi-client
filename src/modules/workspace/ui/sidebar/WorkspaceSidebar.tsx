@@ -1,6 +1,6 @@
 "use client"
 
-import { InboxSection, ChannelSection, QRCodeSection } from "./components"
+import { InboxSection, ChannelSection } from "./components"
 import { Sidebar, SidebarContent, SidebarSeparator } from "@/shared/components/layout/sidebar/core"
 
 export default function WorkspaceSidebar() {
@@ -16,7 +16,6 @@ export default function WorkspaceSidebar() {
         <InboxSection />
         <SidebarSeparator />
         <ChannelSection />
-        <QRCodeSection />
       </SidebarContent>
     </Sidebar>
   )

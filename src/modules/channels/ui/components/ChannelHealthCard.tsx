@@ -52,7 +52,7 @@ export function ChannelHealthCard({
    * ese campo como «Teléfono» mostraba «Sin datos» en un dato que nunca va a
    * existir, y escondía el que sí está. La etiqueta la decide el kind.
    */
-  const hasPhone = isCloud || channel.kind === "whatsapp_web";
+  const hasPhone = isCloud;
   const accountLabel = hasPhone ? "Teléfono" : "Cuenta";
   const quality = readQualityRating(channel.quality_rating);
   const limit = readMessagingLimit(channel.messaging_limit);

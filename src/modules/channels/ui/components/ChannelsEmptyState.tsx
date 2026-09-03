@@ -29,7 +29,7 @@ export function ChannelsEmptyState() {
             </Link>
           </Button>
           <p className="text-xs text-muted-foreground">
-            También puedes conectar WhatsApp con código QR, Instagram o Messenger.
+            WhatsApp, Instagram o Messenger: los tres se conectan con un botón.
           </p>
         </div>
       }

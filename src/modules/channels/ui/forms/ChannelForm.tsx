@@ -30,20 +30,17 @@ import {
 
 /**
  * Formulario de canal:
- * - Crear (`POST /channels`): `whatsapp_web` solo requiere nombre;
- *   `whatsapp_cloud` además `provider_account_id` + `access_token` (+ `waba_id`).
+ * - Crear (`POST /channels`): `provider_account_id` + `access_token`
+ *   (+ `waba_id` en WhatsApp Cloud). Es el camino MANUAL de soporte; el alta
+ *   normal es el botón de Meta.
  * - Editar (`PATCH /channels/:id`): solo `name` y `default_ai_agent_id`
  *   (el vínculo canal ↔ agente IA).
- * Instagram y Messenger se conectan igual, con el id de la cuenta o de la página
- * y un token: sus adaptadores existen en el backend desde B9. Lo que todavía no
- * existe para ellos es el alta por Embedded Signup, así que el wizard los manda
- * por aquí (véase el registry).
  */
 const NONE_AGENT = "__none__"
 
 const channelFormFields = z.object({
   name: z.string().trim().min(3, "Mínimo 3 caracteres"),
-  kind: z.enum(["whatsapp_cloud", "whatsapp_web", "instagram_dm", "facebook_messenger"]),
+  kind: z.enum(["whatsapp_cloud", "instagram_dm", "facebook_messenger"]),
   provider_account_id: z.string().trim().optional().or(z.literal("")),
   waba_id: z.string().trim().optional().or(z.literal("")),
   access_token: z.string().trim().optional().or(z.literal("")),
@@ -66,38 +63,21 @@ function makeChannelFormSchema(isEdit: boolean) {
     // Editar solo toca `name` y `default_ai_agent_id`: las credenciales se rotan
     // por `PUT /channels/:id/credentials`, no por aquí.
     if (isEdit) return
-    // Todos los kinds con token exigen cuenta + token; solo wweb se conecta por
-    // pairing. El backend valida lo mismo (`TokenChannelKind`).
-    if (values.kind !== "whatsapp_web") {
-      if (!values.provider_account_id) {
-        ctx.addIssue({ code: "custom", path: ["provider_account_id"], message: ACCOUNT_HINT[values.kind] })
-      }
-      if (!values.access_token) {
-        ctx.addIssue({ code: "custom", path: ["access_token"], message: "Requerido para conectar con token" })
-      }
+    // Todos los kinds exigen cuenta + token. El backend valida lo mismo.
+    if (!values.provider_account_id) {
+      ctx.addIssue({ code: "custom", path: ["provider_account_id"], message: ACCOUNT_HINT[values.kind] })
+    }
+    if (!values.access_token) {
+      ctx.addIssue({ code: "custom", path: ["access_token"], message: "Requerido para conectar con token" })
     }
   })
 }
 
-/**
- * Kinds que se pueden CREAR desde la interfaz.
- *
- * `whatsapp_web` queda fuera a propósito: vincular por QR usa un cliente no
- * oficial de WhatsApp, que las condiciones de la plataforma de Meta no
- * permiten, y ofrecerlo junto al alta de la Cloud API es un riesgo durante el
- * App Review y después. Los canales QR existentes se siguen EDITANDO con este
- * mismo formulario (el enum de validación sí lo acepta); lo que desaparece es
- * el alta.
- */
+/** Kinds que se pueden CREAR desde la interfaz. */
 const CREATABLE_KINDS = ["whatsapp_cloud", "instagram_dm", "facebook_messenger"] as const
 
-/** Kinds que el formulario sabe EDITAR: incluye los QR ya existentes. */
-const EDITABLE_KINDS = [
-  "whatsapp_cloud",
-  "whatsapp_web",
-  "instagram_dm",
-  "facebook_messenger",
-] as const
+/** Kinds que el formulario sabe EDITAR. */
+const EDITABLE_KINDS = ["whatsapp_cloud", "instagram_dm", "facebook_messenger"] as const
 
 type EditableKind = (typeof EDITABLE_KINDS)[number]
 
@@ -210,16 +190,10 @@ export function ChannelForm({
         const created = await createChannel({
           name: values.name,
           kind: values.kind,
-          ...(values.kind !== "whatsapp_web"
-            ? {
-                provider_account_id: values.provider_account_id,
-                access_token: values.access_token,
-                // El WABA es un concepto de WhatsApp: IG y Messenger no tienen
-                ...(values.kind === "whatsapp_cloud" && values.waba_id
-                  ? { waba_id: values.waba_id }
-                  : {}),
-              }
-            : {}),
+          provider_account_id: values.provider_account_id,
+          access_token: values.access_token,
+          // El WABA es un concepto de WhatsApp: IG y Messenger no tienen
+          ...(values.kind === "whatsapp_cloud" && values.waba_id ? { waba_id: values.waba_id } : {}),
         })
         // El agente por defecto se asigna con un PATCH posterior (contrato del backend).
         if (values.default_ai_agent_id && values.default_ai_agent_id !== NONE_AGENT) {
@@ -299,7 +273,7 @@ export function ChannelForm({
           />
         )}
 
-        {!isEdit && kind !== "whatsapp_web" && (
+        {!isEdit && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
               name="provider_account_id"

@@ -543,26 +543,11 @@ export type MarketingPromotionRevertedEvent = {
   simulated: boolean;
 };
 
-export type ChannelQrCodeEvent = {
-  channel_id: string;
-  company_id: string;
-  qr: string | null;
-  /** Data URL lista para `<img src>`; puede venir null si solo hay pairing code. */
-  qr_image: string | null;
-  pairing_code: string | null;
-};
-
 export type ChannelStatusChangedEvent = {
   channel_id: string;
   company_id: string;
   status: ChannelStatus;
   phone_number?: string | null;
-};
-
-export type ChannelSessionFailedEvent = {
-  channel_id: string;
-  company_id: string;
-  reason: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -802,9 +787,7 @@ export type InboxServerEvents = {
 
 /** Namespace `/channels` — solo lectura (sin comandos). */
 export type ChannelsServerEvents = {
-  "channel.qr_code": (payload: ChannelQrCodeEvent) => void;
   "channel.status_changed": (payload: ChannelStatusChangedEvent) => void;
-  "channel.session_failed": (payload: ChannelSessionFailedEvent) => void;
   "company.suspended": (payload: CompanySuspendedEvent) => void;
 };
 

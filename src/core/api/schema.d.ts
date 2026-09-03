@@ -836,86 +836,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels/{id}/whatsapp-web/session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["WwebSessionController_start_v1"];
-        delete: operations["WwebSessionController_stop_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/qr": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["WwebSessionController_pairingState_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/qr.png": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["WwebSessionController_pairingQrPng_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/pairing-code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["WwebSessionController_requestPairingCode_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/channels/{id}/whatsapp-web/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["WwebSessionController_logout_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/platform/quality/scenarios": {
         parameters: {
             query?: never;
@@ -6271,9 +6191,10 @@ export interface components {
         CreateChannelDto: {
             name: string;
             /** @enum {string} */
-            kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger";
+            kind: "whatsapp_cloud" | "instagram_dm" | "facebook_messenger";
             provider_account_id?: string;
             waba_id?: string;
+            page_id?: string;
             access_token?: string;
         };
         ChannelListDto: {
@@ -6323,17 +6244,6 @@ export interface components {
         };
         UpdateChannelCredentialsDto: {
             access_token: string;
-        };
-        WwebPairingStateDto: {
-            /** @enum {string} */
-            status: "pending_setup" | "connecting" | "connected" | "disconnected" | "error";
-            qr: string | null;
-            qr_image: string | null;
-            pairing_code: string | null;
-            phone_number: string | null;
-        };
-        WwebPairingCodeRequestDto: {
-            phone_number: string;
         };
         ScenariosPageDto: {
             data: {
@@ -14303,127 +14213,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChannelDto"];
                 };
-            };
-        };
-    };
-    WwebSessionController_start_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_stop_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_pairingState_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WwebPairingStateDto"];
-                };
-            };
-        };
-    };
-    WwebSessionController_pairingQrPng_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description PNG del código QR de vinculación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_requestPairingCode_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WwebPairingCodeRequestDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WwebSessionController_logout_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

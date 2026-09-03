@@ -15,7 +15,6 @@ import { ManualCredentialsFallback } from "./ManualCredentialsFallback";
 import { ConnectSuccess } from "./ConnectSuccess";
 import { PrerequisitesChecklist } from "./PrerequisitesChecklist";
 import { ProviderGallery } from "./ProviderGallery";
-import { QrPairingPanel } from "./QrPairingPanel";
 
 /**
  * El wizard de conexión de canal en cuatro pasos, SIN cromo de página: lo
@@ -61,9 +60,6 @@ export function ConnectChannelFlow({
     if (provider === null) return null;
     const strategy = effectiveConnectStrategy(provider);
 
-    if (strategy === "qr") {
-      return <QrPairingPanel onConnected={goToSuccess} />;
-    }
     if (strategy === "manual") {
       return (
         <ManualCredentialsFallback
@@ -130,8 +126,6 @@ function title(step: number, provider: ChannelProvider | null): string {
   if (step === 1) return "Antes de empezar";
   if (step === 2) {
     if (provider === null) return "Conecta tu canal";
-    const strategy = effectiveConnectStrategy(provider);
-    if (strategy === "qr") return "Vincula tu WhatsApp";
     // El botón de Meta dejó de ser solo de WhatsApp: Instagram y Messenger pasan
     // por aquí, y titular su pantalla "Conecta tu WhatsApp" es un error visible.
     return `Conecta ${provider.label}`;
@@ -147,7 +141,6 @@ function subtitle(step: number, provider: ChannelProvider | null): string {
   if (step === 2) {
     if (provider === null) return "";
     const strategy = effectiveConnectStrategy(provider);
-    if (strategy === "qr") return "Escanea el código con la app de WhatsApp de tu celular.";
     if (strategy === "manual") {
       return "Este canal todavía se conecta con las credenciales de tu app de Meta. El botón llega pronto.";
     }

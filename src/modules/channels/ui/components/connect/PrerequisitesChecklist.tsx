@@ -45,7 +45,8 @@ export function PrerequisitesChecklist({
             <span className="font-medium text-foreground">
               Quieres probar sin comprometer tu número principal:
             </span>{" "}
-            conecta primero con código QR y cámbiate al canal oficial más adelante.
+            conecta un número nuevo o secundario. Podrás añadir el principal cuando quieras, y
+            los dos convivirán como canales distintos.
           </p>
         </>
       }

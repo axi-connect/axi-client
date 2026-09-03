@@ -95,7 +95,7 @@ export function WhatsAppStep({
           glyph="connections"
           title="Qué vas a conectar"
           text="Tu número de WhatsApp Business por la API oficial de Meta, en un solo paso desde aquí."
-          tips={["También puedes empezar con tu número actual, sin verificación de Meta", "Instagram y Messenger se conectan después en Canales", "Si algo falla, te acompañamos por WhatsApp"]}
+          tips={["El número no puede estar en uso en la app de WhatsApp", "Instagram y Messenger se conectan después en Canales", "Si algo falla, te acompañamos por WhatsApp"]}
         />
       }
     >

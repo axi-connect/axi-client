@@ -81,6 +81,6 @@ describe("PrerequisitesChecklist", () => {
     fireEvent.click(screen.getByRole("button", { name: "Algo de esto no lo cumplo" }));
 
     expect(screen.getByText(/El número ya está en WhatsApp:/)).toBeInTheDocument();
-    expect(screen.getByText(/conecta primero con código QR/i)).toBeInTheDocument();
+    expect(screen.getByText(/conecta un número nuevo o secundario/i)).toBeInTheDocument();
   });
 });

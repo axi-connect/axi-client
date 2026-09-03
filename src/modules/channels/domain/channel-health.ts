@@ -160,7 +160,7 @@ export function readConnectionMethod(value: ChannelDTO["connection_method"]): st
     case "embedded_signup":
       return "Con un botón";
     case "qr_pairing":
-      return "Con código QR";
+      return "Con código QR (canal retirado)";
     case "manual_token":
       return "Credenciales pegadas a mano";
     default:
@@ -237,11 +237,9 @@ const ACTIVE_HINT =
 /**
  * Decide las acciones del detalle (F6).
  *
- * Vive en `domain` y no en el componente porque las tres reglas son de
- * producto, no de presentación, y las tres son fáciles de romper sin notarlo:
+ * Vive en `domain` y no en el componente porque las reglas son de producto,
+ * no de presentación, y son fáciles de romper sin notarlo:
  *
- * - **`whatsapp_web` no ofrece «Desconectar»**: su panel de sesión ya tiene
- *   «Cerrar sesión», y dos botones para la misma acción es peor que uno.
  * - **Desconectar no es eliminar**: es reversible, así que la copia promete
  *   explícitamente que se conserva el historial. Sin esa frase, nadie lo pulsa.
  * - **Quién desconectó cambia el mensaje**: `credentials_revoked` lo escribe
@@ -255,7 +253,7 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
 
   if (!disconnected) {
     return {
-      can_disconnect: channel.kind !== "whatsapp_web",
+      can_disconnect: true,
       can_reconnect: false,
       hint: ACTIVE_HINT,
     };

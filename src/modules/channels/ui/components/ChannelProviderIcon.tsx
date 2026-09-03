@@ -1,4 +1,3 @@
-import { QrCode } from "lucide-react";
 import { FaFacebookMessenger, FaInstagram, FaRobot, FaWhatsapp } from "react-icons/fa";
 
 import { cn } from "@/core/lib/utils";
@@ -16,7 +15,6 @@ import type { ChannelIconId } from "@/modules/channels/domain/channel-providers"
  */
 const ICONS: Record<ChannelIconId, React.ComponentType<{ className?: string }>> = {
   whatsapp: FaWhatsapp,
-  qr: QrCode,
   instagram: FaInstagram,
   messenger: FaFacebookMessenger,
   robot: FaRobot,
@@ -24,7 +22,6 @@ const ICONS: Record<ChannelIconId, React.ComponentType<{ className?: string }>> 
 
 const GLYPH_COLOR: Record<ChannelIconId, string> = {
   whatsapp: "text-logo-whatsapp",
-  qr: "text-logo-whatsapp",
   instagram: "text-logo-instagram",
   messenger: "text-logo-messenger",
   robot: "text-muted-foreground",
