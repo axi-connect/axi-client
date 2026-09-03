@@ -1,85 +1,35 @@
 /**
  * Import de catálogo con IA (paso «Catálogo» del onboarding). Dominio PURO:
- * tipos espejo del contrato B4 (`CatalogImportDto`, `CatalogImportItemDto`) y
- * las reglas que decide el frontend — qué archivo se acepta, cada cuánto se
- * pregunta por el job, qué fila está lista para crearse y cómo se lee la
- * confianza de la IA.
+ * los tipos vienen del contrato generado (`Schemas`) y aquí viven las reglas
+ * que decide el frontend: qué archivo se acepta, cada cuánto se pregunta por el
+ * trabajo, qué fila está lista para crearse y cómo se lee la confianza de la IA.
  *
  * Invariante: **la IA nunca inventa un precio**. Un item sin `price_cents` no se
  * crea; el usuario lo escribe o lo excluye. Aquí se calcula, en la UI se pinta.
  */
 
-// CONTRACT: `Schemas["CatalogImportDto"]` / `["CatalogImportItemDto"]` en F7.
-export type CatalogImportStatus =
-  | "queued"
-  | "parsing"
-  | "extracting"
-  | "review_required"
-  | "committing"
-  | "completed"
-  | "failed"
-  | "cancelled";
+import type { Schemas } from "@/core/api/types";
 
-export type CatalogImportSourceKind = "sheet" | "pdf" | "image";
+/** Estado del trabajo, tal como lo sirve el servidor. */
+export type CatalogImportDTO = Schemas["CatalogImportDto"];
+export type CatalogImportStatus = CatalogImportDTO["status"];
+export type CatalogImportSourceKind = CatalogImportDTO["source_kind"];
 
-export type CatalogImportItemStatus = "ready" | "missing_fields" | "duplicate" | "excluded" | "committed" | "error";
+/** Un producto candidato de la pantalla de revisión. */
+export type CatalogImportItemDTO = NonNullable<CatalogImportDTO["items"]>[number];
+export type CatalogImportItemStatus = CatalogImportItemDTO["status"];
 
+/**
+ * Variante leída del archivo. El contrato la declara `unknown[]` (el servidor
+ * la guarda tal cual la devolvió el modelo), así que la forma esperada se
+ * describe aquí y se lee con cuidado.
+ */
 export type ImportedVariant = {
   name: string;
   price_cents: number | null;
-  attributes: Record<string, string>;
-  sku?: string;
 };
 
-export type CatalogImportItemDTO = {
-  id: string;
-  position: number;
-  status: CatalogImportItemStatus;
-  name: string;
-  description: string | null;
-  price_cents: number | null;
-  currency: string;
-  category: string | null;
-  kind: "product" | "service";
-  duration_minutes: number | null;
-  variants: ImportedVariant[];
-  image_urls: string[];
-  /** 0..1, la confianza de la IA en la fila completa. */
-  confidence: number;
-  /** «hoja Menú, fila 12» · «página 3» · «imagen, región superior». */
-  source_ref: string;
-  missing_fields: string[];
-  duplicate_of_product_id: string | null;
-  error: string | null;
-};
-
-export type CatalogImportDTO = {
-  id: string;
-  status: CatalogImportStatus;
-  filename: string;
-  mime_type: string;
-  size_bytes: number;
-  source_kind: CatalogImportSourceKind;
-  pages_total: number | null;
-  pages_processed: number;
-  items_total: number;
-  items_ready: number;
-  items_missing_fields: number;
-  items_excluded: number;
-  created_count: number;
-  updated_count: number;
-  skipped_count: number;
-  error: { code: string; message: string } | null;
-  ai_cost_usd: number | null;
-  started_at: string | null;
-  finished_at: string | null;
-  created_at: string;
-  items?: CatalogImportItemDTO[];
-};
-
-export type CatalogImportItemPatchDTO = Partial<
-  Pick<CatalogImportItemDTO, "name" | "description" | "price_cents" | "currency" | "category" | "kind" | "duration_minutes">
-> & { status?: "ready" | "excluded" };
+export type CatalogImportItemPatchDTO = Schemas["UpdateImportItemDto"];
 
 export type CommitCatalogImportDTO = {
   catalog_id?: string;
@@ -155,7 +105,7 @@ export function importProgressLabel(job: CatalogImportDTO): string {
     case "review_required":
       return `${job.items_total} productos encontrados`;
     case "completed":
-      return `Creamos ${job.created_count} productos`;
+      return `Creamos ${job.items_created} productos`;
     case "failed":
       return "No pudimos leer el archivo";
     case "cancelled":

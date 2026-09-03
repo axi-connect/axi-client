@@ -19,10 +19,6 @@ import {
   type OnboardingStep,
 } from "@/modules/onboarding/domain/onboarding-progress";
 
-// CONTRACT: `MeDto.email_verified` llega con B2. Hasta entonces el campo es
-// opcional y, si no viene, no se muestra el aviso.
-type MeWithVerification = { email?: string; email_verified?: boolean };
-
 /**
  * Cromo de `/onboarding`: cabecera con el nombre de la empresa, barra de
  * progreso con el gradiente corto de marca y el indicador de pasos (hacia atrás
@@ -60,8 +56,9 @@ export function OnboardingShell({
 
   const percent = progressPercent(progress);
   const currentIndex = current ? stepIndex(current) : ONBOARDING_STEPS.length;
-  const verification = user as MeWithVerification | null;
-  const showEmailNotice = verification?.email_verified === false;
+  // `email_verified` ya viene en el perfil de sesión: el aviso se muestra solo
+  // a quien entró por el alta autoservicio y aún no abrió su correo.
+  const showEmailNotice = user?.email_verified === false;
 
   return (
     <div className="bg-brand-ambient flex min-h-svh w-full flex-col">
@@ -120,7 +117,7 @@ export function OnboardingShell({
             <MailWarning aria-hidden="true" className="text-warning mt-0.5 size-4 shrink-0" />
             <span>
               <strong>Verifica tu correo</strong> para conectar canales e invitar a tu equipo. Te enviamos el enlace a{" "}
-              {verification?.email ?? "tu correo"}.
+              {user?.email ?? "tu correo"}.
             </span>
           </p>
         ) : null}

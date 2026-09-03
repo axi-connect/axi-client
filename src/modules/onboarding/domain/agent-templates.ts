@@ -5,24 +5,12 @@
  * negocio entiende — nombre, tono, personalidad y datos clave.
  */
 
-export type AgentTemplateRole = "ventas" | "reservas" | "soporte" | "captacion";
+/** Una plantilla del catálogo, tal como la sirve el servidor. */
+import type { Schemas } from "@/core/api/types";
 
-// CONTRACT: `Schemas["AgentTemplateDto"]` (B3) en F7.
-export type AgentTemplateDTO = {
-  code: string;
-  niche_code: string;
-  name: string;
-  role: AgentTemplateRole;
-  description: string;
-  default_skills: string[];
-  intention_codes: Array<{ code: string; requirements?: Record<string, boolean> }>;
-  recommended_character_id: string | null;
-  recommended_voice_id: string | null;
-  /** Placeholders que el servidor rellena: `company.name`, `company.city`… */
-  placeholders: string[];
-  /** La que el nicho propone primero. A lo sumo una por nicho. */
-  recommended: boolean;
-};
+export type AgentTemplateDTO = Schemas["AgentTemplateListDto"]["data"][number];
+
+export type AgentTemplateRole = AgentTemplateDTO["role"];
 
 export const AGENT_TONES = ["cercano", "formal", "directo"] as const;
 export type AgentTone = (typeof AGENT_TONES)[number];
@@ -51,12 +39,7 @@ export type AgentTemplateOverrides = {
 
 export const EXTRA_INSTRUCTIONS_MAX = 2000;
 
-// CONTRACT: `CreateAgentFromTemplateDto` (B3).
-export type CreateAgentFromTemplateDTO = {
-  template_code: string;
-  overrides?: AgentTemplateOverrides;
-  status?: "active" | "draft";
-};
+export type CreateAgentFromTemplateDTO = Schemas["CreateAgentFromTemplateDto"];
 
 export type AgentTemplateDraft = {
   name: string;

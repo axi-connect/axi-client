@@ -28,8 +28,26 @@ const entitlements: EntitlementsDTO = {
   pending_offer: null,
   trial: { active: true, ends_at: "2026-09-08T10:00:00Z" },
   included: [
-    { metric: "ai_tokens_output", period: "billing_cycle", quantity_raw: 112500, quantity_display: "75", unit_label: "conversaciones con IA" },
-    { metric: "tts_characters", period: "billing_cycle", quantity_raw: 15000, quantity_display: "15.000", unit_label: "caracteres de voz", approx_display: "50 notas de voz" },
+    {
+      metric: "ai_tokens_output",
+      period: "billing_cycle",
+      quantity_raw: 112500,
+      quantity_display: "75",
+      unit_label: "conversaciones con IA",
+      approx_display: null,
+      used_raw: null,
+      used_display: null,
+    },
+    {
+      metric: "tts_characters",
+      period: "billing_cycle",
+      quantity_raw: 15000,
+      quantity_display: "15.000",
+      unit_label: "caracteres de voz",
+      approx_display: "50 notas de voz",
+      used_raw: null,
+      used_display: null,
+    },
   ],
 }
 

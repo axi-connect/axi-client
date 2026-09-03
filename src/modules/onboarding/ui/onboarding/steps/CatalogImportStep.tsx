@@ -130,9 +130,9 @@ export function CatalogImportStep({
     processing: { title: "Estamos leyendo tu catálogo", lead: "Puedes esperar aquí o seguir con los agentes y volver después." },
     review: {
       title: "Revisa lo que encontramos",
-      lead: job ? `${job.items_total} productos en «${job.filename}». ${blockers > 0 ? `${blockers} necesitan un dato antes de crearse.` : "Todo listo para crearse."}` : "",
+      lead: job ? `${job.items_total} productos en «${job.file_name}». ${blockers > 0 ? `${blockers} necesitan un dato antes de crearse.` : "Todo listo para crearse."}` : "",
     },
-    completed: { title: "Tu catálogo está creado", lead: job ? `Creamos ${job.created_count} productos${job.skipped_count ? ` y omitimos ${job.skipped_count}` : ""}. Puedes completar fotos y detalles en Catálogo.` : "" },
+    completed: { title: "Tu catálogo está creado", lead: job ? `Creamos ${job.items_created} productos${job.items_skipped ? ` y omitimos ${job.items_skipped}` : ""}. Puedes completar fotos y detalles en Catálogo.` : "" },
     failed: { title: "Carga tu catálogo", lead: "Sube el archivo que ya tienes. No hace falta que esté ordenado: la IA se encarga y tú revisas." },
   }[phase];
 
@@ -148,7 +148,7 @@ export function CatalogImportStep({
     }
     if (phase === "completed" && job) {
       return (
-        <Button size="lg" className="h-11" disabled={saving} onClick={() => onDone({ import_id: job.id, created_count: job.created_count })}>
+        <Button size="lg" className="h-11" disabled={saving} onClick={() => onDone({ import_id: job.id, created_count: job.items_created })}>
           Continuar
           <ArrowRight aria-hidden="true" />
         </Button>
@@ -234,8 +234,8 @@ export function CatalogImportStep({
       {phase === "completed" && job ? (
         <div className="border-border bg-background/70 rounded-2xl border p-5 text-sm leading-relaxed">
           <p>
-            <strong>{job.created_count}</strong> productos creados{job.updated_count ? `, ${job.updated_count} actualizados` : ""}
-            {job.skipped_count ? `, ${job.skipped_count} omitidos` : ""}
+            <strong>{job.items_created}</strong> productos creados{job.items_updated ? `, ${job.items_updated} actualizados` : ""}
+            {job.items_skipped ? `, ${job.items_skipped} omitidos` : ""}
             {nicheName ? ` con las categorías de ${nicheName.toLowerCase()}` : ""}.{" "}
             <Link href="/catalog/products" className="text-brand font-medium hover:underline">
               Ver el catálogo
@@ -249,7 +249,7 @@ export function CatalogImportStep({
           glyph="noresults"
           title="No pudimos leer este archivo"
           description={
-            job.error?.message ??
+            job.error ??
             "Por ahora leemos Excel, CSV, PDF con texto y fotos del menú. Prueba con una foto directa de la carta o con tu lista de precios."
           }
           action={

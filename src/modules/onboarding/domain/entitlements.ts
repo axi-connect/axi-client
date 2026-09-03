@@ -1,32 +1,16 @@
+import type { Schemas } from "@/core/api/types";
+
 /**
- * Entitlements del tenant (`GET /me/entitlements`, contrato B1): qué
+ * Entitlements del tenant (`GET /me/entitlements`): qué
  * capacidades tiene y qué incluye su oferta, ya en unidades comerciales. El
  * backend devuelve la copia calculada (`quantity_display`, `unit_label`): el
  * frontend nunca divide tokens.
  */
 
-// CONTRACT: `Schemas["EntitlementsDto"]` en F7.
-export type EntitlementIncluded = {
-  metric: string;
-  period: "day" | "billing_cycle";
-  quantity_raw: number;
-  /** «75», «50», «200» — ya formateado por el backend en es-CO. */
-  quantity_display: string;
-  /** «conversaciones con IA», «notas de voz del agente»… */
-  unit_label: string;
-  approx_display?: string | null;
-  used_raw?: number | null;
-  used_display?: string | null;
-};
+export type EntitlementsDTO = Schemas["EntitlementsDto"];
 
-export type EntitlementsDTO = {
-  offer_kind: "package" | "modules" | "none";
-  plans: Array<{ id: string; code: string; public_slug: string; kind: "package" | "module"; name: string }>;
-  capabilities: string[];
-  pending_offer: { plan_ids: string[] } | null;
-  trial: { active: boolean; ends_at: string | null };
-  included: EntitlementIncluded[];
-};
+/** Una línea de «lo que incluye tu prueba», ya formateada por el backend. */
+export type EntitlementIncluded = EntitlementsDTO["included"][number];
 
 /** «8 de septiembre»: la fecha de fin de la prueba, para meterla en una frase; `null` sin trial. */
 export function trialEndsDate(entitlements: EntitlementsDTO, locale = "es-CO"): string | null {

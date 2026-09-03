@@ -42,7 +42,7 @@ export function ImportJobProgress({
           <Icon aria-hidden="true" className="size-[1.125rem]" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{job.filename}</p>
+          <p className="truncate text-sm font-semibold">{job.file_name}</p>
           <p className="text-muted-foreground text-xs">{meta}</p>
         </div>
         <Badge variant={stalled ? "warning" : "secondary"} className={stalled ? "" : "text-accent-violet bg-accent-violet/12"}>

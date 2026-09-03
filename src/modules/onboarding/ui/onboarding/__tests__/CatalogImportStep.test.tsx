@@ -17,7 +17,6 @@ jest.mock("@/modules/onboarding/infrastructure/services/catalog-import-service.a
 
 const item = (overrides: Partial<CatalogImportItemDTO>): CatalogImportItemDTO => ({
   id: "i1",
-  position: 1,
   status: "ready",
   name: "Hamburguesa La Parrilla",
   description: null,
@@ -32,31 +31,29 @@ const item = (overrides: Partial<CatalogImportItemDTO>): CatalogImportItemDTO =>
   source_ref: "Fila 4",
   missing_fields: [],
   duplicate_of_product_id: null,
-  error: null,
   ...overrides,
 })
 
 const job = (overrides: Partial<CatalogImportDTO>): CatalogImportDTO => ({
   id: "imp1",
   status: "queued",
-  filename: "menu-parrilla-2026.xlsx",
-  mime_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  size_bytes: 236_000,
+  file_name: "menu-parrilla-2026.xlsx",
   source_kind: "sheet",
-  pages_total: null,
+  catalog_id: null,
+  size_bytes: 236_000,
+  pages_total: 0,
   pages_processed: 0,
   items_total: 0,
   items_ready: 0,
-  items_missing_fields: 0,
-  items_excluded: 0,
-  created_count: 0,
-  updated_count: 0,
-  skipped_count: 0,
+  items_missing: 0,
+  items_committed: 0,
+  items_created: 0,
+  items_updated: 0,
+  items_skipped: 0,
   error: null,
-  ai_cost_usd: null,
-  started_at: null,
-  finished_at: null,
+  ai_cost_usd: 0,
   created_at: "2026-09-01T10:00:00Z",
+  updated_at: "2026-09-01T10:00:00Z",
   ...overrides,
 })
 
@@ -116,7 +113,7 @@ describe("CatalogImportStep", () => {
     patchCatalogImportItem.mockResolvedValue({})
     const committing = job({ ...reviewJob, status: "committing" })
     commitCatalogImport.mockResolvedValueOnce(committing)
-    getCatalogImport.mockResolvedValueOnce(job({ status: "completed", created_count: 2, skipped_count: 1 }))
+    getCatalogImport.mockResolvedValueOnce(job({ status: "completed", items_created: 2, items_skipped: 1 }))
     const p = props()
     render(<CatalogImportStep {...p} initialImportId="imp1" />)
 
@@ -138,7 +135,7 @@ describe("CatalogImportStep", () => {
     getCatalogImport.mockResolvedValueOnce(reviewJob)
     patchCatalogImportItem.mockResolvedValue({})
     commitCatalogImport.mockResolvedValueOnce(job({ ...reviewJob, status: "committing" }))
-    getCatalogImport.mockResolvedValueOnce(job({ status: "completed", created_count: 3 }))
+    getCatalogImport.mockResolvedValueOnce(job({ status: "completed", items_created: 3 }))
     render(<CatalogImportStep {...props()} initialImportId="imp1" />)
 
     await screen.findByRole("heading", { name: /revisa lo que encontramos/i })
@@ -153,7 +150,7 @@ describe("CatalogImportStep", () => {
   })
 
   it("un archivo ilegible ofrece probar otro o cargar a mano", async () => {
-    getCatalogImport.mockResolvedValueOnce(job({ status: "failed", error: { code: "catalog/import_pdf_scanned", message: "PDF escaneado sin texto." } }))
+    getCatalogImport.mockResolvedValueOnce(job({ status: "failed", error: "catalog/import_pdf_scanned: PDF escaneado sin texto." }))
     const p = props()
     render(<CatalogImportStep {...p} initialImportId="imp1" />)
 

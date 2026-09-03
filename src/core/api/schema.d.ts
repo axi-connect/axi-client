@@ -5092,6 +5092,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EntitlementsController_read_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/onboarding/signups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicOnboardingController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/onboarding/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicOnboardingController_resendVerification_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/onboarding/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicOnboardingController_verifyEmail_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OnboardingController_read_v1"];
+        put: operations["OnboardingController_save_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OnboardingController_finish_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/niches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OnboardingController_niches_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/niches/{code}/agent-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OnboardingController_agentTemplates_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/onboarding/agents/from-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OnboardingController_createAgent_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CatalogImportsController_list_v1"];
+        put?: never;
+        post: operations["CatalogImportsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CatalogImportsController_read_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/imports/{id}/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CatalogImportsController_updateItem_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/imports/{id}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CatalogImportsController_commit_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/imports/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CatalogImportsController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5127,6 +5351,7 @@ export interface components {
             status: "active" | "invited" | "disabled";
             /** Format: uuid */
             company_id: string;
+            email_verified: boolean;
             role: {
                 /** Format: uuid */
                 id: string;
@@ -12103,6 +12328,328 @@ export interface components {
                 page_size: number;
             };
             unread_count: number;
+        };
+        EntitlementsDto: {
+            /** @enum {string} */
+            offer_kind: "package" | "modules" | "none";
+            plans: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                public_slug: string | null;
+                /** @enum {string} */
+                kind: "package" | "module";
+                name: string;
+            }[];
+            capabilities: string[];
+            pending_offer: {
+                kind: string;
+                plan_codes: string[];
+            } | null;
+            trial: {
+                active: boolean;
+                /** Format: date-time */
+                ends_at: string | null;
+            };
+            included: {
+                metric: string | null;
+                /** @enum {string} */
+                period: "day" | "billing_cycle";
+                quantity_raw: number;
+                quantity_display: string;
+                unit_label: string;
+                approx_display: string | null;
+                used_raw: number | null;
+                used_display: string | null;
+            }[];
+        };
+        SignupDto: {
+            offer: {
+                /** @enum {string} */
+                kind: "package" | "module";
+                codes: string[];
+            };
+            company: {
+                name: string;
+                nit: string;
+                country_code: string;
+                city: string;
+                timezone?: string;
+            };
+            owner: {
+                name: string;
+                /** Format: email */
+                email: string;
+                password: string;
+                phone?: string;
+            };
+            captcha_token: string;
+            /** @enum {boolean} */
+            accepted_terms: true;
+            website?: string;
+        };
+        SignupResultDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** Format: uuid */
+            user_id: string;
+            /** Format: date-time */
+            trial_ends_at: string;
+            tokens: {
+                access_token: string;
+                /** @enum {string} */
+                token_type: "Bearer";
+                expires_in: number;
+                refresh_token: string;
+            };
+            /** @enum {string} */
+            email_verification: "pending";
+            next: string;
+        };
+        ResendVerificationDto: {
+            /** Format: email */
+            email: string;
+        };
+        VerifyEmailDto: {
+            token: string;
+        };
+        VerifyEmailResultDto: {
+            /** @enum {boolean} */
+            verified: true;
+        };
+        OnboardingProgressDto: {
+            /** Format: uuid */
+            company_id: string;
+            niche_code: string | null;
+            /** @enum {string} */
+            current_step: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp";
+            steps: {
+                [key: string]: {
+                    /** @enum {string} */
+                    status: "pending" | "done" | "skipped";
+                    /** Format: date-time */
+                    completed_at: string | null;
+                    data?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: date-time */
+            banner_dismissed_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateOnboardingProgressDto: {
+            /** @enum {string} */
+            current_step?: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp";
+            niche_code?: string;
+            steps?: {
+                [key: string]: {
+                    /** @enum {string} */
+                    status: "pending" | "done" | "skipped";
+                    data?: {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** Format: date-time */
+            banner_dismissed_at?: string | null;
+        };
+        NicheListDto: {
+            data: {
+                code: string;
+                name: string;
+                description: string | null;
+                catalog_preset: {
+                    [key: string]: unknown;
+                };
+            }[];
+        };
+        AgentTemplateListDto: {
+            data: {
+                code: string;
+                niche_code: string;
+                name: string;
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                description: string;
+                default_skills: string[];
+                intention_codes: {
+                    code: string;
+                    requirements?: {
+                        [key: string]: boolean;
+                    };
+                }[];
+                /** Format: uuid */
+                recommended_character_id: string | null;
+                /** Format: uuid */
+                recommended_voice_id: string | null;
+                placeholders: string[];
+                recommended: boolean;
+            }[];
+        };
+        CreateAgentFromTemplateDto: {
+            template_code: string;
+            overrides?: {
+                name?: string;
+                /** @enum {string} */
+                tone?: "cercano" | "formal" | "directo";
+                /** Format: uuid */
+                character_id?: string;
+                /** Format: uuid */
+                voice_id?: string;
+                extra_instructions?: string;
+            };
+            /** @enum {string} */
+            status?: "active" | "draft";
+        };
+        CreatedAgentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            status: "active" | "paused" | "draft";
+            system_prompt: string;
+            skills: string[];
+            /** @enum {string} */
+            provider: "openai_compatible" | "anthropic" | "mock";
+            model: string;
+            model_params: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            character_id: string | null;
+            handoff_policy: {
+                [key: string]: unknown;
+            };
+            voice_policy: {
+                [key: string]: unknown;
+            };
+            intentions: unknown[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CatalogImportDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "queued" | "parsing" | "extracting" | "review_required" | "committing" | "completed" | "failed" | "cancelled";
+            /** @enum {string} */
+            source_kind: "sheet" | "pdf" | "image";
+            file_name: string;
+            /** Format: uuid */
+            catalog_id: string | null;
+            pages_total: number;
+            pages_processed: number;
+            items_total: number;
+            items_ready: number;
+            items_missing: number;
+            items_committed: number;
+            items_created: number;
+            items_updated: number;
+            items_skipped: number;
+            size_bytes: number;
+            ai_cost_usd: number;
+            error: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            items?: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "ready" | "missing_fields" | "duplicate" | "excluded" | "committed" | "error";
+                name: string;
+                description: string | null;
+                price_cents: number | null;
+                currency: string;
+                category: string | null;
+                /** @enum {string} */
+                kind: "product" | "service";
+                duration_minutes: number | null;
+                variants: unknown[];
+                image_urls: string[];
+                confidence: number;
+                source_ref: string;
+                missing_fields: string[];
+                /** Format: uuid */
+                duplicate_of_product_id: string | null;
+            }[];
+        };
+        CatalogImportListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "queued" | "parsing" | "extracting" | "review_required" | "committing" | "completed" | "failed" | "cancelled";
+                /** @enum {string} */
+                source_kind: "sheet" | "pdf" | "image";
+                file_name: string;
+                /** Format: uuid */
+                catalog_id: string | null;
+                pages_total: number;
+                pages_processed: number;
+                items_total: number;
+                items_ready: number;
+                items_missing: number;
+                items_committed: number;
+                items_created: number;
+                items_updated: number;
+                items_skipped: number;
+                size_bytes: number;
+                ai_cost_usd: number;
+                error: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                items?: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    status: "ready" | "missing_fields" | "duplicate" | "excluded" | "committed" | "error";
+                    name: string;
+                    description: string | null;
+                    price_cents: number | null;
+                    currency: string;
+                    category: string | null;
+                    /** @enum {string} */
+                    kind: "product" | "service";
+                    duration_minutes: number | null;
+                    variants: unknown[];
+                    image_urls: string[];
+                    confidence: number;
+                    source_ref: string;
+                    missing_fields: string[];
+                    /** Format: uuid */
+                    duplicate_of_product_id: string | null;
+                }[];
+            }[];
+        };
+        UpdateImportItemDto: {
+            name?: string;
+            description?: string | null;
+            price_cents?: number | null;
+            category?: string | null;
+            /** @enum {string} */
+            kind?: "product" | "service";
+            duration_minutes?: number | null;
+            /** @enum {string} */
+            status?: "ready" | "excluded";
+        };
+        CommitImportDto: {
+            /** Format: uuid */
+            catalog_id?: string;
+            create_categories?: boolean;
+            /** @enum {string} */
+            on_duplicate?: "skip" | "update";
         };
     };
     responses: never;
@@ -21902,6 +22449,358 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    EntitlementsController_read_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementsDto"];
+                };
+            };
+        };
+    };
+    PublicOnboardingController_create_v1: {
+        parameters: {
+            query?: never;
+            header: {
+                "user-agent": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignupResultDto"];
+                };
+            };
+        };
+    };
+    PublicOnboardingController_resendVerification_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PublicOnboardingController_verifyEmail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyEmailResultDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_read_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgressDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_save_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOnboardingProgressDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgressDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_finish_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgressDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_niches_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NicheListDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_agentTemplates_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentTemplateListDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_createAgent_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAgentFromTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedAgentDto"];
+                };
+            };
+        };
+    };
+    CatalogImportsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportListDto"];
+                };
+            };
+        };
+    };
+    CatalogImportsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    catalog_id?: string;
+                    default_currency?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportDto"];
+                };
+            };
+        };
+    };
+    CatalogImportsController_read_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportDto"];
+                };
+            };
+        };
+    };
+    CatalogImportsController_updateItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateImportItemDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportDto"];
+                };
+            };
+        };
+    };
+    CatalogImportsController_commit_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitImportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportDto"];
+                };
+            };
+        };
+    };
+    CatalogImportsController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportDto"];
+                };
             };
         };
     };

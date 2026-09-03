@@ -10,9 +10,6 @@ import { ConnectChannelFlow, type ChannelDTO } from "@/modules/channels/public";
 import { resendVerificationEmail } from "@/modules/onboarding/infrastructure/services/onboarding-service.adapter";
 import { StepAside, StepFrame } from "@/modules/onboarding/ui/onboarding/StepFrame";
 
-// CONTRACT: `MeDto.email_verified` llega con B2; `undefined` = no se exige aún.
-type MeWithVerification = { email?: string; email_verified?: boolean } | null;
-
 /**
  * Paso 5 · WhatsApp. Opcional (decisión D6), pero es lo que pone a trabajar al
  * agente. Embebe el MISMO wizard de `/settings/channels/connect`
@@ -33,7 +30,7 @@ export function WhatsAppStep({
   onDone: (result: { channel_id: string | null }) => void;
 }) {
   const { user, refresh } = useAuth();
-  const me = user as MeWithVerification;
+  const me = user;
   const emailUnverified = me?.email_verified === false;
   const [connected, setConnected] = useState<ChannelDTO | null>(null);
   const [manualCreated, setManualCreated] = useState(false);

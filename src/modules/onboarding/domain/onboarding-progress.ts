@@ -8,6 +8,8 @@
  * abierto, a cuál se puede saltar y cuánto falta.
  */
 
+import type { Schemas } from "@/core/api/types";
+
 export const ONBOARDING_PATH = "/onboarding";
 /** `?welcome=1`: el registro acaba de crear la cuenta y se muestra la bienvenida antes del primer paso. */
 export const WELCOME_QUERY = "welcome";
@@ -37,22 +39,28 @@ export type StepState = {
   data?: Record<string, unknown>;
 };
 
-// CONTRACT: espejo de `OnboardingProgressDto` (B3). Se sustituye por
-// `Schemas["OnboardingProgressDto"]` en F7, cuando el backend esté en main.
-export type OnboardingProgressDTO = {
-  company_id: string;
-  niche_code: string | null;
+/**
+ * `GET /onboarding/progress`, anclado al contrato generado.
+ *
+ * `steps` y `current_step` se estrechan a propósito: el contrato los declara
+ * como un registro de claves libres (es lo que sabe expresar OpenAPI), pero
+ * aquí los pasos son un conjunto cerrado y la interfaz necesita esa precisión
+ * para que un paso inventado no compile. El resto de campos vienen del
+ * generado, así que un cambio en el servidor rompe la compilación aquí.
+ */
+export type OnboardingProgressDTO = Omit<
+  Schemas["OnboardingProgressDto"],
+  "steps" | "current_step"
+> & {
   current_step: OnboardingStep;
   steps: Partial<Record<OnboardingStep, StepState>>;
-  completed_at: string | null;
-  banner_dismissed_at: string | null;
-  started_at: string;
-  updated_at: string;
 };
 
-export type UpdateOnboardingProgressDTO = {
+export type UpdateOnboardingProgressDTO = Omit<
+  Schemas["UpdateOnboardingProgressDto"],
+  "steps" | "current_step"
+> & {
   current_step?: OnboardingStep;
-  niche_code?: string;
   steps?: Partial<Record<OnboardingStep, { status: StepStatus; data?: Record<string, unknown> }>>;
   banner_dismissed_at?: string | null;
 };

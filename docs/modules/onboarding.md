@@ -199,14 +199,22 @@ ignora), `confetti.test.tsx` (instancia perezosa, `at`, limpieza al desmontar, r
 
 ## Parte C — Lo que aún es contrato a mano y lo que falta
 
-- **Tipos `// CONTRACT`** (a sustituir por `Schemas[...]` cuando B1–B4 estén en `main` y se corra
-  `npm run api:types`): `domain/onboarding-progress.ts`, `domain/catalog-import.ts`,
-  `domain/agent-templates.ts`, `domain/entitlements.ts`, `SignupPayload` en `shared/auth/auth.types.ts`,
-  y la lectura tolerante de `MeDto.email_verified` en `OnboardingShell` y `WhatsAppStep`.
+- **Tipos del contrato: YA GENERADOS** (2026-09-03, backend S1–S3 en `main`). No queda ningún
+  `// CONTRACT` en el slice: `entitlements`, `agent-templates` y `catalog-import` son alias directos de
+  `Schemas[...]`, y `MeDto.email_verified` se lee del perfil real. Dos tipos se estrechan a propósito
+  sobre el generado, porque OpenAPI no sabe expresarlos: `OnboardingProgressDTO.steps` y `current_step`
+  (el contrato los declara como registro de claves libres; aquí los pasos son un conjunto cerrado y la
+  interfaz necesita que un paso inventado no compile).
+- **Lo que encontró la generación de tipos**: el cliente esperaba `filename`, `items_missing_fields`,
+  `created_count`/`updated_count`/`skipped_count` y un `error` estructurado. Se resolvió por los dos
+  lados: el servidor pasó a guardar y servir el desglose del commit (`items_created`, `items_updated`,
+  `items_skipped`) porque la pantalla final lo promete, y el cliente adoptó los nombres del contrato
+  (`file_name`, `items_missing`) y el `error` como cadena.
 - **`api:types:check` desde un worktree falla por la ruta relativa al spec** (`../axi-server/...`);
   correr desde el checkout principal o con `npx openapi-typescript <ruta absoluta>`.
 - **Fuera de v1** (decisión): preview de chat del agente, varias empresas por usuario, conversión
   autoservicio desde `/billing` (B5), PDF escaneado, métrica `appointments_booked`, voz y palabras de
   traspaso en el sheet de plantilla (el `CreateAgentFromTemplateDto` no los admite; viven en Agentes).
-- **Pendiente del dueño**: `next build`, suite completa, `seed:rbac`/`seed:offers` en el backend,
-  `NEXT_PUBLIC_TURNSTILE_SITE_KEY` en producción, reindexar el grafo tras fusionar.
+- **Pendiente del dueño**: `next build`, suite completa, `npm run seed:offers` en el backend,
+  `NEXT_PUBLIC_TURNSTILE_SITE_KEY` y `CAPTCHA_PROVIDER=turnstile` + `PUBLIC_APP_URL` en producción
+  (el arranque los exige), probar el import con un modelo real, reindexar el grafo tras fusionar.

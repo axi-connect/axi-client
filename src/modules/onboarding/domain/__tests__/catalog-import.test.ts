@@ -15,7 +15,6 @@ import {
 
 const item = (overrides: Partial<CatalogImportItemDTO>): CatalogImportItemDTO => ({
   id: "i1",
-  position: 1,
   status: "ready",
   name: "Hamburguesa",
   description: null,
@@ -30,7 +29,6 @@ const item = (overrides: Partial<CatalogImportItemDTO>): CatalogImportItemDTO =>
   source_ref: "Fila 4",
   missing_fields: [],
   duplicate_of_product_id: null,
-  error: null,
   ...overrides,
 })
 
@@ -54,10 +52,10 @@ describe("sondeo del job", () => {
   })
 
   it("describe el progreso en español según el estado", () => {
-    const base = { pages_total: 10, pages_processed: 3, items_total: 26, created_count: 0 } as CatalogImportDTO
+    const base = { pages_total: 10, pages_processed: 3, items_total: 26, items_created: 0 } as CatalogImportDTO
     expect(importProgressLabel({ ...base, status: "parsing" })).toBe("Leyendo página 3 de 10")
     expect(importProgressLabel({ ...base, status: "extracting" })).toBe("26 productos encontrados hasta ahora")
-    expect(importProgressLabel({ ...base, status: "completed", created_count: 37 })).toBe("Creamos 37 productos")
+    expect(importProgressLabel({ ...base, status: "completed", items_created: 37 })).toBe("Creamos 37 productos")
   })
 })
 
