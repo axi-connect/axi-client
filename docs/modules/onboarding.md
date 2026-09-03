@@ -4,8 +4,9 @@
 > que consume este slice. Parte B: anatomía y decisiones del frontend. Parte C: lo que aún es
 > contrato a mano y lo que falta.
 >
-> **Estado (2026-09-02): F1–F6 implementadas** en la rama `feat/onboarding-self-service`, sin
-> fusionar. Plan vivo: `docs/plans/onboarding_self_service_plan.md` (frontend) y
+> **Estado (2026-09-03): F1–F7 + bienvenida fusionadas en `main` local y AUDITADAS.** Informe con 30
+> hallazgos, recorrido en vivo y remediación por fases (P0/P1 corregidos, gating por capacidades
+> implementado): `axi-server/docs/incidentes/2026-09-03_auditoria_onboarding.md`. Sin push. Plan vivo: `docs/plans/onboarding_self_service_plan.md` (frontend) y
 > `axi-server/docs/plans/onboarding_self_service_backend_plan.md` (contrato B0–B5). Mockups
 > aprobados: precios <https://claude.ai/code/artifact/47a257c5-171c-48b3-8a3c-8c286f262ba4> ·
 > funnel <https://claude.ai/code/artifact/7655655c-3083-4d7d-b805-165727992f8c>.
