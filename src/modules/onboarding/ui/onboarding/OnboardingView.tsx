@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -13,6 +13,7 @@ import {
   ONBOARDING_PATH,
   WELCOME_QUERY,
   firstOpenStep,
+  stepStatus,
   isFreshProgress,
   isOnboardingComplete,
   resolveEntryStep,
@@ -28,6 +29,7 @@ import { CatalogImportStep } from "@/modules/onboarding/ui/onboarding/steps/Cata
 import { DoneStep } from "@/modules/onboarding/ui/onboarding/steps/DoneStep";
 import { NicheStep } from "@/modules/onboarding/ui/onboarding/steps/NicheStep";
 import { WhatsAppStep } from "@/modules/onboarding/ui/onboarding/steps/WhatsAppStep";
+import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 
 const DASHBOARD_PATH = "/dashboard";
 
@@ -61,6 +63,8 @@ export function OnboardingView() {
   const update = useOnboardingStore((state) => state.update);
 
   const [current, setCurrent] = useState<OnboardingStep | null | undefined>(undefined);
+  const { hasCapability, loaded: entitlementsLoaded } = useEntitlements();
+  const catalogAutoSkipped = useRef(false);
   const [welcome, setWelcome] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>(null);
@@ -86,6 +90,25 @@ export function OnboardingView() {
     setWelcome(showWelcome);
     setCurrent(resolveEntryStep(progress, showWelcome ? null : search.get("step")));
   }, [status, progress, current, router, search]);
+
+  // Sin la capacidad `sales` (módulos Llamadas, Captación, CRM) no hay catálogo
+  // que importar: el paso se cierra solo como omitido y el recorrido sigue. El
+  // backend además gatea `POST /catalog/imports`, así que dejarlo abierto sería
+  // invitar a un 403 (auditoría 2026-09-03, Fase 4).
+  useEffect(() => {
+    if (status !== "ready" || !progress || !entitlementsLoaded || catalogAutoSkipped.current) return;
+    if (hasCapability("sales") || stepStatus(progress, "catalog") !== "pending") return;
+    catalogAutoSkipped.current = true;
+    void skip("catalog")
+      .then(() => {
+        if (useOnboardingStore.getState().progress && current === "catalog") {
+          setCurrent(firstOpenStep(useOnboardingStore.getState().progress!));
+        }
+      })
+      .catch(() => {
+        catalogAutoSkipped.current = false;
+      });
+  }, [status, progress, entitlementsLoaded, hasCapability, skip, current]);
 
   // Tras cerrar un paso se sigue por el primero abierto: los cerrados no se
   // repiten aunque se haya vuelto a revisar uno anterior. Sin abiertos → final.

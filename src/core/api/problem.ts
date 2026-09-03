@@ -22,6 +22,8 @@ export type ProblemDetails = {
   detail?: string;
   trace_id?: string;
   errors?: ValidationIssue[];
+  /** Extensión RFC 7807: lo que el error quiso decir además del código (`required`, `capability`, `upgrade_hint`). */
+  details?: Record<string, unknown>;
 };
 
 /** Códigos de error que el frontend maneja con lógica propia. */
@@ -36,6 +38,8 @@ export const API_ERROR_CODES = {
   trialExpired: "auth/trial_expired",
   paymentOverdue: "auth/payment_overdue",
   permissionDenied: "rbac/permission_denied",
+  /** El rol lo permite pero el PLAN no lo incluye; `details.upgrade_hint.path` lleva a ampliarlo. */
+  capabilityNotGranted: "entitlements/capability_not_granted",
   usageLimitExceeded: "usage/limit_exceeded",
   outsideServiceWindow: "channels/outside_service_window",
   invalidTransition: "conversations/invalid_transition",

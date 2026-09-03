@@ -172,6 +172,15 @@ costaron tiempo:
 
 ---
 
+### B.9 El plan acota el recorrido (2026-09-03)
+
+Las capacidades del plan (`GET /me/entitlements.capabilities`, vía `useEntitlements()` de `shared/auth`)
+gatean lo que el backend también gatea: sin `sales` (módulos Llamadas, Captación y CRM) el paso «Catálogo» se
+cierra solo como omitido —`POST /catalog/imports` respondería `403 entitlements/capability_not_granted`— y el
+dashboard no pide las tarjetas de ventas. El sidebar no necesita nada aquí: `/me/navigation` ya viene filtrado
+por `capability_code`. El código `capabilityNotGranted` tiene mensaje propio («Tu plan no incluye esta función.
+Puedes ampliarlo desde Facturación»); `details.upgrade_hint.path` del problem+json lleva a `/billing`.
+
 ### B.8 Confirmar el correo desde el enlace (2026-09-03)
 
 El backend compone `PUBLIC_APP_URL/verificar-correo?token=…` en el correo de verificación. La página

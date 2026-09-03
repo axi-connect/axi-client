@@ -17,6 +17,7 @@ import { ConversationsFlowCard } from "@/modules/dashboard/ui/components/Convers
 import { NewCustomersCard } from "@/modules/dashboard/ui/components/NewCustomersCard";
 import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCard";
 import { OnboardingResumeBanner } from "@/modules/onboarding/public";
+import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 
 /**
  * Vista del dashboard. Orquesta el fetch condicional por permiso (RBAC natural,
@@ -26,16 +27,20 @@ import { OnboardingResumeBanner } from "@/modules/onboarding/public";
  */
 export function DashboardView() {
   const { hasPermission } = useAuth();
+  const { hasCapability, loaded: entitlementsLoaded } = useEntitlements();
 
   const perms: DashboardPerms = useMemo(
     () => ({
-      orders: hasPermission("orders:read"),
+      // Permiso del rol Y capacidad del plan: un tenant del módulo Llamadas no
+      // tiene catálogo ni pedidos, y sin esto las tarjetas de ventas pedirían
+      // /orders/stats para recibir un 403 (auditoría 2026-09-03, Fase 4).
+      orders: hasPermission("orders:read") && entitlementsLoaded && hasCapability("sales"),
       conversations: hasPermission("conversations:read"),
       contacts: hasPermission("contacts:read"),
       usage: hasPermission("usage:read"),
       channels: hasPermission("channels:read"),
     }),
-    [hasPermission],
+    [hasPermission, hasCapability, entitlementsLoaded],
   );
 
   const period = useDashboardStore((state) => state.period);

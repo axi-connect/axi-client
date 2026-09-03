@@ -273,7 +273,7 @@ Estas reglas son la política del proyecto; el objetivo es hacerlas cumplir con 
 
   La identidad del tenant entra por la prop `identity` inyectada desde la capa app (mismo patrón que `PrivateHeader actions`, §3.3), y el footer expone el menú de cuenta con "Cerrar sesión" → modal interceptado `/auth/logout`.
 - **`api/`** — `buildListParams()` (construye `{ limit, offset, sortBy, sortDir, [searchField], ...extra }`) y `usePaginatedList()` (hook de listado paginado sobre un `fetcher` que devuelve `ApiResponse<T>`). **Reutilizar siempre** para listados en tablas.
-- **`auth/`** — `auth.types.ts` (`AuthUser`, `Tokens`, `LoginPayload`, `SessionResponse`, `COOKIE_NAMES`), `auth.hooks.ts` (`useAuth`, `useSession`) y `auth.handlers.ts` (`refreshToken()` server-side).
+- **`auth/`** — `auth.types.ts` (`AuthUser`, `Tokens`, `LoginPayload`, `SignupPayload`, `SessionResponse`, `COOKIE_NAMES`), `auth.hooks.ts` (`useAuth`, `useSession`), `auth.handlers.ts` (`refreshToken()` server-side) y **`entitlements.store.ts` + `entitlements.hooks.ts`** (`useEntitlements()`: capacidades del plan del tenant desde `GET /me/entitlements`, una carga por sesión; `hasCapability('sales')` gatea UI que el backend también gatea con `403 entitlements/capability_not_granted` — el sidebar ya llega filtrado por `/me/navigation`, así que aquí solo se adaptan superficies compuestas como el dashboard o el paso de catálogo del onboarding; si la carga falla responde `true` y deja al servidor decir 403).
 
 ---
 

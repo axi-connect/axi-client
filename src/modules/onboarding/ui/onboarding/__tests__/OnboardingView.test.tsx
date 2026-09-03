@@ -33,6 +33,10 @@ jest.mock("@/modules/companies/public", () => ({
   ),
 }))
 
+jest.mock("@/shared/auth/entitlements.hooks", () => ({
+  useEntitlements: () => ({ entitlements: null, loaded: true, hasCapability: () => true }),
+}))
+
 jest.mock("@/shared/auth/auth.hooks", () => ({
   useSession: () => ({ status: "authenticated", user: { email: "joao@laparrilla.co" }, isAuthenticated: true }),
 }))
