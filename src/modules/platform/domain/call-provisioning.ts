@@ -12,6 +12,15 @@ export type AvailableNumber = Schemas["AvailableCallNumberDto"];
 export type CallCredentials = Schemas["CreateCallProviderDto"]["credentials"];
 export type TenantCallAgent = Schemas["PlatformTenantAgentDto"];
 export type OwnedTwilioNumber = Schemas["OwnedCallNumberDto"];
+/** Identificador de llamada VERIFICADO en Twilio (OutgoingCallerId): solo se
+ * muestra como From en las salientes; no recibe llamadas ni tiene renta. */
+export type OwnedCallerId = Schemas["OwnedCallerIdDto"];
+export type CallNumberKind = CallNumber["kind"];
+
+export const CALL_NUMBER_KIND_LABELS: Record<CallNumberKind, string> = {
+  twilio: "Número Twilio",
+  caller_id: "Identificador",
+};
 
 export type CallAccountStatus =
   | "active"
@@ -48,6 +57,7 @@ export type CallNumberRow = {
   phone_number: string;
   country_code: string;
   status: CallNumber["status"];
+  kind: CallNumberKind;
   company_id: string | null;
   company_name: string | null;
   default_ai_agent_name: string | null;
@@ -62,6 +72,7 @@ export function toCallNumberRow(dto: CallNumber): CallNumberRow {
     phone_number: dto.phone_number,
     country_code: dto.country_code,
     status: dto.status,
+    kind: dto.kind,
     company_id: dto.company_id,
     company_name: dto.company_name,
     default_ai_agent_name: dto.default_ai_agent_name,

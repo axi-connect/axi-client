@@ -104,6 +104,8 @@ export const platformKeys = {
     accounts: () => [...platformKeys.calls.all, "accounts"] as const,
     numbers: () => [...platformKeys.calls.all, "numbers"] as const,
     owned: (accountId: string) => [...platformKeys.calls.all, "owned", accountId] as const,
+    ownedCallerIds: (accountId: string) =>
+      [...platformKeys.calls.all, "caller-ids", accountId] as const,
     tenantAgents: (companyId: string) =>
       [...platformKeys.calls.all, "tenants", companyId, "agents"] as const,
   },

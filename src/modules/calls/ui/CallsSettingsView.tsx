@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { LoaderCircle, Mic2, Phone, RotateCcw } from "lucide-react";
+import { BadgeCheck, LoaderCircle, Mic2, Phone, RotateCcw } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -85,6 +85,8 @@ export function CallsSettingsView() {
     );
   }
 
+  const hasCallerId = numbers?.some((number) => number.kind === "caller_id") ?? false;
+
   return (
     <div className="grid items-start gap-5 p-4 md:p-6 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="flex flex-col gap-5">
@@ -99,31 +101,47 @@ export function CallsSettingsView() {
             </p>
           ) : (
             <ul className="space-y-3">
-              {numbers.map((number) => (
-                <li key={number.id} className="flex items-start gap-3">
-                  <span
-                    className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet flex size-9 shrink-0 items-center justify-center rounded-full border"
-                    aria-hidden
-                  >
-                    <Phone className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-mono text-sm font-medium">{number.phone_number}</p>
-                    <p className="text-muted-foreground mt-0.5 text-xs">
-                      Contesta:{" "}
-                      {number.default_ai_agent_id === null
-                        ? "sin agente configurado"
-                        : (agentNames.get(number.default_ai_agent_id) ?? "agente IA")}
-                      {" · Entrantes "}
-                      {number.inbound_enabled ? "habilitadas" : "deshabilitadas"}
-                    </p>
-                  </div>
-                  <StatusBadge
-                    status="active"
-                    map={{ active: { label: "Activo", tone: "success" } }}
-                  />
-                </li>
-              ))}
+              {numbers.map((number) => {
+                // El identificador verificado es lo que ven tus clientes al
+                // llamarles; el número Twilio recibe las entrantes y define
+                // quién contesta. Si hay identificador, se dice explícitamente.
+                const isCallerId = number.kind === "caller_id";
+                return (
+                  <li key={number.id} className="flex items-start gap-3">
+                    <span
+                      className="border-accent-violet/40 bg-accent-violet/10 text-accent-violet flex size-9 shrink-0 items-center justify-center rounded-full border"
+                      aria-hidden
+                    >
+                      {isCallerId ? <BadgeCheck className="size-4" /> : <Phone className="size-4" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-mono text-sm font-medium">{number.phone_number}</p>
+                      <p className="text-muted-foreground mt-0.5 text-xs">
+                        {isCallerId ? (
+                          "Se muestra al llamar: es el número que ven tus clientes"
+                        ) : (
+                          <>
+                            Contesta:{" "}
+                            {number.default_ai_agent_id === null
+                              ? "sin agente configurado"
+                              : (agentNames.get(number.default_ai_agent_id) ?? "agente IA")}
+                            {" · Entrantes "}
+                            {number.inbound_enabled ? "habilitadas" : "deshabilitadas"}
+                            {hasCallerId && " · Recibe las entrantes"}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <StatusBadge
+                      status={isCallerId ? "caller_id" : "active"}
+                      map={{
+                        active: { label: "Activo", tone: "success" },
+                        caller_id: { label: "Identificador", tone: "info" },
+                      }}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

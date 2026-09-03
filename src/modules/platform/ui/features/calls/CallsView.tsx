@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Phone, PhoneIncoming, Plus, ShoppingCart } from "lucide-react";
+import { BadgeCheck, Phone, PhoneIncoming, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { DataTable } from "@/shared/components/features/data-table";
 import { EmptyState } from "@/shared/components/features/empty-state";
@@ -18,6 +18,7 @@ import { CallAccountCard } from "./CallAccountCard";
 import { ConnectTwilioSheet } from "./TwilioCredentialsSheets";
 import { BuyNumberSheet } from "./BuyNumberSheet";
 import { ImportNumberSheet } from "./ImportNumberSheet";
+import { ImportCallerIdSheet } from "./ImportCallerIdSheet";
 import { callNumberColumns } from "./calls-numbers-table.config";
 
 type NumbersSort = { by: keyof CallNumberRow & string; dir: "asc" | "desc" };
@@ -35,6 +36,7 @@ export function CallsView() {
   const [connecting, setConnecting] = useState(false);
   const [buying, setBuying] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importingCallerId, setImportingCallerId] = useState(false);
   const [sort, setSort] = useState<NumbersSort>({ by: "created_at", dir: "desc" });
   const [page, setPage] = useState(1);
 
@@ -102,6 +104,17 @@ export function CallsView() {
               <PhoneIncoming className="size-4" aria-hidden />
               Importar de Twilio
             </Button>
+            {/* Identificador verificado: el +57 del negocio como From de las salientes */}
+            <Button
+              variant="outline"
+              className="rounded-full"
+              disabled={account === null}
+              title={account === null ? "Primero conecta la cuenta madre" : undefined}
+              onClick={() => setImportingCallerId(true)}
+            >
+              <BadgeCheck className="size-4" aria-hidden />
+              Importar identificador
+            </Button>
             <Button
               className="rounded-full"
               disabled={!canBuy}
@@ -152,6 +165,9 @@ export function CallsView() {
       )}
       {importing && account !== null && (
         <ImportNumberSheet accountId={account.id} onClose={() => setImporting(false)} />
+      )}
+      {importingCallerId && account !== null && (
+        <ImportCallerIdSheet accountId={account.id} onClose={() => setImportingCallerId(false)} />
       )}
     </div>
   );

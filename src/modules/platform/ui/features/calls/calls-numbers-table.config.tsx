@@ -4,12 +4,19 @@ import type { ColumnDef } from "@/shared/components/features/data-table";
 import { formatMoney } from "@/core/lib/format";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
-import type { CallNumberRow } from "../../../domain/call-provisioning";
+import { CALL_NUMBER_KIND_LABELS, type CallNumberRow } from "../../../domain/call-provisioning";
 import { NumberRowActions } from "./NumberRowActions";
 
 const NUMBER_STATUS_MAP = {
   active: { label: "Activo", tone: "success" as const },
   released: { label: "Liberado", tone: "neutral" as const },
+};
+
+/** Número Twilio (ruta: recibe y contesta) vs identificador verificado (solo
+ * se muestra al llamar). */
+const NUMBER_KIND_MAP = {
+  twilio: { label: CALL_NUMBER_KIND_LABELS.twilio, tone: "neutral" as const },
+  caller_id: { label: CALL_NUMBER_KIND_LABELS.caller_id, tone: "info" as const },
 };
 
 export const callNumberColumns: ColumnDef<CallNumberRow>[] = [
@@ -23,6 +30,14 @@ export const callNumberColumns: ColumnDef<CallNumberRow>[] = [
         {row.original.phone_number}
       </span>
     ),
+  },
+  {
+    accessorKey: "kind",
+    header: "Tipo",
+    sortable: true,
+    searchable: false,
+    minWidth: 130,
+    cell: ({ row }) => <StatusBadge status={row.original.kind} map={NUMBER_KIND_MAP} />,
   },
   {
     accessorKey: "status",

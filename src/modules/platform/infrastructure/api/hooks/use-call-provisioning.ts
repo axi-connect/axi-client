@@ -12,6 +12,7 @@ import type {
   CallNumber,
   OwnedTwilioNumber,
   TenantCallAgent,
+  OwnedCallerId,
 } from "../../../domain/call-provisioning";
 
 /** Hooks del aprovisionamiento de telefonía (calls F4-E). Mismo reparto que
@@ -145,6 +146,38 @@ export function useImportCallNumber() {
   return useMutation({
     mutationFn: async (input: { provider_account_id: string; provider_sid: string }) => {
       const { data } = await platformClient.POST("/api/v1/platform/calls/numbers/import", {
+        body: input as never,
+      });
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: platformKeys.calls.numbers() });
+      void queryClient.invalidateQueries({ queryKey: platformKeys.calls.all });
+    },
+  });
+}
+
+/** Identificadores de llamada VERIFICADOS en Twilio, marcando cuáles ya están
+ * en axi. Se consulta al abrir el sheet «Importar identificador». */
+export function useOwnedCallerIdsQuery(accountId: string | null) {
+  const { reloginOpen } = usePlatformAuth();
+  return useQuery({
+    queryKey: platformKeys.calls.ownedCallerIds(accountId ?? "none"),
+    queryFn: async () => {
+      const { data } = await platformClient.GET("/api/v1/platform/calls/caller-ids/owned", {
+        params: { query: { provider_account_id: accountId ?? "" } },
+      });
+      return (data ?? []) as unknown as OwnedCallerId[];
+    },
+    enabled: !reloginOpen && accountId !== null,
+  });
+}
+
+export function useImportCallerId() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { provider_account_id: string; provider_sid: string }) => {
+      const { data } = await platformClient.POST("/api/v1/platform/calls/caller-ids/import", {
         body: input as never,
       });
       return data;

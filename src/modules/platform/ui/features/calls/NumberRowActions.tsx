@@ -31,6 +31,8 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
   const [releasing, setReleasing] = useState(false);
   const [returning, setReturning] = useState(false);
 
+  const isCallerId = number.kind === "caller_id";
+
   if (number.status === "released") {
     return <span className="text-muted-foreground text-xs">—</span>;
   }
@@ -62,8 +64,10 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
       setReleasing(false);
       showAlert({
         tone: "success",
-        title: "Número liberado en Twilio",
-        description: "La renta mensual se detiene; la fila queda como historial.",
+        title: isCallerId ? "Identificador quitado de Twilio" : "Número liberado en Twilio",
+        description: isCallerId
+          ? "El número ya no está verificado; las salientes vuelven al número Twilio."
+          : "La renta mensual se detiene; la fila queda como historial.",
         autoCloseMs: 5000,
       });
     } catch (error) {
@@ -106,7 +110,7 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
             onClick={() => setReleasing(true)}
           >
             <Trash2 className="size-4" aria-hidden />
-            Liberar en Twilio
+            {isCallerId ? "Quitar identificador" : "Liberar en Twilio"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -116,13 +120,20 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
       <ConfirmTyped
         open={returning}
         onOpenChange={setReturning}
-        title="Devolver el número al stock"
+        title={isCallerId ? "Devolver el identificador al stock" : "Devolver el número al stock"}
         description={
-          <>
-            El tenant que lo tiene asignado <b>se queda sin telefonía</b> hasta que le asignes
-            otro número. Es reversible (puedes reasignarlo), pero no inocuo: sus llamadas
-            automáticas dejarán de salir.
-          </>
+          isCallerId ? (
+            <>
+              Las salientes del tenant <b>volverán a mostrar el número Twilio</b> (+1). Es
+              reversible: puedes reasignarlo cuando quieras.
+            </>
+          ) : (
+            <>
+              El tenant que lo tiene asignado <b>se queda sin telefonía</b> hasta que le asignes
+              otro número. Es reversible (puedes reasignarlo), pero no inocuo: sus llamadas
+              automáticas dejarán de salir.
+            </>
+          )
         }
         confirmText={number.phone_number}
         actionLabel="Devolver al stock"
@@ -133,16 +144,24 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
       <ConfirmTyped
         open={releasing}
         onOpenChange={setReleasing}
-        title="Liberar el número en Twilio"
+        title={isCallerId ? "Quitar el identificador de Twilio" : "Liberar el número en Twilio"}
         description={
-          <>
-            Twilio recicla los números liberados: <b>no hay garantía de recuperarlo</b>. El tenant
-            que lo tenga asignado se queda sin telefonía hasta que le asignes otro. La fila queda
-            como historial.
-          </>
+          isCallerId ? (
+            <>
+              Se elimina la verificación del número en la cuenta de Twilio: para volver a usarlo
+              habrá que <b>verificarlo de nuevo</b> (llamada con código). Las salientes del tenant
+              vuelven al número Twilio. La fila queda como historial.
+            </>
+          ) : (
+            <>
+              Twilio recicla los números liberados: <b>no hay garantía de recuperarlo</b>. El
+              tenant que lo tenga asignado se queda sin telefonía hasta que le asignes otro. La
+              fila queda como historial.
+            </>
+          )
         }
         confirmText={number.phone_number}
-        actionLabel="Liberar"
+        actionLabel={isCallerId ? "Quitar" : "Liberar"}
         onConfirm={releaseNumber}
         pending={release.isPending}
       />

@@ -4292,6 +4292,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/calls/caller-ids/owned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listOwnedCallerIds_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/caller-ids/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_importCallerId_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/calls/numbers/search": {
         parameters: {
             query?: never;
@@ -11457,6 +11489,8 @@ export interface components {
             country_code: string;
             /** @enum {string} */
             status: "active" | "released";
+            /** @enum {string} */
+            kind: "twilio" | "caller_id";
             /** Format: uuid */
             default_ai_agent_id: string | null;
             default_ai_agent_name: string | null;
@@ -11480,6 +11514,17 @@ export interface components {
             imported: boolean;
         };
         ImportCallNumberDto: {
+            /** Format: uuid */
+            provider_account_id: string;
+            provider_sid: string;
+        };
+        OwnedCallerIdDto: {
+            provider_sid: string;
+            phone_number: string;
+            friendly_name: string;
+            imported: boolean;
+        };
+        ImportCallerIdDto: {
             /** Format: uuid */
             provider_account_id: string;
             provider_sid: string;
@@ -11727,6 +11772,8 @@ export interface components {
             id: string;
             phone_number: string;
             country_code: string;
+            /** @enum {string} */
+            kind: "twilio" | "caller_id";
             /** Format: uuid */
             default_ai_agent_id: string | null;
             inbound_enabled: boolean;
@@ -21107,6 +21154,48 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ImportCallNumberDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_listOwnedCallerIds_v1: {
+        parameters: {
+            query: {
+                provider_account_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnedCallerIdDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_importCallerId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCallerIdDto"];
             };
         };
         responses: {

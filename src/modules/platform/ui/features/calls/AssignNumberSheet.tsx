@@ -39,12 +39,15 @@ export function AssignNumberSheet({
   onClose: () => void;
 }) {
   const assign = useAssignCallNumber();
+  // Un identificador de llamada solo se MUESTRA al llamar: no contesta ni tiene
+  // agente (el servidor lo rechaza), así que esos campos no se ofrecen.
+  const isCallerId = number.kind === "caller_id";
   const [companyId, setCompanyId] = useState<string>(number.company_id ?? "");
   const [agentId, setAgentId] = useState<string>("");
   const [inbound, setInbound] = useState(number.inbound_enabled);
   const [error, setError] = useState<string | null>(null);
 
-  const agents = useTenantCallAgentsQuery(companyId === "" ? null : companyId);
+  const agents = useTenantCallAgentsQuery(companyId === "" || isCallerId ? null : companyId);
 
   // Cambiar de empresa invalida el agente elegido: era de la anterior.
   useEffect(() => {
@@ -57,8 +60,8 @@ export function AssignNumberSheet({
       {
         id: number.id,
         company_id: companyId,
-        default_ai_agent_id: agentId === "" ? null : agentId,
-        inbound_enabled: inbound,
+        default_ai_agent_id: isCallerId || agentId === "" ? null : agentId,
+        inbound_enabled: isCallerId ? false : inbound,
       },
       {
         onSuccess: onClose,
@@ -77,8 +80,9 @@ export function AssignNumberSheet({
         </SheetHeader>
         <div className="flex flex-col gap-4 px-4 pb-6">
           <SheetDescription>
-            El tenant verá este número como suyo: sus llamadas salen desde él y, si habilitas las
-            entrantes, su agente las contesta.
+            {isCallerId
+              ? "Las llamadas salientes del tenant mostrarán este número (su +57) en vez del +1 de Twilio. Solo se muestra al llamar: quien contesta y recibe las entrantes sigue siendo el número Twilio del tenant."
+              : "El tenant verá este número como suyo: sus llamadas salen desde él y, si habilitas las entrantes, su agente las contesta."}
           </SheetDescription>
 
           <div>
@@ -92,58 +96,62 @@ export function AssignNumberSheet({
             />
           </div>
 
-          <div>
-            <p className="mb-1 text-sm font-semibold">Quién contesta</p>
-            <Select
-              value={agentId === "" ? undefined : agentId}
-              onValueChange={setAgentId}
-              disabled={companyId === "" || agents.isLoading}
-            >
-              <SelectTrigger className="w-full" aria-label="Agente que contesta">
-                <SelectValue
-                  placeholder={
-                    companyId === ""
-                      ? "Primero elige la empresa"
-                      : agents.isLoading
-                        ? "Cargando agentes…"
-                        : "Elige el agente IA"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {(agents.data ?? []).map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {companyId !== "" && agents.isError && (
-              <p className="text-destructive bg-destructive/8 border-destructive/25 mt-1 rounded-md border px-3 py-2 text-xs">
-                {errorMessage(agents.error, "No se pudieron cargar los agentes del tenant")}
-              </p>
-            )}
-            {companyId !== "" && agents.isSuccess && agents.data.length === 0 && (
-              <p className="text-warning mt-1 text-xs">
-                Este tenant no tiene agentes IA activos: sin agente, el número no puede llamar ni
-                contestar.
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
+          {!isCallerId && (
             <div>
-              <p className="text-sm font-semibold">Llamadas entrantes</p>
-              <p className="text-muted-foreground text-xs">
-                El agente contesta cuando alguien llama a este número (atención entrante, F5).
-              </p>
+              <p className="mb-1 text-sm font-semibold">Quién contesta</p>
+              <Select
+                value={agentId === "" ? undefined : agentId}
+                onValueChange={setAgentId}
+                disabled={companyId === "" || agents.isLoading}
+              >
+                <SelectTrigger className="w-full" aria-label="Agente que contesta">
+                  <SelectValue
+                    placeholder={
+                      companyId === ""
+                        ? "Primero elige la empresa"
+                        : agents.isLoading
+                          ? "Cargando agentes…"
+                          : "Elige el agente IA"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {(agents.data ?? []).map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {companyId !== "" && agents.isError && (
+                <p className="text-destructive bg-destructive/8 border-destructive/25 mt-1 rounded-md border px-3 py-2 text-xs">
+                  {errorMessage(agents.error, "No se pudieron cargar los agentes del tenant")}
+                </p>
+              )}
+              {companyId !== "" && agents.isSuccess && agents.data.length === 0 && (
+                <p className="text-warning mt-1 text-xs">
+                  Este tenant no tiene agentes IA activos: sin agente, el número no puede llamar ni
+                  contestar.
+                </p>
+              )}
             </div>
-            <Switch
-              checked={inbound}
-              onCheckedChange={setInbound}
-              aria-label="Habilitar entrantes"
-            />
-          </div>
+          )}
+
+          {!isCallerId && (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold">Llamadas entrantes</p>
+                <p className="text-muted-foreground text-xs">
+                  El agente contesta cuando alguien llama a este número (atención entrante, F5).
+                </p>
+              </div>
+              <Switch
+                checked={inbound}
+                onCheckedChange={setInbound}
+                aria-label="Habilitar entrantes"
+              />
+            </div>
+          )}
 
           {error !== null && (
             <p className="text-destructive bg-destructive/8 border-destructive/25 rounded-md border px-3 py-2 text-xs">
@@ -152,11 +160,11 @@ export function AssignNumberSheet({
           )}
 
           <Button
-            disabled={assign.isPending || companyId === "" || agentId === ""}
+            disabled={assign.isPending || companyId === "" || (!isCallerId && agentId === "")}
             onClick={submit}
           >
             {assign.isPending && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
-            Asignar número
+            {isCallerId ? "Asignar identificador" : "Asignar número"}
           </Button>
         </div>
       </SheetContent>
