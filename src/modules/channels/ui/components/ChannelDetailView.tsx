@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, PlugZap, Power, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, KeyRound, PlugZap, Power, RefreshCw, Trash2 } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -24,6 +24,7 @@ import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
 import { ChannelHealthCard } from "./ChannelHealthCard";
 import { ChannelProviderIcon } from "./ChannelProviderIcon";
 import { ChannelStatusBadge } from "./ChannelStatusBadge";
+import { MetaPinDialog } from "./MetaPinDialog";
 import { ReconnectChannelDialog } from "./ReconnectChannelDialog";
 
 /**
@@ -47,6 +48,7 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   const [fetched, setFetched] = useState<ChannelDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
+  const [registeringPin, setRegisteringPin] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,8 +221,20 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
           <p className="text-xs text-muted-foreground">{actions?.hint}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {/* Primero y sólido: es lo único que deja el canal a medias. Sin esta
+              acción, el aviso de salud mandaba a «Renovar», que devolvía el
+              mismo sub-estado — un bucle sin sitio donde teclear el PIN */}
+          {actions?.can_register_pin === true && (
+            <Button onClick={() => setRegisteringPin(true)}>
+              <KeyRound aria-hidden="true" className="size-4" />
+              Confirmar PIN
+            </Button>
+          )}
           {channel.kind === "whatsapp_cloud" && (
-            <Button onClick={() => setReconnecting(true)}>
+            <Button
+              variant={actions?.can_register_pin === true ? "outline" : "default"}
+              onClick={() => setReconnecting(true)}
+            >
               <RefreshCw aria-hidden="true" className="size-4" />
               Renovar conexión
             </Button>
@@ -250,6 +264,9 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
           open={reconnecting}
           onOpenChange={setReconnecting}
         />
+      )}
+      {actions?.can_register_pin === true && (
+        <MetaPinDialog channel={channel} open={registeringPin} onOpenChange={setRegisteringPin} />
       )}
     </div>
   );

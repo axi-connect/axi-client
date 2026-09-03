@@ -52,6 +52,34 @@ function renderPhase(phase: EmbeddedSignupPhase, error: UseEmbeddedSignupResult[
 }
 
 describe("EmbeddedSignupButton", () => {
+  it("en `awaiting_pin` pinta el formulario del PIN, no el botón ni el éxito", () => {
+    // Hasta aquí esta fase era inalcanzable: el hook avisaba `onConnected` en el
+    // mismo batch y el host desmontaba el componente antes de este render. El
+    // formulario existía y era código muerto.
+    state = {
+      ...phaseState("awaiting_pin"),
+      channel: {
+        id: "ch-1",
+        name: "Ventas",
+        kind: "whatsapp_cloud",
+        display_phone_number: "+57 300 000 0000",
+        onboarding: { status: "awaiting_registration" },
+      } as unknown as UseEmbeddedSignupResult["channel"],
+    };
+    render(
+      <EmbeddedSignupButton
+        provider={channelProvider("whatsapp_cloud")}
+        onConnected={jest.fn()}
+        onManualCreated={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/PIN de seis dígitos/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("textbox", { name: /Dígito \d de 6/ })).toHaveLength(6);
+    expect(screen.getByRole("button", { name: /Confirmar y activar/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Conectar/i })).toBeNull();
+  });
+
   it("el botón NACE deshabilitado mientras se prepara", () => {
     renderPhase("preparing");
 

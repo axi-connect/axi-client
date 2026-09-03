@@ -50,6 +50,10 @@ export type UseEmbeddedSignupOptions = {
   product: MetaProduct;
   /** Nombre del canal. El backend lo acepta en el alta: no hace falta PATCH. */
   channelName?: string;
+  /**
+   * El canal quedó operativo. NO se llama en `awaiting_pin`: ahí el flujo sigue
+   * vivo pidiendo el PIN, y quien lo monta no debe desmontarlo todavía.
+   */
   onConnected?: (channel: ChannelDTO) => void;
 };
 
@@ -190,10 +194,16 @@ export function useEmbeddedSignup({
       // El canal EXISTE aunque falte el PIN: el backend no tumba la conexión por
       // eso, devuelve 201 con el sub-estado. De ahí sale el id que necesita el
       // endpoint de registro.
-      setPhase(
-        created.onboarding?.status === "awaiting_registration" ? "awaiting_pin" : "success",
-      );
-      onConnected?.(created);
+      const awaitingPin = created.onboarding?.status === "awaiting_registration";
+      setPhase(awaitingPin ? "awaiting_pin" : "success");
+      // `onConnected` SOLO cuando de verdad terminó. Avisar también en
+      // `awaiting_pin` hacía que los dos hosts desmontaran este flujo —el
+      // wizard saltaba al paso «Listo», el diálogo de reconexión se cerraba
+      // cantando «Conexión renovada»— justo antes de pintar el formulario del
+      // PIN. Resultado: un canal que no podía iniciar conversaciones, una
+      // pantalla de éxito, y ningún sitio en el producto donde teclear el PIN.
+      // `submitPin` avisa cuando el registro se completa.
+      if (!awaitingPin) onConnected?.(created);
     } catch (err) {
       clearAttempt();
       if (!mountedRef.current) return;

@@ -279,6 +279,36 @@ describe("useEmbeddedSignup", () => {
     expect(view.result.current.phase).toBe("success");
   });
 
+  it("en `awaiting_pin` NO avisa `onConnected`: avisar desmontaba el formulario del PIN", async () => {
+    // El bug: los dos hosts reaccionan a `onConnected` desmontando el flujo (el
+    // wizard salta a «Listo», el diálogo de reconexión se cierra con «Conexión
+    // renovada»). Llamarlo aquí dejaba un canal mudo detrás de una pantalla de
+    // éxito, sin ningún sitio donde teclear el PIN.
+    completeMetaSignup.mockResolvedValue({
+      ...CHANNEL,
+      onboarding: { status: "awaiting_registration", method: null, attempted_at: null, last_error_code: null },
+    });
+    const onConnected = jest.fn();
+    const view = renderHook(() => useEmbeddedSignup({ product: "whatsapp", onConnected }));
+    await waitFor(() => expect(view.result.current.phase).toBe("ready"));
+    act(() => view.result.current.start());
+    act(() => loginCallback?.({ authResponse: { code: "AQD-code" } }));
+    act(() => {
+      window.dispatchEvent(finishMessage());
+    });
+    await waitFor(() => expect(view.result.current.phase).toBe("awaiting_pin"));
+
+    expect(onConnected).not.toHaveBeenCalled();
+
+    // Y SÍ avisa cuando el PIN cierra el registro: ahí termina de verdad
+    registerMetaPhoneNumber.mockResolvedValue(CHANNEL);
+    await act(async () => {
+      await view.result.current.submitPin("123456");
+    });
+    expect(onConnected).toHaveBeenCalledTimes(1);
+    expect(onConnected).toHaveBeenCalledWith(expect.objectContaining({ id: "ch-1" }));
+  });
+
   it("un `code` caducado va a `error` conservando el código del backend", async () => {
     completeMetaSignup.mockRejectedValue(
       new HttpError({ status: 422, code: "channels/meta_code_expired", message: "expirado" }),

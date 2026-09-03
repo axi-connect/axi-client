@@ -239,6 +239,32 @@ describe("readChannelActions — las acciones del detalle (F6)", () => {
     expect(actions.hint).not.toContain("Lo desconectaste");
   });
 
+  it("con el número sin PIN ofrece confirmarlo: la salida del bucle «renovar → sigue sin PIN»", () => {
+    // Antes la única acción era renovar la conexión, que devolvía el mismo
+    // sub-estado. El canal recibía y no podía iniciar conversaciones, y no había
+    // ningún sitio en el producto donde teclear el PIN.
+    const actions = readChannelActions(
+      channel({
+        onboarding: { status: "awaiting_registration", method: null, attempted_at: null, last_error_code: null },
+      }),
+    );
+
+    expect(actions.can_register_pin).toBe(true);
+    expect(actions.can_disconnect).toBe(true);
+  });
+
+  it("el PIN no se ofrece en un canal desconectado ni en uno ya registrado", () => {
+    expect(
+      readChannelActions(
+        channel({
+          status: "disconnected",
+          onboarding: { status: "awaiting_registration", method: null, attempted_at: null, last_error_code: null },
+        }),
+      ).can_register_pin,
+    ).toBe(false);
+    expect(readChannelActions(channel()).can_register_pin).toBe(false);
+  });
+
   it("un canal viejo sin fecha no inventa una", () => {
     // Los canales anteriores a B10 no tienen `disconnected_at`
     const actions = readChannelActions(channel({ status: "disconnected" }));

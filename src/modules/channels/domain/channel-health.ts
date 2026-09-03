@@ -184,7 +184,7 @@ export function readOnboardingNotice(
         tone: "warning",
         title: "Falta confirmar el PIN del número",
         detail:
-          "El canal ya recibe mensajes, pero no podrás iniciar conversaciones nuevas hasta completar este paso. Renueva la conexión para terminarlo.",
+          "El canal ya recibe mensajes, pero no podrás iniciar conversaciones nuevas hasta completar este paso. Confírmalo desde las acciones del canal.",
       };
     case "awaiting_payment_method":
       return {
@@ -225,6 +225,13 @@ function daysBetween(from: Date, to: Date): number {
 export type ChannelActions = {
   can_disconnect: boolean;
   can_reconnect: boolean;
+  /**
+   * El número quedó dado de alta sin PIN (`awaiting_registration`): el canal
+   * recibe pero no puede iniciar conversaciones. Sin una acción propia, la única
+   * salida era «Renovar la conexión», que volvía a devolver el mismo sub-estado:
+   * un bucle sin ningún sitio donde teclear el PIN.
+   */
+  can_register_pin: boolean;
   /** Copia de la sección: cambia según quién dejó el canal así. */
   hint: string;
 };
@@ -250,11 +257,16 @@ const ACTIVE_HINT =
 export function readChannelActions(channel: ChannelDTO, now: Date = new Date()): ChannelActions {
   const disconnected = channel.status === "disconnected";
   const isCloud = channel.kind === "whatsapp_cloud";
+  // Solo WhatsApp Cloud tiene PIN de registro, y solo mientras el canal esté
+  // vivo: en uno desconectado primero hay que reconectar
+  const canRegisterPin =
+    isCloud && !disconnected && channel.onboarding?.status === "awaiting_registration";
 
   if (!disconnected) {
     return {
       can_disconnect: true,
       can_reconnect: false,
+      can_register_pin: canRegisterPin,
       hint: ACTIVE_HINT,
     };
   }
@@ -263,6 +275,7 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
     return {
       can_disconnect: false,
       can_reconnect: isCloud,
+      can_register_pin: false,
       hint: "Meta revocó el acceso a este canal. Vuelve a conectarlo para seguir recibiendo mensajes.",
     };
   }
@@ -270,6 +283,7 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
   return {
     can_disconnect: false,
     can_reconnect: isCloud,
+    can_register_pin: false,
     hint: disconnectedHint(channel.disconnected_at ?? null, now),
   };
 }
