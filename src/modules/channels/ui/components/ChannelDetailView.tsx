@@ -33,10 +33,11 @@ import { ReconnectChannelDialog } from "./ReconnectChannelDialog";
  * queremos sacar al operador de su vista para mirar el estado de un canal.
  *
  * F4 le añade la tarjeta de salud —calidad del número, límite de mensajería,
- * vigencia del acceso de Meta— y la renovación de la conexión. **No hay botón de
- * desconexión suave**: el backend no la implementa (su fase B10 quedó abierta), y
- * prometer en la UI una semántica que el backend no tiene es peor que no
- * ofrecerla. Las acciones son renovar y eliminar.
+ * vigencia del acceso de Meta— y la renovación de la conexión. F6 añade la
+ * desconexión suave (B10: `POST /channels/:id/disconnect`, reversible, conserva
+ * historial) y la reconexión; la Fase 5 de la auditoría, la confirmación del PIN.
+ * Qué acciones se ofrecen lo decide `readChannelActions` en `domain/`, no esta
+ * vista.
  */
 export function ChannelDetailView({ channelId }: { channelId: string }) {
   useChannelsRealtime();

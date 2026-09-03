@@ -34,11 +34,12 @@ export type ChannelBrandClass =
   | "brand-fault";
 
 /**
- * `manual_only` es la sustancia de F5: el canal **funciona de punta a punta** —el
- * backend tiene su adaptador de envío y su router de webhook desde B9— pero su
- * alta por Embedded Signup todavía no existe, porque la verificación de propiedad
- * de esos productos usa `/me/accounts` y no el WABA, así que es otro caso de uso.
- * Sin esa verificación, ofrecer el botón sería reabrir el agujero que B4 cerró.
+ * `manual_only` fue la sustancia de F5: un canal que funciona de punta a punta
+ * pero cuya alta por botón aún no existía, así que se ofrecía por credenciales.
+ * Desde F7 (B11) ningún proveedor lo usa —Instagram y Messenger tienen botón—,
+ * pero el valor se conserva como válvula: si un producto pierde su alta por
+ * botón (un `config_id` retirado, un permiso revocado), basta cambiar una palabra
+ * aquí para que el wizard caiga al camino manual sin tocar ninguna vista.
  *
  * La diferencia con `coming_soon` importa: `coming_soon` no se puede elegir,
  * `manual_only` sí, y va por el camino de credenciales.

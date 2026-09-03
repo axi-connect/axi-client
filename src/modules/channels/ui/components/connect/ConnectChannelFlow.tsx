@@ -142,7 +142,7 @@ function subtitle(step: number, provider: ChannelProvider | null): string {
     if (provider === null) return "";
     const strategy = effectiveConnectStrategy(provider);
     if (strategy === "manual") {
-      return "Este canal todavía se conecta con las credenciales de tu app de Meta. El botón llega pronto.";
+      return "Este canal se conecta con las credenciales de tu app de Meta.";
     }
     return "Se abrirá una ventana de Meta. Autoriza ahí y nosotros hacemos el resto.";
   }
