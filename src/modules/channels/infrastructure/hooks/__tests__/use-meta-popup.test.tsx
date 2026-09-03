@@ -84,3 +84,36 @@ describe("useMetaPopup — opciones de FB.login por producto", () => {
     },
   );
 });
+
+describe("useMetaPopup — la configuración que no se pudo LEER no es capacidad ausente", () => {
+  it("un fallo de red deja `unavailable` con un código reintentable, y `retryConfig` vuelve a pedirla", async () => {
+    // El adapter ya devuelve `null` en los dos casos legítimos de ausencia
+    // (503 disabled, 400 por colisión de rutas). Lo que lanza es otra cosa —red,
+    // 5xx— y tratarlo como ausencia mandaba al usuario a pegar tokens por un
+    // hipo de un segundo, sin más salida que recargar.
+    getMetaSignupConfig.mockRejectedValueOnce(new Error("Failed to fetch"));
+    getMetaSignupConfig.mockResolvedValueOnce(config("whatsapp"));
+    const sdk = { login };
+    loadFacebookSdk.mockResolvedValue(sdk);
+    getFacebookSdk.mockReturnValue(sdk);
+
+    const { result } = renderHook(() => useMetaPopup("whatsapp"));
+    await waitFor(() => expect(result.current.status).toBe("unavailable"));
+    expect(result.current.error?.code).toBe("channels/meta_config_unreachable");
+
+    act(() => result.current.retryConfig());
+
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(getMetaSignupConfig).toHaveBeenCalledTimes(2);
+  });
+
+  it("la ausencia real (adapter devuelve null) sigue siendo `meta_signup_disabled`, sin reintento", async () => {
+    getMetaSignupConfig.mockResolvedValue(null);
+
+    const { result } = renderHook(() => useMetaPopup("whatsapp"));
+    await waitFor(() => expect(result.current.status).toBe("unavailable"));
+
+    expect(result.current.error?.code).toBe("channels/meta_signup_disabled");
+    expect(loadFacebookSdk).not.toHaveBeenCalled();
+  });
+});

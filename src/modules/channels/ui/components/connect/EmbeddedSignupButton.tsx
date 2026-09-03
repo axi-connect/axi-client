@@ -15,11 +15,17 @@ import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import type { ChannelProvider } from "@/modules/channels/domain/channel-providers";
-import type { EmbeddedSignupPhase } from "@/modules/channels/domain/meta-signup";
+import {
+  SIGNUP_STEPS,
+  signupStepIndex,
+  type EmbeddedSignupPhase,
+  type MetaProduct,
+} from "@/modules/channels/domain/meta-signup";
 import {
   useEmbeddedSignup,
   type EmbeddedSignupError,
 } from "@/modules/channels/infrastructure/hooks/use-embedded-signup";
+import { CONFIG_UNREACHABLE_CODE } from "@/modules/channels/infrastructure/hooks/use-meta-popup";
 import { ManualCredentialsFallback } from "./ManualCredentialsFallback";
 import { MetaPinForm } from "./MetaPinForm";
 
@@ -74,11 +80,9 @@ export function EmbeddedSignupButton({
   intro?: React.ReactNode;
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { phase, error, channel, start, submitPin, submittingPin, reset } = useEmbeddedSignup({
-    product: provider.meta_product ?? "whatsapp",
-    channelName,
-    onConnected,
-  });
+  const product: MetaProduct = provider.meta_product ?? "whatsapp";
+  const { phase, error, channel, start, submitPin, submittingPin, reset, retryConfig } =
+    useEmbeddedSignup({ product, channelName, onConnected });
 
   useEffect(() => {
     if (TERMINAL.includes(phase)) buttonRef.current?.focus();
@@ -99,12 +103,12 @@ export function EmbeddedSignupButton({
     <div className="space-y-5">
       <div className="space-y-5 rounded-lg border border-border p-4 md:p-6">
         {intro}
-        <div>{renderAction({ phase, buttonRef, start, reset })}</div>
+        <div>{renderAction({ phase, error, buttonRef, start, reset, retryConfig })}</div>
 
         {/* Región viva para lo que está EN CURSO: `polite` no interrumpe al
             lector de pantalla en mitad de una frase */}
         <div role="status" aria-live="polite" className="space-y-4">
-          {IN_PROGRESS.includes(phase) && renderProgress(phase)}
+          {IN_PROGRESS.includes(phase) && renderProgress(phase, product)}
         </div>
 
         {/* Y `assertive` para lo terminal: si el intento se cayó, hay que
@@ -128,16 +132,30 @@ export function EmbeddedSignupButton({
   );
 }
 
+/**
+ * `unavailable` tiene dos causas con dos salidas: la capacidad no está (camino
+ * manual, botón inerte) o la configuración no se pudo LEER por un hipo de red
+ * (reintentar). Antes las dos pintaban el botón deshabilitado y la única salida
+ * era recargar la página. Compartido con el botón de páginas.
+ */
+export function isConfigUnreachable(error: { code: string } | null): boolean {
+  return error?.code === CONFIG_UNREACHABLE_CODE;
+}
+
 function renderAction({
   phase,
+  error,
   buttonRef,
   start,
   reset,
+  retryConfig,
 }: {
   phase: EmbeddedSignupPhase;
+  error: EmbeddedSignupError | null;
   buttonRef: React.RefObject<HTMLButtonElement | null>;
   start: () => void;
   reset: () => void;
+  retryConfig: () => void;
 }) {
   if (phase === "preparing") {
     return (
@@ -164,6 +182,14 @@ function renderAction({
     );
   }
   if (phase === "unavailable") {
+    if (isConfigUnreachable(error)) {
+      return (
+        <Button ref={buttonRef} size="lg" variant="outline" onClick={retryConfig}>
+          <ExternalLink aria-hidden="true" className="size-4" />
+          Reintentar la conexión
+        </Button>
+      );
+    }
     return (
       <Button ref={buttonRef} size="lg" disabled>
         <ExternalLink aria-hidden="true" className="size-4" />
@@ -188,7 +214,7 @@ function renderAction({
   );
 }
 
-export function renderProgress(phase: EmbeddedSignupPhase) {
+export function renderProgress(phase: EmbeddedSignupPhase, product: MetaProduct) {
   if (phase === "preparing") {
     return (
       <p className="text-xs text-muted-foreground">
@@ -198,14 +224,10 @@ export function renderProgress(phase: EmbeddedSignupPhase) {
   }
 
   // Saber cuánto falta reduce el abandono: son los pasos que verá DENTRO del
-  // popup, no los nuestros
-  const steps = [
-    "Eliges el negocio y el número",
-    "Meta verifica el número por SMS o llamada",
-    "Aceptas los permisos",
-    "Activamos el canal",
-  ];
-  const active = phase === "exchanging" ? 3 : 0;
+  // popup, no los nuestros — y son distintos por producto (en Instagram y
+  // Messenger no hay número ni SMS; ver `SIGNUP_STEPS`)
+  const steps = SIGNUP_STEPS[product];
+  const active = signupStepIndex(product, phase);
 
   return (
     <div className="space-y-3">

@@ -71,6 +71,8 @@ export type UseEmbeddedSignupResult = {
   submittingPin: boolean;
   /** Vuelve a `ready` (o `unavailable`) descartando el intento anterior. */
   reset: () => void;
+  /** Vuelve a pedir configuración y SDK tras un fallo de red (ver `useMetaPopup`). */
+  retryConfig: () => void;
 };
 
 export function useEmbeddedSignup({
@@ -370,5 +372,6 @@ export function useEmbeddedSignup({
     submitPin,
     submittingPin,
     reset,
+    retryConfig: popup.retryConfig,
   };
 }

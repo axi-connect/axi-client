@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import { channelProvider } from "@/modules/channels/domain/channel-providers";
 import type { EmbeddedSignupPhase } from "@/modules/channels/domain/meta-signup";
@@ -35,6 +35,7 @@ function phaseState(phase: EmbeddedSignupPhase, error: UseEmbeddedSignupResult["
     submitPin: jest.fn(),
     submittingPin: false,
     reset: jest.fn(),
+    retryConfig: jest.fn(),
   } satisfies UseEmbeddedSignupResult;
 }
 
@@ -153,6 +154,20 @@ describe("EmbeddedSignupButton", () => {
     expect(screen.getByText("channels/meta_code_expired")).toBeInTheDocument();
     // Cero jerga en la superficie: nada de identificadores de Meta
     expect(screen.queryByText(/phone_number_id|WABA|Graph API/i)).toBeNull();
+  });
+
+  it("si la configuración no se pudo LEER, el botón ofrece reintentar en vez de quedarse inerte", () => {
+    // Un hipo de red al pedir la configuración se convertía en «la función no
+    // está disponible» con el botón deshabilitado: la única salida era recargar
+    const state = renderPhase("unavailable", {
+      code: "channels/meta_config_unreachable",
+      message: "No pudimos comprobar la conexión con Meta.",
+    });
+
+    const retry = screen.getByRole("button", { name: /Reintentar la conexión/i });
+    expect(retry).toBeEnabled();
+    fireEvent.click(retry);
+    expect(state.retryConfig).toHaveBeenCalledTimes(1);
   });
 
   it("en `unavailable` el camino manual SUBE a visible y el botón queda inerte", () => {

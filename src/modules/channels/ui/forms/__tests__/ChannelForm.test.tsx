@@ -129,3 +129,49 @@ describe("ChannelForm — edición", () => {
     expect(updateChannel).not.toHaveBeenCalled();
   });
 });
+
+describe("ChannelForm — alta manual", () => {
+  it("Instagram exige y envía el page_id: sin él el canal recibe y no envía", async () => {
+    // El backend lo exige desde A2 (la Send API publica en la PÁGINA). Sin este
+    // campo, el alta manual de IG desde la interfaz respondía 400.
+    createChannel.mockResolvedValue({ id: "ch-ig" });
+    render(
+      <>
+        <ChannelForm fixedKind="instagram_dm" />
+        <button
+          type="button"
+          onClick={() => {
+            const form = document.getElementById("channels-form");
+            (form as HTMLFormElement | null)?.requestSubmit();
+          }}
+        >
+          Guardar
+        </button>
+      </>,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Nombre del canal/i), { target: { value: "Tienda IG" } });
+    fireEvent.change(screen.getByLabelText(/ID de la cuenta de Instagram/i), {
+      target: { value: "17841400008460056" },
+    });
+    fireEvent.change(screen.getByLabelText(/Access token/i), {
+      target: { value: "EAAG-un-token-lo-bastante-largo" },
+    });
+    // Sin page_id: la validación avisa y NO llama al backend
+    fireEvent.click(screen.getByRole("button", { name: /^Guardar$/i }));
+    await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })));
+    expect(createChannel).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText(/ID de la página de Facebook vinculada/i), {
+      target: { value: "109876543210987" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^Guardar$/i }));
+
+    await waitFor(() => expect(createChannel).toHaveBeenCalled());
+    expect(createChannel.mock.calls[0][0]).toMatchObject({
+      kind: "instagram_dm",
+      provider_account_id: "17841400008460056",
+      page_id: "109876543210987",
+    });
+  });
+});

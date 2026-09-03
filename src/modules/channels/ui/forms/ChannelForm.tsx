@@ -43,6 +43,8 @@ const channelFormFields = z.object({
   kind: z.enum(["whatsapp_cloud", "instagram_dm", "facebook_messenger"]),
   provider_account_id: z.string().trim().optional().or(z.literal("")),
   waba_id: z.string().trim().optional().or(z.literal("")),
+  /** Solo Instagram: la página de Facebook vinculada. Sin ella el canal recibe y no envía. */
+  page_id: z.string().trim().optional().or(z.literal("")),
   access_token: z.string().trim().optional().or(z.literal("")),
   default_ai_agent_id: z.string().optional(),
 })
@@ -70,6 +72,11 @@ function makeChannelFormSchema(isEdit: boolean) {
     if (!values.access_token) {
       ctx.addIssue({ code: "custom", path: ["access_token"], message: "Requerido para conectar con token" })
     }
+    // El backend lo exige por la misma razón que lo muestra la etiqueta: la Send
+    // API de Instagram publica en la PÁGINA, no en la cuenta
+    if (values.kind === "instagram_dm" && !values.page_id) {
+      ctx.addIssue({ code: "custom", path: ["page_id"], message: "Requerido para Instagram (id de la página de Facebook vinculada)" })
+    }
   })
 }
 
@@ -92,6 +99,7 @@ const FIELD_LABEL: Record<string, string> = {
   kind: "Tipo de canal",
   provider_account_id: "Identificador de la cuenta",
   waba_id: "WABA ID",
+  page_id: "ID de la página de Facebook",
   access_token: "Access token",
   default_ai_agent_id: "Agente IA por defecto",
 }
@@ -146,6 +154,7 @@ export function ChannelForm({
       kind: fixedKind ?? toEditableKind(host?.channel?.kind) ?? "whatsapp_cloud",
       provider_account_id: "",
       waba_id: "",
+      page_id: "",
       access_token: "",
       default_ai_agent_id: host?.channel?.default_ai_agent_id ?? undefined,
     },
@@ -194,6 +203,8 @@ export function ChannelForm({
           access_token: values.access_token,
           // El WABA es un concepto de WhatsApp: IG y Messenger no tienen
           ...(values.kind === "whatsapp_cloud" && values.waba_id ? { waba_id: values.waba_id } : {}),
+          // Y la página vinculada es un concepto de Instagram
+          ...(values.kind === "instagram_dm" && values.page_id ? { page_id: values.page_id } : {}),
         })
         // El agente por defecto se asigna con un PATCH posterior (contrato del backend).
         if (values.default_ai_agent_id && values.default_ai_agent_id !== NONE_AGENT) {
@@ -288,6 +299,21 @@ export function ChannelForm({
                 </FormItem>
               )}
             />
+            {kind === "instagram_dm" && (
+              <FormField
+                name="page_id"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID de la página de Facebook vinculada</FormLabel>
+                    <FormControl>
+                      <Input placeholder="109876543210987" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             {kind === "whatsapp_cloud" && (
               <FormField
                 name="waba_id"

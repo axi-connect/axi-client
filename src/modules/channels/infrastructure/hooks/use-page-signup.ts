@@ -45,6 +45,8 @@ export type UsePageSignupResult = {
   start: () => void;
   choose: (assetId: string) => void;
   reset: () => void;
+  /** Vuelve a pedir configuración y SDK tras un fallo de red (ver `useMetaPopup`). */
+  retryConfig: () => void;
 };
 
 export function usePageSignup({ product, onConnected }: UsePageSignupOptions): UsePageSignupResult {
@@ -195,5 +197,15 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
     setPhase(popup.ready ? "ready" : "unavailable");
   }, [clearWatchdog, popup.ready]);
 
-  return { phase, error, channel, assets, connecting, start, choose, reset };
+  return {
+    phase,
+    error,
+    channel,
+    assets,
+    connecting,
+    start,
+    choose,
+    reset,
+    retryConfig: popup.retryConfig,
+  };
 }

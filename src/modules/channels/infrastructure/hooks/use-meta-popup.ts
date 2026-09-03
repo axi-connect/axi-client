@@ -88,12 +88,25 @@ export type UseMetaPopupResult = {
   }) => void;
   /** Corta el abandono del intento en curso. Lo llama el flujo al resolver. */
   clearWatchdog: () => void;
+  /**
+   * Vuelve a pedir la configuración y el SDK. Existe porque un hipo de red al
+   * pedir la configuración se convertía en «la función no está disponible» con
+   * el botón deshabilitado y sin salida salvo recargar. El adapter distingue
+   * bien los dos casos legítimos de capacidad ausente; el hook los mezclaba con
+   * los 500 y los fallos de red.
+   */
+  retryConfig: () => void;
 };
+
+/** Código local: la configuración no se pudo LEER (red, 5xx). Reintentable. */
+export const CONFIG_UNREACHABLE_CODE = "channels/meta_config_unreachable";
 
 export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
   const [status, setStatus] = useState<MetaPopupStatus>("preparing");
   const [config, setConfig] = useState<MetaSignupConfigDTO | null>(null);
   const [error, setError] = useState<MetaPopupError | null>(null);
+  /** Cada reintento vuelve a correr el efecto de carga. */
+  const [attempt, setAttempt] = useState(0);
 
   /** Solo marca que la carga terminó. El objeto se lee del global al usarlo. */
   const loadedRef = useRef(false);
@@ -113,10 +126,22 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
     // SDK y configuración en paralelo: son independientes y en serie duplicarían
     // el tiempo que el botón pasa deshabilitado
     void (async () => {
-      const configResult = await getMetaSignupConfig(product).catch((err: unknown) => {
-        console.warn("[meta-signup] La configuración falló:", err);
-        return null;
-      });
+      let configResult: MetaSignupConfigDTO | null;
+      try {
+        configResult = await getMetaSignupConfig(product);
+      } catch (err) {
+        // El adapter YA devolvió `null` en los dos casos de capacidad ausente.
+        // Lo que llega aquí es otra cosa —red, 5xx— y tratarlo como ausencia
+        // mandaba al usuario a pegar tokens por un hipo de un segundo.
+        if (cancelled) return;
+        console.warn("[meta-signup] No se pudo leer la configuración:", err);
+        setStatus("unavailable");
+        setError({
+          code: CONFIG_UNREACHABLE_CODE,
+          message: "No pudimos comprobar la conexión con Meta. Suele ser pasajero: vuelve a intentarlo.",
+        });
+        return;
+      }
       if (cancelled) return;
 
       // `null` = capacidad ausente (flag apagado, config_id sin poner). No es un
@@ -153,7 +178,13 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
       cancelled = true;
       clearWatchdog();
     };
-  }, [product, clearWatchdog]);
+  }, [product, clearWatchdog, attempt]);
+
+  const retryConfig = useCallback(() => {
+    setStatus("preparing");
+    setError(null);
+    setAttempt((current) => current + 1);
+  }, []);
 
   const open = useCallback(
     (handlers: { beforeOpen?: () => void; onResult: (result: MetaPopupResult) => void }) => {
@@ -274,5 +305,6 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
     ready: status === "ready",
     open,
     clearWatchdog,
+    retryConfig,
   };
 }

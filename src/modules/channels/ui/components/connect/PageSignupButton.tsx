@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import type { ChannelProvider } from "@/modules/channels/domain/channel-providers";
 import { usePageSignup } from "@/modules/channels/infrastructure/hooks/use-page-signup";
+import type { MetaPopupError } from "@/modules/channels/infrastructure/hooks/use-meta-popup";
 import {
   CancelledNotice,
   ErrorNotice,
@@ -14,6 +15,7 @@ import {
   PopupBlockedNotice,
   TERMINAL,
   UnavailableNotice,
+  isConfigUnreachable,
   renderProgress,
 } from "./EmbeddedSignupButton";
 import { ManualCredentialsFallback } from "./ManualCredentialsFallback";
@@ -45,7 +47,7 @@ export function PageSignupButton({
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const product = provider.meta_product === "instagram" ? "instagram" : "messenger";
-  const { phase, error, assets, connecting, start, choose, reset } = usePageSignup({
+  const { phase, error, assets, connecting, start, choose, reset, retryConfig } = usePageSignup({
     product,
     onConnected,
   });
@@ -65,16 +67,18 @@ export function PageSignupButton({
           ) : (
             <PrimaryAction
               phase={phase}
+              error={error}
               buttonRef={buttonRef}
               label={provider.label}
               start={start}
               reset={reset}
+              retryConfig={retryConfig}
             />
           )}
         </div>
 
         <div role="status" aria-live="polite" className="space-y-4">
-          {IN_PROGRESS.includes(phase) && renderProgress(phase)}
+          {IN_PROGRESS.includes(phase) && renderProgress(phase, product)}
         </div>
 
         <div role="alert" aria-live="assertive" className="space-y-4">
@@ -98,16 +102,20 @@ export function PageSignupButton({
 
 function PrimaryAction({
   phase,
+  error,
   buttonRef,
   label,
   start,
   reset,
+  retryConfig,
 }: {
   phase: string;
+  error: MetaPopupError | null;
   buttonRef: React.RefObject<HTMLButtonElement | null>;
   label: string;
   start: () => void;
   reset: () => void;
+  retryConfig: () => void;
 }) {
   if (phase === "preparing") {
     return (
@@ -129,9 +137,28 @@ function PrimaryAction({
 
   if (TERMINAL.includes(phase as never) && phase !== "unavailable") {
     return (
-      <Button ref={buttonRef} size="lg" onClick={reset}>
+      <Button
+        ref={buttonRef}
+        size="lg"
+        onClick={() => {
+          // Igual que el botón de WhatsApp: reintentar ES reabrir el popup. Solo
+          // `reset` dejaba la fase en `ready` y obligaba a un segundo clic. Los
+          // dos van en el mismo tick: `start` sigue siendo síncrona en el gesto.
+          reset();
+          start();
+        }}
+      >
         <RefreshCw aria-hidden="true" className="size-4" />
         Volver a intentar
+      </Button>
+    );
+  }
+
+  if (phase === "unavailable" && isConfigUnreachable(error)) {
+    return (
+      <Button ref={buttonRef} size="lg" variant="outline" onClick={retryConfig}>
+        <RefreshCw aria-hidden="true" className="size-4" />
+        Reintentar la conexión
       </Button>
     );
   }

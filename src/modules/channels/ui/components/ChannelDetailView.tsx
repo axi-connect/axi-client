@@ -45,6 +45,7 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
   const { showAlert, showModal, closeModal } = useAlert();
   const liveChannels = useChannelStore((s) => s.channels);
   const removeChannel = useChannelStore((s) => s.removeChannel);
+  const upsertChannel = useChannelStore((s) => s.upsertChannel);
   const [fetched, setFetched] = useState<ChannelDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
@@ -96,6 +97,10 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
           onClick: async () => {
             try {
               const updated = await disconnectChannel(channel.id);
+              // Al store, no solo al snapshot: la cabecera pinta `live ?? fetched`
+              // y `live` gana. Sin esto el POST pasaba y el badge seguía en verde
+              // hasta que llegara el evento por WS — o hasta recargar
+              upsertChannel(updated);
               setFetched(updated);
               closeModal();
               showAlert({
@@ -230,7 +235,10 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
               Confirmar PIN
             </Button>
           )}
-          {channel.kind === "whatsapp_cloud" && (
+          {/* Renovar solo tiene sentido en un canal VIVO: desconectado ofrece
+              «Reconectar», que es la misma acción con otro nombre. Antes salían
+              los dos botones a la vez sobre el mismo diálogo */}
+          {provider.meta_product !== undefined && channel.status !== "disconnected" && (
             <Button
               variant={actions?.can_register_pin === true ? "outline" : "default"}
               onClick={() => setReconnecting(true)}
@@ -258,7 +266,9 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
         </div>
       </section>
 
-      {channel.kind === "whatsapp_cloud" && (
+      {/* Los tres productos de Meta se reconectan relanzando su alta por botón:
+          antes solo WhatsApp, y un Instagram revocado solo ofrecía «Eliminar» */}
+      {provider.meta_product !== undefined && (
         <ReconnectChannelDialog
           channel={channel}
           open={reconnecting}

@@ -13,6 +13,7 @@ import { channelProvider } from "@/modules/channels/domain/channel-providers";
 import { useChannelStore } from "@/modules/channels/infrastructure/stores/channels.store";
 import { updateChannelCredentials } from "@/modules/channels/infrastructure/services/channels-service.adapter";
 import { EmbeddedSignupButton } from "./connect/EmbeddedSignupButton";
+import { PageSignupButton } from "./connect/PageSignupButton";
 
 /**
  * Renovar la conexión de un canal que ya existe.
@@ -43,6 +44,40 @@ export function ReconnectChannelDialog({
   const provider = channelProvider(channel.kind);
   const { showAlert } = useAlert();
   const upsertChannel = useChannelStore((s) => s.upsertChannel);
+  // Instagram y Messenger hablan de «página» o «cuenta», no de número
+  const isPage = provider.meta_product === "instagram" || provider.meta_product === "messenger";
+  const assetWord = provider.meta_product === "instagram" ? "la misma cuenta" : "la misma página";
+
+  const onConnected = (updated: ChannelDTO) => {
+    upsertChannel(updated);
+    onOpenChange(false);
+    showAlert({
+      tone: updated.id === channel.id ? "success" : "info",
+      title:
+        updated.id === channel.id
+          ? "Conexión renovada"
+          : isPage
+            ? "Conectaste otra página, así que creamos un canal nuevo"
+            : "Conectaste un número distinto, así que creamos un canal nuevo",
+      open: true,
+      autoCloseMs: 5000,
+    });
+  };
+
+  const intro = (
+    <div className="flex gap-3 rounded-md border border-warning/40 bg-warning/[0.09] p-3.5">
+      <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
+      <div className="space-y-1">
+        <p className="text-sm font-semibold">
+          Elige {isPage ? assetWord : "el mismo número"}:{" "}
+          {channel.display_phone_number ?? channel.verified_name ?? channel.name}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Si eliges {isPage ? "otra" : "otro"}, se creará un canal nuevo en lugar de renovar este.
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <Modal
@@ -54,37 +89,22 @@ export function ReconnectChannelDialog({
         className: "sm:max-w-2xl",
       }}
     >
-      <EmbeddedSignupButton
-        provider={provider}
-        channelName={channel.name}
-        intro={
-          <div className="flex gap-3 rounded-md border border-warning/40 bg-warning/[0.09] p-3.5">
-            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">
-                Elige el mismo número: {channel.display_phone_number ?? channel.name}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Si eliges otro, se creará un canal nuevo en lugar de renovar este.
-              </p>
-            </div>
-          </div>
-        }
-        fallback={<RotateTokenFallback channelId={channel.id} />}
-        onConnected={(updated) => {
-          upsertChannel(updated);
-          onOpenChange(false);
-          showAlert({
-            tone: updated.id === channel.id ? "success" : "info",
-            title:
-              updated.id === channel.id
-                ? "Conexión renovada"
-                : "Conectaste un número distinto, así que creamos un canal nuevo",
-            open: true,
-            autoCloseMs: 5000,
-          });
-        }}
-      />
+      {isPage ? (
+        // El de páginas no admite `fallback`: su camino manual es el alta por
+        // credenciales, que aquí no aplica. La rotación del page token va aparte.
+        <>
+          <PageSignupButton provider={provider} intro={intro} onConnected={onConnected} />
+          <RotateTokenFallback channelId={channel.id} />
+        </>
+      ) : (
+        <EmbeddedSignupButton
+          provider={provider}
+          channelName={channel.name}
+          intro={intro}
+          fallback={<RotateTokenFallback channelId={channel.id} />}
+          onConnected={onConnected}
+        />
+      )}
     </Modal>
   );
 }

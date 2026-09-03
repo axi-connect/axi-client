@@ -135,3 +135,37 @@ export function parseWaSignupMessage(raw: unknown): WaEmbeddedSignupMessage | nu
   if (typeof candidate.event !== "string") return null;
   return candidate as WaEmbeddedSignupMessage;
 }
+
+/**
+ * Lo que el usuario va a ver DENTRO del popup, por producto. Saber cuánto falta
+ * reduce el abandono, pero solo si es verdad: el indicador decía «Meta verifica
+ * el número por SMS o llamada» también en Instagram y Messenger, donde no hay
+ * número, ni SMS, ni verificación telefónica — hay página y elección de activo.
+ * Se compartió lo que no era común.
+ */
+export const SIGNUP_STEPS: Record<MetaProduct, readonly string[]> = {
+  whatsapp: [
+    "Eliges el negocio y el número",
+    "Meta verifica el número por SMS o llamada",
+    "Aceptas los permisos",
+    "Activamos el canal",
+  ],
+  instagram: [
+    "Eliges el negocio y sus páginas de Facebook",
+    "Aceptas los permisos",
+    "Leemos las cuentas de Instagram vinculadas",
+    "Eliges cuál conectar y la activamos",
+  ],
+  messenger: [
+    "Eliges el negocio y sus páginas de Facebook",
+    "Aceptas los permisos",
+    "Leemos las páginas autorizadas",
+    "Eliges cuál conectar y la activamos",
+  ],
+};
+
+/** Qué paso está en curso según la fase. `exchanging` en páginas es «leemos». */
+export function signupStepIndex(product: MetaProduct, phase: EmbeddedSignupPhase): number {
+  if (phase !== "exchanging") return 0;
+  return product === "whatsapp" ? 3 : 2;
+}

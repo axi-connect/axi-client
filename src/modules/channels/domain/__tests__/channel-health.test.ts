@@ -239,6 +239,17 @@ describe("readChannelActions — las acciones del detalle (F6)", () => {
     expect(actions.hint).not.toContain("Lo desconectaste");
   });
 
+  it("Instagram y Messenger también se reconectan: antes un IG revocado solo ofrecía «Eliminar»", () => {
+    // `can_reconnect` era `isCloud`, coherente cuando no tenían alta por botón.
+    // Desde F7 la tienen, y reconectar es relanzarla.
+    for (const kind of ["instagram_dm", "facebook_messenger"] as const) {
+      const actions = readChannelActions(channel({ kind, status: "disconnected", credentials_revoked: true }));
+      expect(actions.can_reconnect).toBe(true);
+    }
+    // El simulador no tiene producto de Meta: nada que relanzar
+    expect(readChannelActions(channel({ kind: "simulator", status: "disconnected" })).can_reconnect).toBe(false);
+  });
+
   it("con el número sin PIN ofrece confirmarlo: la salida del bucle «renovar → sigue sin PIN»", () => {
     // Antes la única acción era renovar la conexión, que devolvía el mismo
     // sub-estado. El canal recibía y no podía iniciar conversaciones, y no había

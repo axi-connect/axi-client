@@ -1,4 +1,5 @@
 import type { ChannelDTO } from "./channel";
+import { channelProvider } from "./channel-providers";
 import type { MetaOnboardingStatus } from "./meta-signup";
 
 /**
@@ -257,6 +258,11 @@ const ACTIVE_HINT =
 export function readChannelActions(channel: ChannelDTO, now: Date = new Date()): ChannelActions {
   const disconnected = channel.status === "disconnected";
   const isCloud = channel.kind === "whatsapp_cloud";
+  // Reconectar es relanzar el alta por botón, así que lo tiene todo canal con
+  // producto de Meta. Antes era `isCloud`: coherente cuando Instagram y
+  // Messenger no tenían alta por botón, pero desde F7 la tienen, y un canal de
+  // Instagram revocado solo ofrecía «Eliminar».
+  const canReconnect = channelProvider(channel.kind).meta_product !== undefined;
   // Solo WhatsApp Cloud tiene PIN de registro, y solo mientras el canal esté
   // vivo: en uno desconectado primero hay que reconectar
   const canRegisterPin =
@@ -274,7 +280,7 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
   if (channel.credentials_revoked) {
     return {
       can_disconnect: false,
-      can_reconnect: isCloud,
+      can_reconnect: canReconnect,
       can_register_pin: false,
       hint: "Meta revocó el acceso a este canal. Vuelve a conectarlo para seguir recibiendo mensajes.",
     };
@@ -282,7 +288,7 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
 
   return {
     can_disconnect: false,
-    can_reconnect: isCloud,
+    can_reconnect: canReconnect,
     can_register_pin: false,
     hint: disconnectedHint(channel.disconnected_at ?? null, now),
   };

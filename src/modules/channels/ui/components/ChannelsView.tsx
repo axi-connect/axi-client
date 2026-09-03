@@ -85,9 +85,28 @@ export function ChannelsView() {
         </div>
       ))}
 
+      {/* Un fallo al REFRESCAR no puede borrar los canales que ya se ven: el
+          store conserva la lista y aquí el error baja a un aviso. La caja a fondo
+          completo queda para la primera carga, cuando no hay nada que mostrar */}
+      {error !== null && channels.length > 0 && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-3 rounded-md border border-warning/40 bg-warning/[0.09] p-3.5"
+        >
+          <TriangleAlert aria-hidden="true" className="size-4 shrink-0 text-warning" />
+          <p className="min-w-0 flex-1 text-sm">
+            No se pudo actualizar la lista; esto es lo último que teníamos. {error}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => void fetchChannels()}>
+            <RefreshCw aria-hidden="true" className="size-4" />
+            Reintentar
+          </Button>
+        </div>
+      )}
+
       {loading && channels.length === 0 ? (
         <ChannelsGridSkeleton />
-      ) : error !== null ? (
+      ) : error !== null && channels.length === 0 ? (
         <div className="space-y-3 rounded-lg border border-border p-6 text-center">
           <p className="text-muted-foreground">{error}</p>
           <Button variant="outline" onClick={() => void fetchChannels()}>
