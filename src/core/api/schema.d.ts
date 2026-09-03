@@ -164,6 +164,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/entitlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EntitlementsController_read_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsageController_conversationUsage_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsageController_summary_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsageController_history_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsageController_events_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsageController_alerts_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/usage/alerts/{id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UsageController_ack_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies/me": {
         parameters: {
             query?: never;
@@ -590,102 +702,6 @@ export interface paths {
         get: operations["PlatformDatabasesController_migrations_v1"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/usage/conversations/{conversation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UsageController_conversationUsage_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/usage/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UsageController_summary_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/usage/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UsageController_history_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/usage/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UsageController_events_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/usage/alerts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UsageController_alerts_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/usage/alerts/{id}/ack": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["UsageController_ack_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5012,22 +5028,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/me/entitlements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["EntitlementsController_read_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/public/onboarding/signups": {
         parameters: {
             query?: never;
@@ -5352,6 +5352,133 @@ export interface components {
         };
         NavigationDto: {
             data: components["schemas"]["NavigationDto__schema0"][];
+        };
+        EntitlementsDto: {
+            /** @enum {string} */
+            offer_kind: "package" | "modules" | "none";
+            plans: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                public_slug: string | null;
+                /** @enum {string} */
+                kind: "package" | "module";
+                name: string;
+            }[];
+            capabilities: string[];
+            pending_offer: {
+                kind: string;
+                plan_codes: string[];
+            } | null;
+            trial: {
+                active: boolean;
+                /** Format: date-time */
+                ends_at: string | null;
+            };
+            included: {
+                metric: string | null;
+                /** @enum {string} */
+                period: "day" | "billing_cycle";
+                quantity_raw: number;
+                quantity_display: string;
+                unit_label: string;
+                approx_display: string | null;
+                used_raw: number | null;
+                used_display: string | null;
+            }[];
+        };
+        ConversationUsageDto: {
+            /** Format: uuid */
+            conversation_id: string;
+            ai_requests: number;
+            tokens_input: number;
+            tokens_output: number;
+            tts_characters: number;
+            cost_usd: number;
+        };
+        UsageSummaryDto: {
+            /** @enum {string} */
+            period: "day" | "billing_cycle";
+            /** Format: date-time */
+            period_start: string;
+            /** Format: date-time */
+            period_end: string;
+            ai_paused: boolean;
+            metrics: {
+                /** @enum {string} */
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                used: number;
+                limit: {
+                    value: number;
+                    /** @enum {string} */
+                    action: "block" | "degrade" | "notify_only";
+                    pct_used: number;
+                } | null;
+            }[];
+            cost: {
+                used_usd: number;
+                limit: {
+                    value: number;
+                    /** @enum {string} */
+                    action: "block" | "degrade" | "notify_only";
+                    pct_used: number;
+                } | null;
+            };
+        };
+        UsageHistoryDto: {
+            data: {
+                /** Format: date-time */
+                period_start: string;
+                quantity: number;
+                cost_usd: number;
+                event_count: number;
+            }[];
+        };
+        UsageEventsDto: {
+            data: {
+                id: string;
+                /** @enum {string} */
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                quantity: number;
+                cost_usd: number | null;
+                provider: string | null;
+                model: string | null;
+                resource_id: string | null;
+                request_id: string;
+                /** Format: date-time */
+                occurred_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        UsageAlertsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "triggered" | "acknowledged" | "resolved";
+                threshold_pct: number;
+                value_at_trigger: number;
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                created_at: string;
+                limit: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                    /** @enum {string} */
+                    period: "day" | "billing_cycle";
+                    /** @enum {string} */
+                    action: "block" | "degrade" | "notify_only";
+                    limit_value: number;
+                    is_cost_limit: boolean;
+                };
+            }[];
         };
         CompanyDto: {
             /** Format: uuid */
@@ -6030,99 +6157,6 @@ export interface components {
                 finished_at: string | null;
                 /** Format: date-time */
                 created_at: string;
-            }[];
-        };
-        ConversationUsageDto: {
-            /** Format: uuid */
-            conversation_id: string;
-            ai_requests: number;
-            tokens_input: number;
-            tokens_output: number;
-            tts_characters: number;
-            cost_usd: number;
-        };
-        UsageSummaryDto: {
-            /** @enum {string} */
-            period: "day" | "billing_cycle";
-            /** Format: date-time */
-            period_start: string;
-            /** Format: date-time */
-            period_end: string;
-            ai_paused: boolean;
-            metrics: {
-                /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
-                used: number;
-                limit: {
-                    value: number;
-                    /** @enum {string} */
-                    action: "block" | "degrade" | "notify_only";
-                    pct_used: number;
-                } | null;
-            }[];
-            cost: {
-                used_usd: number;
-                limit: {
-                    value: number;
-                    /** @enum {string} */
-                    action: "block" | "degrade" | "notify_only";
-                    pct_used: number;
-                } | null;
-            };
-        };
-        UsageHistoryDto: {
-            data: {
-                /** Format: date-time */
-                period_start: string;
-                quantity: number;
-                cost_usd: number;
-                event_count: number;
-            }[];
-        };
-        UsageEventsDto: {
-            data: {
-                id: string;
-                /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
-                quantity: number;
-                cost_usd: number | null;
-                provider: string | null;
-                model: string | null;
-                resource_id: string | null;
-                request_id: string;
-                /** Format: date-time */
-                occurred_at: string;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        UsageAlertsDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                status: "triggered" | "acknowledged" | "resolved";
-                threshold_pct: number;
-                value_at_trigger: number;
-                /** Format: date-time */
-                period_start: string;
-                /** Format: date-time */
-                created_at: string;
-                limit: {
-                    /** Format: uuid */
-                    id: string;
-                    /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
-                    /** @enum {string} */
-                    period: "day" | "billing_cycle";
-                    /** @enum {string} */
-                    action: "block" | "degrade" | "notify_only";
-                    limit_value: number;
-                    is_cost_limit: boolean;
-                };
             }[];
         };
         MetaSignupConfigDto: {
@@ -12261,40 +12295,6 @@ export interface components {
             };
             unread_count: number;
         };
-        EntitlementsDto: {
-            /** @enum {string} */
-            offer_kind: "package" | "modules" | "none";
-            plans: {
-                /** Format: uuid */
-                id: string;
-                code: string;
-                public_slug: string | null;
-                /** @enum {string} */
-                kind: "package" | "module";
-                name: string;
-            }[];
-            capabilities: string[];
-            pending_offer: {
-                kind: string;
-                plan_codes: string[];
-            } | null;
-            trial: {
-                active: boolean;
-                /** Format: date-time */
-                ends_at: string | null;
-            };
-            included: {
-                metric: string | null;
-                /** @enum {string} */
-                period: "day" | "billing_cycle";
-                quantity_raw: number;
-                quantity_display: string;
-                unit_label: string;
-                approx_display: string | null;
-                used_raw: number | null;
-                used_display: string | null;
-            }[];
-        };
         SignupDto: {
             offer: {
                 /** @enum {string} */
@@ -13014,6 +13014,156 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["NavigationDto"];
                 };
+            };
+        };
+    };
+    EntitlementsController_read_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementsDto"];
+                };
+            };
+        };
+    };
+    UsageController_conversationUsage_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationUsageDto"];
+                };
+            };
+        };
+    };
+    UsageController_summary_v1: {
+        parameters: {
+            query?: {
+                period?: "day" | "billing_cycle";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageSummaryDto"];
+                };
+            };
+        };
+    };
+    UsageController_history_v1: {
+        parameters: {
+            query: {
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                granularity?: "hour" | "day";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageHistoryDto"];
+                };
+            };
+        };
+    };
+    UsageController_events_v1: {
+        parameters: {
+            query?: {
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                from?: string;
+                to?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageEventsDto"];
+                };
+            };
+        };
+    };
+    UsageController_alerts_v1: {
+        parameters: {
+            query?: {
+                status?: "triggered" | "acknowledged" | "resolved";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageAlertsDto"];
+                };
+            };
+        };
+    };
+    UsageController_ack_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -13830,137 +13980,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DataMigrationListDto"];
                 };
-            };
-        };
-    };
-    UsageController_conversationUsage_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationUsageDto"];
-                };
-            };
-        };
-    };
-    UsageController_summary_v1: {
-        parameters: {
-            query?: {
-                period?: "day" | "billing_cycle";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UsageSummaryDto"];
-                };
-            };
-        };
-    };
-    UsageController_history_v1: {
-        parameters: {
-            query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
-                granularity?: "hour" | "day";
-                from?: string;
-                to?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UsageHistoryDto"];
-                };
-            };
-        };
-    };
-    UsageController_events_v1: {
-        parameters: {
-            query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
-                from?: string;
-                to?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UsageEventsDto"];
-                };
-            };
-        };
-    };
-    UsageController_alerts_v1: {
-        parameters: {
-            query?: {
-                status?: "triggered" | "acknowledged" | "resolved";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UsageAlertsDto"];
-                };
-            };
-        };
-    };
-    UsageController_ack_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -22260,25 +22279,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    EntitlementsController_read_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EntitlementsDto"];
-                };
             };
         };
     };
