@@ -6,18 +6,20 @@ import { listLiveCallSessions } from "@/modules/calls/infrastructure/services/ca
 /** Colapsa la ráfaga de eventos de una misma llamada en UN re-fetch. */
 const REFRESH_DEBOUNCE_MS = 400;
 
-let refreshTimer: number | null = null;
-
 type LiveCallsStore = {
   calls: CallSessionRowDTO[];
   loading: boolean;
   error: string | null;
   initialized: boolean;
+  /** Timer del debounce: vive en el store (no en el módulo) para poder cancelarlo. */
+  refresh_timer: number | null;
 
   /** GET /calls/sessions/live — la verdad; el WS solo avisa cuándo re-pedirla. */
   fetchLive: () => Promise<void>;
   /** Re-fetch con debounce: cualquier `call.*` del tenant lo dispara. */
   scheduleRefresh: () => void;
+  /** Al desmontar el Monitoreo: nada de GET fantasma 400 ms después. */
+  cancelRefresh: () => void;
 };
 
 export const useLiveCallsStore = create<LiveCallsStore>((set, get) => ({
@@ -25,6 +27,7 @@ export const useLiveCallsStore = create<LiveCallsStore>((set, get) => ({
   loading: false,
   error: null,
   initialized: false,
+  refresh_timer: null,
 
   async fetchLive() {
     set({ loading: true });
@@ -37,10 +40,19 @@ export const useLiveCallsStore = create<LiveCallsStore>((set, get) => ({
   },
 
   scheduleRefresh() {
-    if (refreshTimer !== null) window.clearTimeout(refreshTimer);
-    refreshTimer = window.setTimeout(() => {
-      refreshTimer = null;
+    get().cancelRefresh();
+    const timer = window.setTimeout(() => {
+      set({ refresh_timer: null });
       void get().fetchLive();
     }, REFRESH_DEBOUNCE_MS);
+    set({ refresh_timer: timer });
+  },
+
+  cancelRefresh() {
+    const timer = get().refresh_timer;
+    if (timer !== null) {
+      window.clearTimeout(timer);
+      set({ refresh_timer: null });
+    }
   },
 }));

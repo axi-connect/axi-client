@@ -19,6 +19,9 @@ export function useCallsSocket() {
   useSocketEvent(socket, "call.started", () => store.getState().scheduleRefresh());
   useSocketEvent(socket, "call.status_changed", () => store.getState().scheduleRefresh());
   useSocketEvent(socket, "call.ended", () => store.getState().scheduleRefresh());
+  // El outcome definitivo llega con el resumen (la card viva ya se fue, pero
+  // el KPI del ciclo cambia).
+  useSocketEvent(socket, "call.summary_ready", () => store.getState().scheduleRefresh());
 
   useEffect(() => {
     if (connected && wasConnectedRef.current) {
@@ -26,6 +29,9 @@ export function useCallsSocket() {
     }
     wasConnectedRef.current = connected;
   }, [connected, store]);
+
+  // Un re-fetch agendado no debe disparar contra una vista ya desmontada.
+  useEffect(() => () => store.getState().cancelRefresh(), [store]);
 
   return { connected };
 }

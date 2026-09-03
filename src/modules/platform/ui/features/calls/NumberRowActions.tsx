@@ -19,8 +19,9 @@ import {
 import { AssignNumberSheet } from "./AssignNumberSheet";
 
 /**
- * Acciones por número. Devolver al stock es reversible (mutación directa +
- * toast); LIBERAR es irreversible en Twilio → ConfirmTyped con el E.164.
+ * Acciones por número. Devolver al stock es reversible pero deja a un tenant
+ * sin telefonía → confirmación; LIBERAR es irreversible en Twilio →
+ * ConfirmTyped con el E.164.
  */
 export function NumberRowActions({ number }: { number: CallNumberRow }) {
   const { showAlert } = useAlert();
@@ -28,14 +29,18 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
   const release = useReleaseCallNumber();
   const [assigning, setAssigning] = useState(false);
   const [releasing, setReleasing] = useState(false);
+  const [returning, setReturning] = useState(false);
 
   if (number.status === "released") {
     return <span className="text-muted-foreground text-xs">—</span>;
   }
 
   async function returnToStock() {
+    if (assign.isPending) return;
     try {
-      await assign.mutateAsync({ id: number.id, company_id: null });
+      // Sin agente por defecto: un número en stock no «pertenece» a ningún agente
+      await assign.mutateAsync({ id: number.id, company_id: null, default_ai_agent_id: null });
+      setReturning(false);
       showAlert({
         tone: "success",
         title: "Número devuelto al stock",
@@ -90,7 +95,7 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
           {number.company_id !== null && (
             <DropdownMenuItem
               className="flex items-center gap-2"
-              onClick={() => void returnToStock()}
+              onClick={() => setReturning(true)}
             >
               <ArchiveRestore className="size-4" aria-hidden />
               Devolver al stock
@@ -107,6 +112,23 @@ export function NumberRowActions({ number }: { number: CallNumberRow }) {
       </DropdownMenu>
 
       {assigning && <AssignNumberSheet number={number} onClose={() => setAssigning(false)} />}
+
+      <ConfirmTyped
+        open={returning}
+        onOpenChange={setReturning}
+        title="Devolver el número al stock"
+        description={
+          <>
+            El tenant que lo tiene asignado <b>se queda sin telefonía</b> hasta que le asignes
+            otro número. Es reversible (puedes reasignarlo), pero no inocuo: sus llamadas
+            automáticas dejarán de salir.
+          </>
+        }
+        confirmText={number.phone_number}
+        actionLabel="Devolver al stock"
+        onConfirm={returnToStock}
+        pending={assign.isPending}
+      />
 
       <ConfirmTyped
         open={releasing}

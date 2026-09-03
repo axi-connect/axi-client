@@ -164,7 +164,7 @@ export function CallsMonitorView() {
               </span>
             </div>
             {liveError !== null ? (
-              <div className="border-border bg-background rounded-lg border p-6 text-center">
+              <div className="border-border bg-background rounded-lg border p-6 text-center" role="alert">
                 <p className="text-muted-foreground text-sm">{liveError}</p>
                 <Button
                   variant="outline"

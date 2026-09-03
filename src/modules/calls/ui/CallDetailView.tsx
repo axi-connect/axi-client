@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownLeft,
@@ -66,6 +66,26 @@ export function CallDetailView({ callId }: { callId: string }) {
     load({ initial: true });
   }, [load]);
 
+  // Un hueco en la numeración de los segmentos en vivo (el join al room llegó
+  // después de que se emitieran) se rellena re-consultando el detalle, con
+  // debounce — antes quedaba un agujero permanente en el transcript.
+  const gapTimerRef = useRef<number | null>(null);
+  const scheduleGapReload = useCallback(() => {
+    if (gapTimerRef.current !== null) window.clearTimeout(gapTimerRef.current);
+    gapTimerRef.current = window.setTimeout(() => {
+      gapTimerRef.current = null;
+      load();
+    }, 800);
+  }, [load]);
+  useEffect(
+    () => () => {
+      if (gapTimerRef.current !== null) window.clearTimeout(gapTimerRef.current);
+    },
+    [],
+  );
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const segmentCount = call?.segments.length ?? 0;
+
   // Transcript en vivo (F4-C): mientras la llamada siga viva, el room
   // `call_…` inserta los segmentos y cualquier cambio de estado re-consulta.
   const live = call !== null && isLiveCallStatus(call.status);
@@ -76,6 +96,8 @@ export function CallDetailView({ callId }: { callId: string }) {
       setCall((prev) => {
         if (prev === null) return prev;
         if (prev.segments.some((existing) => existing.seq === segment.seq)) return prev;
+        const lastSeq = prev.segments.reduce((max, s) => Math.max(max, s.seq), 0);
+        if (segment.seq > lastSeq + 1) scheduleGapReload();
         const next = [
           ...prev.segments,
           {
@@ -91,6 +113,11 @@ export function CallDetailView({ callId }: { callId: string }) {
     },
     onChanged: () => load(),
   });
+
+  // El transcript en vivo sigue al último turno sin que el usuario persiga el texto.
+  useEffect(() => {
+    if (live && segmentCount > 0) bottomRef.current?.scrollIntoView({ block: "nearest" });
+  }, [live, segmentCount]);
 
   if (call === null) {
     return (
@@ -119,9 +146,9 @@ export function CallDetailView({ callId }: { callId: string }) {
 
       <header className="mb-5 flex flex-wrap items-start gap-4">
         <div>
-          <h1 className="font-heading text-xl font-bold">
+          <h2 className="font-heading text-xl font-bold">
             {call.contact?.name ?? customerPhone}
-          </h1>
+          </h2>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={badge.status} map={badge.map} />
             <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-xs">
@@ -181,12 +208,15 @@ export function CallDetailView({ callId }: { callId: string }) {
                   : "Esta llamada no tiene transcript (no hubo conversación con la IA)."}
               </p>
             ) : (
-              <CallTranscript
-                segments={call.segments}
-                events={call.events}
-                agentName={call.ai_agent_name}
-                contactName={call.contact?.name ?? null}
-              />
+              <div aria-live={live ? "polite" : "off"}>
+                <CallTranscript
+                  segments={call.segments}
+                  events={call.events}
+                  agentName={call.ai_agent_name}
+                  contactName={call.contact?.name ?? null}
+                />
+                <div ref={bottomRef} aria-hidden />
+              </div>
             )}
           </section>
         </div>
@@ -207,9 +237,17 @@ export function CallDetailView({ callId }: { callId: string }) {
   );
 }
 
-/** La URL firmada se pide en el PRIMER play (TTL 300 s), no al abrir. */
+/** La URL firmada se pide en el PRIMER play (TTL 300 s), no al abrir. Si el
+ * <audio> falla con una URL (vencida tras una pausa larga), se pide UNA fresca
+ * — una sola vez por URL, para no entrar en bucle si el fallo es otro. */
 function RecordingCard({ callId }: { callId: string }) {
-  const { url, status, load } = useRecordingUrl(callId);
+  const { url, status, load, refresh } = useRecordingUrl(callId);
+  const retriedForRef = useRef<string | null>(null);
+  const onAudioError = () => {
+    if (url === null || retriedForRef.current === url) return;
+    retriedForRef.current = url;
+    refresh();
+  };
   return (
     <section className={`${CARD} flex items-center gap-3`}>
       <AudioPlayerCore
@@ -217,10 +255,13 @@ function RecordingCard({ callId }: { callId: string }) {
         loading={status === "loading"}
         error={status === "error"}
         onNeedSrc={load}
+        onError={onAudioError}
         className="w-full"
       />
       {status === "error" && (
-        <p className="text-destructive text-xs">No se pudo cargar la grabación.</p>
+        <p className="text-destructive text-xs" role="alert">
+          No se pudo cargar la grabación.
+        </p>
       )}
     </section>
   );
