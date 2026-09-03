@@ -326,6 +326,7 @@ Grupos de ruta bajo `src/app/`, más la capa BFF (`api/`), slots paralelos y tre
 **Superficies de primer nivel** (ni `(public)` ni `(private)`; heredan solo el layout raíz):
 - **`/platform`** — consola super admin, auth aislado (§8.1).
 - **`/pay`** — pago sin sesión (billing).
+- **`/verificar-correo`** — destino del enlace del correo de verificación (`docs/modules/onboarding.md` B.8). Pública y `noindex`; llama al API sin sesión y refresca la sesión si la hay.
 - **`/comenzar`** — registro autoservicio en tres pasos. Público (`PUBLIC_PATHS`) y `noindex`; monta `PublicAnalytics` porque es la superficie de conversión y no expone datos de tenants. Al crear la cuenta, `POST /api/auth/signup` siembra las cookies de sesión y manda a `/onboarding`.
 
 **Rutas paralelas** (slots como props del layout):

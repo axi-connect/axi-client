@@ -73,7 +73,7 @@ El hero del marketplace vive aparte: `src/shared/components/layout/marketplace-h
 
 - Tokens en **cookies HttpOnly** (`accessToken` 15 min, `refreshToken` 7 d); el browser nunca ve el JWT. BFF en `src/app/api/auth/*` + proxy autenticado `src/app/api/proxy/[...path]/route.ts`.
 - No autenticado en ruta privada → middleware → `/auth/login?next=...`. Tras login: splash → `next` o `/dashboard`.
-- **Alta autoservicio en `/comenzar`** (desde 2026-09, `docs/plans/onboarding_self_service_plan.md`): tres pasos (oferta → empresa → cuenta) y `POST /api/auth/signup`, que siembra las mismas cookies que el login con los tokens que devuelve el backend y manda a `/onboarding`. Enterprise sigue siendo asistido (`/contacto`). El login dice "¿No tienes cuenta? Crea tu cuenta". La consola `/platform` conserva su alta manual.
+- **Alta autoservicio en `/comenzar`** (desde 2026-09, `docs/plans/onboarding_self_service_plan.md`): tres pasos (oferta → empresa → cuenta) y `POST /api/auth/signup`, que siembra las mismas cookies que el login con los tokens que devuelve el backend y manda a `/onboarding`. Enterprise sigue siendo asistido (`/contacto`). El login dice "¿No tienes cuenta? Crea tu cuenta". La consola `/platform` conserva su alta manual. El correo de verificación lleva a `/verificar-correo?token=` (pública, `noindex`), que confirma la cuenta y devuelve al onboarding.
 - Empresa suspendida (F15) → `CompanySuspendedScreen`, nunca al login.
 
 ## 4. Convenciones aplicables a nuevas páginas públicas

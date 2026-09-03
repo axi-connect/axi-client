@@ -28,6 +28,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.offerNotSelfService]: "Enterprise se activa con nuestro equipo. Escríbenos y lo hacemos contigo",
   [API_ERROR_CODES.captchaFailed]: "No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo",
   [API_ERROR_CODES.signupRateLimited]: "Demasiados intentos desde esta conexión. Espera unos minutos",
+  [API_ERROR_CODES.verificationExpired]: "Este enlace ya no sirve: venció o ya se usó. Pide uno nuevo desde tu panel",
   "identities/email_taken": "Ya existe un usuario con ese correo",
   // Panel de plataforma (super admin) — tabla §7 de frontend_platform_plan.md
   "tenant_db/not_found": "El tenant no tiene base de datos dedicada configurada",

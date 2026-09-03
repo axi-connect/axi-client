@@ -36,3 +36,12 @@ export function getMyEntitlements(): Promise<EntitlementsDTO> {
 export function resendVerificationEmail(email: string): Promise<void> {
   return http.post<void>("/public/onboarding/resend-verification", { email }, { authenticate: false });
 }
+
+/**
+ * Confirma el correo con el token que viajó en el enlace (contrato B2).
+ * Público: quien pulsa el enlace puede no tener sesión (otro dispositivo).
+ * `410 onboarding/verification_expired` cubre token vencido, usado o desconocido.
+ */
+export function verifyEmail(token: string): Promise<{ verified: true }> {
+  return http.post<{ verified: true }>("/public/onboarding/verify-email", { token }, { authenticate: false });
+}

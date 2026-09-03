@@ -51,6 +51,7 @@ export const API_ERROR_CODES = {
   offerNotSelfService: "onboarding/offer_not_self_service",
   captchaFailed: "onboarding/captcha_failed",
   signupRateLimited: "onboarding/signup_rate_limited",
+  verificationExpired: "onboarding/verification_expired",
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];

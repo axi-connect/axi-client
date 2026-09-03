@@ -33,6 +33,7 @@ rutas van relativas a `/api/v1` y pasan por el BFF salvo las públicas.
 |---|---|---|---|
 | POST | `/public/onboarding/signups` | B2 | `app/api/auth/signup/route.ts` (BFF) — siembra las cookies con `tokens` |
 | POST | `/public/onboarding/resend-verification` | B2 | `onboarding-service.adapter#resendVerificationEmail` (`authenticate: false`) |
+| POST | `/public/onboarding/verify-email` | B2 | `onboarding-service.adapter#verifyEmail` (`authenticate: false`); lo consume `/verificar-correo`, destino del enlace del correo |
 | GET/PUT | `/onboarding/progress` | B3 | `onboarding.store` (`load`, `update`, `markDone`, `skip`, `dismissBanner`) |
 | POST | `/onboarding/complete` | B3 | `onboarding.store#complete` (idempotente) |
 | GET | `/onboarding/niches/:code/agent-templates` | B3 | `agent-templates-service.adapter#listAgentTemplates` |
@@ -170,6 +171,17 @@ costaron tiempo:
 - Un campo custom de `DynamicForm` necesita `htmlFor` + `id` para que `getByLabelText` lo encuentre.
 
 ---
+
+### B.8 Confirmar el correo desde el enlace (2026-09-03)
+
+El backend compone `PUBLIC_APP_URL/verificar-correo?token=…` en el correo de verificación. La página
+`src/app/(public)/verificar-correo/page.tsx` (pública en `PUBLIC_PATHS`, `noindex`) monta
+`ui/verify/VerifyEmailView`: lee el token, llama **una sola vez** a `verifyEmail` sin autenticar (quien pulsa
+puede venir de otro dispositivo), y según la respuesta muestra confirmado (CTA a `/onboarding`, o al login con
+`next=/onboarding` si no hay sesión), `410 onboarding/verification_expired` (venció, ya se usó o no existe: el
+backend no los distingue a propósito) o el error del backend. Con sesión abierta hace `useAuth().refresh()` para
+que `MeDto.email_verified` cambie sin volver a entrar: el paso WhatsApp lo lee. Hallazgo H2 de la auditoría
+(`axi-server/docs/incidentes/2026-09-03_auditoria_onboarding.md`): antes de esta página el enlace era un 404.
 
 ### B.7 Bienvenida tras crear la cuenta (2026-09-02)
 
