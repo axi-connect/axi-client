@@ -19,6 +19,15 @@ export function updateOnboardingProgress(patch: UpdateOnboardingProgressDTO): Pr
   return http.put<OnboardingProgressDTO>("/onboarding/progress", patch);
 }
 
+/**
+ * Oculta el banner del dashboard. Endpoint propio con `companies:read`: es una
+ * preferencia de quien lo ve, no una edición de la empresa (con el PUT un
+ * operador veía un banner que no podía quitar).
+ */
+export function dismissOnboardingBanner(): Promise<OnboardingProgressDTO> {
+  return http.post<OnboardingProgressDTO>("/onboarding/progress/dismiss-banner", {});
+}
+
 /** Idempotente: repetirlo con el onboarding ya cerrado responde 200. */
 export function completeOnboarding(): Promise<OnboardingProgressDTO> {
   return http.post<OnboardingProgressDTO>("/onboarding/complete", {});

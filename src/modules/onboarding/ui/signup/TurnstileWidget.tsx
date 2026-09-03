@@ -77,7 +77,18 @@ export function TurnstileWidget({ onToken }: { onToken: (token: string) => void 
     };
   }, []);
 
-  if (!TURNSTILE_SITE_KEY) return null;
+  if (!TURNSTILE_SITE_KEY) {
+    // Fuera de producción el backend valida con su verificador `noop`. En
+    // producción exige Turnstile: sin site key el token viaja vacío y el 100 %
+    // de las altas cae en `captcha_failed` con un «recarga la página» que no
+    // ayuda (auditoría 2026-09-03, H6). Mejor decirlo antes de que lo intenten.
+    if (process.env.NODE_ENV !== "production") return null;
+    return (
+      <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        La verificación de seguridad no está configurada. Escríbenos y creamos tu cuenta contigo.
+      </p>
+    );
+  }
 
   return (
     <>

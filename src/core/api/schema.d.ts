@@ -5092,6 +5092,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/onboarding/progress/dismiss-banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OnboardingController_dismissBanner_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/onboarding/complete": {
         parameters: {
             query?: never;
@@ -22366,6 +22382,25 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateOnboardingProgressDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgressDto"];
+                };
+            };
+        };
+    };
+    OnboardingController_dismissBanner_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

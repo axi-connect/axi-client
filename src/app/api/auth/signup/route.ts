@@ -3,21 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { http } from "@/core/services/http";
 import { isHttpError } from "@/core/api/problem";
 import { setSessionCookies } from "@/shared/auth/auth.handlers";
-import type { AuthTokens, SignupPayload, SignupResult } from "@/shared/auth/auth.types";
+import type { SignupPayload, SignupResponse, SignupResult } from "@/shared/auth/auth.types";
 
-/**
- * Respuesta del backend al alta (`SignupResultDto`, contrato B2). Los tokens
- * se consumen aquí y **no** viajan al browser: la sesión queda en cookies
- * HttpOnly, exactamente como tras `/api/auth/login`.
- */
-type SignupResponse = {
-  company_id: string;
-  user_id: string;
-  trial_ends_at: string;
-  tokens: AuthTokens;
-  email_verification: "pending";
-  next: string;
-};
+// `SignupResponse` = `Schemas["SignupResultDto"]`. Los tokens se consumen aquí y
+// **no** viajan al browser: la sesión queda en cookies HttpOnly, exactamente
+// como tras `/api/auth/login`.
 
 /**
  * POST /api/auth/signup — alta autoservicio. Un solo viaje: crea la empresa y

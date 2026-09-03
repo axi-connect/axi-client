@@ -6,9 +6,11 @@ import { resetOnboardingStore } from "@/modules/onboarding/infrastructure/stores
 
 const getOnboardingProgress = jest.fn()
 const updateOnboardingProgress = jest.fn()
+const dismissOnboardingBanner = jest.fn()
 jest.mock("@/modules/onboarding/infrastructure/services/onboarding-service.adapter", () => ({
   getOnboardingProgress: (...args: unknown[]) => getOnboardingProgress(...args),
   updateOnboardingProgress: (...args: unknown[]) => updateOnboardingProgress(...args),
+  dismissOnboardingBanner: (...args: unknown[]) => dismissOnboardingBanner(...args),
   completeOnboarding: jest.fn(),
   getMyEntitlements: () => Promise.reject(new Error("sin entitlements en este test")),
   resendVerificationEmail: jest.fn(),
@@ -56,12 +58,14 @@ describe("OnboardingResumeBanner", () => {
 
   it("ocultar lo quita al instante y lo persiste en el servidor", async () => {
     getOnboardingProgress.mockResolvedValueOnce(emptyProgress("c1", NOW))
-    updateOnboardingProgress.mockResolvedValueOnce({ ...emptyProgress("c1", NOW), banner_dismissed_at: NOW })
+    dismissOnboardingBanner.mockResolvedValueOnce({ ...emptyProgress("c1", NOW), banner_dismissed_at: NOW })
     render(<OnboardingResumeBanner />)
 
     fireEvent.click(await screen.findByRole("button", { name: /ocultar/i }))
 
     await waitFor(() => expect(screen.queryByRole("heading", { name: /te faltan/i })).not.toBeInTheDocument())
-    expect(updateOnboardingProgress).toHaveBeenCalledWith(expect.objectContaining({ banner_dismissed_at: expect.any(String) }))
+    // Endpoint propio con `companies:read`, no el PUT de edición.
+    expect(dismissOnboardingBanner).toHaveBeenCalledTimes(1)
+    expect(updateOnboardingProgress).not.toHaveBeenCalled()
   })
 })

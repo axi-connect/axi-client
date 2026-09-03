@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { errorMessage } from "@/core/lib/error-messages";
 import {
   completeOnboarding,
+  dismissOnboardingBanner,
   getOnboardingProgress,
   updateOnboardingProgress,
 } from "@/modules/onboarding/infrastructure/services/onboarding-service.adapter";
@@ -87,10 +88,11 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   dismissBanner: async () => {
     const current = get().progress;
     if (!current) return;
-    // Optimista: el banner desaparece ya; si el PUT falla, vuelve.
+    // Optimista: el banner desaparece ya; si la petición falla, vuelve.
     set({ progress: { ...current, banner_dismissed_at: new Date().toISOString() } });
     try {
-      await get().update({ banner_dismissed_at: new Date().toISOString() });
+      const progress = await dismissOnboardingBanner();
+      set({ progress });
     } catch {
       set({ progress: current });
     }

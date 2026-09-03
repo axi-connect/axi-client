@@ -1,7 +1,6 @@
 import { http } from "@/core/services/http";
 import type {
   CatalogImportDTO,
-  CatalogImportItemDTO,
   CatalogImportItemPatchDTO,
   CommitCatalogImportDTO,
 } from "@/modules/onboarding/domain/catalog-import";
@@ -23,12 +22,13 @@ export function getCatalogImport(importId: string): Promise<CatalogImportDTO> {
   return http.get<CatalogImportDTO>(`/catalog/imports/${importId}`);
 }
 
+/** El servidor responde con el import COMPLETO (contadores recalculados), no con el item. */
 export function patchCatalogImportItem(
   importId: string,
   itemId: string,
   patch: CatalogImportItemPatchDTO,
-): Promise<CatalogImportItemDTO> {
-  return http.put<CatalogImportItemDTO>(`/catalog/imports/${importId}/items/${itemId}`, patch);
+): Promise<CatalogImportDTO> {
+  return http.put<CatalogImportDTO>(`/catalog/imports/${importId}/items/${itemId}`, patch);
 }
 
 /** 200: el job pasa a `committing`; el resultado llega por el mismo sondeo. */
