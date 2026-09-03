@@ -6,13 +6,13 @@
 > Si actualizas algo, actualízalo **aquí primero** y luego recarga el grafo.
 
 Documento maestro de arquitectura: `docs/architecture.md`. Este ADR resume lo que el grafo NO expresa por sí solo.
-Índice al día de: commit `e16ab3b` (main) — 9.746 nodos / 25.182 aristas.
+Índice al día de: commit `5d6e5e7` (main, 45 commits por delante de origin/main) — 11.860 nodos / 30.982 aristas.
 
 ## Contexto
 App web de **axi-connect** (SaaS multi-tenant de atención omnicanal). Next.js 15 App Router + React 19 + TS strict. Consume `axi-server` vía REST `/api/v1/*` y WebSocket (`/inbox`, `/channels`). Repo hermano indexado como `home-davela-dev-axi-axi-server`.
 
 ## Decisiones estructurales
-1. **Vertical slices** en `src/modules/<slice>/`: companies, agents, users, rbac, catalog, channels, conversations, crm, quick-actions, forms, marketing, **billing**, platform, workspace. Un slice es dueño de su dominio, datos, estado y UI.
+1. **Vertical slices** en `src/modules/<slice>/`: companies, agents, users, rbac, catalog, channels, conversations, crm, quick-actions, forms, marketing, billing, **calls**, **onboarding**, **prospecting**, **inbox**, **landing**, platform, workspace. Un slice es dueño de su dominio, datos, estado y UI.
 2. **Clean + Hexagonal por slice**: `domain/` (TS puro: cero React, cero http, cero zod) → `application/` (puertos + casos de uso, opcional en slices CRUD) → `infrastructure/` (adapters HTTP, stores, hooks) → `ui/`.
 3. **Regla de escape sancionada**: un slice puramente CRUD omite `application/`. No se fabrica ceremonia sin dominio real.
 4. **`workspace` es capa de composición** (única excepción): solo `ui/`, agrega stores de `channels` + `conversations` para el inbox. Sin dominio propio.
@@ -23,17 +23,18 @@ App web de **axi-connect** (SaaS multi-tenant de atención omnicanal). Next.js 1
 ## Reglas de dependencia (estado verificado)
 - `domain` no importa React/http/zod. `application` jamás importa `infrastructure`/`ui`.
 - **La UI nunca llama a `http` directamente**: pasa por un `*-service.adapter.ts` del slice.
-- `core/` y `shared/` **nunca** importan de `modules/`. **Estado real del índice: 0 aristas `IMPORTS` desde `core/`; 1 desde `shared/`, y es un falso positivo verificado y estable a través de 6 indexados** — `SiteHero.tsx` hace `import Image from 'next/image'` y el resolutor lo apunta a `modules/catalog/domain/__tests__/product-images.test.ts`. La regla se sostiene; no hay violación real.
+- `core/` y `shared/` **nunca** importan de `modules/`. **Estado real del índice: 0 aristas `IMPORTS` desde `core/`; 1 desde `shared/`, y es un falso positivo verificado y estable a través de 7 indexados** — `SiteHero.tsx` hace `import Image from 'next/image'` y el resolutor lo apunta a `modules/catalog/domain/__tests__/product-images.test.ts`. La regla se sostiene; no hay violación real.
 
 ## Cómo consultar este grafo (gotchas verificados)
-- **El re-indexado BORRA el ADR del grafo.** `index_repository` deja `adr_present: false` y `manage_adr(mode='sections')` vuelve vacío. Confirmado en seis indexados consecutivos. Por eso existe este archivo: recarga el grafo desde aquí.
-- **Nodos `Route` NO son endpoints del backend.** Son 380 nodos que mezclan rutas del App Router, navegaciones y literales de docs. El path vive en la propiedad **`name`**, no en `path` (`key_path` vacío salvo nodos `infra`).
-- **Llamadas reales al API**: aristas `HTTP_CALLS` (417) con `url_path` + `callee`. Filtrar `callee STARTS WITH 'http.'` deja **328 llamadas reales**; el resto son `router.push/replace` (navegación Next, no HTTP).
+- **El re-indexado BORRA el ADR del grafo.** `index_repository` deja `adr_present: false` y `manage_adr(mode='sections')` vuelve vacío. Confirmado en siete indexados consecutivos. Por eso existe este archivo: recarga el grafo desde aquí.
+- **Nodos `Route` NO son endpoints del backend.** Son 498 nodos que mezclan rutas del App Router, navegaciones y literales de docs. El path vive en la propiedad **`name`**, no en `path` (`key_path` vacío salvo nodos `infra`).
+- **Llamadas reales al API**: aristas `HTTP_CALLS` (514) con `url_path` + `callee`. Filtrar `callee STARTS WITH 'http.'` deja **418 llamadas reales**; el resto son `router.push/replace` (navegación Next, no HTTP).
 - Los `url_path` son **relativos al prefijo** `/api/v1` (p.ej. `/orders/:id/cancel`), porque `HttpClient` los expresa así. Para cruzar al backend hay que buscar el controller por decorador (ver `axi-server/docs/rules/adr.md`), no por match de path.
 - **Los contadores de `boundaries` tienen ruido de resolución**: incluyen (a) invocaciones de props callback (`onSubmit`, `isVisible`, `fetcher`, `onDelete`) que van de `shared` a `modules` por diseño — inversión de control de los componentes dirigidos por configuración —, y (b) falsos positivos por nombres genéricos (`fetch` del `HttpClient` resuelto contra el `fetch` de un store, `render` de Testing Library, `Image` de `next/image`). **Antes de declarar una violación de capas, confirmar con aristas `IMPORTS` y abrir el archivo.**
 - **La documentación cuenta como nodos.** Editar `docs/architecture.md` cambia el conteo del grafo (los `.md` se indexan como nodos `Section`) sin que haya cambiado una línea de código.
 - **`certificates/` se excluye del índice** (apareció al añadir HTTPS local para el popup de Meta).
-- Hotspots de fan-in: `cn` (374), `errorMessage` (220), `showAlert` (146), `useAlert` (105), `HttpClient.post` (50), `HttpClient.get` (40). Tocarlos tiene alcance amplio.
+- Hotspots de fan-in: `cn` (410), `errorMessage` (265), `useAlert` (120), `useAuth` (63), `HttpClient.post` (54), `isHttpError` (46). Tocarlos tiene alcance amplio.
+- **El ranking de `hotspots` arrastra colisiones con los globals de los tests.** Al crecer la suite, funciones propias homónimas de un global de Jest suben al top con fan-in falso: `channel-health.describe` (57 "callers", todos `__tests__` invocando el `describe()` de Jest) y `DatabaseConnectionSheet.render` (61, el `render` de Testing Library). Verificar el origen de los callers antes de tratar un hotspot como punto caliente real.
 
 ## Consecuencias
 - Un listado nuevo = `DataTable` + `usePaginatedList`; un formulario = `DynamicForm` + `*.config.tsx` con Zod; un detalle = `DetailSheet` con `fetchDetail`.
