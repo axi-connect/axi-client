@@ -123,15 +123,20 @@ export function BuyNumberSheet({
             <ul className="flex max-h-72 flex-col gap-1.5 overflow-y-auto" role="radiogroup">
               {(search.data ?? []).map((candidate) => {
                 const isSelected = selected?.phone_number === candidate.phone_number;
+                // Sin capacidad de voz el número no sirve para llamadas: no se
+                // puede elegir (antes se podía comprar y pagar su renta igual).
+                const voiceless = !candidate.capabilities.voice;
                 return (
                   <li key={candidate.phone_number}>
                     <button
+                      type="button"
                       role="radio"
                       aria-checked={isSelected}
+                      disabled={voiceless}
                       onClick={() => setSelected(candidate)}
                       className={`border-border w-full rounded-lg border p-2.5 text-left text-sm transition-colors ${
                         isSelected ? "bg-accent" : "hover:bg-secondary"
-                      }`}
+                      } ${voiceless ? "cursor-not-allowed opacity-50" : ""}`}
                     >
                       <span className="font-mono font-medium">{candidate.phone_number}</span>
                       <span className="text-muted-foreground block truncate text-xs">

@@ -5,7 +5,6 @@ import { ArrowDownLeft, ArrowUpRight, Mic } from "lucide-react";
 import type { ListQuery } from "@/shared/api/query";
 import type { Paginated } from "@/core/api/types";
 import { cn } from "@/core/lib/utils";
-import { formatDuration } from "@/core/lib/format";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import type { ColumnDef } from "@/shared/components/features/data-table/types";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
@@ -18,7 +17,7 @@ import {
   type ListCallSessionsParams,
 } from "@/modules/calls/domain/call";
 import { listCallSessions } from "@/modules/calls/infrastructure/services/calls-service.adapter";
-import { formatCallCost } from "@/modules/calls/ui/lib/call-format";
+import { formatCallClock, formatCallCost } from "@/modules/calls/ui/lib/call-format";
 
 export async function fetchCalls(params: ListQuery): Promise<Paginated<CallRow>> {
   const page = await listCallSessions(params as ListCallSessionsParams);
@@ -89,7 +88,7 @@ export const callColumns: ColumnDef<CallRow>[] = [
       <span className="text-muted-foreground inline-flex items-center gap-1.5 font-mono text-xs tabular-nums">
         {row.original.duration_seconds === null
           ? "—"
-          : formatDuration(row.original.duration_seconds)}
+          : formatCallClock(row.original.duration_seconds)}
         {row.original.has_recording ? (
           <Mic className="text-accent-violet size-3" aria-label="Con grabación" />
         ) : null}

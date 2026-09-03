@@ -21,8 +21,9 @@ import type { CallsSettingsDTO } from "@/modules/calls/domain/call";
 /**
  * Config del formulario de llamadas. El PUT es de SECCIÓN COMPLETA: lo
  * omitido volvería al default del sistema, así que `toCallsSettingsPayload`
- * manda siempre todos los campos. La duración se edita en minutos (el wire
- * va en segundos) y el horario como ventana de silencio start→end.
+ * manda siempre todos los campos. La duración se edita en SEGUNDOS, igual que
+ * el wire (editarla en minutos redondeaba y reescribía el valor guardado), y el
+ * horario como ventana de silencio start→end.
  */
 export const callsSettingsFormSchema = z.object({
   ai_enabled: z.boolean(),
@@ -33,16 +34,31 @@ export const callsSettingsFormSchema = z.object({
     .trim()
     .min(10, "Mínimo 10 caracteres — es tu aviso de habeas data")
     .max(500, "Máximo 500 caracteres"),
-  max_duration_minutes: z.coerce
+  max_duration_seconds: z.coerce
     .number({ message: "Requerido" })
     .int("Debe ser un entero")
-    .min(1, "Entre 1 y 30 minutos")
-    .max(30, "Entre 1 y 30 minutos"),
+    .min(60, "Entre 60 y 1800 segundos")
+    .max(1800, "Entre 60 y 1800 segundos"),
   max_concurrent: z.coerce
     .number({ message: "Requerido" })
     .int("Debe ser un entero")
     .min(1, "Entre 1 y 20")
     .max(20, "Entre 1 y 20"),
+  ring_timeout_seconds: z.coerce
+    .number({ message: "Requerido" })
+    .int("Debe ser un entero")
+    .min(20, "Entre 20 y 55 segundos")
+    .max(55, "Entre 20 y 55 segundos"),
+  silence_probe_seconds: z.coerce
+    .number({ message: "Requerido" })
+    .int("Debe ser un entero")
+    .min(5, "Entre 5 y 30 segundos")
+    .max(30, "Entre 5 y 30 segundos"),
+  silence_hangup_seconds: z.coerce
+    .number({ message: "Requerido" })
+    .int("Debe ser un entero")
+    .min(5, "Entre 5 y 30 segundos")
+    .max(30, "Entre 5 y 30 segundos"),
   quiet_start_hour: z.coerce.number().int().min(0).max(23),
   quiet_end_hour: z.coerce.number().int().min(0).max(23),
 });
@@ -55,8 +71,11 @@ export function fromCallsSettingsDto(dto: CallsSettingsDTO): CallsSettingsFormVa
     recording_enabled: dto.recording_enabled,
     hangup_on_machine: dto.hangup_on_machine,
     legal_notice_text: dto.legal_notice_text,
-    max_duration_minutes: Math.round(dto.max_duration_seconds / 60),
+    max_duration_seconds: dto.max_duration_seconds,
     max_concurrent: dto.max_concurrent,
+    ring_timeout_seconds: dto.ring_timeout_seconds,
+    silence_probe_seconds: dto.silence_probe_seconds,
+    silence_hangup_seconds: dto.silence_hangup_seconds,
     quiet_start_hour: dto.quiet_hours.start_hour,
     quiet_end_hour: dto.quiet_hours.end_hour,
   };
@@ -68,8 +87,11 @@ export function toCallsSettingsPayload(values: CallsSettingsFormValues): CallsSe
     recording_enabled: values.recording_enabled,
     hangup_on_machine: values.hangup_on_machine,
     legal_notice_text: values.legal_notice_text.trim(),
-    max_duration_seconds: values.max_duration_minutes * 60,
+    max_duration_seconds: values.max_duration_seconds,
     max_concurrent: values.max_concurrent,
+    ring_timeout_seconds: values.ring_timeout_seconds,
+    silence_probe_seconds: values.silence_probe_seconds,
+    silence_hangup_seconds: values.silence_hangup_seconds,
     quiet_hours: {
       start_hour: values.quiet_start_hour,
       end_hour: values.quiet_end_hour,
@@ -194,11 +216,12 @@ export function buildCallsSettingsFields(opts: {
         colSpan: { base: 1, md: 2 },
       },
     ),
-    createInputField<CallsSettingsFormValues>("max_duration_minutes", {
-      label: "Duración máxima por llamada (minutos)",
-      description: "El agente se despide con tiempo antes del corte (1–30).",
+    createInputField<CallsSettingsFormValues>("max_duration_seconds", {
+      label: "Duración máxima por llamada (segundos)",
+      description:
+        "El agente avisa 30 s antes y se despide al llegar al tope (60–1800; 600 = 10 min).",
       inputKind: "number",
-      inputProps: { min: 1, max: 30 },
+      inputProps: { min: 60, max: 1800, step: 30 },
       isDisabled: readOnly,
     }),
     createInputField<CallsSettingsFormValues>("max_concurrent", {
@@ -206,6 +229,29 @@ export function buildCallsSettingsFields(opts: {
       description: "Tope de llamadas activas al mismo tiempo (1–20).",
       inputKind: "number",
       inputProps: { min: 1, max: 20 },
+      isDisabled: readOnly,
+    }),
+    createInputField<CallsSettingsFormValues>("ring_timeout_seconds", {
+      label: "Segundos de timbre antes de rendirse",
+      description:
+        "Por debajo del desvío a buzón del operador (~40 s) un buzón cuesta cero: la llamada termina «Sin respuesta» sin minutos ni grabación (20–55).",
+      inputKind: "number",
+      inputProps: { min: 20, max: 55 },
+      isDisabled: readOnly,
+    }),
+    createInputField<CallsSettingsFormValues>("silence_probe_seconds", {
+      label: "Silencio antes de preguntar «¿Sigues ahí?» (segundos)",
+      description:
+        "Se cuenta desde que el agente termina de hablar. Hablar, teclear o interrumpir reinicia el conteo (5–30).",
+      inputKind: "number",
+      inputProps: { min: 5, max: 30 },
+      isDisabled: readOnly,
+    }),
+    createInputField<CallsSettingsFormValues>("silence_hangup_seconds", {
+      label: "Silencio adicional antes de despedirse (segundos)",
+      description: "Tras la pregunta, si nadie responde la llamada cierra como «Sin respuesta en línea» (5–30).",
+      inputKind: "number",
+      inputProps: { min: 5, max: 30 },
       isDisabled: readOnly,
     }),
     createCustomField<CallsSettingsFormValues>(

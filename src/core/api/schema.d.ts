@@ -11611,7 +11611,7 @@ export interface components {
                 /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
-                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | null;
+                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
                 /** @enum {string|null} */
                 answered_by: "human" | "machine" | "unknown" | "fax" | null;
                 contact: {
@@ -11652,7 +11652,7 @@ export interface components {
                 /** @enum {string} */
                 status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
                 /** @enum {string|null} */
-                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | null;
+                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
                 /** @enum {string|null} */
                 answered_by: "human" | "machine" | "unknown" | "fax" | null;
                 contact: {
@@ -11687,7 +11687,7 @@ export interface components {
             /** @enum {string} */
             status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
             /** @enum {string|null} */
-            outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | null;
+            outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
             /** @enum {string|null} */
             answered_by: "human" | "machine" | "unknown" | "fax" | null;
             contact: {
@@ -11745,6 +11745,12 @@ export interface components {
             };
             /** @default false */
             hangup_on_machine: boolean;
+            /** @default 45 */
+            ring_timeout_seconds: number;
+            /** @default 12 */
+            silence_probe_seconds: number;
+            /** @default 15 */
+            silence_hangup_seconds: number;
         };
         TestCallDto: {
             to: string;
@@ -21379,7 +21385,7 @@ export interface operations {
             query?: {
                 direction?: "outbound" | "inbound";
                 status?: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
-                outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred";
+                outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error";
                 purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
                 ai_agent_id?: string;
                 contact_id?: string;

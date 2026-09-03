@@ -20,6 +20,7 @@ export function AudioPlayerCore({
   loading = false,
   error = false,
   onNeedSrc,
+  onError,
   outbound = false,
   className,
 }: {
@@ -27,6 +28,9 @@ export function AudioPlayerCore({
   loading?: boolean
   error?: boolean
   onNeedSrc?: () => void
+  /** El <audio> falló al cargar/reproducir `src` (p. ej. URL firmada vencida):
+   * quien la provee puede pedir una fresca. */
+  onError?: () => void
   outbound?: boolean
   className?: string
 }) {
@@ -88,6 +92,10 @@ export function AudioPlayerCore({
           onEnded={() => {
             setPlaying(false)
             setCurrentTime(0)
+          }}
+          onError={() => {
+            setPlaying(false)
+            onError?.()
           }}
           onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
           onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}

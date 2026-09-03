@@ -2,7 +2,6 @@
 
 import { Flag, Wrench } from "lucide-react";
 import { cn } from "@/core/lib/utils";
-import { formatDuration } from "@/core/lib/format";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import {
   parseTurnLatency,
@@ -10,7 +9,7 @@ import {
   type CallTranscriptSegment,
   type TurnLatency,
 } from "@/modules/calls/domain/call";
-import { formatMs } from "@/modules/calls/ui/lib/call-format";
+import { formatCallClock, formatMs } from "@/modules/calls/ui/lib/call-format";
 
 /** Umbral del badge ámbar: por encima el turno se sintió lento (plan §3.4). */
 const SLOW_TURN_MS = 4_000;
@@ -34,6 +33,11 @@ export function CallTranscript({
   const latencies = events
     .filter((event) => event.type === "turn_completed")
     .map((event) => parseTurnLatency(event.payload));
+  // La correlación es posicional: si por lo que sea no cuadran (un turno sin
+  // segmento, un segmento sin turno), mejor ningún badge que badges corridos
+  // atribuyendo latencias al turno equivocado.
+  const agentSegments = segments.filter((segment) => segment.role === "agent").length;
+  const aligned = latencies.length === agentSegments;
 
   let agentTurnIndex = -1;
   return (
@@ -41,7 +45,7 @@ export function CallTranscript({
       {segments.map((segment) => {
         const isAgent = segment.role === "agent";
         if (isAgent) agentTurnIndex += 1;
-        const latency = isAgent ? (latencies[agentTurnIndex] ?? null) : null;
+        const latency = isAgent && aligned ? (latencies[agentTurnIndex] ?? null) : null;
 
         if (segment.role === "system") {
           return (
@@ -51,7 +55,7 @@ export function CallTranscript({
               </span>
               <div className="min-w-0">
                 <p className="text-muted-foreground text-xs font-medium">
-                  Sistema · {formatDuration(Math.round(segment.at_ms / 1000))}
+                  Sistema · {formatCallClock(Math.round(segment.at_ms / 1000))}
                 </p>
                 <p className="text-muted-foreground mt-0.5 text-sm">{segment.text}</p>
               </div>
@@ -77,7 +81,7 @@ export function CallTranscript({
                 {isAgent ? (agentName ?? "Agente") : (contactName ?? "Cliente")}
                 <span className="text-muted-foreground font-normal">
                   {" · "}
-                  {formatDuration(Math.round(segment.at_ms / 1000))}
+                  {formatCallClock(Math.round(segment.at_ms / 1000))}
                 </span>
                 {segment.interrupted && isAgent && (
                   <span className="text-warning ml-2 font-normal">interrumpido</span>

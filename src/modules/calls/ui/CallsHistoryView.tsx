@@ -152,7 +152,7 @@ export function CallsHistoryView() {
       )}
 
       {error ? (
-        <div className="border-border bg-background rounded-2xl border p-8 text-center">
+        <div className="border-border bg-background rounded-2xl border p-8 text-center" role="alert">
           <p className="text-muted-foreground text-sm">{errorMessage(error)}</p>
           <Button variant="outline" className="mt-4 rounded-full" onClick={() => void refresh()}>
             Reintentar

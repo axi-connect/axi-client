@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, LoaderCircle, Pause, Play } from "lucide-react";
-import { formatDuration } from "@/core/lib/format";
 import { cn } from "@/core/lib/utils";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Phone } from "lucide-react";
+import { formatCallClock } from "@/modules/calls/ui/lib/call-format";
 import {
   callResultBadge,
   CALL_PURPOSE_LABELS,
@@ -95,7 +95,9 @@ export function ContactCallsList({
 
   if (error) {
     return (
-      <p className="text-muted-foreground p-2 text-xs">No se pudieron cargar las llamadas.</p>
+      <p className="text-muted-foreground p-2 text-xs" role="alert">
+        No se pudieron cargar las llamadas.
+      </p>
     );
   }
   if (calls === null) {
@@ -146,7 +148,7 @@ export function ContactCallsList({
               >
                 {CALL_PURPOSE_LABELS[call.purpose]}
                 {call.duration_seconds !== null
-                  ? ` · ${formatDuration(call.duration_seconds)}`
+                  ? ` · ${formatCallClock(call.duration_seconds)}`
                   : ""}
               </Link>
               <div className="mt-0.5">
@@ -155,6 +157,7 @@ export function ContactCallsList({
             </div>
             {call.has_recording && (
               <button
+                type="button"
                 onClick={() => void togglePlay(call)}
                 className="border-input text-accent-violet hover:bg-accent flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors"
                 aria-label={playingId === call.id ? "Pausar grabación" : "Reproducir grabación"}

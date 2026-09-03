@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { Eye } from "lucide-react";
-import { formatDuration } from "@/core/lib/format";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { Button } from "@/shared/components/ui/button";
+import { formatCallClock } from "@/modules/calls/ui/lib/call-format";
 import {
   CALL_PURPOSE_LABELS,
   CALL_STATUS_MAP,
@@ -39,7 +39,7 @@ export function LiveCallCard({ call, now }: { call: CallSessionRowDTO; now: numb
           </p>
         </div>
         <span className="text-muted-foreground font-mono text-sm tabular-nums">
-          {elapsed === null ? "—" : formatDuration(elapsed)}
+          {elapsed === null ? "—" : formatCallClock(elapsed)}
         </span>
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
