@@ -18,8 +18,15 @@ import { BrandLockup } from "@/shared/components/ui/brand-lockup";
 export const metadata: Metadata = noindexMetadata("Crea tu cuenta");
 
 export default function ComenzarLayout({ children }: { children: React.ReactNode }) {
+  // `html` lleva `overflow: hidden` (globals.css) y cada capa monta su propio
+  // scroller `data-app-scroll` (público, privado, plataforma). Sin él, en
+  // pantallas bajas el formulario quedaba recortado y los botones fuera de
+  // alcance. `h-svh` + `overflow-y-auto`: el funnel desplaza dentro del
+  // viewport pequeño del móvil, con la barra de marca (`sidebar-scroll`) y el
+  // rail lateral `lg:sticky` anclado a este contenedor. `w-full` y no
+  // `w-screen`: 100vw incluye la barra y provocaba scroll horizontal.
   return (
-    <div className="bg-brand-ambient flex min-h-svh w-full flex-col">
+    <div data-app-scroll className="bg-brand-ambient sidebar-scroll flex h-svh w-full flex-col overflow-y-auto">
       <PublicAnalytics />
       <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-4 px-6 py-5">
         {/* El mismo lockup que el header público: el funnel es la continuación

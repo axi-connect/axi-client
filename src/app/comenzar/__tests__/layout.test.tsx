@@ -18,4 +18,16 @@ describe("ComenzarLayout", () => {
     expect(screen.getByRole("link", { name: /inicia sesión/i })).toHaveAttribute("href", "/auth/login")
     expect(screen.getByText("contenido")).toBeInTheDocument()
   })
+
+  it("monta su propio scroller de marca: `html` no desplaza y el funnel no puede recortarse en pantallas bajas", () => {
+    const { container } = render(
+      <ComenzarLayout>
+        <p>contenido</p>
+      </ComenzarLayout>,
+    )
+
+    const scroller = container.querySelector("[data-app-scroll]")
+    expect(scroller).not.toBeNull()
+    expect(scroller).toHaveClass("h-svh", "overflow-y-auto", "sidebar-scroll")
+  })
 })
