@@ -46,6 +46,12 @@ ARG NEXT_PUBLIC_APP_URL
 # vez de romper el build.
 ARG NEXT_PUBLIC_GA_ID
 ARG NEXT_PUBLIC_META_PIXEL_ID
+# Clave pública del captcha del alta (/comenzar). Opcional para el build, pero
+# sin ella la imagen sale con el widget apagado y TODAS las altas fallan: el
+# token viaja vacío y el backend lo rechaza. No lleva valor por defecto a
+# propósito — una clave inventada pasaría la validación de formato y rompería
+# el captcha en silencio; ausente, el widget lo anuncia en pantalla.
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
     NEXT_PUBLIC_WS_BASE_URL=${NEXT_PUBLIC_WS_BASE_URL} \
     NEXT_PUBLIC_STORAGE_URL=${NEXT_PUBLIC_STORAGE_URL} \
@@ -53,6 +59,7 @@ ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
     NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
     NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID} \
     NEXT_PUBLIC_META_PIXEL_ID=${NEXT_PUBLIC_META_PIXEL_ID} \
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY} \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production \
     NODE_OPTIONS=--max-old-space-size=3072

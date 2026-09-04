@@ -82,3 +82,53 @@ describe("formatSalesWhatsApp", () => {
     expect((await loadEnv("+1 415 555 2671")).formatSalesWhatsApp()).toBe("+14155552671")
   })
 })
+
+/**
+ * La clave del captcha se resuelve en carga del módulo igual que el número
+ * comercial, así que cada caso recarga `env` aislado. `loadEnv` fija el número
+ * (obligatorio, o el módulo lanza por otra razón) y aquí se añade la clave.
+ */
+const ORIGINAL_TURNSTILE = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
+async function loadEnvWithTurnstile(value: string | undefined): Promise<EnvModule> {
+  if (value === undefined) delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  else process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = value
+  return loadEnv("573224970950")
+}
+
+describe("TURNSTILE_SITE_KEY", () => {
+  afterEach(() => {
+    if (ORIGINAL_TURNSTILE === undefined) delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    else process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = ORIGINAL_TURNSTILE
+  })
+
+  it("ausente degrada a null y no marca clave de prueba", async () => {
+    const env = await loadEnvWithTurnstile(undefined)
+    expect(env.TURNSTILE_SITE_KEY).toBeNull()
+    expect(env.TURNSTILE_IS_TEST_KEY).toBe(false)
+  })
+
+  it("acepta una clave real de Cloudflare", async () => {
+    const env = await loadEnvWithTurnstile("0x4AAAAAAABkMYinukE8nzYw")
+    expect(env.TURNSTILE_SITE_KEY).toBe("0x4AAAAAAABkMYinukE8nzYw")
+    expect(env.TURNSTILE_IS_TEST_KEY).toBe(false)
+  })
+
+  // Las ficticias sirven en cualquier dominio, localhost incluido: son la forma
+  // de desarrollar contra el captcha sin tocar las credenciales de producción.
+  it.each([
+    ["1x00000000000000000000AA", "siempre aprueba"],
+    ["2x00000000000000000000AB", "siempre rechaza"],
+    ["3x00000000000000000000FF", "fuerza el desafío"],
+  ])("acepta la clave de prueba %s (%s) y la marca como tal", async (key) => {
+    const env = await loadEnvWithTurnstile(key)
+    expect(env.TURNSTILE_SITE_KEY).toBe(key)
+    expect(env.TURNSTILE_IS_TEST_KEY).toBe(true)
+  })
+
+  it("una clave que no es de ninguna familia sigue abortando", async () => {
+    await expect(loadEnvWithTurnstile("sitekey-de-pega")).rejects.toThrow(
+      /NEXT_PUBLIC_TURNSTILE_SITE_KEY/,
+    )
+  })
+})

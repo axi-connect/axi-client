@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Script from "next/script";
 
-import { TURNSTILE_SITE_KEY } from "@/core/config/env";
+import { TURNSTILE_IS_TEST_KEY, TURNSTILE_SITE_KEY } from "@/core/config/env";
 
 /**
  * Widget de Cloudflare Turnstile del alta. Se monta solo con
@@ -77,18 +77,24 @@ export function TurnstileWidget({ onToken }: { onToken: (token: string) => void 
     };
   }, []);
 
-  if (!TURNSTILE_SITE_KEY) {
-    // Fuera de producción el backend valida con su verificador `noop`. En
-    // producción exige Turnstile: sin site key el token viaja vacío y el 100 %
-    // de las altas cae en `captcha_failed` con un «recarga la página» que no
-    // ayuda (auditoría 2026-09-03, H6). Mejor decirlo antes de que lo intenten.
-    if (process.env.NODE_ENV !== "production") return null;
+  // En producción, dos formas de estar mal configurado con el mismo desenlace.
+  // Sin site key el token viaja vacío y el 100 % de las altas cae en
+  // `captcha_failed` con un «recarga la página» que no ayuda (auditoría
+  // 2026-09-03, H6). Con una clave de PRUEBA de Cloudflare el widget sí se
+  // marca, pero el secreto real rechaza ese token igual: mismo callejón, y
+  // encima aparentando funcionar.
+  if (process.env.NODE_ENV === "production" && (!TURNSTILE_SITE_KEY || TURNSTILE_IS_TEST_KEY)) {
     return (
       <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
         La verificación de seguridad no está configurada. Escríbenos y creamos tu cuenta contigo.
       </p>
     );
   }
+
+  // Fuera de producción, sin clave no hay widget y el backend valida el alta
+  // con su verificador `noop`. Con clave de prueba sí se monta: es la forma de
+  // desarrollar contra el captcha de verdad sin tocar las credenciales reales.
+  if (!TURNSTILE_SITE_KEY) return null;
 
   return (
     <>

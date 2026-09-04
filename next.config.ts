@@ -86,14 +86,22 @@ const nextConfig: NextConfig = {
    * el flujo necesita, y omitir cualquiera lo rompe:
    *
    *   script-src  'self' https://connect.facebook.net https://www.googletagmanager.com
+   *               https://challenges.cloudflare.com
    *   frame-src   'self' https://web.facebook.com https://www.facebook.com
+   *               https://challenges.cloudflare.com
    *   connect-src 'self' https://graph.facebook.com https://www.facebook.com
    *               https://www.google-analytics.com https://*.analytics.google.com
+   *               https://challenges.cloudflare.com
    *   img-src     'self' data: https://www.facebook.com https://www.google-analytics.com
    *
    * Los dominios de Google Tag Manager y de Analytics son de la capa de
    * analítica (`core/analytics/`), añadida con el SEO: omitirlos dejaría el
    * sitio sin medición y sin ningún error visible.
+   *
+   * `challenges.cloudflare.com` es el captcha del alta autoservicio: sirve el
+   * script, el iframe del widget y el POST del token. Omitirlo dejaría
+   * `/comenzar` sin captcha y, como el backend exige un token válido en
+   * producción, sin una sola alta posible.
    */
   async headers() {
     return [

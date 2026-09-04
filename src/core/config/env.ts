@@ -176,12 +176,29 @@ export const META_PIXEL_ID = resolveOptionalId(
  * (`/comenzar`), o `null`: sin ella el widget no se monta y el backend valida
  * el alta con su verificador `noop`, que está prohibido en producción. Mismo
  * criterio que los ids de analítica — ausente degrada, mal formada aborta.
+ *
+ * El primer carácter distingue la familia, y por eso el patrón NO se limita a
+ * `0x`: Cloudflare publica claves de prueba que funcionan en cualquier dominio
+ * —`localhost` incluido— sin necesidad de cuenta, y son la forma sensata de
+ * desarrollar contra el captcha de verdad. `0x` es una clave real; `1x` aprueba
+ * siempre, `2x` rechaza siempre y `3x` fuerza el desafío interactivo.
  */
 export const TURNSTILE_SITE_KEY = resolveOptionalId(
   "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
-  /^0x[0-9A-Za-z_-]{8,}$/,
+  /^[0-3]x[0-9A-Za-z_-]{8,}$/,
   "0x4AAAAAAABkMYinukE8nzYw",
 );
+
+/**
+ * Cierto si la clave configurada es una de las ficticias de Cloudflare. En
+ * producción eso es un error de despliegue —el captcha no protege nada— y el
+ * widget lo anuncia en pantalla en vez de fingir que verifica a alguien.
+ *
+ * Se decide aquí y no en la interfaz para que el patrón de arriba siga siendo
+ * la única definición de qué es una clave real.
+ */
+export const TURNSTILE_IS_TEST_KEY =
+  TURNSTILE_SITE_KEY !== null && !TURNSTILE_SITE_KEY.startsWith("0x");
 
 /**
  * La analítica solo se monta en producción y solo si hay algo que medir: en
