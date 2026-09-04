@@ -533,7 +533,7 @@ export const FOUNDERS = {
    * «fundador» pierda significado por extensiones sucesivas, y el plazo ya se
    * movió una vez: era el 30 de septiembre.
    */
-  lastCallNote: "Última extensión: el programa no se vuelve a ampliar.",
+  // lastCallNote: "Última extensión: el programa no se vuelve a ampliar.",
   discountBadge: `${FOUNDERS_DISCOUNT_LABEL} precio fundador`,
   countdownLabel: "Cierra en",
   soldOut: "Cupos agotados",
@@ -547,26 +547,246 @@ export const FOUNDERS = {
 } as const;
 
 
-/**
- * Estimador de volumen: resuelve la objeción real ("no sé cuántas
- * conversaciones manejo") señalando el paquete que le corresponde. `unknown` es
- * el estado inicial y no recomienda ninguno. Cubre los cuatro tramos sin dejar
- * hueco: el catálogo anterior saltaba de 300 a 3.000 y dejaba sin oferta a
- * quien manejaba 800, con el propio estimador exhibiendo el vacío.
- */
-export const VOLUME_ESTIMATOR = {
-  legend: "¿Cuántas conversaciones maneja tu negocio al mes?",
-  recommendedBadge: "Tu plan",
-  choices: [
-    { id: "lt_500", label: "Menos de 500", recommends: "esencial" },
-    { id: "500_1500", label: "500 a 1.500", recommends: "crecimiento" },
-    { id: "1500_4000", label: "1.500 a 4.000", recommends: "escala" },
-    { id: "gt_4000", label: "Más de 4.000", recommends: "enterprise" },
-    { id: "unknown", label: "No lo sé", recommends: null },
-  ],
-} as const;
+/* ─────────────────────── §9 Paquetes · los dos ejes ──────────────────── */
 
-export type VolumeChoiceId = (typeof VOLUME_ESTIMATOR)["choices"][number]["id"];
+/**
+ * El precio tiene DOS EJES independientes (decisión del dueño, 2026-09-04).
+ *
+ *   precio_mensual = tarifaPaquete(qué puede hacer) + tarifaVolumen(cuánto habla)
+ *
+ * Antes iban soldados: Esencial *era* 500 conversaciones y Crecimiento *era*
+ * 1.500, así que para hablar más había que comprar funciones que nadie pidió.
+ * Separados, «Esencial con 10.000 conversaciones» es una compra legítima.
+ *
+ * Se guarda como suma de dos componentes y no como matriz de precios porque
+ * son nueve cifras en lugar de dieciocho, y porque **es lo que la sección dice
+ * en voz alta**: una tabla suelta se contradice con el discurso en cuanto
+ * alguien retoca una casilla.
+ */
+export const PRICING_VOLUMES = [
+  { id: "500", label: "500", conversations: 500, feeCop: 99_900 },
+  { id: "1000", label: "1.000", conversations: 1_000, feeCop: 169_900 },
+  { id: "2500", label: "2.500", conversations: 2_500, feeCop: 359_900 },
+  { id: "5000", label: "5.000", conversations: 5_000, feeCop: 649_900 },
+  { id: "10000", label: "10.000", conversations: 10_000, feeCop: 1_149_900 },
+  { id: "25000", label: "25.000", conversations: 25_000, feeCop: 2_499_900 },
+  /**
+   * Por encima del catálogo NO se da cifra. Inventar un precio aquí es
+   * renegociarlo después: las tarjetas pasan a «A la medida» y a ventas.
+   */
+  { id: "max", label: "Más de 25.000", conversations: null, feeCop: null },
+] as const;
+
+export type VolumeId = (typeof PRICING_VOLUMES)[number]["id"];
+
+/** Con qué volumen abre la sección. El tramo más comprado, no el más barato. */
+export const DEFAULT_VOLUME_ID: VolumeId = "1000";
+
+export function volumeById(id: VolumeId): (typeof PRICING_VOLUMES)[number] {
+  return PRICING_VOLUMES.find((volume) => volume.id === id) ?? PRICING_VOLUMES[1];
+}
+
+/**
+ * Periodicidad. El beneficio del anual **no es un porcentaje**: son doce meses
+ * de servicio y once facturados. Se guarda como número de meses pagados para
+ * que la cifra del ahorro se derive y no se pueda desincronizar de la etiqueta.
+ */
+export const ANNUAL_PAID_MONTHS = 11;
+export const MONTHS_PER_YEAR = 12;
+
+export const BILLING_PERIODS = [
+  { id: "monthly", label: "Mensual", badge: null },
+  { id: "annual", label: "Anual", badge: `${String(MONTHS_PER_YEAR - ANNUAL_PAID_MONTHS)} mes gratis` },
+] as const;
+
+export type BillingPeriodId = (typeof BILLING_PERIODS)[number]["id"];
+
+/* ──────────────────────────── Los paquetes ───────────────────────────── */
+
+/**
+ * Dónde vive cada plan en la sección. No es decoración: gobierna quién se pinta
+ * como tarjeta comparable, quién es el marco de la prueba y quién es la franja
+ * de ventas.
+ *
+ * - `trial` — la prueba gratuita. **Dejó de ser tarjeta** (2026-09-04): se
+ *   anuncia en el rail y en los botones de los tres paquetes, porque aplica a
+ *   los tres y una tarjeta la hacía parecer una cuarta opción excluyente.
+ * - `package` — las tres que se comparan entre sí y reaccionan al volumen.
+ * - `enterprise` — franja aparte. No comparte fila porque no comparte eje: ni
+ *   reacciona al volumen ni tiene prueba gratuita.
+ */
+export type PlanGroup = "trial" | "package" | "enterprise";
+
+export type PricingPlan = {
+  id: string;
+  name: string;
+  group: PlanGroup;
+  badge: string | null;
+  featured: boolean;
+  tagline: string;
+  /** Lo que cuestan las FUNCIONES. `null` cuando el plan no se tarifa por catálogo. */
+  planFeeCop: number | null;
+  /** Cifra literal, solo para los planes sin precio calculado. */
+  priceValue: string | null;
+  priceUnit: string | null;
+  /**
+   * Nombre del paquete inmediatamente inferior. La tarjeta lo dice («Todo lo de
+   * Esencial, y además») porque **es verdad**: con el volumen fuera de las
+   * viñetas, lo único que las separa son funciones acumulativas.
+   */
+  inheritsFrom: string | null;
+  bullets: readonly string[];
+  cta: { label: string; href: string };
+  ctaMicrocopy: string;
+};
+
+const TRIAL_CTA = "Comienza tus 7 días gratis";
+const TRIAL_MICROCOPY = "Sin tarjeta. Pagas cuando decidas seguir.";
+
+const PLANS: readonly PricingPlan[] = [
+  {
+    id: "free_trial",
+    name: "Free Trial",
+    group: "trial",
+    badge: null,
+    featured: false,
+    tagline: "Pruébalo con tu propio catálogo y tu WhatsApp, sin poner un peso.",
+    planFeeCop: null,
+    priceValue: "7 días",
+    priceUnit: "gratis",
+    inheritsFrom: null,
+    bullets: [
+      "El producto completo, sin funciones recortadas",
+      "Sin tarjeta de crédito ni compromiso",
+      "Si no sigues, tus datos quedan intactos",
+      "Te acompañamos en la activación",
+    ],
+    cta: { label: TRIAL_CTA, href: "/comenzar?plan=free_trial" },
+    ctaMicrocopy: "Sin tarjeta. Tu cuenta queda lista hoy.",
+  },
+  {
+    // El escalón de entrada. Chat y voz: sin Axel, sin captación y sin llamadas,
+    // que son el 97 % del costo. No es el producto recortado, es el producto sin
+    // las capacidades caras que este cliente probablemente no va a usar.
+    id: "esencial",
+    name: "Esencial",
+    group: "package",
+    badge: null,
+    featured: false,
+    tagline: "Para el negocio que ya vende por chat y quiere ordenarlo y medirlo.",
+    planFeeCop: 89_900,
+    priceValue: null,
+    priceUnit: "COP/mes",
+    inheritsFrom: null,
+    bullets: [
+      "WhatsApp oficial (API de Meta), Instagram y Messenger",
+      "Agente vendedor con tu catálogo y tus pedidos",
+      "Inbox compartido, CRM y agenda de citas",
+      "Reporte de ventas cerradas por conversación",
+    ],
+    cta: { label: TRIAL_CTA, href: "/comenzar?plan=esencial" },
+    ctaMicrocopy: TRIAL_MICROCOPY,
+  },
+  {
+    id: "crecimiento",
+    name: "Crecimiento",
+    group: "package",
+    badge: "Más elegido",
+    featured: true,
+    tagline: "Para el que ya escala y necesita captación, llamadas y medición.",
+    planFeeCop: 199_900,
+    priceValue: null,
+    priceUnit: "COP/mes",
+    inheritsFrom: "Esencial",
+    bullets: [
+      "Axel, tu CMO con IA: propone campañas y las mide",
+      "Captación de leads con datos verificados",
+      "Llamadas con voz natural desde tu propio número",
+      "Embudo en pesos y calidad de cada conversación",
+    ],
+    cta: { label: TRIAL_CTA, href: "/comenzar?plan=crecimiento" },
+    ctaMicrocopy: TRIAL_MICROCOPY,
+  },
+  {
+    id: "escala",
+    name: "Escala",
+    group: "package",
+    badge: null,
+    featured: false,
+    tagline: "Para la operación con varios equipos y varias líneas abiertas.",
+    planFeeCop: 399_900,
+    priceValue: null,
+    priceUnit: "COP/mes",
+    inheritsFrom: "Crecimiento",
+    bullets: [
+      "Varias líneas de WhatsApp y equipos separados",
+      "Roles y permisos por equipo, sin límite de usuarios",
+      "Integraciones con Shopify, Salesforce y tu ERP",
+      "Gestor de cuenta asignado y soporte prioritario",
+    ],
+    cta: { label: TRIAL_CTA, href: "/comenzar?plan=escala" },
+    ctaMicrocopy: TRIAL_MICROCOPY,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    group: "enterprise",
+    badge: null,
+    featured: false,
+    tagline: "Para alto volumen o con exigencias de aislamiento de datos.",
+    planFeeCop: null,
+    // Piso PUBLICADO. «Precio a la medida» sin cifra deja dinero sobre la mesa
+    // en cada negociación: el competidor directo cobra entre tres y siete veces
+    // esto por el mismo relato de producto.
+    priceValue: "Desde $2.900.000",
+    priceUnit: "COP/mes",
+    inheritsFrom: "Escala",
+    bullets: [
+      "Base de datos dedicada solo para tu empresa",
+      "Volumen de conversaciones sin tope de catálogo",
+      "Acuerdo de nivel de servicio por escrito",
+      "Implementación acompañada: $3.500.000, pago único",
+    ],
+    // Enterprise exige base dedicada: se activa con ventas, nunca por autoservicio.
+    cta: { label: "Hablar con ventas", href: "/contacto" },
+    ctaMicrocopy: "Sin prueba gratuita: se activa con ventas.",
+  },
+];
+
+/** Las tres que se comparan entre sí. Lo que se pinta como tarjeta. */
+export function pricingPackages(): PricingPlan[] {
+  return PLANS.filter((plan) => plan.group === "package");
+}
+
+export function planById(id: string): PricingPlan | null {
+  return PLANS.find((plan) => plan.id === id) ?? null;
+}
+
+/**
+ * Precio de lista mensual de un paquete a un volumen dado. `null` cuando no hay
+ * cifra que dar: el plan no se tarifa por catálogo, o el volumen se salió de él.
+ */
+export function planListCop(plan: PricingPlan, volumeId: VolumeId): number | null {
+  const volume = volumeById(volumeId);
+  if (plan.planFeeCop === null || volume.feeCop === null) return null;
+  return plan.planFeeCop + volume.feeCop;
+}
+
+/**
+ * Lo que se paga hoy: el de fundador mientras la oferta siga abierta, el de
+ * lista después. Pasa por `foundersOfferOpen` (cupos **y** fecha), que es la
+ * misma puerta que usan el dato estructurado y el alta.
+ */
+export function planMonthlyCop(plan: PricingPlan, volumeId: VolumeId): number | null {
+  const list = planListCop(plan, volumeId);
+  if (list === null) return null;
+  return foundersOfferOpen() ? founderCop(list) : list;
+}
+
+/** Lo que se factura de una vez en el plan anual: once meses, doce de servicio. */
+export function annualTotalCop(monthlyCop: number): number {
+  return monthlyCop * ANNUAL_PAID_MONTHS;
+}
 
 /**
  * §9 Paquetes. Los tres planes históricos pasan a llamarse «Paquetes»
@@ -579,120 +799,11 @@ export const PRICING = {
   title: "Pagas por lo que tu negocio conversa y vende. No por funciones.",
   intro:
     "Un Paquete trae el producto completo: tu agente vendedor, el catálogo, los pedidos, el inbox de tu equipo, la agenda, el CRM y la medición de ventas. Lo único que cambia es el volumen de conversaciones que tu negocio maneja.",
-  plans: [
-    {
-      id: "free_trial",
-      name: "Free Trial",
-      abbr: null,
-      badge: null,
-      featured: false,
-      tagline: "Pruébalo con tu propio catálogo y tu WhatsApp, sin poner un peso.",
-      /** `free` · `tiered` (precio por tramo de volumen) · `custom` */
-      priceKind: "free",
-      priceValue: "7 días",
-      priceUnit: "gratis",
-      bullets: [
-        "El producto completo, sin funciones recortadas",
-        "Sin tarjeta de crédito ni compromiso",
-        "Si no sigues, tus datos quedan intactos",
-        "Te acompañamos en la activación",
-      ],
-      cta: { label: "Empieza tus 7 días gratis", href: "/comenzar?plan=free_trial" },
-      ctaMicrocopy: "Sin tarjeta. Tu cuenta queda lista hoy.",
-    },
-    {
-      // El escalón de entrada. Solo chat y voz: sin Axel, sin captación y sin
-      // llamadas, que son el 97 % del costo. No es una versión recortada del
-      // producto, es el producto sin las capacidades caras que este cliente
-      // probablemente no va a usar y hoy estaba subsidiando.
-      id: "esencial",
-      name: "Esencial",
-      abbr: null,
-      badge: null,
-      featured: false,
-      tagline: "Para el negocio que ya vende por chat y quiere ordenarlo y medirlo.",
-      priceKind: "fixed",
-      listCop: 189_900,
-      priceValue: null,
-      priceUnit: "COP/mes",
-      bullets: [
-        "Hasta 500 conversaciones con IA al mes",
-        "WhatsApp oficial (API de Meta), Instagram y Messenger",
-        "Agente vendedor con tu catálogo, tus pedidos y tu agenda",
-        "Inbox, CRM y medición para todo tu equipo",
-      ],
-      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=esencial" },
-      ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
-    },
-    {
-      id: "crecimiento",
-      name: "Crecimiento",
-      abbr: null,
-      badge: "Most popular",
-      featured: true,
-      tagline: "Para el negocio que ya escala y necesita captación, llamadas y medición.",
-      priceKind: "fixed",
-      listCop: 449_900,
-      priceValue: null,
-      priceUnit: "COP/mes",
-      bullets: [
-        "Hasta 1.500 conversaciones con IA al mes",
-        "Axel, tu CMO con IA, y captación de leads",
-        "Llamadas con voz natural desde tu propio número",
-        "Medición completa: embudo en pesos y calidad de cada conversación",
-      ],
-      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=crecimiento" },
-      ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
-    },
-    {
-      id: "escala",
-      name: "Escala",
-      abbr: null,
-      badge: null,
-      featured: false,
-      tagline: "Para la operación con varios equipos y volumen alto de conversación.",
-      priceKind: "fixed",
-      listCop: 899_900,
-      priceValue: null,
-      priceUnit: "COP/mes",
-      bullets: [
-        "Hasta 4.000 conversaciones con IA al mes",
-        "El triple de captación, análisis y minutos de llamada",
-        "Roles y permisos por equipo, sin límite de usuarios",
-        "Acompañamiento prioritario",
-      ],
-      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=escala" },
-      ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      abbr: null,
-      badge: null,
-      featured: false,
-      tagline: "Para operaciones de alto volumen o con exigencias de aislamiento de datos.",
-      // Piso PUBLICADO. Antes decía «precio a la medida» sin cifra, y eso deja
-      // dinero sobre la mesa en cada negociación: el competidor directo cobra
-      // entre tres y siete veces esto por el mismo relato de producto.
-      priceKind: "custom",
-      priceValue: "Desde $2.900.000",
-      priceUnit: "COP/mes",
-      bullets: [
-        "Volumen de conversaciones a la medida",
-        "Base de datos dedicada solo para tu empresa",
-        "Límites ampliados y soporte prioritario",
-        "Implementación acompañada: $3.500.000, pago único",
-      ],
-      // Enterprise exige base dedicada: se activa con ventas, nunca por autoservicio.
-      cta: { label: "Hablemos", href: "/contacto" },
-      ctaMicrocopy: "Te respondemos el mismo día.",
-    },
-  ],
+  plans: PLANS,
   microcopy:
-    "Un Paquete se define por volumen, no por funciones: todos incluyen el producto completo. **No cobramos por usuario**: suma a todo tu equipo sin que cambie el precio. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
+    "El Paquete decide qué puede hacer axi por ti; el volumen, cuántas conversaciones atiende al mes. Son dos elecciones distintas. **No cobramos por usuario**: suma a todo tu equipo sin que cambie el precio. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
 } as const;
 
-export type PricingPlan = (typeof PRICING)["plans"][number];
 
 /* ───────────────────────────── §9b Módulos ──────────────────────────── */
 

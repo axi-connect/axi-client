@@ -1,8 +1,12 @@
 import {
+  ANNUAL_PAID_MONTHS,
+  DEFAULT_VOLUME_ID,
   FOUNDERS,
   MODULES,
+  MONTHS_PER_YEAR,
   PRICING,
-  VOLUME_ESTIMATOR,
+  PRICING_VOLUMES,
+  annualTotalCop,
   countdownParts,
   daysUntil,
   formatCop,
@@ -12,11 +16,18 @@ import {
   foundersOfferOpen,
   foundersRemaining,
   offerByCode,
+  planById,
+  planListCop,
+  planMonthlyCop,
+  pricingPackages,
   publishableModules,
+  volumeById,
 } from "../landing.content"
 
+/** Tramos con cifra: `max` es «a la medida» y no tiene precio de catálogo. */
+const PRICED_VOLUMES = PRICING_VOLUMES.filter((volume) => volume.feeCop !== null)
+
 describe("precios de fundador", () => {
-  const fixedPlans = PRICING.plans.filter((plan) => plan.priceKind === "fixed")
 
   it("aplica el descuento del content y termina en novecientos como el catálogo", () => {
     // El descuento vive en un solo sitio: si cambia, estos precios cambian
@@ -30,14 +41,20 @@ describe("precios de fundador", () => {
   it("jamás entrega un descuento MENOR al prometido", () => {
     // Redondear al millar más cercano subiría el precio por encima del 40 % en
     // la mitad de los casos, y la promesa de la página es un número exacto.
-    for (const plan of fixedPlans) {
-      expect(founderCop(plan.listCop)).toBeLessThanOrEqual(plan.listCop * (1 - FOUNDERS.discount))
+    for (const plan of pricingPackages()) {
+      for (const volume of PRICED_VOLUMES) {
+        const list = planListCop(plan, volume.id) as number
+        expect(founderCop(list)).toBeLessThanOrEqual(list * (1 - FOUNDERS.discount))
+      }
     }
   })
 
   it("nunca deja un precio de fundador por encima del de lista", () => {
-    for (const plan of fixedPlans) {
-      expect(founderCop(plan.listCop)).toBeLessThan(plan.listCop)
+    for (const plan of pricingPackages()) {
+      for (const volume of PRICED_VOLUMES) {
+        const list = planListCop(plan, volume.id) as number
+        expect(founderCop(list)).toBeLessThan(list)
+      }
     }
   })
 
@@ -137,21 +154,59 @@ describe("validación de la fecha de cierre", () => {
   })
 })
 
-describe("estimador de volumen", () => {
-  it("apunta siempre a un plan que existe", () => {
-    const planIds = PRICING.plans.map((plan) => plan.id)
-    for (const choice of VOLUME_ESTIMATOR.choices) {
-      if (choice.recommends) expect(planIds).toContain(choice.recommends)
+describe("los dos ejes del precio", () => {
+  it("el precio es la suma de la tarifa del paquete y la del volumen", () => {
+    // Es la regla que la sección dice en voz alta: el paquete cobra las
+    // funciones y el volumen cobra las conversaciones. Si esto deja de
+    // cumplirse, el discurso de la página pasa a ser falso.
+    for (const plan of pricingPackages()) {
+      for (const volume of PRICED_VOLUMES) {
+        expect(planListCop(plan, volume.id)).toBe((plan.planFeeCop as number) + (volume.feeCop as number))
+      }
     }
   })
 
-  it("cubre todos los tramos de volumen sin dejar hueco entre uno y el siguiente", () => {
-    // El salto 300 → 3.000 del catálogo anterior dejaba sin oferta a quien
-    // manejaba 800 conversaciones, y el propio estimador lo exhibía.
-    const recommended = VOLUME_ESTIMATOR.choices
-      .map((choice) => choice.recommends)
-      .filter((id) => id !== null)
-    expect(recommended).toEqual(["esencial", "crecimiento", "escala", "enterprise"])
+  it("los tramos de volumen suben de conversaciones y de precio a la vez", () => {
+    const fees = PRICED_VOLUMES.map((volume) => volume.feeCop as number)
+    const sizes = PRICED_VOLUMES.map((volume) => volume.conversations as number)
+    expect(fees).toEqual([...fees].sort((a, b) => a - b))
+    expect(sizes).toEqual([...sizes].sort((a, b) => a - b))
+    expect(new Set(fees).size).toBe(fees.length)
+  })
+
+  it("el orden de los paquetes se sostiene en TODOS los tramos, no solo en uno", () => {
+    // Un precio que se cruza en el tramo alto convierte la escalera en una
+    // trampa: saldría más barato el paquete de arriba.
+    for (const volume of PRICED_VOLUMES) {
+      const prices = pricingPackages().map((plan) => planListCop(plan, volume.id) as number)
+      expect(prices).toEqual([...prices].sort((a, b) => a - b))
+      expect(new Set(prices).size).toBe(prices.length)
+    }
+  })
+
+  it("por encima del catálogo no publica ninguna cifra", () => {
+    // Inventar un precio ahí es renegociarlo después: se pasa a ventas.
+    const over = PRICING_VOLUMES[PRICING_VOLUMES.length - 1]
+    expect(over.feeCop).toBeNull()
+    expect(over.conversations).toBeNull()
+    for (const plan of pricingPackages()) {
+      expect(planListCop(plan, over.id)).toBeNull()
+      expect(planMonthlyCop(plan, over.id)).toBeNull()
+    }
+  })
+
+  it("el plan anual factura once meses y regala uno: doce de servicio", () => {
+    expect(MONTHS_PER_YEAR - ANNUAL_PAID_MONTHS).toBe(1)
+    for (const plan of pricingPackages()) {
+      const monthly = planMonthlyCop(plan, DEFAULT_VOLUME_ID) as number
+      expect(annualTotalCop(monthly)).toBe(monthly * ANNUAL_PAID_MONTHS)
+      // El ahorro es exactamente una mensualidad, ni un peso más.
+      expect(monthly * MONTHS_PER_YEAR - annualTotalCop(monthly)).toBe(monthly)
+    }
+  })
+
+  it("el tramo por defecto existe en el catálogo y tiene precio", () => {
+    expect(volumeById(DEFAULT_VOLUME_ID).feeCop).not.toBeNull()
   })
 })
 
@@ -161,23 +216,32 @@ describe("catálogo de planes", () => {
     expect(names).toEqual(["Free Trial", "Esencial", "Crecimiento", "Escala", "Enterprise"])
   })
 
-  it("los tres paquetes de pago suben de precio en el mismo orden que de volumen", () => {
-    const prices = PRICING.plans
-      .filter((plan) => plan.priceKind === "fixed")
-      .map((plan) => plan.listCop)
-    expect(prices).toEqual([...prices].sort((a, b) => a - b))
-    expect(new Set(prices).size).toBe(prices.length)
+  it("solo tres planes se comparan como tarjeta; la prueba y Enterprise no", () => {
+    expect(pricingPackages().map((plan) => plan.id)).toEqual(["esencial", "crecimiento", "escala"])
+    expect(planById("free_trial")?.group).toBe("trial")
+    expect(planById("enterprise")?.group).toBe("enterprise")
+  })
+
+  it("cada paquete declara de cuál hereda, y el de entrada no hereda de nadie", () => {
+    // La tarjeta lo dice («Todo lo de Esencial, y además») y tiene que ser
+    // verdad: las viñetas son acumulativas.
+    const [entry, ...rest] = pricingPackages()
+    expect(entry.inheritsFrom).toBeNull()
+    const names = pricingPackages().map((plan) => plan.name)
+    rest.forEach((plan, index) => expect(plan.inheritsFrom).toBe(names[index]))
   })
 
   it("destaca exactamente un plan", () => {
     expect(PRICING.plans.filter((plan) => plan.featured)).toHaveLength(1)
   })
 
-  it("cada paquete de pago anuncia su volumen en el primer bullet", () => {
-    // El registro lo lee de ahí para el rail de resumen: si deja de estar,
-    // el cliente elige un paquete sin saber cuánto trae.
-    for (const plan of PRICING.plans.filter((p) => p.priceKind === "fixed")) {
-      expect(plan.bullets[0]).toMatch(/conversaciones/i)
+  it("ninguna viñeta de paquete habla de volumen: ese es el OTRO eje", () => {
+    // Antes el volumen vivía en el primer bullet. Con dos ejes, dejarlo ahí lo
+    // desincroniza del selector en cuanto alguien edita uno de los dos.
+    for (const plan of pricingPackages()) {
+      for (const bullet of plan.bullets) {
+        expect(bullet).not.toMatch(/\bconversaciones (con IA )?al mes\b/i)
+      }
     }
   })
 })
@@ -190,7 +254,10 @@ describe("catálogo de módulos", () => {
   })
 
   it("resuelve Paquetes por id y Módulos por offer_code", () => {
-    expect(offerByCode("sbs")).toBe(PRICING.plans[1])
+    // `sbs` NO se resuelve aquí: su alias vive en `RETIRED_PACKAGES`, dentro de
+    // `signup-draft`, que es quien recibe los enlaces viejos.
+    expect(offerByCode("esencial")).toBe(planById("esencial"))
+    expect(offerByCode("sbs")).toBeNull()
     expect(offerByCode("calls")).toBe(MODULES[0])
     expect(offerByCode("no-existe")).toBeNull()
   })

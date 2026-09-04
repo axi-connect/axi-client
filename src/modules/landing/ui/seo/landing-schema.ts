@@ -5,8 +5,10 @@ import { ORG_ID } from "@/core/seo/site";
 import {
   FOUNDERS,
   PRICING,
-  founderCop,
+  PRICING_VOLUMES,
   foundersOfferOpen,
+  planMonthlyCop,
+  pricingPackages,
   publishableModules,
 } from "@/modules/landing/ui/content/landing.content";
 
@@ -20,8 +22,8 @@ import {
  * retirar el resultado enriquecido.
  *
  * Qué NO se declara, a propósito:
- *  - El plan Enterprise (`priceKind: "custom"`) no genera `Offer`: no tiene
- *    precio publicable y un `Offer` sin precio no aporta nada.
+ *  - El plan Enterprise no genera `Offer`: no tiene precio publicable y un
+ *    `Offer` sin precio no aporta nada.
  *  - Los Módulos con `priceStatus: "draft"`: la tarjeta muestra la cifra como
  *    propuesta, pero afirmársela a Google sería publicar un precio no decidido.
  *    Entran solos al pasar a `final` (`publishableModules()`).
@@ -35,19 +37,39 @@ export function pricingSchema(): WithContext<SoftwareApplication> {
   // anunciando el precio de fundador con una validez ya vencida mientras la
   // página mostraba el de lista.
   const foundersActive = foundersOfferOpen();
-  const priceOf = (listCop: number) => (foundersActive ? founderCop(listCop) : listCop);
 
-  const packageOffers: Offer[] = PRICING.plans
-    .filter((plan) => plan.priceKind === "fixed")
-    .map((plan) => ({
-      "@type": "Offer",
-      name: `Paquete ${plan.name}`,
-      price: String(priceOf(plan.listCop)),
-      priceCurrency: "COP",
-      url: siteUrl("/precios"),
-      availability: "https://schema.org/InStock",
-      ...(foundersActive ? { priceValidUntil: FOUNDERS.deadline } : {}),
-    }));
+  /**
+   * Desde que el precio tiene dos ejes, un paquete no tiene UN precio sino una
+   * escalera. Se declara el ESCALÓN DE ENTRADA —el volumen más bajo del
+   * catálogo— y se marca como mínimo con `priceSpecification`: es lo que Google
+   * entiende de un rango, y afirmar un precio fijo que la página no muestra en
+   * todos sus tramos sería la discrepancia que retira el resultado enriquecido.
+   */
+  const entryVolume = PRICING_VOLUMES[0];
+
+  const packageOffers: Offer[] = pricingPackages().flatMap((plan) => {
+    const price = planMonthlyCop(plan, entryVolume.id);
+    if (price === null) return [];
+    return [
+      {
+        "@type": "Offer",
+        name: `Paquete ${plan.name}`,
+        price: String(price),
+        priceCurrency: "COP",
+        priceSpecification: {
+          "@type": "PriceSpecification",
+          // `minPrice` es numérico en el vocabulario: mandarlo como texto pasa
+          // el build y Google lo descarta sin decir nada.
+          minPrice: price,
+          priceCurrency: "COP",
+          valueAddedTaxIncluded: false,
+        },
+        url: siteUrl("/precios"),
+        availability: "https://schema.org/InStock",
+        ...(foundersActive ? { priceValidUntil: FOUNDERS.deadline } : {}),
+      } satisfies Offer,
+    ];
+  });
 
   const trialOffer: Offer = {
     "@type": "Offer",

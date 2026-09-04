@@ -8,21 +8,33 @@
  * de iconos: ningún componente con estado.
  */
 export {
+  BILLING_PERIODS,
+  DEFAULT_VOLUME_ID,
   FOUNDERS,
   MODULES,
   MODULES_SECTION,
   MODULE_IDS,
   PRICING,
+  PRICING_VOLUMES,
+  annualTotalCop,
   formatCop,
   founderCop,
   foundersOfferOpen,
   foundersRemaining,
   offerByCode,
+  planById,
+  planListCop,
+  planMonthlyCop,
+  pricingPackages,
   publishableModules,
+  volumeById,
+  type BillingPeriodId,
   type ModuleId,
   type ModuleOffer,
   type OfferCode,
+  type PlanGroup,
   type PricingPlan,
+  type VolumeId,
 } from "@/modules/landing/ui/content/landing.content";
 
 export { MODULE_ICONS } from "@/modules/landing/ui/components/ModuleCard";

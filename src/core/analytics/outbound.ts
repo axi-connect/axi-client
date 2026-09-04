@@ -38,12 +38,24 @@ function locationFromAnchor(anchor: HTMLAnchorElement, path: string): CtaLocatio
   return "unknown";
 }
 
-/** `/comenzar?plan=sbs` → "sbs"; `/comenzar?modulo=calls,crm` → "calls,crm"; sin query → "". */
-function offerCodesFromHref(href: string): string {
+/**
+ * Los tres ejes que puede llevar un CTA de registro:
+ * `/comenzar?plan=escala&volumen=5000&periodo=annual` → los tres;
+ * `/comenzar?modulo=calls,crm` → solo los códigos. Lo ausente va vacío.
+ */
+function offerFromHref(href: string): {
+  offer_codes: string;
+  offer_volume: string;
+  offer_period: string;
+} {
   const query = href.split("?")[1];
-  if (!query) return "";
+  if (!query) return { offer_codes: "", offer_volume: "", offer_period: "" };
   const params = new URLSearchParams(query);
-  return params.get("plan") ?? params.get("modulo") ?? "";
+  return {
+    offer_codes: params.get("plan") ?? params.get("modulo") ?? "",
+    offer_volume: params.get("volumen") ?? "",
+    offer_period: params.get("periodo") ?? "",
+  };
 }
 
 /**
@@ -74,11 +86,12 @@ export function attachOutboundTracking(getPath: () => string): () => void {
       return;
     }
 
-    // CTA de registro: la oferta va en la query (`?plan=sbs`, `?modulo=calls,crm`).
+    // CTA de registro: la oferta va en la query
+    // (`?plan=escala&volumen=5000&periodo=annual`, `?modulo=calls,crm`).
     if (href.startsWith("/comenzar")) {
       track({
         name: "signup_start_click",
-        params: { offer_codes: offerCodesFromHref(href), location: locationFromAnchor(anchor, path), path },
+        params: { ...offerFromHref(href), location: locationFromAnchor(anchor, path), path },
       });
     }
   };

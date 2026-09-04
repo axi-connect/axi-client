@@ -25,7 +25,20 @@ export type AnalyticsEvent =
   | { name: "demo_form_submit"; params: { volume: string } }
   // Funnel de registro autoservicio (/comenzar). `offer_codes` va como cadena
   // separada por comas: GA4 y Meta solo aceptan parámetros escalares.
-  | { name: "signup_start_click"; params: { offer_codes: string; location: CtaLocation; path: string } }
+  // `offer_volume` y `offer_period` son los otros dos ejes del precio: sin
+  // ellos no se puede saber qué tramo convierte, que es justo el dato con el
+  // que se fijan las tarifas del catálogo. Van vacíos cuando el enlace no los
+  // trae (un CTA fuera de la sección de precios).
+  | {
+      name: "signup_start_click"
+      params: {
+        offer_codes: string
+        offer_volume: string
+        offer_period: string
+        location: CtaLocation
+        path: string
+      }
+    }
   | { name: "signup_step_view"; params: { step: string } }
   | { name: "signup_completed"; params: { offer_codes: string } };
 

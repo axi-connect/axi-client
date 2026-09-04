@@ -11,15 +11,20 @@
 import { ONBOARDING_WELCOME_PATH } from "@/modules/onboarding/domain/onboarding-progress";
 import type { SignupPayload } from "@/shared/auth/auth.types";
 import {
+  BILLING_PERIODS,
+  DEFAULT_VOLUME_ID,
   MODULES,
   MODULE_IDS,
   PRICING,
+  PRICING_VOLUMES,
   formatCop,
-  founderCop,
-  foundersOfferOpen,
+  planMonthlyCop,
+  volumeById,
+  type BillingPeriodId,
   type ModuleId,
   type ModuleOffer,
   type PricingPlan,
+  type VolumeId,
 } from "@/modules/landing/public";
 
 /* ────────────────────────────── Oferta ────────────────────────────── */
@@ -41,10 +46,37 @@ export type PackageCode = (typeof SELF_SERVICE_PACKAGES)[number];
 /**
  * Un Paquete XOR uno o varios Módulos (decisión del dueño, 2026-09-01). El tipo
  * hace imposible el estado mixto: cambiar de modo descarta el otro.
+ *
+ * Desde que el precio tiene dos ejes (2026-09-04), elegir un paquete es elegir
+ * TRES cosas: qué funciones, cuántas conversaciones y cada cuánto se paga.
+ *
+ * Volumen y periodicidad van OPCIONALES a propósito: un enlace publicado con
+ * `?plan=crecimiento` a secas sigue siendo válido y cae en los valores por
+ * defecto, en vez de aterrizar en un error de oferta incompleta.
  */
 export type OfferSelection =
-  | { kind: "package"; code: PackageCode }
+  | { kind: "package"; code: PackageCode; volume?: VolumeId; period?: BillingPeriodId }
   | { kind: "modules"; codes: ModuleId[] };
+
+export function isVolumeId(value: string): value is VolumeId {
+  return PRICING_VOLUMES.some((volume) => volume.id === value);
+}
+
+export function isBillingPeriodId(value: string): value is BillingPeriodId {
+  return BILLING_PERIODS.some((period) => period.id === value);
+}
+
+/** Los dos ejes de una selección, con sus valores por defecto ya resueltos. */
+export function offerAxes(selection: OfferSelection): {
+  volume: VolumeId;
+  period: BillingPeriodId;
+} {
+  if (selection.kind !== "package") return { volume: DEFAULT_VOLUME_ID, period: "monthly" };
+  return {
+    volume: selection.volume ?? DEFAULT_VOLUME_ID,
+    period: selection.period ?? "monthly",
+  };
+}
 
 export function isPackageCode(value: string): value is PackageCode {
   return (SELF_SERVICE_PACKAGES as readonly string[]).includes(value);
@@ -82,9 +114,13 @@ export function toggleModule(selection: OfferSelection | null, id: ModuleId): Of
 
 /**
  * Preselección desde la URL de los CTA de precios: `?plan=crecimiento` o
- * `?modulo=calls,crm`. Los códigos desconocidos se ignoran (un enlace viejo no
- * rompe el funnel) y `plan=enterprise` manda a ventas: el backend rechaza crear
- * un tenant enterprise sin base dedicada.
+ * `?modulo=calls,crm`. Las tarjetas añaden además `&volumen=2500&periodo=anual`,
+ * los dos ejes elegidos en la sección de precios; sin ellos se usan los valores
+ * por defecto, así que un enlace viejo sigue funcionando.
+ *
+ * Los códigos desconocidos se ignoran (un enlace viejo no rompe el funnel) y
+ * `plan=enterprise` manda a ventas: el backend rechaza crear un tenant
+ * enterprise sin base dedicada.
  */
 export type ParsedOfferQuery = { selection: OfferSelection | null; redirectTo: string | null };
 
@@ -100,9 +136,19 @@ const RETIRED_PACKAGES: Readonly<Record<string, PackageCode>> = { sbs: "crecimie
 export function parseOfferQuery(params: { get(name: string): string | null }): ParsedOfferQuery {
   const plan = params.get("plan");
   if (plan === "enterprise") return { selection: null, redirectTo: ENTERPRISE_PATH };
+
+  const rawVolume = params.get("volumen");
+  const rawPeriod = params.get("periodo");
+  const axes = {
+    ...(rawVolume && isVolumeId(rawVolume) ? { volume: rawVolume } : {}),
+    ...(rawPeriod && isBillingPeriodId(rawPeriod) ? { period: rawPeriod } : {}),
+  };
+
   const revived = plan === null ? undefined : RETIRED_PACKAGES[plan];
-  if (revived) return { selection: { kind: "package", code: revived }, redirectTo: null };
-  if (plan && isPackageCode(plan)) return { selection: { kind: "package", code: plan }, redirectTo: null };
+  if (revived) return { selection: { kind: "package", code: revived, ...axes }, redirectTo: null };
+  if (plan && isPackageCode(plan)) {
+    return { selection: { kind: "package", code: plan, ...axes }, redirectTo: null };
+  }
 
   const modules = params.get("modulo");
   if (modules) {
@@ -189,29 +235,38 @@ export type OfferSummary = {
  * cupos, así que pasada la fecha el registro habría cobrado un precio de
  * fundador que la página de precios ya no mostraba.
  */
-export function packagePriceCop(code: PackageCode): number {
-  const plan = packagePlan(code);
-  if (plan.priceKind !== "fixed") return 0;
-  return foundersOfferOpen() ? founderCop(plan.listCop) : plan.listCop;
+export function packagePriceCop(code: PackageCode, volume: VolumeId = DEFAULT_VOLUME_ID): number {
+  return planMonthlyCop(packagePlan(code), volume) ?? 0;
 }
 
-/** Precio del escalón de entrada: la referencia contra la que se comparan los módulos. */
+/**
+ * Precio del escalón de entrada: la referencia contra la que se comparan los
+ * módulos. Se toma al VOLUMEN MÁS BAJO del catálogo a propósito — comparar un
+ * módulo con un paquete cargado de conversaciones haría ganar al módulo
+ * siempre, y la comparación dejaría de significar nada.
+ */
 export function entryPackagePriceCop(): number {
-  return packagePriceCop("esencial");
+  return packagePriceCop("esencial", PRICING_VOLUMES[0].id);
 }
 
 export function offerSummary(selection: OfferSelection): OfferSummary {
   if (selection.kind === "package") {
     const plan = packagePlan(selection.code);
-    if (plan.priceKind === "fixed") {
+    if (plan.group === "package") {
+      const { volume, period } = offerAxes(selection);
+      // El volumen sale del eje elegido, no de la primera viñeta del plan:
+      // desde que son dos ejes, las viñetas solo hablan de funciones.
       return {
         kind: "Paquete",
         title: plan.name,
         lines: [
-          { label: "Incluye", value: "Producto completo" },
-          { label: "Volumen", value: plan.bullets[0] },
+          { label: "Conversaciones", value: `${volumeById(volume).label} al mes` },
+          {
+            label: "Pago",
+            value: period === "annual" ? "Anual, con 1 mes gratis" : "Mensual",
+          },
         ],
-        afterTrial: `${formatCop(packagePriceCop(selection.code))} COP/mes`,
+        afterTrial: `${formatCop(packagePriceCop(selection.code, volume))} COP/mes`,
         approximate: false,
       };
     }

@@ -55,12 +55,25 @@ describe("SignupFunnelView", () => {
   })
 
   it("preselecciona el paquete de la URL y entra directo a Empresa", async () => {
+    // `sbs` es el enlace del catálogo retirado: aterriza en su equivalente,
+    // que es Crecimiento. El nombre viejo ya no existe en ningún sitio.
     search = new URLSearchParams("plan=sbs")
     render(<SignupFunnelView />)
 
     await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
     const rail = within(screen.getByRole("complementary", { name: /resumen/i }))
-    expect(rail.getByText("Small Business Suite")).toBeInTheDocument()
+    expect(rail.getByText("Crecimiento")).toBeInTheDocument()
+  })
+
+  it("el rail resume los dos ejes que llegaron en el enlace", async () => {
+    search = new URLSearchParams("plan=escala&volumen=5000&periodo=annual")
+    render(<SignupFunnelView />)
+
+    await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
+    const rail = within(screen.getByRole("complementary", { name: /resumen/i }))
+    expect(rail.getByText("Escala")).toBeInTheDocument()
+    expect(rail.getByText("5.000 al mes")).toBeInTheDocument()
+    expect(rail.getByText("Anual, con 1 mes gratis")).toBeInTheDocument()
   })
 
   it("manda Enterprise a ventas", async () => {

@@ -30,29 +30,31 @@ import { PRICING } from "@/modules/landing/ui/content/landing.content";
  * cualquier nav de SaaS, y llevaba a cargar una landing de doce secciones para
  * aterrizar a media página, sin URL compartible ni superficie de SEO propia.
  *
- * Reutiliza `PricingPlans` **entero** (franja de fundadores + estimador de
- * volumen + las tres tarjetas de Paquete) y `ModulePlans` (los Módulos): el
+ * Reutiliza `PricingPlans` **entero** (franja de fundadores + conmutador de
+ * periodicidad + rail de volumen + las tres tarjetas de Paquete + la franja de
+ * Enterprise) y `ModulePlans` (los Módulos): el
  * precio vive en un solo sitio, así que la home y esta página no pueden
  * desincronizarse. Lo que añade es lo que la home no
  * tiene espacio para explicar: cómo se mide el consumo y qué pasa al pasarse.
  *
  * El alta es AUTOSERVICIO desde el registro (`/comenzar`, plan
- * onboarding_self_service_plan.md): los cinco paquetes y los cuatro
- * Módulos abren el registro con la oferta preseleccionada; Enterprise sigue
- * siendo asistido porque exige base de datos dedicada.
+ * onboarding_self_service_plan.md): los tres Paquetes y los cuatro Módulos
+ * abren el registro con la oferta preseleccionada —y los Paquetes arrastran
+ * además el volumen y la periodicidad elegidos aquí—; Enterprise sigue siendo
+ * asistido porque exige base de datos dedicada.
  */
 export const metadata: Metadata = pageMetadata({
   title: "Precios",
   description:
-    "Paquetes por volumen de conversaciones con el producto completo, o Módulos de una sola capacidad. Empieza con 7 días gratis, sin tarjeta.",
+    "Elige las funciones que necesitas y el volumen de conversaciones por separado, o contrata Módulos de una sola capacidad. Empieza con 7 días gratis, sin tarjeta.",
   path: "/precios",
 });
 
 const GUARANTEES = [
   {
     icon: Gauge,
-    title: "El plan lo define el volumen, no las funciones",
-    body: "Ningún plan recorta capacidades: el agente, el catálogo, los pedidos, el inbox del equipo y la medición vienen completos desde el primer día. Lo único que escala es cuántas conversaciones maneja tu negocio.",
+    title: "Eliges las funciones y el volumen por separado",
+    body: "El Paquete decide qué puede hacer axi por ti; el volumen, cuántas conversaciones atiende al mes. Son dos elecciones distintas, así que hablar más no te obliga a comprar capacidades que no vas a usar.",
   },
   {
     icon: BellRing,

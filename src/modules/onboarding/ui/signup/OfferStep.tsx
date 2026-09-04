@@ -8,11 +8,12 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { ProviderCard } from "@/shared/components/features/provider-card";
-import { MODULES, MODULE_ICONS, formatCop } from "@/modules/landing/public";
+import { MODULES, MODULE_ICONS, formatCop, volumeById } from "@/modules/landing/public";
 import {
   SELF_SERVICE_PACKAGES,
   offerBlocker,
   packageBeatsModules,
+  offerAxes,
   packagePlan,
   packagePriceCop,
   toggleModule,
@@ -66,14 +67,21 @@ export function OfferStep({
           {SELF_SERVICE_PACKAGES.map((code) => {
             const plan = packagePlan(code);
             const Icon = PACKAGE_ICONS[code];
-            // El volumen sale del primer bullet del plan, que es donde el
-            // content lo declara: repetirlo aquí sería una cifra que se puede
-            // desincronizar de la tarjeta de precios.
+            // El volumen ya no sale de una viñeta: es el eje que el visitante
+            // eligió en la sección de precios y que viajó en la URL. Si no
+            // eligió, `offerAxes` resuelve el tramo por defecto.
+            const { volume } = selection ? offerAxes(selection) : { volume: undefined };
             const metrics =
-              plan.priceKind === "fixed"
+              plan.group === "package"
                 ? [
-                    { label: "Volumen", value: plan.bullets[0] },
-                    { label: "Tras la prueba", value: `${formatCop(packagePriceCop(code))} COP/mes` },
+                    {
+                      label: "Conversaciones",
+                      value: `${volumeById(volume ?? "1000").label} al mes`,
+                    },
+                    {
+                      label: "Tras la prueba",
+                      value: `${formatCop(packagePriceCop(code, volume))} COP/mes`,
+                    },
                   ]
                 : [
                     { label: "Prueba", value: "7 días gratis" },

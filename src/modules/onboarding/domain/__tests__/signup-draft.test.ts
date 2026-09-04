@@ -17,9 +17,25 @@ import { MODULES } from "@/modules/landing/public"
 const params = (query: string) => new URLSearchParams(query)
 
 describe("parseOfferQuery", () => {
+  it("arrastra los dos ejes que eligió el visitante en la sección de precios", () => {
+    expect(parseOfferQuery(params("plan=escala&volumen=5000&periodo=annual")).selection).toEqual({
+      kind: "package",
+      code: "escala",
+      volume: "5000",
+      period: "annual",
+    })
+  })
+
+  it("un eje con un valor inventado se ignora en vez de romper el alta", () => {
+    expect(parseOfferQuery(params("plan=escala&volumen=9x9&periodo=bienal")).selection).toEqual({
+      kind: "package",
+      code: "escala",
+    })
+  })
+
   it("preselecciona un paquete autoservicio", () => {
-    expect(parseOfferQuery(params("plan=sbs"))).toEqual({
-      selection: { kind: "package", code: "sbs" },
+    expect(parseOfferQuery(params("plan=crecimiento"))).toEqual({
+      selection: { kind: "package", code: "crecimiento" },
       redirectTo: null,
     })
   })
