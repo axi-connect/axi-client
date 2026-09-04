@@ -614,7 +614,6 @@ export const PRICING = {
       // El bullet de volumen NO va aquí: lo aporta el tramo activo
       // (`SBS_TIERS[].volumeBullet`) y encabeza la lista.
       bullets: [
-        // TODO [A VALIDAR]: estado de producción de Instagram/Messenger.
         "WhatsApp oficial (API de Meta), Instagram y Messenger",
         "Agentes vendedores con tu catálogo, tus pedidos y tu agenda",
         "Medición completa: embudo en pesos y calidad de cada conversación",
@@ -927,8 +926,8 @@ export const FAQ = {
   title: "Preguntas frecuentes",
   items: [
     {
-      q: "¿Necesito la API oficial de WhatsApp para empezar?",
-      a: "No. Puedes conectar tu número actual en minutos, escaneando un código — como WhatsApp Web. Cuando tu volumen lo justifique, te ayudamos a migrar al canal oficial de Meta sin perder nada.",
+      q: "¿Qué necesito para empezar?",
+      a: "Tu WhatsApp en el canal oficial de Meta. El alta la haces desde el panel en un botón: autorizas en una ventana de Meta y el canal queda operativo, sin pegar tokens ni configurar nada. El único trámite es la verificación del número, y te acompañamos en ella.",
     },
     {
       q: "¿Cuánto tarda quedar funcionando?",

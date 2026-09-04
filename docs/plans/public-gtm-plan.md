@@ -491,7 +491,7 @@ Se inserta **entre §6 Medición y §7 Tu equipo en control**: llega justo despu
   Pago verificado por tu equipo ✓      —          —
   Ventas medidas en pesos      ✓       —          —
   Qué corregir mañana          ✓       —          —
-  Tu número actual en minutos  ✓       —          —
+  Alta del canal en un botón   ✓       —          —
   ─────────────────────────────────────────────────────────
 
   Las demás plataformas te dicen cuántos mensajes respondiste.

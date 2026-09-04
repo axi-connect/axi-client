@@ -190,29 +190,24 @@ export const SITE_NAV: readonly SiteNavItem[] = [
     cardColumns: 2,
     cards: [
       {
-        // Primera tarjeta a propósito: es la ventaja de adopción más difícil de
-        // copiar que tiene axi (knowledge-base §13.2).
-        name: "WhatsApp Web · tu número actual",
-        href: "/integraciones#whatsapp-web",
-        description: "Escaneas un código y estás vendiendo hoy. Sin verificación de Meta, sin línea nueva.",
-        icon: MessageCircle,
-      },
-      {
+        // Primera tarjeta a propósito: es el canal por el que entra todo el mundo.
+        // La rampa por QR ya no existe (`whatsapp_web` retirado): axi opera solo
+        // con canales oficiales de Meta.
         name: "WhatsApp Cloud API",
         href: "/integraciones#whatsapp-cloud",
-        description: "Alta de un botón, plantillas aprobadas y voz. El canal de producción.",
+        description: "El canal oficial, con alta de un botón. Plantillas aprobadas y voz.",
         icon: MessagesSquare,
       },
       {
         name: "Instagram Direct",
         href: "/integraciones#instagram",
-        description: "El mismo botón y el mismo inbox. Pendiente de aprobación de permisos de Meta.",
+        description: "El mismo botón y el mismo inbox, con la app de Meta ya aprobada.",
         icon: Instagram,
       },
       {
         name: "Facebook Messenger",
         href: "/integraciones#messenger",
-        description: "Adaptador propio, mismo pipeline. Pendiente de aprobación de permisos de Meta.",
+        description: "Adaptador propio, mismo pipeline y la misma autorización de Meta.",
         icon: MessageCircle,
       },
     ],
@@ -226,8 +221,8 @@ export const SITE_NAV: readonly SiteNavItem[] = [
       ],
     },
     footer: {
-      claim: "¿Funciona con lo que ya tienes? **Conecta tu número actual** y lo compruebas el mismo día.",
-      whatsappMessage: "Hola, quiero saber si Axi Connect funciona con mi WhatsApp actual.",
+      claim: "¿Funciona con lo que ya tienes? **El alta del canal es un botón** y te acompañamos en el trámite de Meta.",
+      whatsappMessage: "Hola, quiero saber cómo conecto mis canales con Axi Connect.",
     },
   },
   { kind: "link", name: "Precios", href: "/precios" },

@@ -84,7 +84,16 @@ Barra inferior del panel: «7 días de prueba con el producto completo» + `[Age
 **Soluciones ▾** — cuatro tarjetas → `/soluciones#califica · #cierra · #retiene · #agenda`.
 Columna derecha **«Por industria»** (mata la objeción "mi negocio es distinto", la más cara del embudo): Retail y moda · Comida y restaurantes · Servicios con agenda · Educación y formación · Alto ticket → anclas de `/casos`.
 
-**Integraciones ▾** — Canales: WhatsApp Cloud API · **WhatsApp Web, «conecta tu número actual y vende hoy»** · Instagram Direct · Messenger.
+> ⚠️ **SUPERADO el 2026-09-04 en lo referente a WhatsApp Web.** El canal
+> `whatsapp_web` se retiró y axi quedó aprobado como Tech Provider de Meta con
+> la App Review pasada: hoy **solo opera con canales oficiales**. Todo lo que
+> este documento dice sobre «conecta tu número actual», la rampa por QR o el
+> estado *best effort* produjo cuatro claims falsos publicados
+> (`docs/business/market-study-2026-09.md` §5.3), corregidos en el commit de
+> «copy honesto». Instagram y Messenger ya no están «pendientes»: son «listos
+> para conectar».
+
+**Integraciones ▾** — Canales: WhatsApp Cloud API · Instagram Direct · Messenger.
 Columna derecha: Shopify · Medios de pago (Nequi · Daviplata · Bancolombia) · Voz del agente · `Ver todas` → `/integraciones`.
 
 **Por qué estas tres páginas y no otras.** Cubren los tres huecos donde hoy se pierde la conversión: el precio (nadie compra sin verlo, y hoy es un ancla en una landing de doce secciones), la prueba social (tres pilotos reales con cifras reales, contra "esto no sirve para mi negocio") y la compatibilidad ("¿funciona con mi WhatsApp actual?, ¿con mi Shopify?"). No se propone blog ni recursos: sin equipo de contenido una sección vacía resta solvencia, y ya existe la regla de que un enlace sin destino real es peor que no tenerlo.
@@ -96,8 +105,8 @@ Se construyen sobre lo que ya existe (`SectionHeading`, `Reveal`, `PricingPlans`
 | Ruta | Contenido | Honestidad obligatoria |
 |---|---|---|
 | `/precios` | `PricingPlans` + `VolumeEstimator` reutilizados, comparativa, trial de 7 días, cómo funciona el consumo medido, FAQ de precios, CTA | El alta es asistida: el CTA es demo/WhatsApp, **nunca "regístrate"** |
-| `/casos` | Los tres pilotos (Joao's Burguer, 37 productos · Savage, 129 productos y 385 imágenes · TBI, 19 servicios con agenda) + bloque de 5 verticales con anclas | Cifras reales del negocio; los tres operan sobre WhatsApp Web |
-| `/integraciones` | Cuatro canales + Shopify + medios de pago + voz, con el estado real de cada uno | IG y Messenger: **integrados, pendientes de aprobación de permisos de Meta**; WhatsApp Web es *best effort* |
+| `/casos` | Los tres pilotos (Joao's Burguer, 37 productos · Savage, 129 productos y 385 imágenes · TBI, 19 servicios con agenda) + bloque de 5 verticales con anclas | Cifras reales del negocio; **sin afirmar canal** (§5.4 del estudio: la migración a Cloud API no está cerrada) |
+| `/integraciones` | Tres canales + Shopify + medios de pago + voz, con el estado real de cada uno | IG y Messenger: **listos para conectar** (app aprobada), no «probados»: aprobado no es con clientes encima |
 
 Cada una: `metadata` + `alternates.canonical`, alta en **`PUBLIC_PATHS`** (`core/config/routes.ts` — sin eso el middleware manda al login, no da 404) y el redirect `/precios → /#planes` de `next.config.ts` **se elimina**.
 

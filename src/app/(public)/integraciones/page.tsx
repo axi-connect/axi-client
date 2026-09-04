@@ -6,14 +6,13 @@ import { breadcrumbSchema } from "@/core/seo/site";
 import Link from "next/link";
 import {
   CheckCircle2,
-  Clock3,
   CreditCard,
   Instagram,
   MessageCircle,
   MessagesSquare,
   Mic,
+  PlugZap,
   ShoppingBag,
-  TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,19 +32,24 @@ import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
  * su WhatsApp, su Instagram o su Shopify.
  *
  * REGLA DE HONESTIDAD (knowledge-base §13.3): lo construido y lo probado no son
- * lo mismo, y esta página no los confunde. Instagram y Messenger están
- * integrados de verdad pero **pendientes de la aprobación de permisos de Meta**,
- * y WhatsApp Web es un canal *best effort*. Decirlo aquí cuesta menos que
+ * lo mismo, y esta página no los confunde. Con la App Review aprobada, Instagram
+ * y Messenger ya se pueden conectar — pero «aprobado» no es «con clientes
+ * encima», así que llevan `listo` y no `probado`. Decirlo aquí cuesta menos que
  * decirlo en la demo.
+ *
+ * Ya NO existe la rampa por QR: `whatsapp_web` se retiró (el proveedor está
+ * etiquetado «retirado» en `channels/domain/channel-providers.ts`) y axi opera
+ * solo con canales oficiales de Meta. Esta página sostuvo cuatro claims falsos
+ * sobre ese canal hasta 2026-09-04 — ver `market-study-2026-09.md` §5.3.
  */
 export const metadata: Metadata = pageMetadata({
   title: "Integraciones",
   description:
-    "WhatsApp (tu número actual o la API oficial), Instagram, Messenger, Shopify y los medios de pago que usa Colombia. Conecta lo que ya tienes y empieza a vender el mismo día.",
+    "WhatsApp por la API oficial de Meta, Instagram, Messenger, Shopify y los medios de pago que usa Colombia. El alta del canal es un botón desde el panel.",
   path: "/integraciones",
 });
 
-type IntegrationStatus = "probado" | "pendiente" | "best-effort";
+type IntegrationStatus = "probado" | "listo";
 
 const STATUS_META: Record<
   IntegrationStatus,
@@ -57,15 +61,12 @@ const STATUS_META: Record<
     // Verde semántico: es estado del sistema, no acento de marca (DESIGN §3.4).
     className: "text-success border-success/30 bg-success/10",
   },
-  "best-effort": {
-    label: "No oficial · best effort",
-    icon: TriangleAlert,
-    className: "text-warning border-warning/30 bg-warning/10",
-  },
-  pendiente: {
-    label: "Pendiente de aprobación de Meta",
-    icon: Clock3,
-    className: "text-muted-foreground border-border bg-secondary",
+  // Integrado y con la app aprobada, pero sin clientes encima todavía: el chip
+  // informativo lo separa del verde de «probado» sin degradarlo a «pendiente».
+  listo: {
+    label: "Listo para conectar",
+    icon: PlugZap,
+    className: "text-info border-info/30 bg-info/10",
   },
 };
 
@@ -80,21 +81,6 @@ type Integration = {
 };
 
 const CHANNELS: readonly Integration[] = [
-  {
-    id: "whatsapp-web",
-    name: "WhatsApp Web · tu número actual",
-    icon: MessageCircle,
-    status: "best-effort",
-    claim: "Conecta el número que ya usas y vende hoy.",
-    body:
-      "Se vincula escaneando un código, como el WhatsApp Web del navegador: sin verificación de Meta, sin línea nueva y sin costo por conversación. Es la rampa de entrada — cuando tu volumen justifique formalizar, migras al canal oficial sin rehacer nada. Corre en un proceso aislado, así que su fragilidad nunca alcanza al resto de la plataforma.",
-    facts: [
-      "La sesión sobrevive a reinicios sin volver a escanear",
-      "Sin ventana de 24 horas y sin plantillas",
-      "Soporta voz del agente",
-      "Los tres negocios piloto operan hoy por aquí",
-    ],
-  },
   {
     id: "whatsapp-cloud",
     name: "WhatsApp Cloud API",
@@ -114,10 +100,10 @@ const CHANNELS: readonly Integration[] = [
     id: "instagram",
     name: "Instagram Direct",
     icon: Instagram,
-    status: "pendiente",
+    status: "listo",
     claim: "El mismo botón, el mismo inbox.",
     body:
-      "Adaptador propio, webhook enrutado y envío funcionando: aguas abajo del punto de entrada el sistema no distingue el canal, así que el agente, el catálogo y la medición son los mismos. Lo que falta no es código — es la aprobación por parte de Meta de los permisos de páginas e Instagram, que es un trámite con sus tiempos.",
+      "Adaptador propio, webhook enrutado y envío funcionando: aguas abajo del punto de entrada el sistema no distingue el canal, así que el agente, el catálogo y la medición son los mismos. Con la App Review aprobada y axi como Tech Provider de Meta, el canal se conecta desde el panel igual que WhatsApp.",
     facts: [
       "Identidad unificada del contacto: la misma persona escriba por donde escriba",
       "Sin plantillas y sin voz",
@@ -128,10 +114,10 @@ const CHANNELS: readonly Integration[] = [
     id: "messenger",
     name: "Facebook Messenger",
     icon: MessageCircle,
-    status: "pendiente",
+    status: "listo",
     claim: "Integrado por el mismo camino que Instagram.",
     body:
-      "Mismo adaptador, mismo webhook y mismo pipeline que el resto. También espera la aprobación de permisos de Meta, y comparte con Instagram las dos limitaciones del canal: sin plantillas y sin voz.",
+      "Mismo adaptador, mismo webhook y mismo pipeline que el resto. Se conecta por la misma autorización de Meta que Instagram, y comparte con él las dos limitaciones del canal: sin plantillas y sin voz.",
     facts: [
       "Las diferencias de capacidad se resuelven en el adaptador, nunca en el agente",
       "Añadir un canal nuevo no toca el motor de IA",
@@ -177,7 +163,7 @@ const EXTRAS: readonly Integration[] = [
     body:
       "Catálogo curado de diez voces en español latino, una por personalidad de agente. Si algo falla, degrada a texto en silencio: el cliente nunca se queda esperando. Y las notas de voz que te manden se transcriben automáticamente.",
     facts: [
-      "Disponible en WhatsApp (oficial y no oficial)",
+      "Disponible en WhatsApp; Instagram y Messenger no admiten voz",
       "Topes y longitud máxima aplicados en el servidor",
       "Consumo medido con su propia métrica",
     ],
@@ -200,7 +186,7 @@ function StatusChip({ status }: { status: IntegrationStatus }) {
   );
 }
 
-function IntegrationBlock({ item, index }: { item: Integration; index: number }) {
+function IntegrationBlock({ item }: { item: Integration }) {
   const Icon = item.icon;
   return (
     <section id={item.id} className="scroll-mt-28">
@@ -245,8 +231,8 @@ export default function IntegracionesPage() {
         <SectionHeading
           as="h1"
           kicker="Conecta lo que ya tienes"
-          title="Tu WhatsApp de hoy, funcionando esta semana"
-          intro="No hay que montar un canal nuevo ni pedirle permiso a nadie para empezar. Conectas el número que ya usas, cargas tu catálogo y el agente empieza a atender. Cuando el volumen lo justifique, formalizas con la API oficial de Meta sin rehacer nada."
+          title="Empiezas en el canal oficial, no en un atajo"
+          intro="El alta de WhatsApp es un botón: autorizas en una ventana de Meta y el canal queda operativo, sin pegar tokens ni configurar webhooks. Y por estar en el canal oficial desde el primer día, tienes plantillas aprobadas, campañas, recordatorios, Instagram y Messenger — cosas que en un canal informal simplemente no funcionan."
         />
         <div className="mt-9 flex flex-wrap gap-3.5">
           <Button asChild size="lg" className="h-12 px-7 text-base">
@@ -254,7 +240,7 @@ export default function IntegracionesPage() {
           </Button>
           <Button asChild size="lg" variant="outline" className="h-12 px-7 text-base">
             <a
-              href={salesWhatsAppUrl("Hola, quiero saber si Axi Connect funciona con mi WhatsApp actual.")}
+              href={salesWhatsAppUrl("Hola, quiero saber cómo conecto mis canales con Axi Connect.")}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -269,8 +255,8 @@ export default function IntegracionesPage() {
         <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
           Canales de conversación
         </h2>
-        {CHANNELS.map((channel, index) => (
-          <IntegrationBlock key={channel.id} item={channel} index={index} />
+        {CHANNELS.map((channel) => (
+          <IntegrationBlock key={channel.id} item={channel} />
         ))}
       </div>
 
@@ -278,8 +264,8 @@ export default function IntegracionesPage() {
         <h2 className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
           Tienda, pagos y voz
         </h2>
-        {EXTRAS.map((extra, index) => (
-          <IntegrationBlock key={extra.id} item={extra} index={index + 2} />
+        {EXTRAS.map((extra) => (
+          <IntegrationBlock key={extra.id} item={extra} />
         ))}
       </div>
 

@@ -44,20 +44,23 @@ export const metadata: Metadata = pageMetadata({
 });
 
 /** Datos verificables de cada piloto (knowledge-base §17.2). */
-const CASE_FACTS: Record<string, { catalog: string; channel: string; proves: string }> = {
+/**
+ * Sin campo `channel` a propósito: los tres pilotos se montaron sobre el canal
+ * `whatsapp_web`, que ya se retiró, y la migración al canal oficial no está
+ * cerrada (market-study-2026-09.md §5.4). Afirmar un canal aquí sería cambiar un
+ * claim obsoleto por otro; el catálogo sí es verificable y es lo que se pinta.
+ */
+const CASE_FACTS: Record<string, { catalog: string; proves: string }> = {
   joaos: {
     catalog: "37 productos en 5 categorías",
-    channel: "WhatsApp Web",
     proves: "Volumen alto, ticket bajo y decisión rápida: domicilios y para recoger, sin agenda y sin control de stock.",
   },
   savage: {
     catalog: "129 productos con variantes de talla · 385 imágenes",
-    channel: "WhatsApp Web",
     proves: "E-commerce conversacional puro: fotos por variante, envíos nacionales y búsqueda que tolera errores de tipeo.",
   },
   tbi: {
     catalog: "19 servicios y productos",
-    channel: "WhatsApp Web",
     proves: "Aquí lo que se vende es tiempo: disponibilidad real, reserva sin duplicar y recordatorios 24 h y 1 h antes.",
   },
 };
@@ -161,17 +164,11 @@ export default function CasosPage() {
                     </p>
 
                     <dl className="border-border/60 grid gap-3 border-t pt-4 sm:grid-cols-2">
-                      <div>
+                      <div className="sm:col-span-2">
                         <dt className="text-muted-foreground text-xs tracking-wide uppercase">
                           Catálogo real
                         </dt>
                         <dd className="mt-1 text-sm font-medium">{facts.catalog}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground text-xs tracking-wide uppercase">
-                          Canal
-                        </dt>
-                        <dd className="mt-1 text-sm font-medium">{facts.channel}</dd>
                       </div>
                       <div className="sm:col-span-2">
                         <dt className="text-muted-foreground text-xs tracking-wide uppercase">
@@ -192,9 +189,9 @@ export default function CasosPage() {
         <Reveal>
           <p className="text-muted-foreground mx-auto max-w-3xl text-center text-sm leading-relaxed">
             <b className="text-foreground font-semibold">185 productos y servicios reales</b> entre
-            los tres, con precios y fotos reales. Los tres operan hoy sobre WhatsApp Web, el canal
-            de la rampa de entrada: tres clientes vendiendo sin haber pasado por una verificación
-            de Meta.
+            los tres, con precios y fotos reales — un menú de domicilios, un catálogo de moda con
+            variantes de talla y una agenda de servicios. Tres negocios que no se parecen en nada,
+            atendidos por la misma configuración base.
           </p>
         </Reveal>
       </div>

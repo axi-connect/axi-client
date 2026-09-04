@@ -14,8 +14,8 @@ import {
  *
  * ⚠️ REQUIERE REVISIÓN LEGAL ANTES DE PUBLICAR. El contenido describe con
  * fidelidad cómo opera el producto (alta asistida, límites de consumo con
- * degradación de la IA, canal no oficial de WhatsApp sin garantías, verificación
- * humana del pago), pero no ha pasado por un abogado.
+ * degradación de la IA, verificación de Meta del número, verificación humana del
+ * pago), pero no ha pasado por un abogado.
  *
  * Fuente de los hechos descritos: `docs/business/knowledge-base.md` §9, §15.
  */
@@ -52,12 +52,11 @@ const SECTIONS: readonly LegalSection[] = [
   {
     heading: "Canales de mensajería",
     body: [
-      "La plataforma se integra con canales operados por terceros. Esto implica dos condiciones que el cliente acepta expresamente:",
+      "La plataforma opera exclusivamente sobre los canales oficiales de Meta (WhatsApp Cloud API, Instagram Direct, Messenger). Esto implica dos condiciones que el cliente acepta expresamente:",
       [
-        "Los canales oficiales de Meta (WhatsApp Cloud API, Instagram, Messenger) están sujetos a las políticas y tarifas de Meta, incluida la ventana de servicio de 24 horas, y a su disponibilidad.",
-        "La conexión de WhatsApp mediante código QR es un canal no oficial que se ofrece como rampa de entrada, sin garantía de continuidad: el proveedor puede restringir o bloquear el número en cualquier momento, y esa decisión es ajena a Axi Connect.",
+        "Los canales están sujetos a las políticas y tarifas de Meta, incluida la ventana de servicio de 24 horas y el costo por plantilla entregada, y a su disponibilidad.",
+        "El alta de un canal exige que Meta verifique el negocio y el número del cliente. Ese trámite lo resuelve Meta con sus propios tiempos y criterios, y su resultado es ajeno a Axi Connect.",
       ],
-      "Para operaciones que requieran garantías de servicio, el canal indicado es el oficial de Meta.",
     ],
   },
   {

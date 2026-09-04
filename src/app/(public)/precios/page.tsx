@@ -97,8 +97,8 @@ const PRICING_FAQ = [
     a: "Por defecto se pausa el agente de IA y tu equipo sigue atendiendo todo desde el inbox. Los topes son configurables por métrica y período, y cada uno puede bloquear, degradar o solo notificar según lo que acordemos contigo.",
   },
   {
-    q: "¿Necesito la API oficial de WhatsApp para pagar menos?",
-    a: "No. Puedes empezar conectando tu número actual, sin verificación de Meta y sin costo por conversación. Cuando el volumen justifique formalizar, te ayudamos a migrar al canal oficial sin rehacer nada de lo configurado.",
+    q: "¿Qué le pago a Meta, aparte del plan?",
+    a: "Meta cobra por plantilla entregada, y la tarifa depende de la categoría. La categoría de servicio — toda la atención del agente dentro de la ventana de 24 horas que abre tu cliente — es gratis. Se paga cuando tú inicias la conversación: campañas de marketing y recordatorios fuera de esa ventana.",
   },
   {
     q: "¿Cómo se factura?",
