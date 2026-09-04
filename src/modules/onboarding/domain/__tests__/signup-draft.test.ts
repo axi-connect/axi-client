@@ -40,11 +40,20 @@ describe("parseOfferQuery", () => {
     expect(parseOfferQuery(params("modulo=inventado")).selection).toBeNull()
     expect(parseOfferQuery(params("plan=inventado")).selection).toBeNull()
   })
+
+  it("un enlace publicado del catálogo viejo aterriza en su equivalente", () => {
+    // Hay CTAs con `?plan=sbs` en enlaces compartidos y marcadores. Quien
+    // llegue por ahí debe encontrar el paquete equivalente, no un error.
+    expect(parseOfferQuery(params("plan=sbs")).selection).toEqual({
+      kind: "package",
+      code: "crecimiento",
+    })
+  })
 })
 
 describe("selección de oferta", () => {
   it("un paquete y los módulos nunca conviven: alternar un módulo descarta el paquete", () => {
-    const fromPackage = toggleModule({ kind: "package", code: "sbs" }, "calls")
+    const fromPackage = toggleModule({ kind: "package", code: "crecimiento" }, "calls")
     expect(fromPackage).toEqual({ kind: "modules", codes: ["calls"] })
 
     const removed = toggleModule({ kind: "modules", codes: ["calls", "crm"] }, "calls")
@@ -77,12 +86,15 @@ describe("selección de oferta", () => {
     expect(summary.afterTrial).toContain("COP/mes")
 
     expect(offerSummary({ kind: "package", code: "free_trial" }).afterTrial).toBeNull()
-    expect(offerSummary({ kind: "package", code: "sbs" }).approximate).toBe(true)
+    // Un paquete de pago ya tiene precio exacto: dejó de depender de un tramo.
+    const paquete = offerSummary({ kind: "package", code: "crecimiento" })
+    expect(paquete.approximate).toBe(false)
+    expect(paquete.afterTrial).toContain("COP/mes")
   })
 })
 
 describe("bloqueos por paso", () => {
-  const withOffer: SignupDraft = { ...EMPTY_SIGNUP_DRAFT, offer: { kind: "package", code: "sbs" } }
+  const withOffer: SignupDraft = { ...EMPTY_SIGNUP_DRAFT, offer: { kind: "package", code: "crecimiento" } }
 
   it("no deja avanzar a Empresa sin oferta ni a Cuenta sin empresa", () => {
     expect(blockerForSignupStep("company", EMPTY_SIGNUP_DRAFT)).not.toBeNull()

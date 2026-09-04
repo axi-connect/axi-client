@@ -8,13 +8,13 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { ProviderCard } from "@/shared/components/features/provider-card";
-import { MODULES, MODULE_ICONS, SBS_TIERS, formatCop } from "@/modules/landing/public";
+import { MODULES, MODULE_ICONS, formatCop } from "@/modules/landing/public";
 import {
   SELF_SERVICE_PACKAGES,
   offerBlocker,
   packageBeatsModules,
   packagePlan,
-  sbsEntryPriceCop,
+  packagePriceCop,
   toggleModule,
   type OfferSelection,
   type PackageCode,
@@ -22,7 +22,12 @@ import {
 
 type OfferKind = "package" | "modules";
 
-const PACKAGE_ICONS: Record<PackageCode, typeof Inbox> = { free_trial: Sparkles, sbs: Inbox };
+const PACKAGE_ICONS: Record<PackageCode, typeof Inbox> = {
+  free_trial: Sparkles,
+  esencial: Inbox,
+  crecimiento: Inbox,
+  escala: Inbox,
+};
 
 /**
  * Paso 1 · Oferta. Conmutador Paquete | Módulos (`SegmentedControl`, un
@@ -61,11 +66,14 @@ export function OfferStep({
           {SELF_SERVICE_PACKAGES.map((code) => {
             const plan = packagePlan(code);
             const Icon = PACKAGE_ICONS[code];
+            // El volumen sale del primer bullet del plan, que es donde el
+            // content lo declara: repetirlo aquí sería una cifra que se puede
+            // desincronizar de la tarjeta de precios.
             const metrics =
-              code === "sbs"
+              plan.priceKind === "fixed"
                 ? [
-                    { label: "Volumen", value: SBS_TIERS[0].volumeBullet },
-                    { label: "Tras la prueba", value: `${formatCop(sbsEntryPriceCop())} COP/mes` },
+                    { label: "Volumen", value: plan.bullets[0] },
+                    { label: "Tras la prueba", value: `${formatCop(packagePriceCop(code))} COP/mes` },
                   ]
                 : [
                     { label: "Prueba", value: "7 días gratis" },

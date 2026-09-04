@@ -5,9 +5,8 @@ import { ORG_ID } from "@/core/seo/site";
 import {
   FOUNDERS,
   PRICING,
-  SBS_TIERS,
   founderCop,
-  foundersRemaining,
+  foundersOfferOpen,
   publishableModules,
 } from "@/modules/landing/ui/content/landing.content";
 
@@ -15,8 +14,8 @@ import {
  * `SoftwareApplication` con la oferta real de Axi Connect.
  *
  * Vive en el slice de landing, y no en `core/seo/`, porque lee el contenido:
- * las cifras salen de `SBS_TIERS` y de `founderCop()`, **los mismos** que pintan
- * las tarjetas de precio. No se copia ni un número. Si el JSON-LD declarara un
+ * las cifras salen de `PRICING.plans` y de `founderCop()`, **los mismos** que
+ * pintan las tarjetas de precio. No se copia ni un número. Si el JSON-LD declarara un
  * precio distinto del visible, Google lo trata como discrepancia y puede
  * retirar el resultado enriquecido.
  *
@@ -31,20 +30,24 @@ import {
  *    inventar una valoración.
  */
 export function pricingSchema(): WithContext<SoftwareApplication> {
-  // El precio de fundador es el que ve el visitante mientras queden cupos y no
-  // haya vencido el programa; el JSON-LD tiene que decir lo mismo que la tarjeta.
-  const foundersActive = foundersRemaining() > 0;
+  // Cupos Y fecha, por la MISMA puerta que usan las tarjetas. Antes esta línea
+  // miraba solo los cupos, así que pasada la fecha el buscador habría seguido
+  // anunciando el precio de fundador con una validez ya vencida mientras la
+  // página mostraba el de lista.
+  const foundersActive = foundersOfferOpen();
   const priceOf = (listCop: number) => (foundersActive ? founderCop(listCop) : listCop);
 
-  const tierOffers: Offer[] = SBS_TIERS.map((tier) => ({
-    "@type": "Offer",
-    name: `Small Business Suite — ${tier.volumeBullet}`,
-    price: String(priceOf(tier.listCop)),
-    priceCurrency: "COP",
-    url: siteUrl("/precios"),
-    availability: "https://schema.org/InStock",
-    ...(foundersActive ? { priceValidUntil: FOUNDERS.deadline } : {}),
-  }));
+  const packageOffers: Offer[] = PRICING.plans
+    .filter((plan) => plan.priceKind === "fixed")
+    .map((plan) => ({
+      "@type": "Offer",
+      name: `Paquete ${plan.name}`,
+      price: String(priceOf(plan.listCop)),
+      priceCurrency: "COP",
+      url: siteUrl("/precios"),
+      availability: "https://schema.org/InStock",
+      ...(foundersActive ? { priceValidUntil: FOUNDERS.deadline } : {}),
+    }));
 
   const trialOffer: Offer = {
     "@type": "Offer",
@@ -74,6 +77,6 @@ export function pricingSchema(): WithContext<SoftwareApplication> {
     description: PRICING.intro,
     inLanguage: "es-CO",
     publisher: { "@id": ORG_ID },
-    offers: [trialOffer, ...tierOffers, ...moduleOffers],
+    offers: [trialOffer, ...packageOffers, ...moduleOffers],
   };
 }

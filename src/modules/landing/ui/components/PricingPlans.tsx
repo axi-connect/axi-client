@@ -14,42 +14,42 @@ import { VolumeEstimator } from "@/modules/landing/ui/components/VolumeEstimator
 import {
   FOUNDERS,
   PRICING,
-  SBS_TIERS,
   VOLUME_ESTIMATOR,
-  daysUntil,
   formatCop,
   founderCop,
+  foundersOfferOpen,
   foundersRemaining,
-  sbsTier,
   type PricingPlan,
-  type SbsTierId,
   type VolumeChoiceId,
 } from "@/modules/landing/ui/content/landing.content";
 
 const DEFAULT_CHOICE: VolumeChoiceId = "unknown";
-const DEFAULT_TIER: SbsTierId = SBS_TIERS[0].id;
 
 /**
  * Tarjetas de planes + estimador de volumen (§9).
  *
- * Isla de cliente: el estimador es el único estado de la sección y decide dos
- * cosas — qué tramo de precio muestra SBS y qué tarjeta lleva el sello «Tu
- * plan». La cabecera y el microcopy siguen siendo RSC en `LandingPricing`.
+ * Isla de cliente: el estimador es el único estado de la sección y decide una
+ * cosa — qué tarjeta lleva el sello «Tu plan». Cada paquete tiene su propio
+ * precio desde que la oferta pasó de dos tramos de un plan a tres planes.
+ * La cabecera y el microcopy siguen siendo RSC en `LandingPricing`.
  */
 export function PricingPlans() {
   const [choiceId, setChoiceId] = useState<VolumeChoiceId>(DEFAULT_CHOICE);
-  // Los cupos son una constante del content: se conoce en SSR y no hay riesgo
-  // de hidratación. La fecha sí depende del reloj → se verifica tras montar,
-  // y al vencer la oferta cae sola a precios de lista (fallo seguro).
+  // Los cupos son una constante del content: se conocen en SSR y no hay riesgo
+  // de hidratación. La FECHA sí depende del reloj, y comprobarla en el primer
+  // render congelaría el resultado en la fecha del despliegue —la página se
+  // prerenderiza—, así que se verifica tras montar. Al vencer, la oferta cae
+  // sola a precios de lista sin desplegar nada: fallo seguro.
   const [deadlineOpen, setDeadlineOpen] = useState(true);
   const offerOpen = foundersRemaining() > 0 && deadlineOpen;
 
   useEffect(() => {
-    setDeadlineOpen(daysUntil(FOUNDERS.deadline, new Date()) > 0);
+    setDeadlineOpen(foundersOfferOpen(new Date()));
   }, []);
 
-  const choice = VOLUME_ESTIMATOR.choices.find((c) => c.id === choiceId) ?? VOLUME_ESTIMATOR.choices[3];
-  const tier = sbsTier(choice.tier ?? DEFAULT_TIER);
+  const choice =
+    VOLUME_ESTIMATOR.choices.find((c) => c.id === choiceId) ??
+    VOLUME_ESTIMATOR.choices[VOLUME_ESTIMATOR.choices.length - 1];
 
   return (
     <>
@@ -61,18 +61,12 @@ export function PricingPlans() {
         <VolumeEstimator value={choiceId} onChange={setChoiceId} />
       </Reveal>
 
-      <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-3">
+      {/* Cinco tarjetas y no tres: la rejilla parte en dos filas en escritorio
+          para que ninguna quede por debajo de un ancho legible. */}
+      <div className="mt-10 grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
         {PRICING.plans.map((plan, i) => (
           <Reveal key={plan.id} delay={i * 0.08} className="h-full">
-            <PlanCard
-              plan={plan}
-              recommended={choice.recommends === plan.id}
-              offerOpen={offerOpen}
-              tierListCop={tier.listCop}
-              tierVolumeBullet={tier.volumeBullet}
-              /** Sin tramo elegido el precio se presenta como "Desde". */
-              showFrom={choice.tier === null}
-            />
+            <PlanCard plan={plan} recommended={choice.recommends === plan.id} offerOpen={offerOpen} />
           </Reveal>
         ))}
       </div>
@@ -85,20 +79,12 @@ function PlanCard({
   plan,
   recommended,
   offerOpen,
-  tierListCop,
-  tierVolumeBullet,
-  showFrom,
 }: {
   plan: PricingPlan;
   recommended: boolean;
   offerOpen: boolean;
-  tierListCop: number;
-  tierVolumeBullet: string;
-  showFrom: boolean;
 }) {
-  // El bullet de volumen no vive en el plan: lo aporta el tramo activo y
-  // encabeza la lista, para que el precio y el volumen se lean juntos.
-  const bullets = plan.priceKind === "tiered" ? [tierVolumeBullet, ...plan.bullets] : plan.bullets;
+  const bullets = plan.bullets;
 
   return (
     <TiltCard depth={6} className="h-full">
@@ -129,12 +115,7 @@ function PlanCard({
           <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{plan.tagline}</p>
         </div>
 
-        <PriceBlock
-          plan={plan}
-          offerOpen={offerOpen}
-          tierListCop={tierListCop}
-          showFrom={showFrom}
-        />
+        <PriceBlock plan={plan} offerOpen={offerOpen} />
 
         <ul className="flex flex-1 flex-col gap-3">
           {bullets.map((bullet) => (
@@ -168,22 +149,12 @@ function PlanCard({
 }
 
 /**
- * Bloque de precio. En el plan por tramos, el precio de lista y el de fundador
- * salen del MISMO número (`founderCop`): es imposible que el tachado y el
- * precio final se contradigan al editar el descuento.
+ * Bloque de precio. El precio de lista y el de fundador salen del MISMO número
+ * (`founderCop`): es imposible que el tachado y el precio final se contradigan
+ * al editar el descuento.
  */
-function PriceBlock({
-  plan,
-  offerOpen,
-  tierListCop,
-  showFrom,
-}: {
-  plan: PricingPlan;
-  offerOpen: boolean;
-  tierListCop: number;
-  showFrom: boolean;
-}) {
-  if (plan.priceKind !== "tiered") {
+function PriceBlock({ plan, offerOpen }: { plan: PricingPlan; offerOpen: boolean }) {
+  if (plan.priceKind !== "fixed") {
     // La monoespaciada es para cifras (DESIGN §4): "7 días" sí, "Precio a la
     // medida" no — ahí el peso tipográfico hace el trabajo.
     const isFigure = plan.priceKind === "free";
@@ -204,8 +175,8 @@ function PriceBlock({
     );
   }
 
-  const listPrice = formatCop(tierListCop);
-  const finalPrice = offerOpen ? formatCop(founderCop(tierListCop)) : listPrice;
+  const listPrice = formatCop(plan.listCop);
+  const finalPrice = offerOpen ? formatCop(founderCop(plan.listCop)) : listPrice;
 
   return (
     <div>
@@ -215,10 +186,9 @@ function PriceBlock({
           : `${finalPrice} pesos colombianos al mes.`}
       </span>
       <div aria-hidden>
-        {showFrom || offerOpen ? (
+        {offerOpen ? (
           <p className="text-muted-foreground flex flex-wrap items-baseline gap-x-2 text-sm">
-            {showFrom ? <span>Desde</span> : null}
-            {offerOpen ? <s className="text-base">{listPrice}</s> : null}
+            <s className="text-base">{listPrice}</s>
           </p>
         ) : null}
         <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2">

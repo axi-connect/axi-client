@@ -4,7 +4,6 @@ import { PricingPlans } from "../PricingPlans"
 import {
   FOUNDERS,
   PRICING,
-  SBS_TIERS,
   VOLUME_ESTIMATOR,
   formatCop,
   formatDeadlineLong,
@@ -26,7 +25,8 @@ import {
  * Mismo patrón que `FlipCountdown.test.tsx`.
  */
 const BEFORE_DEADLINE = new Date("2026-09-01T10:00:00")
-const AFTER_DEADLINE = new Date("2026-10-15T10:00:00")
+/** Después del 31 de diciembre de 2026, que es el cierre del programa. */
+const AFTER_DEADLINE = new Date("2027-01-15T10:00:00")
 
 /** Busca por id y falla ruidosamente si el content cambió de forma. */
 function byId<T extends { readonly id: string }>(items: readonly T[], id: string): T {
@@ -35,14 +35,21 @@ function byId<T extends { readonly id: string }>(items: readonly T[], id: string
   return found
 }
 
+/** Paquetes con precio fijo, ya estrechados: los de prueba y Enterprise no lo tienen. */
+const FIXED_PLANS = PRICING.plans.filter((plan) => plan.priceKind === "fixed")
+
+function fixedById(id: string) {
+  return byId(FIXED_PLANS, id)
+}
+
 /**
  * Las aserciones se DERIVAN del content: este test no vuelve a escribir a mano
- * precios, cupos ni fechas. Si el negocio cambia un tramo o el descuento, el
+ * precios, cupos ni fechas. Si el negocio cambia un precio o el descuento, el
  * test sigue siendo verdad; si cambia el comportamiento, falla.
  */
-const ENTRY_TIER = SBS_TIERS[0]
-const UPPER_TIER = byId(SBS_TIERS, "t3000")
-const SBS_PLAN = byId(PRICING.plans, "sbs")
+const ENTRY_PLAN = fixedById("esencial")
+const FEATURED_PLAN = fixedById("crecimiento")
+const UPPER_PLAN = fixedById("escala")
 const ENTERPRISE_PLAN = byId(PRICING.plans, "enterprise")
 
 const choiceLabel = (id: string) => byId(VOLUME_ESTIMATOR.choices, id).label
@@ -51,7 +58,7 @@ function selectVolume(id: string) {
   fireEvent.click(screen.getByRole("radio", { name: choiceLabel(id) }))
 }
 
-const sbsCard = () => within(screen.getByTestId(`plan-${SBS_PLAN.id}`))
+const cardOf = (id: string) => within(screen.getByTestId(`plan-${id}`))
 
 describe("PricingPlans", () => {
   beforeEach(() => {
@@ -63,47 +70,38 @@ describe("PricingPlans", () => {
     jest.useRealTimers()
   })
 
-  it("arranca en 'Desde' con el tramo de entrada y el descuento de fundador", () => {
+  it("cada paquete de pago muestra su propio precio, su tachado y el sello de fundador", () => {
     render(<PricingPlans />)
-    const sbs = sbsCard()
 
-    expect(sbs.getByText("Desde")).toBeInTheDocument()
-    expect(sbs.getByText(formatCop(ENTRY_TIER.listCop))).toBeInTheDocument()
-    expect(sbs.getByText(formatCop(founderCop(ENTRY_TIER.listCop)))).toBeInTheDocument()
-    expect(sbs.getByText(ENTRY_TIER.volumeBullet)).toBeInTheDocument()
-    expect(sbs.getByText(FOUNDERS.discountBadge)).toBeInTheDocument()
+    for (const plan of [ENTRY_PLAN, FEATURED_PLAN, UPPER_PLAN]) {
+      const card = cardOf(plan.id)
+      expect(card.getByText(formatCop(plan.listCop))).toBeInTheDocument()
+      expect(card.getByText(formatCop(founderCop(plan.listCop)))).toBeInTheDocument()
+      expect(card.getByText(FOUNDERS.discountBadge)).toBeInTheDocument()
+    }
   })
 
-  it("cambia precio, tachado y bullet de volumen al elegir un tramo", () => {
+  it("los tres escalones tienen precios distintos y crecientes", () => {
+    // El catálogo anterior era UN plan con dos etiquetas y un salto de 3,4×
+    // sin nada en medio. Que sean tres tarjetas con tres cifras es el cambio.
     render(<PricingPlans />)
-    selectVolume("300_3k")
-    const sbs = sbsCard()
-
-    expect(sbs.getByText(formatCop(UPPER_TIER.listCop))).toBeInTheDocument()
-    expect(sbs.getByText(formatCop(founderCop(UPPER_TIER.listCop)))).toBeInTheDocument()
-    expect(sbs.getByText(UPPER_TIER.volumeBullet)).toBeInTheDocument()
-    // Con tramo elegido el precio deja de ser aproximado
-    expect(sbs.queryByText("Desde")).not.toBeInTheDocument()
+    const prices = [ENTRY_PLAN, FEATURED_PLAN, UPPER_PLAN].map((plan) => plan.listCop)
+    expect(new Set(prices).size).toBe(3)
+    expect(prices).toEqual([...prices].sort((a, b) => a - b))
   })
 
-  it("mueve el sello 'Tu plan' a Enterprise sin quitarle su badge a SBS", () => {
+  it("mueve el sello 'Tu plan' según el volumen, sin quitarle su badge al destacado", () => {
     render(<PricingPlans />)
 
-    selectVolume("lt_300")
-    expect(sbsCard().getByText(VOLUME_ESTIMATOR.recommendedBadge)).toBeInTheDocument()
+    selectVolume("lt_500")
+    expect(cardOf(ENTRY_PLAN.id).getByText(VOLUME_ESTIMATOR.recommendedBadge)).toBeInTheDocument()
 
-    selectVolume("gt_3k")
+    selectVolume("gt_4000")
+    expect(cardOf(ENTERPRISE_PLAN.id).getByText(VOLUME_ESTIMATOR.recommendedBadge)).toBeInTheDocument()
     expect(
-      within(screen.getByTestId(`plan-${ENTERPRISE_PLAN.id}`)).getByText(
-        VOLUME_ESTIMATOR.recommendedBadge,
-      ),
-    ).toBeInTheDocument()
-
-    const sbs = sbsCard()
-    expect(sbs.queryByText(VOLUME_ESTIMATOR.recommendedBadge)).not.toBeInTheDocument()
-    expect(sbs.getByText(String(SBS_PLAN.badge))).toBeInTheDocument()
-    // Sin tramo aplicable, SBS vuelve a su precio de entrada aproximado
-    expect(sbs.getByText("Desde")).toBeInTheDocument()
+      cardOf(ENTRY_PLAN.id).queryByText(VOLUME_ESTIMATOR.recommendedBadge),
+    ).not.toBeInTheDocument()
+    expect(cardOf(FEATURED_PLAN.id).getByText(String(FEATURED_PLAN.badge))).toBeInTheDocument()
   })
 
   it("no recomienda ningún plan mientras el visitante no declare su volumen", () => {
@@ -122,7 +120,7 @@ describe("PricingPlans", () => {
   it("los paquetes autoservicio abren el registro con la oferta preseleccionada", () => {
     render(<PricingPlans />)
 
-    for (const id of ["free_trial", "sbs"]) {
+    for (const id of ["free_trial", "esencial", "crecimiento", "escala"]) {
       const plan = byId(PRICING.plans, id)
       expect(screen.getByRole("link", { name: plan.cta.label })).toHaveAttribute("href", `/comenzar?plan=${id}`)
     }
@@ -155,10 +153,10 @@ describe("PricingPlans", () => {
     // landing deja de prometer un descuento que ya no aplica.
     jest.setSystemTime(AFTER_DEADLINE)
     render(<PricingPlans />)
-    const sbs = sbsCard()
+    const card = cardOf(ENTRY_PLAN.id)
 
-    expect(sbs.getByText(formatCop(ENTRY_TIER.listCop))).toBeInTheDocument()
-    expect(sbs.queryByText(FOUNDERS.discountBadge)).not.toBeInTheDocument()
-    expect(sbs.queryByText(formatCop(founderCop(ENTRY_TIER.listCop)))).not.toBeInTheDocument()
+    expect(card.getByText(formatCop(ENTRY_PLAN.listCop))).toBeInTheDocument()
+    expect(card.queryByText(FOUNDERS.discountBadge)).not.toBeInTheDocument()
+    expect(card.queryByText(formatCop(founderCop(ENTRY_PLAN.listCop)))).not.toBeInTheDocument()
   })
 })

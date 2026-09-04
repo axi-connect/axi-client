@@ -6,7 +6,7 @@ import { LANDING_ANCHORS, PRICING } from "@/modules/landing/ui/content/landing.c
 
 /**
  * §9 Paquetes — la unidad es el volumen de conversaciones/mes, no las
- * funciones: un Paquete trae el producto completo y SBS es una sola tarjeta
+ * funciones: un Paquete trae el producto completo y lo único que cambia
  * cuyo precio escala con el tramo. La prueba gratuita abre la escalera y el
  * Programa Fundadores pone la urgencia. Debajo, §9b Módulos (`ModulePlans`)
  * vende una sola capacidad a quien ya opera con otra herramienta.

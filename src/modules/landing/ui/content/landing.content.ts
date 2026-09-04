@@ -517,10 +517,23 @@ export const FOUNDERS = {
    * Se valida al parsearse (`parseIsoDate`): una fecha que no existe en el
    * calendario rompe el build en vez de rodar en silencio al día siguiente.
    */
-  deadline: "2026-09-30",
+  deadline: "2026-12-31",
   headline: `${FOUNDERS_DISCOUNT_LABEL} de descuento para las primeras ${FOUNDERS_SLOTS} empresas.`,
+  /**
+   * UNA sola promesa, y es la congelada. El documento de copy prometía «−40 %
+   * durante 12 meses» y el código «congelada mientras sigas»: son dos cosas
+   * distintas y la segunda es mucho más cara. Se deja la cara a propósito,
+   * porque lo que compra son los primeros casos con cifras y testimonios,
+   * sobre la cohorte mejor acompañada que va a haber.
+   */
   promise:
-    "Tu tarifa queda congelada mientras sigas con nosotros. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
+    "Tu tarifa en pesos queda congelada mientras sigas con nosotros. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
+  /**
+   * Se dice en la página. Lo único que destruye un programa así es que
+   * «fundador» pierda significado por extensiones sucesivas, y el plazo ya se
+   * movió una vez: era el 30 de septiembre.
+   */
+  lastCallNote: "Última extensión: el programa no se vuelve a ampliar.",
   discountBadge: `${FOUNDERS_DISCOUNT_LABEL} precio fundador`,
   countdownLabel: "Cierra en",
   soldOut: "Cupos agotados",
@@ -533,37 +546,23 @@ export const FOUNDERS = {
   },
 } as const;
 
-/**
- * Tramos de volumen del plan SBS.
- *
- * El producto NO cierra funciones por plan: `usage_plan` solo lleva límites
- * numéricos (tokens, requests, tope de gasto). Lo único que escala con el
- * precio es el volumen — de ahí que SBS sea una sola tarjeta y no dos.
- */
-// TODO [A VALIDAR]: precios ancla definitivos y política de excedente
-// (racional en landing-copy.md §9). Los valores actuales son la propuesta.
-// Falta también decidir si hay un tramo intermedio: entre 300 y 3.000
-// conversaciones el salto es de 3,4× sin escalón, y el estimador lo expone.
-export const SBS_TIERS = [
-  { id: "t300", listCop: 250_000, volumeBullet: "Hasta 300 conversaciones/mes" },
-  { id: "t3000", listCop: 850_000, volumeBullet: "Hasta 3.000 conversaciones/mes" },
-] as const;
-
-export type SbsTierId = (typeof SBS_TIERS)[number]["id"];
 
 /**
  * Estimador de volumen: resuelve la objeción real ("no sé cuántas
- * conversaciones manejo") fijando el tramo de precio de SBS y moviendo la
- * recomendación. `unknown` es el estado inicial y deja el precio en "Desde".
+ * conversaciones manejo") señalando el paquete que le corresponde. `unknown` es
+ * el estado inicial y no recomienda ninguno. Cubre los cuatro tramos sin dejar
+ * hueco: el catálogo anterior saltaba de 300 a 3.000 y dejaba sin oferta a
+ * quien manejaba 800, con el propio estimador exhibiendo el vacío.
  */
 export const VOLUME_ESTIMATOR = {
   legend: "¿Cuántas conversaciones maneja tu negocio al mes?",
   recommendedBadge: "Tu plan",
   choices: [
-    { id: "lt_300", label: "Menos de 300", recommends: "sbs", tier: "t300" },
-    { id: "300_3k", label: "300 a 3.000", recommends: "sbs", tier: "t3000" },
-    { id: "gt_3k", label: "Más de 3.000", recommends: "enterprise", tier: null },
-    { id: "unknown", label: "No lo sé", recommends: null, tier: null },
+    { id: "lt_500", label: "Menos de 500", recommends: "esencial" },
+    { id: "500_1500", label: "500 a 1.500", recommends: "crecimiento" },
+    { id: "1500_4000", label: "1.500 a 4.000", recommends: "escala" },
+    { id: "gt_4000", label: "Más de 4.000", recommends: "enterprise" },
+    { id: "unknown", label: "No lo sé", recommends: null },
   ],
 } as const;
 
@@ -602,24 +601,67 @@ export const PRICING = {
       ctaMicrocopy: "Sin tarjeta. Tu cuenta queda lista hoy.",
     },
     {
-      id: "sbs",
-      name: "Small Business Suite",
+      // El escalón de entrada. Solo chat y voz: sin Axel, sin captación y sin
+      // llamadas, que son el 97 % del costo. No es una versión recortada del
+      // producto, es el producto sin las capacidades caras que este cliente
+      // probablemente no va a usar y hoy estaba subsidiando.
+      id: "esencial",
+      name: "Esencial",
+      abbr: null,
+      badge: null,
+      featured: false,
+      tagline: "Para el negocio que ya vende por chat y quiere ordenarlo y medirlo.",
+      priceKind: "fixed",
+      listCop: 189_900,
+      priceValue: null,
+      priceUnit: "COP/mes",
+      bullets: [
+        "Hasta 500 conversaciones con IA al mes",
+        "WhatsApp oficial (API de Meta), Instagram y Messenger",
+        "Agente vendedor con tu catálogo, tus pedidos y tu agenda",
+        "Inbox, CRM y medición para todo tu equipo",
+      ],
+      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=esencial" },
+      ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
+    },
+    {
+      id: "crecimiento",
+      name: "Crecimiento",
       abbr: null,
       badge: "Most popular",
       featured: true,
-      tagline: "Para el negocio que ya vende por chat y quiere ordenarlo y medirlo.",
-      priceKind: "tiered",
+      tagline: "Para el negocio que ya escala y necesita captación, llamadas y medición.",
+      priceKind: "fixed",
+      listCop: 449_900,
       priceValue: null,
       priceUnit: "COP/mes",
-      // El bullet de volumen NO va aquí: lo aporta el tramo activo
-      // (`SBS_TIERS[].volumeBullet`) y encabeza la lista.
       bullets: [
-        "WhatsApp oficial (API de Meta), Instagram y Messenger",
-        "Agentes vendedores con tu catálogo, tus pedidos y tu agenda",
+        "Hasta 1.500 conversaciones con IA al mes",
+        "Axel, tu CMO con IA, y captación de leads",
+        "Llamadas con voz natural desde tu propio número",
         "Medición completa: embudo en pesos y calidad de cada conversación",
-        "Inbox, roles y permisos para todo tu equipo",
       ],
-      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=sbs" },
+      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=crecimiento" },
+      ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
+    },
+    {
+      id: "escala",
+      name: "Escala",
+      abbr: null,
+      badge: null,
+      featured: false,
+      tagline: "Para la operación con varios equipos y volumen alto de conversación.",
+      priceKind: "fixed",
+      listCop: 899_900,
+      priceValue: null,
+      priceUnit: "COP/mes",
+      bullets: [
+        "Hasta 4.000 conversaciones con IA al mes",
+        "El triple de captación, análisis y minutos de llamada",
+        "Roles y permisos por equipo, sin límite de usuarios",
+        "Acompañamiento prioritario",
+      ],
+      cta: { label: "Reclama tu cupo fundador", href: "/comenzar?plan=escala" },
       ctaMicrocopy: "7 días gratis primero. Pagas cuando decidas seguir.",
     },
     {
@@ -629,14 +671,17 @@ export const PRICING = {
       badge: null,
       featured: false,
       tagline: "Para operaciones de alto volumen o con exigencias de aislamiento de datos.",
+      // Piso PUBLICADO. Antes decía «precio a la medida» sin cifra, y eso deja
+      // dinero sobre la mesa en cada negociación: el competidor directo cobra
+      // entre tres y siete veces esto por el mismo relato de producto.
       priceKind: "custom",
-      priceValue: "Precio a la medida",
-      priceUnit: null,
+      priceValue: "Desde $2.900.000",
+      priceUnit: "COP/mes",
       bullets: [
         "Volumen de conversaciones a la medida",
         "Base de datos dedicada solo para tu empresa",
         "Límites ampliados y soporte prioritario",
-        "Acompañamiento en la implementación",
+        "Implementación acompañada: $3.500.000, pago único",
       ],
       // Enterprise exige base dedicada: se activa con ventas, nunca por autoservicio.
       cta: { label: "Hablemos", href: "/contacto" },
@@ -644,7 +689,7 @@ export const PRICING = {
     },
   ],
   microcopy:
-    "Un Paquete se define por volumen, no por funciones: todos incluyen el producto completo. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
+    "Un Paquete se define por volumen, no por funciones: todos incluyen el producto completo. **No cobramos por usuario**: suma a todo tu equipo sin que cambie el precio. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
 } as const;
 
 export type PricingPlan = (typeof PRICING)["plans"][number];
@@ -668,8 +713,8 @@ export type PricingPlan = (typeof PRICING)["plans"][number];
  * ve en la tarjeta como propuesta pero el JSON-LD la omite. Pasarlo a `final`
  * es la decisión comercial, no un cambio de UI.
  */
-// TODO [A VALIDAR]: precios y cuotas propuestos desde el costo (plan
-// onboarding_self_service_plan.md §4.3). El dueño fija las cifras definitivas.
+// Precios y cuotas FIJADOS el 2026-09-04 desde el costo verificado
+// (docs/business/pricing-proposal-2026-09.md §3). Ya no son propuesta.
 export const MODULE_IDS = ["calls", "leads", "crm", "scheduling"] as const;
 export type ModuleId = (typeof MODULE_IDS)[number];
 
@@ -703,11 +748,16 @@ export const MODULES: readonly ModuleOffer[] = [
       equivalent: { quantity: 60, unit: "calls" },
     },
     extras: "CRM y Analítica incluidos · 100 conversaciones de chat",
-    listCop: 189_900,
-    priceStatus: "draft",
+    // +53 %, y no es codicia: al catálogo de costos le faltaba el servicio de
+    // conversación de Twilio, que es más caro que la voz misma. El minuto
+    // cuesta USD 0,1107 y no los 0,09 que decía. A 189.900 el módulo rendía
+    // 42 %, por debajo incluso de la banda del sector.
+    listCop: 289_900,
+    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
-      "Llamadas entrantes y salientes con tu número",
+      "Llamadas salientes desde tu número verificado",
+      "Recibe llamadas en tu propio número por $89.900 más al mes",
       "Grabación, transcripción y monitoreo en vivo",
       "Si nadie contesta, el seguimiento sigue por WhatsApp",
     ],
@@ -726,8 +776,10 @@ export const MODULES: readonly ModuleOffer[] = [
       equivalent: { quantity: 150, unit: "verified_leads" },
     },
     extras: "CRM y Analítica incluidos · campañas · 200 conversaciones",
-    listCop: 149_900,
-    priceStatus: "draft",
+    // Ajuste menor para llevarla a la banda alta: su costo depende de
+    // proveedores externos cuyas tarifas suben.
+    listCop: 169_900,
+    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Búsqueda en Google Maps, directorios y LinkedIn",
@@ -749,8 +801,11 @@ export const MODULES: readonly ModuleOffer[] = [
       equivalent: { quantity: 2000, unit: "contacts" },
     },
     extras: "Analítica, copiloto y tareas automáticas incluidos",
+    // Sin cambio: rinde 94 %. Subirlo no compraría margen que haga falta y sí
+    // perdería la posición contra Kommo y Leadsales, donde el argumento es
+    // que un equipo de 15 asesores allí paga por cabeza y aquí no.
     listCop: 129_900,
-    priceStatus: "draft",
+    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Scoring automático por hitos reales de compra",
@@ -768,8 +823,9 @@ export const MODULES: readonly ModuleOffer[] = [
       "Tu agente agenda, confirma y reagenda por WhatsApp, y recuerda cada cita para que nadie falte.",
     allowance: { quantity: 300, unit: "conversations" },
     extras: "CRM y Analítica incluidos · citas ilimitadas · recordatorios",
+    // Sin cambio: rinde 91 %.
     listCop: 89_900,
-    priceStatus: "draft",
+    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Horarios, capacidad y duración por servicio",
@@ -797,7 +853,7 @@ export const MODULES_SECTION = {
   includesLabel: "Incluido en todos los módulos",
   allowanceLabel: "Incluye cada mes",
   note: "Los Módulos no se combinan con un Paquete. ¿Necesitas dos o más capacidades?",
-  noteLink: "Compara con Small Business Suite",
+  noteLink: "Compara con los Paquetes",
   noteTail: ": sale mejor y trae el producto completo.",
 } as const;
 
@@ -821,7 +877,7 @@ export function publishableModules(): ModuleOffer[] {
   return MODULES.filter((offer) => offer.priceStatus === "final");
 }
 
-/** Formato de moneda de la landing: pesos sin decimales ("$250.000"). */
+/** Formato de moneda de la landing: pesos sin decimales ("$189.900"). */
 const COP_FORMAT = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
 
 export function formatCop(value: number): string {
@@ -829,20 +885,41 @@ export function formatCop(value: number): string {
 }
 
 /**
- * Precio con descuento de fundador, redondeado al millar.
- * Los dos precios de la tarjeta (tachado y final) salen SIEMPRE de aquí: así
- * es imposible que se contradigan al editar el descuento.
+ * Precio con descuento de fundador. Los dos precios de la tarjeta —el tachado
+ * y el final— salen SIEMPRE de aquí: así es imposible que se contradigan al
+ * editar el descuento.
+ *
+ * Redondea HACIA ABAJO al «novecientos» inmediatamente inferior, no al millar
+ * más cercano. Dos razones. La primera es que todo el catálogo termina en
+ * novecientos y un precio de fundador en 114.000 se ve como una errata al lado
+ * de 189.900. La segunda importa más: redondear hacia arriba entregaría un
+ * descuento MENOR al que la página promete, y la promesa es un número exacto.
  */
 export function founderCop(listCop: number): number {
-  return Math.round((listCop * (1 - FOUNDERS.discount)) / 1000) * 1000;
+  const discounted = listCop * (1 - FOUNDERS.discount);
+  return Math.floor((discounted - 900) / 1000) * 1000 + 900;
 }
 
 export function foundersRemaining(): number {
   return Math.max(0, FOUNDERS.slots - FOUNDERS.claimed);
 }
 
-export function sbsTier(id: SbsTierId) {
-  return SBS_TIERS.find((tier) => tier.id === id) ?? SBS_TIERS[0];
+/**
+ * ¿Sigue viva la oferta de fundador? Cupos **y** fecha, lo que ocurra primero.
+ *
+ * ESTA FUNCIÓN EXISTE PORQUE LA CONDICIÓN ESTABA COPIADA Y MAL EN DOS DE LOS
+ * TRES SITIOS QUE LA USAN. Las tarjetas de precio comprobaban las dos cosas,
+ * pero el dato estructurado que lee Google y el cálculo de precio del alta
+ * miraban solo los cupos. Pasada la fecha, con cupos libres, habría habido
+ * tres precios distintos para el mismo producto a la vez: lista en la página,
+ * fundador en el buscador y fundador en el registro.
+ *
+ * `now` se inyecta para que quien renderice en servidor decida con qué reloj
+ * mira: la página se prerenderiza y un `new Date()` dentro se congelaría en la
+ * fecha del despliegue.
+ */
+export function foundersOfferOpen(now: Date = new Date()): boolean {
+  return foundersRemaining() > 0 && daysUntil(FOUNDERS.deadline, now) > 0;
 }
 
 /**

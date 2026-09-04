@@ -1,11 +1,12 @@
 import { pricingSchema } from "../landing-schema"
-import { MODULES, SBS_TIERS, publishableModules } from "@/modules/landing/ui/content/landing.content"
+import { MODULES, PRICING, publishableModules } from "@/modules/landing/ui/content/landing.content"
 
 describe("pricingSchema", () => {
   it("declara la prueba, los tramos de SBS y solo los módulos con precio final", () => {
     const offers = pricingSchema().offers
     expect(Array.isArray(offers)).toBe(true)
-    expect(offers).toHaveLength(1 + SBS_TIERS.length + publishableModules().length)
+    const paidPackages = PRICING.plans.filter((plan) => plan.priceKind === "fixed")
+    expect(offers).toHaveLength(1 + paidPackages.length + publishableModules().length)
   })
 
   it("no publica a Google un precio de módulo que aún está en borrador", () => {

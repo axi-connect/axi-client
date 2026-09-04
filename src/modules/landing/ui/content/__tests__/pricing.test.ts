@@ -2,7 +2,6 @@ import {
   FOUNDERS,
   MODULES,
   PRICING,
-  SBS_TIERS,
   VOLUME_ESTIMATOR,
   countdownParts,
   daysUntil,
@@ -10,24 +9,35 @@ import {
   formatDeadline,
   formatDeadlineLong,
   founderCop,
+  foundersOfferOpen,
   foundersRemaining,
   offerByCode,
   publishableModules,
-  sbsTier,
 } from "../landing.content"
 
 describe("precios de fundador", () => {
-  it("aplica el descuento del content y redondea al millar", () => {
+  const fixedPlans = PRICING.plans.filter((plan) => plan.priceKind === "fixed")
+
+  it("aplica el descuento del content y termina en novecientos como el catálogo", () => {
     // El descuento vive en un solo sitio: si cambia, estos precios cambian
     // con él. Nada de cifras escritas dos veces en la tarjeta.
     expect(FOUNDERS.discount).toBe(0.4)
-    expect(founderCop(250_000)).toBe(150_000)
-    expect(founderCop(850_000)).toBe(510_000)
+    expect(founderCop(189_900)).toBe(113_900)
+    expect(founderCop(449_900)).toBe(269_900)
+    expect(founderCop(899_900)).toBe(539_900)
+  })
+
+  it("jamás entrega un descuento MENOR al prometido", () => {
+    // Redondear al millar más cercano subiría el precio por encima del 40 % en
+    // la mitad de los casos, y la promesa de la página es un número exacto.
+    for (const plan of fixedPlans) {
+      expect(founderCop(plan.listCop)).toBeLessThanOrEqual(plan.listCop * (1 - FOUNDERS.discount))
+    }
   })
 
   it("nunca deja un precio de fundador por encima del de lista", () => {
-    for (const tier of SBS_TIERS) {
-      expect(founderCop(tier.listCop)).toBeLessThan(tier.listCop)
+    for (const plan of fixedPlans) {
+      expect(founderCop(plan.listCop)).toBeLessThan(plan.listCop)
     }
   })
 
@@ -45,6 +55,16 @@ describe("cupos y fecha de cierre", () => {
 
   it("no publica más cupos tomados que ofrecidos", () => {
     expect(FOUNDERS.claimed).toBeLessThanOrEqual(FOUNDERS.slots)
+  })
+
+  it("la oferta se cierra por cupos O por fecha, lo que ocurra primero", () => {
+    // Los dos consumidores que NO comprobaban la fecha —el dato estructurado
+    // que lee Google y el precio del registro— entregaban precio de fundador
+    // pasado el cierre. Ahora los tres pasan por esta única puerta.
+    const antes = new Date("2026-10-01T10:00:00")
+    const despues = new Date("2027-01-02T10:00:00")
+    expect(foundersOfferOpen(antes)).toBe(true)
+    expect(foundersOfferOpen(despues)).toBe(false)
   })
 
   it("cuenta los días hasta el final del día de cierre", () => {
@@ -118,38 +138,47 @@ describe("validación de la fecha de cierre", () => {
 })
 
 describe("estimador de volumen", () => {
-  it("apunta siempre a un tramo y a un plan que existen", () => {
+  it("apunta siempre a un plan que existe", () => {
     const planIds = PRICING.plans.map((plan) => plan.id)
-    const tierIds = SBS_TIERS.map((tier) => tier.id)
-
     for (const choice of VOLUME_ESTIMATOR.choices) {
       if (choice.recommends) expect(planIds).toContain(choice.recommends)
-      if (choice.tier) expect(tierIds).toContain(choice.tier)
-      // Un tramo solo tiene sentido sobre el plan por volumen.
-      if (choice.tier) expect(choice.recommends).toBe("sbs")
     }
   })
 
-  it("resuelve el tramo por id y cae al de entrada si no existe", () => {
-    expect(sbsTier("t3000").listCop).toBe(850_000)
-    // @ts-expect-error — id inexistente: el fallback protege de un content mal editado
-    expect(sbsTier("t9999")).toBe(SBS_TIERS[0])
+  it("cubre todos los tramos de volumen sin dejar hueco entre uno y el siguiente", () => {
+    // El salto 300 → 3.000 del catálogo anterior dejaba sin oferta a quien
+    // manejaba 800 conversaciones, y el propio estimador lo exhibía.
+    const recommended = VOLUME_ESTIMATOR.choices
+      .map((choice) => choice.recommends)
+      .filter((id) => id !== null)
+    expect(recommended).toEqual(["esencial", "crecimiento", "escala", "enterprise"])
   })
 })
 
 describe("catálogo de planes", () => {
   it("usa los nombres oficiales del backend", () => {
     const names = PRICING.plans.map((plan) => plan.name)
-    expect(names).toEqual(["Free Trial", "Small Business Suite", "Enterprise"])
+    expect(names).toEqual(["Free Trial", "Esencial", "Crecimiento", "Escala", "Enterprise"])
+  })
+
+  it("los tres paquetes de pago suben de precio en el mismo orden que de volumen", () => {
+    const prices = PRICING.plans
+      .filter((plan) => plan.priceKind === "fixed")
+      .map((plan) => plan.listCop)
+    expect(prices).toEqual([...prices].sort((a, b) => a - b))
+    expect(new Set(prices).size).toBe(prices.length)
   })
 
   it("destaca exactamente un plan", () => {
     expect(PRICING.plans.filter((plan) => plan.featured)).toHaveLength(1)
   })
 
-  it("el plan por tramos no lleva su volumen en los bullets (lo aporta el tramo)", () => {
-    const sbs = PRICING.plans.find((plan) => plan.priceKind === "tiered")
-    expect(sbs?.bullets.some((bullet) => bullet.includes("conversaciones/mes"))).toBe(false)
+  it("cada paquete de pago anuncia su volumen en el primer bullet", () => {
+    // El registro lo lee de ahí para el rail de resumen: si deja de estar,
+    // el cliente elige un paquete sin saber cuánto trae.
+    for (const plan of PRICING.plans.filter((p) => p.priceKind === "fixed")) {
+      expect(plan.bullets[0]).toMatch(/conversaciones/i)
+    }
   })
 })
 

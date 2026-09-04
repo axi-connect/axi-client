@@ -87,6 +87,11 @@ export function FoundersBar() {
             <p className="text-muted-foreground mt-3 text-xs">
               Hasta el {formatDeadlineLong(FOUNDERS.deadline)}
             </p>
+            {/* El plazo ya se movió una vez. Decir que es la última extensión
+                es lo que impide que «fundador» pierda significado. */}
+            <p className="text-muted-foreground mt-1 text-xs font-medium">
+              {FOUNDERS.lastCallNote}
+            </p>
           </div>
         </div>
       </div>

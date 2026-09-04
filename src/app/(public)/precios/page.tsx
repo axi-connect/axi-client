@@ -37,7 +37,7 @@ import { PRICING } from "@/modules/landing/ui/content/landing.content";
  * tiene espacio para explicar: cómo se mide el consumo y qué pasa al pasarse.
  *
  * El alta es AUTOSERVICIO desde el registro (`/comenzar`, plan
- * onboarding_self_service_plan.md): los paquetes Free Trial y SBS y los cuatro
+ * onboarding_self_service_plan.md): los cinco paquetes y los cuatro
  * Módulos abren el registro con la oferta preseleccionada; Enterprise sigue
  * siendo asistido porque exige base de datos dedicada.
  */

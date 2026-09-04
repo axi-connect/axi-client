@@ -14,10 +14,9 @@ import {
   MODULES,
   MODULE_IDS,
   PRICING,
-  SBS_TIERS,
   formatCop,
   founderCop,
-  foundersRemaining,
+  foundersOfferOpen,
   type ModuleId,
   type ModuleOffer,
   type PricingPlan,
@@ -25,8 +24,18 @@ import {
 
 /* ────────────────────────────── Oferta ────────────────────────────── */
 
-/** Paquetes que se contratan solos. Enterprise se activa con ventas. */
-export const SELF_SERVICE_PACKAGES = ["free_trial", "sbs"] as const;
+/**
+ * Paquetes que se contratan solos. Enterprise se activa con ventas.
+ * `sbs` se conserva como ALIAS del catálogo anterior: hay enlaces publicados y
+ * marcadores con `?plan=sbs`, y quien llegue por ahí debe aterrizar en el
+ * paquete equivalente en vez de en un error de oferta desconocida.
+ */
+export const SELF_SERVICE_PACKAGES = [
+  "free_trial",
+  "esencial",
+  "crecimiento",
+  "escala",
+] as const;
 export type PackageCode = (typeof SELF_SERVICE_PACKAGES)[number];
 
 /**
@@ -72,7 +81,7 @@ export function toggleModule(selection: OfferSelection | null, id: ModuleId): Of
 }
 
 /**
- * Preselección desde la URL de los CTA de precios: `?plan=sbs` o
+ * Preselección desde la URL de los CTA de precios: `?plan=crecimiento` o
  * `?modulo=calls,crm`. Los códigos desconocidos se ignoran (un enlace viejo no
  * rompe el funnel) y `plan=enterprise` manda a ventas: el backend rechaza crear
  * un tenant enterprise sin base dedicada.
@@ -81,9 +90,18 @@ export type ParsedOfferQuery = { selection: OfferSelection | null; redirectTo: s
 
 export const ENTERPRISE_PATH = "/contacto";
 
+/**
+ * Paquetes retirados y a dónde va hoy quien llegue con su enlace. `sbs` era el
+ * paquete completo del catálogo anterior y su equivalente directo es
+ * Crecimiento, que es también el destino de su migración en la base.
+ */
+const RETIRED_PACKAGES: Readonly<Record<string, PackageCode>> = { sbs: "crecimiento" };
+
 export function parseOfferQuery(params: { get(name: string): string | null }): ParsedOfferQuery {
   const plan = params.get("plan");
   if (plan === "enterprise") return { selection: null, redirectTo: ENTERPRISE_PATH };
+  const revived = plan === null ? undefined : RETIRED_PACKAGES[plan];
+  if (revived) return { selection: { kind: "package", code: revived }, redirectTo: null };
   if (plan && isPackageCode(plan)) return { selection: { kind: "package", code: plan }, redirectTo: null };
 
   const modules = params.get("modulo");
@@ -163,25 +181,38 @@ export type OfferSummary = {
   approximate: boolean;
 };
 
-/** Precio de SBS que ve hoy el visitante: fundador mientras queden cupos. */
-export function sbsEntryPriceCop(): number {
-  const list = SBS_TIERS[0].listCop;
-  return foundersRemaining() > 0 ? founderCop(list) : list;
+/**
+ * Precio que ve hoy el visitante para un paquete: el de fundador mientras la
+ * oferta siga abierta, el de lista después.
+ *
+ * Usa `foundersOfferOpen`, que mira cupos Y fecha. Antes miraba solo los
+ * cupos, así que pasada la fecha el registro habría cobrado un precio de
+ * fundador que la página de precios ya no mostraba.
+ */
+export function packagePriceCop(code: PackageCode): number {
+  const plan = packagePlan(code);
+  if (plan.priceKind !== "fixed") return 0;
+  return foundersOfferOpen() ? founderCop(plan.listCop) : plan.listCop;
+}
+
+/** Precio del escalón de entrada: la referencia contra la que se comparan los módulos. */
+export function entryPackagePriceCop(): number {
+  return packagePriceCop("esencial");
 }
 
 export function offerSummary(selection: OfferSelection): OfferSummary {
   if (selection.kind === "package") {
     const plan = packagePlan(selection.code);
-    if (selection.code === "sbs") {
+    if (plan.priceKind === "fixed") {
       return {
         kind: "Paquete",
         title: plan.name,
         lines: [
           { label: "Incluye", value: "Producto completo" },
-          { label: "Volumen", value: SBS_TIERS[0].volumeBullet },
+          { label: "Volumen", value: plan.bullets[0] },
         ],
-        afterTrial: `${formatCop(sbsEntryPriceCop())} COP/mes`,
-        approximate: true,
+        afterTrial: `${formatCop(packagePriceCop(selection.code))} COP/mes`,
+        approximate: false,
       };
     }
     return {
@@ -207,11 +238,11 @@ export function offerSummary(selection: OfferSelection): OfferSummary {
   };
 }
 
-/** Con dos o más módulos el paquete SBS sale mejor: el rail lo dice. */
+/** Con dos o más módulos el paquete de entrada sale mejor: el rail lo dice. */
 export function packageBeatsModules(selection: OfferSelection | null): boolean {
   if (!selection || selection.kind !== "modules" || selection.codes.length < 2) return false;
   const total = selection.codes.map(moduleOffer).reduce((sum, offer) => sum + offer.listCop, 0);
-  return total >= sbsEntryPriceCop();
+  return total >= entryPackagePriceCop();
 }
 
 /* ───────────────────────────── Validaciones ───────────────────────────── */
