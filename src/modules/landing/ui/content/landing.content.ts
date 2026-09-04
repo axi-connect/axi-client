@@ -801,7 +801,7 @@ export const PRICING = {
     "Un Paquete trae el producto completo: tu agente vendedor, el catálogo, los pedidos, el inbox de tu equipo, la agenda, el CRM y la medición de ventas. Lo único que cambia es el volumen de conversaciones que tu negocio maneja.",
   plans: PLANS,
   microcopy:
-    "El Paquete decide qué puede hacer axi por ti; el volumen, cuántas conversaciones atiende al mes. Son dos elecciones distintas. **No cobramos por usuario**: suma a todo tu equipo sin que cambie el precio. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
+    "El Paquete decide qué puede hacer axi por ti; el volumen, cuántas conversaciones atiende al mes. Una conversación es un hilo con una misma persona durante el mes, sin importar cuántos mensajes se crucen, y lo que responde tu equipo a mano no consume cuota. **No cobramos por usuario**: suma a todo tu equipo sin que cambie el precio. Empiezas con 7 días gratis y sin tarjeta; si solo te falta una capacidad, mira los Módulos.",
 } as const;
 
 

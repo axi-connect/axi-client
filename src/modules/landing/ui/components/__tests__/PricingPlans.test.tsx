@@ -5,6 +5,7 @@ import {
   DEFAULT_VOLUME_ID,
   FOUNDERS,
   MONTHS_PER_YEAR,
+  PRICING_VOLUMES,
   annualTotalCop,
   formatCop,
   formatDeadlineLong,
@@ -34,15 +35,15 @@ const BEFORE_DEADLINE = new Date("2026-09-01T10:00:00")
 /** Después del 31 de diciembre de 2026, que es el cierre del programa. */
 const AFTER_DEADLINE = new Date("2027-01-15T10:00:00")
 
-/**
- * El EJE DE VOLUMEN no se ejercita desde aquí. Su control es el `Select` de
- * Radix, que abre por eventos de puntero con `hasPointerCapture` y `scrollIntoView`
- * — jsdom no implementa ninguno de los dos, así que un test de interacción ahí
- * probaría los polyfills y no el precio. La aritmética de los dos ejes se
- * verifica entera en `content/__tests__/pricing.test.ts`; esto prueba lo que la
- * sección PINTA en el tramo por defecto.
- */
+/** Tramo con el que abre la sección: contra él se derivan las aserciones. */
 const VOLUME = DEFAULT_VOLUME_ID
+
+/** Los chips son radios nativos: se eligen por su etiqueta, como el visitante. */
+function selectVolume(id: string) {
+  const volume = PRICING_VOLUMES.find((candidate) => candidate.id === id)
+  if (!volume) throw new Error(`El content ya no tiene el tramo "${id}"`)
+  fireEvent.click(screen.getByRole("radio", { name: volume.label }))
+}
 
 function planOrFail(id: string): PricingPlan {
   const plan = planById(id)
@@ -105,13 +106,41 @@ describe("PricingPlans", () => {
     expect(prices).toEqual([...prices].sort((a, b) => a - b))
   })
 
-  it("la prueba gratuita se anuncia en el rail y en los botones, no como tarjeta", () => {
+  it("la prueba gratuita se anuncia en los propios botones, no como tarjeta", () => {
     render(<PricingPlans />)
 
-    expect(screen.getByText(/Empieza con 7 días gratis/i)).toBeInTheDocument()
-    expect(screen.getByText(/No se necesita tarjeta de crédito/i)).toBeInTheDocument()
     for (const plan of pricingPackages()) {
-      expect(cardOf(plan.id).getByRole("link")).toHaveTextContent(/7 días gratis/i)
+      const card = cardOf(plan.id)
+      expect(card.getByRole("link")).toHaveTextContent(/7 días gratis/i)
+      expect(card.getByText(/Sin tarjeta/i)).toBeInTheDocument()
+    }
+  })
+
+  it("los chips recalculan las TRES tarjetas a la vez", () => {
+    // Es el eje entero: un chip mueve el precio de las tres, no el de una.
+    render(<PricingPlans />)
+
+    selectVolume("10000")
+    for (const plan of pricingPackages()) {
+      const monthly = planMonthlyCop(plan, "10000") as number
+      expect(cardOf(plan.id).getByText(formatCop(monthly))).toBeInTheDocument()
+    }
+
+    selectVolume("500")
+    for (const plan of pricingPackages()) {
+      const monthly = planMonthlyCop(plan, "500") as number
+      expect(cardOf(plan.id).getByText(formatCop(monthly))).toBeInTheDocument()
+    }
+  })
+
+  it("por encima del catálogo deja de dar cifra y manda a ventas", () => {
+    render(<PricingPlans />)
+    selectVolume("max")
+
+    for (const plan of pricingPackages()) {
+      const card = cardOf(plan.id)
+      expect(card.getByText("A la medida")).toBeInTheDocument()
+      expect(card.getByRole("link")).toHaveAttribute("href", "/contacto")
     }
   })
 

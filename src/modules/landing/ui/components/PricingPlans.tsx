@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { TiltCard } from "@/shared/components/ui/tilt-card";
 import { FoundersBar } from "@/modules/landing/ui/components/FoundersBar";
-import { PricingRail } from "@/modules/landing/ui/components/PricingRail";
+import { VolumeChips } from "@/modules/landing/ui/components/VolumeChips";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
   ANNUAL_PAID_MONTHS,
@@ -39,10 +39,15 @@ const SALES_PATH = "/contacto";
  * el precio tiene dos ejes: el paquete cobra las funciones y el volumen cobra
  * las conversaciones (`landing.content.ts`).
  *
- * Se pintan TRES tarjetas comparables, no cinco. La prueba gratuita se mudó al
- * rail y Enterprise a una franja propia: ninguna de las dos reacciona al
- * volumen, así que ocupando fila solo estrujaban a las tres que sí se comparan
- * entre sí.
+ * Se pintan TRES tarjetas comparables, no cinco. La prueba gratuita se anuncia
+ * en los propios botones y Enterprise baja a una franja: ninguna de las dos
+ * reacciona al volumen, así que ocupando columna solo estrujaban a las tres que
+ * sí se comparan entre sí.
+ *
+ * Los dos controles van ARRIBA y en una línea cada uno —conmutador y chips—,
+ * de modo que la fila de tarjetas se queda con el ancho entero. Un rail lateral
+ * con la misma información costaba una columna y volvía a dejar las tarjetas
+ * ilegibles, que es exactamente el defecto que esta sección venía a corregir.
  *
  * La cabecera, el microcopy y `FoundersBar` no se tocan desde aquí.
  */
@@ -84,15 +89,11 @@ export function PricingPlans() {
         />
       </Reveal>
 
-      {/* El rail se despliega en horizontal ANTES de que las tarjetas se
-          estrechen: comprimir las tres es justo lo que hacía ilegible la
-          versión de cinco columnas. Lo que cede es el marco, nunca lo que se
-          compara. */}
-      <div className="mt-11 grid items-stretch gap-6 lg:grid-cols-3 xl:grid-cols-[19rem_repeat(3,minmax(0,1fr))]">
-        <div className="lg:col-span-3 xl:col-span-1">
-          <PricingRail value={volumeId} onChange={setVolumeId} />
-        </div>
+      <Reveal className="mt-8">
+        <VolumeChips value={volumeId} onChange={setVolumeId} />
+      </Reveal>
 
+      <div className="mt-10 grid items-stretch gap-6 md:grid-cols-3">
         {packages.map((plan, i) => (
           <Reveal key={plan.id} delay={i * 0.08} className="h-full">
             <PlanCard plan={plan} volumeId={volumeId} period={period} offerOpen={offerOpen} />
@@ -141,7 +142,7 @@ function PlanCard({
         className={cn(
           "bg-card relative flex h-full flex-col gap-5 rounded-2xl border p-7",
           plan.featured
-            ? "border-brand shadow-overlay xl:-translate-y-3"
+            ? "border-brand shadow-overlay md:-translate-y-3"
             : "border-border shadow-float",
         )}
       >

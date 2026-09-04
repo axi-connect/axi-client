@@ -31,7 +31,7 @@ import { PRICING } from "@/modules/landing/ui/content/landing.content";
  * aterrizar a media página, sin URL compartible ni superficie de SEO propia.
  *
  * Reutiliza `PricingPlans` **entero** (franja de fundadores + conmutador de
- * periodicidad + rail de volumen + las tres tarjetas de Paquete + la franja de
+ * periodicidad + chips de volumen + las tres tarjetas de Paquete + la franja de
  * Enterprise) y `ModulePlans` (los Módulos): el
  * precio vive en un solo sitio, así que la home y esta página no pueden
  * desincronizarse. Lo que añade es lo que la home no
