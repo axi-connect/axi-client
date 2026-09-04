@@ -4,7 +4,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 export default function SchedulingRemindersLoading() {
   return (
     <div
-      className="flex h-full min-h-0 flex-1 flex-col gap-4 p-4 md:p-6"
+      className="flex min-h-0 flex-1 flex-col gap-4 p-4 md:p-6"
       role="status"
       aria-label="Cargando recordatorios"
     >

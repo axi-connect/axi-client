@@ -4,7 +4,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 export default function SchedulingSettingsLoading() {
   return (
     <div
-      className="grid items-start gap-5 p-4 md:p-6 lg:grid-cols-2"
+      className="grid items-start gap-5 lg:grid-cols-2"
       role="status"
       aria-label="Cargando configuración"
     >

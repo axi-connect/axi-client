@@ -107,7 +107,7 @@ export function CallsHistoryView() {
       : null;
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="space-y-4">
       {overview !== null && (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile

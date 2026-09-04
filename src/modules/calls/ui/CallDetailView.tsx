@@ -133,7 +133,7 @@ export function CallDetailView({ callId }: { callId: string }) {
   const customerPhone = outbound ? call.to_number : call.from_number;
 
   return (
-    <div className="p-4 md:p-6">
+    <div>
       <Button
         variant="outline"
         size="sm"

@@ -78,7 +78,7 @@ export function CallsMonitorView() {
   const paused = minutesPct !== null && minutesPct >= 100;
 
   return (
-    <div className="space-y-5 p-4 md:p-6">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground max-w-2xl text-sm">
           Tu agente hace y contesta llamadas con su propia voz. Cada llamada queda grabada,

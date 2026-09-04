@@ -74,13 +74,11 @@ export function CallsSettingsView() {
 
   if (error !== null) {
     return (
-      <div className="p-4 md:p-6">
-        <div className="border-destructive/40 bg-destructive/5 flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm">
-          <span className="min-w-0 flex-1">{error}</span>
-          <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
-            <RotateCcw aria-hidden className="size-3.5" /> Reintentar
-          </Button>
-        </div>
+      <div className="border-destructive/40 bg-destructive/5 flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm">
+        <span className="min-w-0 flex-1">{error}</span>
+        <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+          <RotateCcw aria-hidden className="size-3.5" /> Reintentar
+        </Button>
       </div>
     );
   }
@@ -88,7 +86,7 @@ export function CallsSettingsView() {
   const hasCallerId = numbers?.some((number) => number.kind === "caller_id") ?? false;
 
   return (
-    <div className="grid items-start gap-5 p-4 md:p-6 lg:grid-cols-[0.9fr_1.1fr]">
+    <div className="grid items-start gap-5 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="flex flex-col gap-5">
         <section className={CARD}>
           <h2 className="mb-3 text-sm font-semibold">Tu número de llamadas</h2>

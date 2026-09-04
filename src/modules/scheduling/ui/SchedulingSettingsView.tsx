@@ -47,7 +47,7 @@ export function SchedulingSettingsView() {
   }, [reloadKey]);
 
   return (
-    <div className="grid items-start gap-5 p-4 md:p-6 lg:grid-cols-2">
+    <div className="grid items-start gap-5 lg:grid-cols-2">
       <section className="rounded-2xl border border-border bg-card p-5 md:p-6">
         <h2 className="text-base font-semibold tracking-tight">Reglas de agendamiento</h2>
         <p className="mb-5 mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">

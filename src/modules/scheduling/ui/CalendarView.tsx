@@ -112,7 +112,7 @@ export function CalendarView() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-3 p-4 md:gap-4 md:p-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 p-4 md:gap-4 md:p-6">
       <CalendarToolbar
         title={title}
         view={view}
