@@ -33,9 +33,15 @@ import {
 } from "@/modules/landing/ui/content/landing.content";
 
 /**
- * Formulario "Agenda tu demo" (§11): 4 campos, ni uno más.
- * El submit valida, registra el lead (adapter con TODO de `POST /leads`) y
- * convierte por la vía real de hoy: abre WhatsApp con el mensaje prellenado.
+ * Formulario "Agenda tu demo" (§11).
+ *
+ * El submit hace las dos cosas, en este orden: PERSISTE el lead y después abre
+ * WhatsApp con el mensaje prellenado. El orden importa — antes solo hacía lo
+ * segundo, y quien no pulsaba «enviar» dentro de WhatsApp se perdía entero.
+ *
+ * Si la persistencia falla, el formulario NO se queda bloqueado: se sigue
+ * abriendo WhatsApp. Un lead que llega por chat vale más que un mensaje de
+ * error, y el fallo se ve en el registro del servidor.
  */
 export function DemoLeadForm() {
   const { form } = FINAL_CTA;
@@ -55,7 +61,11 @@ export function DemoLeadForm() {
   const volume = watch("monthly_conversations");
 
   const onSubmit = handleSubmit(async (values) => {
-    await createDemoLead(toDemoLeadPayload(values));
+    try {
+      await createDemoLead(toDemoLeadPayload(values));
+    } catch {
+      // Se traga a propósito: ver el comentario del componente.
+    }
     const waText = buildDemoLeadWaText({
       name: values.name,
       businessName: values.business_name,
@@ -162,6 +172,22 @@ export function DemoLeadForm() {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="lead-consent" className="flex items-start gap-2.5 text-[13px] leading-relaxed">
+          <input
+            id="lead-consent"
+            type="checkbox"
+            className="accent-brand mt-0.5 size-4 shrink-0"
+            aria-invalid={!!errors.consent}
+            {...register("consent")}
+          />
+          <span className="text-muted-foreground">{form.consentLabel}</span>
+        </label>
+        {errors.consent ? (
+          <p className="text-destructive text-xs">{errors.consent.message}</p>
+        ) : null}
       </div>
 
       <Button type="submit" size="lg" disabled={isSubmitting} className="mt-1.5 h-12 text-base">

@@ -2292,6 +2292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/forms/{public_key}/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicFormsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/pipelines": {
         parameters: {
             query?: never;
@@ -7823,7 +7839,7 @@ export interface components {
             /** @enum {string} */
             lifecycle_stage: "prospect" | "lead" | "customer" | "other";
             /** @enum {string} */
-            source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
+            source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
             custom_fields: {
                 [key: string]: unknown;
             };
@@ -7880,7 +7896,7 @@ export interface components {
                 /** @enum {string} */
                 lifecycle_stage: "prospect" | "lead" | "customer" | "other";
                 /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
                 custom_fields: {
                     [key: string]: unknown;
                 };
@@ -8774,6 +8790,19 @@ export interface components {
                 position: number;
             }[];
             is_active?: boolean;
+        };
+        PublicFormSubmissionDto: {
+            payload: {
+                [key: string]: string;
+            };
+            /** @enum {boolean} */
+            consent: true;
+            website?: string;
+            source_url?: string;
+        };
+        PublicFormSubmissionResultDto: {
+            submission_id: string;
+            contact_id: string | null;
         };
         PipelinesListDto: {
             data: {
@@ -16273,7 +16302,7 @@ export interface operations {
             query?: {
                 q?: string;
                 lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
-                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
+                source?: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
                 city?: string;
                 created_after?: string;
                 created_before?: string;
@@ -17436,6 +17465,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PublicFormsController_create_v1: {
+        parameters: {
+            query?: never;
+            header: {
+                "user-agent": string;
+            };
+            path: {
+                public_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicFormSubmissionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicFormSubmissionResultDto"];
+                };
             };
         };
     };

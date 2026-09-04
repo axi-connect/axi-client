@@ -66,4 +66,7 @@ export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {
   // El mismo nombre que el módulo tiene en el menú: si en el panel se llama
   // «Captación», en el origen del contacto no puede llamarse otra cosa.
   prospecting: "Captación",
+  // Se registró él mismo en un formulario de tu sitio. Se distingue de
+  // «Captación» a propósito: aquí hubo consentimiento explícito y fechado.
+  forms: "Formulario web",
 };

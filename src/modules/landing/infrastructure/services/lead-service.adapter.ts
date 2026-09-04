@@ -1,21 +1,28 @@
 import type { DemoLeadPayload } from "@/modules/landing/domain/lead";
 
 /**
- * Adapter de captura de leads de demo.
+ * Captura de leads de demo. Persiste de verdad desde 2026-09-04: hasta esa
+ * fecha esto era un temporizador de 450 ms que descartaba el payload, así que
+ * todo el que no pulsara «enviar» dentro de WhatsApp se perdía entero.
  *
- * TODO(integración): la captura de leads todavía no existe en axi-server
- * (brecha n.º 1 del checklist de `docs/business/landing-copy.md`). Cuando el
- * endpoint esté disponible, reemplazar la simulación por:
+ * Va por la ruta intermedia del propio Next y no directo al API, igual que el
+ * alta: así el origen del backend no viaja al navegador y la dirección de
+ * quien envía llega al servidor sin depender de cabeceras reenviadas.
  *
- *   import { http } from "@/core/services/http";
- *   return http.post<void>("/leads", payload, { authenticate: false });
- *
- * Mientras tanto el formulario convierte por la vía real: abre WhatsApp con
- * el mensaje prellenado (ver `DemoLeadForm`), y este adapter solo simula la
- * persistencia para dejar el punto de integración listo.
+ * El campo trampa se manda SIEMPRE, vacío. Un robot que rellena todos los
+ * campos del formulario lo rellena también, y el backend lo descarta en
+ * silencio.
  */
-export async function createDemoLead(payload: DemoLeadPayload): Promise<{ ok: true }> {
-  void payload;
-  await new Promise((resolve) => setTimeout(resolve, 450));
-  return { ok: true };
+export async function createDemoLead(payload: DemoLeadPayload): Promise<{ ok: boolean }> {
+  const response = await fetch("/api/leads", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      payload,
+      consent: true,
+      website: "",
+      source_url: window.location.href,
+    }),
+  });
+  return { ok: response.ok };
 }

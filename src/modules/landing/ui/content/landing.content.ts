@@ -1080,6 +1080,13 @@ export const FINAL_CTA = {
     businessPlaceholder: "¿Cómo se llama tu negocio?",
     whatsappPlaceholder: "Tu WhatsApp",
     volumeLabel: "¿Cuántas conversaciones maneja tu negocio al mes, aproximadamente?",
+    /**
+     * Autorización de tratamiento de datos. Obligatoria en Colombia (ley 1581)
+     * desde que el formulario PERSISTE: antes no guardaba nada y solo abría
+     * WhatsApp, y ahí el consentimiento lo daba el propio acto de escribir.
+     */
+    consentLabel:
+      "Autorizo a Axi Connect a guardar mis datos y contactarme sobre el producto. Puedo pedir que los borren cuando quiera.",
     submit: "Agendar mi demo",
     microcopy: "Te escribimos por WhatsApp el mismo día para coordinar la hora.",
     successTitle: "¡Listo! Abrimos WhatsApp con tus datos.",
