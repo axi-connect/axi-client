@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 /**
  * `SALES_WHATSAPP` es el único punto donde se define el número comercial, y se
  * resuelve en carga del módulo. Por eso cada caso recarga `env` aislado con su
@@ -130,5 +133,35 @@ describe("TURNSTILE_SITE_KEY", () => {
     await expect(loadEnvWithTurnstile("sitekey-de-pega")).rejects.toThrow(
       /NEXT_PUBLIC_TURNSTILE_SITE_KEY/,
     )
+  })
+})
+
+/**
+ * Guardián del bug que dejó el captcha muerto en producción durante un
+ * despliegue entero: `env.ts` leía las variables públicas con clave calculada
+ * (`process.env[name]`) y Next.js solo sustituye ACCESOS ESTÁTICOS al
+ * compilar. En el navegador quedaba un objeto vacío, así que las constantes
+ * valían `null` por muy bien configurada que estuviera la variable — y no hay
+ * error ni aviso: simplemente no se monta nada.
+ *
+ * Se comprueba sobre el fichero real porque el fallo NO se reproduce en Jest:
+ * aquí `process.env` es el de Node y la lectura calculada funciona.
+ */
+describe("env.ts — las variables públicas se leen con acceso estático", () => {
+  it("no queda ninguna lectura con clave calculada", () => {
+    const source = readFileSync(join(__dirname, "..", "env.ts"), "utf8")
+    const withoutComments = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "")
+    expect(withoutComments).not.toMatch(/process\.env\s*\[/)
+  })
+
+  it("cada variable pública del cliente aparece escrita entera", () => {
+    const source = readFileSync(join(__dirname, "..", "env.ts"), "utf8")
+    for (const name of [
+      "process.env.NEXT_PUBLIC_GA_ID",
+      "process.env.NEXT_PUBLIC_META_PIXEL_ID",
+      "process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+    ]) {
+      expect(source).toContain(name)
+    }
   })
 })

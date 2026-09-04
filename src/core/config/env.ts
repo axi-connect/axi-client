@@ -143,23 +143,38 @@ export function siteUrl(path = "/"): string {
  *
  * En GitHub Actions una Variable no definida llega como cadena VACÍA, no como
  * indefinida — de ahí el `trim()` antes de decidir.
+ *
+ * EL VALOR SE RECIBE COMO ARGUMENTO Y NO SE LEE AQUÍ, y esto no es estilo.
+ * Next.js sustituye `process.env.NEXT_PUBLIC_FOO` por su literal al compilar,
+ * pero SOLO cuando el acceso es estático: con una clave calculada
+ * (`process.env[name]`) no hay nada que sustituir, y en el navegador queda un
+ * objeto vacío. Esta función leía así, de modo que las tres constantes de
+ * abajo valían `null` en el cliente por muy bien configurada que estuviera la
+ * variable — el captcha nunca se montaba y la analítica nunca se cargaba.
+ * El nombre se sigue pasando aparte porque el mensaje de error lo necesita.
  */
-function resolveOptionalId(name: string, pattern: RegExp, example: string): string | null {
-  const raw = process.env[name]?.trim();
-  if (!raw) return null;
+function resolveOptionalId(
+  name: string,
+  raw: string | undefined,
+  pattern: RegExp,
+  example: string,
+): string | null {
+  const value = raw?.trim();
+  if (!value) return null;
 
-  if (!pattern.test(raw)) {
+  if (!pattern.test(value)) {
     throw new Error(
-      `${name}="${raw}" no tiene el formato esperado (p.ej. ${example}). ` +
+      `${name}="${value}" no tiene el formato esperado (p.ej. ${example}). ` +
         "Un id mal escrito se despliega sin medir nada y sin avisar: mejor que reviente el build.",
     );
   }
-  return raw;
+  return value;
 }
 
 /** Id de medición de GA4 (`G-XXXXXXX`), o `null` si no está configurado. */
 export const GA_MEASUREMENT_ID = resolveOptionalId(
   "NEXT_PUBLIC_GA_ID",
+  process.env.NEXT_PUBLIC_GA_ID,
   /^G-[A-Z0-9]{4,}$/,
   "G-ABC1234567",
 );
@@ -167,6 +182,7 @@ export const GA_MEASUREMENT_ID = resolveOptionalId(
 /** Id del píxel de Meta (15-16 dígitos), o `null` si no está configurado. */
 export const META_PIXEL_ID = resolveOptionalId(
   "NEXT_PUBLIC_META_PIXEL_ID",
+  process.env.NEXT_PUBLIC_META_PIXEL_ID,
   /^\d{15,16}$/,
   "123456789012345",
 );
@@ -185,6 +201,7 @@ export const META_PIXEL_ID = resolveOptionalId(
  */
 export const TURNSTILE_SITE_KEY = resolveOptionalId(
   "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   /^[0-3]x[0-9A-Za-z_-]{8,}$/,
   "0x4AAAAAAABkMYinukE8nzYw",
 );
