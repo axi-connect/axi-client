@@ -30,10 +30,12 @@ export function BrandLockup({
   return (
     <Link prefetch={false} href={href} className={cn("flex items-center gap-2", className)}>
       <BrandMark className={small ? "size-7" : "size-8"} />
-      {/* Sin `cn()`: tailwind-merge toma `text-brand-gradient` por un color de
-          texto y lo descarta frente a `text-transparent`. */}
+      {/* `.text-brand-wordmark` es reactiva al tema: degradado coral en claro,
+          blanco en oscuro (globals.css). Ya trae el recorte y el color, así que
+          aquí no van `bg-clip-text` ni `text-transparent`. Sigue sin `cn()`:
+          tailwind-merge toma cualquier `text-*` de color por conflicto. */}
       <span
-        className={`text-brand-gradient font-heading bg-clip-text font-bold text-transparent ${small ? "text-lg" : "text-xl"}`}
+        className={`text-brand-wordmark font-heading font-bold ${small ? "text-lg" : "text-xl"}`}
       >
         axi connect
       </span>

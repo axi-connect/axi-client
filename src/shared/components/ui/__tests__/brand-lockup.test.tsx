@@ -15,7 +15,10 @@ describe("BrandLockup", () => {
 
   it("mismo lockup en dos tamaños: el wordmark nunca baja de text-lg", () => {
     const { rerender } = render(<BrandLockup />)
-    expect(screen.getByText("axi connect")).toHaveClass("text-xl", "text-brand-gradient", "font-heading")
+    // `text-brand-wordmark` y no `text-brand-gradient`: el logo es blanco en
+    // oscuro y coral en claro, mientras el degradado suelto sigue siendo coral
+    // en los dos temas donde se usa como titular.
+    expect(screen.getByText("axi connect")).toHaveClass("text-xl", "text-brand-wordmark", "font-heading")
     expect(screen.getByRole("link").querySelector("svg")).toHaveClass("size-8")
 
     rerender(<BrandLockup size="sm" />)

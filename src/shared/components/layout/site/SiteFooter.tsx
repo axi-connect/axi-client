@@ -25,7 +25,7 @@ export default function SiteFooter() {
               externo) y el PNG local pesa 423 KB para renderizar 36px. */}
           <Link href="/" className="mb-4 flex items-center gap-2">
             <BrandMark className="size-9" />
-            <span className="text-brand-gradient bg-clip-text text-2xl font-semibold tracking-tight text-transparent font-heading">
+            <span className="text-brand-wordmark text-2xl font-semibold tracking-tight font-heading">
               axi connect
             </span>
           </Link>

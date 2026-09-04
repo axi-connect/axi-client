@@ -175,6 +175,29 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .bg-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); }
 .text-brand-gradient { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .text-brand-gradient-tri { background-image: linear-gradient(to right, var(--axi-brand), var(--axi-amber), var(--axi-violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/**
+ * Wordmark del logo («axi connect»). En claro es el degradado corto de marca;
+ * en oscuro, blanco monocromo — DESIGN §2.2 lo admite explícitamente («sobre
+ * fondos oscuros: versión a color o monocroma blanca»), y el coral sobre el
+ * fondo casi negro pierde definición justo al tamaño de una cabecera.
+ *
+ * Es utilidad PROPIA y no `.text-brand-gradient` con un `dark:` encima porque
+ * ese degradado se usa además en titulares y cifras de la landing, donde sí
+ * debe seguir siendo coral en los dos temas. Aquí el sujeto es el logo.
+ *
+ * El blanco sale de `--foreground` (#ededed en oscuro) y no de `--axi-on-color`:
+ * ese token es «texto SOBRE color» y en oscuro vale #0a0a0a, que pintaría el
+ * wordmark en negro. En oscuro hay que anular el `background-image`, porque si
+ * no el degradado sigue recortado en el texto y el `color` no se ve.
+ */
+.text-brand-wordmark {
+  background-image: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dark .text-brand-wordmark { background-image: none; color: var(--foreground); }
+
 /* Titular plata (hero de /productos): degradado del propio foreground hacia su
    mezcla con el fondo — premium/corporativo, sin color de marca. Derivado de
    tokens: funciona en ambos temas y dentro de las islas oscuras. */
