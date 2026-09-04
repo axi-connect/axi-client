@@ -20,8 +20,8 @@ export default function CmoLayout({
   sheet: ReactNode;
 }) {
   return (
-    <div className="flex h-full min-h-0 w-full overflow-hidden">
-      <div className="flex min-w-0 flex-1 overflow-hidden">{children}</div>
+    <div className="flex min-h-0 w-full flex-1 overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">{children}</div>
       {sheet}
     </div>
   );

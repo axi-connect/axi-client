@@ -30,7 +30,7 @@ export default function CmoLoading() {
         </div>
       </div>
       <div className="hidden w-[316px] flex-none flex-col border-l border-border bg-secondary/40 xl:flex">
-        <div className="flex flex-1 flex-col gap-3 p-3.5">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3.5">
           <Skeleton className="h-32 w-full rounded-lg" />
           <Skeleton className="h-24 w-full rounded-lg" />
         </div>

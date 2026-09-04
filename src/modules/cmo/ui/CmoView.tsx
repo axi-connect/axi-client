@@ -94,7 +94,7 @@ export function CmoView() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1" data-app-view>
+    <div className="flex min-h-0 flex-1 overflow-hidden" data-app-view>
       <main className="axel-field flex min-w-0 flex-1 flex-col">
         <AxelChat
           ownerName={firstName(user?.name ?? null)}

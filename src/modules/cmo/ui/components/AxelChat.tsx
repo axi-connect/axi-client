@@ -204,7 +204,7 @@ export function AxelChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div ref={containerRef} className="sidebar-scroll flex-1 overflow-y-auto px-6 pt-8 pb-2">
+      <div ref={containerRef} className="sidebar-scroll min-h-0 flex-1 overflow-y-auto px-6 pt-8 pb-2">
         <div className="mx-auto flex w-full max-w-[640px] flex-col">
           {blocked !== null ? (
             <CmoBlockedState blocker={blocked} canManage={canManage} />

@@ -53,7 +53,16 @@ export function CmoBoardRail({
       aria-label="Tablero de Axel"
       className="flex w-[316px] flex-none flex-col border-l border-border bg-secondary/40"
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3.5">
+      {/* Scroller de BLOQUE, no `flex flex-col`, y esto no es cosmético: el
+          tamaño mínimo automático de un hijo que sea contenedor de scroll es 0
+          (CSS Box Sizing), y la `<section>` de abajo lo es por su
+          `overflow-hidden`. Como hijo directo de un scroller flex era encogible
+          hasta 0, así que flex la aplastaba a la altura disponible y su
+          `overflow-hidden` recortaba las tarjetas: este scroller nunca
+          desbordaba y las propuestas de más quedaban inalcanzables. En bloque, la
+          altura de los hijos es su contenido y el scroll aparece.
+          Ver DESIGN-SYSTEM §4.2. */}
+      <div className="sidebar-scroll min-h-0 flex-1 space-y-3 overflow-y-auto p-3.5">
         <section className="overflow-hidden rounded-lg border border-border bg-background">
           <header className="flex items-center gap-2 px-3.5 pt-3">
             <Inbox className="size-3.5 text-accent-violet" aria-hidden="true" />
