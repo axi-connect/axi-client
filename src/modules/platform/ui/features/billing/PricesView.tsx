@@ -51,7 +51,6 @@ import {
   ANNUAL_MONTHS_BILLED,
   deriveCells,
   discountedCents,
-  inferPackageFee,
   overrideKey,
   runGate,
   type CellOverride,
@@ -61,9 +60,9 @@ import {
 } from "../../../domain/pricing-cells";
 import {
   useAllBillingPricesQuery,
+  usePricingPreviewQuery,
   usePromotionsQuery,
   usePublishPriceBatch,
-  useUpdateVolumeTier,
   useVolumeTiersQuery,
 } from "../../../infrastructure/api/hooks/use-catalog";
 import { usePlansQuery } from "../../../infrastructure/api/hooks/use-plans";
@@ -84,12 +83,15 @@ export function PricesView() {
   const tiers = useVolumeTiersQuery();
   const prices = useAllBillingPricesQuery();
   const promotions = usePromotionsQuery();
+  // La tarifa de PAQUETE vive en el servidor (billing_plan_fee) y viaja en el
+  // catálogo público por slug: es el componente, no una inferencia desde celdas.
+  const preview = usePricingPreviewQuery();
 
-  const failed = [plans, tiers, prices].find((query) => query.isError);
+  const failed = [plans, tiers, prices, preview].find((query) => query.isError);
   if (failed?.isError) {
     return <ProblemAlert error={failed.error} onRetry={() => void failed.refetch()} className="mx-auto max-w-xl" />;
   }
-  if (plans.data === undefined || tiers.data === undefined || prices.data === undefined) {
+  if (plans.data === undefined || tiers.data === undefined || prices.data === undefined || preview.data === undefined) {
     return <TableSkeleton rows={6} />;
   }
 
@@ -98,6 +100,9 @@ export function PricesView() {
       plans={plans.data.data}
       tiers={tiers.data.data}
       prices={prices.data.data}
+      packageFeeBySlug={Object.fromEntries(
+        preview.data.packages.map((plan) => [plan.public_slug, plan.package_fee_cents] as const),
+      )}
       promotion={promotions.data?.data.find((promo) => promo.is_active && promo.is_public) ?? null}
     />
   );
@@ -110,16 +115,17 @@ function CatalogEditor({
   plans,
   tiers,
   prices,
+  packageFeeBySlug,
   promotion,
 }: {
   plans: PlanRow[];
   tiers: TierRow[];
   prices: BillingPrice[];
+  packageFeeBySlug: Record<string, number | null>;
   promotion: BillingPromotion | null;
 }) {
   const { showAlert } = useAlert();
   const publishBatch = usePublishPriceBatch();
-  const updateTier = useUpdateVolumeTier();
 
   // Paquetes vendibles en autoservicio y en la escalera declarada del catálogo
   // (Esencial → Crecimiento → Escala): enterprise es «a la medida» y no entra.
@@ -133,8 +139,8 @@ function CatalogEditor({
     [prices],
   );
 
-  // Borrador de componentes: arranca de lo publicado (tramo persistido,
-  // paquete = celda − tramo) y se edita en vivo.
+  // Borrador de componentes: arranca de lo persistido (tarifa de tramo y de
+  // paquete, ambas del servidor) y se edita en vivo.
   const [tierFees, setTierFees] = useState<Record<string, string>>(() =>
     Object.fromEntries(sortedTiers.map((tier) => [tier.code, tier.fee_cents === null ? "" : String(tier.fee_cents / 100)])),
   );
@@ -145,18 +151,11 @@ function CatalogEditor({
     feeCents: tierFees[tier.code] === "" ? null : parseMoneyToCents(tierFees[tier.code] ?? ""),
     isActive: tier.is_active,
   }));
-  const persistedTierComponents: TierComponent[] = sortedTiers.map((tier) => ({
-    code: tier.code,
-    conversations: tier.conversations,
-    label: tier.label,
-    feeCents: tier.fee_cents,
-    isActive: tier.is_active,
-  }));
   const [packageFees, setPackageFees] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       packagePlans.map((plan) => {
-        const inferred = inferPackageFee(latestFirst, plan.id, persistedTierComponents);
-        return [plan.id, inferred === null ? "" : String(inferred / 100)];
+        const fee = packageFeeBySlug[plan.public_slug as string] ?? null;
+        return [plan.id, fee === null ? "" : String(fee / 100)];
       }),
     ),
   );
@@ -165,7 +164,8 @@ function CatalogEditor({
     return cents === null ? [] : [{ planId: plan.id, slug: plan.public_slug as string, name: plan.name, feeCents: cents }];
   });
   const [overrides, setOverrides] = useState<Record<string, CellOverride>>({});
-  const [interval, setInterval] = useState<Interval>("monthly");
+  // `period`, no `interval`: `setInterval` sombrearía el global (hallazgo B8).
+  const [period, setPeriod] = useState<Interval>("monthly");
   const [mode, setMode] = useState<Mode>("list");
   const [publishing, setPublishing] = useState(false);
   const [overriding, setOverriding] = useState<{ planSlug: string; tierCode: string; derived: number } | null>(null);
@@ -181,33 +181,29 @@ function CatalogEditor({
 
   const shown = (listCents: number): number => {
     if (mode !== "promo" || promotion === null || promotion.scope === "modules") return listCents;
-    const monthly = interval === "annual" ? listCents / ANNUAL_MONTHS_BILLED : listCents;
-    return discountedCents(monthly, promotion.percent_bps, promotion.rounding) * (interval === "annual" ? ANNUAL_MONTHS_BILLED : 1);
+    const monthly = period === "annual" ? listCents / ANNUAL_MONTHS_BILLED : listCents;
+    return discountedCents(monthly, promotion.percent_bps, promotion.rounding) * (period === "annual" ? ANNUAL_MONTHS_BILLED : 1);
   };
 
   async function publish(effectiveFrom: string) {
     try {
-      // 1) Persistir las tarifas de tramo que cambiaron: son el componente
-      //    que el panel administra; sin ellas la rejilla no se reconstruye.
-      for (const tier of sortedTiers) {
-        const draft = tierComponents.find((component) => component.code === tier.code);
-        if (draft && draft.feeCents !== tier.fee_cents) {
-          await updateTier.mutateAsync({ tierId: tier.id, body: { fee_cents: draft.feeCents } });
-        }
-      }
-      // 2) Las celdas, en una sola transacción.
+      // Componentes, no celdas (hallazgo A2): el servidor deriva las celdas,
+      // corre la misma verja y escribe tarifas de paquete, de tramo y celdas en
+      // UNA transacción. Nada cambia si algo falla.
       const result = await publishBatch.mutateAsync({
         effective_from: new Date(`${effectiveFrom}T05:00:00Z`).toISOString(),
         currency: "COP",
         tax_treatment: "excluded",
         tax_rate_bps: 0,
-        cells: cells.map((cell) => ({
-          plan_id: cell.planId,
-          volume_tier_code: cell.tierCode,
-          interval: cell.interval,
-          amount_cents: cell.amountCents,
-          override_reason: cell.overrideReason,
-        })),
+        package_fees: packageComponents.map((pkg) => ({ plan_id: pkg.planId, fee_cents: pkg.feeCents })),
+        tier_fees: tierComponents.flatMap((tier) =>
+          tier.feeCents === null ? [] : [{ code: tier.code, fee_cents: tier.feeCents }],
+        ),
+        overrides: Object.entries(overrides).flatMap(([key, override]) => {
+          const [planSlug, tierCode] = key.split("|");
+          const pkg = packageComponents.find((component) => component.slug === planSlug);
+          return pkg ? [{ plan_id: pkg.planId, tier_code: tierCode, amount_cents: override.amountCents, reason: override.reason }] : [];
+        }),
       });
       showAlert({
         tone: "success",
@@ -240,8 +236,8 @@ function CatalogEditor({
         <div className="flex flex-wrap items-center gap-2">
           <SegmentedControl
             label="Periodicidad"
-            value={interval}
-            onValueChange={setInterval}
+            value={period}
+            onValueChange={setPeriod}
             items={[
               { value: "monthly", label: "Mensual" },
               { value: "annual", label: `Anual · ×${ANNUAL_MONTHS_BILLED}` },
@@ -298,14 +294,14 @@ function CatalogEditor({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex flex-col gap-4">
           {packageComponents.length >= 2 && tierComponents.some((tier) => tier.feeCents !== null) ? (
-            <PriceCurve packages={packageComponents} tiers={tierComponents} overrides={overrides} interval={interval} shown={shown} />
+            <PriceCurve packages={packageComponents} tiers={tierComponents} overrides={overrides} interval={period} shown={shown} />
           ) : null}
 
           <section className="border-border-soft bg-card rounded-2xl border p-4 shadow-[var(--shadow-float)]">
             <header className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-[15px] font-semibold">
-                  Celdas · {interval === "annual" ? `anual ×${ANNUAL_MONTHS_BILLED}` : "mensual"} · {mode === "promo" && promotion ? promotion.name : "precio de lista"}
+                  Celdas · {period === "annual" ? `anual ×${ANNUAL_MONTHS_BILLED}` : "mensual"} · {mode === "promo" && promotion ? promotion.name : "precio de lista"}
                 </h2>
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   Filas: tramo. Columnas: paquete. Una celda anulada lleva borde punteado y su motivo queda en la fila.
@@ -337,7 +333,7 @@ function CatalogEditor({
                       tier={tier}
                       packages={packageComponents}
                       cells={cells}
-                      interval={interval}
+                      interval={period}
                       shown={shown}
                       onOverride={(planSlug, derived) => setOverriding({ planSlug, tierCode: tier.code, derived })}
                     />
@@ -447,7 +443,7 @@ function CatalogEditor({
         onOpenChange={setPublishing}
         cellCount={cells.length}
         gate={gate}
-        pending={publishBatch.isPending || updateTier.isPending}
+        pending={publishBatch.isPending}
         onPublish={publish}
       />
       <OverrideSheet

@@ -11477,16 +11477,23 @@ export interface components {
             tax_treatment: "excluded" | "taxed" | "exempt";
             /** @default 0 */
             tax_rate_bps: number;
-            cells: {
+            package_fees: {
                 /** Format: uuid */
                 plan_id: string;
-                /** @default null */
-                volume_tier_code: string | null;
-                /** @enum {string} */
-                interval: "monthly" | "annual";
+                fee_cents: number;
+            }[];
+            /** @default [] */
+            tier_fees: {
+                code: string;
+                fee_cents: number;
+            }[];
+            /** @default [] */
+            overrides: {
+                /** Format: uuid */
+                plan_id: string;
+                tier_code: string;
                 amount_cents: number;
-                /** @default null */
-                override_reason: string | null;
+                reason: string;
             }[];
         };
         PublishedBatchDto: {
@@ -11621,6 +11628,7 @@ export interface components {
                 public_slug: string;
                 name: string;
                 description: string | null;
+                package_fee_cents: number | null;
                 capabilities: string[];
                 commercial_units: unknown;
             }[];
@@ -11628,6 +11636,7 @@ export interface components {
                 public_slug: string;
                 name: string;
                 description: string | null;
+                package_fee_cents: number | null;
                 capabilities: string[];
                 commercial_units: unknown;
             }[];

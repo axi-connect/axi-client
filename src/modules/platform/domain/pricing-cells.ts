@@ -99,34 +99,6 @@ export function deriveCells(
   return cells;
 }
 
-/**
- * Reconstruye la tarifa de paquete desde una celda publicada y la tarifa de
- * su tramo: `paquete = celda − tramo`. Con las tarifas de tramo persistidas,
- * cualquier celda mensual del paquete basta y todas dan el mismo número —
- * salvo una anulada, que por eso se salta.
- */
-export function inferPackageFee(
-  cells: readonly {
-    plan_id: string;
-    interval: CellInterval;
-    amount_cents: number;
-    volume_tier: { code: string } | null;
-    override_reason: string | null;
-  }[],
-  planId: string,
-  tiers: readonly TierComponent[],
-): number | null {
-  const tierFee = new Map(tiers.map((tier) => [tier.code, tier.feeCents] as const));
-  for (const cell of cells) {
-    if (cell.plan_id !== planId || cell.interval !== "monthly") continue;
-    if (cell.volume_tier === null || cell.override_reason !== null) continue;
-    const fee = tierFee.get(cell.volume_tier.code);
-    if (fee === null || fee === undefined) continue;
-    return cell.amount_cents - fee;
-  }
-  return null;
-}
-
 export type GateCheck = {
   key: "additivity" | "rounding" | "monotonic" | "decreasing" | "margin";
   label: string;

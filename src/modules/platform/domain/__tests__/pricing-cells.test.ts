@@ -2,7 +2,6 @@ import {
   ANNUAL_MONTHS_BILLED,
   deriveCells,
   discountedCents,
-  inferPackageFee,
   perConversationCop,
   runGate,
   type PackageComponent,
@@ -61,20 +60,6 @@ describe("pricing-cells", () => {
       derivedCents: 2_899_900_00,
       overrideReason: "Piso de Enterprise",
     });
-  });
-
-  it("reconstruye la tarifa de paquete desde una celda publicada y su tramo", () => {
-    const published = [
-      {
-        plan_id: "p-crecimiento",
-        interval: "monthly" as const,
-        amount_cents: 369_900_00,
-        volume_tier: { code: "t1000" },
-        override_reason: null,
-      },
-    ];
-    expect(inferPackageFee(published, "p-crecimiento", TIERS)).toBe(200_000_00);
-    expect(inferPackageFee(published, "p-escala", TIERS)).toBeNull();
   });
 
   describe("runGate", () => {
