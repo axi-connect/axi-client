@@ -11,6 +11,7 @@ import { ProviderCard } from "@/shared/components/features/provider-card";
 import { MODULES, MODULE_ICONS, formatCop, volumeById } from "@/modules/landing/public";
 import {
   SELF_SERVICE_PACKAGES,
+  SIGNUP_STEPS,
   offerBlocker,
   packageBeatsModules,
   offerAxes,
@@ -143,7 +144,7 @@ export function OfferStep({
           role="note"
           className="border-accent-violet/35 bg-accent-violet/8 rounded-xl border px-4 py-3 text-sm leading-relaxed"
         >
-          Con dos o más módulos, <strong>Small Business Suite</strong> sale mejor y trae el producto completo.{" "}
+          Con dos o más módulos, <strong>Crecimiento</strong> sale mejor y trae el producto completo.{" "}
           <Link href="/precios#planes" className="text-brand font-medium hover:underline">
             Comparar
           </Link>
@@ -151,7 +152,7 @@ export function OfferStep({
       ) : null}
 
       <div className="border-border/70 flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-        <span className="text-muted-foreground text-xs">Paso 1 de 3</span>
+        <span className="text-muted-foreground text-xs">Paso 1 de {SIGNUP_STEPS.length}</span>
         <div className="flex flex-col items-end gap-1.5">
           <Button size="lg" className="h-11" onClick={onNext} disabled={blocker !== null} aria-describedby="offer-blocker">
             Continuar

@@ -1,6 +1,7 @@
 import {
   EMPTY_SIGNUP_DRAFT,
   blockerForSignupStep,
+  reachableSignupStep,
   normalizeNit,
   offerBlocker,
   offerCodesOf,
@@ -112,10 +113,31 @@ describe("selección de oferta", () => {
 describe("bloqueos por paso", () => {
   const withOffer: SignupDraft = { ...EMPTY_SIGNUP_DRAFT, offer: { kind: "package", code: "crecimiento" } }
 
+  const company = { name: "La Parrilla", nit: "901.234.567-8", country_code: "CO", city: "Medellín", timezone: "America/Bogota" }
+
   it("no deja avanzar a Empresa sin oferta ni a Cuenta sin empresa", () => {
     expect(blockerForSignupStep("company", EMPTY_SIGNUP_DRAFT)).not.toBeNull()
     expect(blockerForSignupStep("company", withOffer)).toBeNull()
     expect(blockerForSignupStep("account", withOffer)).toMatch(/empresa/i)
+  })
+
+  it("cada pantalla exige la anterior respondida: identidad, ubicación y persona", () => {
+    const identity: SignupDraft = { ...withOffer, company: { ...company, city: "" } }
+    expect(blockerForSignupStep("location", withOffer)).toMatch(/empresa/i)
+    expect(blockerForSignupStep("location", identity)).toBeNull()
+    expect(blockerForSignupStep("owner", identity)).toMatch(/empresa/i)
+    const located: SignupDraft = { ...withOffer, company }
+    expect(blockerForSignupStep("owner", located)).toBeNull()
+    expect(blockerForSignupStep("account", located)).toMatch(/quién eres/i)
+    const owner: SignupDraft = { ...located, account: { name: "Joao", email: "joao@laparrilla.co", password: "", accept_terms: false } }
+    expect(blockerForSignupStep("account", owner)).toBeNull()
+  })
+
+  it("al recargar se vuelve al paso más lejano que las respuestas permitan", () => {
+    expect(reachableSignupStep(4, withOffer)).toBe(1)
+    expect(reachableSignupStep(4, { ...withOffer, company })).toBe(3)
+    expect(reachableSignupStep(2, { ...withOffer, company })).toBe(2)
+    expect(reachableSignupStep(3, EMPTY_SIGNUP_DRAFT)).toBe(0)
   })
 })
 

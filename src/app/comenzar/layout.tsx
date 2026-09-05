@@ -14,6 +14,11 @@ import { BrandLockup } from "@/shared/components/ui/brand-lockup";
  *
  * `noindex`: es una página de proceso, no de contenido; el prefijo está además
  * en `DISALLOWED_PREFIXES` y fuera de `INDEXABLE_ROUTES`.
+ *
+ * El escenario es «el campo» (`.signup-field`, globals.css; mockup v3 «Flow»,
+ * 2026-09-05): fondo de marca a sangre que re-deriva los tokens semánticos, así
+ * el lockup, los controles y los textos de dentro adoptan el material sin
+ * variantes. La retícula (`.signup-grain`) es la única textura.
  */
 export const metadata: Metadata = noindexMetadata("Crea tu cuenta");
 
@@ -22,20 +27,20 @@ export default function ComenzarLayout({ children }: { children: React.ReactNode
   // scroller `data-app-scroll` (público, privado, plataforma). Sin él, en
   // pantallas bajas el formulario quedaba recortado y los botones fuera de
   // alcance. `h-svh` + `overflow-y-auto`: el funnel desplaza dentro del
-  // viewport pequeño del móvil, con la barra de marca (`sidebar-scroll`) y el
-  // rail lateral `lg:sticky` anclado a este contenedor. `w-full` y no
-  // `w-screen`: 100vw incluye la barra y provocaba scroll horizontal.
+  // viewport pequeño del móvil, con la barra de marca (`sidebar-scroll`). `w-full`
+  // y no `w-screen`: 100vw incluye la barra y provocaba scroll horizontal.
   return (
-    <div data-app-scroll className="bg-brand-ambient sidebar-scroll flex h-svh w-full flex-col overflow-y-auto">
+    <div data-app-scroll className="signup-field sidebar-scroll relative isolate flex h-svh w-full flex-col overflow-x-hidden overflow-y-auto">
+      <div aria-hidden="true" className="signup-grain pointer-events-none absolute inset-0 -z-10" />
       <PublicAnalytics />
-      <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-4 px-6 py-5">
-        {/* El mismo lockup que el header público: el funnel es la continuación
-            de la landing y la marca no puede cambiar de tamaño ni de wordmark
-            al cruzar a /comenzar. */}
+      <header className="flex w-full items-center justify-between gap-4 px-6 pt-6 sm:px-10 sm:pt-7">
+        {/* El mismo lockup que el header público: isotipo a color y, por CSS
+            (`.signup-field .text-brand-wordmark`), el wordmark en el color del
+            texto del campo. Sin variantes en el componente. */}
         <BrandLockup />
-        <p className="text-muted-foreground text-[0.8125rem]">
-          ¿Ya tienes cuenta?{" "}
-          <Link href="/auth/login" className="text-brand font-medium hover:underline">
+        <p className="text-muted-foreground text-[13px] whitespace-nowrap">
+          <span className="hidden sm:inline">¿Ya tienes cuenta? </span>
+          <Link href="/auth/login" className="text-foreground font-semibold hover:underline">
             Inicia sesión
           </Link>
         </p>
