@@ -106,7 +106,8 @@ ui/
   onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton, WelcomeView,
                                  steps/{Niche,BusinessHours,CatalogImport,AgentTemplates,WhatsApp,Done}Step
   catalog-import/                ImportDropzone, CatalogScan (el haz y las filas que aparecen; antes ImportJobProgress), ExtractedProductsReview
-  agents/                        TemplateCard, TemplateCustomizeSheet
+  agents/                        AgentPreview (el teléfono de vista previa) + agent-preview-copy.ts, TemplateCustomizeForm
+                                 (antes un DetailSheet; hoy en pantalla, al lado del teléfono)
   components/                    OnboardingResumeBanner
 ```
 
