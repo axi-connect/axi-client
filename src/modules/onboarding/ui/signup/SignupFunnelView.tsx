@@ -66,6 +66,15 @@ const STEP_COPY = [
 
 const ROUTE_STOPS = SIGNUP_STEPS.map((step) => ({ code: step.code, label: step.label, icon: SIGNUP_STEP_ICONS[step.code] }));
 
+/** Objetivo de entrada de cada pantalla. Constante para reconocerlo en `onAnimationComplete`. */
+const ENTER = { opacity: 1, y: 0, transition: spring.soft } as const;
+const EXIT = { opacity: 0, y: -18, transition: fade.fast } as const;
+
+/** Solo con puntero fino: en móvil el foco automático levanta el teclado sin que nadie lo pida. */
+function hasFinePointer(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
 /**
  * Orquestador de `/comenzar` (mockup v3 «Flow», aprobado 2026-09-05): una
  * pregunta por pantalla sobre el campo de marca, con la ruta al pie.
@@ -95,6 +104,17 @@ export function SignupFunnelView() {
   const captchaRef = useRef("");
   const honeypotRef = useRef("");
   const initializedRef = useRef(false);
+  const screenRef = useRef<HTMLElement | null>(null);
+
+  // Al terminar de ENTRAR una pantalla, el primer control recibe el foco: la
+  // pregunta ya se leyó y lo siguiente es responderla. En Oferta no hay input
+  // y no pasa nada; en la salida de la pantalla anterior tampoco (se compara
+  // con el objetivo de entrada, no con el de salida).
+  const focusFirstControl = useCallback((definition: unknown) => {
+    if (definition !== ENTER || !hasFinePointer()) return;
+    const control = screenRef.current?.querySelector<HTMLElement>('input:not([type="hidden"]):not([tabindex="-1"]), select, [role="combobox"]');
+    control?.focus({ preventScroll: true });
+  }, []);
 
   // Estado inicial en efecto y no en render: `sessionStorage` no existe en el
   // servidor y la página se prerenderiza. Se ejecuta UNA vez: la URL de
@@ -210,10 +230,11 @@ export function SignupFunnelView() {
             key={step}
             className="w-full"
             initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0, transition: spring.soft }}
-            exit={{ opacity: 0, y: -18, transition: fade.fast }}
+            animate={ENTER}
+            exit={EXIT}
+            onAnimationComplete={focusFirstControl}
           >
-            <section aria-label={`Paso ${step + 1} de ${SIGNUP_STEPS.length}: ${SIGNUP_STEPS[step].label}`}>
+            <section ref={screenRef} aria-label={`Paso ${step + 1} de ${SIGNUP_STEPS.length}: ${SIGNUP_STEPS[step].label}`}>
               <SignupScreen title={copy.title} lead={copy.lead}>
                 {step === 0 ? <OfferStep selection={draft.offer} onChange={setOffer} onNext={() => goTo(1)} /> : null}
                 {step === 1 ? (

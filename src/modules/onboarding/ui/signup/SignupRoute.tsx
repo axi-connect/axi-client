@@ -18,6 +18,7 @@ export type RouteStop = { code: string; label: string; icon: LucideIcon };
 const HEIGHT = 280;
 const HEIGHT_SM = 210;
 const FALLBACK_WIDTH = 1024;
+const SHORT_VIEWPORT = "(max-height: 760px)";
 
 /**
  * La ruta del registro (mockup v3 «Flow»): una curva suave al pie de la
@@ -47,7 +48,20 @@ export function SignupRoute({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
+  const [short, setShort] = useState(false);
   const reduced = useReducedMotion();
+
+  // Pantalla baja (portátil pequeño, móvil apaisado): la ruta cede alto a la
+  // pregunta. Se decide por viewport, no por contenedor, porque lo que falta
+  // es altura de ventana.
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia(SHORT_VIEWPORT);
+    const apply = () => setShort(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -61,7 +75,7 @@ export function SignupRoute({
     return () => observer.disconnect();
   }, []);
 
-  const compact = width > 0 && width < 640;
+  const compact = (width > 0 && width < 640) || short;
   const height = compact ? HEIGHT_SM : HEIGHT;
   const seg = Math.max(240, Math.min(560, width * 0.42));
   const amp = height * 0.09;
