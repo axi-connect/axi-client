@@ -24,10 +24,13 @@ jest.mock("@/shared/auth/auth.hooks", () => ({
 const WAIT = { timeout: 5000 }
 jest.setTimeout(20_000)
 
+// Una pregunta por pantalla (mockup v3): la empresa son dos pantallas y la
+// persona propietaria otras dos.
 async function fillCompany(nit = "901.234.567-8") {
   fireEvent.change(await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT), { target: { value: "La Parrilla de Joao" } })
   fireEvent.change(screen.getByLabelText(/^nit/i), { target: { value: nit } })
-  fireEvent.change(screen.getByLabelText(/ciudad/i), { target: { value: "Medellín" } })
+  fireEvent.click(screen.getByRole("button", { name: /continuar/i }))
+  fireEvent.change(await screen.findByLabelText(/ciudad/i, undefined, WAIT), { target: { value: "Medellín" } })
   fireEvent.click(screen.getByRole("button", { name: /continuar/i }))
   await waitFor(() => expect(screen.getByLabelText(/correo de trabajo/i)).toBeInTheDocument(), WAIT)
 }
@@ -35,9 +38,15 @@ async function fillCompany(nit = "901.234.567-8") {
 async function fillAccount() {
   fireEvent.change(screen.getByLabelText(/tu nombre/i), { target: { value: "Joao Pereira" } })
   fireEvent.change(screen.getByLabelText(/correo de trabajo/i), { target: { value: "joao@laparrilla.co" } })
-  fireEvent.change(screen.getByLabelText(/contraseña/i, { selector: "input" }), { target: { value: "Parrilla2026!" } })
+  fireEvent.click(screen.getByRole("button", { name: /continuar/i }))
+  fireEvent.change(await screen.findByLabelText(/contraseña/i, { selector: "input" }, WAIT), { target: { value: "Parrilla2026!" } })
   fireEvent.click(screen.getByRole("checkbox"))
   fireEvent.click(screen.getByRole("button", { name: /crear mi cuenta/i }))
+}
+
+/** Del final del funnel: la línea de resumen que acompaña al CTA. */
+function summary() {
+  return within(screen.getByLabelText(/resumen de tu elección/i))
 }
 
 describe("SignupFunnelView", () => {
@@ -61,19 +70,27 @@ describe("SignupFunnelView", () => {
     render(<SignupFunnelView />)
 
     await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
-    const rail = within(screen.getByRole("complementary", { name: /resumen/i }))
-    expect(rail.getByText("Crecimiento")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/cómo se llama tu empresa/i)
+    // La ruta al pie marca la parada activa y deja volver a la anterior.
+    const route = within(screen.getByRole("navigation", { name: /recorrido del registro/i }))
+    expect(route.getByLabelText("Empresa")).toHaveAttribute("aria-current", "step")
+    expect(route.getByRole("button", { name: /volver a oferta/i })).toBeInTheDocument()
+
+    await fillCompany()
+    await fillAccount()
+    expect(summary().getByText(/crecimiento/i)).toBeInTheDocument()
   })
 
-  it("el rail resume los dos ejes que llegaron en el enlace", async () => {
+  it("el resumen final recoge los dos ejes que llegaron en el enlace", async () => {
     search = new URLSearchParams("plan=escala&volumen=5000&periodo=annual")
     render(<SignupFunnelView />)
 
-    await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
-    const rail = within(screen.getByRole("complementary", { name: /resumen/i }))
-    expect(rail.getByText("Escala")).toBeInTheDocument()
-    expect(rail.getByText("5.000 al mes")).toBeInTheDocument()
-    expect(rail.getByText("Anual, con 1 mes gratis")).toBeInTheDocument()
+    await fillCompany()
+    await fillAccount()
+    const line = summary()
+    expect(line.getByText(/escala/i)).toBeInTheDocument()
+    expect(line.getByText(/5\.000 al mes/)).toBeInTheDocument()
+    expect(line.getByText(/anual, con 1 mes gratis/i)).toBeInTheDocument()
   })
 
   it("manda Enterprise a ventas", async () => {
@@ -92,7 +109,7 @@ describe("SignupFunnelView", () => {
     const calls = await screen.findByRole("checkbox", { name: /llamadas con ia/i })
     expect(calls).toHaveAttribute("aria-checked", "true")
     fireEvent.click(screen.getByRole("checkbox", { name: /captación de leads/i }))
-    expect(screen.getByRole("note")).toHaveTextContent(/small business suite/i)
+    expect(screen.getByRole("note")).toHaveTextContent(/crecimiento/i)
   })
 
   it("crea la cuenta con el wire en snake_case y manda al onboarding", async () => {
@@ -125,7 +142,7 @@ describe("SignupFunnelView", () => {
     expect(screen.getByLabelText(/nombre de la empresa/i)).toHaveValue("La Parrilla de Joao")
   })
 
-  it("un correo en uso marca el campo sin salir del paso Cuenta", async () => {
+  it("un correo en uso devuelve a «Tú» con el error en el campo", async () => {
     search = new URLSearchParams("plan=sbs")
     signup.mockRejectedValueOnce(new LoginError({ code: API_ERROR_CODES.emailInUse, status: 409, message: "in use" }))
     render(<SignupFunnelView />)
@@ -133,8 +150,9 @@ describe("SignupFunnelView", () => {
     await fillCompany()
     await fillAccount()
 
+    // Vuelve a la pantalla «Tú», donde vive el correo, con el error en el campo.
     await waitFor(() => expect(screen.getByText(/este correo ya tiene una cuenta/i)).toBeInTheDocument(), WAIT)
-    expect(screen.getByLabelText(/correo de trabajo/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/correo de trabajo/i)).toHaveValue("joao@laparrilla.co")
   })
 
   it("con demasiados intentos avisa cuánto esperar", async () => {

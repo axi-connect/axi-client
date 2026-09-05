@@ -160,9 +160,18 @@ export function parseOfferQuery(params: { get(name: string): string | null }): P
 
 /* ─────────────────────────────── Pasos ─────────────────────────────── */
 
+/**
+ * Una pregunta por pantalla (mockup v3 «Flow», aprobado 2026-09-05). Cinco
+ * pantallas para tres objetos del wire: la empresa se pregunta en dos
+ * (identidad y ubicación) y la persona propietaria en otras dos (quién es y
+ * su contraseña). El payload no cambia: `toSignupPayload` sigue leyendo
+ * `company` y `account` completos.
+ */
 export const SIGNUP_STEPS = [
   { code: "offer", label: "Oferta" },
   { code: "company", label: "Empresa" },
+  { code: "location", label: "Ubicación" },
+  { code: "owner", label: "Tú" },
   { code: "account", label: "Cuenta" },
 ] as const;
 
@@ -204,13 +213,46 @@ export function offerBlocker(selection: OfferSelection | null): string | null {
   return null;
 }
 
-/** Motivo por el que NO se puede entrar en un paso, o `null` si está abierto. */
+/** La empresa tiene identidad cuando ya se respondió la pantalla «Empresa». */
+export function hasCompanyIdentity(company: CompanyDraft | null): boolean {
+  return !!company && company.name.trim().length > 0 && company.nit.trim().length > 0;
+}
+
+/** La empresa está completa cuando además se respondió «Ubicación». */
+export function hasCompanyLocation(company: CompanyDraft | null): boolean {
+  return hasCompanyIdentity(company) && !!company && company.country_code.length > 0 && company.city.trim().length > 0;
+}
+
+/** La persona propietaria se conoce cuando ya se respondió la pantalla «Tú». */
+export function hasOwnerIdentity(account: AccountDraft | null): boolean {
+  return !!account && account.name.trim().length > 0 && account.email.trim().length > 0;
+}
+
+/**
+ * Motivo por el que NO se puede entrar en un paso, o `null` si está abierto.
+ * Cada pantalla exige la anterior respondida: adelante solo con información,
+ * atrás siempre (misma regla que el onboarding guiado).
+ */
 export function blockerForSignupStep(step: SignupStep, draft: SignupDraft): string | null {
   if (step === "offer") return null;
   const offer = offerBlocker(draft.offer);
   if (offer) return offer;
-  if (step === "account" && !draft.company) return "Completa los datos de tu empresa primero.";
+  if (step === "company") return null;
+  if (!hasCompanyIdentity(draft.company)) return "Cuéntanos primero cómo se llama tu empresa.";
+  if (step === "location") return null;
+  if (!hasCompanyLocation(draft.company)) return "Completa los datos de tu empresa primero.";
+  if (step === "owner") return null;
+  if (!hasOwnerIdentity(draft.account)) return "Dinos primero quién eres.";
   return null;
+}
+
+/** Primer paso al que se puede entrar sin saltarse ninguno; nunca más allá de `wanted`. */
+export function reachableSignupStep(wanted: number, draft: SignupDraft): number {
+  const target = Math.max(0, Math.min(wanted, SIGNUP_STEPS.length - 1));
+  for (let index = 0; index <= target; index += 1) {
+    if (blockerForSignupStep(SIGNUP_STEPS[index].code, draft)) return Math.max(0, index - 1);
+  }
+  return target;
 }
 
 /* ─────────────────────────── Resumen del rail ─────────────────────────── */
@@ -336,8 +378,8 @@ export function toSignupPayload(
   extras: { captcha_token: string; website: string },
 ): SignupPayload {
   if (!draft.offer || offerBlocker(draft.offer)) throw new Error("Falta la oferta en el borrador del alta.");
-  if (!draft.company) throw new Error("Faltan los datos de la empresa en el borrador del alta.");
-  if (!draft.account?.accept_terms) throw new Error("Falta la cuenta o la aceptación de términos.");
+  if (!hasCompanyLocation(draft.company) || !draft.company) throw new Error("Faltan los datos de la empresa en el borrador del alta.");
+  if (!hasOwnerIdentity(draft.account) || !draft.account?.accept_terms) throw new Error("Falta la cuenta o la aceptación de términos.");
 
   const company = draft.company;
   return {

@@ -96,8 +96,10 @@ infrastructure/
   hooks/use-catalog-import-job.ts sondeo 2 s → 5 s → «tarda más» a los 3 min
   storage/signup-draft.storage.ts sessionStorage sin la contraseña
 ui/
-  signup/                        SignupFunnelView, OfferStep, CompanyStep, AccountStep, SignupSummaryRail,
-                                 PasswordField, TurnstileWidget, config/*.config.tsx
+  signup/                        SignupFunnelView (orquestador, 5 pantallas), SignupScreen + SignupProgressDots,
+                                 SignupRoute (la ruta animada), SignupActions, OfferStep + OfferTile + graphics/,
+                                 CompanyIdentityStep, CompanyLocationStep, OwnerStep, PasswordStep, PasswordField,
+                                 TurnstileWidget, signup-field.styles.ts, config/*.config.tsx
   onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton, WelcomeView,
                                  steps/{Niche,BusinessHours,CatalogImport,AgentTemplates,WhatsApp,Done}Step
   catalog-import/                ImportDropzone, ImportJobProgress, ExtractedProductsReview
@@ -135,6 +137,19 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
     entitlements llegan ya formateados por el backend y aquí no se divide nada.
 11. **`FOUNDERS.claimed`, `MODULES[].listCop` y `priceStatus`** son valores manuales del content de la
     landing; `priceStatus: "draft"` mantiene el precio visible pero fuera del JSON-LD.
+12. **Una pregunta por pantalla, tres objetos en el wire** (rediseño «Flow», 2026-09-05). `SIGNUP_STEPS` son
+    cinco (`offer · company · location · owner · account`) pero `CompanyDraft` y `AccountDraft` siguen
+    enteros: cada pantalla valida su parte con un `pick` del schema y el orquestador funde los valores.
+    `toSignupPayload` no cambió. Los errores del backend vuelven a SU pantalla: NIT a «Empresa», correo a «Tú».
+13. **El campo es un material, no un tema.** `.signup-field` (globals.css) re-deriva los tokens semánticos
+    dentro de su alcance —técnica de `.theme-dark-island`— y por eso los primitivos (`Input`, `FormMessage`,
+    `Button`, `Checkbox`, `SegmentedControl`) se ven de cristal sin variantes ni hex. `--color-background` no
+    se toca. El isotipo conserva sus tres cintas (el dueño rechazó el mono blanco); solo el wordmark toma el
+    color del texto.
+14. **La ruta es navegación, no decoración.** `SignupRoute` es un `nav`: las paradas recorridas son botones
+    «Volver a …»; la activa lleva `aria-current="step"`; solo el trazo SVG va `aria-hidden`. Adelante solo con
+    información (`blockerForSignupStep`), atrás siempre; al recargar, `reachableSignupStep` vuelve al paso más
+    lejano que las respuestas guardadas permitan. Con `prefers-reduced-motion` la curva queda fija.
 
 ### B.4 Piezas compartidas que nacieron o crecieron aquí
 
@@ -142,7 +157,8 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
 unificar la marca de `/comenzar` con la landing) · `shared/components/ui/confetti.tsx` + `core/lib/brand-palette.ts`
 (extraído de `beams-background`) · `SplashContext.phase` · `shared/data/countries.ts` (promovido desde `platform`) ·
 `DraftBackButton` en `shared/components/features/dynamic-form` · `ProviderCard.selectionRole`
-(`radio` | `checkbox`) · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
+(`radio` | `checkbox`; ya no se usa en el funnel desde el rediseño «Flow») · `.signup-field`, `.sf-glass*`,
+`.signup-grain` y `.signup-route-path` en `globals.css` · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
 `core/lib/error-messages.ts` · `AuthProvider.signup()` · barrels `landing/public.ts` y
 `onboarding/public.ts`; `channels/public.ts` += `ConnectChannelFlow`; `agents/public.ts` +=
 `listCharacters`, `characterStyle`, `characterHasVoice`, `CharacterDTO`, `AiAgentDTO`.
@@ -218,6 +234,29 @@ Tests: `WelcomeView.test.tsx` (nombre/empresa/oferta/fecha; confeti una vez y so
 ignora), `confetti.test.tsx` (instancia perezosa, `at`, limpieza al desmontar, reduced-motion),
 `onboarding-progress.test.ts` (`isFreshProgress`). El canvas no existe en jsdom: en las vistas se mockea
 `@/shared/components/ui/confetti`; en su propio test se mockea `canvas-confetti`.
+
+### B.10 El registro «Flow» (2026-09-05)
+
+Rediseño de `/comenzar` aprobado en mockup (`docs/design/mockups/comenzar-flow-v3.html`; la alternativa
+bento, `comenzar-premium-v2.html`, quedó como referencia) y construido en F1–F4 del plan
+`docs/plans/comenzar_premium_plan.md`. Lo que ve la persona: un fondo de marca a sangre (cielo coral en
+claro, noche de marca en oscuro), la pregunta grande centrada, un solo control de cristal debajo, los puntos
+de progreso arriba y, al pie, una curva con una parada por paso que se desliza con spring al avanzar.
+
+Piezas: `SignupFunnelView` (estado, borrador, analítica, errores por `code`, `AnimatePresence mode="wait"` con
+`spring.soft`/`fade.fast`, foco en el primer control al completar la ENTRADA y solo con puntero fino),
+`SignupScreen` (el `h1` por pantalla ES la etiqueta visible; los campos llevan `SrLabel` y el placeholder
+nombra el control), `SignupRoute` (SVG de cúbicas con tangentes horizontales, dos paradas virtuales en los
+extremos, la activa centrada por `translateX`; alto 280/210 px, se compacta por ancho < 640 o viewport
+< 760 px de alto; en jsdom mide con `FALLBACK_WIDTH`), `SignupActions` (CTA blanco a todo el ancho +
+microcopy + «Atrás»), `OfferTile` (ficha de cristal; marca redonda en radio y cuadrada en checkbox; el
+gráfico en columna propia de 128/190 px) y `graphics/OfferGraphics.tsx` (los ocho gráficos aprobados en
+`currentColor` con `vector-effect: non-scaling-stroke`). Crecimiento y Free Trial van a todo el ancho.
+
+Copy corregido de paso: la nota de dos o más módulos decía «Small Business Suite», paquete retirado; dice
+«Crecimiento». Tests: `SignupFunnelView.test.tsx` recorre las cinco pantallas y comprueba la ruta
+(`aria-current`, «Volver a Oferta») y el resumen final; `signup-draft.test.ts` cubre los bloqueos por pantalla
+y `reachableSignupStep`.
 
 ## Parte C — Lo que aún es contrato a mano y lo que falta
 

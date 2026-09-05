@@ -73,7 +73,7 @@ El hero del marketplace vive aparte: `src/shared/components/layout/marketplace-h
 
 - Tokens en **cookies HttpOnly** (`accessToken` 15 min, `refreshToken` 7 d); el browser nunca ve el JWT. BFF en `src/app/api/auth/*` + proxy autenticado `src/app/api/proxy/[...path]/route.ts`.
 - No autenticado en ruta privada → middleware → `/auth/login?next=...`. Tras login: splash → `next` o `/dashboard`.
-- **Alta autoservicio en `/comenzar`** (desde 2026-09, `docs/plans/onboarding_self_service_plan.md`): tres pasos (oferta → empresa → cuenta) y `POST /api/auth/signup`, que siembra las mismas cookies que el login con los tokens que devuelve el backend y manda a `/onboarding`. Enterprise sigue siendo asistido (`/contacto`). El login dice "¿No tienes cuenta? Crea tu cuenta". La consola `/platform` conserva su alta manual. El correo de verificación lleva a `/verificar-correo?token=` (pública, `noindex`), que confirma la cuenta y devuelve al onboarding.
+- **Alta autoservicio en `/comenzar`** (desde 2026-09, `docs/plans/onboarding_self_service_plan.md`): cinco pantallas de una pregunta (oferta → empresa → ubicación → tú → cuenta; rediseño «Flow» 2026-09-05, `onboarding.md` B.10) y `POST /api/auth/signup`, que siembra las mismas cookies que el login con los tokens que devuelve el backend y manda a `/onboarding`. Enterprise sigue siendo asistido (`/contacto`). El login dice "¿No tienes cuenta? Crea tu cuenta". La consola `/platform` conserva su alta manual. El correo de verificación lleva a `/verificar-correo?token=` (pública, `noindex`), que confirma la cuenta y devuelve al onboarding.
 - Empresa suspendida (F15) → `CompanySuspendedScreen`, nunca al login.
 
 ## 4. Convenciones aplicables a nuevas páginas públicas
@@ -154,9 +154,9 @@ es dominio puro (`domain/signup-draft.ts`, con test). Reglas:
 - **Paquete XOR Módulos** por tipo (`OfferSelection`): cambiar de pestaña descarta lo otro.
 - **La ciudad es obligatoria**; el país autollenan zona horaria (catálogo `shared/data/countries`).
 - El borrador se guarda en `sessionStorage` **sin la contraseña**.
-- Errores por `code`: `identities/nit_taken` y `onboarding/nit_invalid` vuelven a Empresa con el
-  error en NIT; `onboarding/email_in_use` y `email_disposable` marcan el correo; el resto se muestra
-  sobre el botón. Mensajes en `core/lib/error-messages.ts`.
+- Errores por `code`: `identities/nit_taken` y `onboarding/nit_invalid` vuelven a «Empresa» con el
+  error en NIT; `onboarding/email_in_use` y `email_disposable` vuelven a «Tú» con el error en el correo;
+  el resto se muestra sobre el botón de «Cuenta». Mensajes en `core/lib/error-messages.ts`.
 - Captcha: `TurnstileWidget` solo con `NEXT_PUBLIC_TURNSTILE_SITE_KEY`; sin ella el backend valida con
   su verificador `noop` (prohibido en producción).
 - Analítica: `signup_start_click` (delegado en `outbound.ts` sobre `href^="/comenzar"`),

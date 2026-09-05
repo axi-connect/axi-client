@@ -1,11 +1,20 @@
 /**
- * Paso «Empresa» de `/comenzar`: Zod + campos declarativos para `DynamicForm`.
+ * Pantallas «Empresa» y «Ubicación» de `/comenzar`: Zod + campos declarativos
+ * para `DynamicForm`.
  *
  * Portado del wizard de alta de `/platform` (`company-step.config.tsx`), sin
  * industria (la decide el nicho en el onboarding), sin estado (siempre trial)
  * y con la **ciudad obligatoria** (decisión del dueño, 2026-09-01). País,
  * moneda y zona horaria salen del catálogo compartido `shared/data/countries`;
  * la moneda y la zona se autollenan al elegir país y viajan ocultas.
+ *
+ * Desde el mockup v3 (2026-09-05) la empresa se pregunta en DOS pantallas —
+ * cómo se llama (nombre + NIT) y dónde opera (país + ciudad)— pero sigue siendo
+ * UN objeto `CompanyDraft`: cada pantalla valida su parte con un `pick` del
+ * mismo schema, así el wire no cambia.
+ *
+ * Las etiquetas van solo para el lector de pantalla: la pregunta grande es la
+ * etiqueta visible de la pantalla y el placeholder nombra cada control.
  */
 import { z } from "zod";
 
@@ -23,6 +32,7 @@ import {
   type FieldConfig,
 } from "@/shared/components/features/dynamic-form";
 import type { CompanyDraft } from "@/modules/onboarding/domain/signup-draft";
+import { SIGNUP_INPUT_CLASS, SIGNUP_SELECT_CLASS, SrLabel } from "@/modules/onboarding/ui/signup/signup-field.styles";
 
 export const companyStepSchema = z.object({
   name: z.string().trim().min(2, "Escribe el nombre de tu empresa"),
@@ -33,6 +43,14 @@ export const companyStepSchema = z.object({
 });
 
 export type CompanyStepValues = z.infer<typeof companyStepSchema>;
+
+/** Pantalla «Empresa»: identidad. */
+export const companyIdentitySchema = companyStepSchema.pick({ name: true, nit: true });
+export type CompanyIdentityValues = z.infer<typeof companyIdentitySchema>;
+
+/** Pantalla «Ubicación»: dónde opera. */
+export const companyLocationSchema = companyStepSchema.pick({ country_code: true, city: true, timezone: true });
+export type CompanyLocationValues = z.infer<typeof companyLocationSchema>;
 
 export const defaultCompanyStepValues: CompanyStepValues = {
   name: "",
@@ -47,27 +65,33 @@ export function companyDraftToValues(draft: CompanyDraft | null): CompanyStepVal
 }
 
 /** `nitError`: error del backend (`identities/nit_taken`, `onboarding/nit_invalid`) inline. */
-export function buildCompanyFields(nitError?: string | null): FieldConfig<CompanyStepValues>[] {
+export function buildCompanyIdentityFields(nitError?: string | null): FieldConfig<CompanyIdentityValues>[] {
   return [
-    createInputField<CompanyStepValues>("name", {
-      label: "Nombre de la empresa",
-      placeholder: "Como la conocen tus clientes",
+    createInputField<CompanyIdentityValues>("name", {
+      label: <SrLabel>Nombre de la empresa</SrLabel>,
+      placeholder: "Nombre de la empresa",
       autoComplete: "organization",
+      inputProps: { className: SIGNUP_INPUT_CLASS },
     }),
-    createInputField<CompanyStepValues>("nit", {
-      label: "NIT",
-      placeholder: "900.000.000-0",
+    createInputField<CompanyIdentityValues>("nit", {
+      label: <SrLabel>NIT</SrLabel>,
+      placeholder: "NIT con dígito de verificación",
       autoComplete: "off",
-      inputProps: { inputMode: "numeric" },
+      inputProps: { inputMode: "numeric", className: SIGNUP_INPUT_CLASS },
       description: nitError ? (
-        <span role="alert" className="text-destructive">
+        <span role="alert" className="font-medium">
           {nitError}
         </span>
       ) : (
-        "Con dígito de verificación. Lo usamos para identificar tu empresa al iniciar sesión."
+        "El NIT identifica tu empresa al iniciar sesión."
       ),
     }),
-    createCustomField<CompanyStepValues>(
+  ];
+}
+
+export function buildCompanyLocationFields(): FieldConfig<CompanyLocationValues>[] {
+  return [
+    createCustomField<CompanyLocationValues>(
       "country_code",
       ({ value, setValue, getError }) => (
         <div className="space-y-1">
@@ -79,8 +103,8 @@ export function buildCompanyFields(nitError?: string | null): FieldConfig<Compan
               if (country) setValue("timezone", country.timezone);
             }}
           >
-            <SelectTrigger className="w-full" aria-label="País">
-              <SelectValue placeholder="Elige un país" />
+            <SelectTrigger className={SIGNUP_SELECT_CLASS} aria-label="País">
+              <SelectValue placeholder="País" />
             </SelectTrigger>
             <SelectContent>
               {COUNTRIES.map((country) => (
@@ -90,20 +114,17 @@ export function buildCompanyFields(nitError?: string | null): FieldConfig<Compan
               ))}
             </SelectContent>
           </Select>
-          {getError() && <p className="text-destructive text-sm">{getError()}</p>}
+          {getError() && <p className="text-destructive text-sm font-medium">{getError()}</p>}
         </div>
       ),
-      {
-        label: "País",
-        description: "La moneda y la zona horaria se ajustan solas.",
-      },
+      { label: <SrLabel>País</SrLabel> },
     ),
-    createInputField<CompanyStepValues>("city", {
-      label: "Ciudad",
+    createInputField<CompanyLocationValues>("city", {
+      label: <SrLabel>Ciudad</SrLabel>,
       placeholder: "Ciudad principal",
       autoComplete: "address-level2",
-      description: "Donde opera tu negocio. Ajusta ejemplos, zonas de entrega y agenda.",
+      inputProps: { className: SIGNUP_INPUT_CLASS },
     }),
-    createInputField<CompanyStepValues>("timezone", { inputKind: "hidden" }),
+    createInputField<CompanyLocationValues>("timezone", { inputKind: "hidden" }),
   ];
 }

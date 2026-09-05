@@ -1583,3 +1583,89 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .ticket-surface--live .ticket-perforation {
   border-color: color-mix(in srgb, var(--axi-amber) 42%, transparent);
 }
+
+/* ==========================================================================
+   REGISTRO AUTOSERVICIO /comenzar — «el campo» (mockup v3 «Flow», 2026-09-05)
+   ==========================================================================
+   Una pregunta por pantalla sobre un fondo de marca a sangre: cielo coral en
+   claro (texto blanco; el gradiente de marca en un momento hero está
+   autorizado por DESIGN.md §3.2) y noche de marca en oscuro. Es UN material y
+   se aplica UNA vez, en el layout de la ruta.
+
+   La técnica es la de `.theme-dark-island`: el bloque RE-DERIVA los tokens
+   semánticos dentro de su alcance, así los primitivos (Input, FormLabel,
+   FormMessage, Button…) adoptan el material sin variantes nuevas ni hex en
+   componentes. `--color-background` NO se toca: el cristal se mezcla contra el
+   fondo real y los overlays siguen siendo los de la app. */
+.signup-field {
+  --sf-fg: #ffffff;                /* único hex del bloque: el texto sobre coral es blanco puro */
+  --sf-on-fg: var(--axi-brand);    /* texto sobre un control lleno (botón blanco → coral) */
+  --sf-glass: color-mix(in srgb, var(--sf-fg) 16%, transparent);
+  --sf-glass-hover: color-mix(in srgb, var(--sf-fg) 24%, transparent);
+  --sf-glass-on: color-mix(in srgb, var(--sf-fg) 30%, transparent);
+  --sf-line: color-mix(in srgb, var(--sf-fg) 26%, transparent);
+  --sf-soft: color-mix(in srgb, var(--sf-fg) 78%, transparent);
+
+  --color-foreground: var(--sf-fg);
+  --color-muted-foreground: var(--sf-soft);
+  --color-border: var(--sf-line);
+  --color-input: var(--sf-line);
+  --color-ring: var(--sf-fg);
+  --color-primary: var(--sf-fg);
+  --color-primary-foreground: var(--sf-on-fg);
+  --color-secondary: var(--sf-glass);
+  --color-secondary-foreground: var(--sf-fg);
+  --color-accent: var(--sf-glass-on);
+  --color-accent-foreground: var(--sf-fg);
+  /* El rojo semántico no se lee sobre coral. El error se distingue por peso,
+     por `role="alert"` y por el borde del control, no por el tono. En oscuro
+     vuelve el rojo (ver abajo). */
+  --color-destructive: var(--sf-fg);
+
+  color: var(--sf-fg);
+  background-color: var(--axi-brand);
+  background-image:
+    radial-gradient(70% 55% at 18% 0%, color-mix(in srgb, var(--background) 22%, transparent), transparent 70%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--axi-brand-2) 55%, var(--axi-brand)) 0%,
+      var(--axi-brand) 46%,
+      color-mix(in srgb, var(--axi-brand) 58%, var(--background)) 100%);
+}
+.dark .signup-field {
+  --sf-fg: var(--foreground);
+  --sf-on-fg: var(--background);
+  --color-destructive: var(--axi-destructive);
+  background-color: var(--background);
+  background-image:
+    radial-gradient(60% 50% at 20% 0%, color-mix(in srgb, var(--axi-brand) 30%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 85% 100%, color-mix(in srgb, var(--axi-violet) 22%, transparent), transparent 70%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--axi-brand) 26%, var(--background)) 0%,
+      var(--background) 55%,
+      color-mix(in srgb, var(--axi-violet) 14%, var(--background)) 100%);
+}
+
+/* Marca sobre el campo: el isotipo conserva sus tres cintas (el dueño rechazó
+   la versión monocroma, 2026-09-05) y solo el wordmark pasa al color del texto,
+   porque el degradado coral sobre el cielo coral desaparecería. Se resuelve por
+   CSS para no darle variantes al `BrandLockup`, que no las admite a propósito. */
+.signup-field .text-brand-wordmark { background-image: none; color: var(--sf-fg); }
+
+/* Retícula tenue que se desvanece hacia los bordes: la única textura del campo. */
+.signup-grain {
+  background-image: radial-gradient(color-mix(in srgb, var(--sf-fg) 9%, transparent) 1px, transparent 1.2px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(80% 70% at 50% 20%, #000 20%, transparent 100%);
+  mask-image: radial-gradient(80% 70% at 50% 20%, #000 20%, transparent 100%);
+}
+
+/* Cristal blanco de los controles del campo: fichas, inputs, segmentado, nodos
+   de la ruta. Sin `backdrop-filter`: detrás solo hay un degradado que la app
+   controla (DESIGN-SYSTEM §5.2), y los nodos viajan en un transform. */
+.sf-glass { background-color: var(--sf-glass); border: 1px solid var(--sf-line); }
+.sf-glass-hover:hover { background-color: var(--sf-glass-hover); }
+.sf-glass-on { background-color: var(--sf-glass-on); border-color: var(--sf-fg); }
+.sf-line { border-color: var(--sf-line); }
+
+/* El trazo de la ruta y su tipografía de etiqueta. */
+.signup-route-path { fill: none; stroke: color-mix(in srgb, var(--sf-fg) 80%, transparent); stroke-width: 1.5; }
