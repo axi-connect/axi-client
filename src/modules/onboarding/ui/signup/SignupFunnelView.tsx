@@ -12,6 +12,7 @@ import { LoginError } from "@/core/providers/auth-provider";
 import { useSplashOptional } from "@/core/providers/splash-provider";
 import { useAuth, useSession } from "@/shared/auth/auth.hooks";
 import { StepIndicator } from "@/shared/components/ui/step-indicator";
+import type { PublicCatalog } from "@/modules/landing/public";
 import {
   EMPTY_SIGNUP_DRAFT,
   SIGNUP_NEXT_PATH,
@@ -61,7 +62,7 @@ const STEP_COPY = [
  * el error en el campo; correo en uso o desechable → error en el campo del
  * paso 3; el resto (captcha, rate-limit, red) → aviso sobre el botón.
  */
-export function SignupFunnelView() {
+export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null }) {
   const router = useRouter();
   const search = useSearchParams();
   const { signup } = useAuth();
@@ -84,7 +85,7 @@ export function SignupFunnelView() {
     if (initializedRef.current) return;
     initializedRef.current = true;
     const stored = readSignupDraft();
-    const fromQuery = parseOfferQuery(search);
+    const fromQuery = parseOfferQuery(search, catalog);
     if (fromQuery.redirectTo) {
       router.replace(fromQuery.redirectTo);
       return;
@@ -96,7 +97,7 @@ export function SignupFunnelView() {
     const initialStep = fromQuery.selection ? 1 : Math.min(stored?.step ?? 0, 2);
     setStep(blockerForSignupStep(SIGNUP_STEPS[initialStep].code, { offer, company, account: null }) ? 0 : initialStep);
     setReady(true);
-  }, [router, search]);
+  }, [router, search, catalog]);
 
   useEffect(() => {
     if (!ready) return;
@@ -187,7 +188,7 @@ export function SignupFunnelView() {
           <p className="text-muted-foreground mt-2 max-w-[44rem] text-sm leading-relaxed">{copy.lead}</p>
 
           <div className="mt-6">
-            {step === 0 ? <OfferStep selection={draft.offer} onChange={setOffer} onNext={() => goTo(1)} /> : null}
+            {step === 0 ? <OfferStep selection={draft.offer} catalog={catalog} onChange={setOffer} onNext={() => goTo(1)} /> : null}
             {step === 1 ? (
               <CompanyStep
                 defaultValues={companyDraftToValues(draft.company)}
@@ -223,7 +224,7 @@ export function SignupFunnelView() {
           </div>
         </section>
 
-        <SignupSummaryRail selection={draft.offer} />
+        <SignupSummaryRail selection={draft.offer} catalog={catalog} />
       </div>
     </div>
   );

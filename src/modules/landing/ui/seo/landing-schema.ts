@@ -3,74 +3,30 @@ import type { Offer, SoftwareApplication, WithContext } from "schema-dts";
 import { siteUrl } from "@/core/config/env";
 import { ORG_ID } from "@/core/seo/site";
 import {
-  FOUNDERS,
-  PRICING,
-  PRICING_VOLUMES,
-  foundersOfferOpen,
+  modulePriceCop,
   planMonthlyCop,
-  pricingPackages,
-  publishableModules,
-} from "@/modules/landing/ui/content/landing.content";
+  promotionLastDay,
+  promotionOpen,
+  type PublicCatalog,
+} from "@/modules/landing/domain/public-catalog";
+import { MODULES, PRICING, pricingPackages } from "@/modules/landing/ui/content/landing.content";
 
 /**
  * `SoftwareApplication` con la oferta real de Axi Connect.
  *
- * Vive en el slice de landing, y no en `core/seo/`, porque lee el contenido:
- * las cifras salen de `PRICING.plans` y de `founderCop()`, **los mismos** que
- * pintan las tarjetas de precio. No se copia ni un número. Si el JSON-LD declarara un
- * precio distinto del visible, Google lo trata como discrepancia y puede
- * retirar el resultado enriquecido.
+ * Lee el MISMO catálogo que pintan las tarjetas (la página lo carga una vez y
+ * lo pasa por props a ambos): no se copia ni un número. Si el JSON-LD
+ * declarara un precio distinto del visible, Google lo trata como discrepancia
+ * y puede retirar el resultado enriquecido. Sin catálogo, se declara solo la
+ * prueba gratuita: ninguna cifra inventada.
  *
  * Qué NO se declara, a propósito:
- *  - El plan Enterprise no genera `Offer`: no tiene precio publicable y un
- *    `Offer` sin precio no aporta nada.
- *  - Los Módulos con `priceStatus: "draft"`: la tarjeta muestra la cifra como
- *    propuesta, pero afirmársela a Google sería publicar un precio no decidido.
- *    Entran solos al pasar a `final` (`publishableModules()`).
+ *  - El plan Enterprise no genera `Offer`: su piso no es un precio de lista.
  *  - Sin `aggregateRating`: no hay reseñas. Search Console lo marcará como
  *    "campo recomendado ausente"; es un aviso, no un error, y es preferible a
  *    inventar una valoración.
  */
-export function pricingSchema(): WithContext<SoftwareApplication> {
-  // Cupos Y fecha, por la MISMA puerta que usan las tarjetas. Antes esta línea
-  // miraba solo los cupos, así que pasada la fecha el buscador habría seguido
-  // anunciando el precio de fundador con una validez ya vencida mientras la
-  // página mostraba el de lista.
-  const foundersActive = foundersOfferOpen();
-
-  /**
-   * Desde que el precio tiene dos ejes, un paquete no tiene UN precio sino una
-   * escalera. Se declara el ESCALÓN DE ENTRADA —el volumen más bajo del
-   * catálogo— y se marca como mínimo con `priceSpecification`: es lo que Google
-   * entiende de un rango, y afirmar un precio fijo que la página no muestra en
-   * todos sus tramos sería la discrepancia que retira el resultado enriquecido.
-   */
-  const entryVolume = PRICING_VOLUMES[0];
-
-  const packageOffers: Offer[] = pricingPackages().flatMap((plan) => {
-    const price = planMonthlyCop(plan, entryVolume.id);
-    if (price === null) return [];
-    return [
-      {
-        "@type": "Offer",
-        name: `Paquete ${plan.name}`,
-        price: String(price),
-        priceCurrency: "COP",
-        priceSpecification: {
-          "@type": "PriceSpecification",
-          // `minPrice` es numérico en el vocabulario: mandarlo como texto pasa
-          // el build y Google lo descarta sin decir nada.
-          minPrice: price,
-          priceCurrency: "COP",
-          valueAddedTaxIncluded: false,
-        },
-        url: siteUrl("/precios"),
-        availability: "https://schema.org/InStock",
-        ...(foundersActive ? { priceValidUntil: FOUNDERS.deadline } : {}),
-      } satisfies Offer,
-    ];
-  });
-
+export function pricingSchema(catalog: PublicCatalog | null, now: Date = new Date()): WithContext<SoftwareApplication> {
   const trialOffer: Offer = {
     "@type": "Offer",
     name: "Prueba gratuita de 7 días",
@@ -80,14 +36,59 @@ export function pricingSchema(): WithContext<SoftwareApplication> {
     availability: "https://schema.org/InStock",
   };
 
-  const moduleOffers: Offer[] = publishableModules().map((offer) => ({
-    "@type": "Offer",
-    name: `Módulo ${offer.name}`,
-    price: String(offer.listCop),
-    priceCurrency: "COP",
-    url: siteUrl("/precios"),
-    availability: "https://schema.org/InStock",
-  }));
+  const packageOffers: Offer[] =
+    catalog === null
+      ? []
+      : pricingPackages().flatMap((plan) => {
+          /**
+           * Con dos ejes un paquete no tiene UN precio sino una escalera. Se
+           * declara el ESCALÓN DE ENTRADA —el tramo más bajo con cifra— y se
+           * marca como mínimo con `priceSpecification`: es lo que Google
+           * entiende de un rango.
+           */
+          const entry = catalog.volumes.find((volume) => volume.feeCop !== null) ?? catalog.volumes[0];
+          const price = planMonthlyCop(catalog, plan.id, entry.id, now);
+          if (price === null) return [];
+          const open = promotionOpen(catalog, now) && catalog.promotion !== null;
+          const lastDay = open && catalog.promotion ? promotionLastDay(catalog.promotion) : null;
+          return [
+            {
+              "@type": "Offer",
+              name: `Paquete ${plan.name}`,
+              price: String(price),
+              priceCurrency: "COP",
+              priceSpecification: {
+                "@type": "PriceSpecification",
+                // `minPrice` es numérico en el vocabulario: mandarlo como texto
+                // pasa el build y Google lo descarta sin decir nada.
+                minPrice: price,
+                priceCurrency: "COP",
+                valueAddedTaxIncluded: false,
+              },
+              url: siteUrl("/precios"),
+              availability: "https://schema.org/InStock",
+              ...(lastDay ? { priceValidUntil: lastDay } : {}),
+            } satisfies Offer,
+          ];
+        });
+
+  const moduleOffers: Offer[] =
+    catalog === null
+      ? []
+      : MODULES.flatMap((offer) => {
+          const price = modulePriceCop(catalog, offer.offer_code);
+          if (price === null) return [];
+          return [
+            {
+              "@type": "Offer",
+              name: `Módulo ${offer.name}`,
+              price: String(price),
+              priceCurrency: "COP",
+              url: siteUrl("/precios"),
+              availability: "https://schema.org/InStock",
+            } satisfies Offer,
+          ];
+        });
 
   return {
     "@context": "https://schema.org",

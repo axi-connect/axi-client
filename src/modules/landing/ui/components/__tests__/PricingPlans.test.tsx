@@ -2,47 +2,50 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 
 import { PricingPlans } from "../PricingPlans"
 import {
-  DEFAULT_VOLUME_ID,
-  FOUNDERS,
+  FIXTURE_CATALOG,
+  FIXTURE_CATALOG_LEGACY,
+  FIXTURE_CATALOG_SOLD_OUT,
+  FIXTURE_NOW,
+} from "@/modules/landing/domain/testing/catalog.fixture"
+import {
   MONTHS_PER_YEAR,
-  PRICING_VOLUMES,
   annualTotalCop,
-  formatCop,
-  formatDeadlineLong,
-  planById,
+  discountLabel,
   planListCop,
   planMonthlyCop,
-  pricingPackages,
+  promotionLastDay,
   volumeById,
+  type PublicCatalog,
+} from "@/modules/landing/domain/public-catalog"
+import {
+  formatCop,
+  formatDeadlineLong,
+  foundersDiscountBadge,
+  planById,
+  pricingPackages,
   type PricingPlan,
 } from "@/modules/landing/ui/content/landing.content"
 
 /**
- * El reloj va CONGELADO en una fecha anterior al cierre del programa.
+ * Las cifras salen de un catálogo de EJEMPLO con la forma exacta del API
+ * (`catalog.fixture.ts`): el código de producción ya no tiene ninguna.
  *
- * Dos razones, ambas de fondo:
- * 1. `FlipCountdown` corre un `setInterval` y pinta cifras de dos dígitos. Con
- *    el reloj real, cualquier ficha que marcara el mismo número que los cupos
- *    tomados volvía ambigua la búsqueda por texto — los segundos lo hacen una
- *    vez por minuto, así que el test era flaky por diseño.
- * 2. Los precios de fundador dependen de que la oferta esté abierta. Sin
- *    congelar el reloj, estos tests empezarían a fallar solos el día que pase
- *    `FOUNDERS.deadline`, con el código intacto.
- *
- * Mismo patrón que `FlipCountdown.test.tsx`.
+ * El reloj va CONGELADO dentro de la promoción del fixture. Dos razones:
+ * 1. `FlipCountdown` corre un `setInterval` y pinta cifras de dos dígitos; con
+ *    el reloj real cualquier ficha podía coincidir con el contador de cupos.
+ * 2. El precio de fundador depende de que la oferta esté abierta; sin congelar
+ *    el reloj estos tests caducarían solos el 1 de enero con el código intacto.
  */
-const BEFORE_DEADLINE = new Date("2026-09-01T10:00:00")
-/** Después del 31 de diciembre de 2026, que es el cierre del programa. */
 const AFTER_DEADLINE = new Date("2027-01-15T10:00:00")
 
+const CATALOG = FIXTURE_CATALOG
+const PROMOTION = CATALOG.promotion!
 /** Tramo con el que abre la sección: contra él se derivan las aserciones. */
-const VOLUME = DEFAULT_VOLUME_ID
+const VOLUME = CATALOG.defaultVolumeId
 
 /** Los chips son radios nativos: se eligen por su etiqueta, como el visitante. */
-function selectVolume(id: string) {
-  const volume = PRICING_VOLUMES.find((candidate) => candidate.id === id)
-  if (!volume) throw new Error(`El content ya no tiene el tramo "${id}"`)
-  fireEvent.click(screen.getByRole("radio", { name: volume.label }))
+function selectVolume(catalog: PublicCatalog, id: string) {
+  fireEvent.click(screen.getByRole("radio", { name: volumeById(catalog, id).label }))
 }
 
 function planOrFail(id: string): PricingPlan {
@@ -59,13 +62,14 @@ const ENTERPRISE_PLAN = planOrFail("enterprise")
 const cardOf = (id: string) => within(screen.getByTestId(`plan-${id}`))
 
 /** Precio de lista / de fundador ya resueltos al tramo por defecto. */
-const listOf = (plan: PricingPlan) => planListCop(plan, VOLUME) as number
-const monthlyOf = (plan: PricingPlan) => planMonthlyCop(plan, VOLUME) as number
+const listOf = (plan: PricingPlan, volume = VOLUME) => planListCop(CATALOG, plan.id, volume) as number
+const monthlyOf = (plan: PricingPlan, volume = VOLUME) =>
+  planMonthlyCop(CATALOG, plan.id, volume, FIXTURE_NOW) as number
 
 describe("PricingPlans", () => {
   beforeEach(() => {
     jest.useFakeTimers()
-    jest.setSystemTime(BEFORE_DEADLINE)
+    jest.setSystemTime(FIXTURE_NOW)
   })
 
   afterEach(() => {
@@ -73,10 +77,7 @@ describe("PricingPlans", () => {
   })
 
   it("pinta TRES tarjetas comparables: ni la prueba ni Enterprise ocupan fila", () => {
-    // La versión de cinco tarjetas partía la rejilla en dos filas y dejaba a
-    // cada una por debajo de un ancho legible. La prueba se mudó al rail y
-    // Enterprise a su franja: ninguna de las dos reacciona al volumen.
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     expect(pricingPackages()).toHaveLength(3)
     expect(screen.queryByTestId("plan-free_trial")).not.toBeInTheDocument()
@@ -87,27 +88,37 @@ describe("PricingPlans", () => {
   })
 
   it("cada paquete muestra su propio precio, su tachado y el sello de fundador", () => {
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     for (const plan of [ENTRY_PLAN, FEATURED_PLAN, UPPER_PLAN]) {
       const card = cardOf(plan.id)
+      expect(monthlyOf(plan)).toBeLessThan(listOf(plan))
       expect(card.getByText(formatCop(listOf(plan)))).toBeInTheDocument()
       expect(card.getByText(formatCop(monthlyOf(plan)))).toBeInTheDocument()
-      expect(card.getByText(FOUNDERS.discountBadge)).toBeInTheDocument()
+      expect(card.getByText(foundersDiscountBadge(discountLabel(PROMOTION)))).toBeInTheDocument()
+    }
+  })
+
+  it("el precio es la SUMA de la tarifa del paquete y la del tramo (G7)", () => {
+    // La landing promete «paquete + tramo»; el catálogo trae los dos
+    // componentes y la celda tiene que ser exactamente su suma.
+    render(<PricingPlans catalog={CATALOG} />)
+    const tramo = volumeById(CATALOG, VOLUME).feeCop as number
+    for (const plan of pricingPackages()) {
+      expect(listOf(plan)).toBe(CATALOG.packageFees[plan.id] + tramo)
+      expect(String(listOf(plan))).toMatch(/900$/)
     }
   })
 
   it("los tres escalones tienen precios distintos y crecientes al mismo volumen", () => {
-    // Con dos ejes, lo que separa a los tres paquetes es SOLO la tarifa de
-    // funciones: al mismo volumen tienen que seguir ordenados.
-    render(<PricingPlans />)
-    const prices = [ENTRY_PLAN, FEATURED_PLAN, UPPER_PLAN].map(listOf)
+    render(<PricingPlans catalog={CATALOG} />)
+    const prices = [ENTRY_PLAN, FEATURED_PLAN, UPPER_PLAN].map((plan) => listOf(plan))
     expect(new Set(prices).size).toBe(3)
     expect(prices).toEqual([...prices].sort((a, b) => a - b))
   })
 
   it("la prueba gratuita se anuncia en los propios botones, no como tarjeta", () => {
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     for (const plan of pricingPackages()) {
       const card = cardOf(plan.id)
@@ -117,25 +128,22 @@ describe("PricingPlans", () => {
   })
 
   it("los chips recalculan las TRES tarjetas a la vez", () => {
-    // Es el eje entero: un chip mueve el precio de las tres, no el de una.
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
-    selectVolume("10000")
+    selectVolume(CATALOG, "t10000")
     for (const plan of pricingPackages()) {
-      const monthly = planMonthlyCop(plan, "10000") as number
-      expect(cardOf(plan.id).getByText(formatCop(monthly))).toBeInTheDocument()
+      expect(cardOf(plan.id).getByText(formatCop(monthlyOf(plan, "t10000")))).toBeInTheDocument()
     }
 
-    selectVolume("500")
+    selectVolume(CATALOG, "t500")
     for (const plan of pricingPackages()) {
-      const monthly = planMonthlyCop(plan, "500") as number
-      expect(cardOf(plan.id).getByText(formatCop(monthly))).toBeInTheDocument()
+      expect(cardOf(plan.id).getByText(formatCop(monthlyOf(plan, "t500")))).toBeInTheDocument()
     }
   })
 
   it("por encima del catálogo deja de dar cifra y manda a ventas", () => {
-    render(<PricingPlans />)
-    selectVolume("max")
+    render(<PricingPlans catalog={CATALOG} />)
+    selectVolume(CATALOG, "max")
 
     for (const plan of pricingPackages()) {
       const card = cardOf(plan.id)
@@ -145,9 +153,7 @@ describe("PricingPlans", () => {
   })
 
   it("el botón arrastra los DOS ejes elegidos al registro", () => {
-    // Sin ellos el alta empieza de cero y el visitante vuelve a elegir lo que
-    // ya eligió aquí.
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     for (const plan of pricingPackages()) {
       expect(cardOf(plan.id).getByRole("link")).toHaveAttribute(
@@ -158,15 +164,15 @@ describe("PricingPlans", () => {
   })
 
   it("el conmutador anual factura once meses y pone el ahorro en pesos", () => {
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     fireEvent.click(screen.getByRole("radio", { name: /anual/i }))
 
     const card = cardOf(FEATURED_PLAN.id)
     const monthly = monthlyOf(FEATURED_PLAN)
     // La cifra grande NO cambia: el beneficio es un mes gratis, no una tarifa
-    // menor. Sale DOS veces —el precio y el ahorro— justamente porque el mes
-    // que se regala vale exactamente una mensualidad.
+    // menor. Sale DOS veces —el precio y el ahorro— porque el mes que se
+    // regala vale exactamente una mensualidad.
     expect(card.getAllByText(formatCop(monthly))).toHaveLength(2)
     expect(card.getByText(/Te ahorras/)).toBeInTheDocument()
     expect(card.getByText(formatCop(annualTotalCop(monthly)))).toBeInTheDocument()
@@ -178,59 +184,85 @@ describe("PricingPlans", () => {
   })
 
   it("declara el volumen vigente junto al precio, no en las viñetas", () => {
-    // Con dos ejes, repetir el volumen en las viñetas lo desincroniza del
-    // selector en cuanto alguien edita una de las dos.
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     const card = cardOf(ENTRY_PLAN.id)
-    // «conversaciones/mes» y no «conversaciones»: el texto para lector de
-    // pantalla dice «al mes» y competiría por la misma búsqueda.
     expect(
-      card.getByText(new RegExp(`${volumeById(VOLUME).label} conversaciones/mes`)),
+      card.getByText(new RegExp(`${volumeById(CATALOG, VOLUME).label} conversaciones/mes`)),
     ).toBeInTheDocument()
     for (const bullet of ENTRY_PLAN.bullets) expect(bullet).not.toMatch(/conversaciones\/mes/i)
   })
 
   it("cada tarjeta declara lo que hereda de la anterior", () => {
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
 
     expect(cardOf(ENTRY_PLAN.id).getByText("Incluye")).toBeInTheDocument()
     expect(cardOf(FEATURED_PLAN.id).getByText(/Todo lo de Esencial/)).toBeInTheDocument()
     expect(cardOf(UPPER_PLAN.id).getByText(/Todo lo de Crecimiento/)).toBeInTheDocument()
   })
 
-  it("Enterprise sigue en ventas: nunca entra al registro autoservicio", () => {
-    render(<PricingPlans />)
+  it("Enterprise sigue en ventas y su piso viene del catálogo", () => {
+    render(<PricingPlans catalog={CATALOG} />)
     const band = cardOf(ENTERPRISE_PLAN.id)
     expect(band.getByRole("link", { name: ENTERPRISE_PLAN.cta.label })).toHaveAttribute("href", "/contacto")
-    expect(band.getByText(String(ENTERPRISE_PLAN.priceValue))).toBeInTheDocument()
+    expect(band.getByText(`Desde ${formatCop(CATALOG.enterpriseFloorCop as number)}`)).toBeInTheDocument()
   })
 
-  it("publica el estado real de los cupos y la fecha de cierre", () => {
-    render(<PricingPlans />)
+  it("publica los cupos reales de la promoción y su fecha de cierre", () => {
+    render(<PricingPlans catalog={CATALOG} />)
 
-    // El contador se consulta acotado a su propio nodo: la cuenta atrás de al
-    // lado también pinta números y competiría por la misma búsqueda.
     const slots = within(screen.getByTestId("founders-slots"))
-    expect(slots.getByText(String(FOUNDERS.claimed))).toBeInTheDocument()
-    expect(slots.getByText(`de ${FOUNDERS.slots} tomados`)).toBeInTheDocument()
+    expect(slots.getByText(String(PROMOTION.taken))).toBeInTheDocument()
+    expect(slots.getByText(`de ${PROMOTION.slots} tomados`)).toBeInTheDocument()
 
     const bar = screen.getByRole("progressbar")
-    expect(bar).toHaveAttribute("aria-valuenow", String(FOUNDERS.claimed))
-    expect(bar).toHaveAttribute("aria-valuemax", String(FOUNDERS.slots))
-    expect(bar.getAttribute("aria-label")).toContain(`${FOUNDERS.claimed} de ${FOUNDERS.slots}`)
+    expect(bar).toHaveAttribute("aria-valuenow", String(PROMOTION.taken))
+    expect(bar).toHaveAttribute("aria-valuemax", String(PROMOTION.slots))
 
-    expect(screen.getByText(`Hasta el ${formatDeadlineLong(FOUNDERS.deadline)}`)).toBeInTheDocument()
+    const lastDay = promotionLastDay(PROMOTION) as string
+    expect(lastDay).toBe("2026-12-31")
+    expect(screen.getByText(`Hasta el ${formatDeadlineLong(lastDay)}`)).toBeInTheDocument()
+  })
+
+  it("con los cupos agotados la promoción se cierra: ni franja ni descuento", () => {
+    // Fecha Y cupos, lo que ocurra primero (D5): agotados los cupos la landing
+    // deja de prometer un descuento que ya no puede dar.
+    render(<PricingPlans catalog={FIXTURE_CATALOG_SOLD_OUT} />)
+
+    expect(screen.queryByTestId("founders-slots")).not.toBeInTheDocument()
+    const card = cardOf(ENTRY_PLAN.id)
+    expect(card.getByText(formatCop(listOf(ENTRY_PLAN)))).toBeInTheDocument()
+    expect(card.queryByText(foundersDiscountBadge(discountLabel(PROMOTION)))).not.toBeInTheDocument()
   })
 
   it("vencida la fecha cae sola a precio de lista, sin tocar nada más", () => {
-    // El "fallo seguro" que documenta el content: si nadie renueva el ciclo, la
-    // landing deja de prometer un descuento que ya no aplica.
     jest.setSystemTime(AFTER_DEADLINE)
-    render(<PricingPlans />)
+    render(<PricingPlans catalog={CATALOG} />)
     const card = cardOf(ENTRY_PLAN.id)
 
     expect(card.getByText(formatCop(listOf(ENTRY_PLAN)))).toBeInTheDocument()
-    expect(card.queryByText(FOUNDERS.discountBadge)).not.toBeInTheDocument()
+    expect(card.queryByText(foundersDiscountBadge(discountLabel(PROMOTION)))).not.toBeInTheDocument()
+    expect(screen.queryByTestId("founders-slots")).not.toBeInTheDocument()
+  })
+
+  it("antes de la vigencia de dos ejes pinta el precio legado sin chips de volumen", () => {
+    render(<PricingPlans catalog={FIXTURE_CATALOG_LEGACY} />)
+
+    expect(screen.queryByRole("radio", { name: volumeById(CATALOG, VOLUME).label })).not.toBeInTheDocument()
+    for (const plan of pricingPackages()) {
+      const list = planListCop(FIXTURE_CATALOG_LEGACY, plan.id, FIXTURE_CATALOG_LEGACY.defaultVolumeId) as number
+      expect(list).toBe(FIXTURE_CATALOG_LEGACY.legacyPackageCop[plan.id])
+      expect(cardOf(plan.id).getByText(formatCop(list))).toBeInTheDocument()
+      expect(cardOf(plan.id).getByRole("link")).toHaveAttribute("href", `/comenzar?plan=${plan.id}&periodo=monthly`)
+    }
+  })
+
+  it("sin catálogo no inventa cifras: «precios a consulta» y ventas", () => {
+    render(<PricingPlans catalog={null} />)
+
+    const box = within(screen.getByTestId("pricing-unavailable"))
+    expect(box.getByRole("link", { name: /ventas/i })).toHaveAttribute("href", "/contacto")
+    expect(screen.queryByTestId(`plan-${ENTRY_PLAN.id}`)).not.toBeInTheDocument()
+    expect(screen.queryByText(/\$\s?\d/)).not.toBeInTheDocument()
   })
 })

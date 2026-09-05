@@ -25,18 +25,18 @@ export const MODULE_ICONS: Record<ModuleId, LucideIcon> = {
 /**
  * Tarjeta de un Módulo (mockup F0-A v3, aprobado 2026-09-01).
  *
+ * El precio llega del catálogo público (`priceCop`); el copy —cuota, extras,
+ * viñetas— sigue en el content. Sin precio publicado la tarjeta lo dice y
+ * manda a ventas en vez de inventar una cifra.
+ *
  * Misma anatomía que sus hermanas de Paquete: `TiltCard depth={6}` con reflejo
  * que sigue al cursor. La superficie es **`.glass-flat`** y no `.glass`: bajo el
  * transform 3D del tilt un `backdrop-filter` captura otro backdrop y recalcula
  * el blur por frame (docs/modules/public-site.md §4.1) — mismo aspecto, sin
  * filtro. El halo (`.brand-sheen`) y el resplandor tricolor son los de
  * `BrandCard`, para que las tres tarjetas de la capa pública sean un material.
- *
- * Dos columnas: a la izquierda identidad y argumento; a la derecha el
- * «tiquete» con la cifra comercial grande, el precio y el CTA. La cifra manda
- * (DESIGN §4): es lo que el visitante compara entre módulos.
  */
-export function ModuleCard({ offer }: { offer: ModuleOffer }) {
+export function ModuleCard({ offer, priceCop }: { offer: ModuleOffer; priceCop: number | null }) {
   const Icon = MODULE_ICONS[offer.id];
   const { allowance } = offer;
 
@@ -46,7 +46,6 @@ export function ModuleCard({ offer }: { offer: ModuleOffer }) {
         data-testid={`module-${offer.id}`}
         className="group glass-flat relative isolate z-0 grid h-full gap-6 overflow-hidden rounded-2xl p-7 transition-[border-color,box-shadow] duration-200 hover:border-brand/35 hover:shadow-overlay md:grid-cols-[minmax(0,1.45fr)_minmax(13rem,0.85fr)] md:gap-8 md:p-8"
       >
-        {/* Halo de marca y resplandor tricolor: la firma de `BrandCard`. */}
         <div
           aria-hidden="true"
           className="brand-sheen pointer-events-none absolute inset-0 -z-10 transition-[background-image] duration-200"
@@ -91,8 +90,6 @@ export function ModuleCard({ offer }: { offer: ModuleOffer }) {
         </div>
 
         <div className="border-border/90 bg-background/70 relative flex flex-col gap-3.5 rounded-2xl border p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]">
-          {/* Filete de marca en el canto superior: distingue el tiquete del resto
-              de la superficie sin recurrir a otro color. */}
           <span aria-hidden="true" className="bg-brand-gradient absolute inset-x-5 -top-px h-0.5 rounded-full" />
           <p className="text-muted-foreground text-[0.6875rem] font-semibold tracking-[0.14em] uppercase">
             {MODULES_SECTION.allowanceLabel}
@@ -111,21 +108,24 @@ export function ModuleCard({ offer }: { offer: ModuleOffer }) {
               : offer.extras}
           </p>
           <hr className="border-foreground/15 border-dashed" />
-          <p className="flex flex-wrap items-baseline gap-x-2">
-            <span
-              className="font-mono text-[1.75rem] font-semibold tracking-tight tabular-nums"
-              data-price-status={offer.priceStatus}
-            >
-              {formatCop(offer.listCop)}
-            </span>
-            <span className="text-muted-foreground text-sm">{offer.priceUnit}</span>
-          </p>
+          {priceCop === null ? (
+            <p className="text-muted-foreground text-sm leading-relaxed">Precio a consulta</p>
+          ) : (
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-mono text-[1.75rem] font-semibold tracking-tight tabular-nums">
+                {formatCop(priceCop)}
+              </span>
+              <span className="text-muted-foreground text-sm">{offer.priceUnit}</span>
+            </p>
+          )}
           <div className="mt-1 flex flex-col gap-2">
             <Button asChild size="lg" variant="outline" className="h-11 w-full">
-              <Link href={offer.cta.href}>{offer.cta.label}</Link>
+              <Link href={priceCop === null ? "/contacto" : offer.cta.href}>
+                {priceCop === null ? "Hablar con ventas" : offer.cta.label}
+              </Link>
             </Button>
             <p className="text-muted-foreground text-center text-xs leading-relaxed">
-              {offer.ctaMicrocopy}
+              {priceCop === null ? "Te respondemos el mismo día." : offer.ctaMicrocopy}
             </p>
           </div>
         </div>

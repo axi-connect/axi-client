@@ -14,6 +14,11 @@
 
 import { formatSalesWhatsApp, salesWhatsAppUrl } from "@/core/config/env";
 import type { Allowance } from "@/core/lib/commercial-units";
+import { ANNUAL_PAID_MONTHS, MONTHS_PER_YEAR } from "@/modules/landing/domain/public-catalog";
+
+// Las CIFRAS del precio ya no viven aquí: llegan del catálogo público
+// (`landing/domain/public-catalog.ts`). Este fichero conserva el copy.
+export { ANNUAL_PAID_MONTHS, MONTHS_PER_YEAR };
 
 /* ────────────────────────────── WhatsApp ────────────────────────────── */
 
@@ -495,48 +500,18 @@ export const CASES = {
  *                desaparece y las tarjetas muestran el precio de lista sin
  *                tocar nada más. Fallo seguro ante un olvido.
  */
-/** Cupos totales del ciclo. Fuente única: la prosa de abajo lo compone. */
-const FOUNDERS_SLOTS = 20;
-/** Fracción de descuento sobre el precio de lista (0.4 = −40 %). */
-const FOUNDERS_DISCOUNT = 0.4;
-/**
- * Etiqueta del descuento, derivada de la fracción. El signo es U+2212 MINUS
- * SIGN (−), no un guion ASCII: es el que compone tipográficamente con las
- * cifras. Se deriva para que `headline` y `discountBadge` no puedan
- * desincronizarse de `FOUNDERS_DISCOUNT`.
- */
-const FOUNDERS_DISCOUNT_LABEL = `−${Math.round(FOUNDERS_DISCOUNT * 100)} %`;
-
 export const FOUNDERS = {
   kicker: "Programa Fundadores",
-  slots: FOUNDERS_SLOTS,
-  claimed: 3,
-  discount: FOUNDERS_DISCOUNT,
   /**
-   * Cierre del programa, ISO sin hora: cuenta hasta el final de ese día.
-   * Se valida al parsearse (`parseIsoDate`): una fecha que no existe en el
-   * calendario rompe el build en vez de rodar en silencio al día siguiente.
-   */
-  deadline: "2026-12-31",
-  headline: `${FOUNDERS_DISCOUNT_LABEL} de descuento para las primeras ${FOUNDERS_SLOTS} empresas.`,
-  /**
-   * UNA sola promesa, y es la congelada. El documento de copy prometía «−40 %
-   * durante 12 meses» y el código «congelada mientras sigas»: son dos cosas
-   * distintas y la segunda es mucho más cara. Se deja la cara a propósito,
-   * porque lo que compra son los primeros casos con cifras y testimonios,
-   * sobre la cohorte mejor acompañada que va a haber.
+   * UNA sola promesa, y es la del congelamiento CON ajuste por inflación (D6 del
+   * plan de alineación 2026-09-05): el precio en pesos se mantiene y solo se
+   * indexa cada enero con el IPC declarado. Antes decía «congelada mientras
+   * sigas»; la promesa perpetua sin ajuste no era sostenible con costos en
+   * dólares. Cupos, descuento y fecha vienen del catálogo público, no de aquí.
    */
   promise:
-    "Tu tarifa en pesos queda congelada mientras sigas con nosotros. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
-  /**
-   * Se dice en la página. Lo único que destruye un programa así es que
-   * «fundador» pierda significado por extensiones sucesivas, y el plazo ya se
-   * movió una vez: era el 30 de septiembre.
-   */
-  // lastCallNote: "Última extensión: el programa no se vuelve a ampliar.",
-  discountBadge: `${FOUNDERS_DISCOUNT_LABEL} precio fundador`,
+    "Tu tarifa en pesos queda fija y solo se ajusta con la inflación una vez al año. Acompañamos uno a uno a este primer grupo: por eso es cerrado.",
   countdownLabel: "Cierra en",
-  soldOut: "Cupos agotados",
   /** Etiquetas de las fichas de la cuenta atrás. */
   units: {
     days: "días",
@@ -546,54 +521,29 @@ export const FOUNDERS = {
   },
 } as const;
 
+/** «−40 % de descuento para las primeras 20 empresas.» — del catálogo, no de una constante. */
+export function foundersHeadline(discountLabel: string, slots: number | null): string {
+  return slots === null
+    ? `${discountLabel} de descuento para las primeras empresas.`
+    : `${discountLabel} de descuento para las primeras ${slots} empresas.`;
+}
+
+export function foundersDiscountBadge(discountLabel: string): string {
+  return `${discountLabel} precio fundador`;
+}
 
 /* ─────────────────────── §9 Paquetes · los dos ejes ──────────────────── */
 
 /**
- * El precio tiene DOS EJES independientes (decisión del dueño, 2026-09-04).
+ * El precio tiene DOS EJES independientes (decisión del dueño, 2026-09-04):
  *
  *   precio_mensual = tarifaPaquete(qué puede hacer) + tarifaVolumen(cuánto habla)
  *
- * Antes iban soldados: Esencial *era* 500 conversaciones y Crecimiento *era*
- * 1.500, así que para hablar más había que comprar funciones que nadie pidió.
- * Separados, «Esencial con 10.000 conversaciones» es una compra legítima.
- *
- * Se guarda como suma de dos componentes y no como matriz de precios porque
- * son nueve cifras en lugar de dieciocho, y porque **es lo que la sección dice
- * en voz alta**: una tabla suelta se contradice con el discurso en cuanto
- * alguien retoca una casilla.
+ * Los tramos, las tarifas y la promoción llegan del catálogo público
+ * (`GET /public/pricing`); aquí solo queda la periodicidad, que es copy.
+ * El beneficio del anual **no es un porcentaje**: son doce meses de servicio
+ * y once facturados.
  */
-export const PRICING_VOLUMES = [
-  { id: "500", label: "500", conversations: 500, feeCop: 99_900 },
-  { id: "1000", label: "1.000", conversations: 1_000, feeCop: 169_900 },
-  { id: "2500", label: "2.500", conversations: 2_500, feeCop: 359_900 },
-  { id: "5000", label: "5.000", conversations: 5_000, feeCop: 649_900 },
-  { id: "10000", label: "10.000", conversations: 10_000, feeCop: 1_149_900 },
-  { id: "25000", label: "25.000", conversations: 25_000, feeCop: 2_499_900 },
-  /**
-   * Por encima del catálogo NO se da cifra. Inventar un precio aquí es
-   * renegociarlo después: las tarjetas pasan a «A la medida» y a ventas.
-   */
-  { id: "max", label: "Más de 25.000", conversations: null, feeCop: null },
-] as const;
-
-export type VolumeId = (typeof PRICING_VOLUMES)[number]["id"];
-
-/** Con qué volumen abre la sección. El tramo más comprado, no el más barato. */
-export const DEFAULT_VOLUME_ID: VolumeId = "1000";
-
-export function volumeById(id: VolumeId): (typeof PRICING_VOLUMES)[number] {
-  return PRICING_VOLUMES.find((volume) => volume.id === id) ?? PRICING_VOLUMES[1];
-}
-
-/**
- * Periodicidad. El beneficio del anual **no es un porcentaje**: son doce meses
- * de servicio y once facturados. Se guarda como número de meses pagados para
- * que la cifra del ahorro se derive y no se pueda desincronizar de la etiqueta.
- */
-export const ANNUAL_PAID_MONTHS = 11;
-export const MONTHS_PER_YEAR = 12;
-
 export const BILLING_PERIODS = [
   { id: "monthly", label: "Mensual", badge: null },
   { id: "annual", label: "Anual", badge: `${String(MONTHS_PER_YEAR - ANNUAL_PAID_MONTHS)} mes gratis` },
@@ -624,9 +574,7 @@ export type PricingPlan = {
   badge: string | null;
   featured: boolean;
   tagline: string;
-  /** Lo que cuestan las FUNCIONES. `null` cuando el plan no se tarifa por catálogo. */
-  planFeeCop: number | null;
-  /** Cifra literal, solo para los planes sin precio calculado. */
+  /** Texto literal cuando el plan no lleva cifra del catálogo (la prueba: «7 días»). */
   priceValue: string | null;
   priceUnit: string | null;
   /**
@@ -651,7 +599,6 @@ const PLANS: readonly PricingPlan[] = [
     badge: null,
     featured: false,
     tagline: "Pruébalo con tu propio catálogo y tu WhatsApp, sin poner un peso.",
-    planFeeCop: null,
     priceValue: "7 días",
     priceUnit: "gratis",
     inheritsFrom: null,
@@ -674,7 +621,6 @@ const PLANS: readonly PricingPlan[] = [
     badge: null,
     featured: false,
     tagline: "Para el negocio que ya vende por chat y quiere ordenarlo y medirlo.",
-    planFeeCop: 89_900,
     priceValue: null,
     priceUnit: "COP/mes",
     inheritsFrom: null,
@@ -694,7 +640,6 @@ const PLANS: readonly PricingPlan[] = [
     badge: "Más elegido",
     featured: true,
     tagline: "Para el que ya escala y necesita captación, llamadas y medición.",
-    planFeeCop: 199_900,
     priceValue: null,
     priceUnit: "COP/mes",
     inheritsFrom: "Esencial",
@@ -714,7 +659,6 @@ const PLANS: readonly PricingPlan[] = [
     badge: null,
     featured: false,
     tagline: "Para la operación con varios equipos y varias líneas abiertas.",
-    planFeeCop: 399_900,
     priceValue: null,
     priceUnit: "COP/mes",
     inheritsFrom: "Crecimiento",
@@ -734,11 +678,11 @@ const PLANS: readonly PricingPlan[] = [
     badge: null,
     featured: false,
     tagline: "Para alto volumen o con exigencias de aislamiento de datos.",
-    planFeeCop: null,
     // Piso PUBLICADO. «Precio a la medida» sin cifra deja dinero sobre la mesa
     // en cada negociación: el competidor directo cobra entre tres y siete veces
     // esto por el mismo relato de producto.
-    priceValue: "Desde $2.900.000",
+    // El piso PUBLICADO viene del catálogo («Desde $2.900.000»).
+    priceValue: null,
     priceUnit: "COP/mes",
     inheritsFrom: "Escala",
     bullets: [
@@ -766,34 +710,6 @@ export function planById(id: string): PricingPlan | null {
  * Precio de lista mensual de un paquete a un volumen dado. `null` cuando no hay
  * cifra que dar: el plan no se tarifa por catálogo, o el volumen se salió de él.
  */
-export function planListCop(plan: PricingPlan, volumeId: VolumeId): number | null {
-  const volume = volumeById(volumeId);
-  if (plan.planFeeCop === null || volume.feeCop === null) return null;
-  return plan.planFeeCop + volume.feeCop;
-}
-
-/**
- * Lo que se paga hoy: el de fundador mientras la oferta siga abierta, el de
- * lista después. Pasa por `foundersOfferOpen` (cupos **y** fecha), que es la
- * misma puerta que usan el dato estructurado y el alta.
- */
-export function planMonthlyCop(plan: PricingPlan, volumeId: VolumeId): number | null {
-  const list = planListCop(plan, volumeId);
-  if (list === null) return null;
-  return foundersOfferOpen() ? founderCop(list) : list;
-}
-
-/** Lo que se factura de una vez en el plan anual: once meses, doce de servicio. */
-export function annualTotalCop(monthlyCop: number): number {
-  return monthlyCop * ANNUAL_PAID_MONTHS;
-}
-
-/**
- * §9 Paquetes. Los tres planes históricos pasan a llamarse «Paquetes»
- * (2026-09-01): heredan el producto completo y límites altos. Debajo se venden
- * los `MODULES`, planes de una sola capacidad. Los nombres de plan (`name`)
- * siguen siendo los del backend: solo cambia cómo se agrupa la oferta.
- */
 export const PRICING = {
   kicker: "Paquetes",
   title: "Pagas por lo que tu negocio conversa y vende. No por funciones.",
@@ -820,7 +736,7 @@ export const PRICING = {
  * estático a propósito
  * (la sección más vista del sitio no espera a ningún fetch).
  *
- * `priceStatus` gobierna lo que se PUBLICA: mientras sea `draft`, la cifra se
+ * El precio de cada módulo llega del catálogo público (`modulePrices`); aquí
  * ve en la tarjeta como propuesta pero el JSON-LD la omite. Pasarlo a `final`
  * es la decisión comercial, no un cambio de UI.
  */
@@ -838,8 +754,6 @@ export type ModuleOffer = {
   allowance: Allowance;
   /** Lo que acompaña a la cuota principal, ya redactado. */
   extras: string;
-  listCop: number;
-  priceStatus: "draft" | "final";
   priceUnit: string;
   bullets: readonly string[];
   cta: { label: string; href: string };
@@ -863,8 +777,6 @@ export const MODULES: readonly ModuleOffer[] = [
     // conversación de Twilio, que es más caro que la voz misma. El minuto
     // cuesta USD 0,1107 y no los 0,09 que decía. A 189.900 el módulo rendía
     // 42 %, por debajo incluso de la banda del sector.
-    listCop: 289_900,
-    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Llamadas salientes desde tu número verificado",
@@ -889,8 +801,6 @@ export const MODULES: readonly ModuleOffer[] = [
     extras: "CRM y Analítica incluidos · campañas · 200 conversaciones",
     // Ajuste menor para llevarla a la banda alta: su costo depende de
     // proveedores externos cuyas tarifas suben.
-    listCop: 169_900,
-    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Búsqueda en Google Maps, directorios y LinkedIn",
@@ -915,8 +825,6 @@ export const MODULES: readonly ModuleOffer[] = [
     // Sin cambio: rinde 94 %. Subirlo no compraría margen que haga falta y sí
     // perdería la posición contra Kommo y Leadsales, donde el argumento es
     // que un equipo de 15 asesores allí paga por cabeza y aquí no.
-    listCop: 129_900,
-    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Scoring automático por hitos reales de compra",
@@ -935,8 +843,6 @@ export const MODULES: readonly ModuleOffer[] = [
     allowance: { quantity: 300, unit: "conversations" },
     extras: "CRM y Analítica incluidos · citas ilimitadas · recordatorios",
     // Sin cambio: rinde 91 %.
-    listCop: 89_900,
-    priceStatus: "final",
     priceUnit: "COP/mes",
     bullets: [
       "Horarios, capacidad y duración por servicio",
@@ -984,11 +890,6 @@ export function offerByCode(code: string): PricingPlan | ModuleOffer | null {
  * precio en borrador se ve en la tarjeta como propuesta, pero publicarlo a
  * Google como oferta sería afirmar algo que aún no se decidió.
  */
-export function publishableModules(): ModuleOffer[] {
-  return MODULES.filter((offer) => offer.priceStatus === "final");
-}
-
-/** Formato de moneda de la landing: pesos sin decimales ("$189.900"). */
 const COP_FORMAT = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
 
 export function formatCop(value: number): string {
@@ -1005,49 +906,6 @@ export function formatCop(value: number): string {
  * novecientos y un precio de fundador en 114.000 se ve como una errata al lado
  * de 189.900. La segunda importa más: redondear hacia arriba entregaría un
  * descuento MENOR al que la página promete, y la promesa es un número exacto.
- */
-export function founderCop(listCop: number): number {
-  const discounted = listCop * (1 - FOUNDERS.discount);
-  return Math.floor((discounted - 900) / 1000) * 1000 + 900;
-}
-
-export function foundersRemaining(): number {
-  return Math.max(0, FOUNDERS.slots - FOUNDERS.claimed);
-}
-
-/**
- * ¿Sigue viva la oferta de fundador? Cupos **y** fecha, lo que ocurra primero.
- *
- * ESTA FUNCIÓN EXISTE PORQUE LA CONDICIÓN ESTABA COPIADA Y MAL EN DOS DE LOS
- * TRES SITIOS QUE LA USAN. Las tarjetas de precio comprobaban las dos cosas,
- * pero el dato estructurado que lee Google y el cálculo de precio del alta
- * miraban solo los cupos. Pasada la fecha, con cupos libres, habría habido
- * tres precios distintos para el mismo producto a la vez: lista en la página,
- * fundador en el buscador y fundador en el registro.
- *
- * `now` se inyecta para que quien renderice en servidor decida con qué reloj
- * mira: la página se prerenderiza y un `new Date()` dentro se congelaría en la
- * fecha del despliegue.
- */
-export function foundersOfferOpen(now: Date = new Date()): boolean {
-  return foundersRemaining() > 0 && daysUntil(FOUNDERS.deadline, now) > 0;
-}
-
-/**
- * Parsea una fecha `YYYY-MM-DD` del content **validando que exista**.
- *
- * `new Date("2026-09-31T00:00:00")` NO lanza error: el parser laxo de V8 rueda
- * la fecha al 1 de octubre. Un dato imposible viajaba así hasta producción,
- * publicando una fecha equivocada y adelantando el cierre del programa. La
- * única forma de detectarlo es comparar los componentes DESPUÉS de construir:
- * si el día no sobrevivió al viaje, la fecha no existía.
- *
- * Se construye en hora **local** y sin sufijo `Z` a propósito: así el servidor
- * (UTC) y el navegador (Bogotá) formatean el MISMO día y no hay mismatch de
- * hidratación.
- *
- * Lanza en vez de degradar: la home se prerenderiza estática, así que un dato
- * inválido rompe `next build` y nunca llega a un visitante.
  */
 function parseIsoDate(iso: string, endOfDay = false): Date {
   const [year, month, day] = iso.split("-").map(Number);

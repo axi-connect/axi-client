@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { SignupFunnelView } from "../SignupFunnelView"
+import { FIXTURE_CATALOG } from "@/modules/landing/domain/testing/catalog.fixture"
 import { LoginError } from "@/core/providers/auth-provider"
 import { API_ERROR_CODES } from "@/core/api/problem"
 
@@ -48,7 +49,7 @@ describe("SignupFunnelView", () => {
   })
 
   it("sin oferta no deja continuar y explica por qué", async () => {
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
     const next = await screen.findByRole("button", { name: /continuar/i })
     expect(next).toBeDisabled()
     expect(screen.getByText(/elige un paquete o al menos un módulo/i)).toBeInTheDocument()
@@ -58,7 +59,7 @@ describe("SignupFunnelView", () => {
     // `sbs` es el enlace del catálogo retirado: aterriza en su equivalente,
     // que es Crecimiento. El nombre viejo ya no existe en ningún sitio.
     search = new URLSearchParams("plan=sbs")
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
 
     await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
     const rail = within(screen.getByRole("complementary", { name: /resumen/i }))
@@ -67,7 +68,7 @@ describe("SignupFunnelView", () => {
 
   it("el rail resume los dos ejes que llegaron en el enlace", async () => {
     search = new URLSearchParams("plan=escala&volumen=5000&periodo=annual")
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
 
     await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
     const rail = within(screen.getByRole("complementary", { name: /resumen/i }))
@@ -78,13 +79,13 @@ describe("SignupFunnelView", () => {
 
   it("manda Enterprise a ventas", async () => {
     search = new URLSearchParams("plan=enterprise")
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/contacto"))
   })
 
   it("preselecciona módulos, los alterna y avisa cuando el paquete sale mejor", async () => {
     search = new URLSearchParams("modulo=calls")
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
     // Con módulos en la URL también se entra a Empresa; volvemos a Oferta.
     await screen.findByLabelText(/nombre de la empresa/i, undefined, WAIT)
     fireEvent.click(screen.getByRole("button", { name: /atrás/i }))
@@ -98,7 +99,7 @@ describe("SignupFunnelView", () => {
   it("crea la cuenta con el wire en snake_case y manda al onboarding", async () => {
     search = new URLSearchParams("plan=free_trial")
     signup.mockResolvedValueOnce({ success: true, company_id: "c1", user_id: "u1", trial_ends_at: "2026-09-08" })
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
 
     await fillCompany()
     await fillAccount()
@@ -116,7 +117,7 @@ describe("SignupFunnelView", () => {
   it("un NIT ya registrado devuelve a Empresa con el error en el campo", async () => {
     search = new URLSearchParams("plan=sbs")
     signup.mockRejectedValueOnce(new LoginError({ code: API_ERROR_CODES.nitTaken, status: 409, message: "taken" }))
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
 
     await fillCompany()
     await fillAccount()
@@ -128,7 +129,7 @@ describe("SignupFunnelView", () => {
   it("un correo en uso marca el campo sin salir del paso Cuenta", async () => {
     search = new URLSearchParams("plan=sbs")
     signup.mockRejectedValueOnce(new LoginError({ code: API_ERROR_CODES.emailInUse, status: 409, message: "in use" }))
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
 
     await fillCompany()
     await fillAccount()
@@ -140,7 +141,7 @@ describe("SignupFunnelView", () => {
   it("con demasiados intentos avisa cuánto esperar", async () => {
     search = new URLSearchParams("plan=sbs")
     signup.mockRejectedValueOnce(new LoginError({ code: "http/429", status: 429, message: "slow", retryAfterSeconds: 90 }))
-    render(<SignupFunnelView />)
+    render(<SignupFunnelView catalog={FIXTURE_CATALOG} />)
 
     await fillCompany()
     await fillAccount()

@@ -8,9 +8,10 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { ProviderCard } from "@/shared/components/features/provider-card";
-import { MODULES, MODULE_ICONS, formatCop, volumeById } from "@/modules/landing/public";
+import { MODULES, MODULE_ICONS, formatCop, volumeById, type PublicCatalog } from "@/modules/landing/public";
 import {
   SELF_SERVICE_PACKAGES,
+  modulePrice,
   offerBlocker,
   packageBeatsModules,
   offerAxes,
@@ -38,16 +39,19 @@ const PACKAGE_ICONS: Record<PackageCode, typeof Inbox> = {
  */
 export function OfferStep({
   selection,
+  catalog,
   onChange,
   onNext,
 }: {
   selection: OfferSelection | null;
+  /** Catálogo público cargado por la página; `null` = precios «a confirmar». */
+  catalog: PublicCatalog | null;
   onChange: (next: OfferSelection | null) => void;
   onNext: () => void;
 }) {
   const kind: OfferKind = selection?.kind === "modules" ? "modules" : "package";
   const blocker = offerBlocker(selection);
-  const suggestPackage = packageBeatsModules(selection);
+  const suggestPackage = packageBeatsModules(selection, catalog);
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,17 +74,22 @@ export function OfferStep({
             // El volumen ya no sale de una viñeta: es el eje que el visitante
             // eligió en la sección de precios y que viajó en la URL. Si no
             // eligió, `offerAxes` resuelve el tramo por defecto.
-            const { volume } = selection ? offerAxes(selection) : { volume: undefined };
+            const { volume } = selection ? offerAxes(selection, catalog) : { volume: undefined };
+            const price = packagePriceCop(catalog, code, volume);
             const metrics =
               plan.group === "package"
                 ? [
-                    {
-                      label: "Conversaciones",
-                      value: `${volumeById(volume ?? "1000").label} al mes`,
-                    },
+                    ...(catalog === null
+                      ? []
+                      : [
+                          {
+                            label: "Conversaciones",
+                            value: `${volumeById(catalog, volume ?? catalog.defaultVolumeId).label} al mes`,
+                          },
+                        ]),
                     {
                       label: "Tras la prueba",
-                      value: `${formatCop(packagePriceCop(code, volume))} COP/mes`,
+                      value: price === null ? "Precio a confirmar" : `${formatCop(price)} COP/mes`,
                     },
                   ]
                 : [
@@ -107,12 +116,13 @@ export function OfferStep({
           {MODULES.map((offer) => {
             const Icon = MODULE_ICONS[offer.id];
             const checked = selection?.kind === "modules" && selection.codes.includes(offer.id);
+            const price = modulePrice(catalog, offer.id);
             return (
               <ProviderCard
                 key={offer.id}
                 icon={<Icon aria-hidden="true" className="text-brand size-5" />}
                 title={offer.name}
-                subtitle={`${formatCop(offer.listCop)} COP/mes tras la prueba`}
+                subtitle={price === null ? "Precio a confirmar tras la prueba" : `${formatCop(price)} COP/mes tras la prueba`}
                 metrics={[
                   {
                     label: unitLabel(offer.allowance.unit, offer.allowance.quantity),

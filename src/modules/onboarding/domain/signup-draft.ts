@@ -12,20 +12,28 @@ import { ONBOARDING_WELCOME_PATH } from "@/modules/onboarding/domain/onboarding-
 import type { SignupPayload } from "@/shared/auth/auth.types";
 import {
   BILLING_PERIODS,
-  DEFAULT_VOLUME_ID,
+  MAX_VOLUME_ID,
   MODULES,
   MODULE_IDS,
   PRICING,
-  PRICING_VOLUMES,
   formatCop,
+  isVolumeId,
+  modulePriceCop,
   planMonthlyCop,
   volumeById,
   type BillingPeriodId,
   type ModuleId,
   type ModuleOffer,
   type PricingPlan,
-  type VolumeId,
+  type PublicCatalog,
 } from "@/modules/landing/public";
+
+/**
+ * El catálogo público (tramos, tarifas, promoción) llega por props desde la
+ * página; sin él (API caído) el alta sigue funcionando: la oferta se elige por
+ * nombre y el precio se muestra «a confirmar».
+ */
+export type VolumeId = string;
 
 /* ────────────────────────────── Oferta ────────────────────────────── */
 
@@ -58,22 +66,28 @@ export type OfferSelection =
   | { kind: "package"; code: PackageCode; volume?: VolumeId; period?: BillingPeriodId }
   | { kind: "modules"; codes: ModuleId[] };
 
-export function isVolumeId(value: string): value is VolumeId {
-  return PRICING_VOLUMES.some((volume) => volume.id === value);
-}
-
 export function isBillingPeriodId(value: string): value is BillingPeriodId {
   return BILLING_PERIODS.some((period) => period.id === value);
 }
 
+/**
+ * Los enlaces publicados antes del catálogo en vivo llevan el tramo como número
+ * (`?volumen=1000`); el catálogo lo nombra `t1000`. Se acepta el alias para que
+ * ningún enlace compartido aterrice en un error (hallazgo B9 de la auditoría).
+ */
+export function normalizeVolumeId(raw: string): string {
+  return /^\d+$/.test(raw) ? `t${raw}` : raw;
+}
+
 /** Los dos ejes de una selección, con sus valores por defecto ya resueltos. */
-export function offerAxes(selection: OfferSelection): {
-  volume: VolumeId;
-  period: BillingPeriodId;
-} {
-  if (selection.kind !== "package") return { volume: DEFAULT_VOLUME_ID, period: "monthly" };
+export function offerAxes(
+  selection: OfferSelection,
+  catalog: PublicCatalog | null,
+): { volume: VolumeId; period: BillingPeriodId } {
+  const fallback = catalog?.defaultVolumeId ?? MAX_VOLUME_ID;
+  if (selection.kind !== "package") return { volume: fallback, period: "monthly" };
   return {
-    volume: selection.volume ?? DEFAULT_VOLUME_ID,
+    volume: selection.volume ?? fallback,
     period: selection.period ?? "monthly",
   };
 }
@@ -133,14 +147,18 @@ export const ENTERPRISE_PATH = "/contacto";
  */
 const RETIRED_PACKAGES: Readonly<Record<string, PackageCode>> = { sbs: "crecimiento" };
 
-export function parseOfferQuery(params: { get(name: string): string | null }): ParsedOfferQuery {
+export function parseOfferQuery(
+  params: { get(name: string): string | null },
+  catalog: PublicCatalog | null,
+): ParsedOfferQuery {
   const plan = params.get("plan");
   if (plan === "enterprise") return { selection: null, redirectTo: ENTERPRISE_PATH };
 
   const rawVolume = params.get("volumen");
   const rawPeriod = params.get("periodo");
+  const volume = rawVolume === null ? null : normalizeVolumeId(rawVolume);
   const axes = {
-    ...(rawVolume && isVolumeId(rawVolume) ? { volume: rawVolume } : {}),
+    ...(volume !== null && isVolumeId(catalog, volume) ? { volume } : {}),
     ...(rawPeriod && isBillingPeriodId(rawPeriod) ? { period: rawPeriod } : {}),
   };
 
@@ -235,8 +253,14 @@ export type OfferSummary = {
  * cupos, así que pasada la fecha el registro habría cobrado un precio de
  * fundador que la página de precios ya no mostraba.
  */
-export function packagePriceCop(code: PackageCode, volume: VolumeId = DEFAULT_VOLUME_ID): number {
-  return planMonthlyCop(packagePlan(code), volume) ?? 0;
+export function packagePriceCop(
+  catalog: PublicCatalog | null,
+  code: PackageCode,
+  volume?: VolumeId,
+  now: Date = new Date(),
+): number | null {
+  if (catalog === null) return null;
+  return planMonthlyCop(catalog, code, volume ?? catalog.defaultVolumeId, now);
 }
 
 /**
@@ -245,28 +269,40 @@ export function packagePriceCop(code: PackageCode, volume: VolumeId = DEFAULT_VO
  * módulo con un paquete cargado de conversaciones haría ganar al módulo
  * siempre, y la comparación dejaría de significar nada.
  */
-export function entryPackagePriceCop(): number {
-  return packagePriceCop("esencial", PRICING_VOLUMES[0].id);
+export function entryPackagePriceCop(catalog: PublicCatalog | null, now: Date = new Date()): number | null {
+  if (catalog === null) return null;
+  const entry = catalog.volumes.find((volume) => volume.feeCop !== null) ?? catalog.volumes[0];
+  return planMonthlyCop(catalog, "esencial", entry.id, now);
 }
 
-export function offerSummary(selection: OfferSelection): OfferSummary {
+export function modulePrice(catalog: PublicCatalog | null, id: ModuleId): number | null {
+  return catalog === null ? null : modulePriceCop(catalog, moduleOffer(id).offer_code);
+}
+
+export function offerSummary(
+  selection: OfferSelection,
+  catalog: PublicCatalog | null,
+  now: Date = new Date(),
+): OfferSummary {
   if (selection.kind === "package") {
     const plan = packagePlan(selection.code);
     if (plan.group === "package") {
-      const { volume, period } = offerAxes(selection);
+      const { volume, period } = offerAxes(selection, catalog);
+      const price = packagePriceCop(catalog, selection.code, volume, now);
+      const volumeLabel = catalog === null ? null : volumeById(catalog, volume).label;
       // El volumen sale del eje elegido, no de la primera viñeta del plan:
       // desde que son dos ejes, las viñetas solo hablan de funciones.
       return {
         kind: "Paquete",
         title: plan.name,
         lines: [
-          { label: "Conversaciones", value: `${volumeById(volume).label} al mes` },
+          ...(volumeLabel === null ? [] : [{ label: "Conversaciones", value: `${volumeLabel} al mes` }]),
           {
             label: "Pago",
             value: period === "annual" ? "Anual, con 1 mes gratis" : "Mensual",
           },
         ],
-        afterTrial: `${formatCop(packagePriceCop(selection.code, volume))} COP/mes`,
+        afterTrial: price === null ? "Precio a confirmar" : `${formatCop(price)} COP/mes`,
         approximate: false,
       };
     }
@@ -283,21 +319,29 @@ export function offerSummary(selection: OfferSelection): OfferSummary {
   }
 
   const offers = selection.codes.map(moduleOffer);
-  const total = offers.reduce((sum, offer) => sum + offer.listCop, 0);
+  const prices = offers.map((offer) => modulePrice(catalog, offer.id));
+  const known = prices.every((price): price is number => price !== null);
+  const total = known ? prices.reduce((sum, price) => sum + price, 0) : null;
   return {
     kind: "Módulos",
     title: offers.length === 1 ? offers[0].name : `${offers.length} módulos`,
-    lines: offers.map((offer) => ({ label: offer.name, value: formatCop(offer.listCop) })),
-    afterTrial: offers.length > 0 ? `${formatCop(total)} COP/mes` : null,
+    lines: offers.map((offer, index) => ({
+      label: offer.name,
+      value: prices[index] === null ? "A confirmar" : formatCop(prices[index] as number),
+    })),
+    afterTrial: offers.length === 0 ? null : total === null ? "Precio a confirmar" : `${formatCop(total)} COP/mes`,
     approximate: false,
   };
 }
 
 /** Con dos o más módulos el paquete de entrada sale mejor: el rail lo dice. */
-export function packageBeatsModules(selection: OfferSelection | null): boolean {
+export function packageBeatsModules(selection: OfferSelection | null, catalog: PublicCatalog | null): boolean {
   if (!selection || selection.kind !== "modules" || selection.codes.length < 2) return false;
-  const total = selection.codes.map(moduleOffer).reduce((sum, offer) => sum + offer.listCop, 0);
-  return total >= entryPackagePriceCop();
+  const entry = entryPackagePriceCop(catalog);
+  if (entry === null) return false;
+  const prices = selection.codes.map((id) => modulePrice(catalog, id));
+  if (!prices.every((price): price is number => price !== null)) return false;
+  return prices.reduce((sum, price) => sum + price, 0) >= entry;
 }
 
 /* ───────────────────────────── Validaciones ───────────────────────────── */

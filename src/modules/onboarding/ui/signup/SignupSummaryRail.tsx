@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import type { GlyphKind } from "@/shared/components/ui/glyphs/glyph-geometry";
-import type { ModuleId } from "@/modules/landing/public";
+import type { ModuleId, PublicCatalog } from "@/modules/landing/public";
 import { ENTERPRISE_PATH, offerSummary, type OfferSelection } from "@/modules/onboarding/domain/signup-draft";
 
 /** Glifo del rail por oferta: la familia semántica más cercana a la capacidad. */
@@ -26,8 +26,14 @@ function glyphFor(selection: OfferSelection | null): GlyphKind {
  * nada detrás que difuminar). El glifo va como ilustración, nunca bajo texto
  * (DESIGN-SYSTEM §7).
  */
-export function SignupSummaryRail({ selection }: { selection: OfferSelection | null }) {
-  const summary = selection ? offerSummary(selection) : null;
+export function SignupSummaryRail({
+  selection,
+  catalog,
+}: {
+  selection: OfferSelection | null;
+  catalog: PublicCatalog | null;
+}) {
+  const summary = selection ? offerSummary(selection, catalog) : null;
 
   return (
     <aside className="glass-flat flex flex-col gap-4 rounded-2xl p-6 lg:sticky lg:top-6" aria-label="Resumen de tu elección">

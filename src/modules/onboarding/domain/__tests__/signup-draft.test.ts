@@ -2,6 +2,7 @@ import {
   EMPTY_SIGNUP_DRAFT,
   blockerForSignupStep,
   normalizeNit,
+  normalizeVolumeId,
   offerBlocker,
   offerCodesOf,
   offerSummary,
@@ -12,55 +13,75 @@ import {
   toggleModule,
   type SignupDraft,
 } from "../signup-draft"
-import { MODULES } from "@/modules/landing/public"
+import { FIXTURE_CATALOG, FIXTURE_NOW } from "@/modules/landing/domain/testing/catalog.fixture"
+import { MODULES, formatCop, planMonthlyCop, volumeById } from "@/modules/landing/public"
 
 const params = (query: string) => new URLSearchParams(query)
+const CATALOG = FIXTURE_CATALOG
 
 describe("parseOfferQuery", () => {
   it("arrastra los dos ejes que eligió el visitante en la sección de precios", () => {
-    expect(parseOfferQuery(params("plan=escala&volumen=5000&periodo=annual")).selection).toEqual({
+    expect(parseOfferQuery(params("plan=escala&volumen=t5000&periodo=annual"), CATALOG).selection).toEqual({
       kind: "package",
       code: "escala",
-      volume: "5000",
+      volume: "t5000",
       period: "annual",
     })
   })
 
+  it("un enlace del catálogo viejo con el volumen numérico aterriza en el tramo (B9)", () => {
+    // Los CTAs publicados llevaban `volumen=5000`; hoy el tramo se llama `t5000`.
+    expect(normalizeVolumeId("5000")).toBe("t5000")
+    expect(normalizeVolumeId("t5000")).toBe("t5000")
+    expect(parseOfferQuery(params("plan=escala&volumen=5000"), CATALOG).selection).toEqual({
+      kind: "package",
+      code: "escala",
+      volume: "t5000",
+    })
+  })
+
   it("un eje con un valor inventado se ignora en vez de romper el alta", () => {
-    expect(parseOfferQuery(params("plan=escala&volumen=9x9&periodo=bienal")).selection).toEqual({
+    expect(parseOfferQuery(params("plan=escala&volumen=9x9&periodo=bienal"), CATALOG).selection).toEqual({
+      kind: "package",
+      code: "escala",
+    })
+  })
+
+  it("sin catálogo no valida el volumen: el alta sigue, el precio queda a confirmar", () => {
+    expect(parseOfferQuery(params("plan=escala&volumen=t5000"), null).selection).toEqual({
       kind: "package",
       code: "escala",
     })
   })
 
   it("preselecciona un paquete autoservicio", () => {
-    expect(parseOfferQuery(params("plan=crecimiento"))).toEqual({
+    expect(parseOfferQuery(params("plan=crecimiento"), CATALOG)).toEqual({
       selection: { kind: "package", code: "crecimiento" },
       redirectTo: null,
     })
   })
 
   it("manda Enterprise a ventas en vez de intentar el alta", () => {
-    expect(parseOfferQuery(params("plan=enterprise")).redirectTo).toBe("/contacto")
+    expect(parseOfferQuery(params("plan=enterprise"), CATALOG).redirectTo).toBe("/contacto")
   })
 
   it("preselecciona módulos e ignora los códigos que no existen", () => {
-    expect(parseOfferQuery(params("modulo=calls,inventado,crm")).selection).toEqual({
+    expect(parseOfferQuery(params("modulo=calls,inventado,crm"), CATALOG).selection).toEqual({
       kind: "modules",
       codes: ["calls", "crm"],
     })
   })
 
   it("sin query ni códigos válidos no preselecciona nada", () => {
-    expect(parseOfferQuery(params("")).selection).toBeNull()
-    expect(parseOfferQuery(params("modulo=inventado")).selection).toBeNull()
-    expect(parseOfferQuery(params("plan=inventado")).selection).toBeNull()
+    expect(parseOfferQuery(params(""), CATALOG).selection).toBeNull()
+    expect(parseOfferQuery(params("modulo=inventado"), CATALOG).selection).toBeNull()
+    expect(parseOfferQuery(params("plan=inventado"), CATALOG).selection).toBeNull()
   })
 
   it("un enlace publicado del catálogo viejo aterriza en su equivalente", () => {
     // Hay CTAs con `?plan=sbs` en enlaces compartidos y marcadores. Quien
     // llegue por ahí debe encontrar el paquete equivalente, no un error.
-    expect(parseOfferQuery(params("plan=sbs")).selection).toEqual({
+    expect(parseOfferQuery(params("plan=sbs"), CATALOG).selection).toEqual({
       kind: "package",
       code: "crecimiento",
     })
@@ -90,22 +111,40 @@ describe("selección de oferta", () => {
     )
   })
 
-  it("con dos o más módulos avisa de que el paquete sale mejor", () => {
-    expect(packageBeatsModules({ kind: "modules", codes: ["calls"] })).toBe(false)
-    expect(packageBeatsModules({ kind: "modules", codes: ["calls", "leads"] })).toBe(true)
+  it("con dos o más módulos avisa de que el paquete sale mejor, si hay catálogo", () => {
+    expect(packageBeatsModules({ kind: "modules", codes: ["calls"] }, CATALOG)).toBe(false)
+    expect(packageBeatsModules({ kind: "modules", codes: ["calls", "leads"] }, CATALOG)).toBe(true)
+    // Sin cifras no hay comparación que hacer: no se afirma nada.
+    expect(packageBeatsModules({ kind: "modules", codes: ["calls", "leads"] }, null)).toBe(false)
   })
 
-  it("resume la oferta para el rail sin duplicar cifras del content", () => {
-    const summary = offerSummary({ kind: "modules", codes: ["crm", "scheduling"] })
+  it("resume la oferta para el rail con las cifras del catálogo", () => {
+    const summary = offerSummary({ kind: "modules", codes: ["crm", "scheduling"] }, CATALOG, FIXTURE_NOW)
     expect(summary.kind).toBe("Módulos")
     expect(summary.lines).toHaveLength(2)
-    expect(summary.afterTrial).toContain("COP/mes")
+    expect(summary.afterTrial).toBe(
+      `${formatCop(CATALOG.modulePrices.crm + CATALOG.modulePrices.scheduling)} COP/mes`,
+    )
 
-    expect(offerSummary({ kind: "package", code: "free_trial" }).afterTrial).toBeNull()
-    // Un paquete de pago ya tiene precio exacto: dejó de depender de un tramo.
-    const paquete = offerSummary({ kind: "package", code: "crecimiento" })
+    expect(offerSummary({ kind: "package", code: "free_trial" }, CATALOG, FIXTURE_NOW).afterTrial).toBeNull()
+
+    // Un paquete lleva el precio exacto de SU tramo: el elegido o el por defecto.
+    const paquete = offerSummary({ kind: "package", code: "crecimiento", volume: "t5000" }, CATALOG, FIXTURE_NOW)
     expect(paquete.approximate).toBe(false)
-    expect(paquete.afterTrial).toContain("COP/mes")
+    expect(paquete.lines).toContainEqual({
+      label: "Conversaciones",
+      value: `${volumeById(CATALOG, "t5000").label} al mes`,
+    })
+    expect(paquete.afterTrial).toBe(
+      `${formatCop(planMonthlyCop(CATALOG, "crecimiento", "t5000", FIXTURE_NOW) as number)} COP/mes`,
+    )
+  })
+
+  it("sin catálogo el rail dice «a confirmar» en vez de inventar un precio", () => {
+    expect(offerSummary({ kind: "package", code: "crecimiento" }, null).afterTrial).toBe("Precio a confirmar")
+    const modules = offerSummary({ kind: "modules", codes: ["crm"] }, null)
+    expect(modules.afterTrial).toBe("Precio a confirmar")
+    expect(modules.lines[0].value).toBe("A confirmar")
   })
 })
 
