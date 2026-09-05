@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, LoaderCircle } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { Badge } from "@/shared/components/ui/badge";
@@ -24,7 +24,8 @@ import {
 } from "@/modules/onboarding/infrastructure/services/agent-templates-service.adapter";
 import { TemplateCard } from "@/modules/onboarding/ui/agents/TemplateCard";
 import { TemplateCustomizeSheet } from "@/modules/onboarding/ui/agents/TemplateCustomizeSheet";
-import { StepAside, StepFrame } from "@/modules/onboarding/ui/onboarding/StepFrame";
+import { FlowActions, FlowBackButton } from "@/modules/onboarding/ui/flow/FlowActions";
+import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
 
 type CreatedAgent = { agent: AiAgentDTO; template: AgentTemplateDTO; tone: string };
 
@@ -105,74 +106,18 @@ export function AgentTemplatesStep({
   };
 
   return (
-    <StepFrame
-      stepNumber={4}
-      total={5}
-      label="Agentes"
+    <FlowScreen
+      focusHeading
+      size="wide"
       title={created.length > 0 ? "Tu agente está listo" : "Crea tu primer agente"}
       lead={
         created.length > 0
           ? "Puedes crear otro con una plantilla distinta o continuar. Todo se ajusta después en Agentes."
           : `Elegimos plantillas para ${niche?.name.toLowerCase() ?? "tu negocio"}. Personaliza nombre, tono y personalidad, o crea el recomendado tal cual con un clic.`
       }
-      footer={
-        <>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={onBack}>
-              <ArrowLeft aria-hidden="true" />
-              Atrás
-            </Button>
-            {created.length === 0 ? (
-              <Button variant="ghost" disabled={saving} onClick={onSkip}>
-                Configurar después
-              </Button>
-            ) : null}
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <div className="flex flex-wrap justify-end gap-2">
-              {created.length > 0 ? (
-                <Button size="lg" className="h-11" disabled={saving} onClick={() => onDone({ agent_ids: created.map((entry) => entry.agent.id) })}>
-                  Continuar
-                  <ArrowRight aria-hidden="true" />
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="h-11"
-                    disabled={!selected || creating || saving}
-                    onClick={() => selected && void create(quickCreateDTO(selected, companyName), selected, TONE_LABELS.cercano)}
-                  >
-                    {creating && !sheetOpen ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : null}
-                    Crear el recomendado tal cual
-                  </Button>
-                  <Button size="lg" className="h-11" disabled={!selected || creating || saving} onClick={openSheet}>
-                    Personalizar y crear
-                    <ArrowRight aria-hidden="true" />
-                  </Button>
-                </>
-              )}
-            </div>
-            {createError && !sheetOpen ? (
-              <span role="alert" className="text-destructive text-xs">
-                {createError}
-              </span>
-            ) : null}
-          </div>
-        </>
-      }
-      aside={
-        <StepAside
-          glyph="ai"
-          title="Qué trae la plantilla"
-          text="Instrucciones probadas para tu sector, las intenciones correctas (ventas, soporte) y un manual de ventas inicial con tus datos."
-          tips={["Usa tu catálogo y tu horario automáticamente", "Modelo y parámetros ya afinados", "Ajustes avanzados después en Agentes"]}
-        />
-      }
     >
       {templates === null && !loadError ? (
-        <div className="grid gap-3 md:grid-cols-3" aria-busy="true" aria-label="Cargando plantillas">
+        <div className="grid w-full gap-3 md:grid-cols-3" aria-busy="true" aria-label="Cargando plantillas">
           {[0, 1, 2].map((index) => (
             <Skeleton key={index} className="h-44 rounded-2xl" />
           ))}
@@ -180,7 +125,7 @@ export function AgentTemplatesStep({
       ) : null}
 
       {loadError ? (
-        <div className="border-warning/40 bg-warning/10 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm">
+        <div className="sf-glass flex w-full flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm">
           <span role="alert">{loadError}</span>
           <Button size="sm" variant="outline" onClick={() => setReloadKey((key) => key + 1)}>
             Reintentar
@@ -189,13 +134,13 @@ export function AgentTemplatesStep({
       ) : null}
 
       {templates && templates.length === 0 ? (
-        <p className="border-border bg-background/70 rounded-2xl border p-5 text-sm leading-relaxed">
+        <p className="sf-glass w-full rounded-2xl p-5 text-sm leading-relaxed">
           Aún no hay plantillas para este tipo de negocio. Puedes crear tu agente desde cero en Agentes cuando termines.
         </p>
       ) : null}
 
       {templates && templates.length > 0 ? (
-        <div role="radiogroup" aria-label="Plantillas" className="grid gap-3 md:grid-cols-3">
+        <div role="radiogroup" aria-label="Plantillas" className="grid w-full gap-3 text-left md:grid-cols-3">
           {templates.map((template) => (
             <TemplateCard
               key={template.code}
@@ -208,9 +153,9 @@ export function AgentTemplatesStep({
       ) : null}
 
       {created.length > 0 ? (
-        <ul className="mt-5 flex flex-col gap-2" aria-label="Agentes creados">
+        <ul className="flex w-full max-w-[560px] flex-col gap-2 text-left" aria-label="Agentes creados">
           {created.map(({ agent, template, tone }) => (
-            <li key={agent.id} className="border-border bg-background/70 flex items-center justify-between gap-3 rounded-2xl border px-4 py-3">
+            <li key={agent.id} className="sf-glass flex items-center justify-between gap-3 rounded-2xl px-4 py-3">
               <div className="flex items-center gap-3">
                 <span className="bg-brand-gradient grid size-9 place-items-center rounded-full text-xs font-semibold text-white">
                   {agent.name.slice(0, 2).toUpperCase()}
@@ -231,6 +176,39 @@ export function AgentTemplatesStep({
         </ul>
       ) : null}
 
+      <FlowActions
+        type="button"
+        label={created.length > 0 ? "Continuar" : "Personalizar y crear"}
+        disabled={created.length > 0 ? saving : !selected || creating || saving}
+        onClick={created.length > 0 ? () => onDone({ agent_ids: created.map((entry) => entry.agent.id) }) : openSheet}
+        secondary={
+          created.length === 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={!selected || creating || saving}
+              onClick={() => selected && void create(quickCreateDTO(selected, companyName), selected, TONE_LABELS.cercano)}
+            >
+              {creating && !sheetOpen ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : null}
+              Crear el recomendado tal cual
+            </Button>
+          ) : undefined
+        }
+        error={createError && !sheetOpen ? createError : null}
+        microcopy={created.length > 0 ? "Puedes crear otro con una plantilla distinta desde Agentes." : "Usa tu catálogo y tu horario automáticamente · modelo y parámetros ya afinados."}
+        back={
+          <>
+            <FlowBackButton onClick={onBack} />
+            {created.length === 0 ? (
+              <Button type="button" variant="ghost" size="sm" disabled={saving} onClick={onSkip}>
+                Configurar después
+              </Button>
+            ) : null}
+          </>
+        }
+        className="mt-2"
+      />
+
       <TemplateCustomizeSheet
         open={sheetOpen && selected !== null && draft !== null}
         template={selected}
@@ -241,6 +219,6 @@ export function AgentTemplatesStep({
         onClose={() => setSheetOpen(false)}
         onSubmit={() => selected && draft && void create(toCreateDTO(selected, draft, companyName), selected, TONE_LABELS[draft.tone])}
       />
-    </StepFrame>
+    </FlowScreen>
   );
 }

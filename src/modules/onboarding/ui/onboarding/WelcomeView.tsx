@@ -13,6 +13,8 @@ import { Confetti, brandCelebration, type ConfettiApi } from "@/shared/component
 import { offerLabel, trialEndsDate, type EntitlementsDTO } from "@/modules/onboarding/domain/entitlements";
 import { ONBOARDING_STEPS, type OnboardingStep } from "@/modules/onboarding/domain/onboarding-progress";
 import { getMyEntitlements } from "@/modules/onboarding/infrastructure/services/onboarding-service.adapter";
+import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
+import { ONBOARDING_STEP_ICONS } from "@/modules/onboarding/ui/onboarding/onboarding-route";
 
 const DASHBOARD_PATH = "/dashboard";
 
@@ -26,10 +28,14 @@ const STEP_PITCH: Record<OnboardingStep, string> = {
 };
 
 /**
- * Bienvenida tras crear la cuenta (mockup aprobado 2026-09-02). Se muestra una
- * sola vez, antes del primer paso: la cuenta ya existe, la prueba ya corre, y
- * esta pantalla lo celebra y anticipa lo que viene. Sin barra de progreso ni
- * indicador de pasos: todavía no se ha empezado nada.
+ * Bienvenida tras crear la cuenta (onboarding «Flow», 2026-09-05; antes mockup
+ * 2026-09-02). Se muestra una sola vez, antes del primer paso, **sobre el campo
+ * coral** que `FlowStage` pone encima del suelo: es el cierre del registro y
+ * su celebración. Sin barra de progreso ni ruta: todavía no se ha empezado
+ * nada; la ruta sube desde abajo cuando el campo se hunde.
+ *
+ * Los cinco pasos van como fichas de cristal con el mismo icono que luego
+ * viaja a su parada de la ruta: lo que se anuncia aquí es lo que se recorre.
  *
  * El confeti espera a que el splash de entrada haya terminado (`phase ===
  * "idle"`): disparar debajo del overlay o durante la hidratación sería una
@@ -49,12 +55,7 @@ export function WelcomeView({
   const splash = useSplashOptional();
   const confettiRef = useRef<ConfettiApi | null>(null);
   const firedRef = useRef(false);
-  const headingRef = useRef<HTMLHeadingElement | null>(null);
   const [entitlements, setEntitlements] = useState<EntitlementsDTO | null>(null);
-
-  useEffect(() => {
-    headingRef.current?.focus({ preventScroll: true });
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,97 +81,91 @@ export function WelcomeView({
   const company = companyName ?? "Tu empresa";
 
   return (
-    <div className="bg-brand-ambient relative isolate flex min-h-svh w-full flex-col overflow-hidden">
+    <div className="relative flex min-h-full w-full flex-1 flex-col">
       <Confetti ref={confettiRef} />
 
-      <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-4 px-6 py-5">
+      <header className="flex w-full items-center justify-between gap-4 px-6 pt-6 sm:px-10 sm:pt-7">
         <BrandLockup />
-        <span className="border-border text-muted-foreground hidden h-7 items-center rounded-full border px-3 text-xs sm:inline-flex">
+        <span className="sf-line text-muted-foreground hidden h-7 items-center rounded-full border px-3 text-xs sm:inline-flex">
           Prueba de 7 días · sin tarjeta
         </span>
       </header>
 
-      <main className="relative mx-auto flex w-full max-w-[760px] flex-1 flex-col items-center gap-3.5 px-6 pt-5 pb-24 text-center sm:pt-9">
-        <div
-          aria-hidden="true"
-          className="bg-brand-gradient-tri pointer-events-none absolute top-[-40px] left-1/2 -z-10 h-80 w-[min(520px,100%)] -translate-x-1/2 rounded-full opacity-25 blur-3xl dark:opacity-20"
-        />
-
-        <div className="mt-2 grid size-28 place-items-center">
+      <main className="flex w-full flex-1 flex-col items-center px-6 pt-4 pb-12 sm:pt-6">
+        <div className="mt-1 mb-2 grid size-24 place-items-center">
           <BrandMark className="size-24" />
         </div>
-
-        <span className="text-brand inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.08em] uppercase">
+        <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.08em] uppercase">
           <Check aria-hidden="true" className="size-3.5" />
           Cuenta creada
         </span>
 
-        <h1
-          ref={headingRef}
-          tabIndex={-1}
-          className="font-heading max-w-[22ch] text-[1.75rem] leading-[1.1] font-bold tracking-tight outline-none sm:text-[2.125rem]"
-        >
-          Bienvenido a Axi Connect{firstName ? `, ${firstName}` : ""}
-        </h1>
-
-        <p className="text-muted-foreground max-w-[40rem] text-[15px] leading-relaxed">
-          <b className="text-foreground font-semibold">{company}</b> ya tiene su cuenta.{" "}
-          {endsAt ? (
+        <FlowScreen
+          size="wide"
+          focusHeading
+          className="mt-2"
+          title={<>Bienvenido a Axi Connect{firstName ? `, ${firstName}` : ""}</>}
+          lead={
             <>
-              Tu prueba de 7 días empieza hoy y vence el <b className="text-foreground font-semibold">{endsAt}</b>; hasta entonces
-              no te pedimos tarjeta.
+              <b className="text-foreground font-semibold">{company}</b> ya tiene su cuenta.{" "}
+              {endsAt ? (
+                <>
+                  Tu prueba de 7 días empieza hoy y vence el <b className="text-foreground font-semibold">{endsAt}</b>; hasta entonces no te
+                  pedimos tarjeta.
+                </>
+              ) : (
+                <>Tu prueba de 7 días empieza hoy; hasta que termine no te pedimos tarjeta.</>
+              )}
             </>
-          ) : (
-            <>Tu prueba de 7 días empieza hoy; hasta que termine no te pedimos tarjeta.</>
-          )}
-        </p>
-
-        {entitlements ? (
-          <span className="border-brand/25 bg-brand/[0.09] inline-flex min-h-[34px] flex-wrap items-center justify-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] font-medium">
-            {offerLabel(entitlements)}
-            <span className="text-muted-foreground" aria-hidden="true">
-              ·
+          }
+        >
+          {entitlements ? (
+            <span className="sf-glass inline-flex min-h-[34px] flex-wrap items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-medium">
+              {offerLabel(entitlements)}
+              <span className="text-muted-foreground" aria-hidden="true">
+                ·
+              </span>
+              <span className="text-muted-foreground font-normal">
+                {entitlements.offer_kind === "package" ? "paquete completo en prueba" : "en prueba"}
+              </span>
             </span>
-            <span className="font-normal">{entitlements.offer_kind === "package" ? "paquete completo en prueba" : "en prueba"}</span>
-          </span>
-        ) : null}
+          ) : null}
 
-        <section aria-label="Lo que haremos ahora" className="glass-flat mt-3.5 w-full rounded-[20px] p-6 text-left">
-          <h2 className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[15px] font-bold">
-            Lo que haremos ahora
-            <span className="text-muted-foreground font-body text-[0.8125rem] font-normal">unos 10 minutos · puedes saltar pasos</span>
-          </h2>
-          <ol className="mt-3.5 grid gap-2 md:grid-cols-5 md:gap-2.5">
-            {ONBOARDING_STEPS.map((step, index) => (
-              <li
-                key={step.code}
-                className="border-border/80 bg-background/70 flex items-start gap-2.5 rounded-xl border p-3 md:flex-col md:gap-2"
-              >
-                <span className="bg-violet/15 text-violet font-mono grid size-[26px] shrink-0 place-items-center rounded-full text-xs font-semibold">
-                  {index + 1}
-                </span>
-                <div>
-                  <div className="text-[13px] leading-tight font-semibold">{step.label}</div>
-                  <div className="text-muted-foreground mt-0.5 text-xs leading-snug">{STEP_PITCH[step.code]}</div>
-                </div>
-              </li>
-            ))}
+          <div className="mt-2 flex w-full flex-col items-center gap-0.5 text-[12.5px] sm:flex-row sm:justify-between">
+            <span className="text-foreground font-semibold">Lo que haremos ahora</span>
+            <span className="text-muted-foreground">unos 10 minutos · puedes saltar pasos</span>
+          </div>
+          <ol className="grid w-full gap-2 sm:grid-cols-2 lg:grid-cols-5" aria-label="Lo que haremos ahora">
+            {ONBOARDING_STEPS.map((step) => {
+              const Icon = ONBOARDING_STEP_ICONS[step.code];
+              return (
+                <li key={step.code} className="sf-glass flex flex-col gap-1.5 rounded-[14px] p-3 text-left last:sm:col-span-2 last:lg:col-span-1">
+                  <span className="sf-glass-on sf-line grid size-8 place-items-center rounded-full">
+                    <Icon aria-hidden="true" className="size-4" strokeWidth={1.9} />
+                  </span>
+                  <span className="text-[13px] leading-tight font-semibold">{step.label}</span>
+                  <span className="text-muted-foreground text-[11.5px] leading-snug">{STEP_PITCH[step.code]}</span>
+                </li>
+              );
+            })}
           </ol>
-        </section>
 
-        <div className="mt-4 flex flex-col items-center gap-2.5">
-          <Button size="lg" className="h-11 px-6" onClick={onStart}>
+          <Button
+            size="lg"
+            onClick={onStart}
+            className="mt-2 h-14 w-full max-w-[440px] rounded-[14px] text-[15.5px] font-semibold shadow-[0_18px_50px_rgb(0_0_0/.18)] transition-[transform,box-shadow] hover:-translate-y-px active:scale-[.98]"
+          >
             Configurar mi empresa
             <ArrowRight aria-hidden="true" className="size-4" />
           </Button>
-          <p className="text-muted-foreground text-[0.8125rem]">
+          <p className="text-muted-foreground text-[13px]">
             Si prefieres,{" "}
-            <Link href={DASHBOARD_PATH} className="text-brand font-medium hover:underline">
+            <Link href={DASHBOARD_PATH} className="text-foreground font-semibold hover:underline">
               ve directo a tu panel
             </Link>
             : te recordamos lo que falte.
           </p>
-        </div>
+        </FlowScreen>
       </main>
     </div>
   );

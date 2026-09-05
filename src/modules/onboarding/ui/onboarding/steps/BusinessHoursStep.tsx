@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -11,12 +10,16 @@ import {
   loadMyCompanyOnce,
   type CompanyDTO,
 } from "@/modules/companies/public";
-import { StepAside, StepFrame } from "@/modules/onboarding/ui/onboarding/StepFrame";
+import { FlowActions, FlowBackButton } from "@/modules/onboarding/ui/flow/FlowActions";
+import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
 
 /**
  * Paso 2 · Horarios. Embebe el editor real del slice `companies` (el mismo de
- * Ajustes y de la Agenda): al guardar, el paso queda hecho. El alta ya sembró
- * Lunes–Sábado 9–18, así que «Mantener este horario» es un cierre válido.
+ * Ajustes y de la Agenda) **intacto**, en una hoja sólida: es un formulario y
+ * los formularios no van sobre cristal (DESIGN-SYSTEM §5.2). Al guardar, el
+ * paso queda hecho. El alta ya sembró Lunes–Sábado 9–18, así que «Mantener
+ * este horario» es un cierre válido y es la única acción del pie: el CTA de
+ * guardar es el del editor.
  */
 export function BusinessHoursStep({
   saving,
@@ -49,52 +52,43 @@ export function BusinessHoursStep({
   }, []);
 
   return (
-    <StepFrame
-      stepNumber={2}
-      total={5}
-      label="Horarios"
-      title="Tu horario de atención"
+    <FlowScreen
+      focusHeading
+      title="¿Cuándo atiende tu negocio?"
       lead="Venía Lunes a Sábado de 9 a 18. Ajústalo a como opera tu negocio y guarda; o mantenlo y sigue."
-      footer={
-        <>
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft aria-hidden="true" />
-            Atrás
-          </Button>
-          <Button variant="outline" size="lg" className="h-11" disabled={saving} onClick={onKeep}>
+    >
+      <div className="bg-background border-border w-full max-w-[640px] rounded-2xl border p-4 text-left shadow-[0_12px_40px_rgb(0_0_0/.06)] sm:p-5">
+        {company ? (
+          <SchedulesEditor
+            schedules={company.schedules}
+            onSaved={() => {
+              invalidateMyCompanyCache();
+              onSaved();
+            }}
+            onError={onError}
+          />
+        ) : loadError ? (
+          <p role="alert" className="text-muted-foreground text-sm leading-relaxed">
+            {loadError}
+          </p>
+        ) : (
+          <div className="space-y-2" aria-busy="true" aria-label="Cargando horario">
+            {Array.from({ length: 7 }, (_, index) => (
+              <Skeleton key={index} className="h-12 w-full rounded-lg" />
+            ))}
+          </div>
+        )}
+      </div>
+      <FlowActions
+        secondary={
+          <Button type="button" variant="ghost" disabled={saving} onClick={onKeep}>
             Mantener este horario y continuar
           </Button>
-        </>
-      }
-      aside={
-        <StepAside
-          glyph="time"
-          title="Para qué sirve"
-          text="La agenda, los recordatorios y las promesas de entrega del agente usan este horario. Tu agente responde fuera de él, pero solo agenda y promete dentro."
-          tips={[`Zona horaria: ${company?.timezone ?? "la de tu empresa"}`, "Varios tramos por día, más adelante en Agenda", "Los festivos se configuran en Agenda"]}
-        />
-      }
-    >
-      {company ? (
-        <SchedulesEditor
-          schedules={company.schedules}
-          onSaved={() => {
-            invalidateMyCompanyCache();
-            onSaved();
-          }}
-          onError={onError}
-        />
-      ) : loadError ? (
-        <p role="alert" className="border-warning/40 bg-warning/10 rounded-xl border px-4 py-3 text-sm">
-          {loadError}
-        </p>
-      ) : (
-        <div className="space-y-2" aria-busy="true" aria-label="Cargando horario">
-          {Array.from({ length: 7 }, (_, index) => (
-            <Skeleton key={index} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
-      )}
-    </StepFrame>
+        }
+        microcopy={`Tu agente atiende en este horario y fuera de él avisa · zona horaria ${company?.timezone ?? "de tu empresa"}`}
+        back={<FlowBackButton onClick={onBack} />}
+        className="mt-2"
+      />
+    </FlowScreen>
   );
 }
