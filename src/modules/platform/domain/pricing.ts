@@ -26,6 +26,9 @@ export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   { value: "elevenlabs", label: "ElevenLabs" },
   // calls F2: tarifas por segundo de llamada (voice_out_co / voice_in)
   { value: "twilio", label: "Twilio" },
+  // Transcripción de notas de voz (Whisper). Faltaba y la tabla escondía sus
+  // tarifas en silencio (pricing_margin_console_plan.md §4.7).
+  { value: "groq", label: "Groq" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {

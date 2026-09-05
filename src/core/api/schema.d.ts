@@ -4036,6 +4036,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/billing/prices/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformBillingPricesController_publishBatch_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/billing/prices/{price_id}/active": {
         parameters: {
             query?: never;
@@ -4141,6 +4157,166 @@ export interface paths {
         };
         get?: never;
         put: operations["PlatformTenantBillingController_setCycle_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/pricing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicPricingController_get_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/volume-tiers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformVolumeTiersController_list_v1"];
+        put?: never;
+        post: operations["PlatformVolumeTiersController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/volume-tiers/{tier_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformVolumeTiersController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/billing/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformPromotionsController_list_v1"];
+        put?: never;
+        post: operations["PlatformPromotionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/promotions/{promotion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformPromotionsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/billing/promotions/{promotion_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformPromotionsController_close_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/promotions/{promotion_id}/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformPromotionsController_addRedemption_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/promotions/{promotion_id}/redemptions/{redemption_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformPromotionsController_setRedemptionStatus_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/billing/parameters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformBillingParametersController_list_v1"];
+        put?: never;
+        post: operations["PlatformBillingParametersController_publish_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/pricing-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformPricingPreviewController_preview_v1"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -5454,7 +5630,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 used: number;
                 limit: {
                     value: number;
@@ -5486,7 +5662,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -5518,7 +5694,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -5822,7 +5998,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -5846,7 +6022,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -5866,7 +6042,7 @@ export interface components {
         PricingListDto: {
             data: {
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio";
+                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq";
                 model: string;
                 /**
                  * @default tokens
@@ -5889,7 +6065,7 @@ export interface components {
         };
         CreatePricingDto: {
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio";
+            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq";
             model: string;
             /**
              * @default tokens
@@ -5985,7 +6161,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -6003,6 +6179,10 @@ export interface components {
                 }[];
                 /** Format: uuid */
                 id: string;
+                /** @enum {string} */
+                kind: "package" | "module";
+                public_slug: string | null;
+                self_service: boolean;
                 is_active: boolean;
                 subscriptions_count: number;
                 /** Format: date-time */
@@ -6020,7 +6200,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -6047,7 +6227,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -6074,7 +6254,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -6092,6 +6272,10 @@ export interface components {
                 }[];
                 /** Format: uuid */
                 id: string;
+                /** @enum {string} */
+                kind: "package" | "module";
+                public_slug: string | null;
+                self_service: boolean;
                 is_active: boolean;
                 /** Format: date-time */
                 created_at: string;
@@ -6104,7 +6288,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -9506,7 +9690,7 @@ export interface components {
                 /** @enum {string} */
                 lifecycle_stage: "prospect" | "lead" | "customer" | "other";
                 /** @enum {string} */
-                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting";
+                source: "inbound_conversation" | "manual" | "import" | "lead_conversion" | "integration" | "prospecting" | "forms";
                 /** Format: date-time */
                 created_at: string;
             } & {
@@ -11199,6 +11383,12 @@ export interface components {
                 plan_id: string;
                 plan_code: string;
                 plan_name: string;
+                volume_tier: {
+                    code: string;
+                    conversations: number;
+                    label: string;
+                } | null;
+                override_reason: string | null;
                 /** @enum {string} */
                 interval: "monthly" | "annual";
                 amount_cents: number;
@@ -11214,7 +11404,7 @@ export interface components {
                 is_current: boolean;
                 overage_rates: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                     included_quantity: number | null;
                     unit_size: number;
                     amount_cents_per_unit: number;
@@ -11227,6 +11417,10 @@ export interface components {
         PublishBillingPriceDto: {
             /** Format: uuid */
             plan_id: string;
+            /** @default null */
+            volume_tier_code: string | null;
+            /** @default null */
+            override_reason: string | null;
             /**
              * @default monthly
              * @enum {string}
@@ -11250,7 +11444,7 @@ export interface components {
             /** @default [] */
             overage_rates: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 /** @default null */
                 included_quantity: number | null;
                 unit_size: number;
@@ -11267,6 +11461,36 @@ export interface components {
         CreatedBillingPriceDto: {
             /** Format: uuid */
             id: string;
+        };
+        PublishPriceBatchDto: {
+            /** Format: date-time */
+            effective_from: string;
+            /**
+             * @default COP
+             * @enum {string}
+             */
+            currency: "COP";
+            /**
+             * @default excluded
+             * @enum {string}
+             */
+            tax_treatment: "excluded" | "taxed" | "exempt";
+            /** @default 0 */
+            tax_rate_bps: number;
+            cells: {
+                /** Format: uuid */
+                plan_id: string;
+                /** @default null */
+                volume_tier_code: string | null;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                /** @default null */
+                override_reason: string | null;
+            }[];
+        };
+        PublishedBatchDto: {
+            ids: string[];
         };
         SetPriceActiveDto: {
             is_active: boolean;
@@ -11382,6 +11606,274 @@ export interface components {
         SetBillingCycleDto: {
             /** Format: date-time */
             billing_cycle_anchor: string;
+        };
+        PublicPricingDto: {
+            /** Format: date-time */
+            as_of: string;
+            currency: string;
+            tiers: {
+                code: string;
+                conversations: number;
+                label: string;
+                fee_cents: number | null;
+            }[];
+            packages: {
+                public_slug: string;
+                name: string;
+                description: string | null;
+                capabilities: string[];
+                commercial_units: unknown;
+            }[];
+            modules: {
+                public_slug: string;
+                name: string;
+                description: string | null;
+                capabilities: string[];
+                commercial_units: unknown;
+            }[];
+            prices: {
+                plan: string;
+                tier: string | null;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                currency: string;
+            }[];
+            promotion: {
+                code: string;
+                name: string;
+                percent_bps: number;
+                /** @enum {string} */
+                rounding: "none" | "floor_900";
+                /** @enum {string} */
+                scope: "packages" | "modules" | "all";
+                slots: number | null;
+                taken: number;
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string | null;
+                stacks_with_annual: boolean;
+                /** @enum {string} */
+                indexation_policy: "none" | "ipc_annual";
+                indexation_first_year: number | null;
+            } | null;
+            version: string;
+        };
+        BillingVolumeTierListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                conversations: number;
+                label: string;
+                sort_order: number;
+                fee_cents: number | null;
+                is_active: boolean;
+                price_count: number;
+            }[];
+        };
+        CreateBillingVolumeTierDto: {
+            code: string;
+            conversations: number;
+            label: string;
+            sort_order: number;
+            /** @default null */
+            fee_cents: number | null;
+            /** @default true */
+            is_active: boolean;
+        };
+        BillingCatalogCreatedDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        UpdateBillingVolumeTierDto: {
+            conversations?: number;
+            label?: string;
+            sort_order?: number;
+            fee_cents?: number | null;
+            is_active?: boolean;
+        };
+        BillingPromotionListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+                percent_bps: number;
+                /** @enum {string} */
+                rounding: "none" | "floor_900";
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string | null;
+                max_slots: number | null;
+                reserved_slots: number;
+                /** @enum {string} */
+                scope: "packages" | "modules" | "all";
+                stacks_with_annual: boolean;
+                /** @enum {string} */
+                indexation_policy: "none" | "ipc_annual";
+                indexation_first_year: number | null;
+                is_public: boolean;
+                is_active: boolean;
+                counters: {
+                    reserved: number;
+                    active: number;
+                    released: number;
+                    expired: number;
+                    taken: number;
+                };
+                redemptions: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: uuid */
+                    company_id: string;
+                    company_name: string;
+                    /** @enum {string} */
+                    status: "reserved" | "active" | "released" | "expired";
+                    /** @enum {string} */
+                    source: "self_service" | "manual";
+                    /** Format: uuid */
+                    price_id: string | null;
+                    /** @enum {string} */
+                    indexation_policy: "none" | "ipc_annual";
+                    /** Format: date-time */
+                    reserved_at: string;
+                    /** Format: date-time */
+                    expires_at: string | null;
+                    /** Format: date-time */
+                    activated_at: string | null;
+                    /** Format: date-time */
+                    released_at: string | null;
+                    note: string | null;
+                }[];
+            }[];
+        };
+        CreateBillingPromotionDto: {
+            code: string;
+            name: string;
+            percent_bps: number;
+            /**
+             * @default floor_900
+             * @enum {string}
+             */
+            rounding: "none" | "floor_900";
+            /** Format: date-time */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @default null
+             */
+            ends_at: string | null;
+            /** @default null */
+            max_slots: number | null;
+            /** @default 0 */
+            reserved_slots: number;
+            /**
+             * @default all
+             * @enum {string}
+             */
+            scope: "packages" | "modules" | "all";
+            /** @default true */
+            stacks_with_annual: boolean;
+            /**
+             * @default none
+             * @enum {string}
+             */
+            indexation_policy: "none" | "ipc_annual";
+            /** @default null */
+            indexation_first_year: number | null;
+            /** @default true */
+            is_public: boolean;
+        };
+        UpdateBillingPromotionDto: {
+            name?: string;
+            percent_bps?: number;
+            /**
+             * @default floor_900
+             * @enum {string}
+             */
+            rounding: "none" | "floor_900";
+            /** Format: date-time */
+            starts_at?: string;
+            /**
+             * Format: date-time
+             * @default null
+             */
+            ends_at: string | null;
+            /** @default null */
+            max_slots: number | null;
+            /** @default 0 */
+            reserved_slots: number;
+            /**
+             * @default all
+             * @enum {string}
+             */
+            scope: "packages" | "modules" | "all";
+            /** @default true */
+            stacks_with_annual: boolean;
+            /**
+             * @default none
+             * @enum {string}
+             */
+            indexation_policy: "none" | "ipc_annual";
+            /** @default null */
+            indexation_first_year: number | null;
+            /** @default true */
+            is_public: boolean;
+            is_active?: boolean;
+        };
+        BillingManualRedemptionDto: {
+            /** Format: uuid */
+            company_id: string;
+            /**
+             * @default active
+             * @enum {string}
+             */
+            status: "reserved" | "active";
+            /**
+             * Format: uuid
+             * @default null
+             */
+            price_id: string | null;
+            /**
+             * @default null
+             * @enum {string|null}
+             */
+            indexation_policy: "none" | "ipc_annual" | null;
+            /** @default null */
+            note: string | null;
+        };
+        BillingRedemptionStatusDto: {
+            /** @enum {string} */
+            status: "active" | "released";
+        };
+        BillingParameterListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                value: number;
+                /** Format: date-time */
+                effective_from: string;
+                /** Format: date-time */
+                effective_to: string | null;
+                source: string | null;
+                note: string | null;
+                created_by: string | null;
+                is_current: boolean;
+            }[];
+        };
+        PublishBillingParameterDto: {
+            /** @enum {string} */
+            code: "trm_cop_usd" | "ipc_annual_pct";
+            value: number;
+            /** Format: date-time */
+            effective_from: string;
+            source: string;
+            /** @default null */
+            note: string | null;
         };
         RemindersListDto: {
             data: {
@@ -13157,7 +13649,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -13181,7 +13673,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -20711,6 +21203,29 @@ export interface operations {
             };
         };
     };
+    PlatformBillingPricesController_publishBatch_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishPriceBatchDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishedBatchDto"];
+                };
+            };
+        };
+    };
     PlatformBillingPricesController_setActive_v1: {
         parameters: {
             query?: never;
@@ -20898,6 +21413,286 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PublicPricingController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPricingDto"];
+                };
+            };
+        };
+    };
+    PlatformVolumeTiersController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingVolumeTierListDto"];
+                };
+            };
+        };
+    };
+    PlatformVolumeTiersController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBillingVolumeTierDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformVolumeTiersController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBillingVolumeTierDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformPromotionsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPromotionListDto"];
+                };
+            };
+        };
+    };
+    PlatformPromotionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBillingPromotionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformPromotionsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBillingPromotionDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformPromotionsController_close_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformPromotionsController_addRedemption_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingManualRedemptionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformPromotionsController_setRedemptionStatus_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+                redemption_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingRedemptionStatusDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformBillingParametersController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingParameterListDto"];
+                };
+            };
+        };
+    };
+    PlatformBillingParametersController_publish_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBillingParameterDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformPricingPreviewController_preview_v1: {
+        parameters: {
+            query?: {
+                at?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPricingDto"];
+                };
             };
         };
     };
