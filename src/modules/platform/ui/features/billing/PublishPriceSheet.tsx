@@ -75,6 +75,10 @@ export function PublishPriceSheet({
     try {
       await publish.mutateAsync({
         plan_id: planId,
+        // Celda SIN tramo: módulos, enterprise y filas legado. Las celdas de
+        // paquete con tramo se publican por lote desde la rejilla.
+        volume_tier_code: null,
+        override_reason: null,
         interval,
         amount_cents: amountCents,
         currency: "COP",

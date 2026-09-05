@@ -4,18 +4,25 @@ import { BeamsBackground } from "@/shared/components/ui/beams-background";
 import { ModuleCard } from "@/modules/landing/ui/components/ModuleCard";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
 import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
+import { modulePriceCop, type PublicCatalog } from "@/modules/landing/domain/public-catalog";
 import { LANDING_ANCHORS, MODULES, MODULES_SECTION } from "@/modules/landing/ui/content/landing.content";
 
 /**
  * §9b Módulos — la banda que va debajo de los Paquetes, en la home y en
  * `/precios`. Es RSC: la única interacción (tilt, haces) vive en hojas de
- * cliente. La analítica del CTA la cubre la delegación de `core/analytics`
- * (`modulos` → `pricing` en `outbound.ts`), sin manejadores aquí.
+ * cliente. Los precios llegan del catálogo público; sin catálogo, cada tarjeta
+ * dice «precio a consulta» y manda a ventas.
  *
  * `relative isolate`: el canvas de haces (`-z-20`) y el velo (`-z-10`) tienen
  * que quedar bajo el contenido de ESTA sección y no colarse bajo la página.
  */
-export function ModulePlans({ headingAs = "h2" }: { headingAs?: "h1" | "h2" }) {
+export function ModulePlans({
+  catalog,
+  headingAs = "h2",
+}: {
+  catalog: PublicCatalog | null;
+  headingAs?: "h1" | "h2";
+}) {
   return (
     <section
       id={LANDING_ANCHORS.modules}
@@ -39,7 +46,10 @@ export function ModulePlans({ headingAs = "h2" }: { headingAs?: "h1" | "h2" }) {
         <div className="mt-14 grid items-stretch gap-6 md:grid-cols-2 md:gap-7">
           {MODULES.map((offer, i) => (
             <Reveal key={offer.id} delay={i * 0.06} className="h-full">
-              <ModuleCard offer={offer} />
+              <ModuleCard
+                offer={offer}
+                priceCop={catalog === null ? null : modulePriceCop(catalog, offer.offer_code)}
+              />
             </Reveal>
           ))}
         </div>

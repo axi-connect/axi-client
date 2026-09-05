@@ -4,8 +4,9 @@ import Link from "next/link";
 
 import { formatAllowance } from "@/core/lib/commercial-units";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
-import { MODULES, formatCop, planListCop, volumeById } from "@/modules/landing/public";
+import { MODULES, discountLabel, formatCop, planListCop, promotionOpen, volumeById, type PublicCatalog } from "@/modules/landing/public";
 import {
+  modulePrice,
   offerAxes,
   offerBlocker,
   packageBeatsModules,
@@ -37,6 +38,8 @@ const PACKAGE_LINES: Record<PackageCode, string> = {
 const PACKAGE_ORDER: readonly PackageCode[] = ["crecimiento", "esencial", "escala", "free_trial"];
 const FULL_WIDTH: ReadonlySet<PackageCode> = new Set(["crecimiento", "free_trial"]);
 
+const TO_CONFIRM = "Precio a confirmar";
+
 /**
  * Pantalla «Oferta» (mockup v3 «Flow»). Conmutador Paquete | Módulos
  * (`SegmentedControl`, un radiogroup) y debajo las fichas de cristal
@@ -44,26 +47,33 @@ const FULL_WIDTH: ReadonlySet<PackageCode> = new Set(["crecimiento", "free_trial
  * capacidad que aprobó el dueño. El estado mixto es imposible por tipo;
  * cambiar de pestaña descarta lo otro.
  *
- * Las cifras salen del barrel de `landing` (dueña del copy y de los precios):
- * aquí no se escribe ninguna. El precio del paquete es el que ve hoy el
- * visitante (fundador mientras la oferta siga abierta) y, tachado, el de lista.
+ * Las cifras salen del catálogo público que la página cargó en el servidor y
+ * bajó por props (Tanda A3): aquí no se escribe ninguna. El precio del paquete
+ * es el que ve hoy el visitante (promoción mientras siga abierta) y, tachado,
+ * el de lista. Sin catálogo (API caído) la ficha dice «Precio a confirmar» y el
+ * alta sigue: la prueba es gratis y el precio se cobra al terminar.
  */
 export function OfferStep({
   selection,
+  catalog,
   onChange,
   onNext,
 }: {
   selection: OfferSelection | null;
+  /** Catálogo público cargado por la página; `null` = precios «a confirmar». */
+  catalog: PublicCatalog | null;
   onChange: (next: OfferSelection | null) => void;
   onNext: () => void;
 }) {
   const kind: OfferKind = selection?.kind === "modules" ? "modules" : "package";
   const blocker = offerBlocker(selection);
-  const suggestPackage = packageBeatsModules(selection);
+  const suggestPackage = packageBeatsModules(selection, catalog);
   // El volumen es el eje que el visitante eligió en precios y viajó en la URL;
-  // sin él, `offerAxes` resuelve el tramo por defecto.
-  const { volume } = selection ? offerAxes(selection) : offerAxes({ kind: "package", code: "esencial" });
-  const conversations = `${volumeById(volume).label} conversaciones`;
+  // sin él, `offerAxes` resuelve el tramo por defecto del catálogo. Sin
+  // catálogo no hay tramo que nombrar y la línea de conversaciones se omite.
+  const { volume } = offerAxes(selection ?? { kind: "package", code: "esencial" }, catalog);
+  const conversations = catalog && volume ? `${volumeById(catalog, volume).label} conversaciones` : null;
+  const promotion = catalog && promotionOpen(catalog, new Date()) ? catalog.promotion : null;
 
   return (
     <div className="flex w-full flex-col items-center gap-2.5">
@@ -89,8 +99,8 @@ export function OfferStep({
             const plan = packagePlan(code);
             const Graphic = PACKAGE_GRAPHICS[code];
             const paid = plan.group === "package";
-            const list = paid ? planListCop(plan, volume) : null;
-            const today = paid ? packagePriceCop(code, volume) : null;
+            const list = paid && catalog ? planListCop(catalog, code, volume ?? catalog.defaultVolumeId) : null;
+            const today = paid ? packagePriceCop(catalog, code, volume) : null;
             return (
               <OfferTile
                 key={code}
@@ -102,23 +112,25 @@ export function OfferStep({
                 badge={plan.badge ?? undefined}
                 featured={plan.featured || FULL_WIDTH.has(code)}
                 price={
-                  paid && today !== null ? (
+                  !paid ? (
+                    "7 días gratis"
+                  ) : today !== null ? (
                     <>
                       {formatCop(today)}
                       <small className="font-body text-muted-foreground ml-1.5 text-xs font-normal">COP/mes</small>
                     </>
                   ) : (
-                    "7 días gratis"
+                    TO_CONFIRM
                   )
                 }
                 priceNote={
-                  paid && list !== null && today !== null && list !== today ? (
+                  paid && promotion && list !== null && today !== null && list !== today ? (
                     <>
-                      <s>{formatCop(list)}</s> lista · −40 % fundador
+                      <s>{formatCop(list)}</s> lista · {discountLabel(promotion)} {promotion.name}
                     </>
                   ) : undefined
                 }
-                description={paid ? `${PACKAGE_LINES[code]} · ${conversations}` : PACKAGE_LINES[code]}
+                description={paid && conversations ? `${PACKAGE_LINES[code]} · ${conversations}` : PACKAGE_LINES[code]}
                 graphic={<Graphic />}
               />
             );
@@ -129,6 +141,7 @@ export function OfferStep({
           {MODULES.map((offer) => {
             const Graphic = MODULE_GRAPHICS[offer.id];
             const checked = selection?.kind === "modules" && selection.codes.includes(offer.id);
+            const price = modulePrice(catalog, offer.id);
             return (
               <OfferTile
                 key={offer.id}
@@ -138,10 +151,14 @@ export function OfferStep({
                 onClick={() => onChange(toggleModule(selection, offer.id))}
                 name={offer.name}
                 price={
-                  <>
-                    {formatCop(offer.listCop)}
-                    <small className="font-body text-muted-foreground ml-1.5 text-xs font-normal">COP/mes</small>
-                  </>
+                  price !== null ? (
+                    <>
+                      {formatCop(price)}
+                      <small className="font-body text-muted-foreground ml-1.5 text-xs font-normal">COP/mes</small>
+                    </>
+                  ) : (
+                    TO_CONFIRM
+                  )
                 }
                 description={`Tras la prueba · ${formatAllowance(offer.allowance)} al mes`}
                 graphic={<Graphic />}

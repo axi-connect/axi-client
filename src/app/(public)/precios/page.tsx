@@ -21,6 +21,7 @@ import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { PricingPlans } from "@/modules/landing/ui/components/PricingPlans";
 import { ModulePlans } from "@/modules/landing/ui/components/ModulePlans";
 import { PRICING } from "@/modules/landing/ui/content/landing.content";
+import { CATALOG_REVALIDATE_SECONDS, loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
 
 /**
  * `/precios` — página propia. Antes `/precios` redirigía a la ancla `#planes` de
@@ -108,10 +109,14 @@ const PRICING_FAQ = [
   },
 ] as const;
 
-export default function PreciosPage() {
+/** ISR de un minuto (D11): la misma lectura alimenta las tarjetas y el JSON-LD. */
+export const revalidate = CATALOG_REVALIDATE_SECONDS;
+
+export default async function PreciosPage() {
+  const catalog = await loadPublicCatalog();
   return (
     <div className="w-full">
-      <JsonLd data={pricingSchema()} />
+      <JsonLd data={pricingSchema(catalog)} />
       <JsonLd data={faqSchema(PRICING_FAQ)} />
       <JsonLd data={breadcrumbSchema(["/precios"])} />
       <section className="mx-auto w-full max-w-[1200px] px-6 pt-32 pb-4 sm:pt-40">
@@ -119,7 +124,7 @@ export default function PreciosPage() {
       </section>
 
       <section className="mx-auto w-full max-w-[1200px] px-6 pb-16">
-        <PricingPlans />
+        <PricingPlans catalog={catalog} />
 
         <Reveal className="mt-8">
           <p className="text-muted-foreground mx-auto max-w-2xl text-center text-sm leading-relaxed">
@@ -128,7 +133,7 @@ export default function PreciosPage() {
         </Reveal>
       </section>
 
-      <ModulePlans />
+      <ModulePlans catalog={catalog} />
 
       {/* ── Lo que la home no tiene espacio para explicar ── */}
       <section className="border-border/60 w-full border-t">

@@ -13,6 +13,7 @@ import { LoginError } from "@/core/providers/auth-provider";
 import { useSplashOptional } from "@/core/providers/splash-provider";
 import { fade, spring } from "@/core/styles/motion";
 import { useAuth, useSession } from "@/shared/auth/auth.hooks";
+import type { PublicCatalog } from "@/modules/landing/public";
 import {
   EMPTY_SIGNUP_DRAFT,
   SIGNUP_NEXT_PATH,
@@ -88,7 +89,7 @@ function hasFinePointer(): boolean {
  * error en el correo; el resto (captcha, rate-limit, red) → aviso sobre el
  * botón de la última pantalla.
  */
-export function SignupFunnelView() {
+export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null }) {
   const router = useRouter();
   const search = useSearchParams();
   const { signup } = useAuth();
@@ -123,7 +124,7 @@ export function SignupFunnelView() {
     if (initializedRef.current) return;
     initializedRef.current = true;
     const stored = readSignupDraft();
-    const fromQuery = parseOfferQuery(search);
+    const fromQuery = parseOfferQuery(search, catalog);
     if (fromQuery.redirectTo) {
       router.replace(fromQuery.redirectTo);
       return;
@@ -136,7 +137,7 @@ export function SignupFunnelView() {
     // más lejano que las respuestas guardadas permitan.
     setStep(fromQuery.selection ? reachableSignupStep(1, initial) : reachableSignupStep(stored?.step ?? 0, initial));
     setReady(true);
-  }, [router, search]);
+  }, [router, search, catalog]);
 
   useEffect(() => {
     if (!ready) return;
@@ -236,7 +237,7 @@ export function SignupFunnelView() {
           >
             <section ref={screenRef} aria-label={`Paso ${step + 1} de ${SIGNUP_STEPS.length}: ${SIGNUP_STEPS[step].label}`}>
               <SignupScreen title={copy.title} lead={copy.lead}>
-                {step === 0 ? <OfferStep selection={draft.offer} onChange={setOffer} onNext={() => goTo(1)} /> : null}
+                {step === 0 ? <OfferStep selection={draft.offer} catalog={catalog} onChange={setOffer} onNext={() => goTo(1)} /> : null}
                 {step === 1 ? (
                   <CompanyIdentityStep
                     defaultValues={companyValues}
@@ -283,6 +284,7 @@ export function SignupFunnelView() {
                 {step === 4 ? (
                   <PasswordStep
                     selection={draft.offer}
+                    catalog={catalog}
                     defaultValues={accountValues}
                     submitError={submitError}
                     onBack={(values) => {

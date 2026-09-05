@@ -2,39 +2,54 @@
  * Superficie pública del slice `landing` (architecture §3.3 regla 5).
  *
  * Nació con su primer consumidor externo, `onboarding`: el registro
- * autoservicio necesita la oferta comercial (paquetes, módulos, precios y sus
- * helpers) para preseleccionar y resumir lo elegido, y la landing es la única
- * dueña de ese copy y de esas cifras. Todo lo exportado es dato puro o un mapa
+ * autoservicio necesita la oferta comercial (paquetes, módulos y su copy) para
+ * preseleccionar y resumir lo elegido. Las CIFRAS ya no viven en el content:
+ * llegan del catálogo público y se resuelven con el dominio `public-catalog`,
+ * que también se exporta desde aquí. Todo lo exportado es dato puro o un mapa
  * de iconos: ningún componente con estado.
  */
 export {
+  ANNUAL_PAID_MONTHS,
   BILLING_PERIODS,
-  DEFAULT_VOLUME_ID,
   FOUNDERS,
   MODULES,
   MODULES_SECTION,
   MODULE_IDS,
+  MONTHS_PER_YEAR,
   PRICING,
-  PRICING_VOLUMES,
-  annualTotalCop,
   formatCop,
-  founderCop,
-  foundersOfferOpen,
-  foundersRemaining,
+  foundersDiscountBadge,
+  foundersHeadline,
   offerByCode,
   planById,
-  planListCop,
-  planMonthlyCop,
   pricingPackages,
-  publishableModules,
-  volumeById,
   type BillingPeriodId,
   type ModuleId,
   type ModuleOffer,
   type OfferCode,
   type PlanGroup,
   type PricingPlan,
-  type VolumeId,
 } from "@/modules/landing/ui/content/landing.content";
+
+export {
+  MAX_VOLUME_ID,
+  annualTotalCop,
+  catalogFromApi,
+  discountLabel,
+  discountedCop,
+  hasVolumeAxis,
+  isVolumeId,
+  modulePriceCop,
+  planListCop,
+  planMonthlyCop,
+  promotionAppliesTo,
+  promotionLastDay,
+  promotionOpen,
+  promotionRemaining,
+  volumeById,
+  type CatalogPromotion,
+  type CatalogVolume,
+  type PublicCatalog,
+} from "@/modules/landing/domain/public-catalog";
 
 export { MODULE_ICONS } from "@/modules/landing/ui/components/ModuleCard";

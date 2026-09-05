@@ -3,6 +3,7 @@
 import type { UseFormReturn } from "react-hook-form";
 
 import { DraftBackButton, DynamicForm } from "@/shared/components/features/dynamic-form";
+import type { PublicCatalog } from "@/modules/landing/public";
 import { offerSummary, type OfferSelection } from "@/modules/onboarding/domain/signup-draft";
 import {
   buildPasswordFields,
@@ -24,6 +25,7 @@ import { TurnstileWidget } from "@/modules/onboarding/ui/signup/TurnstileWidget"
  */
 export function PasswordStep({
   selection,
+  catalog,
   defaultValues,
   submitError,
   onBack,
@@ -32,6 +34,8 @@ export function PasswordStep({
   onHoneypot,
 }: {
   selection: OfferSelection | null;
+  /** Catálogo público cargado por la página; `null` = precios «a confirmar». */
+  catalog: PublicCatalog | null;
   defaultValues: AccountStepValues;
   /** Error general del alta (rate-limit, captcha, red) mostrado sobre el botón. */
   submitError: string | null;
@@ -40,7 +44,7 @@ export function PasswordStep({
   onCaptcha: (token: string) => void;
   onHoneypot: (value: string) => void;
 }) {
-  const summary = selection ? offerSummary(selection) : null;
+  const summary = selection ? offerSummary(selection, catalog) : null;
 
   return (
     <DynamicForm<PasswordValues>

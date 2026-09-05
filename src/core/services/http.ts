@@ -20,6 +20,12 @@ export type HttpRequestOptions = {
   headers?: Record<string, string>;
   /** Default `true`. Solo los endpoints públicos del backend usan `false`. */
   authenticate?: boolean;
+  /**
+   * Segundos de la Data Cache de Next para esta petición. SOLO para
+   * endpoints públicos (`authenticate: false`): lo autenticado es por tenant y
+   * cachearlo sería un bug. Sin él, la petición va con `no-store`.
+   */
+  revalidate?: number;
 };
 
 export type Params = Record<string, string | number | boolean | undefined>;
@@ -68,12 +74,13 @@ export class HttpClient {
       ...(await this.buildAuthHeader(authenticate, options)),
     };
 
+    const cacheable = !authenticate && options.revalidate !== undefined;
     const res = await fetch(url, {
       method,
       headers,
       body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
       signal: options.signal,
-      cache: "no-store",
+      ...(cacheable ? { next: { revalidate: options.revalidate } } : { cache: "no-store" }),
     });
 
     if (!res.ok) {

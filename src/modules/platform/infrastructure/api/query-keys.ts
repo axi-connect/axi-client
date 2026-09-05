@@ -44,6 +44,12 @@ export const platformKeys = {
     prices: (planId?: string) =>
       [...platformKeys.billing.all, "prices", planId ?? "all"] as const,
     tenant: (id: string) => [...platformKeys.billing.all, "tenant", id] as const,
+    // Catálogo de dos ejes (Tanda A2): tramos, promociones, parámetros y la
+    // previsualización pública a una fecha.
+    tiers: () => [...platformKeys.billing.all, "tiers"] as const,
+    promotions: () => [...platformKeys.billing.all, "promotions"] as const,
+    parameters: () => [...platformKeys.billing.all, "parameters"] as const,
+    preview: (at?: string) => [...platformKeys.billing.all, "preview", at ?? "now"] as const,
   },
 
   audit: {

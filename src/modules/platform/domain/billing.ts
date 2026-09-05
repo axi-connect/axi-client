@@ -19,6 +19,21 @@ export type InvoiceAdministration = Schemas["InvoiceAdministrationDto"];
 export type OverageMetric = OverageRate["metric"];
 export type BillingInterval = BillingPrice["interval"];
 export type TaxTreatment = BillingPrice["tax_treatment"];
+export type BillingVolumeTier = Schemas["BillingVolumeTierListDto"]["data"][number];
+export type CreateVolumeTierDTO = Schemas["CreateBillingVolumeTierDto"];
+export type UpdateVolumeTierDTO = Schemas["UpdateBillingVolumeTierDto"];
+export type BillingPromotion = Schemas["BillingPromotionListDto"]["data"][number];
+export type PromotionRedemption = BillingPromotion["redemptions"][number];
+export type CreatePromotionDTO = Schemas["CreateBillingPromotionDto"];
+export type UpdatePromotionDTO = Schemas["UpdateBillingPromotionDto"];
+export type ManualRedemptionDTO = Schemas["BillingManualRedemptionDto"];
+export type BillingParameter = Schemas["BillingParameterListDto"]["data"][number];
+export type PublishParameterDTO = Schemas["PublishBillingParameterDto"];
+export type PublishPriceBatchDTO = Schemas["PublishPriceBatchDto"];
+export type PublicPricing = Schemas["PublicPricingDto"];
+export type IndexationPolicy = BillingPromotion["indexation_policy"];
+export type RedemptionStatus = PromotionRedemption["status"];
+export type PromotionScope = BillingPromotion["scope"];
 
 /**
  * Etiquetas de las métricas facturables. El operador que publica una tarifa no
@@ -42,6 +57,7 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   lead_discoveries: "Leads descubiertos",
   lead_enrichments: "Datos de leads verificados",
   call_seconds: "Segundos de llamada",
+  ai_conversations: "Conversaciones con IA",
 };
 
 export const OVERAGE_METRICS = Object.keys(
@@ -66,6 +82,38 @@ export const PRICE_VIGENCY_MAP: StatusMap = {
   current: { label: "Vigente", tone: "success" },
   scheduled: { label: "Programada o cerrada", tone: "neutral" },
   disabled: { label: "Desactivada", tone: "neutral" },
+};
+
+/** Cupo de una promoción: se reserva al confirmar, se toma al pagar. */
+export const REDEMPTION_STATUS_MAP: StatusMap = {
+  reserved: { label: "Reservada", tone: "warning" },
+  active: { label: "Activa", tone: "success" },
+  released: { label: "Liberada", tone: "neutral" },
+  expired: { label: "Vencida", tone: "neutral" },
+};
+
+export const INDEXATION_LABELS: Record<IndexationPolicy, string> = {
+  none: "Sin ajuste",
+  ipc_annual: "IPC anual",
+};
+
+export const PROMOTION_SCOPE_LABELS: Record<PromotionScope, string> = {
+  packages: "Solo paquetes",
+  modules: "Solo módulos",
+  all: "Paquetes y módulos",
+};
+
+export const PARAMETER_LABELS: Record<string, { name: string; unit: string; help: string }> = {
+  trm_cop_usd: {
+    name: "TRM de cálculo",
+    unit: "COP por USD",
+    help: "Convierte el costo en dólares del catálogo a pesos. La verja de publicación mide el margen con esta cifra; el colchón frente a la TRM real es explícito, no vive dentro del costo.",
+  },
+  ipc_annual_pct: {
+    name: "IPC anual",
+    unit: "%",
+    help: "Indexa cada 1 de enero los precios con política «IPC anual». Se declara en cuanto el DANE publica la cifra.",
+  },
 };
 
 /** Estado de la cuenta de cobro del tenant, para la ficha de plataforma. */
