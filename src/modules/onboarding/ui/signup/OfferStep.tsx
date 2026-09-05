@@ -1,41 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Inbox, Sparkles } from "lucide-react";
 
-import { formatQuantity, unitLabel } from "@/core/lib/commercial-units";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
+import { formatAllowance } from "@/core/lib/commercial-units";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
-import { ProviderCard } from "@/shared/components/features/provider-card";
-import { MODULES, MODULE_ICONS, formatCop, volumeById } from "@/modules/landing/public";
+import { MODULES, formatCop, planListCop, volumeById } from "@/modules/landing/public";
 import {
-  SELF_SERVICE_PACKAGES,
-  SIGNUP_STEPS,
+  offerAxes,
   offerBlocker,
   packageBeatsModules,
-  offerAxes,
   packagePlan,
   packagePriceCop,
   toggleModule,
   type OfferSelection,
   type PackageCode,
 } from "@/modules/onboarding/domain/signup-draft";
+import { MODULE_GRAPHICS, PACKAGE_GRAPHICS } from "@/modules/onboarding/ui/signup/graphics/OfferGraphics";
+import { OfferTile } from "@/modules/onboarding/ui/signup/OfferTile";
+import { SignupActions } from "@/modules/onboarding/ui/signup/SignupActions";
 
 type OfferKind = "package" | "modules";
 
-const PACKAGE_ICONS: Record<PackageCode, typeof Inbox> = {
-  free_trial: Sparkles,
-  esencial: Inbox,
-  crecimiento: Inbox,
-  escala: Inbox,
+/** Una línea por paquete: lo que lo distingue del anterior, sin repetir el tagline. */
+const PACKAGE_LINES: Record<PackageCode, string> = {
+  free_trial: "Producto completo · después eliges tu plan",
+  esencial: "El escalón de entrada",
+  crecimiento: "Todo Esencial y más",
+  escala: "Para varios equipos",
 };
 
 /**
- * Paso 1 · Oferta. Conmutador Paquete | Módulos (`SegmentedControl`, un
- * radiogroup) y debajo las tarjetas (`ProviderCard`, radio para paquetes y
- * checkbox para módulos: «seleccionado = elevado», nunca teñido). El estado
- * mixto es imposible por tipo; cambiar de pestaña descarta lo otro.
+ * Crecimiento va destacado y primero; Free Trial cierra la rejilla como salida
+ * sin fricción y ocupa el mismo ancho que Crecimiento (decisión del dueño,
+ * 2026-09-05: coherencia entre la primera y la última fila).
+ */
+const PACKAGE_ORDER: readonly PackageCode[] = ["crecimiento", "esencial", "escala", "free_trial"];
+const FULL_WIDTH: ReadonlySet<PackageCode> = new Set(["crecimiento", "free_trial"]);
+
+/**
+ * Pantalla «Oferta» (mockup v3 «Flow»). Conmutador Paquete | Módulos
+ * (`SegmentedControl`, un radiogroup) y debajo las fichas de cristal
+ * (`OfferTile`: radio para paquetes, checkbox para módulos) con el gráfico de
+ * capacidad que aprobó el dueño. El estado mixto es imposible por tipo;
+ * cambiar de pestaña descarta lo otro.
+ *
+ * Las cifras salen del barrel de `landing` (dueña del copy y de los precios):
+ * aquí no se escribe ninguna. El precio del paquete es el que ve hoy el
+ * visitante (fundador mientras la oferta siga abierta) y, tachado, el de lista.
  */
 export function OfferStep({
   selection,
@@ -49,122 +60,114 @@ export function OfferStep({
   const kind: OfferKind = selection?.kind === "modules" ? "modules" : "package";
   const blocker = offerBlocker(selection);
   const suggestPackage = packageBeatsModules(selection);
+  // El volumen es el eje que el visitante eligió en precios y viajó en la URL;
+  // sin él, `offerAxes` resuelve el tramo por defecto.
+  const { volume } = selection ? offerAxes(selection) : offerAxes({ kind: "package", code: "esencial" });
+  const conversations = `${volumeById(volume).label} conversaciones`;
 
   return (
-    <div className="flex flex-col gap-6">
-      <SegmentedControl<OfferKind>
-        label="Tipo de oferta"
-        value={kind}
-        onValueChange={(next) => onChange(next === "package" ? null : { kind: "modules", codes: [] })}
-        items={[
-          { value: "package", label: "Paquete" },
-          { value: "modules", label: "Módulos" },
-        ]}
-        surface="inline"
-      />
+    <div className="flex w-full flex-col items-center gap-2.5">
+      <div className="flex w-full max-w-[700px] flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-between">
+        <SegmentedControl<OfferKind>
+          label="Tipo de oferta"
+          value={kind}
+          onValueChange={(next) => onChange(next === "package" ? null : { kind: "modules", codes: [] })}
+          items={[
+            { value: "package", label: "Paquete" },
+            { value: "modules", label: "Módulos" },
+          ]}
+          surface="inline"
+        />
+        <p className="text-muted-foreground text-[13px]">
+          {kind === "package" ? "El producto completo. Solo cambia cuántas conversaciones atiende." : "Solo la capacidad que te falta. Puedes elegir varias."}
+        </p>
+      </div>
 
       {kind === "package" ? (
-        <div role="radiogroup" aria-label="Paquetes" className="grid gap-3 sm:grid-cols-2">
-          {SELF_SERVICE_PACKAGES.map((code) => {
+        <div role="radiogroup" aria-label="Paquetes" className="grid w-full max-w-[700px] gap-2 sm:grid-cols-2">
+          {PACKAGE_ORDER.map((code) => {
             const plan = packagePlan(code);
-            const Icon = PACKAGE_ICONS[code];
-            // El volumen ya no sale de una viñeta: es el eje que el visitante
-            // eligió en la sección de precios y que viajó en la URL. Si no
-            // eligió, `offerAxes` resuelve el tramo por defecto.
-            const { volume } = selection ? offerAxes(selection) : { volume: undefined };
-            const metrics =
-              plan.group === "package"
-                ? [
-                    {
-                      label: "Conversaciones",
-                      value: `${volumeById(volume ?? "1000").label} al mes`,
-                    },
-                    {
-                      label: "Tras la prueba",
-                      value: `${formatCop(packagePriceCop(code, volume))} COP/mes`,
-                    },
-                  ]
-                : [
-                    { label: "Prueba", value: "7 días gratis" },
-                    { label: "Después", value: "Eliges tu plan" },
-                  ];
+            const Graphic = PACKAGE_GRAPHICS[code];
+            const paid = plan.group === "package";
+            const list = paid ? planListCop(plan, volume) : null;
+            const today = paid ? packagePriceCop(code, volume) : null;
             return (
-              <ProviderCard
+              <OfferTile
                 key={code}
-                icon={<Icon aria-hidden="true" className="text-brand size-5" />}
-                title={plan.name}
-                subtitle={plan.badge ?? plan.priceUnit ?? undefined}
-                badge={plan.badge ? <Badge className="relative">{plan.badge}</Badge> : undefined}
-                body={plan.tagline}
-                metrics={metrics}
-                selected={selection?.kind === "package" && selection.code === code}
+                role="radio"
+                testId={`offer-${code}`}
+                checked={selection?.kind === "package" && selection.code === code}
                 onClick={() => onChange({ kind: "package", code })}
+                name={plan.name}
+                badge={plan.badge ?? undefined}
+                featured={plan.featured || FULL_WIDTH.has(code)}
+                price={
+                  paid && today !== null ? (
+                    <>
+                      {formatCop(today)}
+                      <small className="font-body text-muted-foreground ml-1.5 text-xs font-normal">COP/mes</small>
+                    </>
+                  ) : (
+                    "7 días gratis"
+                  )
+                }
+                priceNote={
+                  paid && list !== null && today !== null && list !== today ? (
+                    <>
+                      <s>{formatCop(list)}</s> lista · −40 % fundador
+                    </>
+                  ) : undefined
+                }
+                description={paid ? `${PACKAGE_LINES[code]} · ${conversations}` : PACKAGE_LINES[code]}
+                graphic={<Graphic />}
               />
             );
           })}
         </div>
       ) : (
-        <div role="group" aria-label="Módulos" className="grid gap-3 sm:grid-cols-2">
+        <div role="group" aria-label="Módulos" className="grid w-full max-w-[700px] gap-2 sm:grid-cols-2">
           {MODULES.map((offer) => {
-            const Icon = MODULE_ICONS[offer.id];
+            const Graphic = MODULE_GRAPHICS[offer.id];
             const checked = selection?.kind === "modules" && selection.codes.includes(offer.id);
             return (
-              <ProviderCard
+              <OfferTile
                 key={offer.id}
-                icon={<Icon aria-hidden="true" className="text-brand size-5" />}
-                title={offer.name}
-                subtitle={`${formatCop(offer.listCop)} COP/mes tras la prueba`}
-                metrics={[
-                  {
-                    label: unitLabel(offer.allowance.unit, offer.allowance.quantity),
-                    value: `${offer.allowance.quantity} al mes`,
-                  },
-                  offer.allowance.equivalent
-                    ? {
-                        label: "Equivale a",
-                        value: formatQuantity(offer.allowance.equivalent.quantity, offer.allowance.equivalent.unit),
-                      }
-                    : { label: "Incluye", value: offer.extras },
-                ]}
-                selected={checked}
-                selectionRole="checkbox"
+                role="checkbox"
+                testId={`offer-${offer.id}`}
+                checked={checked}
                 onClick={() => onChange(toggleModule(selection, offer.id))}
+                name={offer.name}
+                price={
+                  <>
+                    {formatCop(offer.listCop)}
+                    <small className="font-body text-muted-foreground ml-1.5 text-xs font-normal">COP/mes</small>
+                  </>
+                }
+                description={`Tras la prueba · ${formatAllowance(offer.allowance)} al mes`}
+                graphic={<Graphic />}
               />
             );
           })}
         </div>
       )}
 
-      <p className="text-muted-foreground text-[0.8125rem] leading-relaxed">
-        Los Módulos se contratan sueltos y no se combinan con un Paquete. Todo empieza con 7 días de prueba sin tarjeta.
-      </p>
-
       {suggestPackage ? (
-        <p
-          role="note"
-          className="border-accent-violet/35 bg-accent-violet/8 rounded-xl border px-4 py-3 text-sm leading-relaxed"
-        >
-          Con dos o más módulos, <strong>Crecimiento</strong> sale mejor y trae el producto completo.{" "}
-          <Link href="/precios#planes" className="text-brand font-medium hover:underline">
+        <p role="note" className="text-muted-foreground max-w-[700px] text-[13px] leading-relaxed">
+          Con dos o más módulos, <strong className="text-foreground font-semibold">Crecimiento</strong> sale mejor y trae el producto completo.{" "}
+          <Link href="/precios#planes" className="text-foreground font-semibold hover:underline">
             Comparar
           </Link>
         </p>
       ) : null}
 
-      <div className="border-border/70 flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-        <span className="text-muted-foreground text-xs">Paso 1 de {SIGNUP_STEPS.length}</span>
-        <div className="flex flex-col items-end gap-1.5">
-          <Button size="lg" className="h-11" onClick={onNext} disabled={blocker !== null} aria-describedby="offer-blocker">
-            Continuar
-            <ArrowRight aria-hidden="true" />
-          </Button>
-          {blocker ? (
-            <span id="offer-blocker" className="text-muted-foreground text-xs">
-              {blocker}
-            </span>
-          ) : null}
-        </div>
-      </div>
+      <SignupActions
+        type="button"
+        label="Continuar"
+        onClick={onNext}
+        disabled={blocker !== null}
+        microcopy={blocker ?? "7 días gratis · sin tarjeta · si no sigues, tus datos quedan intactos"}
+        className="mt-1"
+      />
     </div>
   );
 }

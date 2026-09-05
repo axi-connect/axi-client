@@ -1,6 +1,6 @@
 # Plan — `/comenzar` premium («Flow»): una pregunta por pantalla sobre el campo de marca
 
-> Estado: **F1 hecha (2026-09-05)**, en gate. Rama `feat/comenzar-premium` (worktree `.claude/worktrees/feat-comenzar-premium`), desde `main` = `origin/main`.
+> Estado: **F1 y F2 hechas (2026-09-05)**, F2 en gate. Rama `feat/comenzar-premium` (worktree `.claude/worktrees/feat-comenzar-premium`), desde `main` = `origin/main`.
 > Mockups aprobados: v3 «Flow» https://claude.ai/code/artifact/5fafaf84-b9ee-407a-9ef0-47af48185b27 (la dirección) y v2 «bento» (referencia guardada en `docs/design/mockups/comenzar-premium-v2.html`, descartada como dirección).
 
 ## 1. Por qué
@@ -40,7 +40,7 @@ Un bloque, aplicado una vez en `app/comenzar/layout.tsx`. Técnica de `.theme-da
 | `SignupRoute` | La ruta: SVG con cúbicas de tangentes horizontales, paradas equidistantes alternando alto/bajo, dos paradas virtuales en los extremos, la activa centrada por `translateX` animado (`spring.soft`; `useReducedMotion` la deja fija). Alto 280 px y amplitud corta (9 %) para que la parada activa con su anillo quepa entera arriba y abajo. `nav` con botones «Volver a …» en las paradas recorridas. |
 | `SignupActions` | Pie único: CTA a todo el ancho (blanco con texto coral por la re-derivación), microcopy y «Atrás» (`DraftBackButton`). |
 | `CompanyIdentityStep`, `CompanyLocationStep`, `OwnerStep`, `PasswordStep` | Las cuatro pantallas de formulario sobre `DynamicForm` (`columns={{ base: 1 }}`), etiquetas `SrLabel` (la pregunta es la etiqueta visible; el placeholder nombra el control), inputs con `SIGNUP_INPUT_CLASS`. `PasswordStep` lleva el resumen «hoy pagas $0» antes del CTA. |
-| `OfferStep` (F2) | Fichas de cristal con los gráficos aprobados, segmentado Paquete/Módulos, nota violeta con «Crecimiento» (corregido: decía «Small Business Suite», paquete retirado). |
+| `OfferStep` + `OfferTile` + `graphics/OfferGraphics.tsx` | Fichas de cristal con los gráficos aprobados (precio de hoy y de lista tachado desde `packagePriceCop`/`planListCop`; cuota con `formatAllowance`), segmentado Paquete/Módulos, nota «Crecimiento» (corregido: decía «Small Business Suite», paquete retirado), CTA con el bloqueo como microcopy. |
 | `signup-field.styles.ts` | `SIGNUP_INPUT_CLASS`, `SIGNUP_SELECT_CLASS`, `SrLabel`, `SIGNUP_STEP_ICONS` (Blocks, Building2, MapPin, UserRound, KeyRound). |
 
 Eliminados: `SignupSummaryRail`, `CompanyStep`, `AccountStep`, y el uso de `StepIndicator` en el funnel.
@@ -51,7 +51,7 @@ Eliminados: `SignupSummaryRail`, `CompanyStep`, `AccountStep`, y el uso de `Step
 |---|---|---|
 | **F0** | Mockups v1→v3, aprobación de la dirección | ✅ 2026-09-05 |
 | **F1** | Campo (`.signup-field`), cabecera con marca mono, puntos, ruta animada, transición entre pantallas, dominio de 5 pasos, pantallas Empresa/Ubicación/Tú/Cuenta en cristal, resumen final, skeleton, fix del copy; tests actualizados | ✅ en gate |
-| **F2** | Pantalla Oferta: fichas de cristal (`role=radio`/`checkbox`) con los gráficos SVG como componentes (`ui/signup/graphics/*.tsx`), Crecimiento destacado a todo el ancho, segmentado de cristal (`SegmentedControl treatment` nueva o clases locales), nota de ≥2 módulos, CTA con `offerBlocker`; retirar `ProviderCard` del funnel | pendiente |
+| **F2** | Pantalla Oferta: `OfferTile` (cristal, `role=radio`/`checkbox`, marca redonda o cuadrada, gráfico en columna propia) + `graphics/OfferGraphics.tsx` (los 8 gráficos aprobados en `currentColor`, diccionarios `PACKAGE_GRAPHICS`/`MODULE_GRAPHICS`), Crecimiento y Free Trial a todo el ancho (primera y última fila coherentes), Esencial y Escala en dos columnas, `SegmentedControl surface="inline"` (adopta el cristal por la re-derivación), nota de ≥2 módulos, `SignupActions` con `offerBlocker` como microcopy; `ProviderCard` fuera del funnel | ✅ en gate |
 | **F3** | Móvil y pulido: alturas de la ruta en pantallas bajas, foco automático en el primer control tras la transición (solo con puntero), Enter avanza, `sesión abierta`, estados de error visibles en claro y oscuro; captura de pantalla de las 5 pantallas en ambos temas | pendiente |
 | **F4** | Docs y verjas: `docs/modules/onboarding.md` (B.2/B.3 decisiones 12–14, B.4 piezas nuevas), DESIGN-SYSTEM §5 (`.sf-glass`) y §8 (re-derivación de tokens por alcance), `public-site.md` si cambia el copy; reindexar grafo; `next build` y suite completa por el dueño | pendiente |
 
