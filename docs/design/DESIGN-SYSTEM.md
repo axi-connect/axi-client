@@ -268,6 +268,10 @@ Regla de legibilidad: el glass solo se posa sobre fondos que controla la app; nu
 
 La tabla habla de **superficies**. Un glifo ilustrado de cristal (`GlassGlyph`, §7) no es una superficie y no está en ninguna de las dos columnas: no lleva `backdrop-filter`, no aloja contenido y nunca hay texto encima.
 
+### 5.3 Cristal blanco sobre un campo de color (`.sf-glass`)
+
+El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —fichas, inputs, segmentado, nodos de la ruta— con **otro material**: cristal blanco a distintos porcentajes del color del texto (`--sf-fg` 16 % en reposo, 24 % en hover, 30 % seleccionado; borde al 26 %) y **sin `backdrop-filter`**, porque detrás solo hay un degradado que la app controla (§5.2) y los nodos viajan dentro de un `transform`. No sustituye a `.glass`: `.glass` es el material de lo que flota sobre el contenido; `.sf-glass` es el de los controles que se posan sobre un **campo de color** (ver §8, «re-derivación por alcance»). Vive junto a `.signup-field` en `globals.css` y solo tiene sentido dentro de ese alcance.
+
 ---
 
 ## 6. Movimiento
@@ -349,6 +353,7 @@ Reglas:
 - **Control de tema** (`ThemeToggle`, a crear en `shared/components/layout/`): toggle de 3 estados (light / dark / system) presente en `PrivateHeader`, footer del `AppSidebar` y `SiteHeader`.
 - Todo componente nuevo se revisa en ambos temas antes de mergear; los tokens hacen el 95% del trabajo si no hay hex sueltos.
 - Evitar flash de tema: no leer `window`/tema en render de servidor; `suppressHydrationWarning` en `<html>` (ya aplicado).
+- **Re-derivación de tokens por alcance** (`.theme-dark-island`, `.signup-field`): un bloque puede redefinir los tokens semánticos (`--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-input`, `--color-ring`, `--color-primary(-foreground)`, `--color-secondary`, `--color-accent`, `--color-destructive`) **dentro de su propio alcance**, y todo primitivo que viva dentro adopta el material sin variantes ni hex en componentes. Es la forma de pintar un momento de marca (isla oscura de Fundadores, campo coral del registro) sin bifurcar componentes. Reglas: se aplica **una vez**, en el layout de la superficie; `--color-background` no se toca (el cristal se mezcla contra el fondo real y los overlays siguen siendo los de la app); el bloque declara como mucho **un** hex propio (`--sf-fg: #ffffff`, el texto sobre coral) y todo lo demás se deriva con `color-mix`; el bloque `.dark` del mismo alcance devuelve los tokens al tema (`--sf-fg: var(--foreground)`, destructivo al rojo). Cuando la marca cae sobre el campo, el isotipo conserva sus cintas y solo el wordmark toma el color del texto (`.signup-field .text-brand-wordmark`).
 - Imágenes/logos con variante por tema — **dos casos, según el logo**:
   - **A color** (varias tintas, como el logo horizontal de axi con sus tres cintas): dos archivos, renderizando ambos con `dark:hidden` / `hidden dark:block` (no JS).
   - **Monocromo** (silueta con canal alfa): **un solo archivo** como `mask-image` + `bg-current`. El color lo aporta el token de texto, así que sigue al tema sin una sola variante `dark:` y sin un segundo asset que mantener sincronizado. El color del archivo es irrelevante — solo cuenta su transparencia. Referencia: `shared/components/layout/site/KodecolBanner.tsx`.

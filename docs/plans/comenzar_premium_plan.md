@@ -1,6 +1,6 @@
 # Plan — `/comenzar` premium («Flow»): una pregunta por pantalla sobre el campo de marca
 
-> Estado: **F1, F2 y F3 hechas (2026-09-05)**, F3 en gate; queda F4 (docs). Rama `feat/comenzar-premium` (worktree `.claude/worktrees/feat-comenzar-premium`), desde `main` = `origin/main`.
+> Estado: **F1–F4 hechas (2026-09-05)**. Queda del dueño: `next build`, suite completa, revisión visual, merge a `main`, push y reindexar el grafo. Rama `feat/comenzar-premium` (worktree `.claude/worktrees/feat-comenzar-premium`), desde `main` = `origin/main`.
 > Mockups aprobados: v3 «Flow» https://claude.ai/code/artifact/5fafaf84-b9ee-407a-9ef0-47af48185b27 (la dirección) y v2 «bento» (referencia guardada en `docs/design/mockups/comenzar-premium-v2.html`, descartada como dirección).
 
 ## 1. Por qué
@@ -53,7 +53,7 @@ Eliminados: `SignupSummaryRail`, `CompanyStep`, `AccountStep`, y el uso de `Step
 | **F1** | Campo (`.signup-field`), cabecera con marca mono, puntos, ruta animada, transición entre pantallas, dominio de 5 pasos, pantallas Empresa/Ubicación/Tú/Cuenta en cristal, resumen final, skeleton, fix del copy; tests actualizados | ✅ en gate |
 | **F2** | Pantalla Oferta: `OfferTile` (cristal, `role=radio`/`checkbox`, marca redonda o cuadrada, gráfico en columna propia) + `graphics/OfferGraphics.tsx` (los 8 gráficos aprobados en `currentColor`, diccionarios `PACKAGE_GRAPHICS`/`MODULE_GRAPHICS`), Crecimiento y Free Trial a todo el ancho (primera y última fila coherentes), Esencial y Escala en dos columnas, `SegmentedControl surface="inline"` (adopta el cristal por la re-derivación), nota de ≥2 módulos, `SignupActions` con `offerBlocker` como microcopy; `ProviderCard` fuera del funnel | ✅ en gate |
 | **F3** | Móvil y pulido: la ruta se compacta también con viewport bajo (`(max-height: 760px)`, no solo por ancho); foco en el primer control al terminar la ENTRADA de cada pantalla (`onAnimationComplete` comparado con el objetivo `ENTER`, solo con `(hover: hover) and (pointer: fine)`); Enter avanza porque cada pantalla es un `<form>` de `DynamicForm`; estados de error sobre el campo (destructivo = blanco en claro, rojo en oscuro). Las capturas de las cinco pantallas quedan para la revisión del dueño en `next dev`: esta máquina no lo levanta | ✅ en gate |
-| **F4** | Docs y verjas: `docs/modules/onboarding.md` (B.2/B.3 decisiones 12–14, B.4 piezas nuevas), DESIGN-SYSTEM §5 (`.sf-glass`) y §8 (re-derivación de tokens por alcance), `public-site.md` si cambia el copy; reindexar grafo; `next build` y suite completa por el dueño | pendiente |
+| **F4** | Docs: `docs/modules/onboarding.md` (árbol B.2, decisiones 12–14, B.4, sección B.10), DESIGN-SYSTEM §5.3 (`.sf-glass`) y §8 (re-derivación de tokens por alcance), `architecture.md` §6, `public-site.md` §3/§4.3. Reindexar el grafo tras fusionar en `main` (el índice se deriva de la ruta del checkout principal); recargar el ADR desde `docs/adr.md` después | ✅ |
 
 Cada fase se cierra, se reporta y espera aprobación explícita antes de la siguiente.
 
