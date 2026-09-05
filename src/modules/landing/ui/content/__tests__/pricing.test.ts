@@ -68,6 +68,19 @@ describe("fecha de cierre", () => {
     })
   })
 
+  it("con el instante exacto del API la cuenta atrás no cierra antes que la promoción", () => {
+    // El API cierra a las 05:00Z (medianoche en Bogotá). A las 03:00Z del 1 de
+    // enero la promoción sigue abierta y faltan dos horas, en cualquier zona.
+    const endsAt = "2027-01-01T05:00:00.000Z"
+    expect(countdownParts(endsAt, new Date("2027-01-01T03:00:00.000Z"))).toEqual({
+      days: 0,
+      hours: 2,
+      minutes: 0,
+      seconds: 0,
+    })
+    expect(daysUntil(endsAt, new Date("2026-12-30T05:00:00.000Z"))).toBe(2)
+  })
+
   it("una fecha imposible rompe el build en vez de rodar en silencio al día siguiente", () => {
     expect(() => formatDeadline("2026-09-31")).toThrow(/no existe/)
   })

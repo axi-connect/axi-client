@@ -3,6 +3,7 @@ import {
   blockerForSignupStep,
   normalizeNit,
   normalizeVolumeId,
+  offerAxes,
   offerBlocker,
   offerCodesOf,
   offerSummary,
@@ -138,6 +139,12 @@ describe("selección de oferta", () => {
     expect(paquete.afterTrial).toBe(
       `${formatCop(planMonthlyCop(CATALOG, "crecimiento", "t5000", FIXTURE_NOW) as number)} COP/mes`,
     )
+  })
+
+  it("sin catálogo el eje de volumen queda sin resolver, nunca en «max» (B4)", () => {
+    expect(offerAxes({ kind: "package", code: "crecimiento" }, null).volume).toBeUndefined()
+    expect(offerAxes({ kind: "package", code: "crecimiento" }, CATALOG).volume).toBe(CATALOG.defaultVolumeId)
+    expect(offerAxes({ kind: "package", code: "crecimiento", volume: "t5000" }, CATALOG).volume).toBe("t5000")
   })
 
   it("sin catálogo el rail dice «a confirmar» en vez de inventar un precio", () => {

@@ -83,7 +83,13 @@ export function FoundersBar({ promotion }: { promotion: CatalogPromotion }) {
               <p className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
                 {FOUNDERS.countdownLabel}
               </p>
-              <FlipCountdown className="mt-3" deadline={lastDay} deadlineLabel={formatDeadline(lastDay)} />
+              {/* La cuenta atrás corre contra el INSTANTE de cierre del API, el
+                  mismo que decide el precio; `lastDay` es solo para los textos. */}
+              <FlipCountdown
+                className="mt-3"
+                deadline={promotion.endsAt as string}
+                deadlineLabel={formatDeadline(lastDay)}
+              />
               <p className="text-muted-foreground mt-3 text-xs">Hasta el {formatDeadlineLong(lastDay)}</p>
             </div>
           ) : null}

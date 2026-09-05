@@ -12,7 +12,6 @@ import { ONBOARDING_WELCOME_PATH } from "@/modules/onboarding/domain/onboarding-
 import type { SignupPayload } from "@/shared/auth/auth.types";
 import {
   BILLING_PERIODS,
-  MAX_VOLUME_ID,
   MODULES,
   MODULE_IDS,
   PRICING,
@@ -79,12 +78,17 @@ export function normalizeVolumeId(raw: string): string {
   return /^\d+$/.test(raw) ? `t${raw}` : raw;
 }
 
-/** Los dos ejes de una selección, con sus valores por defecto ya resueltos. */
+/**
+ * Los dos ejes de una selección, con sus valores por defecto ya resueltos.
+ * Sin catálogo el volumen queda SIN resolver (`undefined`), nunca «max»: un
+ * borrador guardado con el sentinela diría «Más de 25.000 al mes» y «A la
+ * medida» a quien pidió 1.000 cuando el catálogo volviera.
+ */
 export function offerAxes(
   selection: OfferSelection,
   catalog: PublicCatalog | null,
-): { volume: VolumeId; period: BillingPeriodId } {
-  const fallback = catalog?.defaultVolumeId ?? MAX_VOLUME_ID;
+): { volume: VolumeId | undefined; period: BillingPeriodId } {
+  const fallback = catalog?.defaultVolumeId;
   if (selection.kind !== "package") return { volume: fallback, period: "monthly" };
   return {
     volume: selection.volume ?? fallback,
@@ -289,7 +293,8 @@ export function offerSummary(
     if (plan.group === "package") {
       const { volume, period } = offerAxes(selection, catalog);
       const price = packagePriceCop(catalog, selection.code, volume, now);
-      const volumeLabel = catalog === null ? null : volumeById(catalog, volume).label;
+      const volumeLabel =
+        catalog === null ? null : volumeById(catalog, volume ?? catalog.defaultVolumeId).label;
       // El volumen sale del eje elegido, no de la primera viñeta del plan:
       // desde que son dos ejes, las viñetas solo hablan de funciones.
       return {

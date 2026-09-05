@@ -937,10 +937,20 @@ export function formatDeadline(iso: string): string {
   );
 }
 
+/**
+ * Instante de cierre. Acepta el instante EXACTO del API (`2027-01-01T05:00:00.000Z`,
+ * el que decide si la promoción sigue abierta) o un día de calendario
+ * (`YYYY-MM-DD`), que se toma al final del día en la zona del proceso. La cuenta
+ * atrás debe recibir siempre el instante: con el día, en un servidor en UTC el
+ * reloj llegaría a cero cinco horas antes de que el API cerrara la promoción.
+ */
+function deadlineInstant(iso: string): number {
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? parseIsoDate(iso, true).getTime() : new Date(iso).getTime();
+}
+
 /** Días que faltan para el cierre. Solo en cliente: depende del reloj. */
 export function daysUntil(iso: string, now: Date): number {
-  const end = parseIsoDate(iso, true).getTime();
-  return Math.ceil((end - now.getTime()) / 86_400_000);
+  return Math.ceil((deadlineInstant(iso) - now.getTime()) / 86_400_000);
 }
 
 export type CountdownParts = {
@@ -956,7 +966,7 @@ export type CountdownParts = {
  * aquí solo se cuenta.
  */
 export function countdownParts(iso: string, now: Date): CountdownParts {
-  const ms = Math.max(0, parseIsoDate(iso, true).getTime() - now.getTime());
+  const ms = Math.max(0, deadlineInstant(iso) - now.getTime());
   const total = Math.floor(ms / 1000);
   return {
     days: Math.floor(total / 86_400),

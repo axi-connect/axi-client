@@ -235,6 +235,20 @@ describe("PricingPlans", () => {
     expect(card.queryByText(foundersDiscountBadge(discountLabel(PROMOTION)))).not.toBeInTheDocument()
   })
 
+  it("a las 03:00Z del 1 de enero la promoción sigue abierta y la cuenta atrás no está en cero", () => {
+    // El instante de cierre es 05:00Z; el contador corre contra ESE instante y
+    // no contra el final del día de calendario en la zona del servidor.
+    jest.setSystemTime(new Date("2027-01-01T03:00:00.000Z"))
+    render(<PricingPlans catalog={CATALOG} />)
+
+    expect(screen.getByTestId("founders-slots")).toBeInTheDocument()
+    expect(cardOf(ENTRY_PLAN.id).getByText(formatCop(monthlyOf(ENTRY_PLAN)))).toBeInTheDocument()
+    expect(screen.getByText(/quedan 0 días/)).toBeInTheDocument()
+    // Fichas: días 00, horas 02 (aria-hidden, se leen del DOM).
+    const tiles = screen.getAllByText("02")
+    expect(tiles.length).toBeGreaterThan(0)
+  })
+
   it("vencida la fecha cae sola a precio de lista, sin tocar nada más", () => {
     jest.setSystemTime(AFTER_DEADLINE)
     render(<PricingPlans catalog={CATALOG} />)
