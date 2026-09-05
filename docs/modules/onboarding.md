@@ -105,7 +105,7 @@ ui/
                                  FlowBackButton, FlowTile, FlowSkeleton, flow.styles.ts, flow-motion.ts, use-staggered-count.ts
   onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton, WelcomeView,
                                  steps/{Niche,BusinessHours,CatalogImport,AgentTemplates,WhatsApp,Done}Step
-  catalog-import/                ImportDropzone, ImportJobProgress, ExtractedProductsReview
+  catalog-import/                ImportDropzone, CatalogScan (el haz y las filas que aparecen; antes ImportJobProgress), ExtractedProductsReview
   agents/                        TemplateCard, TemplateCustomizeSheet
   components/                    OnboardingResumeBanner
 ```

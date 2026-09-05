@@ -25,7 +25,7 @@ import {
 } from "@/modules/onboarding/infrastructure/services/catalog-import-service.adapter";
 import { ExtractedProductsReview } from "@/modules/onboarding/ui/catalog-import/ExtractedProductsReview";
 import { ImportDropzone } from "@/modules/onboarding/ui/catalog-import/ImportDropzone";
-import { ImportJobProgress } from "@/modules/onboarding/ui/catalog-import/ImportJobProgress";
+import { CatalogScan } from "@/modules/onboarding/ui/catalog-import/CatalogScan";
 import { FlowActions, FlowBackButton } from "@/modules/onboarding/ui/flow/FlowActions";
 import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
 
@@ -37,8 +37,9 @@ const NICHE_HINTS: Record<string, string> = {
 };
 
 /**
- * Paso 3 · Catálogo (mockup F0-B). Cuatro fases en una sola pantalla: subir
- * → analizando (job sondeado) → revisar (edición en línea) → creado. Al
+ * Paso 3 · Catálogo (onboarding «Flow»). Cuatro fases en una sola pantalla:
+ * subir (dropzone de cristal) → leyendo (`CatalogScan`: el haz y las filas que
+ * aparecen) → revisar (la tabla, en hoja sólida) → creado. Al
  * volver con un `import_id` guardado en el progreso, retoma la revisión donde
  * estaba: cerrar la pestaña no pierde el análisis.
  *
@@ -145,7 +146,7 @@ export function CatalogImportStep({
         : null;
 
   return (
-    <FlowScreen focusHeading size={phase === "review" ? "full" : "narrow"} title={copy.title} lead={copy.lead}>
+    <FlowScreen focusHeading size={phase === "review" ? "full" : phase === "processing" ? "wide" : "narrow"} title={copy.title} lead={copy.lead}>
       {phase === "upload" ? (
         <div className="w-full max-w-[560px] text-left">
           <ImportDropzone onFile={(file) => void upload(file)} disabled={uploading} nicheHint={hint} />
@@ -159,8 +160,8 @@ export function CatalogImportStep({
       ) : null}
 
       {phase === "processing" && job ? (
-        <div className="w-full max-w-[560px] text-left">
-          <ImportJobProgress job={job} stalled={stalled} onKeepWaiting={resume} onContinueLater={onSkip} />
+        <div className="w-full max-w-[720px] text-left">
+          <CatalogScan job={job} stalled={stalled} onKeepWaiting={resume} onContinueLater={onSkip} />
         </div>
       ) : null}
 

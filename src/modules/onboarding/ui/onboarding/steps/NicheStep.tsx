@@ -1,41 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import {
-  BedDouble,
-  BriefcaseBusiness,
-  GraduationCap,
-  HeartPulse,
-  Home,
-  Shirt,
-  Store,
-  Truck,
-  Utensils,
-  type LucideIcon,
-} from "lucide-react";
 
-import { ProviderCard } from "@/shared/components/features/provider-card";
 import { NICHES } from "@/modules/onboarding/domain/niches";
 import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
 import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
-
-/** Mapa cerrado por `code`; un nicho nuevo sin icono cae a la tienda genérica. */
-const NICHE_ICONS: Record<string, LucideIcon> = {
-  restaurants: Utensils,
-  retail_fashion: Shirt,
-  hotels_tourism: BedDouble,
-  health_beauty: HeartPulse,
-  real_estate: Home,
-  education: GraduationCap,
-  professional_services: BriefcaseBusiness,
-  b2b_distribution: Truck,
-  other: Store,
-};
+import { FlowTile } from "@/modules/onboarding/ui/flow/FlowTile";
+import { nicheGraphic } from "@/modules/onboarding/ui/onboarding/graphics/NicheGraphics";
 
 /**
- * Paso 1 · Negocio. Único paso no omitible: sin nicho no hay plantillas. La
- * pregunta es el título; el motivo del bloqueo vive bajo el CTA como microcopy
- * y lo describe (`aria-describedby`) mientras no haya elección.
+ * Paso 1 · Negocio. Único paso no omitible: sin nicho no hay plantillas. Las
+ * nueve opciones son fichas «Flow» (las mismas de la oferta del registro) con
+ * su gráfico monocromo. La pregunta es el título; el motivo del bloqueo vive
+ * bajo el CTA como microcopy y lo describe (`aria-describedby`) mientras no
+ * haya elección.
  */
 export function NicheStep({
   initial,
@@ -57,17 +35,19 @@ export function NicheStep({
       title="¿Qué tipo de negocio tienes?"
       lead="Con esto afinamos las plantillas de agentes, las categorías de tu catálogo y los ejemplos que verás en los siguientes pasos."
     >
-      <div role="radiogroup" aria-label="Tipo de negocio" className="grid w-full gap-3 text-left sm:grid-cols-2 lg:grid-cols-3">
+      <div role="radiogroup" aria-label="Tipo de negocio" className="grid w-full gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {NICHES.map((niche) => {
-          const Icon = NICHE_ICONS[niche.code] ?? Store;
+          const Graphic = nicheGraphic(niche.code);
           return (
-            <ProviderCard
+            <FlowTile
               key={niche.code}
-              icon={<Icon aria-hidden="true" className="text-brand size-5" />}
-              title={niche.name}
-              body={niche.description}
-              selected={selected === niche.code}
+              role="radio"
+              testId={`niche-${niche.code}`}
+              checked={selected === niche.code}
               onClick={() => setSelected(niche.code)}
+              title={niche.name}
+              description={niche.description}
+              graphic={<Graphic />}
             />
           );
         })}

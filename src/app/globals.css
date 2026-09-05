@@ -1714,3 +1714,18 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .flow-stop-badge { background-color: var(--flow-done-bg); color: var(--flow-done-fg); }
 @keyframes flow-stop-pulse { 0% { scale: 1; } 50% { scale: 1.14; } 100% { scale: 1; } }
 @media (prefers-reduced-motion: reduce) { .flow-stop--lit { animation: none; } }
+
+/* «La IA lee tu catálogo» (CatalogScan): el haz que recorre el documento. Es un indicador de
+   progreso ligado a un job del servidor (como un spinner), no decoración: existe solo mientras
+   el job procesa, se vuelve DETERMINADO (translateY por ratio) en cuanto el servidor informa
+   páginas, y desaparece al llegar la revisión. El barrido en bucle es solo el estado indeterminado. */
+.flow-scan-beam {
+  position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background-color: var(--axi-violet);
+  box-shadow: 0 0 18px 4px color-mix(in srgb, var(--axi-violet) 45%, transparent);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.flow-scan-beam--sweep { animation: flow-scan 2.4s ease-in-out infinite alternate; }
+.flow-scan-beam--paused { animation-play-state: paused; opacity: 0.4; }
+@keyframes flow-scan { from { transform: translateY(14px); } to { transform: translateY(var(--flow-scan-travel, 220px)); } }
+@media (prefers-reduced-motion: reduce) { .flow-scan-beam, .flow-scan-beam--sweep { animation: none; transform: none; } }
