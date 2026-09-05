@@ -1605,6 +1605,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --sf-glass-on: color-mix(in srgb, var(--sf-fg) 30%, transparent);
   --sf-line: color-mix(in srgb, var(--sf-fg) 26%, transparent);
   --sf-soft: color-mix(in srgb, var(--sf-fg) 78%, transparent);
+  /* Borde de lo seleccionado y color de «completado». Sobre el campo, completado = cristal encendido:
+     el violeta no se lee sobre coral. El suelo (`.flow-ground`) los redefine. */
+  --sf-line-on: var(--sf-fg);
+  --flow-done-bg: var(--sf-glass-on);
+  --flow-done-fg: var(--sf-fg);
+  --flow-done-ring: var(--sf-glass);
 
   --color-foreground: var(--sf-fg);
   --color-muted-foreground: var(--sf-soft);
@@ -1664,8 +1670,47 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    controla (DESIGN-SYSTEM §5.2), y los nodos viajan en un transform. */
 .sf-glass { background-color: var(--sf-glass); border: 1px solid var(--sf-line); }
 .sf-glass-hover:hover { background-color: var(--sf-glass-hover); }
-.sf-glass-on { background-color: var(--sf-glass-on); border-color: var(--sf-fg); }
+.sf-glass-on { background-color: var(--sf-glass-on); border-color: var(--sf-line-on); }
 .sf-line { border-color: var(--sf-line); }
 
-/* El trazo de la ruta y su tipografía de etiqueta. */
-.signup-route-path { fill: none; stroke: color-mix(in srgb, var(--sf-fg) 80%, transparent); stroke-width: 1.5; }
+/* El trazo de la ruta «Flow». Sobre el suelo baja al 26 %: es guía, no protagonista. */
+.flow-route-path { fill: none; stroke: color-mix(in srgb, var(--sf-fg) 80%, transparent); stroke-width: 1.5; }
+.flow-ground .flow-route-path { stroke: color-mix(in srgb, var(--sf-fg) 26%, transparent); }
+
+/* ------------------------------------------------------------------ */
+/* El suelo del onboarding («Flow», segunda escena del mismo material, 2026-09-05).
+   MISMO vocabulario `--sf-*` que `.signup-field`, derivado de los tokens de la app:
+   el cristal blanco del campo se vuelve superficie del tema, «seleccionado» se vuelve
+   sólido (elevado, nunca teñido) y «completado» es violeta. NO re-deriva `--color-*`:
+   sobre el suelo los primitivos ya son los de la app (el CTA sigue coral). Se aplica
+   una vez, en el layout de `(onboarding)`; también en el banner del panel, para que
+   la mini-ruta resuelva sus variables fuera de `/onboarding`. Sin hex: conmuta con
+   `.dark` porque consume tokens que ya conmutan. */
+.flow-ground {
+  --sf-fg: var(--foreground);
+  --sf-on-fg: var(--background);
+  --sf-glass: color-mix(in srgb, var(--background) 65%, transparent);
+  --sf-glass-hover: color-mix(in srgb, var(--background) 88%, transparent);
+  --sf-glass-on: var(--background);
+  --sf-line: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --sf-line-on: color-mix(in srgb, var(--foreground) 34%, transparent);
+  --sf-soft: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --flow-done-bg: var(--axi-violet);
+  --flow-done-fg: var(--axi-on-color);
+  --flow-done-ring: color-mix(in srgb, var(--axi-violet) 22%, transparent);
+}
+
+/* Estados de una parada de la ruta. `--skipped`: quedó «para después» (borde discontinuo, honesto).
+   `--lit`: encendida en el cierre; el pulso va por `scale` (propiedad individual) para no pisar el
+   `translate(-50%,-50%)` inline que la centra. `.flow-stop-badge`: el check pequeño de «hecha». */
+.flow-stop--skipped { border-style: dashed; }
+.flow-stop--lit {
+  background-color: var(--flow-done-bg);
+  color: var(--flow-done-fg);
+  border-color: var(--flow-done-bg);
+  box-shadow: 0 0 0 10px var(--flow-done-ring);
+  animation: flow-stop-pulse 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1;
+}
+.flow-stop-badge { background-color: var(--flow-done-bg); color: var(--flow-done-fg); }
+@keyframes flow-stop-pulse { 0% { scale: 1; } 50% { scale: 1.14; } 100% { scale: 1; } }
+@media (prefers-reduced-motion: reduce) { .flow-stop--lit { animation: none; } }

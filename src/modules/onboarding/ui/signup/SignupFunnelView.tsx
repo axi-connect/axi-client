@@ -11,7 +11,6 @@ import { track } from "@/core/analytics/track";
 import { messageForCode } from "@/core/lib/error-messages";
 import { LoginError } from "@/core/providers/auth-provider";
 import { useSplashOptional } from "@/core/providers/splash-provider";
-import { fade, spring } from "@/core/styles/motion";
 import { useAuth, useSession } from "@/shared/auth/auth.hooks";
 import type { PublicCatalog } from "@/modules/landing/public";
 import {
@@ -30,13 +29,15 @@ import {
   readSignupDraft,
   writeSignupDraft,
 } from "@/modules/onboarding/infrastructure/storage/signup-draft.storage";
+import { FLOW_ENTER, FLOW_EXIT, FLOW_INITIAL, hasFinePointer } from "@/modules/onboarding/ui/flow/flow-motion";
+import { FlowRoute, type FlowStop } from "@/modules/onboarding/ui/flow/FlowRoute";
+import { FlowProgressDots, FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
+import { FlowSkeleton } from "@/modules/onboarding/ui/flow/FlowSkeleton";
 import { CompanyIdentityStep } from "@/modules/onboarding/ui/signup/CompanyIdentityStep";
 import { CompanyLocationStep } from "@/modules/onboarding/ui/signup/CompanyLocationStep";
 import { OfferStep } from "@/modules/onboarding/ui/signup/OfferStep";
 import { OwnerStep } from "@/modules/onboarding/ui/signup/OwnerStep";
 import { PasswordStep } from "@/modules/onboarding/ui/signup/PasswordStep";
-import { SignupProgressDots, SignupScreen } from "@/modules/onboarding/ui/signup/SignupScreen";
-import { SignupRoute } from "@/modules/onboarding/ui/signup/SignupRoute";
 import { SIGNUP_STEP_ICONS } from "@/modules/onboarding/ui/signup/signup-field.styles";
 import { accountDraftToValues, type PasswordValues } from "@/modules/onboarding/ui/signup/config/account-step.config";
 import { companyDraftToValues } from "@/modules/onboarding/ui/signup/config/company-step.config";
@@ -65,16 +66,7 @@ const STEP_COPY = [
   },
 ] as const;
 
-const ROUTE_STOPS = SIGNUP_STEPS.map((step) => ({ code: step.code, label: step.label, icon: SIGNUP_STEP_ICONS[step.code] }));
-
-/** Objetivo de entrada de cada pantalla. Constante para reconocerlo en `onAnimationComplete`. */
-const ENTER = { opacity: 1, y: 0, transition: spring.soft } as const;
-const EXIT = { opacity: 0, y: -18, transition: fade.fast } as const;
-
-/** Solo con puntero fino: en móvil el foco automático levanta el teclado sin que nadie lo pida. */
-function hasFinePointer(): boolean {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-}
+const ROUTE_STOPS: readonly FlowStop[] = SIGNUP_STEPS.map((step) => ({ code: step.code, label: step.label, icon: SIGNUP_STEP_ICONS[step.code] }));
 
 /**
  * Orquestador de `/comenzar` (mockup v3 «Flow», aprobado 2026-09-05): una
@@ -112,7 +104,7 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
   // y no pasa nada; en la salida de la pantalla anterior tampoco (se compara
   // con el objetivo de entrada, no con el de salida).
   const focusFirstControl = useCallback((definition: unknown) => {
-    if (definition !== ENTER || !hasFinePointer()) return;
+    if (definition !== FLOW_ENTER || !hasFinePointer()) return;
     const control = screenRef.current?.querySelector<HTMLElement>('input:not([type="hidden"]):not([tabindex="-1"]), select, [role="combobox"]');
     control?.focus({ preventScroll: true });
   }, []);
@@ -213,7 +205,7 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
   return (
     <div className="flex w-full flex-1 flex-col">
       <div className="flex flex-col items-center gap-3 px-6 pt-1">
-        <SignupProgressDots total={SIGNUP_STEPS.length} current={step} />
+        <FlowProgressDots total={SIGNUP_STEPS.length} current={step} />
         {isAuthenticated ? (
           <p role="status" className="sf-glass rounded-full px-4 py-2 text-[13px]">
             Ya tienes una sesión abierta.{" "}
@@ -230,13 +222,13 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
           <motion.div
             key={step}
             className="w-full"
-            initial={{ opacity: 0, y: 22 }}
-            animate={ENTER}
-            exit={EXIT}
+            initial={FLOW_INITIAL}
+            animate={FLOW_ENTER}
+            exit={FLOW_EXIT}
             onAnimationComplete={focusFirstControl}
           >
             <section ref={screenRef} aria-label={`Paso ${step + 1} de ${SIGNUP_STEPS.length}: ${SIGNUP_STEPS[step].label}`}>
-              <SignupScreen title={copy.title} lead={copy.lead}>
+              <FlowScreen title={copy.title} lead={copy.lead}>
                 {step === 0 ? <OfferStep selection={draft.offer} catalog={catalog} onChange={setOffer} onNext={() => goTo(1)} /> : null}
                 {step === 1 ? (
                   <CompanyIdentityStep
@@ -300,33 +292,18 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
                     }}
                   />
                 ) : null}
-              </SignupScreen>
+              </FlowScreen>
             </section>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <SignupRoute stops={ROUTE_STOPS} current={step} onJump={goTo} />
+      <FlowRoute stops={ROUTE_STOPS} current={step} onJump={goTo} ariaLabel="Recorrido del registro" />
     </div>
   );
 }
 
-/** Esqueleto estructural del funnel (también lo usa `loading.tsx`): la pregunta y su control, en cristal. */
+/** Esqueleto del registro (también lo usa `loading.tsx`): la pregunta y su control, en cristal. */
 export function SignupSkeleton() {
-  return (
-    <div className="flex w-full flex-1 flex-col items-center px-6 pt-1" aria-busy="true" aria-label="Cargando el registro">
-      <div className="flex items-center gap-[7px]">
-        {Array.from({ length: SIGNUP_STEPS.length }, (_, index) => (
-          <i key={index} className="bg-foreground/35 block size-1.5 rounded-full" />
-        ))}
-      </div>
-      <div className="flex w-full max-w-[440px] flex-1 flex-col items-center justify-center gap-4 py-6">
-        <div className="sf-glass h-14 w-3/4 animate-pulse rounded-[14px]" />
-        <div className="sf-glass h-4 w-1/2 animate-pulse rounded-full" />
-        <div className="sf-glass mt-6 h-14 w-full animate-pulse rounded-[14px]" />
-        <div className="sf-glass h-14 w-full animate-pulse rounded-[14px]" />
-      </div>
-      <div className="h-[280px] w-full shrink-0" />
-    </div>
-  );
+  return <FlowSkeleton steps={SIGNUP_STEPS.length} label="Cargando el registro" />;
 }

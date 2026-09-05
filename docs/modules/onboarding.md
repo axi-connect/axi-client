@@ -96,10 +96,13 @@ infrastructure/
   hooks/use-catalog-import-job.ts sondeo 2 s → 5 s → «tarda más» a los 3 min
   storage/signup-draft.storage.ts sessionStorage sin la contraseña
 ui/
-  signup/                        SignupFunnelView (orquestador, 5 pantallas), SignupScreen + SignupProgressDots,
-                                 SignupRoute (la ruta animada), SignupActions, OfferStep + OfferTile + graphics/,
+  signup/                        SignupFunnelView (orquestador, 5 pantallas; las primitivas viven en flow/),
+                                 OfferStep + graphics/ (los 8 gráficos de la oferta),
                                  CompanyIdentityStep, CompanyLocationStep, OwnerStep, PasswordStep, PasswordField,
-                                 TurnstileWidget, signup-field.styles.ts, config/*.config.tsx
+                                 TurnstileWidget, signup-field.styles.ts (iconos de las paradas + re-exports de flow/), config/*.config.tsx
+  flow/                          Primitivas «Flow» compartidas por el registro y el onboarding (F1, 2026-09-05): FlowRoute (ruta
+                                 animada; paradas pending/done/skipped; `celebrate`), FlowScreen + FlowProgressDots, FlowActions +
+                                 FlowBackButton, FlowTile, FlowSkeleton, flow.styles.ts, flow-motion.ts, use-staggered-count.ts
   onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton, WelcomeView,
                                  steps/{Niche,BusinessHours,CatalogImport,AgentTemplates,WhatsApp,Done}Step
   catalog-import/                ImportDropzone, ImportJobProgress, ExtractedProductsReview
@@ -146,7 +149,7 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
     `Button`, `Checkbox`, `SegmentedControl`) se ven de cristal sin variantes ni hex. `--color-background` no
     se toca. El isotipo conserva sus tres cintas (el dueño rechazó el mono blanco); solo el wordmark toma el
     color del texto.
-14. **La ruta es navegación, no decoración.** `SignupRoute` es un `nav`: las paradas recorridas son botones
+14. **La ruta es navegación, no decoración.** `FlowRoute` (antes `SignupRoute`; hoy en `ui/flow/`) es un `nav`: las paradas recorridas son botones
     «Volver a …»; la activa lleva `aria-current="step"`; solo el trazo SVG va `aria-hidden`. Adelante solo con
     información (`blockerForSignupStep`), atrás siempre; al recargar, `reachableSignupStep` vuelve al paso más
     lejano que las respuestas guardadas permitan. Con `prefers-reduced-motion` la curva queda fija.
@@ -158,7 +161,7 @@ unificar la marca de `/comenzar` con la landing) · `shared/components/ui/confet
 (extraído de `beams-background`) · `SplashContext.phase` · `shared/data/countries.ts` (promovido desde `platform`) ·
 `DraftBackButton` en `shared/components/features/dynamic-form` · `ProviderCard.selectionRole`
 (`radio` | `checkbox`; ya no se usa en el funnel desde el rediseño «Flow») · `.signup-field`, `.sf-glass*`,
-`.signup-grain` y `.signup-route-path` en `globals.css` · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
+`.signup-grain`, `.flow-route-path` y `.flow-ground` en `globals.css` · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
 `core/lib/error-messages.ts` · `AuthProvider.signup()` · barrels `landing/public.ts` y
 `onboarding/public.ts`; `channels/public.ts` += `ConnectChannelFlow`; `agents/public.ts` +=
 `listCharacters`, `characterStyle`, `characterHasVoice`, `CharacterDTO`, `AiAgentDTO`.
@@ -245,11 +248,11 @@ de progreso arriba y, al pie, una curva con una parada por paso que se desliza c
 
 Piezas: `SignupFunnelView` (estado, borrador, analítica, errores por `code`, `AnimatePresence mode="wait"` con
 `spring.soft`/`fade.fast`, foco en el primer control al completar la ENTRADA y solo con puntero fino),
-`SignupScreen` (el `h1` por pantalla ES la etiqueta visible; los campos llevan `SrLabel` y el placeholder
-nombra el control), `SignupRoute` (SVG de cúbicas con tangentes horizontales, dos paradas virtuales en los
+`FlowScreen` (antes `SignupScreen`; desde la segunda tanda «Flow», 2026-09-05, estas primitivas viven en `ui/flow/` y las comparte `/onboarding`, ver `docs/plans/onboarding_flow_plan.md`) (el `h1` por pantalla ES la etiqueta visible; los campos llevan `SrLabel` y el placeholder
+nombra el control), `FlowRoute` (SVG de cúbicas con tangentes horizontales, dos paradas virtuales en los
 extremos, la activa centrada por `translateX`; alto 280/210 px, se compacta por ancho < 640 o viewport
-< 760 px de alto; en jsdom mide con `FALLBACK_WIDTH`), `SignupActions` (CTA blanco a todo el ancho +
-microcopy + «Atrás»), `OfferTile` (ficha de cristal; marca redonda en radio y cuadrada en checkbox; el
+< 760 px de alto; en jsdom mide con `FALLBACK_WIDTH`), `FlowActions` (CTA blanco a todo el ancho +
+microcopy + «Atrás»), `FlowTile` (ficha de cristal; marca redonda en radio y cuadrada en checkbox; el
 gráfico en columna propia de 128/190 px) y `graphics/OfferGraphics.tsx` (los ocho gráficos aprobados en
 `currentColor` con `vector-effect: non-scaling-stroke`). Crecimiento y Free Trial van a todo el ancho.
 

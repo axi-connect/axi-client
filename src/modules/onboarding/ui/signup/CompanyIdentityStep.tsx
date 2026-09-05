@@ -7,7 +7,7 @@ import {
   type CompanyIdentityValues,
   type CompanyStepValues,
 } from "@/modules/onboarding/ui/signup/config/company-step.config";
-import { SignupActions } from "@/modules/onboarding/ui/signup/SignupActions";
+import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
 
 /** Pantalla «Empresa»: cómo se llama (nombre + NIT). «Continuar» valida; «Atrás» conserva el borrador. */
 export function CompanyIdentityStep({
@@ -32,7 +32,7 @@ export function CompanyIdentityStep({
       onSubmit={(values) => onNext(values)}
       actions={{
         render: ({ submitting }) => (
-          <SignupActions label="Continuar" submitting={submitting} back={<DraftBackButton<CompanyIdentityValues> onBack={onBack} />} />
+          <FlowActions label="Continuar" submitting={submitting} back={<DraftBackButton<CompanyIdentityValues> onBack={onBack} />} />
         ),
       }}
     />

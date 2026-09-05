@@ -11,7 +11,7 @@ import {
   type AccountStepValues,
   type PasswordValues,
 } from "@/modules/onboarding/ui/signup/config/account-step.config";
-import { SignupActions } from "@/modules/onboarding/ui/signup/SignupActions";
+import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
 import { TurnstileWidget } from "@/modules/onboarding/ui/signup/TurnstileWidget";
 
 /**
@@ -88,7 +88,7 @@ export function PasswordStep({
                 {submitError}
               </p>
             ) : null}
-            <SignupActions
+            <FlowActions
               label="Crear mi cuenta y empezar"
               submittingLabel="Creando tu cuenta…"
               submitting={submitting}

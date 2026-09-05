@@ -6,23 +6,26 @@ import { Check } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 
 /**
- * Ficha de una oferta sobre el campo (mockup v3 «Flow»): cristal blanco,
- * texto a la izquierda y el gráfico de capacidad en su **columna propia** a la
- * derecha (el dueño rechazó la versión en que se solapaba con el texto).
+ * Ficha «Flow» (mockup v3): cristal sobre el campo, superficie elevada sobre el
+ * suelo; texto a la izquierda y el gráfico de capacidad en su **columna
+ * propia** a la derecha (el dueño rechazó la versión en que se solapaba con el
+ * texto). Es la misma pieza para paquetes, módulos, nichos y plantillas: el
+ * material lo pone el alcance (`--sf-*`), el contenido lo ponen las props.
  *
  * «Seleccionado = elevado, nunca teñido» sigue valiendo aquí, traducido al
- * material: el cristal sube al 30 %, el borde se enciende y aparece la marca.
- * La marca es redonda en un `radio` (una sola opción) y cuadrada en un
- * `checkbox` (varias), para que se lea cuántas se pueden elegir.
+ * material: el cristal sube al 30 % (o se vuelve sólido sobre el suelo), el
+ * borde se enciende y aparece la marca. La marca es redonda en un `radio`
+ * (una sola opción) y cuadrada en un `checkbox` (varias), para que se lea
+ * cuántas se pueden elegir.
  */
-export function OfferTile({
+export function FlowTile({
   role,
   checked,
   onClick,
-  name,
+  title,
   badge,
-  price,
-  priceNote,
+  meta,
+  metaNote,
   description,
   graphic,
   featured = false,
@@ -31,11 +34,12 @@ export function OfferTile({
   role: "radio" | "checkbox";
   checked: boolean;
   onClick: () => void;
-  name: string;
+  title: string;
   badge?: string;
-  price: ReactNode;
-  /** Precio de lista tachado u otra nota bajo el precio; línea propia para no empujar el gráfico. */
-  priceNote?: ReactNode;
+  /** La cifra o el dato fuerte de la ficha (precio, rol…); línea propia en tipografía de título. */
+  meta?: ReactNode;
+  /** Nota bajo la cifra (precio de lista tachado…); línea propia para no empujar el gráfico. */
+  metaNote?: ReactNode;
   description: ReactNode;
   graphic: ReactNode;
   /** Ocupa las dos columnas y da más ancho al gráfico. */
@@ -73,15 +77,15 @@ export function OfferTile({
 
       <span className="flex min-w-0 flex-col gap-0.5 overflow-hidden pr-1">
         <span className="flex items-center gap-2 text-[15.5px] font-semibold">
-          {name}
+          {title}
           {badge ? (
             <span className="bg-foreground text-primary-foreground inline-flex h-5 items-center rounded-full px-2 text-[10.5px] font-semibold tracking-[.04em] uppercase">
               {badge}
             </span>
           ) : null}
         </span>
-        <span className="font-heading text-[17px] leading-tight font-bold tracking-[-.01em] whitespace-nowrap tabular-nums">{price}</span>
-        {priceNote ? <span className="text-muted-foreground text-xs leading-tight tabular-nums">{priceNote}</span> : null}
+        {meta ? <span className="font-heading text-[17px] leading-tight font-bold tracking-[-.01em] whitespace-nowrap tabular-nums">{meta}</span> : null}
+        {metaNote ? <span className="text-muted-foreground text-xs leading-tight tabular-nums">{metaNote}</span> : null}
         <span className="text-muted-foreground text-[12.5px] leading-[1.35]">{description}</span>
       </span>
 
