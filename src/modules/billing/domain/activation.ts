@@ -88,9 +88,16 @@ export function daysUntil(iso: string | null, now: Date = new Date()): number | 
  * La cotización de hoy que viaja en un 409 `billing/price_changed`: el servidor
  * la manda en `details.quote_now` para que la segunda confirmación muestre
  * exactamente lo que va a facturar. `null` si el error es otro.
+ *
+ * `billing/promotion_closed` entra por la misma puerta cuando trae cotización:
+ * la promoción que el cliente eligió se agotó o venció, que es OTRA causa del
+ * mismo hecho. Sin esto, el cliente veía un error seco y se quedaba sin forma
+ * de activar su plan al precio de hoy.
  */
+const QUOTED_ERROR_CODES = ["billing/price_changed", "billing/promotion_closed"];
+
 export function priceChangedFromError(error: unknown): ActivationQuoteDTO | null {
-  if (!isHttpError(error) || error.code !== "billing/price_changed") return null;
+  if (!isHttpError(error) || !QUOTED_ERROR_CODES.includes(error.code ?? "")) return null;
   const quote = error.problem?.details?.quote_now;
   if (typeof quote !== "object" || quote === null) return null;
   const candidate = quote as Partial<ActivationQuoteDTO>;
