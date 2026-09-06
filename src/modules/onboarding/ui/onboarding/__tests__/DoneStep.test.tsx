@@ -42,6 +42,7 @@ const entitlements: EntitlementsDTO = {
   plans: [{ id: "p", code: "sbs", public_slug: "sbs", kind: "package", name: "Small Business Suite" }],
   capabilities: ["core", "sales"],
   pending_offer: null,
+  quote: null,
   trial: { active: true, ends_at: "2026-09-08T10:00:00Z" },
   included: [
     {

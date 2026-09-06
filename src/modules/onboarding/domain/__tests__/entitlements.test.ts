@@ -5,6 +5,7 @@ const base: EntitlementsDTO = {
   plans: [{ id: "p1", code: "trial", public_slug: "free_trial", kind: "package", name: "Prueba gratuita" }],
   capabilities: ["core"],
   pending_offer: null,
+  quote: null,
   trial: { active: true, ends_at: "2026-09-08T10:00:00Z" },
   included: [],
 }
