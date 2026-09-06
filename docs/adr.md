@@ -6,7 +6,7 @@
 > Si actualizas algo, actualízalo **aquí primero** y luego recarga el grafo.
 
 Documento maestro de arquitectura: `docs/architecture.md`. Este ADR resume lo que el grafo NO expresa por sí solo.
-Índice al día de: commit `b76ac42` (main, 18 commits por delante de origin/main; incluye el registro «Flow», el catálogo público de precios y el onboarding «Flow») — 12.448 nodos / 32.766 aristas.
+Índice al día de: commit `2cfc781` (main, 27 commits por delante de origin/main; incluye el registro y el onboarding «Flow», el catálogo público de precios, la Tanda B de precios y la cotización en el alta) — 12.519 nodos / 33.034 aristas.
 
 ## Contexto
 App web de **axi-connect** (SaaS multi-tenant de atención omnicanal). Next.js 15 App Router + React 19 + TS strict. Consume `axi-server` vía REST `/api/v1/*` y WebSocket (`/inbox`, `/channels`). Repo hermano indexado como `home-davela-dev-axi-axi-server`.
