@@ -1,6 +1,6 @@
 # Plan — `/onboarding` premium («Flow», segunda tanda): bienvenida, cinco pasos y cierre
 
-> Estado: **F0 ✅ (mockup aprobado 2026-09-05) · F1 en gate**. Rama `feat/onboarding-flow` (worktree `.claude/worktrees/feat-onboarding-flow`), desde `main` = registro «Flow» + catálogo público de precios (Tanda A3) ya fusionados.
+> Estado: **F0–F5 hechas (2026-09-05)**. Queda del dueño: `next build`, suite completa, revisión visual, merge a `main`, push y reindexar el grafo (recargar el ADR desde `docs/adr.md` después). Rama `feat/onboarding-flow` (worktree `.claude/worktrees/feat-onboarding-flow`), desde `main` = registro «Flow» + catálogo público de precios (Tanda A3) ya fusionados.
 > Mockup aprobado: https://claude.ai/code/artifact/3c9c5a8a-6c9e-4284-85a8-f174d4dd2459 (copia fiel en `docs/design/mockups/onboarding-flow-v1.html`, builder al lado). Antecedente: `docs/plans/comenzar_premium_plan.md`.
 
 ## 1. Por qué
@@ -70,11 +70,11 @@ Marco común: `AnimatePresence mode="wait"` → `section aria-label="Paso n de 5
 | Fase | Alcance | Estado |
 |---|---|---|
 | **F0** | Mockup navegable (13 pantallas, temas, móvil, reduced-motion) | ✅ aprobado 2026-09-05 |
-| **F1** | Primitivas en `ui/flow/` + `.flow-ground` + `flowStage`; `/comenzar` igual al píxel (verja: `SignupFunnelView.test.tsx` verde sin ediciones); `FlowRoute.test.tsx`; este plan y el mockup en el repo | en gate |
-| **F2** | Layout con scroller + suelo + cabecera; `FlowStage` (drenado); bienvenida sobre el campo (conserva sus contratos de test: 5 `listitem`, `<b>` de la empresa, fecha, `BrandLockup`); orquestador con `FlowRoute` (`routeStops(progress)` en `ui/onboarding/onboarding-route.ts`, iconos Store · Clock · Package · Bot · MessageCircle + Sparkles) y `AnimatePresence`; seis pasos re-enmarcados con interiores intactos; skeleton y error | |
-| **F3** | Negocio (9 gráficos + `FlowTile`); Catálogo (dropzone, `CatalogScan` + test, revisión en sólido, copy por fase) | |
-| **F4** | Agentes (`TemplateCustomizeForm`, `AgentPreview` + test, gráficos de rol, subpantallas; mismos payloads de creación); WhatsApp en marco sólido | |
-| **F5** | Cierre (`celebrate`, escalonado, `brandCelebrationShort`), `FlowRouteMini` + banner, verificación; docs: `onboarding.md` (B.2, B.3 #15–17, B.7, B.11), DESIGN-SYSTEM §5.3/§6/§8, `architecture.md` §6; reindexar el grafo tras fusionar y recargar el ADR | |
+| **F1** | Primitivas en `ui/flow/` + `.flow-ground` + `flowStage`; `/comenzar` igual al píxel (verja: `SignupFunnelView.test.tsx` verde sin ediciones); `FlowRoute.test.tsx`; este plan y el mockup en el repo | ✅ `084bc08` |
+| **F2** | Layout con scroller + suelo + cabecera; `FlowStage` (drenado); bienvenida sobre el campo (conserva sus contratos de test: 5 `listitem`, `<b>` de la empresa, fecha, `BrandLockup`); orquestador con `FlowRoute` (`routeStops(progress)` en `ui/onboarding/onboarding-route.ts`, iconos Store · Clock · Package · Bot · MessageCircle + Sparkles) y `AnimatePresence`; seis pasos re-enmarcados con interiores intactos; skeleton y error | ✅ `6183607` |
+| **F3** | Negocio (9 gráficos + `FlowTile`); Catálogo (dropzone, `CatalogScan` + test, revisión en sólido, copy por fase) | ✅ `1c81799` |
+| **F4** | Agentes (`TemplateCustomizeForm`, `AgentPreview` + test, gráficos de rol, subpantallas; mismos payloads de creación); WhatsApp en marco sólido | ✅ `2c45e14` |
+| **F5** | Cierre (`celebrate`, escalonado, `brandCelebrationShort`), `FlowRouteMini` + banner, verificación; docs: `onboarding.md` (B.2, B.3 #15–17, B.7, B.11), DESIGN-SYSTEM §5.3/§6/§8, `architecture.md` §6; reindexar el grafo tras fusionar y recargar el ADR | ✅ |
 
 Cada fase se cierra, se reporta y espera aprobación explícita antes de la siguiente.
 

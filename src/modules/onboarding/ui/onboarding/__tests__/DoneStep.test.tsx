@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
+import { useImperativeHandle, type Ref } from "react"
 
 import { DoneStep } from "../steps/DoneStep"
 import { emptyProgress } from "@/modules/onboarding/domain/onboarding-progress"
@@ -7,6 +8,21 @@ import type { EntitlementsDTO } from "@/modules/onboarding/domain/entitlements"
 const getMyEntitlements = jest.fn()
 jest.mock("@/modules/onboarding/infrastructure/services/onboarding-service.adapter", () => ({
   getMyEntitlements: (...args: unknown[]) => getMyEntitlements(...args),
+}))
+
+let phase: "idle" | "covering" | "leaving" = "idle"
+jest.mock("@/core/providers/splash-provider", () => ({
+  useSplashOptional: () => ({ start: jest.fn(), markReady: jest.fn(), phase }),
+}))
+
+// El canvas de confeti no existe en jsdom: se dobla para contar los disparos.
+const fire = jest.fn()
+jest.mock("@/shared/components/ui/confetti", () => ({
+  Confetti: ({ ref }: { ref?: Ref<{ fire: typeof fire }> }) => {
+    useImperativeHandle(ref, () => ({ fire }))
+    return null
+  },
+  brandCelebrationShort: (colors: string[]) => [{ colors, short: true }],
 }))
 
 const progress = {
@@ -52,7 +68,11 @@ const entitlements: EntitlementsDTO = {
 }
 
 describe("DoneStep", () => {
-  beforeEach(() => jest.resetAllMocks())
+  beforeEach(() => {
+    jest.resetAllMocks()
+    jest.useRealTimers()
+    phase = "idle"
+  })
 
   it("resume lo configurado y pinta lo que incluye la prueba en unidades comerciales", async () => {
     getMyEntitlements.mockResolvedValueOnce(entitlements)
@@ -77,5 +97,35 @@ describe("DoneStep", () => {
     await waitFor(() => expect(getMyEntitlements).toHaveBeenCalled())
     expect(screen.queryByRole("region", { name: /qué incluye tu prueba/i })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: /ir a mi panel/i })).toBeEnabled()
+  })
+
+  it("celebra una sola vez, después de que la ruta encienda sus paradas y solo con el splash en reposo", () => {
+    jest.useFakeTimers()
+    getMyEntitlements.mockRejectedValue(new Error("sin entitlements"))
+    phase = "covering"
+    const { rerender } = render(<DoneStep progress={progress} companyName="La Parrilla" saving={false} error={null} onFinish={jest.fn()} />)
+    act(() => {
+      jest.advanceTimersByTime(3000)
+    })
+    expect(fire).not.toHaveBeenCalled()
+
+    phase = "idle"
+    rerender(<DoneStep progress={progress} companyName="La Parrilla" saving={false} error={null} onFinish={jest.fn()} />)
+    // Cuatro paradas hechas + «Listo» a 140 ms cada una, más el respiro: aún no.
+    act(() => {
+      jest.advanceTimersByTime(500)
+    })
+    expect(fire).not.toHaveBeenCalled()
+    act(() => {
+      jest.advanceTimersByTime(1000)
+    })
+    expect(fire).toHaveBeenCalledTimes(1)
+    expect(fire.mock.calls[0][0][0].short).toBe(true)
+
+    rerender(<DoneStep progress={progress} companyName="La Parrilla" saving={false} error={null} onFinish={jest.fn()} />)
+    act(() => {
+      jest.advanceTimersByTime(3000)
+    })
+    expect(fire).toHaveBeenCalledTimes(1)
   })
 })

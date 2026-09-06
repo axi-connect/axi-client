@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, LoaderCircle, MailX } from "lucide-react";
+import { LoaderCircle, MailCheck, MailX } from "lucide-react";
 
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
+import { cn } from "@/core/lib/utils";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { verifyEmail } from "@/modules/onboarding/infrastructure/services/onboarding-service.adapter";
+import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
 
 type Phase = "missing" | "verifying" | "verified" | "expired" | "error";
 
@@ -24,6 +26,11 @@ type Phase = "missing" | "verifying" | "verified" | "expired" | "error";
  * El token viaja UNA vez: el efecto se dispara una sola vez por montaje y el
  * backend responde `410` a un token repetido, vencido o desconocido, sin
  * distinguirlos (no se le regala información a quien adivina).
+ *
+ * Habla el lenguaje «Flow» del onboarding al que devuelve: pregunta grande y
+ * un disco-parada como icono de estado (encendido en el color de «completado»
+ * cuando el correo queda confirmado). Vive bajo el layout público, sobre el
+ * suelo (`flow-ground`).
  */
 export function VerifyEmailView() {
   const params = useSearchParams();
@@ -61,51 +68,57 @@ export function VerifyEmailView() {
   }, [token, refresh, user]);
 
   const nextHref = user ? "/onboarding" : "/auth/login?next=/onboarding";
-  const nextLabel = user ? "Continuar con la configuración" : "Iniciar sesión";
+  const verified = phase === "verified";
+  const title =
+    phase === "verifying"
+      ? "Confirmando tu correo…"
+      : verified
+        ? "Correo confirmado"
+        : phase === "missing"
+          ? "El enlace está incompleto"
+          : "No pudimos confirmar tu correo";
+  const lead =
+    phase === "verifying" ? (
+      "Un momento, no cierres esta pestaña."
+    ) : verified ? (
+      "Ya puedes conectar WhatsApp e invitar a tu equipo. Sigue con la configuración de tu empresa."
+    ) : phase === "missing" ? (
+      "Abre el enlace completo desde el correo que te enviamos."
+    ) : phase === "expired" ? (
+      "Este enlace ya no sirve: venció o ya se usó. Pide uno nuevo desde el paso «WhatsApp» de tu configuración."
+    ) : (
+      <span role="alert">{error}</span>
+    );
 
   return (
-    <section
-      aria-live="polite"
-      className="mx-auto flex w-full max-w-md flex-col items-center gap-6 px-6 py-24 text-center"
-    >
-      {phase === "verifying" && (
-        <>
-          <LoaderCircle className="size-10 animate-spin text-primary" aria-hidden />
-          <h1 className="text-2xl font-semibold">Confirmando tu correo…</h1>
-          <p className="text-sm text-muted-foreground">Un momento, no cierres esta pestaña.</p>
-        </>
-      )}
-
-      {phase === "verified" && (
-        <>
-          <CheckCircle2 className="size-12 text-primary" aria-hidden />
-          <h1 className="text-2xl font-semibold">Correo confirmado</h1>
-          <p className="text-sm text-muted-foreground">
-            Ya puedes conectar WhatsApp e invitar a tu equipo. Sigue con la configuración de tu empresa.
-          </p>
-          <Button asChild size="lg">
-            <Link href={nextHref}>{nextLabel}</Link>
+    <section aria-live="polite" className="flow-ground mx-auto flex w-full flex-col items-center px-6 py-16 text-center sm:py-24">
+      <span
+        aria-hidden="true"
+        className={cn(
+          "mb-4 grid size-24 place-items-center rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-500",
+          verified ? "flow-stop--lit border-transparent" : "sf-glass-on border-[color:var(--sf-fg)] shadow-[0_0_0_10px_var(--sf-glass)]",
+        )}
+      >
+        {phase === "verifying" ? (
+          <LoaderCircle className="size-10 animate-spin motion-reduce:animate-none" strokeWidth={1.6} />
+        ) : verified ? (
+          <MailCheck className="size-10" strokeWidth={1.6} />
+        ) : (
+          <MailX className="size-10" strokeWidth={1.6} />
+        )}
+      </span>
+      <FlowScreen focusHeading title={title} lead={lead}>
+        {phase !== "verifying" ? (
+          <Button
+            asChild
+            size="lg"
+            variant={verified ? "default" : "outline"}
+            className="h-14 w-full max-w-[440px] rounded-[14px] text-[15.5px] font-semibold shadow-[0_18px_50px_rgb(0_0_0/.12)]"
+          >
+            <Link href={nextHref}>{verified ? (user ? "Continuar con la configuración" : "Iniciar sesión") : user ? "Pedir un enlace nuevo desde mi panel" : "Iniciar sesión"}</Link>
           </Button>
-        </>
-      )}
-
-      {(phase === "expired" || phase === "error" || phase === "missing") && (
-        <>
-          <MailX className="size-12 text-muted-foreground" aria-hidden />
-          <h1 className="text-2xl font-semibold">
-            {phase === "missing" ? "El enlace está incompleto" : "No pudimos confirmar tu correo"}
-          </h1>
-          <p className="text-sm text-muted-foreground" role={phase === "error" ? "alert" : undefined}>
-            {phase === "missing" && "Abre el enlace completo desde el correo que te enviamos."}
-            {phase === "expired" &&
-              "Este enlace ya no sirve: venció o ya se usó. Pide uno nuevo desde el paso «WhatsApp» de tu configuración."}
-            {phase === "error" && error}
-          </p>
-          <Button asChild variant="outline" size="lg">
-            <Link href={nextHref}>{user ? "Pedir un enlace nuevo desde mi panel" : "Iniciar sesión"}</Link>
-          </Button>
-        </>
-      )}
+        ) : null}
+      </FlowScreen>
     </section>
   );
 }
