@@ -48,7 +48,9 @@ export const useActivationStore = create<ActivationState>((set, get) => {
     if (inFlight !== null) return inFlight;
     inFlight = (async () => {
       try {
-        set({ status: "ready", view: await getActivation(), error: null });
+        // Una vista nueva trae su propia `quote_now`: la cotización del 409
+        // anterior ya no es lo que rige (auditoría B4-B1).
+        set({ status: "ready", view: await getActivation(), error: null, priceChange: null });
       } catch (error) {
         if (get().view === null) set({ status: "error", error: errorMessage(error) });
       } finally {

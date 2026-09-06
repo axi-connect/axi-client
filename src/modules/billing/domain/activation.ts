@@ -26,6 +26,7 @@ export type ActivationVariant =
   | "hidden"
   | "ready"
   | "price_changed"
+  | "expired_quote"
   | "pending_payment"
   | "no_offer"
   | "unsupported";
@@ -36,9 +37,16 @@ export function activationVariant(view: ActivationDTO | null): ActivationVariant
     case "pending_payment":
       return "pending_payment";
     case "trial_no_offer":
-      return "no_offer";
+      // Cinturón (B4-M1): sin fecha de fin de prueba no es un trial, es un
+      // tenant de pago sin término; el servidor ya lo marca `active`, pero si
+      // no lo hiciera la tarjeta no puede mandarlo a elegir plan.
+      return view.trial_ends_at === null ? "hidden" : "no_offer";
     case "unsupported":
       return "unsupported";
+    case "expired_quote":
+      // La cotización venció y el precio de hoy es otro: misma segunda
+      // confirmación que `price_changed`, pero la causa se dice tal cual.
+      return view.price_changed ? "expired_quote" : "ready";
     default:
       return view.price_changed ? "price_changed" : "ready";
   }

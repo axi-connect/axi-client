@@ -49,14 +49,28 @@ describe("activationVariant", () => {
   it("el precio cambiado gana a ready: la tarjeta cambia de trabajo, no solo de texto", () => {
     expect(activationVariant(view())).toBe("ready");
     expect(activationVariant(view({ price_changed: true }))).toBe("price_changed");
+  });
+
+  it("la cotización vencida con otro precio tiene variante propia: la causa se dice tal cual", () => {
     expect(activationVariant(view({ state: "expired_quote", price_changed: true }))).toBe(
-      "price_changed",
+      "expired_quote",
     );
+    // Vencida pero al mismo precio: no hay nada que re-confirmar.
+    expect(activationVariant(view({ state: "expired_quote", price_changed: false }))).toBe("ready");
+  });
+
+  it("un tenant de pago sin término no es un trial: sin tarjeta aunque el estado diga trial_no_offer (B4-M1)", () => {
+    expect(activationVariant(view({ state: "trial_no_offer", trial_ends_at: null }))).toBe("hidden");
+    expect(
+      activationVariant(view({ state: "trial_no_offer", trial_ends_at: "2026-09-12T12:00:00.000Z" })),
+    ).toBe("no_offer");
   });
 
   it("mapea el resto de estados uno a uno", () => {
     expect(activationVariant(view({ state: "pending_payment" }))).toBe("pending_payment");
-    expect(activationVariant(view({ state: "trial_no_offer" }))).toBe("no_offer");
+    expect(
+      activationVariant(view({ state: "trial_no_offer", trial_ends_at: "2026-09-12T12:00:00.000Z" })),
+    ).toBe("no_offer");
     expect(activationVariant(view({ state: "unsupported" }))).toBe("unsupported");
   });
 });

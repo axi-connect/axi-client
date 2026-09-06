@@ -182,6 +182,30 @@ describe("ActivationCard — el precio cambió (B-D6)", () => {
     });
   });
 
+  it("la cotización vencida dice su causa y pide la misma segunda confirmación", async () => {
+    getActivation.mockResolvedValue(
+      view({
+        state: "expired_quote",
+        price_changed: true,
+        quote_valid_until: "2026-09-19T12:00:00.000Z",
+        quote_now: { ...QUOTE, amount_cents: 36_990_000, promotion_code: null },
+      }),
+    );
+    render(<ActivationCard canPay />);
+    await waitFor(() => expect(screen.getByText("Cotización vencida")).toBeInTheDocument());
+    expect(screen.getByText(/Tu cotización venció el/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirmar al precio de hoy" })).toBeInTheDocument();
+  });
+
+  it("un refresco de la vista limpia la cotización del 409 anterior (B4-B1)", async () => {
+    getActivation.mockResolvedValue(view());
+    render(<ActivationCard canPay />);
+    await waitFor(() => screen.getByRole("button", { name: "Confirmar y pagar" }));
+    useActivationStore.setState({ priceChange: { ...QUOTE, amount_cents: 36_990_000 } });
+    await useActivationStore.getState().refresh();
+    expect(useActivationStore.getState().priceChange).toBeNull();
+  });
+
   it("la vista ya puede venir con price_changed: mismo trabajo sin pasar por el 409", async () => {
     getActivation.mockResolvedValue(
       view({ price_changed: true, quote_now: { ...QUOTE, amount_cents: 36_990_000, promotion_code: null } }),
@@ -241,6 +265,33 @@ describe("ActivationCard — sin oferta o combinación no soportada", () => {
       "/precios",
     );
     expect(screen.getByRole("link", { name: "Hablar con ventas" })).toBeInTheDocument();
+  });
+
+  it("un tenant de pago sin término no ve la tarjeta aunque el estado llegue como trial_no_offer", async () => {
+    getActivation.mockResolvedValue(
+      view({ state: "trial_no_offer", trial_ends_at: null, quote_now: null, quote_saved: null }),
+    );
+    const { container } = render(<ActivationCard canPay />);
+    await waitFor(() => expect(useActivationStore.getState().status).toBe("ready"));
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("en pendiente de pago sin billing:pay los botones se deshabilitan y se explica", async () => {
+    getActivation.mockResolvedValue(
+      view({
+        state: "pending_payment",
+        pending_invoice: {
+          invoice_id: "inv-9",
+          number: "AXI-000123",
+          amount_cents: 22_190_000,
+          currency: "COP",
+          due_at: "2026-09-19T12:00:00.000Z",
+        },
+      }),
+    );
+    render(<ActivationCard canPay={false} />);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Pagar ahora" })).toBeDisabled());
+    expect(screen.getByText(/Solo quien administra la facturación puede pagar/)).toBeInTheDocument();
   });
 
   it("varios módulos sueltos: solo ventas", async () => {

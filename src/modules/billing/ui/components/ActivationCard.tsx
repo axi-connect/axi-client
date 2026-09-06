@@ -61,8 +61,12 @@ export function ActivationCard({ canPay }: { canPay: boolean }) {
     case "no_offer":
     case "unsupported":
       return <ChoosePlan unsupported={variant === "unsupported"} />;
-    default:
+    case "ready":
+    case "price_changed":
+    case "expired_quote":
       return <Offer view={view} canPay={canPay} />;
+    default:
+      return null;
   }
 }
 
@@ -78,6 +82,7 @@ function Offer({ view, canPay }: { view: ActivationDTO; canPay: boolean }) {
   if (quote === null) return null;
 
   const changed = priceChange !== null || view.price_changed;
+  const expired = variantOf(view, priceChange) === "expired_quote";
   const saved = view.quote_saved;
   const savings = savingsCents(quote);
   const promo = quote.promotion_code !== null;
@@ -112,7 +117,7 @@ function Offer({ view, canPay }: { view: ActivationDTO; canPay: boolean }) {
           {changed ? (
             <Badge variant="warning" className="gap-1.5">
               <TriangleAlert className="size-3.5" aria-hidden="true" />
-              Precio actualizado
+              {expired ? "Cotización vencida" : "Precio actualizado"}
             </Badge>
           ) : promo ? (
             <Badge variant="info" className="gap-1.5">
@@ -130,7 +135,9 @@ function Offer({ view, canPay }: { view: ActivationDTO; canPay: boolean }) {
             {changed ? "Tu plan sigue guardado." : "Sigue vendiendo sin pausa."}
           </h2>
           <p className="text-muted-foreground mt-3 max-w-[46ch] text-[15px] leading-relaxed">
-            {changed
+            {expired
+              ? `Tu cotización venció${view.quote_valid_until === null ? "" : ` el ${formatShortDate(view.quote_valid_until)}`}; este es el precio de hoy. Todo lo demás sigue igual: tu plan, tu volumen y tu periodicidad.`
+              : changed
               ? "El precio cambió desde que te registraste. Todo lo demás sigue igual: tu plan, tu volumen y tu periodicidad."
               : trialDays === null
                 ? "Activa el plan que elegiste y todo sigue igual: tu agente, tus conversaciones y tu catálogo."
@@ -222,6 +229,11 @@ const TRUST = [
   "Tus datos y tu configuración se conservan",
 ];
 
+/** La variante que rige, contando la cotización del 409 si la hay. */
+function variantOf(view: ActivationDTO, priceChange: ActivationQuoteDTO | null) {
+  return activationVariant(priceChange === null ? view : { ...view, price_changed: true });
+}
+
 function promoBadge(quote: ActivationQuoteDTO, view: ActivationDTO): string {
   const name = quote.promotion_name ?? "Promoción";
   const until = view.quote_honored ? view.quote_valid_until : quote.promotion_ends_at;
@@ -250,7 +262,8 @@ function PendingPayment({ view, canPay }: { view: ActivationDTO; canPay: boolean
       showAlert({
         tone: "success",
         title: "Enlace de pago copiado",
-        description: `Vale hasta el ${formatShortDate(link.expires_at)}. Quien lo abra puede pagar sin entrar al panel.`,
+        // El servidor ROTA el token: el enlace anterior deja de valer (B4-B2).
+        description: `Vale hasta el ${formatShortDate(link.expires_at)} y reemplaza a cualquier enlace anterior. Quien lo abra puede pagar sin entrar al panel.`,
         autoCloseMs: 8000,
       });
     } catch (error) {
@@ -301,6 +314,11 @@ function PendingPayment({ view, canPay }: { view: ActivationDTO; canPay: boolean
             <Link2 className="size-4" aria-hidden="true" />
             Copiar enlace de pago
           </Button>
+          {canPay ? null : (
+            <p className="text-muted-foreground text-center text-xs">
+              Solo quien administra la facturación puede pagar la activación.
+            </p>
+          )}
         </div>
       </div>
     </section>
