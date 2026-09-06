@@ -5,7 +5,7 @@ import { OG_IMAGE } from "@/core/seo/site";
 import { JsonLd } from "@/core/seo/json-ld";
 import { faqSchema, organizationSchema, webSiteSchema } from "@/core/seo/site";
 import { FAQ } from "@/modules/landing/ui/content/landing.content";
-import { CATALOG_REVALIDATE_SECONDS, loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
+import { loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
 
 import LandingHero from "@/modules/landing/ui/sections/LandingHero";
 import LandingSocialProof from "@/modules/landing/ui/sections/LandingSocialProof";
@@ -62,7 +62,10 @@ export const metadata: Metadata = {
  * la página: `loadPublicCatalog()` devuelve `null` y la sección de precios
  * pinta «precios a consulta» hasta la siguiente revalidación.
  */
-export const revalidate = CATALOG_REVALIDATE_SECONDS;
+// Literal a propósito: Next exige que la config de segmento sea analizable
+// estáticamente (una constante importada rompe el build). Debe coincidir con
+// `CATALOG_REVALIDATE_SECONDS` del loader; un spec guardián lo vigila.
+export const revalidate = 60;
 
 export default async function Home() {
   const catalog = await loadPublicCatalog();

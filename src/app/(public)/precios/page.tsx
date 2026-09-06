@@ -21,7 +21,7 @@ import { SectionHeading } from "@/modules/landing/ui/components/SectionHeading";
 import { PricingPlans } from "@/modules/landing/ui/components/PricingPlans";
 import { ModulePlans } from "@/modules/landing/ui/components/ModulePlans";
 import { PRICING } from "@/modules/landing/ui/content/landing.content";
-import { CATALOG_REVALIDATE_SECONDS, loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
+import { loadPublicCatalog } from "@/modules/landing/infrastructure/pricing-catalog.loader";
 
 /**
  * `/precios` — página propia. Antes `/precios` redirigía a la ancla `#planes` de
@@ -110,7 +110,10 @@ const PRICING_FAQ = [
 ] as const;
 
 /** ISR de un minuto (D11): la misma lectura alimenta las tarjetas y el JSON-LD. */
-export const revalidate = CATALOG_REVALIDATE_SECONDS;
+// Literal a propósito: Next exige que la config de segmento sea analizable
+// estáticamente (una constante importada rompe el build). Debe coincidir con
+// `CATALOG_REVALIDATE_SECONDS` del loader; un spec guardián lo vigila.
+export const revalidate = 60;
 
 export default async function PreciosPage() {
   const catalog = await loadPublicCatalog();
