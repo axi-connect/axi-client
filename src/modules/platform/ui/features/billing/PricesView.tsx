@@ -17,7 +17,8 @@
  * muestra como «pendiente» en la verja. Inventarlo con constantes en el
  * cliente sería repetir el error del `margin_multiplier`.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, formatShortDate, parseMoneyToCents } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -65,12 +66,26 @@ import {
   usePublishPriceBatch,
   useVolumeTiersQuery,
 } from "../../../infrastructure/api/hooks/use-catalog";
+import { useMarginCellsQuery } from "../../../infrastructure/api/hooks/use-margin";
 import { usePlansQuery } from "../../../infrastructure/api/hooks/use-plans";
+import {
+  BASIS_LABELS,
+  GATE_CHECK_LABELS,
+  SCOPE_LABELS,
+  STATUS_CLASSES,
+  cellStatus,
+  formatPct,
+  summarizeCells,
+  type MarginCell,
+  type MarginGateReport,
+} from "../../../domain/margin";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
 import { PublishPriceSheet } from "./PublishPriceSheet";
 
 type Interval = "monthly" | "annual";
+/** Un fallo de verja tal como viaja en `details.failures` del 409 o en el informe. */
+type GateFailureLike = { check: string; detail: string };
 type Mode = "list" | "promo";
 
 /** Colores de serie por paquete: coral, violeta e «ink». Identidad también por etiqueta directa. */
@@ -126,6 +141,10 @@ function CatalogEditor({
 }) {
   const { showAlert } = useAlert();
   const publishBatch = usePublishPriceBatch();
+  // Margen real de las celdas VIGENTES (consola, Tanda C): lo que la verja
+  // rechazaría hoy se ve en la rejilla antes de publicar. El borrador se evalúa
+  // con `dry_run` al abrir la hoja de publicación.
+  const marginCells = useMarginCellsQuery();
 
   // Paquetes vendibles en autoservicio y en la escalera declarada del catálogo
   // (Esencial → Crecimiento → Escala): enterprise es «a la medida» y no entra.
@@ -173,7 +192,32 @@ function CatalogEditor({
   const [publishingPlanPrice, setPublishingPlanPrice] = useState(false);
 
   const cells = useMemo(() => deriveCells(packageComponents, tierComponents, overrides), [packageComponents, tierComponents, overrides]);
-  const gate = useMemo(() => runGate(packageComponents, tierComponents, overrides), [packageComponents, tierComponents, overrides]);
+  const gate = useMemo(() => {
+    const structural = runGate(packageComponents, tierComponents, overrides);
+    const report = marginCells.data;
+    if (report === undefined) return structural;
+    const summary = summarizeCells(report.cells);
+    // Informativo, no bloquea: mide las celdas vigentes, no el borrador. El
+    // borrador pasa por la verja de margen del servidor al publicar (dry_run).
+    return structural.map((check) =>
+      check.key === "margin"
+        ? {
+            ...check,
+            label: "Margen real de las celdas vigentes",
+            detail:
+              summary.failing === 0
+                ? `Base ${BASIS_LABELS[report.basis]} · muestra de ${report.sample_size.toLocaleString("es-CO")} conversaciones`
+                : `${summary.failing} celdas vigentes no pasarían la verja de margen`,
+            ok: summary.failing === 0 ? true : null,
+            value: summary.minP50 === null ? "sin celdas" : `mín. ${formatPct(summary.minP50)}`,
+          }
+        : check,
+    );
+  }, [packageComponents, tierComponents, overrides, marginCells.data]);
+  const codeBySlug = useMemo(
+    () => Object.fromEntries(packagePlans.map((plan) => [plan.public_slug as string, plan.code] as const)),
+    [packagePlans],
+  );
   const gateOk = gate.every((check) => check.ok !== false);
   const complete = packageComponents.length === packagePlans.length && packagePlans.length > 0;
   const currentCells = latestFirst.filter((price) => price.volume_tier !== null && price.is_current);
@@ -185,30 +229,41 @@ function CatalogEditor({
     return discountedCents(monthly, promotion.percent_bps, promotion.rounding) * (period === "annual" ? ANNUAL_MONTHS_BILLED : 1);
   };
 
+  // Componentes, no celdas (hallazgo A2): el servidor deriva las celdas, corre
+  // las dos verjas (estructural y de margen) y escribe tarifas de paquete, de
+  // tramo y celdas en UNA transacción. Nada cambia si algo falla.
+  function batchPayload(effectiveFrom: string, dryRun: boolean) {
+    return {
+      dry_run: dryRun,
+      effective_from: new Date(`${effectiveFrom}T05:00:00Z`).toISOString(),
+      currency: "COP" as const,
+      tax_treatment: "excluded" as const,
+      tax_rate_bps: 0,
+      package_fees: packageComponents.map((pkg) => ({ plan_id: pkg.planId, fee_cents: pkg.feeCents })),
+      tier_fees: tierComponents.flatMap((tier) =>
+        tier.feeCents === null ? [] : [{ code: tier.code, fee_cents: tier.feeCents }],
+      ),
+      overrides: Object.entries(overrides).flatMap(([key, override]) => {
+        const [planSlug, tierCode] = key.split("|");
+        const pkg = packageComponents.find((component) => component.slug === planSlug);
+        return pkg ? [{ plan_id: pkg.planId, tier_code: tierCode, amount_cents: override.amountCents, reason: override.reason }] : [];
+      }),
+    };
+  }
+
+  /** Vista previa: corre las dos verjas del servidor sobre el BORRADOR sin escribir. */
+  async function preview(effectiveFrom: string): Promise<MarginGateReport> {
+    const result = await publishBatch.mutateAsync(batchPayload(effectiveFrom, true));
+    return result.margin;
+  }
+
   async function publish(effectiveFrom: string) {
     try {
-      // Componentes, no celdas (hallazgo A2): el servidor deriva las celdas,
-      // corre la misma verja y escribe tarifas de paquete, de tramo y celdas en
-      // UNA transacción. Nada cambia si algo falla.
-      const result = await publishBatch.mutateAsync({
-        effective_from: new Date(`${effectiveFrom}T05:00:00Z`).toISOString(),
-        currency: "COP",
-        tax_treatment: "excluded",
-        tax_rate_bps: 0,
-        package_fees: packageComponents.map((pkg) => ({ plan_id: pkg.planId, fee_cents: pkg.feeCents })),
-        tier_fees: tierComponents.flatMap((tier) =>
-          tier.feeCents === null ? [] : [{ code: tier.code, fee_cents: tier.feeCents }],
-        ),
-        overrides: Object.entries(overrides).flatMap(([key, override]) => {
-          const [planSlug, tierCode] = key.split("|");
-          const pkg = packageComponents.find((component) => component.slug === planSlug);
-          return pkg ? [{ plan_id: pkg.planId, tier_code: tierCode, amount_cents: override.amountCents, reason: override.reason }] : [];
-        }),
-      });
+      const result = await publishBatch.mutateAsync(batchPayload(effectiveFrom, false));
       showAlert({
         tone: "success",
         title: "Vigencia publicada",
-        description: `${result.ids.length} celdas rigen desde el ${effectiveFrom} (00:00 Bogotá). Las anteriores quedan cerradas; los términos con promoción no cambian.`,
+        description: `${result.ids.length} celdas rigen desde el ${effectiveFrom} (00:00 Bogotá) con margen ${BASIS_LABELS[result.margin.basis]}. Las anteriores quedan cerradas; los términos con promoción no cambian.`,
         autoCloseMs: 8000,
       });
       setPublishing(false);
@@ -335,6 +390,8 @@ function CatalogEditor({
                       cells={cells}
                       interval={period}
                       shown={shown}
+                      marginCells={marginCells.data?.cells}
+                      codeBySlug={codeBySlug}
                       onOverride={(planSlug, derived) => setOverriding({ planSlug, tierCode: tier.code, derived })}
                     />
                   ))}
@@ -444,6 +501,7 @@ function CatalogEditor({
         cellCount={cells.length}
         gate={gate}
         pending={publishBatch.isPending}
+        onPreview={preview}
         onPublish={publish}
       />
       <OverrideSheet
@@ -490,6 +548,8 @@ function TierRowCells({
   cells,
   interval,
   shown,
+  marginCells,
+  codeBySlug,
   onOverride,
 }: {
   tier: TierComponent;
@@ -497,6 +557,9 @@ function TierRowCells({
   cells: ReturnType<typeof deriveCells>;
   interval: Interval;
   shown: (listCents: number) => number;
+  /** Margen real de las celdas VIGENTES (consola): pinta el estado, no el borrador. */
+  marginCells?: readonly MarginCell[];
+  codeBySlug: Record<string, string>;
   onOverride: (planSlug: string, derived: number) => void;
 }) {
   return (
@@ -510,19 +573,30 @@ function TierRowCells({
         if (!cell) return <div key={pkg.planId} />;
         const price = shown(cell.amountCents);
         const overridden = cell.overrideReason !== null;
+        const margin = cellStatus(marginCells, codeBySlug[pkg.slug] ?? pkg.slug, tier.code, interval);
+        const marginClass = margin === null ? "" : margin.failures.length > 0 ? STATUS_CLASSES.loses : STATUS_CLASSES[margin.status];
         return (
           <button
             key={pkg.planId}
             type="button"
             title={overridden ? `Anulada: ${cell.overrideReason}` : "Anular esta celda con motivo"}
             onClick={() => onOverride(pkg.slug, cell.derivedCents)}
-            className={`group border-border-soft bg-card hover:border-brand/50 relative flex min-h-[72px] flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-colors ${overridden ? "border-accent-amber/70 border-dashed" : ""}`}
+            className={`group border-border-soft bg-card hover:border-brand/50 relative flex min-h-[72px] flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-colors ${overridden ? "border-accent-amber/70 border-dashed" : ""} ${marginClass}`}
           >
-            <span className="text-[16px] font-semibold tracking-tight tabular-nums">{formatMoney(price)}</span>
+            <span className="text-foreground text-[16px] font-semibold tracking-tight tabular-nums">{formatMoney(price)}</span>
             <span className="text-muted-foreground text-[11px]">
               {interval === "annual" ? `al año · ${ANNUAL_MONTHS_BILLED} de 12 meses` : "al mes"}
               {price !== cell.amountCents ? ` · lista ${formatMoney(cell.amountCents)}` : ""}
             </span>
+            {margin !== null ? (
+              <span
+                className="text-[11px] font-medium tabular-nums"
+                title={margin.failures[0]?.detail ?? margin.warnings[0]?.detail ?? `Margen real a p50 de la celda vigente · ${BASIS_LABELS[margin.basis]} · ${SCOPE_LABELS[margin.sample_scope]}`}
+              >
+                {formatPct(margin.margin_real_p50)}
+                {margin.failures.length > 0 ? " · falla la verja" : margin.status === "bonus_only" ? " · solo bono" : ""}
+              </span>
+            ) : null}
             {overridden ? (
               <Badge variant="outline" className="border-accent-amber/40 bg-accent-amber/10 text-accent-amber absolute top-2 right-2">
                 anulada
@@ -731,6 +805,7 @@ function PublishBatchSheet({
   cellCount,
   gate,
   pending,
+  onPreview,
   onPublish,
 }: {
   open: boolean;
@@ -738,10 +813,45 @@ function PublishBatchSheet({
   cellCount: number;
   gate: GateCheck[];
   pending: boolean;
+  onPreview: (effectiveFrom: string) => Promise<MarginGateReport>;
   onPublish: (effectiveFrom: string) => Promise<void>;
 }) {
   const [effectiveFrom, setEffectiveFrom] = useState(new Date(Date.now() + 86_400_000).toISOString().slice(0, 10));
   const blocked = gate.filter((check) => check.ok === false);
+  // Verja de MARGEN del borrador (dry_run en el servidor): se corre al abrir y
+  // al cambiar la fecha (la promo abierta depende de ella). Un 409 trae los
+  // motivos en `details.failures`; se muestran igual que un informe con fallos.
+  const [report, setReport] = useState<MarginGateReport | { failures: GateFailureLike[]; basis?: string } | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  useEffect(() => {
+    if (!open || blocked.length > 0 || effectiveFrom === "") return;
+    let cancelled = false;
+    setPreviewing(true);
+    setPreviewError(null);
+    onPreview(effectiveFrom)
+      .then((result) => {
+        if (!cancelled) setReport(result);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const details = isHttpError(error) ? error.problem?.details : undefined;
+        const failures = Array.isArray(details?.failures) ? (details.failures as GateFailureLike[]) : null;
+        if (failures !== null) setReport({ failures, basis: typeof details?.basis === "string" ? details.basis : undefined });
+        else setReport(null);
+        setPreviewError(errorMessage(error));
+      })
+      .finally(() => {
+        if (!cancelled) setPreviewing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onPreview cambia en cada render; la verja depende de open/fecha
+  }, [open, effectiveFrom, blocked.length]);
+  const marginFailures = report?.failures ?? [];
+  const marginWarnings = report !== null && "warnings" in report ? report.warnings : [];
+  const marginBlocked = marginFailures.length > 0 || previewing || (previewError !== null && report === null);
   return (
     <DetailSheet open={open} onOpenChange={onOpenChange} size="md" title="Publicar vigencia" subtitle={`Cierra la vigencia actual y crea ${cellCount} celdas en una sola transacción.`}>
       <div className="flex flex-col gap-4 p-5">
@@ -759,11 +869,48 @@ function PublishBatchSheet({
             No se puede publicar: {blocked[0].label} — {blocked[0].detail} ({blocked[0].value}).
           </p>
         ) : null}
+        <section aria-label="Verja de margen del borrador" className="flex flex-col gap-2">
+          <h3 className="text-[13px] font-semibold">
+            Verja de margen del borrador{" "}
+            <span className="text-muted-foreground text-xs font-normal">
+              {previewing
+                ? "· evaluando…"
+                : report !== null && "sample_size" in report
+                  ? `· base ${BASIS_LABELS[report.basis]} · ${report.sample_size.toLocaleString("es-CO")} conversaciones · TRM ${report.trm_cop_per_usd.toLocaleString("es-CO")}`
+                  : ""}
+            </span>
+          </h3>
+          {previewError !== null && report === null ? (
+            <p className="text-destructive border-destructive/40 bg-destructive/8 rounded-xl border p-3 text-xs">{previewError}</p>
+          ) : null}
+          {marginFailures.map((failure, index) => (
+            <p key={`f-${index}`} className="text-destructive border-destructive/40 bg-destructive/8 rounded-xl border p-2.5 text-xs">
+              <b className="block font-mono text-[11px]">{GATE_CHECK_LABELS[failure.check] ?? failure.check}</b>
+              {failure.detail}
+            </p>
+          ))}
+          {marginWarnings.map((warning, index) => (
+            <p key={`w-${index}`} className="text-warning border-warning/40 bg-warning/8 rounded-xl border p-2.5 text-xs">
+              <b className="block font-mono text-[11px]">{GATE_CHECK_LABELS[warning.check] ?? warning.check}</b>
+              {warning.detail}
+            </p>
+          ))}
+          {!previewing && report !== null && marginFailures.length === 0 ? (
+            <p className="text-success border-success/40 bg-success/10 rounded-xl border p-2.5 text-xs">
+              La verja de margen pasa. La base con que pasó queda guardada con la publicación.
+            </p>
+          ) : null}
+          {marginFailures.length > 0 ? (
+            <p className="text-muted-foreground text-xs">
+              No hay «publicar de todos modos»: se arregla el componente o se cambia el mínimo declarado en Parámetros, con firma y fecha.
+            </p>
+          ) : null}
+        </section>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button disabled={pending || blocked.length > 0 || effectiveFrom === ""} onClick={() => void onPublish(effectiveFrom)}>
+          <Button disabled={pending || blocked.length > 0 || marginBlocked || effectiveFrom === ""} onClick={() => void onPublish(effectiveFrom)}>
             Publicar {cellCount} celdas
           </Button>
         </div>
@@ -847,6 +994,12 @@ function VigencyItem({ price, last }: { price: BillingPrice; last: boolean }) {
         <Badge variant="outline" className="text-muted-foreground w-fit text-[10.5px]">
           {taxLabel(price.tax_treatment, price.tax_rate_bps)}
         </Badge>
+        {price.publication === null ? null : (
+          <span className="text-muted-foreground text-xs">
+            Verja de margen: base {BASIS_LABELS[price.publication.basis]} · {price.publication.sample_size.toLocaleString("es-CO")} conversaciones · TRM{" "}
+            {price.publication.trm_cop_per_usd.toLocaleString("es-CO")} · {price.publication.gateway.provider} {price.publication.gateway.method}
+          </span>
+        )}
         {price.overage_rates.length === 0 ? (
           <span className="text-muted-foreground text-xs">Sin excedentes facturables</span>
         ) : (

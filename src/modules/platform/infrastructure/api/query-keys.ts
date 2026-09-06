@@ -50,6 +50,13 @@ export const platformKeys = {
     promotions: () => [...platformKeys.billing.all, "promotions"] as const,
     parameters: () => [...platformKeys.billing.all, "parameters"] as const,
     preview: (at?: string) => [...platformKeys.billing.all, "preview", at ?? "now"] as const,
+    // Consola de margen (Tanda C): muestra real, celdas evaluadas y parámetros declarados.
+    marginSample: (windowDays: number, companyId?: string, planCode?: string) =>
+      [...platformKeys.billing.all, "margin", "sample", windowDays, companyId ?? "all", planCode ?? "all"] as const,
+    marginCells: (windowDays: number) => [...platformKeys.billing.all, "margin", "cells", windowDays] as const,
+    gatewayFees: () => [...platformKeys.billing.all, "gateway-fees"] as const,
+    capabilityCosts: () => [...platformKeys.billing.all, "capability-costs"] as const,
+    acquisitionCosts: () => [...platformKeys.billing.all, "acquisition-costs"] as const,
   },
 
   audit: {

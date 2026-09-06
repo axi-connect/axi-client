@@ -24,20 +24,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { PARAMETER_LABELS, type BillingParameter } from "../../../domain/billing";
+import {
+  PARAMETER_CODES,
+  PARAMETER_GROUPS,
+  PARAMETER_LABELS,
+  formatParameterValue,
+  type BillingParameter,
+  type ParameterCode,
+} from "../../../domain/billing";
+import { MarginParametersSections } from "./MarginParametersSections";
 import {
   useBillingParametersQuery,
   usePublishParameter,
 } from "../../../infrastructure/api/hooks/use-catalog";
 import { ProblemAlert } from "../../components/ProblemAlert";
 
-const CODES = ["trm_cop_usd", "ipc_annual_pct"] as const;
-type ParameterCode = (typeof CODES)[number];
-
-function formatValue(code: string, value: number): string {
-  if (code === "ipc_annual_pct") return `${value.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
-  return value.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+const CODES = PARAMETER_CODES;
+const formatValue = formatParameterValue;
 
 export function ParametersView() {
   const parameters = useBillingParametersQuery();
@@ -72,8 +75,14 @@ export function ParametersView() {
         </Button>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {CODES.map((code) => {
+      {PARAMETER_GROUPS.map((group) => (
+        <div key={group.title} className="space-y-3">
+          <div>
+            <h2 className="text-[13px] font-semibold tracking-[0.04em] uppercase">{group.title}</h2>
+            <p className="text-muted-foreground text-xs">{group.help}</p>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+        {group.codes.map((code) => {
           const own = rows.filter((row) => row.code === code);
           const meta = PARAMETER_LABELS[code];
           const current = own.find((row) => row.is_current) ?? null;
@@ -118,21 +127,19 @@ export function ParametersView() {
             </section>
           );
         })}
-      </div>
-
-      <section className="border-border-soft bg-card rounded-2xl border p-4 opacity-75 shadow-[var(--shadow-float)]">
-        <header className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-[15px] font-semibold">Comisión de pasarela y costos fijos por capacidad</h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              Llegan con la consola de margen (Tanda C). Se dejan aquí para que la pestaña no cambie de forma.
-            </p>
           </div>
-          <Badge variant="outline" className="text-muted-foreground shrink-0">
-            Tanda C
-          </Badge>
-        </header>
-      </section>
+        </div>
+      ))}
+
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-[13px] font-semibold tracking-[0.04em] uppercase">Consola de margen</h2>
+          <p className="text-muted-foreground text-xs">Comisión de pasarela, costos fijos por capacidad y CAC declarado (Tanda C).</p>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <MarginParametersSections />
+        </div>
+      </div>
 
       <ParameterSheet
         open={publishing !== null}
@@ -195,7 +202,13 @@ function ParameterSheet({
   const [note, setNote] = useState("");
 
   const numeric = Number(value.replace(/\./g, "").replace(",", "."));
-  const ready = Number.isFinite(numeric) && numeric > 0 && source.trim().length >= 3 && effectiveFrom !== "";
+  // La regla por código vive en el servidor: aquí solo lo evidente (TRM > 0; el
+  // IPC admite cero y deflación; los bps y el mix admiten cero).
+  const ready =
+    Number.isFinite(numeric) &&
+    (code === "trm_cop_usd" ? numeric > 0 : code.startsWith("ipc") || numeric >= 0) &&
+    source.trim().length >= 3 &&
+    effectiveFrom !== "";
 
   async function submit() {
     try {
@@ -249,7 +262,7 @@ function ParameterSheet({
               id="param-value"
               className="mt-1.5 tabular-nums"
               inputMode="decimal"
-              placeholder={code === "trm_cop_usd" ? "4.150,00" : "5,20"}
+              placeholder={code === "trm_cop_usd" ? "4.150,00" : code.endsWith("_bps") ? "7000" : "5,20"}
               value={value}
               onChange={(event) => setValue(event.target.value)}
             />

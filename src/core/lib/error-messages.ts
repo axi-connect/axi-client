@@ -267,6 +267,18 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "billing/no_payment_source": "No hay un medio de pago guardado para el cobro automático",
   "billing/price_not_found": "La tarifa no existe",
   "billing/price_vigency_overlap": "Ya hay una tarifa que empieza en esa fecha o después",
+  // Consola de margen (Tanda C): la verja y sus parámetros declarados.
+  "billing/margin_gate_failed": "La verja de margen rechazó el catálogo: revisa los motivos",
+  "billing/margin_gate_unconfigured":
+    "La verja de margen no puede correr: faltan mínimos, TRM o comisión de pasarela vigentes en Parámetros",
+  "billing/invalid_gateway_fee": "Revisa la comisión: puntos básicos entre 0 y 10.000 y fijo no negativo",
+  "billing/gateway_fee_vigency_overlap": "Ya hay una comisión de ese método que empieza en esa fecha o después",
+  "billing/unknown_capability": "Esa capacidad no existe en el catálogo",
+  "billing/invalid_capability_cost": "El costo fijo mensual no puede ser negativo",
+  "billing/capability_cost_vigency_overlap": "Ya hay un costo de esa capacidad que empieza en esa fecha o después",
+  "billing/invalid_acquisition_cost": "Revisa el periodo y el importe del CAC declarado",
+  "billing/acquisition_period_exists": "Ese canal ya tiene CAC declarado para el periodo: corrígelo en vez de declararlo otra vez",
+  "billing/acquisition_cost_not_found": "La declaración de CAC ya no existe",
   "billing/invalid_overage_rate": "Revisa los excedentes: el tamaño de bloque debe ser mayor que cero",
   // Activación del plan (Tanda B)
   "billing/price_changed": "El precio cambió desde que lo viste: revisa el nuevo y confirma otra vez",
