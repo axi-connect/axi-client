@@ -282,6 +282,28 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "billing/link_expired": "Este enlace de pago caducó. Pide uno nuevo desde tu panel o escríbenos",
   "auth/payment_overdue": "Tu servicio está suspendido por un pago pendiente",
   "client/network": "No fue posible contactar al servidor",
+
+  // Integraciones (Shopify). El backend habla de «tenant» y de «capacidades»;
+  // aquí se traduce a lo que el dueño puede hacer en el momento.
+  "integrations/not_found": "Esa integración ya no existe",
+  "integrations/unsupported_provider": "Ese proveedor todavía no se puede conectar",
+  "integrations/provider_account_taken":
+    "Esa tienda ya está conectada a otra cuenta de axi. Si es tuya, escríbenos y lo resolvemos",
+  "integrations/already_connected":
+    "Ya tienes una tienda de este proveedor conectada. Desconéctala antes de conectar otra",
+  "integrations/invalid_credentials":
+    "Shopify rechazó las credenciales. Revisa que el ID y el secreto sean de la app instalada en ESTA tienda y que el secreto no se haya regenerado después de copiarlo",
+  "integrations/missing_scopes":
+    "A la app de Shopify le faltan permisos de Admin API. Márcalos en el Dev Dashboard, reinstala la app en la tienda y vuelve a intentarlo",
+  "integrations/currency_mismatch":
+    "La moneda de la tienda no coincide con la de tu cuenta de axi, y los precios no se pueden convertir",
+  "integrations/provider_error":
+    "Shopify respondió con un error. Suele ser pasajero: inténtalo de nuevo en un minuto",
+  "integrations/rate_limited": "Shopify está limitando las llamadas. Espera un minuto y reintenta",
+  "integrations/sync_in_progress":
+    "Ya hay una sincronización en curso. Mira su avance en la pestaña Historial",
+  "integrations/mass_archive_guard":
+    "La sincronización habría dado de baja más de la mitad del catálogo, así que se detuvo por seguridad. Revisa la tienda antes de repetirla",
 };
 
 /**
@@ -293,7 +315,12 @@ const MESSAGES_BY_CODE: Record<string, string> = {
  * configuración de Meta—. Es una lista blanca a propósito: pegar el detalle de
  * todos los códigos duplicaría el mensaje en los demás.
  */
-const CODES_WITH_USEFUL_DETAIL = new Set(["channels/meta_missing_scopes"]);
+const CODES_WITH_USEFUL_DETAIL = new Set([
+  "channels/meta_missing_scopes",
+  // El detail trae la lista exacta de scopes / las dos monedas.
+  "integrations/missing_scopes",
+  "integrations/currency_mismatch",
+]);
 
 /**
  * Mensaje por `code` cuando el error NO es un `HttpError`: los errores que

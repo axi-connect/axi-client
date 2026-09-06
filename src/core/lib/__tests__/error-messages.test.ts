@@ -151,3 +151,26 @@ describe("errorMessage — onboarding de canales Meta (F3)", () => {
     );
   });
 });
+
+describe("errorMessage — integraciones (Shopify)", () => {
+  it.each([
+    ["integrations/invalid_credentials", /rechazó las credenciales/i],
+    ["integrations/provider_account_taken", /otra cuenta de axi/i],
+    ["integrations/already_connected", /desconéctala antes/i],
+    ["integrations/sync_in_progress", /pestaña historial/i],
+    ["integrations/mass_archive_guard", /más de la mitad del catálogo/i],
+  ])("%s → mensaje accionable en español, sin jerga del backend", (code, expected) => {
+    const message = errorMessage(httpError(code, "El proveedor devolvió un error"));
+    expect(message).toMatch(expected);
+    expect(message).not.toMatch(/tenant/i);
+  });
+
+  it("missing_scopes y currency_mismatch conservan el detail (trae los scopes / las monedas)", () => {
+    expect(
+      errorMessage(httpError("integrations/missing_scopes", "Faltan: read_inventory, read_orders")),
+    ).toMatch(/read_inventory, read_orders/);
+    expect(
+      errorMessage(httpError("integrations/currency_mismatch", "La tienda factura en USD y tu cuenta de axi en COP")),
+    ).toMatch(/USD.*COP/);
+  });
+});
