@@ -44,13 +44,18 @@ import { OAuthConnectPanel } from "../connect/OAuthConnectPanel";
 export function EstadoTab({
   integration,
   onChanged,
+  onSyncStarted,
 }: {
   integration: IntegrationDTO;
   onChanged: () => Promise<void>;
+  /** Tras encolar una sincronización: el detalle salta a Historial, donde se ve el avance. */
+  onSyncStarted?: () => void;
 }) {
   const router = useRouter();
   const removeIntegration = useIntegrationsStore((s) => s.removeIntegration);
   const [syncing, setSyncing] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnectError, setDisconnectError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [rotateOpen, setRotateOpen] = useState(false);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
@@ -64,10 +69,27 @@ export function EstadoTab({
     try {
       await startIntegrationSync(integration.id, "backfill");
       setNotice("Sincronización lanzada: sigue su avance en la pestaña Historial.");
+      onSyncStarted?.();
     } catch (err) {
       setNotice(errorMessage(err, "No se pudo lanzar la sincronización"));
     } finally {
       setSyncing(false);
+    }
+  };
+
+  // Era un `.then()` sin catch: si el DELETE fallaba (403, red) el diálogo se
+  // quedaba abierto y mudo, con el botón clicable. Es la acción más destructiva
+  // del módulo y la única que no decía nada.
+  const disconnect = async () => {
+    setDisconnecting(true);
+    setDisconnectError(null);
+    try {
+      await disconnectIntegration(integration.id);
+      removeIntegration(integration.id);
+      router.push("/settings/integrations");
+    } catch (err) {
+      setDisconnectError(errorMessage(err, "No se pudo desconectar. Inténtalo de nuevo."));
+      setDisconnecting(false);
     }
   };
 
@@ -179,19 +201,21 @@ export function EstadoTab({
               llegar. Puedes volver a conectarla cuando quieras.
             </DialogDescription>
           </DialogHeader>
+          {disconnectError !== null && (
+            <p role="alert" className="text-sm text-destructive">
+              {disconnectError}
+            </p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDisconnectOpen(false)}>
               Cancelar
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                void disconnectIntegration(integration.id).then(() => {
-                  removeIntegration(integration.id);
-                  router.push("/settings/integrations");
-                });
-              }}
+              disabled={disconnecting}
+              onClick={() => void disconnect()}
             >
+              {disconnecting && <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />}
               Desconectar
             </Button>
           </DialogFooter>

@@ -31,6 +31,8 @@ import { RunsTab } from "./RunsTab";
 type TabContext = {
   integration: IntegrationDTO;
   refetch: () => Promise<void>;
+  /** «Sincronizar ahora» vive en Estado pero el avance se ve en Historial. */
+  showHistory: () => void;
 };
 
 const TAB_REGISTRY: Record<
@@ -39,7 +41,13 @@ const TAB_REGISTRY: Record<
 > = {
   estado: {
     label: "Estado",
-    render: (ctx) => <EstadoTab integration={ctx.integration} onChanged={ctx.refetch} />,
+    render: (ctx) => (
+      <EstadoTab
+        integration={ctx.integration}
+        onChanged={ctx.refetch}
+        onSyncStarted={ctx.showHistory}
+      />
+    ),
   },
   ubicaciones: {
     label: "Ubicaciones",
@@ -66,6 +74,7 @@ const TAB_REGISTRY: Record<
 export function IntegrationDetailView({ integrationId }: { integrationId: string }) {
   const [integration, setIntegration] = useState<IntegrationDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<IntegrationDetailTabId>("estado");
 
   const refetch = useCallback(async () => {
     try {
@@ -98,7 +107,7 @@ export function IntegrationDetailView({ integrationId }: { integrationId: string
 
   const provider = integrationProvider(integration.provider);
   const tabs = detailTabsFor(provider, integration);
-  const ctx: TabContext = { integration, refetch };
+  const ctx: TabContext = { integration, refetch, showHistory: () => setTab("historial") };
 
   return (
     <div className="space-y-6">
@@ -120,7 +129,7 @@ export function IntegrationDetailView({ integrationId }: { integrationId: string
         <IntegrationStatusBadge status={integration.status} />
       </header>
 
-      <Tabs defaultValue="estado">
+      <Tabs value={tab} onValueChange={(value) => setTab(value as IntegrationDetailTabId)}>
         <TabsList>
           {tabs.map((tab) => (
             <TabsTrigger key={tab} value={tab}>

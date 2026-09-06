@@ -54,7 +54,9 @@ export function LocationsTab({
     try {
       const res = await updateIntegrationLocations(integrationId, [...counting]);
       setItems(res.items);
-      setNotice("Guardado. El próximo cambio de stock ya suma solo estas ubicaciones.");
+      setNotice(
+        "Guardado. Estamos recalculando el stock con estas ubicaciones: el avance se ve en la pestaña Historial.",
+      );
       await onChanged();
     } catch (err) {
       setNotice(errorMessage(err, "No se pudo guardar la selección"));

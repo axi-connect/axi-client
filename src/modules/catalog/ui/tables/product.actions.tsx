@@ -75,7 +75,9 @@ export function ProductRowActions({ product }: { product: ProductRow }) {
               <span>Editar</span>
             </DropdownMenuItem>
           )}
-          {canManage && (
+          {/* Un producto espejado lo gobierna la tienda conectada: borrarlo aquí
+              solo devolvería un 409 del backend con su detalle crudo. */}
+          {canManage && !product.governed && (
             <DropdownMenuItem
               className="flex items-center gap-2 text-destructive"
               onClick={() => setConfirmOpen(true)}

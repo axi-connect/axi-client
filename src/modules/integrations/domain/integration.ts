@@ -41,11 +41,16 @@ export function isRunActive(run: SyncRunDTO): boolean {
 
 /**
  * Cadencia del polling del historial (patrón `imageImportPollInterval` de
- * catalog): 3 s mientras haya un run vivo; a los ~2 min se declara `stalled`
- * para que la UI ofrezca el botón manual en vez de pollear para siempre.
+ * catalog): 3 s mientras haya un run vivo; a los 10 min se declara `stalled`
+ * para que la UI ofrezca el botón manual en vez de pollear para siempre. Eran
+ * 2 min, y el PRIMER backfill (bulk operation + descarga + aplicar + imágenes)
+ * los supera con normalidad: el dueño veía «dejamos de refrescar» como fallo
+ * justo en la sincronización que más importa.
  */
+export const SYNC_RUNS_STALL_MS = 600_000;
+
 export function syncRunsPollInterval(hasActive: boolean, elapsedMs: number): number | false {
   if (!hasActive) return false;
-  if (elapsedMs > 120_000) return false;
+  if (elapsedMs > SYNC_RUNS_STALL_MS) return false;
   return 3_000;
 }
