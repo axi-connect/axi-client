@@ -3876,6 +3876,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_activationState_v1"];
+        put?: never;
+        post: operations["BillingController_confirmActivation_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/summary": {
         parameters: {
             query?: never;
@@ -5593,6 +5609,20 @@ export interface components {
             pending_offer: {
                 kind: string;
                 plan_codes: string[];
+            } | null;
+            quote: {
+                amount_cents: number;
+                list_amount_cents: number;
+                currency: string;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                volume_tier_code: string | null;
+                volume_label: string | null;
+                promotion_code: string | null;
+                promotion_name: string | null;
+                promotion_outcome: string | null;
+                /** Format: date-time */
+                expires_at: string | null;
             } | null;
             trial: {
                 active: boolean;
@@ -11148,6 +11178,90 @@ export interface components {
                 in_app: boolean;
             };
         };
+        BillingActivationDto: {
+            /** @enum {string} */
+            state: "trial_no_offer" | "ready" | "pending_payment" | "active" | "expired_quote" | "unsupported";
+            offer: {
+                kind: string;
+                plan_codes: string[];
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                volume_tier_code: string | null;
+                volume_label: string | null;
+                promotion_code: string | null;
+                promotion_outcome: string | null;
+            } | null;
+            quote_saved: {
+                amount_cents: number;
+                list_amount_cents: number;
+                currency: string;
+                /** Format: date-time */
+                quoted_at: string | null;
+                /** Format: date-time */
+                expires_at: string | null;
+            } | null;
+            quote_now: {
+                plan_code: string;
+                plan_name: string;
+                volume_tier_code: string | null;
+                volume_label: string | null;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                list_amount_cents: number;
+                amount_cents: number;
+                currency: string;
+                promotion_code: string | null;
+                promotion_name: string | null;
+                promotion_outcome: string;
+                /** Format: date-time */
+                promotion_ends_at: string | null;
+            } | null;
+            price_changed: boolean;
+            quote_honored: boolean;
+            /** Format: date-time */
+            quote_valid_until: string | null;
+            /** Format: date-time */
+            trial_ends_at: string | null;
+            pending_invoice: {
+                /** Format: uuid */
+                invoice_id: string;
+                number: string;
+                amount_cents: number;
+                currency: string;
+                /** Format: date-time */
+                due_at: string | null;
+            } | null;
+            term: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "pending" | "active" | "ended" | "expired";
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                currency: string;
+                /** Format: date-time */
+                term_start: string;
+                /** Format: date-time */
+                paid_through: string | null;
+            } | null;
+        };
+        BillingConfirmActivationDto: {
+            expected_amount_cents?: number;
+            accept_current_price?: boolean;
+        };
+        BillingActivationConfirmedDto: {
+            /** Format: uuid */
+            term_id: string;
+            /** Format: uuid */
+            invoice_id: string;
+            invoice_number: string;
+            amount_cents: number;
+            currency: string;
+            /** Format: date-time */
+            due_at: string;
+            reused: boolean;
+        };
         BillingSummaryDto: {
             /** @enum {string|null} */
             account_status: "current" | "past_due" | "suspended" | "cancelled" | null;
@@ -11624,6 +11738,7 @@ export interface components {
                 label: string;
                 fee_cents: number | null;
             }[];
+            default_tier: string | null;
             packages: {
                 public_slug: string;
                 name: string;
@@ -11666,6 +11781,11 @@ export interface components {
                 /** @enum {string} */
                 indexation_policy: "none" | "ipc_annual";
                 indexation_first_year: number | null;
+            } | null;
+            promotion_closed: {
+                code: string;
+                /** @enum {string} */
+                reason: "ended" | "slots";
             } | null;
             version: string;
         };
@@ -12877,6 +12997,10 @@ export interface components {
                 /** @enum {string} */
                 kind: "package" | "module";
                 codes: string[];
+                volume_tier?: string;
+                /** @enum {string} */
+                interval?: "monthly" | "annual";
+                promotion_code?: string;
             };
             company: {
                 name: string;
@@ -20961,6 +21085,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CmoSettingsViewDto"];
+                };
+            };
+        };
+    };
+    BillingController_activationState_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingActivationDto"];
+                };
+            };
+        };
+    };
+    BillingController_confirmActivation_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingConfirmActivationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingActivationConfirmedDto"];
                 };
             };
         };

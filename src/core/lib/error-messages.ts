@@ -266,6 +266,12 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "billing/price_not_found": "La tarifa no existe",
   "billing/price_vigency_overlap": "Ya hay una tarifa que empieza en esa fecha o después",
   "billing/invalid_overage_rate": "Revisa los excedentes: el tamaño de bloque debe ser mayor que cero",
+  // Activación del plan (Tanda B)
+  "billing/price_changed": "El precio cambió desde que lo viste: revisa el nuevo y confirma otra vez",
+  "billing/promotion_closed": "La promoción se agotó justo ahora: recarga para ver el precio vigente",
+  "billing/no_pending_offer": "No hay una oferta guardada que activar",
+  "billing/term_exists": "Tu plan ya está activo",
+  "billing/activation_unsupported": "Esa combinación se activa con nuestro equipo de ventas",
   "billing/amount_mismatch":
     "El pago no cuadra con el cargo. No es algo que puedas resolver desde aquí: ya estamos avisados",
   "billing/gateway_error":

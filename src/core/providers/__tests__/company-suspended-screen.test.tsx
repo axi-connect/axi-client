@@ -12,6 +12,11 @@ describe("CompanySuspendedScreen (polimórfica por variante)", () => {
     render(<CompanySuspendedScreen variant="trial_expired" />)
     expect(screen.getByRole("alert")).toHaveTextContent("Tu prueba terminó")
     expect(screen.getByRole("alert")).toHaveTextContent("tus datos siguen intactos")
+    // Tanda B (B-D7): si dejó un plan elegido, el enlace de pago ya viajó por
+    // correo y WhatsApp al vencer la prueba. Sin sesión no se sabe si lo dejó,
+    // así que el copy lo condiciona en vez de prometer un correo que quizá no salió.
+    expect(screen.getByRole("alert")).toHaveTextContent(/Si dejaste un plan elegido/)
+    expect(screen.getByRole("alert")).toHaveTextContent(/correo y al WhatsApp/)
     // El CTA comercial sale del número configurado en NEXT_PUBLIC_SALES_WHATSAPP,
     // que es obligatorio (jest.env.ts lo fija); el botón de re-login queda
     // siempre disponible como salida

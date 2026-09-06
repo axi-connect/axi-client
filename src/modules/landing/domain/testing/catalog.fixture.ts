@@ -78,6 +78,9 @@ export const FIXTURE_PRICING_DTO: PublicPricingDto = {
     indexation_policy: "ipc_annual",
     indexation_first_year: 2028,
   },
+  // Tanda B: el tramo que preselecciona el catálogo y por qué cerró la promo (si cerró).
+  default_tier: "t1000",
+  promotion_closed: null,
 };
 
 export const FIXTURE_CATALOG = catalogFromApi(FIXTURE_PRICING_DTO);

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { BILLING_INVOICE_CHANGED } from "@/modules/billing/domain/events";
+import { useActivationStore } from "@/modules/billing/infrastructure/stores/activation.store";
 import { useBillingStore } from "@/modules/billing/infrastructure/stores/billing.store";
 
 /**
@@ -33,6 +34,19 @@ export function useBillingSocket(): { connected: boolean } {
     useBillingStore.getState().onPastDue();
   });
 
+  // Tanda B: la activación se pagó (platform activa el plan) o su link venció.
+  // La tarjeta y el resumen se releen: el estado de cuenta cambia de «en
+  // prueba» a «al día» sin que el cliente recargue.
+  useSocketEvent(socket, "billing.activation_paid", () => {
+    useActivationStore.getState().onActivationChanged();
+    void useBillingStore.getState().refresh();
+    window.dispatchEvent(new CustomEvent(BILLING_INVOICE_CHANGED));
+  });
+  useSocketEvent(socket, "billing.activation_expired", () => {
+    useActivationStore.getState().onActivationChanged();
+    window.dispatchEvent(new CustomEvent(BILLING_INVOICE_CHANGED));
+  });
+
   // En la RECONEXIÓN se recarga: los eventos emitidos mientras el socket estuvo
   // caído se perdieron, y en facturación quedarse con un saldo viejo significa
   // enseñarle una deuda a quien ya pagó. El guard evita recargar en el primer
@@ -40,6 +54,9 @@ export function useBillingSocket(): { connected: boolean } {
   useEffect(() => {
     if (connected && wasConnectedRef.current) {
       void useBillingStore.getState().refresh();
+      if (useActivationStore.getState().view !== null) {
+        void useActivationStore.getState().refresh();
+      }
     }
     wasConnectedRef.current = connected;
   }, [connected]);

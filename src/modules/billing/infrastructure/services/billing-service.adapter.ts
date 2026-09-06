@@ -2,6 +2,11 @@ import type { Paginated, Schemas } from "@/core/api/types";
 import { http } from "@/core/services/http";
 import type { BillingSummaryDTO } from "@/modules/billing/domain/account";
 import type {
+  ActivationConfirmedDTO,
+  ActivationDTO,
+  ConfirmActivationBody,
+} from "@/modules/billing/domain/activation";
+import type {
   InvoiceDTO,
   InvoiceDetailDTO,
   InvoiceLinkDTO,
@@ -26,6 +31,24 @@ export type BillingDataExportDTO = Schemas["BillingDataExportDto"];
 
 export function getBillingSummary(): Promise<BillingSummaryDTO> {
   return http.get<BillingSummaryDTO>("/billing/summary");
+}
+
+/**
+ * La oferta guardada en el alta, re-cotizada al día (Tanda B). `quote_now` es
+ * EXACTAMENTE lo que la confirmación va a facturar.
+ */
+export function getActivation(): Promise<ActivationDTO> {
+  return http.get<ActivationDTO>("/billing/activation");
+}
+
+/**
+ * «Confirmar y pagar» → **201** con la factura de activación. Un 409
+ * `billing/price_changed` trae `details.quote_now`: hay que volver a llamar con
+ * `accept_current_price: true` tras mostrárselo al cliente (nunca se factura un
+ * precio no visto).
+ */
+export function confirmActivation(body: ConfirmActivationBody): Promise<ActivationConfirmedDTO> {
+  return http.post<ActivationConfirmedDTO>("/billing/activation", body);
 }
 
 /**
