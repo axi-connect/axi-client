@@ -6,6 +6,7 @@ import {
   FALLBACK_PROVIDER,
   INTEGRATION_PROVIDERS,
   integrationProvider,
+  validateShopDomain,
   visibleProviders,
   type AccessTokenConnectConfig,
 } from "@/modules/integrations/domain/integration-providers";
@@ -73,12 +74,13 @@ describe("integration-providers", () => {
     expect(integrationProvider("shopify")).toBe(INTEGRATION_PROVIDERS.shopify);
   });
 
-  it("los requisitos de Shopify avisan del token de un solo uso como crítico", () => {
+  it("los requisitos de Shopify marcan como crítico instalar la app en la tienda", () => {
     const critical = INTEGRATION_PROVIDERS.shopify.prerequisites.filter(
       (item) => item.critical === true,
     );
     expect(critical.length).toBeGreaterThan(0);
-    expect(critical.some((item) => item.detail.includes("UNA sola vez"))).toBe(true);
+    // Sin la app instalada Shopify rechaza el par id/secreto aunque sea correcto.
+    expect(critical.some((item) => item.detail.includes("Sin instalarla"))).toBe(true);
   });
 
   it("los copys se generan del noun: nada de «tienda» fijo en las vistas", () => {
@@ -95,25 +97,25 @@ describe("buildConnectPayload / buildRotatePayload", () => {
     const config = INTEGRATION_PROVIDERS.shopify.connect;
     const payload = buildConnectPayload(config, "shopify", {
       shop_domain: "  mi-tienda.myshopify.com ",
-      access_token: " shpat_abc ",
-      api_secret: " shpss_xyz ",
+      client_id: " abc123def456 ",
+      client_secret: " shpss_xyz ",
     });
 
     expect(payload).toEqual({
       provider: "shopify",
       external_account: "mi-tienda.myshopify.com",
       credentials: {
-        mode: "access_token",
-        access_token: "shpat_abc",
-        api_secret: "shpss_xyz",
+        mode: "client_credentials",
+        client_id: "abc123def456",
+        client_secret: "shpss_xyz",
       },
     });
   });
 
-  it("el modo client_credentials arma la otra variante de la unión", () => {
+  it("el modo access_token (custom app del admin) arma la otra variante de la unión", () => {
     const config: AccessTokenConnectConfig = {
       strategy: "access_token",
-      credentials_mode: "client_credentials",
+      credentials_mode: "access_token",
       external_account_field: {
         id: "account",
         label: "Cuenta",
@@ -121,26 +123,46 @@ describe("buildConnectPayload / buildRotatePayload", () => {
         placeholder: "",
       },
       credential_fields: [
-        { id: "client_id", label: "Client ID", hint: "", placeholder: "" },
-        { id: "client_secret", label: "Client secret", hint: "", placeholder: "", secret: true },
+        { id: "access_token", label: "Token", hint: "", placeholder: "", secret: true },
+        { id: "api_secret", label: "API secret", hint: "", placeholder: "", secret: true },
       ],
     };
 
-    expect(buildRotatePayload(config, { client_id: " id ", client_secret: " secreto " })).toEqual({
-      mode: "client_credentials",
-      client_id: "id",
-      client_secret: "secreto",
+    expect(
+      buildRotatePayload(config, { access_token: " shpat_n ", api_secret: " shpss_n " }),
+    ).toEqual({
+      mode: "access_token",
+      access_token: "shpat_n",
+      api_secret: "shpss_n",
     });
   });
 
   it("la rotación reusa los mismos campos del descriptor que el alta", () => {
     const config = INTEGRATION_PROVIDERS.shopify.connect;
-    expect(buildRotatePayload(config, { access_token: "shpat_n", api_secret: "shpss_n" })).toEqual(
-      {
-        mode: "access_token",
-        access_token: "shpat_n",
-        api_secret: "shpss_n",
-      },
-    );
+    expect(
+      buildRotatePayload(config, { client_id: "abc123def456", client_secret: "shpss_n" }),
+    ).toEqual({
+      mode: "client_credentials",
+      client_id: "abc123def456",
+      client_secret: "shpss_n",
+    });
+  });
+});
+
+describe("validateShopDomain", () => {
+  it("acepta lo que el comerciante pega (https, mayúsculas, barra) si es .myshopify.com", () => {
+    for (const raw of [
+      "mi-tienda.myshopify.com",
+      " https://Mi-Tienda.myshopify.com/ ",
+      "tribal-store-4813.myshopify.com",
+    ]) {
+      expect(validateShopDomain(raw)).toBeNull();
+    }
+  });
+
+  it("rechaza el dominio público y los recortes a medias", () => {
+    for (const raw of ["savagecolombia.com", "myshopify.com", "mi-tienda", ""]) {
+      expect(validateShopDomain(raw)).toMatch(/\.myshopify\.com/);
+    }
   });
 });

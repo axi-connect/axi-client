@@ -130,25 +130,25 @@ const SHOPIFY_PREREQUISITES: readonly IntegrationPrerequisite[] = [
     id: "admin_access",
     label: "Puedo entrar al admin de mi tienda Shopify como propietario",
     detail:
-      "Crear la app requiere permisos de propietario. Si la tienda la maneja otra persona, pídele que haga este paso contigo.",
+      "Instalar la app requiere permisos de propietario. Si la tienda la maneja otra persona, pídele que haga este paso contigo.",
   },
   {
-    id: "custom_app_created",
-    label: "Creé la app: Configuración → Aplicaciones y canales de ventas → Desarrollar aplicaciones",
+    id: "dev_app_created",
+    label: "Creé la app «axi» en el Dev Dashboard de Shopify (dev.shopify.com)",
     detail:
-      'La primera vez Shopify pide "Permitir desarrollo de aplicaciones personalizadas". Crea una app llamada "axi".',
+      "Entra con la misma cuenta de la tienda, crea una app y ábrela: en «Configuración» están los permisos y en «Credenciales» el ID y el secreto de cliente.",
   },
   {
     id: "scopes_marked",
     label: "Marqué los 5 permisos de Admin API que axi necesita",
     detail:
-      "read_products, read_inventory, read_locations, read_orders y write_draft_orders. Ni uno más: axi no pide datos de tus clientes.",
+      "read_products, read_inventory, read_locations, read_orders y write_draft_orders. Ni uno más: axi no pide datos de tus clientes. Si los cambias después, hay que reinstalar la app en la tienda.",
   },
   {
-    id: "token_copied",
-    label: "Instalé la app y copié el token de acceso Y la clave secreta de API",
+    id: "app_installed",
+    label: "Instalé la app en mi tienda y tengo a mano el ID y el secreto de cliente",
     detail:
-      "El token (shpat_…) se muestra UNA sola vez al instalar: cópialo antes de cerrar. La clave secreta de API está en la misma pestaña de credenciales y firma los avisos que Shopify nos envía.",
+      "Sin instalarla, Shopify rechaza las credenciales aunque sean correctas. El secreto de cliente (shpss_…) también firma los avisos que tu tienda nos envía: si lo regeneras, vuelve aquí y rota las credenciales.",
     critical: true,
   },
   {
@@ -160,34 +160,59 @@ const SHOPIFY_PREREQUISITES: readonly IntegrationPrerequisite[] = [
 ];
 
 /**
- * El formulario de Shopify, como datos. Los textos son EXACTAMENTE los que el
- * wizard tenía hardcodeados antes de F8: la generalización no cambia un pixel
- * del alta de Shopify. Son TRES campos y no uno (hallazgo M7 de la auditoría):
- * el token firma las llamadas y la clave secreta firma los webhooks.
+ * El formulario de Shopify, como datos. Modo `client_credentials` (app del Dev
+ * Dashboard): el par id/secreto es lo duradero y el backend acuña el token de
+ * 24 h — es el camino que Shopify ofrece hoy para una app nueva, y el que se
+ * verificó contra la tienda real de Savage. Son TRES campos y no uno (hallazgo
+ * M7 de la auditoría): el id autentica y el secreto firma los webhooks.
+ *
+ * `validate` es pura (sin red) y corta antes del round-trip los dos errores de
+ * pegado más comunes: el dominio público en vez del `.myshopify.com` y un
+ * secreto a medio copiar.
  */
+
+/** Acepta lo que el comerciante suele pegar (con https://, mayúsculas, barra final). */
+export function validateShopDomain(value: string): string | null {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "");
+  return /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(normalized)
+    ? null
+    : "Usa el dominio .myshopify.com de tu tienda (Configuración → Dominios), no tu página pública.";
+}
 const SHOPIFY_CONNECT: AccessTokenConnectConfig = {
   strategy: "access_token",
-  credentials_mode: "access_token",
+  credentials_mode: "client_credentials",
   external_account_field: {
     id: "shop_domain",
     label: "Dominio de tu tienda",
     hint: "El dominio .myshopify.com, no el de tu página pública. Está en Configuración → Dominios.",
     placeholder: "mi-tienda.myshopify.com",
+    validate: validateShopDomain,
   },
   credential_fields: [
     {
-      id: "access_token",
-      label: "Token de acceso de Admin API",
-      hint: "Empieza por shpat_. Shopify lo muestra UNA sola vez al instalar la app.",
-      placeholder: "shpat_…",
-      secret: true,
+      id: "client_id",
+      label: "ID de cliente",
+      hint: "En el Dev Dashboard de Shopify → tu app → Credenciales. Identifica la app; no es secreto.",
+      placeholder: "ID de cliente de la app",
+      validate: (value) =>
+        value.trim().length >= 10
+          ? null
+          : "El ID de cliente parece incompleto: cópialo entero desde Credenciales.",
     },
     {
-      id: "api_secret",
-      label: "Clave secreta de API",
-      hint: "Está en la misma pestaña de credenciales de tu app. Firma los avisos que tu tienda nos envía: sin ella no llegan los cambios de stock.",
+      id: "client_secret",
+      label: "Secreto de cliente",
+      hint: "En la misma pantalla de Credenciales. Firma los avisos que tu tienda nos envía: sin él no llegan los cambios de stock.",
       placeholder: "shpss_…",
       secret: true,
+      validate: (value) =>
+        value.trim().length >= 10
+          ? null
+          : "El secreto de cliente parece incompleto: cópialo entero desde Credenciales.",
     },
   ],
 };

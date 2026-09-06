@@ -34,8 +34,8 @@ const { AccessTokenConnectPanel } =
 
 /**
  * F8: el formulario del paso «Conexión» se GENERA desde el descriptor, y el
- * payload que arma es el del contrato. Para Shopify, los campos son EXACTOS a
- * los que estaban hardcodeados antes — esa es la garantía de no-regresión.
+ * payload que arma es el del contrato. Para Shopify es la variante
+ * `client_credentials` (app del Dev Dashboard): id + secreto de cliente.
  */
 describe("AccessTokenConnectPanel", () => {
   const shopify = INTEGRATION_PROVIDERS.shopify;
@@ -60,16 +60,15 @@ describe("AccessTokenConnectPanel", () => {
     renderShopify();
 
     const domain = screen.getByLabelText("Dominio de tu tienda");
-    const token = screen.getByLabelText("Token de acceso de Admin API");
-    const secret = screen.getByLabelText("Clave secreta de API");
+    const token = screen.getByLabelText("ID de cliente");
+    const secret = screen.getByLabelText("Secreto de cliente");
 
     expect(domain).toHaveAttribute("placeholder", "mi-tienda.myshopify.com");
-    expect(token).toHaveAttribute("type", "password");
+    // El id de cliente NO es secreto (identifica la app); el secreto sí.
+    expect(token).toHaveAttribute("type", "text");
     expect(secret).toHaveAttribute("type", "password");
     expect(
-      screen.getByText(
-        "Empieza por shpat_. Shopify lo muestra UNA sola vez al instalar la app.",
-      ),
+      screen.getByText(/Dev Dashboard de Shopify → tu app → Credenciales/),
     ).toBeInTheDocument();
   });
 
@@ -84,12 +83,12 @@ describe("AccessTokenConnectPanel", () => {
     fireEvent.change(screen.getByLabelText("Dominio de tu tienda"), {
       target: { value: " mi-tienda.myshopify.com " },
     });
-    fireEvent.change(screen.getByLabelText("Token de acceso de Admin API"), {
-      target: { value: "shpat_abc" },
+    fireEvent.change(screen.getByLabelText("ID de cliente"), {
+      target: { value: "abc123def456" },
     });
     expect(submit).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Clave secreta de API"), {
-      target: { value: "shpss_xyz" },
+    fireEvent.change(screen.getByLabelText("Secreto de cliente"), {
+      target: { value: "shpss_xyz0123456789" },
     });
     expect(submit).toBeEnabled();
 
@@ -100,9 +99,9 @@ describe("AccessTokenConnectPanel", () => {
       provider: "shopify",
       external_account: "mi-tienda.myshopify.com",
       credentials: {
-        mode: "access_token",
-        access_token: "shpat_abc",
-        api_secret: "shpss_xyz",
+        mode: "client_credentials",
+        client_id: "abc123def456",
+        client_secret: "shpss_xyz0123456789",
       },
     });
     expect(mockUpsertIntegration).toHaveBeenCalledWith(integration);
@@ -117,11 +116,11 @@ describe("AccessTokenConnectPanel", () => {
     fireEvent.change(screen.getByLabelText("Dominio de tu tienda"), {
       target: { value: "mi-tienda.myshopify.com" },
     });
-    fireEvent.change(screen.getByLabelText("Token de acceso de Admin API"), {
-      target: { value: "shpat_abc" },
+    fireEvent.change(screen.getByLabelText("ID de cliente"), {
+      target: { value: "abc123def456" },
     });
-    fireEvent.change(screen.getByLabelText("Clave secreta de API"), {
-      target: { value: "shpss_xyz" },
+    fireEvent.change(screen.getByLabelText("Secreto de cliente"), {
+      target: { value: "shpss_xyz0123456789" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Conectar tienda" }));
 
@@ -158,11 +157,11 @@ describe("AccessTokenConnectPanel", () => {
     fireEvent.change(screen.getByLabelText("Dominio de tu tienda"), {
       target: { value: "mi-tienda.com" },
     });
-    fireEvent.change(screen.getByLabelText("Token de acceso de Admin API"), {
-      target: { value: "shpat_abc" },
+    fireEvent.change(screen.getByLabelText("ID de cliente"), {
+      target: { value: "abc123def456" },
     });
-    fireEvent.change(screen.getByLabelText("Clave secreta de API"), {
-      target: { value: "shpss_xyz" },
+    fireEvent.change(screen.getByLabelText("Secreto de cliente"), {
+      target: { value: "shpss_xyz0123456789" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Conectar tienda" }));
 
