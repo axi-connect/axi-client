@@ -16,9 +16,9 @@ import {
   type OfferSelection,
   type PackageCode,
 } from "@/modules/onboarding/domain/signup-draft";
+import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
+import { FlowTile } from "@/modules/onboarding/ui/flow/FlowTile";
 import { MODULE_GRAPHICS, PACKAGE_GRAPHICS } from "@/modules/onboarding/ui/signup/graphics/OfferGraphics";
-import { OfferTile } from "@/modules/onboarding/ui/signup/OfferTile";
-import { SignupActions } from "@/modules/onboarding/ui/signup/SignupActions";
 
 type OfferKind = "package" | "modules";
 
@@ -43,7 +43,7 @@ const TO_CONFIRM = "Precio a confirmar";
 /**
  * Pantalla «Oferta» (mockup v3 «Flow»). Conmutador Paquete | Módulos
  * (`SegmentedControl`, un radiogroup) y debajo las fichas de cristal
- * (`OfferTile`: radio para paquetes, checkbox para módulos) con el gráfico de
+ * (`FlowTile`: radio para paquetes, checkbox para módulos) con el gráfico de
  * capacidad que aprobó el dueño. El estado mixto es imposible por tipo;
  * cambiar de pestaña descarta lo otro.
  *
@@ -102,16 +102,16 @@ export function OfferStep({
             const list = paid && catalog ? planListCop(catalog, code, volume ?? catalog.defaultVolumeId) : null;
             const today = paid ? packagePriceCop(catalog, code, volume) : null;
             return (
-              <OfferTile
+              <FlowTile
                 key={code}
                 role="radio"
                 testId={`offer-${code}`}
                 checked={selection?.kind === "package" && selection.code === code}
                 onClick={() => onChange({ kind: "package", code })}
-                name={plan.name}
+                title={plan.name}
                 badge={plan.badge ?? undefined}
                 featured={plan.featured || FULL_WIDTH.has(code)}
-                price={
+                meta={
                   !paid ? (
                     "7 días gratis"
                   ) : today !== null ? (
@@ -123,7 +123,7 @@ export function OfferStep({
                     TO_CONFIRM
                   )
                 }
-                priceNote={
+                metaNote={
                   paid && promotion && list !== null && today !== null && list !== today ? (
                     <>
                       <s>{formatCop(list)}</s> lista · {discountLabel(promotion)} {promotion.name}
@@ -143,14 +143,14 @@ export function OfferStep({
             const checked = selection?.kind === "modules" && selection.codes.includes(offer.id);
             const price = modulePrice(catalog, offer.id);
             return (
-              <OfferTile
+              <FlowTile
                 key={offer.id}
                 role="checkbox"
                 testId={`offer-${offer.id}`}
                 checked={checked}
                 onClick={() => onChange(toggleModule(selection, offer.id))}
-                name={offer.name}
-                price={
+                title={offer.name}
+                meta={
                   price !== null ? (
                     <>
                       {formatCop(price)}
@@ -177,7 +177,7 @@ export function OfferStep({
         </p>
       ) : null}
 
-      <SignupActions
+      <FlowActions
         type="button"
         label="Continuar"
         onClick={onNext}

@@ -7,7 +7,7 @@ import {
   type CompanyLocationValues,
   type CompanyStepValues,
 } from "@/modules/onboarding/ui/signup/config/company-step.config";
-import { SignupActions } from "@/modules/onboarding/ui/signup/SignupActions";
+import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
 
 /** Pantalla «Ubicación»: dónde opera (país + ciudad; la zona horaria viaja oculta). */
 export function CompanyLocationStep({
@@ -29,7 +29,7 @@ export function CompanyLocationStep({
       onSubmit={(values) => onNext(values)}
       actions={{
         render: ({ submitting }) => (
-          <SignupActions label="Continuar" submitting={submitting} back={<DraftBackButton<CompanyLocationValues> onBack={onBack} />} />
+          <FlowActions label="Continuar" submitting={submitting} back={<DraftBackButton<CompanyLocationValues> onBack={onBack} />} />
         ),
       }}
     />

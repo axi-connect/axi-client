@@ -270,7 +270,7 @@ La tabla habla de **superficies**. Un glifo ilustrado de cristal (`GlassGlyph`, 
 
 ### 5.3 Cristal blanco sobre un campo de color (`.sf-glass`)
 
-El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —fichas, inputs, segmentado, nodos de la ruta— con **otro material**: cristal blanco a distintos porcentajes del color del texto (`--sf-fg` 16 % en reposo, 24 % en hover, 30 % seleccionado; borde al 26 %) y **sin `backdrop-filter`**, porque detrás solo hay un degradado que la app controla (§5.2) y los nodos viajan dentro de un `transform`. No sustituye a `.glass`: `.glass` es el material de lo que flota sobre el contenido; `.sf-glass` es el de los controles que se posan sobre un **campo de color** (ver §8, «re-derivación por alcance»). Vive junto a `.signup-field` en `globals.css` y solo tiene sentido dentro de ese alcance.
+El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —fichas, inputs, segmentado, nodos de la ruta— con **otro material**: cristal blanco a distintos porcentajes del color del texto (`--sf-fg` 16 % en reposo, 24 % en hover, 30 % seleccionado; borde al 26 %) y **sin `backdrop-filter`**, porque detrás solo hay un degradado que la app controla (§5.2) y los nodos viajan dentro de un `transform`. No sustituye a `.glass`: `.glass` es el material de lo que flota sobre el contenido; `.sf-glass` es el de los controles que se posan sobre un **campo de color** (ver §8, «re-derivación por alcance»). Vive junto a `.signup-field` en `globals.css` y solo tiene sentido dentro de un alcance que defina las variables `--sf-*`. Hoy hay **dos**: `.signup-field` (el campo coral) y `.flow-ground` (el suelo del onboarding, 2026-09-05), que deriva el mismo vocabulario de los tokens de la app —cristal = superficie del tema al 65 %, seleccionado = sólido, «completado» = violeta— sin re-derivar `--color-*`. Así la ruta, las fichas y los controles son las mismas piezas (`modules/onboarding/ui/flow/`) sobre los dos escenarios. Fuera de esos alcances las variables no existen y el material no se pinta: un consumidor suelto (el banner del panel) lleva `flow-ground` en su raíz.
 
 ---
 
@@ -287,6 +287,7 @@ Presets centralizados en **`src/core/styles/motion.ts`** — nunca duraciones/cu
 | `press` | `scale: 0.97`, 100ms | Botones e ítems interactivos |
 | `hover` | transición 150–200ms | Color/fondo/sombra en hover |
 | `splash.*` | entrada `0.45s` / salida `1.1s [0.55,0,0.85,0.15]`, escala 1→80 | Splash de entrada a la app ("se entra por el ojo de la α") — valores documentales; la implementación real es CSS |
+| `flowStage.*` | `drain` 600 ms `[0.4,0,0.2,1]` · `rise` = `spring.soft` + 250 ms · `lightEvery` 140 ms · `staggerEvery` 80 ms | Onboarding «Flow»: el campo coral se hunde y descubre el suelo, la ruta sube desde abajo, «Listo» enciende las paradas y escalona el resumen |
 
 Animaciones CSS de marca (en `globals.css`): `.animate-brand-pulse` (pulso del isotipo en el `BrandLoader`; se desactiva con reduced-motion), `.animate-delayed-fade-in` (aparición diferida ~150ms para indicadores de navegación, evita flicker) y las fases del splash (`splash-in` / `splash-exit` / `fade-in`).
 
@@ -314,12 +315,20 @@ Reglas:
   `prefers-reduced-motion` y ninguno se engancha sin puntero fino.
 - **Celebraciones**: una ráfaga de confeti **finita** (`Confetti` +
   `brandCelebration`, ~2,5 s, termina sola) tampoco es un loop: la dispara una
-  acción del usuario que merece celebrarse y acaba. Hoy hay una sola: la
-  bienvenida tras crear la cuenta (`/onboarding?welcome=1`). Condiciones para
+  acción del usuario que merece celebrarse y acaba. Hoy hay **dos, ambas en el
+  onboarding y ninguna en el workspace**: la bienvenida tras crear la cuenta
+  (`/onboarding?welcome=1`, `brandCelebration`, ~2,5 s) y la pantalla «Listo»
+  al cerrar la configuración (`brandCelebrationShort`, ~1,5 s, cañones sin
+  estallido, después de que la ruta encienda sus paradas). Condiciones para
   cualquier otra: colores de marca leídos de los tokens, disparo **después** de
   que el splash se haya ido (`SplashContext.phase === "idle"`), una sola vez por
   pantalla, y con `prefers-reduced-motion` no se pinta nada. El workspace
   (inbox, CRM, tablas) no celebra: sigue quieto.
+- **Indicadores de progreso ligados a un trabajo del servidor** (spinners,
+  barras, el haz que recorre el documento en `CatalogScan`) tampoco son loops
+  del workspace: existen solo mientras el job procesa, se vuelven determinados
+  en cuanto el servidor informa avance y desaparecen al terminar. Son finitos
+  por construcción; con `prefers-reduced-motion` se quedan quietos.
 
 ---
 
@@ -354,6 +363,7 @@ Reglas:
 - Todo componente nuevo se revisa en ambos temas antes de mergear; los tokens hacen el 95% del trabajo si no hay hex sueltos.
 - Evitar flash de tema: no leer `window`/tema en render de servidor; `suppressHydrationWarning` en `<html>` (ya aplicado).
 - **Re-derivación de tokens por alcance** (`.theme-dark-island`, `.signup-field`): un bloque puede redefinir los tokens semánticos (`--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-input`, `--color-ring`, `--color-primary(-foreground)`, `--color-secondary`, `--color-accent`, `--color-destructive`) **dentro de su propio alcance**, y todo primitivo que viva dentro adopta el material sin variantes ni hex en componentes. Es la forma de pintar un momento de marca (isla oscura de Fundadores, campo coral del registro) sin bifurcar componentes. Reglas: se aplica **una vez**, en el layout de la superficie; `--color-background` no se toca (el cristal se mezcla contra el fondo real y los overlays siguen siendo los de la app); el bloque declara como mucho **un** hex propio (`--sf-fg: #ffffff`, el texto sobre coral) y todo lo demás se deriva con `color-mix`; el bloque `.dark` del mismo alcance devuelve los tokens al tema (`--sf-fg: var(--foreground)`, destructivo al rojo). Cuando la marca cae sobre el campo, el isotipo conserva sus cintas y solo el wordmark toma el color del texto (`.signup-field .text-brand-wordmark`).
+- **Un alcance hermano puede definir solo el material, sin re-derivar** (`.flow-ground`, onboarding «Flow»): declara las mismas variables `--sf-*` que el campo, derivadas de `--foreground`/`--background`/`--axi-violet`, y deja los `--color-*` en paz. Es la segunda escena del mismo material: los primitivos siguen siendo los de la app (el CTA coral) y solo las piezas que hablan `--sf-*` (ruta, fichas, cristal) cambian de escenario. Conmuta con `.dark` gratis porque consume tokens que ya conmutan.
 - Imágenes/logos con variante por tema — **dos casos, según el logo**:
   - **A color** (varias tintas, como el logo horizontal de axi con sus tres cintas): dos archivos, renderizando ambos con `dark:hidden` / `hidden dark:block` (no JS).
   - **Monocromo** (silueta con canal alfa): **un solo archivo** como `mask-image` + `bg-current`. El color lo aporta el token de texto, así que sigue al tema sin una sola variante `dark:` y sin un segundo asset que mantener sincronizado. El color del archivo es irrelevante — solo cuenta su transparencia. Referencia: `shared/components/layout/site/KodecolBanner.tsx`.

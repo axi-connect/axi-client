@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { Button } from "@/shared/components/ui/button";
@@ -25,8 +25,9 @@ import {
 } from "@/modules/onboarding/infrastructure/services/catalog-import-service.adapter";
 import { ExtractedProductsReview } from "@/modules/onboarding/ui/catalog-import/ExtractedProductsReview";
 import { ImportDropzone } from "@/modules/onboarding/ui/catalog-import/ImportDropzone";
-import { ImportJobProgress } from "@/modules/onboarding/ui/catalog-import/ImportJobProgress";
-import { StepAside, StepFrame } from "@/modules/onboarding/ui/onboarding/StepFrame";
+import { CatalogScan } from "@/modules/onboarding/ui/catalog-import/CatalogScan";
+import { FlowActions, FlowBackButton } from "@/modules/onboarding/ui/flow/FlowActions";
+import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
 
 const NICHE_HINTS: Record<string, string> = {
   restaurants: "Para restaurantes ya creamos las categorías Entradas, Platos, Bebidas y Postres. La IA acomoda cada producto en la suya.",
@@ -36,8 +37,9 @@ const NICHE_HINTS: Record<string, string> = {
 };
 
 /**
- * Paso 3 · Catálogo (mockup F0-B). Cuatro fases en una sola pantalla: subir
- * → analizando (job sondeado) → revisar (edición en línea) → creado. Al
+ * Paso 3 · Catálogo (onboarding «Flow»). Cuatro fases en una sola pantalla:
+ * subir (dropzone de cristal) → leyendo (`CatalogScan`: el haz y las filas que
+ * aparecen) → revisar (la tabla, en hoja sólida) → creado. Al
  * volver con un `import_id` guardado en el progreso, retoma la revisión donde
  * estaba: cerrar la pestaña no pierde el análisis.
  *
@@ -136,83 +138,17 @@ export function CatalogImportStep({
     failed: { title: "Carga tu catálogo", lead: "Sube el archivo que ya tienes. No hace falta que esté ordenado: la IA se encarga y tú revisas." },
   }[phase];
 
-  const primary = (() => {
-    if (phase === "review" && job) {
-      return (
-        <Button size="lg" className="h-11" disabled={committing || saving || ready === 0} onClick={() => void commit(job)} aria-describedby="catalog-blocker">
-          {committing ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : null}
-          {committing ? "Creando…" : `Crear ${ready} ${ready === 1 ? "producto" : "productos"}`}
-          {!committing ? <ArrowRight aria-hidden="true" /> : null}
-        </Button>
-      );
-    }
-    if (phase === "completed" && job) {
-      return (
-        <Button size="lg" className="h-11" disabled={saving} onClick={() => onDone({ import_id: job.id, created_count: job.items_created })}>
-          Continuar
-          <ArrowRight aria-hidden="true" />
-        </Button>
-      );
-    }
-    return null;
-  })();
+  const primary =
+    phase === "review" && job
+      ? { label: committing ? "Creando…" : `Crear ${ready} ${ready === 1 ? "producto" : "productos"}`, onClick: () => void commit(job), disabled: saving || ready === 0 }
+      : phase === "completed" && job
+        ? { label: "Continuar", onClick: () => onDone({ import_id: job.id, created_count: job.items_created }), disabled: saving }
+        : null;
 
   return (
-    <StepFrame
-      stepNumber={3}
-      total={5}
-      label="Catálogo"
-      title={copy.title}
-      lead={copy.lead}
-      footer={
-        <>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={onBack}>
-              <ArrowLeft aria-hidden="true" />
-              Atrás
-            </Button>
-            {/* En «fallo» la acción vive en el estado vacío; repetirla aquí duplicaría el botón. */}
-            {phase !== "completed" && phase !== "failed" ? (
-              <Button variant="ghost" disabled={saving} onClick={onSkip}>
-                Cargarlo a mano después
-              </Button>
-            ) : null}
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            {primary}
-            {phase === "review" && blockers > 0 ? (
-              <span id="catalog-blocker" className="text-muted-foreground text-xs">
-                Solo se crean los productos listos; completa o excluye los {blockers} que faltan.
-              </span>
-            ) : null}
-            {actionError ? (
-              <span role="alert" className="text-destructive text-xs">
-                {actionError}
-              </span>
-            ) : null}
-          </div>
-        </>
-      }
-      aside={
-        phase === "review" ? (
-          <StepAside
-            glyph="catalog"
-            title="Antes de crear"
-            text="Solo se crean los productos marcados como «Listo». Los demás puedes completarlos ahora, excluirlos o terminarlos después en Catálogo."
-            tips={["Nada se publica sin tu confirmación", "Los duplicados de productos existentes se omiten", "Podrás añadir fotos después"]}
-          />
-        ) : (
-          <StepAside
-            glyph="catalog"
-            title="Qué hace la IA"
-            text="Extrae nombre, precio, descripción y categoría de cada producto. Lo que no encuentre te lo pide antes de crear nada."
-            tips={["Nunca inventa precios: si falta, te pregunta", "Detecta duplicados con productos ya creados", "Puedes excluir lo que no quieras vender por chat"]}
-          />
-        )
-      }
-    >
+    <FlowScreen focusHeading size={phase === "review" ? "full" : phase === "processing" ? "wide" : "narrow"} title={copy.title} lead={copy.lead}>
       {phase === "upload" ? (
-        <>
+        <div className="w-full max-w-[560px] text-left">
           <ImportDropzone onFile={(file) => void upload(file)} disabled={uploading} nicheHint={hint} />
           {uploading ? (
             <p role="status" className="text-muted-foreground mt-3 flex items-center gap-2 text-sm">
@@ -220,19 +156,23 @@ export function CatalogImportStep({
               Subiendo el archivo…
             </p>
           ) : null}
-        </>
+        </div>
       ) : null}
 
       {phase === "processing" && job ? (
-        <ImportJobProgress job={job} stalled={stalled} onKeepWaiting={resume} onContinueLater={onSkip} />
+        <div className="w-full max-w-[720px] text-left">
+          <CatalogScan job={job} stalled={stalled} onKeepWaiting={resume} onContinueLater={onSkip} />
+        </div>
       ) : null}
 
       {phase === "review" && job ? (
-        <ExtractedProductsReview items={job.items ?? []} edits={edits} onEditsChange={setEdits} />
+        <div className="bg-background border-border w-full rounded-2xl border p-4 text-left shadow-[0_12px_40px_rgb(0_0_0/.06)] sm:p-5">
+          <ExtractedProductsReview items={job.items ?? []} edits={edits} onEditsChange={setEdits} />
+        </div>
       ) : null}
 
       {phase === "completed" && job ? (
-        <div className="border-border bg-background/70 rounded-2xl border p-5 text-sm leading-relaxed">
+        <div className="sf-glass w-full max-w-[560px] rounded-2xl p-5 text-left text-sm leading-relaxed">
           <p>
             <strong>{job.items_created}</strong> productos creados{job.items_updated ? `, ${job.items_updated} actualizados` : ""}
             {job.items_skipped ? `, ${job.items_skipped} omitidos` : ""}
@@ -264,10 +204,39 @@ export function CatalogImportStep({
       ) : null}
 
       {jobError ? (
-        <p role="alert" className="text-destructive mt-3 text-sm">
+        <p role="alert" className="text-destructive text-sm">
           {jobError}
         </p>
       ) : null}
-    </StepFrame>
+
+      <FlowActions
+        type="button"
+        label={primary?.label}
+        submitting={committing}
+        submittingLabel="Creando…"
+        disabled={primary?.disabled ?? false}
+        onClick={primary?.onClick}
+        describedBy={phase === "review" && blockers > 0 ? "catalog-blocker" : undefined}
+        microcopyId="catalog-blocker"
+        microcopy={
+          phase === "review" && blockers > 0
+            ? `Solo se crean los productos listos; completa o excluye los ${blockers} que faltan.`
+            : phase === "upload"
+              ? "Con catálogo, tu agente vende con precios reales desde el primer chat."
+              : undefined
+        }
+        error={actionError}
+        secondary={
+          // En «fallo» la acción vive en el estado vacío; repetirla aquí duplicaría el botón.
+          phase !== "completed" && phase !== "failed" ? (
+            <Button type="button" variant="ghost" disabled={saving} onClick={onSkip}>
+              Cargarlo a mano después
+            </Button>
+          ) : undefined
+        }
+        back={<FlowBackButton onClick={onBack} />}
+        className="mt-2"
+      />
+    </FlowScreen>
   );
 }

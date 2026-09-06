@@ -20,8 +20,11 @@ import { cn } from "@/core/lib/utils";
  *    instante (`at`, en ms). Todo termina solo y los temporizadores se cancelan
  *    al desmontar. No es un loop (DESIGN-SYSTEM §6): lo dispara una acción del
  *    usuario y acaba.
- * 4. **Sin `ConfettiButton`** ni autodisparo al montar: el único consumidor
- *    decide cuándo (la bienvenida espera a que el splash se haya ido).
+ * 4. **Sin `ConfettiButton`** ni autodisparo al montar: los consumidores
+ *    deciden cuándo. Hay dos, ambos en el onboarding y ninguno en el
+ *    workspace: la bienvenida (`brandCelebration`, tras el splash) y la
+ *    pantalla «Listo» (`brandCelebrationShort`, después de que la ruta
+ *    encienda sus paradas).
  *
  * Los colores no se fijan aquí: el preset `brandCelebration` los recibe ya
  * leídos de los tokens (`readBrandPaletteCss`).
@@ -106,5 +109,25 @@ export function brandCelebration(colors: readonly string[]): ConfettiShot[] {
     );
   }
   shots.push({ ...shared, at: 900, particleCount: 90, spread: 75, startVelocity: 42, scalar: 1.05, origin: { x: 0.5, y: 0.35 } });
+  return shots;
+}
+
+/**
+ * La celebración corta del cierre («Listo», onboarding «Flow», 2026-09-05):
+ * solo los cañones laterales durante 900 ms, menos partículas y sin estallido
+ * central; con los `ticks` acortados todo ha caído antes de 1,5 s. Es la
+ * segunda y última ráfaga del viaje: la primera ya sonó en la bienvenida.
+ */
+const SHORT_CANNON_MS = 900;
+
+export function brandCelebrationShort(colors: readonly string[]): ConfettiShot[] {
+  const shared: Options = { colors: [...colors], ticks: 160, gravity: 1, drift: 0 };
+  const shots: ConfettiShot[] = [];
+  for (let at = 0; at < SHORT_CANNON_MS; at += CANNON_EVERY_MS) {
+    shots.push(
+      { ...shared, at, particleCount: 3, angle: 60, spread: 50, startVelocity: 52, origin: { x: 0, y: 0.7 } },
+      { ...shared, at, particleCount: 3, angle: 120, spread: 50, startVelocity: 52, origin: { x: 1, y: 0.7 } },
+    );
+  }
   return shots;
 }

@@ -2,12 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import type { LucideIcon } from "lucide-react";
+import { Check, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import { spring } from "@/core/styles/motion";
+import { flowStage, spring } from "@/core/styles/motion";
+import { useStaggeredCount } from "@/modules/onboarding/ui/flow/use-staggered-count";
 
-export type RouteStop = { code: string; label: string; icon: LucideIcon };
+export type FlowStopStatus = "pending" | "done" | "skipped";
+
+export type FlowStop = {
+  code: string;
+  label: string;
+  icon: LucideIcon;
+  /**
+   * Estado de la parada cuando el progreso lo conoce (onboarding). Sin él, la
+   * ruta deduce «recorrida» por posición (registro): todo lo anterior a la
+   * activa se puede volver a visitar.
+   */
+  status?: FlowStopStatus;
+};
 
 /**
  * Alto fijo del recorrido; la curva se dibuja en proporción a él. La amplitud
@@ -21,35 +34,47 @@ const FALLBACK_WIDTH = 1024;
 const SHORT_VIEWPORT = "(max-height: 760px)";
 
 /**
- * La ruta del registro (mockup v3 «Flow»): una curva suave al pie de la
- * pantalla con una parada por paso. La parada activa se agranda y queda
- * siempre centrada; al avanzar, la curva entera se desliza con un spring y la
- * siguiente parada llega al centro. Las paradas ya recorridas se pueden pulsar
- * para volver: adelante solo con información, atrás siempre.
+ * La ruta «Flow» (mockup v3, 2026-09-05): una curva suave al pie de la pantalla
+ * con una parada por paso. La parada activa se agranda y queda siempre
+ * centrada; al avanzar, la curva entera se desliza con un spring y la
+ * siguiente parada llega al centro. Las paradas cerradas (recorridas, hechas u
+ * omitidas) se pueden pulsar para volver: adelante solo con información, atrás
+ * siempre. Una parada omitida lleva el borde discontinuo: es honesto decir que
+ * quedó «para después».
  *
  * Geometría: paradas equidistantes (`seg`) alternando alto y bajo, unidas por
  * cúbicas con tangentes horizontales, así la curva pasa plana por cada parada y
  * el nodo se posa sobre ella. Se añade una parada virtual a cada lado para que
  * el trazo entre y salga de la pantalla en vez de nacer en el primer nodo.
  *
- * Es `nav` y no decoración: los nodos recorridos son botones con nombre. Solo
- * el trazo SVG va `aria-hidden`.
+ * Con `celebrate` (pantalla «Listo») las paradas hechas se encienden una tras
+ * otra en el color de «completado» del alcance (violeta sobre el suelo, cristal
+ * encendido sobre el campo); con reduced-motion aparecen todas encendidas.
+ *
+ * Es `nav` y no decoración: los nodos cerrados son botones con nombre. Solo el
+ * trazo SVG va `aria-hidden`. El mismo componente sirve al campo coral y al
+ * suelo del panel porque solo habla el vocabulario `--sf-*` (globals.css).
  */
-export function SignupRoute({
+export function FlowRoute({
   stops,
   current,
   onJump,
+  ariaLabel,
+  celebrate = false,
   className,
 }: {
-  stops: readonly RouteStop[];
+  stops: readonly FlowStop[];
   current: number;
   onJump: (index: number) => void;
+  ariaLabel: string;
+  celebrate?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
   const [short, setShort] = useState(false);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotion() ?? false;
+  const lit = useStaggeredCount(celebrate ? stops.length : 0, flowStage.lightEvery * 1000, reduced);
 
   // Pantalla baja (portátil pequeño, móvil apaisado): la ruta cede alto a la
   // pregunta. Se decide por viewport, no por contenedor, porque lo que falta
@@ -96,12 +121,7 @@ export function SignupRoute({
   const x = width / 2 - points[current + 1][0];
 
   return (
-    <nav
-      ref={ref}
-      aria-label="Recorrido del registro"
-      className={cn("relative mt-2 w-full shrink-0 overflow-hidden", className)}
-      style={{ height }}
-    >
+    <nav ref={ref} aria-label={ariaLabel} className={cn("relative mt-2 w-full shrink-0 overflow-hidden", className)} style={{ height }}>
       {width > 0 ? (
         <motion.div
           className="absolute top-0 left-0 h-full will-change-transform"
@@ -110,32 +130,36 @@ export function SignupRoute({
           animate={{ x }}
           transition={reduced ? { duration: 0 } : spring.soft}
         >
-          <svg
-            aria-hidden="true"
-            className="absolute top-0 left-0 overflow-visible"
-            width={total}
-            height={height}
-            viewBox={`0 0 ${total} ${height}`}
-          >
-            <path className="signup-route-path" d={d} />
+          <svg aria-hidden="true" className="absolute top-0 left-0 overflow-visible" width={total} height={height} viewBox={`0 0 ${total} ${height}`}>
+            <path className="flow-route-path" d={d} />
           </svg>
           {stops.map((stop, index) => {
             const [px, py] = points[index + 1];
             const distance = Math.abs(index - current);
-            const done = index < current;
             const active = index === current;
+            const closed = stop.status ? stop.status !== "pending" : index < current;
+            const done = stop.status === "done";
+            const skipped = stop.status === "skipped";
+            const isLit = celebrate && index < lit && (done || active);
             const Icon = stop.icon;
             const size = active ? (compact ? 96 : 128) : distance === 1 ? (compact ? 52 : 72) : compact ? 44 : 60;
             const shared = cn(
-              "sf-glass absolute grid place-items-center rounded-full text-foreground transition-[width,height,opacity,background-color,border-color,box-shadow] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none",
+              "sf-glass absolute grid place-items-center rounded-full text-foreground transition-[width,height,opacity,background-color,border-color,box-shadow,color] duration-700 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none",
               active && "sf-glass-on border-2 shadow-[0_0_0_10px_var(--sf-glass),0_24px_60px_rgb(0_0_0/.14)]",
               distance > 1 && "opacity-55",
-              done && "sf-glass-hover cursor-pointer",
+              closed && !active && "sf-glass-hover cursor-pointer",
+              skipped && "flow-stop--skipped",
+              isLit && "flow-stop--lit",
             );
             const style = { left: px, top: py, width: size, height: size, transform: "translate(-50%,-50%)" };
             const content = (
               <>
                 <Icon aria-hidden="true" className={cn("transition-[width,height] duration-500", active ? "size-11 sm:size-11" : "size-5 sm:size-6")} strokeWidth={1.8} />
+                {done && !active && !isLit ? (
+                  <span aria-hidden="true" className="flow-stop-badge absolute -top-0.5 -right-0.5 grid size-[18px] place-items-center rounded-full">
+                    <Check className="size-2.5" strokeWidth={3} />
+                  </span>
+                ) : null}
                 <span
                   className={cn(
                     "text-muted-foreground absolute top-[calc(100%+10px)] text-xs font-semibold tracking-[.06em] uppercase whitespace-nowrap transition-opacity duration-400",
@@ -146,12 +170,12 @@ export function SignupRoute({
                 </span>
               </>
             );
-            return done ? (
+            return closed && !active ? (
               <button
                 key={stop.code}
                 type="button"
                 onClick={() => onJump(index)}
-                aria-label={`Volver a ${stop.label}`}
+                aria-label={`Volver a ${stop.label}${skipped ? " (para después)" : ""}`}
                 className={shared}
                 style={style}
               >

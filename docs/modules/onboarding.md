@@ -96,14 +96,18 @@ infrastructure/
   hooks/use-catalog-import-job.ts sondeo 2 s → 5 s → «tarda más» a los 3 min
   storage/signup-draft.storage.ts sessionStorage sin la contraseña
 ui/
-  signup/                        SignupFunnelView (orquestador, 5 pantallas), SignupScreen + SignupProgressDots,
-                                 SignupRoute (la ruta animada), SignupActions, OfferStep + OfferTile + graphics/,
+  signup/                        SignupFunnelView (orquestador, 5 pantallas; las primitivas viven en flow/),
+                                 OfferStep + graphics/ (los 8 gráficos de la oferta),
                                  CompanyIdentityStep, CompanyLocationStep, OwnerStep, PasswordStep, PasswordField,
-                                 TurnstileWidget, signup-field.styles.ts, config/*.config.tsx
+                                 TurnstileWidget, signup-field.styles.ts (iconos de las paradas + re-exports de flow/), config/*.config.tsx
+  flow/                          Primitivas «Flow» compartidas por el registro y el onboarding (F1, 2026-09-05): FlowRoute (ruta
+                                 animada; paradas pending/done/skipped; `celebrate`), FlowScreen + FlowProgressDots, FlowActions +
+                                 FlowBackButton, FlowTile, FlowSkeleton, flow.styles.ts, flow-motion.ts, use-staggered-count.ts
   onboarding/                    OnboardingView, OnboardingShell, StepFrame, OnboardingSkeleton, WelcomeView,
                                  steps/{Niche,BusinessHours,CatalogImport,AgentTemplates,WhatsApp,Done}Step
-  catalog-import/                ImportDropzone, ImportJobProgress, ExtractedProductsReview
-  agents/                        TemplateCard, TemplateCustomizeSheet
+  catalog-import/                ImportDropzone, CatalogScan (el haz y las filas que aparecen; antes ImportJobProgress), ExtractedProductsReview
+  agents/                        AgentPreview (el teléfono de vista previa) + agent-preview-copy.ts, TemplateCustomizeForm
+                                 (antes un DetailSheet; hoy en pantalla, al lado del teléfono)
   components/                    OnboardingResumeBanner
 ```
 
@@ -146,10 +150,22 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
     `Button`, `Checkbox`, `SegmentedControl`) se ven de cristal sin variantes ni hex. `--color-background` no
     se toca. El isotipo conserva sus tres cintas (el dueño rechazó el mono blanco); solo el wordmark toma el
     color del texto.
-14. **La ruta es navegación, no decoración.** `SignupRoute` es un `nav`: las paradas recorridas son botones
+14. **La ruta es navegación, no decoración.** `FlowRoute` (antes `SignupRoute`; hoy en `ui/flow/`) es un `nav`: las paradas recorridas son botones
     «Volver a …»; la activa lleva `aria-current="step"`; solo el trazo SVG va `aria-hidden`. Adelante solo con
     información (`blockerForSignupStep`), atrás siempre; al recargar, `reachableSignupStep` vuelve al paso más
     lejano que las respuestas guardadas permitan. Con `prefers-reduced-motion` la curva queda fija.
+15. **El suelo es la segunda escena del mismo material** (onboarding «Flow», 2026-09-05). `.flow-ground` define las
+    mismas `--sf-*` que `.signup-field` desde los tokens de la app y NO re-deriva `--color-*`: la bienvenida corre
+    sobre el campo coral (una capa que `FlowStage` hunde al empezar) y los pasos sobre el suelo del panel, con las
+    mismas primitivas (`ui/flow/`). Nada de cristal bajo formularios ni tablas: `SchedulesEditor`,
+    `ConnectChannelFlow` y la revisión del catálogo van en hoja sólida.
+16. **La ruta es la única barra de progreso.** Fuera `OnboardingShell`, la barra tricolor y `StepIndicator`: `FlowRoute`
+    lleva el estado de cada paso (`routeStops(progress)`: hecha con check, omitida con borde discontinuo, pendiente),
+    las cerradas se pueden volver a visitar (`canJumpTo`) y en «Listo» se encienden en violeta. La bienvenida sigue sin
+    ruta: aún no se empezó.
+17. **La personalización del agente vive en pantalla, no en un sheet.** El formulario (`TemplateCustomizeForm`) va al
+    lado del teléfono de vista previa (`AgentPreview`, puro, copy en `agent-preview-copy.ts`) para que cada cambio se
+    vea al instante; el área de chat tiene alto fijo. Los payloads (`quickCreateDTO`, `toCreateDTO`) no cambiaron.
 
 ### B.4 Piezas compartidas que nacieron o crecieron aquí
 
@@ -158,7 +174,7 @@ unificar la marca de `/comenzar` con la landing) · `shared/components/ui/confet
 (extraído de `beams-background`) · `SplashContext.phase` · `shared/data/countries.ts` (promovido desde `platform`) ·
 `DraftBackButton` en `shared/components/features/dynamic-form` · `ProviderCard.selectionRole`
 (`radio` | `checkbox`; ya no se usa en el funnel desde el rediseño «Flow») · `.signup-field`, `.sf-glass*`,
-`.signup-grain` y `.signup-route-path` en `globals.css` · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
+`.signup-grain`, `.flow-route-path` y `.flow-ground` en `globals.css` · `shared/components/ui/beams-background.tsx` · `messageForCode()` en
 `core/lib/error-messages.ts` · `AuthProvider.signup()` · barrels `landing/public.ts` y
 `onboarding/public.ts`; `channels/public.ts` += `ConnectChannelFlow`; `agents/public.ts` +=
 `listCharacters`, `characterStyle`, `characterHasVoice`, `CharacterDTO`, `AiAgentDTO`.
@@ -222,6 +238,13 @@ Contenido: `BrandLockup` (la misma marca que `/comenzar`), isotipo grande con re
 `GET /me/entitlements`; si falla, la frase sigue sin fecha), pastilla con `offerLabel`, los cinco pasos con
 una línea cada uno, CTA primaria y enlace secundario. Sin barra de progreso ni stepper: aún no se empezó.
 
+Desde el onboarding «Flow» (2026-09-05) la bienvenida se pinta **sobre el campo coral** (`.signup-field`) como una
+capa encima del suelo (`FlowStage`): los cinco pasos son fichas de cristal con el mismo icono que luego viaja a su
+parada de la ruta, el CTA es blanco por la re-derivación, y al pulsarlo el campo se hunde (`flowStage.drain`, solo
+`transform`) mientras la ruta sube desde abajo (`flowStage.rise`). Mientras el progreso no llega, `?welcome=1`
+sirve de pista para pintar el skeleton ya sobre el campo y no destellar suelo → campo. Con reduced-motion no hay
+hundimiento: corte seco.
+
 **Confeti** (`shared/components/ui/confetti.tsx`, `canvas-confetti` cargado en diferido): una ráfaga
 finita de ~2,5 s (`brandCelebration`: dos cañones laterales + estallido central) con los tres colores de
 marca leídos de los tokens (`core/lib/brand-palette.ts`). Se dispara **una vez** y solo cuando el splash
@@ -245,11 +268,11 @@ de progreso arriba y, al pie, una curva con una parada por paso que se desliza c
 
 Piezas: `SignupFunnelView` (estado, borrador, analítica, errores por `code`, `AnimatePresence mode="wait"` con
 `spring.soft`/`fade.fast`, foco en el primer control al completar la ENTRADA y solo con puntero fino),
-`SignupScreen` (el `h1` por pantalla ES la etiqueta visible; los campos llevan `SrLabel` y el placeholder
-nombra el control), `SignupRoute` (SVG de cúbicas con tangentes horizontales, dos paradas virtuales en los
+`FlowScreen` (antes `SignupScreen`; desde la segunda tanda «Flow», 2026-09-05, estas primitivas viven en `ui/flow/` y las comparte `/onboarding`, ver `docs/plans/onboarding_flow_plan.md`) (el `h1` por pantalla ES la etiqueta visible; los campos llevan `SrLabel` y el placeholder
+nombra el control), `FlowRoute` (SVG de cúbicas con tangentes horizontales, dos paradas virtuales en los
 extremos, la activa centrada por `translateX`; alto 280/210 px, se compacta por ancho < 640 o viewport
-< 760 px de alto; en jsdom mide con `FALLBACK_WIDTH`), `SignupActions` (CTA blanco a todo el ancho +
-microcopy + «Atrás»), `OfferTile` (ficha de cristal; marca redonda en radio y cuadrada en checkbox; el
+< 760 px de alto; en jsdom mide con `FALLBACK_WIDTH`), `FlowActions` (CTA blanco a todo el ancho +
+microcopy + «Atrás»), `FlowTile` (ficha de cristal; marca redonda en radio y cuadrada en checkbox; el
 gráfico en columna propia de 128/190 px) y `graphics/OfferGraphics.tsx` (los ocho gráficos aprobados en
 `currentColor` con `vector-effect: non-scaling-stroke`). Crecimiento y Free Trial van a todo el ancho.
 
@@ -257,6 +280,40 @@ Copy corregido de paso: la nota de dos o más módulos decía «Small Business S
 «Crecimiento». Tests: `SignupFunnelView.test.tsx` recorre las cinco pantallas y comprueba la ruta
 (`aria-current`, «Volver a Oferta») y el resumen final; `signup-draft.test.ts` cubre los bloqueos por pantalla
 y `reachableSignupStep`.
+
+### B.11 El onboarding «Flow» (2026-09-05)
+
+Segunda tanda del mismo lenguaje, aprobada en mockup (`docs/design/mockups/onboarding-flow-v1.html`) y
+construida en F1–F5 del plan `docs/plans/onboarding_flow_plan.md`. Lo que ve la persona: la bienvenida sobre el
+campo coral, el campo que se hunde, y cinco preguntas grandes sobre el suelo del panel con la ruta al pie que
+recuerda qué hizo, qué dejó para después y a dónde puede volver; al final, la ruta se enciende, el resumen entra
+escalonado y cae una ráfaga corta de confeti.
+
+Piezas (`ui/flow/`, compartidas con `/comenzar`): `FlowRoute` (paradas con `status`; `celebrate` enciende las hechas
+una cada `flowStage.lightEvery` con `useStaggeredCount`; con reduced-motion todas a la vez), `FlowScreen`
+(`size: narrow | wide | full`, `focusHeading`), `FlowActions` (CTA opcional, `secondary`, `error`, `microcopyId`),
+`FlowTile` (`title`/`meta`/`metaNote`), `FlowSkeleton`, `FlowStage` (la capa del campo que se hunde),
+`FlowRouteMini` (la ruta en miniatura del banner), `flow.styles.ts`, `flow-motion.ts`. Propias del onboarding:
+`onboarding-route.ts` (`ONBOARDING_STEP_ICONS`, `routeStops`, `routeIndex`), `graphics/NicheGraphics.tsx` (9) y
+`graphics/AgentRoleGraphics.tsx` (4), `catalog-import/CatalogScan.tsx` (el haz determinado por
+`importProgressRatio`, barrido solo en el estado indeterminado, filas por `items_total`; mismos roles
+`progressbar`/`status` que la barra que sustituye), `agents/AgentPreview.tsx` + `agent-preview-copy.ts`,
+`agents/TemplateCustomizeForm.tsx`. `DoneStep` dispara `brandCelebrationShort` una vez, tras la iluminación de la
+ruta y solo con `SplashContext.phase === "idle"`. `VerifyEmailView` y `OnboardingResumeBanner` hablan el mismo
+lenguaje (disco-parada como icono de estado; mini-ruta con el estado de los pasos) y llevan `flow-ground` porque
+viven fuera del layout del onboarding.
+
+Lo que desapareció: `OnboardingShell`, `StepFrame`/`StepAside` (el rail de tips), `StepIndicator` en el onboarding,
+`ProviderCard` en nichos y plantillas, `TemplateCard`, `TemplateCustomizeSheet`, `ImportJobProgress`. Y lo que se
+arregló de paso: el layout de `(onboarding)` no montaba `[data-app-scroll]` (nada desplazaba en viewport bajo) y la
+bienvenida usaba utilidades `bg-violet`/`text-violet` inexistentes.
+
+Tests: `FlowRoute.test.tsx` (estados, botones de vuelta, deducción por posición, `celebrate` con temporizadores
+falsos, reduced-motion), `layout.test.tsx` del grupo `(onboarding)`, `CatalogScan.test.tsx`, `AgentPreview.test.tsx`,
+`AgentTemplatesStep.test.tsx` (personalizar en pantalla, el teléfono cambia en vivo, mismo payload), `DoneStep.test.tsx`
+(confeti una vez, tras la iluminación y solo con splash `idle`), `OnboardingView.test.tsx` (la ruta ausente en la
+bienvenida y presente con «Volver a Negocio» tras guardar el nicho). Gotcha de la máquina: `tsc` y `jest` a la vez
+provocan timeouts falsos; en serie pasan.
 
 ## Parte C — Lo que aún es contrato a mano y lo que falta
 

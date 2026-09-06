@@ -18,18 +18,6 @@ jest.mock("@/modules/agents/public", () => ({
   characterHasVoice: () => false,
 }))
 
-// El DetailSheet real usa portal + framer-motion: en test se dobla por un panel plano.
-jest.mock("@/shared/components/features/detail-sheet", () => ({
-  DetailSheet: ({ open, title, children, renderFooter }: { open: boolean; title?: React.ReactNode; children?: React.ReactNode; renderFooter?: () => React.ReactNode }) =>
-    open ? (
-      <div role="dialog" aria-label={typeof title === "string" ? title : "sheet"}>
-        {children}
-        {renderFooter?.()}
-      </div>
-    ) : null,
-  DetailSheetFooter: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-}))
-
 const sales: AgentTemplateDTO = {
   code: "restaurants_ventas",
   niche_code: "restaurants",
@@ -66,7 +54,7 @@ describe("AgentTemplatesStep", () => {
     expect(listAgentTemplates).toHaveBeenCalledWith("restaurants")
   })
 
-  it("«tal cual» crea el agente sin abrir el sheet y habilita Continuar con su id", async () => {
+  it("«tal cual» crea el agente sin pasar por la personalización y habilita Continuar con su id", async () => {
     listAgentTemplates.mockResolvedValueOnce([sales, bookings])
     createAgentFromTemplate.mockResolvedValueOnce({ id: "a1", name: "Vendedor de La Parrilla" })
     const p = props()
@@ -83,25 +71,31 @@ describe("AgentTemplatesStep", () => {
         status: "active",
       }),
     )
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     expect(await screen.findByRole("heading", { name: /tu agente está listo/i })).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: /^continuar/i }))
     expect(p.onDone).toHaveBeenCalledWith({ agent_ids: ["a1"] })
   })
 
-  it("personalizar abre el sheet, respeta el borrador y manda solo los cambios", async () => {
+  it("personalizar abre el formulario en pantalla con el teléfono en vivo, respeta el borrador y manda solo los cambios", async () => {
     listAgentTemplates.mockResolvedValueOnce([sales])
     createAgentFromTemplate.mockResolvedValueOnce({ id: "a2", name: "Joao" })
     render(<AgentTemplatesStep {...props()} />)
 
     await screen.findByRole("radio", { name: /vendedor de menú/i })
-    fireEvent.click(screen.getByRole("button", { name: /personalizar y crear/i }))
-    const dialog = await screen.findByRole("dialog")
-    expect(dialog).toBeInTheDocument()
+    // El teléfono ya habla como el recomendado, con el nombre de la empresa.
+    expect(screen.getByTestId("agent-preview")).toHaveTextContent(/Vendedor de La Parrilla/)
+    fireEvent.click(screen.getByRole("button", { name: /^personalizar$/i }))
+    expect(await screen.findByRole("heading", { name: /dale su voz a vendedor de la parrilla/i })).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText(/nombre del agente/i), { target: { value: "Joao" } })
     fireEvent.click(screen.getByRole("radio", { name: /formal/i }))
     fireEvent.change(screen.getByLabelText(/datos clave/i), { target: { value: "Domicilios en Laureles." } })
+    // El teléfono cambia en vivo: nombre nuevo, tono formal y la personalidad recomendada.
+    const phone = screen.getByTestId("agent-preview")
+    expect(phone).toHaveTextContent(/Le atiende Joao, de La Parrilla/)
+    expect(phone).toHaveTextContent(/Personalidad: Asesor profesional/)
+
     fireEvent.click(screen.getByRole("button", { name: /crear agente/i }))
 
     await waitFor(() =>
@@ -111,7 +105,8 @@ describe("AgentTemplatesStep", () => {
         status: "active",
       }),
     )
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    expect(await screen.findByRole("heading", { name: /tu agente está listo/i })).toBeInTheDocument()
+    expect(screen.getByRole("list", { name: /agentes creados/i })).toHaveTextContent(/Joao/)
   })
 
   it("si las plantillas no cargan ofrece reintentar y seguir sin agente", async () => {

@@ -90,7 +90,12 @@ describe("OnboardingView", () => {
       current_step: "business_hours",
       steps: { niche: { status: "done", data: { niche_code: "restaurants" } } },
     })
-    expect(await screen.findByRole("heading", { name: /tu horario de atención/i })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: /cuándo atiende tu negocio/i })).toBeInTheDocument()
+    // La ruta: la parada cerrada es un botón para volver; la activa es el paso actual.
+    const route = screen.getByRole("navigation", { name: /recorrido de la configuración/i })
+    expect(route).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Volver a Negocio" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Horarios")).toHaveAttribute("aria-current", "step")
   })
 
   it("con ?welcome=1 y progreso recién nacido antepone la bienvenida y luego entra en Negocio", async () => {
@@ -99,12 +104,17 @@ describe("OnboardingView", () => {
     render(<OnboardingView />)
 
     expect(await screen.findByRole("heading", { level: 1, name: /bienvenido a axi connect/i })).toBeInTheDocument()
+    // Sin progreso ni ruta: aún no se empezó nada (decisión B.7).
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: /recorrido de la configuración/i })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: /configurar mi empresa/i }))
 
     expect(replace).toHaveBeenCalledWith("/onboarding")
     expect(await screen.findByRole("radiogroup", { name: /tipo de negocio/i })).toBeInTheDocument()
+    // El campo se hunde y la ruta entra en escena con la primera parada activa.
+    expect(await screen.findByRole("navigation", { name: /recorrido de la configuración/i })).toBeInTheDocument()
+    expect(screen.getByLabelText("Negocio")).toHaveAttribute("aria-current", "step")
   })
 
   it("con ?welcome=1 pero un paso ya cerrado ignora la bienvenida y retoma el paso", async () => {
@@ -112,7 +122,7 @@ describe("OnboardingView", () => {
     getOnboardingProgress.mockResolvedValueOnce(withNiche())
     render(<OnboardingView />)
 
-    expect(await screen.findByRole("heading", { name: /tu horario de atención/i })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: /cuándo atiende tu negocio/i })).toBeInTheDocument()
     expect(screen.queryByRole("heading", { level: 1, name: /bienvenido/i })).not.toBeInTheDocument()
   })
 
@@ -120,7 +130,7 @@ describe("OnboardingView", () => {
     search = new URLSearchParams("step=agents")
     getOnboardingProgress.mockResolvedValueOnce(withNiche())
     render(<OnboardingView />)
-    expect(await screen.findByRole("heading", { name: /tu horario de atención/i })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: /cuándo atiende tu negocio/i })).toBeInTheDocument()
   })
 
   it("mantener el horario lo marca omitido y avanza al catálogo", async () => {

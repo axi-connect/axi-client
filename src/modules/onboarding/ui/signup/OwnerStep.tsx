@@ -7,7 +7,7 @@ import {
   type AccountStepValues,
   type OwnerValues,
 } from "@/modules/onboarding/ui/signup/config/account-step.config";
-import { SignupActions } from "@/modules/onboarding/ui/signup/SignupActions";
+import { FlowActions } from "@/modules/onboarding/ui/flow/FlowActions";
 
 /** Pantalla «Tú»: quién será la persona propietaria (nombre + correo). */
 export function OwnerStep({
@@ -32,7 +32,7 @@ export function OwnerStep({
       onSubmit={(values) => onNext(values)}
       actions={{
         render: ({ submitting }) => (
-          <SignupActions label="Continuar" submitting={submitting} back={<DraftBackButton<OwnerValues> onBack={onBack} />} />
+          <FlowActions label="Continuar" submitting={submitting} back={<DraftBackButton<OwnerValues> onBack={onBack} />} />
         ),
       }}
     />

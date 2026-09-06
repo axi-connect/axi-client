@@ -92,3 +92,18 @@ export const splash = {
   /** Fade del fondo del overlay al revelar la app. */
   reveal: { duration: 0.3, ease: "easeOut" },
 } as const
+
+/**
+ * Escenario del onboarding «Flow» (2026-09-05). `drain`: el campo coral de la
+ * bienvenida se hunde (`translateY(100%)`) y descubre el suelo del panel ya
+ * pintado debajo; solo transform. `rise`: la ruta sube desde abajo en el primer
+ * paso, un poco después de que el campo empiece a caer. `lightEvery`: cadencia
+ * con la que «Listo» enciende las paradas hechas; `staggerEvery`: la del
+ * resumen que entra detrás. En segundos, como todo lo de este fichero.
+ */
+export const flowStage = {
+  drain: { duration: 0.6, ease: [0.4, 0, 0.2, 1] as const },
+  rise: { ...spring.soft, delay: 0.25 },
+  lightEvery: 0.14,
+  staggerEvery: 0.08,
+} as const
