@@ -123,9 +123,17 @@ export function catalogFromApi(dto: PublicPricingDto): PublicCatalog {
 
   const enterprise = monthly.find((price) => price.plan === "enterprise" && price.tier === null);
 
-  // El tramo por defecto es el más comprado, no el más barato: el segundo si existe.
+  // El tramo por defecto lo decide el servidor (`default_tier`, Tanda B1): así
+  // el alta sin tramo explícito y la landing preseleccionan el mismo. El
+  // cálculo local (el segundo con tarifa) queda solo de respaldo.
   const priced = volumes.filter((volume) => volume.feeCop !== null);
-  const defaultVolumeId = priced[1]?.id ?? priced[0]?.id ?? MAX_VOLUME_ID;
+  const defaultVolumeId =
+    (dto.default_tier !== null && priced.some((volume) => volume.id === dto.default_tier)
+      ? dto.default_tier
+      : null) ??
+    priced[1]?.id ??
+    priced[0]?.id ??
+    MAX_VOLUME_ID;
 
   return {
     asOf: dto.as_of,

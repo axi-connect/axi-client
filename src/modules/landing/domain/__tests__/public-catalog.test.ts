@@ -2,6 +2,7 @@ import {
   ANNUAL_PAID_MONTHS,
   MONTHS_PER_YEAR,
   annualTotalCop,
+  catalogFromApi,
   discountedCop,
   hasVolumeAxis,
   isVolumeId,
@@ -18,6 +19,7 @@ import {
   FIXTURE_CATALOG_LEGACY,
   FIXTURE_CATALOG_NO_PROMO,
   FIXTURE_CATALOG_SOLD_OUT,
+  FIXTURE_PRICING_DTO,
   FIXTURE_NOW,
 } from "../testing/catalog.fixture";
 
@@ -39,6 +41,10 @@ describe("catalogFromApi", () => {
 
   it("abre por el tramo más comprado, no por el más barato", () => {
     expect(FIXTURE_CATALOG.defaultVolumeId).toBe("t1000");
+    // El servidor manda: si publica otro tramo por defecto, la landing lo sigue.
+    expect(catalogFromApi({ ...FIXTURE_PRICING_DTO, default_tier: "t2500" }).defaultVolumeId).toBe("t2500");
+    // Un default que no tiene tarifa publicada no se obedece: cae al cálculo local.
+    expect(catalogFromApi({ ...FIXTURE_PRICING_DTO, default_tier: "t99999" }).defaultVolumeId).toBe("t1000");
     expect(isVolumeId(FIXTURE_CATALOG, "t2500")).toBe(true);
     expect(isVolumeId(FIXTURE_CATALOG, "9x9")).toBe(false);
     expect(isVolumeId(null, "t2500")).toBe(false);
