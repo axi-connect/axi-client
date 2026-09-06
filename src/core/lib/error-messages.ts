@@ -26,6 +26,8 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.emailInUse]: "Este correo ya tiene una cuenta. Inicia sesión o usa otro",
   [API_ERROR_CODES.emailDisposable]: "Usa un correo de tu empresa: los correos temporales no sirven para crear la cuenta",
   [API_ERROR_CODES.offerInvalid]: "La oferta elegida no está disponible. Vuelve a elegir tu paquete o módulos",
+  [API_ERROR_CODES.volumeTierInvalid]: "El tramo de conversaciones que elegiste ya no está publicado. Vuelve a la oferta y elige de nuevo",
+  [API_ERROR_CODES.intervalInvalid]: "El periodo de pago que elegiste no está disponible. Vuelve a la oferta y elige de nuevo",
   [API_ERROR_CODES.offerNotSelfService]: "Enterprise se activa con nuestro equipo. Escríbenos y lo hacemos contigo",
   [API_ERROR_CODES.captchaFailed]: "No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo",
   [API_ERROR_CODES.signupRateLimited]: "Demasiados intentos desde esta conexión. Espera unos minutos",

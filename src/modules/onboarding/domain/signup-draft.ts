@@ -12,6 +12,7 @@ import { ONBOARDING_WELCOME_PATH } from "@/modules/onboarding/domain/onboarding-
 import type { SignupPayload } from "@/shared/auth/auth.types";
 import {
   BILLING_PERIODS,
+  MAX_VOLUME_ID,
   MODULES,
   MODULE_IDS,
   PRICING,
@@ -19,6 +20,8 @@ import {
   isVolumeId,
   modulePriceCop,
   planMonthlyCop,
+  promotionAppliesTo,
+  promotionOpen,
   volumeById,
   type BillingPeriodId,
   type ModuleId,
@@ -419,12 +422,44 @@ export const PASSWORD_STRENGTH_LABELS: Record<0 | 1 | 2 | 3 | 4, string> = {
 /* ──────────────────────────────── Wire ──────────────────────────────── */
 
 /**
+ * Lo que el visitante VIO y el servidor debe cotizar (Tanda B, 2026-09-05):
+ * el tramo, el periodo y la promoción, tal cual estaban en el catálogo público
+ * en el momento del alta. Solo viajan cuando hay algo que decir: sin catálogo
+ * el servidor aplica su tramo por defecto y la promoción pública abierta; el
+ * tramo y el periodo solo tienen sentido en un paquete de pago (nunca «max»,
+ * que es «a ventas»); la promoción solo si está abierta por fecha y cupos y
+ * alcanza a esa clase de oferta. Si cerró entre la pantalla y el envío, el
+ * servidor no rechaza: cotiza a precio de lista y lo cuenta en
+ * `entitlements.quote.promotion_outcome`.
+ */
+function offerQuoteAxes(
+  selection: OfferSelection,
+  catalog: PublicCatalog | null,
+  now: Date,
+): Pick<SignupPayload["offer"], "volume_tier" | "interval" | "promotion_code"> {
+  if (!catalog) return {};
+  const paidPackage = selection.kind === "package" && packagePlan(selection.code).group === "package";
+  // La prueba gratuita no tiene precio: nada que cotizar ni promoción que aplicar.
+  if (selection.kind === "package" && !paidPackage) return {};
+  const { volume, period } = offerAxes(selection, catalog);
+  const promotion = catalog.promotion;
+  const applies = promotion !== null && promotionOpen(catalog, now) && promotionAppliesTo(promotion, selection.kind === "package" ? "packages" : "modules");
+  return {
+    ...(paidPackage && volume && volume !== MAX_VOLUME_ID ? { volume_tier: volume } : {}),
+    ...(paidPackage ? { interval: period } : {}),
+    ...(applies && promotion ? { promotion_code: promotion.code } : {}),
+  };
+}
+
+/**
  * Compone el cuerpo del alta. Lanza si el borrador está incompleto: llegar aquí
  * sin oferta o sin empresa es un bug del orquestador, no un estado del usuario.
  */
 export function toSignupPayload(
   draft: SignupDraft,
   extras: { captcha_token: string; website: string },
+  catalog: PublicCatalog | null = null,
+  now: Date = new Date(),
 ): SignupPayload {
   if (!draft.offer || offerBlocker(draft.offer)) throw new Error("Falta la oferta en el borrador del alta.");
   if (!hasCompanyLocation(draft.company) || !draft.company) throw new Error("Faltan los datos de la empresa en el borrador del alta.");
@@ -435,6 +470,7 @@ export function toSignupPayload(
     offer: {
       kind: draft.offer.kind === "package" ? "package" : "module",
       codes: offerCodesOf(draft.offer),
+      ...offerQuoteAxes(draft.offer, catalog, now),
     },
     company: {
       name: company.name.trim(),

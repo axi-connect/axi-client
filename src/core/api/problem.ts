@@ -62,6 +62,9 @@ export const API_ERROR_CODES = {
   noPendingOffer: "billing/no_pending_offer",
   termExists: "billing/term_exists",
   activationUnsupported: "billing/activation_unsupported",
+  // Tanda B del alta: el tramo y el periodo que vio el visitante viajan en `offer`
+  volumeTierInvalid: "onboarding/volume_tier_invalid",
+  intervalInvalid: "onboarding/interval_invalid",
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];

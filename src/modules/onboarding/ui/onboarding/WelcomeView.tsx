@@ -10,7 +10,7 @@ import { BrandLockup } from "@/shared/components/ui/brand-lockup";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { Button } from "@/shared/components/ui/button";
 import { Confetti, brandCelebration, type ConfettiApi } from "@/shared/components/ui/confetti";
-import { offerLabel, trialEndsDate, type EntitlementsDTO } from "@/modules/onboarding/domain/entitlements";
+import { offerLabel, quoteLine, trialEndsDate, type EntitlementsDTO } from "@/modules/onboarding/domain/entitlements";
 import { ONBOARDING_STEPS, type OnboardingStep } from "@/modules/onboarding/domain/onboarding-progress";
 import { getMyEntitlements } from "@/modules/onboarding/infrastructure/services/onboarding-service.adapter";
 import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
@@ -78,6 +78,7 @@ export function WelcomeView({
   }, [splash.phase]);
 
   const endsAt = entitlements ? trialEndsDate(entitlements) : null;
+  const quote = entitlements ? quoteLine(entitlements) : null;
   const company = companyName ?? "Tu empresa";
 
   return (
@@ -129,6 +130,11 @@ export function WelcomeView({
                 {entitlements.offer_kind === "package" ? "paquete completo en prueba" : "en prueba"}
               </span>
             </span>
+          ) : null}
+          {quote ? (
+            <p data-testid="welcome-quote" className={quote.closed ? "text-foreground max-w-[52ch] text-[13px] leading-relaxed font-medium" : "text-muted-foreground max-w-[52ch] text-[13px] leading-relaxed"}>
+              {quote.text}
+            </p>
           ) : null}
 
           <div className="mt-2 flex w-full flex-col items-center gap-0.5 text-[12.5px] sm:flex-row sm:justify-between">
