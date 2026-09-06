@@ -596,6 +596,24 @@ export type BillingPastDueEvent = {
 };
 
 /**
+ * Tanda B: la factura de activación quedó pagada. Platform activa el plan al
+ * oírlo; el panel refresca la tarjeta «Activa tu plan» y el resumen.
+ */
+export type BillingActivationPaidEvent = {
+  company_id: string;
+  term_id: string;
+  invoice_id: string;
+  kind: "activation" | "renewal";
+};
+
+/** Tanda B: el link de activación venció sin pago; la tarjeta vuelve a «Activa tu plan». */
+export type BillingActivationExpiredEvent = {
+  company_id: string;
+  term_id: string;
+  invoice_id: string;
+};
+
+/**
  * F15: la empresa fue suspendida — llega a `/inbox` Y `/channels`, seguido de
  * la desconexión forzada de los sockets desde el server. El cliente debe
  * mostrar la pantalla bloqueante y NO reintentar la reconexión.
@@ -772,6 +790,8 @@ export type InboxServerEvents = {
   "billing.invoice_issued": (payload: BillingInvoiceIssuedEvent) => void;
   "billing.payment_approved": (payload: BillingPaymentApprovedEvent) => void;
   "billing.past_due": (payload: BillingPastDueEvent) => void;
+  "billing.activation_paid": (payload: BillingActivationPaidEvent) => void;
+  "billing.activation_expired": (payload: BillingActivationExpiredEvent) => void;
   "usage.updated": (payload: UsageUpdatedEvent) => void;
   "usage.alert": (payload: UsageAlertEvent) => void;
   "analytics.alert": (payload: AnalyticsAlertEvent) => void;

@@ -29,11 +29,15 @@ const COPY: Record<SuspensionVariant, { title: string; description: string }> = 
       "El acceso fue bloqueado por el administrador de la plataforma. " +
       "Contacta a soporte para reactivar el servicio.",
   },
+  // Sin sesión no se sabe si dejó una oferta cotizada (Tanda B): el copy cubre
+  // los dos casos sin prometer un correo que quizá no salió. Si la dejó, el
+  // enlace de pago ya viajó por correo y WhatsApp al vencer la prueba (B-D7).
   trial_expired: {
     title: "Tu prueba terminó",
     description:
-      "Gracias por probar axi connect. Activa tu plan para recuperar el acceso " +
-      "y seguir atendiendo a tus clientes — tus datos siguen intactos.",
+      "Gracias por probar axi connect. Si dejaste un plan elegido, te enviamos el enlace " +
+      "de pago al correo y al WhatsApp de la cuenta: págalo y el acceso vuelve solo. " +
+      "También puedes activar tu plan con ventas — tus datos siguen intactos.",
   },
   // No regaña: quien lo lee ya tiene el problema, y el texto solo dice cómo se
   // resuelve. Tampoco ofrece un enlace de pago desde aquí — sin sesión no hay

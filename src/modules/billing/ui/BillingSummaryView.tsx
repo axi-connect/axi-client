@@ -8,7 +8,9 @@ import {
   type BillingSummaryDTO,
 } from "@/modules/billing/domain/account";
 import { formatMoney } from "@/modules/billing/domain/money";
+import { ActivationCard } from "@/modules/billing/ui/components/ActivationCard";
 import { EstimateTicket } from "@/modules/billing/ui/components/EstimateTicket";
+import { useActivationStore } from "@/modules/billing/infrastructure/stores/activation.store";
 import { useBillingSocket } from "@/modules/billing/infrastructure/realtime/use-billing-socket";
 import { useBillingStore } from "@/modules/billing/infrastructure/stores/billing.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -69,6 +71,8 @@ export function BillingSummaryView() {
         badge={<AccountBadge summary={summary} />}
       />
 
+      {/* Tanda B: mientras el plan no está activo, la activación manda la pantalla. */}
+      <ActivationCard canPay={hasPermission("billing:pay")} />
       <Estimate summary={summary} />
       <AccountCard summary={summary} canManage={hasPermission("billing:manage")} />
       <TaxNote />
@@ -147,6 +151,20 @@ function AccountCard({
   summary: BillingSummaryDTO;
   canManage: boolean;
 }) {
+  // El término activo (Tanda B) completa la fila «Plan»: periodicidad y hasta
+  // cuándo está pagado. Sin término, el código del plan como hasta ahora.
+  const term = useActivationStore((state) => state.view?.term ?? null);
+  const planValue =
+    term === null || term.status !== "active"
+      ? (summary.plan_code ?? "—")
+      : [
+          summary.plan_code ?? "—",
+          term.interval === "annual" ? "anual" : "mensual",
+          term.paid_through === null ? null : `pagado hasta el ${formatShortDate(term.paid_through)}`,
+        ]
+          .filter((part): part is string => part !== null)
+          .join(" · ");
+
   return (
     <section className="border-border rounded-2xl border p-5">
       <header className="mb-4">
@@ -159,7 +177,7 @@ function AccountCard({
       <FieldList
         layout="grid"
         items={[
-          { label: "Plan", value: summary.plan_code ?? "—" },
+          { label: "Plan", value: planValue },
           { label: "Moneda", value: summary.currency },
           {
             label: "Cobro automático",

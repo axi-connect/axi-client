@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { formatMoney } from "@/core/lib/format";
 import type { BillingSummaryDTO } from "@/modules/billing/domain/account";
+import { useActivationStore } from "@/modules/billing/infrastructure/stores/activation.store";
 import { useBillingStore } from "@/modules/billing/infrastructure/stores/billing.store";
 import { BillingSummaryView } from "../BillingSummaryView";
 
@@ -8,6 +9,21 @@ const getBillingSummary = jest.fn();
 
 jest.mock("@/modules/billing/infrastructure/services/billing-service.adapter", () => ({
   getBillingSummary: () => getBillingSummary(),
+  // La tarjeta «Activa tu plan» tiene su propio test; aquí el plan ya está activo
+  // y la tarjeta no pinta nada.
+  getActivation: () =>
+    Promise.resolve({
+      state: "active",
+      offer: null,
+      quote_saved: null,
+      quote_now: null,
+      price_changed: false,
+      quote_honored: false,
+      quote_valid_until: null,
+      trial_ends_at: null,
+      pending_invoice: null,
+      term: null,
+    }),
 }));
 
 // El socket arrastraría `useSocket` entero y esta vista no depende de él para
@@ -50,6 +66,7 @@ function summary(over: Partial<BillingSummaryDTO> = {}): BillingSummaryDTO {
 beforeEach(() => {
   jest.clearAllMocks();
   useBillingStore.setState({ status: "idle", summary: null, error: null });
+  useActivationStore.setState({ status: "idle", view: null, error: null, priceChange: null });
 });
 
 describe("BillingSummaryView — el tiquete de la estimación", () => {
