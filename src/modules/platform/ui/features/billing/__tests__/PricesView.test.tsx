@@ -17,8 +17,26 @@ jest.mock("@/shared/components/features/detail-sheet", () => ({
 }));
 jest.mock("../PublishPriceSheet", () => ({ PublishPriceSheet: () => null }));
 
-const publishBatch = jest.fn<Promise<{ ids: string[] }>, [unknown]>(() =>
-  Promise.resolve({ ids: Array.from({ length: 36 }, (_, i) => `p${i}`) }),
+const MARGIN = {
+  basis: "measured" as const,
+  sample_as_of: "2026-09-06T09:40:00.000Z",
+  sample_size: 47_318,
+  window_days: 30,
+  trm_cop_per_usd: 4200,
+  gateway: { provider: "wompi", method: "card" },
+  thresholds: { min_list_bps: 7000, min_promo_bps: 6000, bonus_threshold_bps: 7000 },
+  promotion_code: null,
+  failures: [],
+  warnings: [],
+  cells: [],
+};
+// La hoja de publicación corre primero un `dry_run` (verja de margen del borrador) y luego publica.
+const publishBatch = jest.fn<Promise<{ ids: string[]; dry_run: boolean; margin: typeof MARGIN }>, [{ dry_run?: boolean }]>((body) =>
+  Promise.resolve(
+    body.dry_run === true
+      ? { ids: [], dry_run: true, margin: MARGIN }
+      : { ids: Array.from({ length: 36 }, (_, i) => `p${i}`), dry_run: false, margin: MARGIN },
+  ),
 );
 
 const queryOf = <T,>(data: T) => ({ data, isPending: false, isError: false, error: null, refetch: jest.fn() });
@@ -49,6 +67,33 @@ const tiers = Object.entries(TIER_FEES).map(([code, fee], index) => ({
   price_count: 0,
 }));
 
+jest.mock("@/modules/platform/infrastructure/api/hooks/use-margin", () => ({
+  useMarginCellsQuery: () =>
+    queryOf({
+      as_of: "2026-09-06T00:00:00Z",
+      basis: "measured",
+      sample_size: 47_318,
+      window_days: 30,
+      cells: [
+        {
+          plan_code: "esencial",
+          plan_id: "p-esencial",
+          tier_code: "t500",
+          interval: "monthly",
+          amount_cents: 18_990_000,
+          conversations: 500,
+          margin_real_p50: 0.88,
+          margin_real_p90: 0.7,
+          margin_promo_p50: 0.8,
+          status: "ok",
+          basis: "measured",
+          sample_scope: "global",
+          failures: [],
+          warnings: [],
+        },
+      ],
+    }),
+}));
 jest.mock("@/modules/platform/infrastructure/api/hooks/use-plans", () => ({
   usePlansQuery: () =>
     queryOf({
@@ -85,7 +130,8 @@ describe("PricesView · publicación por componentes", () => {
     expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
     // Esencial + t500 = 90.000 + 99.900 (Intl es-CO separa con espacio duro)
     expect(screen.getAllByText(/189\.900/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("4/4").length).toBeGreaterThan(0);
+    // Cinco comprobaciones: las cuatro estructurales y el margen real de las celdas vigentes (Tanda C).
+    expect(screen.getAllByText("5/5").length).toBeGreaterThan(0);
   });
 
   it("publica COMPONENTES con la vigencia a las 00:00 de Bogotá y la anulación con su motivo", async () => {
@@ -99,10 +145,14 @@ describe("PricesView · publicación por componentes", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Publicar vigencia" }));
     fireEvent.change(screen.getByLabelText(/Vigente desde/), { target: { value: "2026-09-15" } });
+    // El botón espera a la vista previa (dry_run) de la verja de margen del borrador.
+    await waitFor(() => expect(screen.getByText(/La verja de margen pasa/)).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: /Publicar 36 celdas/ }));
 
-    await waitFor(() => expect(publishBatch).toHaveBeenCalledTimes(1));
-    const payload = publishBatch.mock.calls[0][0] as {
+    // Primera llamada: la vista previa (dry_run) de la verja de margen; la segunda publica.
+    await waitFor(() => expect(publishBatch.mock.calls.filter(([body]) => body.dry_run !== true)).toHaveLength(1));
+    expect(publishBatch.mock.calls[0]?.[0]).toMatchObject({ dry_run: true });
+    const payload = publishBatch.mock.calls.find(([body]) => body.dry_run !== true)?.[0] as unknown as {
       effective_from: string;
       package_fees: { plan_id: string; fee_cents: number }[];
       tier_fees: { code: string; fee_cents: number }[];

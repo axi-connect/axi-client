@@ -4340,6 +4340,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/billing/gateway-fees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformGatewayFeesController_list_v1"];
+        put?: never;
+        post: operations["PlatformGatewayFeesController_publish_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/capability-costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCapabilityCostsController_list_v1"];
+        put?: never;
+        post: operations["PlatformCapabilityCostsController_publish_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/capability-costs/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCapabilityCostsController_publishOverride_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/acquisition-costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformAcquisitionCostsController_list_v1"];
+        put?: never;
+        post: operations["PlatformAcquisitionCostsController_declare_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/acquisition-costs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformAcquisitionCostsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/billing/margin/sample": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformMarginController_sample_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/margin/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformMarginController_simulate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/billing/margin/cells": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformMarginController_cells_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduling/reminders": {
         parameters: {
             query?: never;
@@ -5648,6 +5776,7 @@ export interface components {
             tokens_input: number;
             tokens_output: number;
             tts_characters: number;
+            conversations: number;
             cost_usd: number;
         };
         UsageSummaryDto: {
@@ -11526,6 +11655,24 @@ export interface components {
                     tax_treatment: "excluded" | "taxed" | "exempt";
                     tax_rate_bps: number;
                 }[];
+                publication: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: date-time */
+                    published_at: string;
+                    published_by: string | null;
+                    /** @enum {string} */
+                    basis: "measured" | "declared" | "mixed";
+                    /** Format: date-time */
+                    sample_as_of: string | null;
+                    sample_size: number;
+                    trm_cop_per_usd: number;
+                    gateway: {
+                        provider: string;
+                        method: string;
+                    };
+                    promotion_code: string | null;
+                } | null;
             }[];
         };
         PublishBillingPriceDto: {
@@ -11575,8 +11722,51 @@ export interface components {
         CreatedBillingPriceDto: {
             /** Format: uuid */
             id: string;
+            margin: {
+                /** @enum {string} */
+                basis: "measured" | "declared" | "mixed";
+                sample_as_of: string | null;
+                sample_size: number;
+                window_days: number;
+                trm_cop_per_usd: number;
+                gateway: {
+                    provider: string;
+                    method: string;
+                };
+                thresholds: {
+                    min_list_bps: number;
+                    min_promo_bps: number;
+                    bonus_threshold_bps: number;
+                };
+                promotion_code: string | null;
+                failures: {
+                    check: string;
+                    detail: string;
+                }[];
+                warnings: {
+                    check: string;
+                    detail: string;
+                }[];
+                cells: {
+                    plan_code: string;
+                    tier_code: string | null;
+                    /** @enum {string} */
+                    interval: "monthly" | "annual";
+                    /** @enum {string} */
+                    basis: "measured" | "declared" | "mixed";
+                    /** @enum {string} */
+                    sample_scope: "plan" | "global";
+                    margin_real_p50: number;
+                    margin_real_p90: number;
+                    margin_promo_p50: number | null;
+                    /** @enum {string} */
+                    status: "ok" | "bonus_only" | "loses";
+                }[];
+            };
         };
         PublishPriceBatchDto: {
+            /** @default false */
+            dry_run: boolean;
             /** Format: date-time */
             effective_from: string;
             /**
@@ -11612,6 +11802,48 @@ export interface components {
         };
         PublishedBatchDto: {
             ids: string[];
+            dry_run: boolean;
+            margin: {
+                /** @enum {string} */
+                basis: "measured" | "declared" | "mixed";
+                sample_as_of: string | null;
+                sample_size: number;
+                window_days: number;
+                trm_cop_per_usd: number;
+                gateway: {
+                    provider: string;
+                    method: string;
+                };
+                thresholds: {
+                    min_list_bps: number;
+                    min_promo_bps: number;
+                    bonus_threshold_bps: number;
+                };
+                promotion_code: string | null;
+                failures: {
+                    check: string;
+                    detail: string;
+                }[];
+                warnings: {
+                    check: string;
+                    detail: string;
+                }[];
+                cells: {
+                    plan_code: string;
+                    tier_code: string | null;
+                    /** @enum {string} */
+                    interval: "monthly" | "annual";
+                    /** @enum {string} */
+                    basis: "measured" | "declared" | "mixed";
+                    /** @enum {string} */
+                    sample_scope: "plan" | "global";
+                    margin_real_p50: number;
+                    margin_real_p90: number;
+                    margin_promo_p50: number | null;
+                    /** @enum {string} */
+                    status: "ok" | "bonus_only" | "loses";
+                }[];
+            };
         };
         SetPriceActiveDto: {
             is_active: boolean;
@@ -11996,13 +12228,392 @@ export interface components {
         };
         PublishBillingParameterDto: {
             /** @enum {string} */
-            code: "trm_cop_usd" | "ipc_annual_pct";
+            code: "trm_cop_usd" | "ipc_annual_pct" | "margin_min_list_bps" | "margin_min_promo_bps" | "margin_bonus_threshold_bps" | "mix_tokens_in_per_conversation" | "mix_tokens_out_per_conversation" | "mix_cache_share_bps" | "mix_voice_notes_per_conversation" | "mix_minutes_per_call" | "mix_calls_per_100_conversations";
             value: number;
             /** Format: date-time */
             effective_from: string;
             source: string;
             /** @default null */
             note: string | null;
+        };
+        BillingGatewayFeeListDto: {
+            data: {
+                provider: string;
+                method: string;
+                percent_bps: number;
+                fixed_cents: number;
+                vat_bps: number;
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                effective_from: string;
+                /** Format: date-time */
+                effective_to: string | null;
+                source: string | null;
+                note: string | null;
+                created_by: string | null;
+                is_current: boolean;
+            }[];
+        };
+        PublishBillingGatewayFeeDto: {
+            provider: string;
+            method: string;
+            percent_bps: number;
+            fixed_cents: number;
+            vat_bps: number;
+            /** Format: date-time */
+            effective_from: string;
+            source: string;
+            /** @default null */
+            note: string | null;
+        };
+        BillingCapabilityCostListDto: {
+            capabilities: {
+                capability: string;
+                monthly_usd: number;
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                effective_from: string;
+                /** Format: date-time */
+                effective_to: string | null;
+                source: string | null;
+                note: string | null;
+                created_by: string | null;
+                is_current: boolean;
+            }[];
+            overrides: {
+                /** Format: uuid */
+                plan_id: string;
+                plan_code: string;
+                capability: string;
+                monthly_usd: number;
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                effective_from: string;
+                /** Format: date-time */
+                effective_to: string | null;
+                source: string | null;
+                note: string | null;
+                created_by: string | null;
+                is_current: boolean;
+            }[];
+        };
+        PublishBillingCapabilityCostDto: {
+            capability: string;
+            monthly_usd: number;
+            /** Format: date-time */
+            effective_from: string;
+            source: string;
+            /** @default null */
+            note: string | null;
+        };
+        PublishBillingPlanCostOverrideDto: {
+            /** Format: uuid */
+            plan_id: string;
+            capability: string;
+            monthly_usd: number;
+            /** Format: date-time */
+            effective_from: string;
+            source: string;
+            /** @default null */
+            note: string | null;
+        };
+        BillingAcquisitionCostListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                channel: string;
+                /** Format: date-time */
+                period_start: string;
+                /** Format: date-time */
+                period_end: string;
+                amount_cents: number;
+                currency: string;
+                source: string | null;
+                note: string | null;
+                created_by: string | null;
+            }[];
+        };
+        DeclareBillingAcquisitionCostDto: {
+            channel: string;
+            /** Format: date-time */
+            period_start: string;
+            /** Format: date-time */
+            period_end: string;
+            amount_cents: number;
+            /**
+             * @default COP
+             * @enum {string}
+             */
+            currency: "COP" | "USD";
+            source: string;
+            /** @default null */
+            note: string | null;
+        };
+        UpdateBillingAcquisitionCostDto: {
+            amount_cents?: number;
+            /** Format: date-time */
+            period_end?: string;
+            source?: string;
+            note?: string | null;
+        };
+        MarginSampleDto: {
+            sample: {
+                window: {
+                    from: string;
+                    to: string;
+                };
+                conversations: number;
+                segments: {
+                    /** @enum {string} */
+                    segment: "text" | "voice";
+                    sample_size: number;
+                    /** @enum {string} */
+                    confidence: "ok" | "low";
+                    share: number;
+                    p50_usd: number;
+                    p75_usd: number;
+                    p90_usd: number;
+                    mean_usd: number;
+                    accounting_p50_usd: number;
+                    by_metric: {
+                        metric: string;
+                        quantity_per_unit: number;
+                        real_usd_per_unit: number;
+                        accounting_usd_per_unit: number;
+                    }[];
+                }[];
+                calls: {
+                    sessions: number;
+                    /** @enum {string} */
+                    confidence: "ok" | "low";
+                    calls_per_100_conversations: number;
+                    p50_usd: number;
+                    p75_usd: number;
+                    p90_usd: number;
+                    mean_seconds: number;
+                    prorated_voice_turn_usd: number;
+                    by_metric: {
+                        metric: string;
+                        quantity_per_unit: number;
+                        real_usd_per_unit: number;
+                        accounting_usd_per_unit: number;
+                    }[];
+                };
+                unattributed: {
+                    purpose: string;
+                    events: number;
+                    real_usd: number;
+                }[];
+                unpriced_events: number;
+                wildcard_share: number;
+                acquisition_measured: {
+                    template_sent_usd: number;
+                    lead_usd: number;
+                };
+                operations_usd: number;
+            };
+            parameters: {
+                trm_cop_per_usd: number;
+                thresholds: {
+                    min_list_bps: number;
+                    min_promo_bps: number;
+                    bonus_threshold_bps: number;
+                };
+                gateway: {
+                    provider: string;
+                    method: string;
+                    fee: {
+                        percent_bps: number;
+                        fixed_cents: number;
+                        vat_bps: number;
+                    };
+                } | null;
+                gateways: {
+                    provider: string;
+                    method: string;
+                    fee: {
+                        percent_bps: number;
+                        fixed_cents: number;
+                        vat_bps: number;
+                    };
+                }[];
+                declared: {
+                    mix: {
+                        tokens_in_per_conversation: number;
+                        tokens_out_per_conversation: number;
+                        cache_share: number;
+                        voice_notes_per_conversation: number;
+                        minutes_per_call: number;
+                        calls_per_100_conversations: number;
+                    };
+                    rates: {
+                        input_usd_per_token: number;
+                        output_usd_per_token: number;
+                        cache_read_usd_per_token: number;
+                        tts_usd_per_character: number;
+                        call_usd_per_second: number;
+                    };
+                    rates_provider: string;
+                    unit_conversation_usd: number;
+                    unit_call_usd: number;
+                };
+                missing: string[];
+            };
+            cached_at: string;
+        };
+        SimulateMarginDto: {
+            /** Format: uuid */
+            plan_id: string;
+            /** @default null */
+            volume_tier_code: string | null;
+            /** @default null */
+            conversations: number | null;
+            /**
+             * @default monthly
+             * @enum {string}
+             */
+            interval: "monthly" | "annual";
+            /** @default null */
+            price_cents: number | null;
+            /** @default null */
+            promotion_code: string | null;
+            /** @default null */
+            gateway: {
+                provider: string;
+                method: string;
+            } | null;
+            /** @default null */
+            trm_cop_per_usd: number | null;
+            /** @default null */
+            mix_override: {
+                text_share_bps?: number;
+                calls_per_100_conversations?: number;
+            } | null;
+            /** @default 30 */
+            window_days: number;
+        };
+        MarginSimulationDto: {
+            plan: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+            };
+            tier_code: string | null;
+            conversations: number;
+            /** @enum {string} */
+            interval: "monthly" | "annual";
+            price: {
+                monthly_list_cents: number;
+                period_list_cents: number;
+                period_promo_cents: number | null;
+                promotion_code: string | null;
+            };
+            /** @enum {string} */
+            basis: "measured" | "declared" | "mixed";
+            /** @enum {string} */
+            sample_scope: "plan" | "global";
+            unit: {
+                text_share: number;
+                voice_share: number;
+                text_p50_usd: number;
+                text_p90_usd: number;
+                voice_p50_usd: number;
+                voice_p90_usd: number;
+                calls_per_100_conversations: number;
+                call_p50_usd: number;
+                call_p90_usd: number;
+            };
+            fixed_usd_per_month: number;
+            gateway: {
+                provider: string;
+                method: string;
+                fee: {
+                    percent_bps: number;
+                    fixed_cents: number;
+                    vat_bps: number;
+                };
+            };
+            trm_cop_per_usd: number;
+            result: {
+                margin_real_p50: number;
+                margin_real_p90: number;
+                margin_promo_p50: number | null;
+                contribution_cents: number;
+                cogs_p50_cents: number;
+                cogs_p90_cents: number;
+                fee_cents: number;
+                quota_cap: {
+                    cap_usd: number;
+                    used_share_p50: number;
+                    allowed_share: number;
+                    promo_cap_usd: number | null;
+                    promo_used_share_p50: number | null;
+                };
+                /** @enum {string} */
+                status: "ok" | "bonus_only" | "loses";
+                failures: {
+                    check: string;
+                    detail: string;
+                }[];
+                warnings: {
+                    check: string;
+                    detail: string;
+                }[];
+            };
+            accounting_margin_p50: number;
+            trm_sensitivity: {
+                trm_cop_per_usd: number;
+                delta_pct: number;
+                margin_p50: number;
+                margin_p90: number;
+            }[];
+            cac: {
+                per_client_cents: number;
+                declared_cents: number;
+                new_clients: number;
+                signups: number;
+                period: string;
+                recovery_months: number | null;
+            } | null;
+            sample_size: number;
+        };
+        MarginCellsDto: {
+            as_of: string;
+            /** @enum {string} */
+            basis: "measured" | "declared" | "mixed";
+            sample_size: number;
+            window_days: number;
+            cells: {
+                plan_code: string;
+                /** Format: uuid */
+                plan_id: string;
+                tier_code: string;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                conversations: number;
+                margin_real_p50: number;
+                margin_real_p90: number;
+                margin_promo_p50: number | null;
+                /** @enum {string} */
+                status: "ok" | "bonus_only" | "loses";
+                /** @enum {string} */
+                basis: "measured" | "declared" | "mixed";
+                /** @enum {string} */
+                sample_scope: "plan" | "global";
+                failures: {
+                    check: string;
+                    detail: string;
+                }[];
+                warnings: {
+                    check: string;
+                    detail: string;
+                }[];
+            }[];
         };
         RemindersListDto: {
             data: {
@@ -21867,6 +22478,246 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicPricingDto"];
+                };
+            };
+        };
+    };
+    PlatformGatewayFeesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingGatewayFeeListDto"];
+                };
+            };
+        };
+    };
+    PlatformGatewayFeesController_publish_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBillingGatewayFeeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformCapabilityCostsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCapabilityCostListDto"];
+                };
+            };
+        };
+    };
+    PlatformCapabilityCostsController_publish_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBillingCapabilityCostDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformCapabilityCostsController_publishOverride_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBillingPlanCostOverrideDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformAcquisitionCostsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingAcquisitionCostListDto"];
+                };
+            };
+        };
+    };
+    PlatformAcquisitionCostsController_declare_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeclareBillingAcquisitionCostDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingCatalogCreatedDto"];
+                };
+            };
+        };
+    };
+    PlatformAcquisitionCostsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBillingAcquisitionCostDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformMarginController_sample_v1: {
+        parameters: {
+            query?: {
+                window_days?: number;
+                company_id?: string;
+                plan_code?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarginSampleDto"];
+                };
+            };
+        };
+    };
+    PlatformMarginController_simulate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulateMarginDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarginSimulationDto"];
+                };
+            };
+        };
+    };
+    PlatformMarginController_cells_v1: {
+        parameters: {
+            query?: {
+                at?: string;
+                window_days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarginCellsDto"];
                 };
             };
         };

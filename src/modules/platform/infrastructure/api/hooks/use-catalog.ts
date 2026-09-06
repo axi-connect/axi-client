@@ -10,9 +10,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreatePromotionDTO,
   CreateVolumeTierDTO,
+  DeclareAcquisitionCostDTO,
   ManualRedemptionDTO,
+  PublishCapabilityCostDTO,
+  PublishGatewayFeeDTO,
   PublishParameterDTO,
+  PublishPlanCostOverrideDTO,
   PublishPriceBatchDTO,
+  UpdateAcquisitionCostDTO,
   UpdatePromotionDTO,
   UpdateVolumeTierDTO,
 } from "../../../domain/billing";
@@ -188,6 +193,95 @@ export function usePublishPriceBatch() {
     mutationFn: async (body: PublishPriceBatchDTO) => {
       const { data } = await platformClient.POST("/api/v1/platform/billing/prices/batch", { body });
       return data!;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.billing.all }),
+  });
+}
+
+/* ───────────── consola de margen (Tanda C): parámetros declarados nuevos ───────────── */
+
+export function useGatewayFeesQuery() {
+  return useQuery({
+    queryKey: platformKeys.billing.gatewayFees(),
+    queryFn: async () => {
+      const { data } = await platformClient.GET("/api/v1/platform/billing/gateway-fees");
+      return data!;
+    },
+  });
+}
+
+export function usePublishGatewayFee() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: PublishGatewayFeeDTO) => {
+      const { data } = await platformClient.POST("/api/v1/platform/billing/gateway-fees", { body });
+      return data!;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.billing.all }),
+  });
+}
+
+export function useCapabilityCostsQuery() {
+  return useQuery({
+    queryKey: platformKeys.billing.capabilityCosts(),
+    queryFn: async () => {
+      const { data } = await platformClient.GET("/api/v1/platform/billing/capability-costs");
+      return data!;
+    },
+  });
+}
+
+export function usePublishCapabilityCost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: PublishCapabilityCostDTO) => {
+      const { data } = await platformClient.POST("/api/v1/platform/billing/capability-costs", { body });
+      return data!;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.billing.all }),
+  });
+}
+
+export function usePublishPlanCostOverride() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: PublishPlanCostOverrideDTO) => {
+      const { data } = await platformClient.POST("/api/v1/platform/billing/capability-costs/overrides", { body });
+      return data!;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.billing.all }),
+  });
+}
+
+export function useAcquisitionCostsQuery() {
+  return useQuery({
+    queryKey: platformKeys.billing.acquisitionCosts(),
+    queryFn: async () => {
+      const { data } = await platformClient.GET("/api/v1/platform/billing/acquisition-costs");
+      return data!;
+    },
+  });
+}
+
+export function useDeclareAcquisitionCost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: DeclareAcquisitionCostDTO) => {
+      const { data } = await platformClient.POST("/api/v1/platform/billing/acquisition-costs", { body });
+      return data!;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.billing.all }),
+  });
+}
+
+export function useUpdateAcquisitionCost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; body: UpdateAcquisitionCostDTO }) => {
+      await platformClient.PATCH("/api/v1/platform/billing/acquisition-costs/{id}", {
+        params: { path: { id: input.id } },
+        body: input.body,
+      });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: platformKeys.billing.all }),
   });

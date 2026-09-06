@@ -5,7 +5,7 @@
  * son navegación (`NavTabs`) y no `Tabs` de Radix — la semántica no es
  * decorativa (DESIGN-SYSTEM §9.3).
  */
-import { Eye, Layers3, Percent, Scale, SlidersHorizontal, Wallet } from "lucide-react";
+import { Eye, Gauge, Layers3, Percent, Scale, SlidersHorizontal, Wallet } from "lucide-react";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
 const BASE = "/platform/billing";
@@ -20,6 +20,8 @@ const TABS: readonly NavTabItem[] = [
   { href: `${BASE}/promotions`, label: "Promociones", icon: Percent },
   { href: `${BASE}/parameters`, label: "Parámetros", icon: SlidersHorizontal },
   { href: `${BASE}/public`, label: "Vista pública", icon: Eye },
+  // Consola de margen (Tanda C)
+  { href: `${BASE}/margin`, label: "Margen", icon: Gauge },
 ];
 
 export function BillingTabs() {

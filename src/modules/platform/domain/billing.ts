@@ -103,7 +103,37 @@ export const PROMOTION_SCOPE_LABELS: Record<PromotionScope, string> = {
   all: "Paquetes y módulos",
 };
 
-export const PARAMETER_LABELS: Record<string, { name: string; unit: string; help: string }> = {
+export type ParameterCode = PublishParameterDTO["code"];
+
+/** Los códigos cerrados del servidor, agrupados como los pinta la pestaña. */
+export const PARAMETER_GROUPS: readonly { title: string; help: string; codes: readonly ParameterCode[] }[] = [
+  {
+    title: "Cálculo",
+    help: "TRM con que se convierte el costo y el IPC con que se indexan los términos con promoción.",
+    codes: ["trm_cop_usd", "ipc_annual_pct"],
+  },
+  {
+    title: "Mínimos de margen",
+    help: "Lo que la verja exige a una celda al publicar (Tanda C). En puntos básicos: 7.000 = 70 %.",
+    codes: ["margin_min_list_bps", "margin_min_promo_bps", "margin_bonus_threshold_bps"],
+  },
+  {
+    title: "Modelo declarado de una conversación",
+    help: "Lo que la verja usa cuando la muestra real es pequeña. La consola muestra al lado el medido.",
+    codes: [
+      "mix_tokens_in_per_conversation",
+      "mix_tokens_out_per_conversation",
+      "mix_cache_share_bps",
+      "mix_voice_notes_per_conversation",
+      "mix_minutes_per_call",
+      "mix_calls_per_100_conversations",
+    ],
+  },
+];
+
+export const PARAMETER_CODES: readonly ParameterCode[] = PARAMETER_GROUPS.flatMap((group) => group.codes);
+
+export const PARAMETER_LABELS: Record<ParameterCode, { name: string; unit: string; help: string }> = {
   trm_cop_usd: {
     name: "TRM de cálculo",
     unit: "COP por USD",
@@ -114,7 +144,81 @@ export const PARAMETER_LABELS: Record<string, { name: string; unit: string; help
     unit: "%",
     help: "Indexa cada 1 de enero los precios con política «IPC anual». Se declara en cuanto el DANE publica la cifra.",
   },
+  margin_min_list_bps: {
+    name: "Mínimo de margen de lista",
+    unit: "bps",
+    help: "Margen bruto real mínimo a p50 para publicar una celda de lista. Por debajo, la publicación se rechaza con el motivo.",
+  },
+  margin_min_promo_bps: {
+    name: "Mínimo de margen con promoción",
+    unit: "bps",
+    help: "Lo mismo, para el precio con la promoción abierta (Fundadores). Se evalúa mientras la promo esté abierta.",
+  },
+  margin_bonus_threshold_bps: {
+    name: "Umbral del bono al canal",
+    unit: "bps",
+    help: "Por debajo de este margen el canal se paga con bono y no con recurrente (estrategia Q4-2026). Sale en el semáforo.",
+  },
+  mix_tokens_in_per_conversation: {
+    name: "Tokens de entrada por conversación",
+    unit: "tokens",
+    help: "Modelo declarado (propuesta 4-sep). Se usa solo si la muestra real no alcanza 30 conversaciones.",
+  },
+  mix_tokens_out_per_conversation: {
+    name: "Tokens de salida por conversación",
+    unit: "tokens",
+    help: "Modelo declarado (propuesta 4-sep).",
+  },
+  mix_cache_share_bps: {
+    name: "Parte leída de caché",
+    unit: "bps",
+    help: "Fracción de los tokens de entrada que llega desde caché (8.000 = 80 %).",
+  },
+  mix_voice_notes_per_conversation: {
+    name: "Notas de voz por conversación",
+    unit: "notas",
+    help: "715 notas por 4.000 conversaciones en la propuesta: 0,17875.",
+  },
+  mix_minutes_per_call: {
+    name: "Minutos por llamada",
+    unit: "min",
+    help: "Solo cuenta en planes con la capacidad de llamadas.",
+  },
+  mix_calls_per_100_conversations: {
+    name: "Llamadas por 100 conversaciones",
+    unit: "llamadas",
+    help: "Razón declarada; la medida sale de las sesiones de llamada de la muestra.",
+  },
 };
+
+/** Formato del valor de un parámetro según su unidad. */
+export function formatParameterValue(code: string, value: number): string {
+  if (code.endsWith("_bps")) return `${(value / 100).toLocaleString("es-CO", { maximumFractionDigits: 2 })} %`;
+  if (code === "ipc_annual_pct") return `${value.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
+  if (code === "trm_cop_usd") return value.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString("es-CO", { maximumFractionDigits: 5 });
+}
+
+/* ───────────── consola de margen (Tanda C): parámetros declarados nuevos ───────────── */
+
+export type BillingGatewayFee = Schemas["BillingGatewayFeeListDto"]["data"][number];
+export type PublishGatewayFeeDTO = Schemas["PublishBillingGatewayFeeDto"];
+export type BillingCapabilityCosts = Schemas["BillingCapabilityCostListDto"];
+export type BillingCapabilityCost = BillingCapabilityCosts["capabilities"][number];
+export type BillingPlanCostOverride = BillingCapabilityCosts["overrides"][number];
+export type PublishCapabilityCostDTO = Schemas["PublishBillingCapabilityCostDto"];
+export type PublishPlanCostOverrideDTO = Schemas["PublishBillingPlanCostOverrideDto"];
+export type BillingAcquisitionCost = Schemas["BillingAcquisitionCostListDto"]["data"][number];
+export type DeclareAcquisitionCostDTO = Schemas["DeclareBillingAcquisitionCostDto"];
+export type UpdateAcquisitionCostDTO = Schemas["UpdateBillingAcquisitionCostDto"];
+
+/** Comisión legible: «2,99 % + $600 + IVA 19 %». */
+export function gatewayFeeLabel(fee: { percent_bps: number; fixed_cents: number; vat_bps: number }): string {
+  const pct = (fee.percent_bps / 100).toLocaleString("es-CO", { maximumFractionDigits: 2 });
+  const fixed = (fee.fixed_cents / 100).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+  const vat = (fee.vat_bps / 100).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+  return `${pct} % + $${fixed} + IVA ${vat} %`;
+}
 
 /** Estado de la cuenta de cobro del tenant, para la ficha de plataforma. */
 export const ACCOUNT_STATUS_MAP: StatusMap = {

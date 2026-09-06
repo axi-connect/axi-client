@@ -88,6 +88,29 @@ jest.mock("@/modules/platform/infrastructure/api/hooks/use-catalog", () => ({
   useSetRedemptionStatus: () => mutation,
   useBillingParametersQuery: () => queryOf({ data: PARAMS }),
   usePublishParameter: () => mutation,
+  // Consola de margen (Tanda C): parámetros declarados nuevos en la misma pestaña.
+  useGatewayFeesQuery: () =>
+    queryOf({
+      data: [
+        { id: "g1", provider: "wompi", method: "card", percent_bps: 299, fixed_cents: 60_000, vat_bps: 1900, effective_from: "2026-09-06T00:00:00.000Z", effective_to: null, source: "Tarifa pública Wompi, SIN confirmar", note: null, created_by: "seed", is_current: true },
+      ],
+    }),
+  usePublishGatewayFee: () => mutation,
+  useCapabilityCostsQuery: () =>
+    queryOf({
+      capabilities: [
+        { id: "c1", capability: "core", monthly_usd: 6, effective_from: "2026-09-06T00:00:00.000Z", effective_to: null, source: "Estimación", note: null, created_by: "seed", is_current: true },
+      ],
+      overrides: [],
+    }),
+  usePublishCapabilityCost: () => mutation,
+  usePublishPlanCostOverride: () => mutation,
+  useAcquisitionCostsQuery: () => queryOf({ data: [] }),
+  useDeclareAcquisitionCost: () => mutation,
+  useUpdateAcquisitionCost: () => mutation,
+}));
+jest.mock("@/modules/platform/infrastructure/api/hooks/use-plans", () => ({
+  usePlansQuery: () => queryOf({ data: [] }),
 }));
 
 describe("catálogo de dos ejes · vistas de platform", () => {
@@ -119,6 +142,6 @@ describe("catálogo de dos ejes · vistas de platform", () => {
     expect(screen.getByRole("heading", { name: "Parámetros" })).toBeInTheDocument();
     expect(screen.getByText("4.150,00 vigente")).toBeInTheDocument();
     expect(screen.getByText("Cerrada")).toBeInTheDocument();
-    expect(screen.getByText("Ningún valor declarado todavía.")).toBeInTheDocument();
+    expect(screen.getAllByText("Ningún valor declarado todavía.")[0]).toBeInTheDocument();
   });
 });
