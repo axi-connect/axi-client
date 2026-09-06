@@ -56,6 +56,9 @@ export const API_ERROR_CODES = {
   captchaFailed: "onboarding/captcha_failed",
   signupRateLimited: "onboarding/signup_rate_limited",
   verificationExpired: "onboarding/verification_expired",
+  // Tanda B del alta: el tramo y el periodo que vio el visitante viajan en `offer`
+  volumeTierInvalid: "onboarding/volume_tier_invalid",
+  intervalInvalid: "onboarding/interval_invalid",
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];

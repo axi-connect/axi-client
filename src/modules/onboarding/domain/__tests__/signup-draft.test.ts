@@ -15,7 +15,7 @@ import {
   toggleModule,
   type SignupDraft,
 } from "../signup-draft"
-import { FIXTURE_CATALOG, FIXTURE_NOW } from "@/modules/landing/domain/testing/catalog.fixture"
+import { FIXTURE_CATALOG, FIXTURE_CATALOG_SOLD_OUT, FIXTURE_NOW } from "@/modules/landing/domain/testing/catalog.fixture"
 import { MODULES, formatCop, planMonthlyCop, volumeById } from "@/modules/landing/public"
 
 const params = (query: string) => new URLSearchParams(query)
@@ -201,6 +201,44 @@ describe("wire del alta", () => {
     expect(payload.owner.email).toBe("joao@laparrilla.co")
     expect(payload.offer).toEqual({ kind: "module", codes: ["crm"] })
     expect(payload.accepted_terms).toBe(true)
+  })
+
+  it("con catálogo manda lo que el visitante vio: tramo, periodo y promoción abierta (Tanda B)", () => {
+    const pkg: SignupDraft = { ...draft, offer: { kind: "package", code: "crecimiento", volume: "t1000", period: "annual" } }
+    expect(toSignupPayload(pkg, { captcha_token: "tok", website: "" }, CATALOG, FIXTURE_NOW).offer).toEqual({
+      kind: "package",
+      codes: ["crecimiento"],
+      volume_tier: "t1000",
+      interval: "annual",
+      promotion_code: "founders_2026",
+    })
+    // Sin ejes elegidos viaja el tramo por defecto del catálogo y el periodo mensual.
+    const plain: SignupDraft = { ...draft, offer: { kind: "package", code: "esencial" } }
+    expect(toSignupPayload(plain, { captcha_token: "tok", website: "" }, CATALOG, FIXTURE_NOW).offer).toEqual({
+      kind: "package",
+      codes: ["esencial"],
+      volume_tier: CATALOG.defaultVolumeId,
+      interval: "monthly",
+      promotion_code: "founders_2026",
+    })
+  })
+
+  it("la promoción no viaja si cerró; sin catálogo no viaja nada y el servidor decide; los módulos no llevan tramo", () => {
+    const pkg: SignupDraft = { ...draft, offer: { kind: "package", code: "crecimiento", volume: "t1000" } }
+    expect(toSignupPayload(pkg, { captcha_token: "tok", website: "" }, FIXTURE_CATALOG_SOLD_OUT, FIXTURE_NOW).offer).toEqual({
+      kind: "package",
+      codes: ["crecimiento"],
+      volume_tier: "t1000",
+      interval: "monthly",
+    })
+    expect(toSignupPayload(pkg, { captcha_token: "tok", website: "" }, null, FIXTURE_NOW).offer).toEqual({ kind: "package", codes: ["crecimiento"] })
+    expect(toSignupPayload(draft, { captcha_token: "tok", website: "" }, CATALOG, FIXTURE_NOW).offer).toEqual({
+      kind: "module",
+      codes: ["crm"],
+      promotion_code: "founders_2026",
+    })
+    const trial: SignupDraft = { ...draft, offer: { kind: "package", code: "free_trial" } }
+    expect(toSignupPayload(trial, { captcha_token: "tok", website: "" }, CATALOG, FIXTURE_NOW).offer).toEqual({ kind: "package", codes: ["free_trial"] })
   })
 
   it("lanza si el borrador está incompleto (bug del orquestador, no del usuario)", () => {

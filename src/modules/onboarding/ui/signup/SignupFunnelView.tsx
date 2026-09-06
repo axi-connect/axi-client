@@ -162,7 +162,7 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
     setDraft(nextDraft);
 
     try {
-      const payload = toSignupPayload(nextDraft, { captcha_token: captchaRef.current, website: honeypotRef.current });
+      const payload = toSignupPayload(nextDraft, { captcha_token: captchaRef.current, website: honeypotRef.current }, catalog);
       await signup(payload);
       clearSignupDraft();
       track({ name: "signup_completed", params: { offer_codes: payload.offer.codes.join(",") } });
@@ -184,6 +184,13 @@ export function SignupFunnelView({ catalog }: { catalog: PublicCatalog | null })
           form.clearErrors();
           setEmailError(messageForCode(error.code));
           setStep(3);
+          return;
+        case API_ERROR_CODES.volumeTierInvalid:
+        case API_ERROR_CODES.intervalInvalid:
+          // El catálogo cambió entre la pantalla y el envío: se avisa sobre el
+          // botón y la persona vuelve a la oferta por la ruta. Sin reintentos
+          // automáticos: el servidor no rechaza por promoción cerrada (B2).
+          setSubmitError(messageForCode(error.code));
           return;
         default:
           if (error.status === 429) {

@@ -28,6 +28,7 @@ const entitlements: EntitlementsDTO = {
   plans: [{ id: "p", code: "sbs", public_slug: "sbs", kind: "package", name: "Small Business Suite" }],
   capabilities: ["core"],
   pending_offer: null,
+  quote: null,
   trial: { active: true, ends_at: "2026-09-09T10:00:00Z" },
   included: [],
 }
@@ -51,6 +52,34 @@ describe("WelcomeView", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(5)
     expect(screen.getByRole("link", { name: /ve directo a tu panel/i })).toHaveAttribute("href", "/dashboard")
     expect(screen.getByRole("link", { name: "axi connect" })).toHaveAttribute("href", "/")
+  })
+
+  it("con cotización del alta la repite bajo la oferta; si la promoción cerró, lo cuenta", async () => {
+    getMyEntitlements.mockResolvedValueOnce({
+      ...entitlements,
+      quote: {
+        amount_cents: 22_190_000,
+        list_amount_cents: 36_980_000,
+        currency: "COP",
+        interval: "monthly",
+        volume_tier_code: "t1000",
+        volume_label: "1.000",
+        promotion_code: "founders_2026",
+        promotion_name: "Programa Fundadores",
+        promotion_outcome: "applied",
+        expires_at: "2026-12-31T05:00:00.000Z",
+      },
+    })
+    const first = render(<WelcomeView firstName="Joao" companyName="La Parrilla de Joao" onStart={jest.fn()} />)
+    expect(await screen.findByTestId("welcome-quote")).toHaveTextContent(/Tras la prueba: \$221\.900\/mes · 1\.000 conversaciones al mes · pago mensual · Programa Fundadores hasta el 31 de diciembre de 2026/)
+    first.unmount()
+
+    getMyEntitlements.mockResolvedValueOnce({
+      ...entitlements,
+      quote: { amount_cents: 36_980_000, list_amount_cents: 36_980_000, currency: "COP", interval: "monthly", volume_tier_code: "t1000", volume_label: "1.000", promotion_code: "founders_2026", promotion_name: "Programa Fundadores", promotion_outcome: "closed", expires_at: null },
+    })
+    render(<WelcomeView firstName="Joao" companyName="La Parrilla de Joao" onStart={jest.fn()} />)
+    expect(await screen.findByTestId("welcome-quote")).toHaveTextContent(/La promoción cerró mientras te registrabas: tu precio tras la prueba es \$369\.800\/mes/)
   })
 
   it("sin nombre ni entitlements sigue siendo una bienvenida completa", async () => {

@@ -166,6 +166,15 @@ mismo patrón que `marketing/domain/campaign-draft.ts`).
 17. **La personalización del agente vive en pantalla, no en un sheet.** El formulario (`TemplateCustomizeForm`) va al
     lado del teléfono de vista previa (`AgentPreview`, puro, copy en `agent-preview-copy.ts`) para que cada cambio se
     vea al instante; el área de chat tiene alto fijo. Los payloads (`quickCreateDTO`, `toCreateDTO`) no cambiaron.
+18. **El alta manda lo que el visitante vio y la bienvenida lo repite** (Tanda B, 2026-09-05). `toSignupPayload(draft,
+    extras, catalog, now)` añade a `offer` el tramo (`volume_tier`, solo paquetes de pago y nunca «max»), el periodo
+    (`interval`) y la promoción (`promotion_code`, solo si está abierta por fecha y cupos y alcanza a esa clase de
+    oferta); sin catálogo no viaja ninguno y el servidor decide; la prueba gratuita no lleva nada. El servidor NO rechaza
+    por promoción cerrada: cotiza a lista y lo cuenta en `entitlements.quote.promotion_outcome`; los 422
+    `onboarding/volume_tier_invalid` e `interval_invalid` caen en el aviso sobre el botón. `quoteLine(entitlements)` pinta
+    la cotización en la bienvenida («Tras la prueba: $X/mes · 1.000 conversaciones al mes · pago mensual · Programa
+    Fundadores hasta el 31 de diciembre de 2026»; anual = total «por 12 meses»; `closed` ⇒ «La promoción cerró mientras te
+    registrabas…»). Onboarding no construye pantallas de pago: la activación vive en Facturación (Tanda B4).
 
 ### B.4 Piezas compartidas que nacieron o crecieron aquí
 
@@ -244,6 +253,10 @@ parada de la ruta, el CTA es blanco por la re-derivación, y al pulsarlo el camp
 `transform`) mientras la ruta sube desde abajo (`flowStage.rise`). Mientras el progreso no llega, `?welcome=1`
 sirve de pista para pintar el skeleton ya sobre el campo y no destellar suelo → campo. Con reduced-motion no hay
 hundimiento: corte seco.
+
+Bajo la pastilla de oferta va la **línea de cotización** (`quoteLine`, decisión 18) cuando el servidor guardó una en el
+alta (`GET /me/entitlements.quote`, Tanda B); sin cotización no hay línea. Con `promotion_outcome === "closed"` la línea
+cambia de tono (texto principal, no atenuado) porque es una noticia, no un dato.
 
 **Confeti** (`shared/components/ui/confetti.tsx`, `canvas-confetti` cargado en diferido): una ráfaga
 finita de ~2,5 s (`brandCelebration`: dos cañones laterales + estallido central) con los tres colores de

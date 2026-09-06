@@ -30,6 +30,9 @@ export const FIXTURE_PRICING_DTO: PublicPricingDto = {
   as_of: "2026-09-20T12:00:00.000Z",
   currency: "COP",
   version: "fixture-v1",
+  // Tanda B: el servidor publica el tramo por defecto (el mismo que deriva `catalogFromApi`) y la última promo cerrada.
+  default_tier: "t1000",
+  promotion_closed: null,
   tiers: TIERS.map((tier) => ({
     code: tier.code,
     conversations: tier.conversations,
