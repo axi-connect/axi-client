@@ -527,13 +527,12 @@ function ExternalChargeRow({ order }: { order: OrderDTO }) {
             <CircleCheck aria-hidden="true" className="size-3" /> Coincide
           </Badge>
         ) : (
-          <Badge
-            variant="outline"
-            className="border-accent-amber/45 bg-accent-amber/10 text-[11px] text-accent-amber"
-          >
+          // secondary + punto (AA por construcción): el tinte ámbar con texto
+          // ámbar da 1,95:1 en claro (auditoría F6).
+          <StatusDotBadge tone="warning" className="text-[11px]">
             Difiere {delta.diff_cents > 0 ? "+" : "−"}
             {formatMoney(Math.abs(delta.diff_cents), order.currency)}
-          </Badge>
+          </StatusDotBadge>
         )}
       </dt>
       <dd className="shrink-0 font-medium tabular-nums text-foreground">

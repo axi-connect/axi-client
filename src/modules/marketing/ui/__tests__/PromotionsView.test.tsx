@@ -43,6 +43,14 @@ jest.mock("@/modules/marketing/infrastructure/services/promotions-service.adapte
   deletePromotion: jest.fn(),
 }));
 
+/* Gobierno de pedidos declarado por la plataforma: local salvo en el escenario
+   de la tienda. Mutable a propósito. */
+let mockOrdersGovernance: "local" | "provider_active" | "provider_declared_not_connected" = "local";
+jest.mock("@/modules/integrations/infrastructure/services/integrations-service.adapter", () => ({
+  listIntegrations: () =>
+    Promise.resolve({ items: [], governance: { catalog: "local", orders: mockOrdersGovernance } }),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const api = require("@/modules/marketing/infrastructure/services/promotions-service.adapter") as {
   listPromotions: jest.Mock;
@@ -174,7 +182,12 @@ describe("catálogo con promociones", () => {
 /* Plan envíos+promos (E3): las promociones de la tienda se ven pero no se
    tocan; una local, cuando la tienda cobra, avisa de que no aplicará. */
 describe("con promociones espejadas de la tienda", () => {
+  afterEach(() => {
+    mockOrdersGovernance = "local";
+  });
+
   beforeEach(async () => {
+    mockOrdersGovernance = "provider_active";
     api.listPromotions.mockResolvedValue([
       promo({
         id: "s1",
@@ -218,13 +231,26 @@ describe("con promociones espejadas de la tienda", () => {
     expect(screen.getAllByRole("button", { name: "Canjes" })).toHaveLength(3);
   });
 
-  it("la local avisa de que no aplica a pedidos cobrados en la tienda, y el filtro Origen separa", () => {
-    expect(screen.getByText("No aplica a pedidos cobrados en la tienda")).toBeInTheDocument();
+  it("la local avisa de que no aplica a pedidos cobrados en la tienda, y el filtro Origen separa", async () => {
+    expect(await screen.findByText("No aplica a pedidos cobrados en la tienda")).toBeInTheDocument();
     expect(screen.getByLabelText("Filtrar por origen")).toBeInTheDocument();
     const search = screen.getByLabelText("Buscar promoción");
     fireEvent.change(search, { target: { value: "savage15" } });
     expect(screen.getByText("Bienvenida")).toBeInTheDocument();
     expect(screen.queryByText("Vuelve y ahorra")).not.toBeInTheDocument();
+  });
+});
+
+describe("tienda que cobra los pedidos sin ninguna promo espejada", () => {
+  afterEach(() => {
+    mockOrdersGovernance = "local";
+  });
+
+  it("aun sin espejo, la promo local avisa de que no aplicará: la señal es el gobierno, no el espejo", async () => {
+    mockOrdersGovernance = "provider_active";
+    api.listPromotions.mockResolvedValue([promo({ name: "Vuelve y ahorra" })]);
+    render(<PromotionsView />);
+    expect(await screen.findByText("No aplica a pedidos cobrados en la tienda")).toBeInTheDocument();
   });
 });
 

@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { StatusDotBadge } from "@/shared/components/ui/status-badges";
 import {
   Table,
   TableBody,
@@ -208,10 +209,9 @@ function ZoneRows({ zone }: { zone: ShippingZoneDTO }) {
             </TableCell>
             <TableCell>
               {rate.kind === "live" ? (
-                // Único acento secundario de la vista (ámbar): «se calcula al cerrar».
-                <Badge variant="outline" className="border-accent-amber/45 bg-accent-amber/10 text-accent-amber">
-                  {RATE_KIND_LABELS.live}
-                </Badge>
+                // Único acento secundario de la vista (ámbar), como punto sobre
+                // secondary: el tinte con texto ámbar no pasa AA en claro.
+                <StatusDotBadge tone="warning">{RATE_KIND_LABELS.live}</StatusDotBadge>
               ) : (
                 <Badge variant="secondary">{RATE_KIND_LABELS.flat}</Badge>
               )}

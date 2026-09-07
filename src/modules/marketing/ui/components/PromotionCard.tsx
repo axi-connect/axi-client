@@ -5,7 +5,7 @@ import { cn } from "@/core/lib/utils";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { ShopifyOriginBadge } from "@/shared/components/ui/status-badges";
+import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import {
   describePromotionKind,
   isGovernedPromotion,
@@ -132,12 +132,11 @@ export function PromotionCard({
           {governed && terms.length > 0 ? <span>·</span> : null}
           <span>{terms.join(" · ")}</span>
           {!governed && storeGovernsOrders ? (
-            <Badge
-              variant="outline"
-              className="border-accent-amber/45 bg-accent-amber/10 text-[0.6875rem] text-accent-amber"
-            >
+            // secondary + punto (AA por construcción; el tinte ámbar con texto
+            // ámbar da 1,95:1 en claro — auditoría F6)
+            <StatusDotBadge tone="warning" className="text-[0.6875rem]">
               No aplica a pedidos cobrados en la tienda
-            </Badge>
+            </StatusDotBadge>
           ) : null}
         </p>
       </div>

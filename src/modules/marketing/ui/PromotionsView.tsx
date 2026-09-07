@@ -41,6 +41,7 @@ import {
   listPromotions,
   updatePromotion,
 } from "@/modules/marketing/infrastructure/services/promotions-service.adapter";
+import { listIntegrations } from "@/modules/integrations/infrastructure/services/integrations-service.adapter";
 import { PromotionCard } from "./components/PromotionCard";
 import { RedemptionsSheet } from "./components/RedemptionsSheet";
 import { PromotionForm, PROMOTION_FORM_ID } from "./forms/PromotionForm";
@@ -62,6 +63,8 @@ export function PromotionsView() {
   const [promotions, setPromotions] = useState<PromotionDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Gobierno de pedidos declarado por la plataforma (null = no se pudo leer). */
+  const [ordersGoverned, setOrdersGoverned] = useState<boolean | null>(null);
 
   const [stateFilter, setStateFilter] = useState<PromotionStateFilter>("active");
   const [kindFilter, setKindFilter] = useState<PromotionKind | typeof ALL>(ALL);
@@ -90,6 +93,16 @@ export function PromotionsView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /* La señal de verdad de «la tienda cobra los pedidos» es el gobierno que
+     declara la plataforma, no que haya promos espejadas (una tienda gobernada
+     puede no tener ningún descuento activo). Best-effort: sin permiso de
+     integraciones se cae a la inferencia por espejo. */
+  useEffect(() => {
+    listIntegrations()
+      .then((res) => setOrdersGoverned(res.governance.orders === "provider_active"))
+      .catch(() => setOrdersGoverned(null));
+  }, []);
 
   /* Llegar desde el chat de Axel: `?promotion=<id>` abre ese borrador. Se pone
      el filtro en «todas» a propósito — lo que Axel deja nace APAGADO, y con el
@@ -135,8 +148,8 @@ export function PromotionsView() {
 
   const hasFilters =
     stateFilter !== "all" || kindFilter !== ALL || originFilter !== "all" || search.trim() !== "";
-  // Hay espejo ⇒ la tienda cobra los pedidos y una promo local no se honraría.
-  const storeGovernsOrders = promotions?.some(isGovernedPromotion) ?? false;
+  // Gobierno declarado; a falta de lectura, hay espejo ⇒ la tienda cobra los pedidos.
+  const storeGovernsOrders = ordersGoverned ?? promotions?.some(isGovernedPromotion) ?? false;
   const isEmpty = promotions !== null && promotions.length === 0;
 
   function openEditor(promotion: PromotionDTO | null) {
