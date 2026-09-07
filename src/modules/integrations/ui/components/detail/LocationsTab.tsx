@@ -1,10 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
-import { LoaderCircle, RefreshCw } from "lucide-react";
+import { LoaderCircle, RefreshCw, TriangleAlert } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { IntegrationLocationDTO } from "@/modules/integrations/domain/integration";
 import {
@@ -30,6 +39,8 @@ export function LocationsTab({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmEmpty, setConfirmEmpty] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -51,24 +62,47 @@ export function LocationsTab({
   const save = async () => {
     setSaving(true);
     setNotice(null);
+    setSaveError(null);
     try {
       const res = await updateIntegrationLocations(integrationId, [...counting]);
       setItems(res.items);
+      setCounting(
+        new Set(res.items.filter((item) => item.counts_stock).map((item) => item.external_location_id)),
+      );
       setNotice(
-        "Guardado. Estamos recalculando el stock con estas ubicaciones: el avance se ve en la pestaña Historial.",
+        res.items.some((item) => item.counts_stock)
+          ? "Guardado. Estamos recalculando el stock con estas ubicaciones: el avance se ve en la pestaña Historial."
+          : "Guardado. Ninguna ubicación suma stock, así que no hay nada que recalcular.",
       );
       await onChanged();
     } catch (err) {
-      setNotice(errorMessage(err, "No se pudo guardar la selección"));
+      setSaveError(errorMessage(err, "No se pudo guardar la selección. Vuelve a intentarlo."));
+      // Releer del servidor: si el fallo llegó DESPUÉS de escribir, las casillas
+      // que se quedan como estaban le dicen al tenant que no guardó cuando sí.
+      await load();
     } finally {
       setSaving(false);
     }
   };
 
+  // Sin ninguna ubicación marcada no hay «stock cero»: no se escribe una sola
+  // fila de inventario, y una variante sin fila se ofrece SIEMPRE disponible.
+  // Es la decisión más cara de esta pantalla y la más fácil de tomar sin querer.
+  const requestSave = () => {
+    if (counting.size === 0) {
+      setConfirmEmpty(true);
+      return;
+    }
+    void save();
+  };
+
   if (error !== null) {
     return (
-      <div className="space-y-3">
-        <p className="text-muted-foreground">{error}</p>
+      <div className="max-w-2xl space-y-3">
+        <Alert variant="destructive">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
         <Button variant="outline" onClick={() => void load()}>
           <RefreshCw aria-hidden="true" className="size-4" />
           Reintentar
@@ -121,12 +155,56 @@ export function LocationsTab({
         })}
       </ul>
 
+      {counting.size === 0 && (
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>
+            Sin ninguna ubicación marcada, tu agente ofrece TODOS los productos como disponibles,
+            sin mirar el stock real de tu tienda.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {saveError !== null && (
+        <Alert variant="destructive">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
+
       {notice !== null && <p className="text-sm text-muted-foreground">{notice}</p>}
 
-      <Button onClick={() => void save()} disabled={saving}>
+      <Button onClick={requestSave} disabled={saving}>
         {saving && <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />}
         Guardar ubicaciones
       </Button>
+
+      <Dialog open={confirmEmpty} onOpenChange={setConfirmEmpty}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Guardar sin control de stock?</DialogTitle>
+            <DialogDescription>
+              No marcaste ninguna ubicación. Tu agente seguirá ofreciendo y vendiendo todos los
+              productos como disponibles, aunque estén agotados en tu tienda. Puedes marcar una
+              ubicación en cualquier momento y el stock se recalcula solo.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmEmpty(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setConfirmEmpty(false);
+                void save();
+              }}
+            >
+              Sí, guardar así
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
