@@ -4,28 +4,25 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LoaderCircle, MapPin, Search } from "lucide-react";
 
+import type { Schemas } from "@/core/api/types";
 import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
 
-/** Un sitio que se puede elegir. Genérico: no sabe de dónde salió. */
-export interface LocationSuggestion {
-  id: string;
-  /** Lo que se lee primero. */
-  name: string;
-  /** Lo que desambigua dos sitios homónimos. */
-  detail: string;
-  /**
-   * El municipio del sitio, si el proveedor lo sabe.
-   *
-   * `name` NO es una ciudad: para «Zona G» el geocodificador devuelve primero un
-   * hotel que se llama así. Quien lance una búsqueda con este punto necesita las
-   * dos cosas por separado — el nombre para mostrar y el municipio para buscar.
-   */
-  locality?: string | null;
-  lat: number;
-  lng: number;
+/**
+ * Un sitio que se puede elegir. Es la forma del contrato del geocodificador
+ * (`GeoSearchResultsDto.items[]`), derivada del esquema generado y no escrita
+ * a mano: antes era un duplicado que podía desviarse en silencio.
+ *
+ * `name` NO es una ciudad: para «Zona G» el geocodificador devuelve primero un
+ * hotel que se llama así. Quien lance una búsqueda con este punto necesita las
+ * dos cosas por separado — el nombre para mostrar y `locality` (el municipio,
+ * si el proveedor lo sabe) para buscar.
+ */
+export type LocationSuggestion = Omit<Schemas["GeoSearchResultsDto"]["items"][number], "kind"> & {
+  /** `city`, `suburb`, `neighbourhood`… Opcional: un sitio reconstruido desde un
+   * formulario guardado no lo trae, y el componente solo lo usa como pista. */
   kind?: string;
-}
+};
 
 /** Por debajo de tres letras la lista es ruido y la petición un gasto. */
 const MIN_QUERY = 3;
