@@ -1,31 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { LoaderCircle, MailCheck, MailX } from "lucide-react";
 
-import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
-import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
-import { verifyEmail } from "@/modules/onboarding/infrastructure/services/onboarding-service.adapter";
+import { useEmailVerification } from "@/modules/onboarding/infrastructure/hooks/use-email-verification";
 import { FlowScreen } from "@/modules/onboarding/ui/flow/FlowScreen";
-
-type Phase = "missing" | "verifying" | "verified" | "expired" | "error";
 
 /**
  * Destino del enlace del correo de verificación
  * (`PUBLIC_APP_URL/verificar-correo?token=…`, lo compone el backend en
  * `email_verification.service.ts`). Pública: quien pulsa el enlace puede no
  * tener sesión o venir de otro dispositivo, así que la llamada va sin
- * autenticar y la sesión, si la hay, se refresca para que `MeDto.email_verified`
- * cambie sin volver a entrar (el paso WhatsApp del onboarding lo lee).
+ * autenticar.
  *
- * El token viaja UNA vez: el efecto se dispara una sola vez por montaje y el
- * backend responde `410` a un token repetido, vencido o desconocido, sin
- * distinguirlos (no se le regala información a quien adivina).
+ * Dos responsabilidades, dos efectos con dependencias honestas:
+ * - **Consumir el token** lo hace `useEmailVerification`, una mutación de un
+ *   solo uso que dispara una vez por token y honra siempre su resultado (el
+ *   backend responde `410` a un token repetido, vencido o desconocido, sin
+ *   distinguirlos: no se le regala información a quien adivina).
+ * - **Refrescar la sesión** para que `MeDto.email_verified` cambie sin volver
+ *   a entrar (el paso WhatsApp del onboarding lo lee) es reactivo a
+ *   `useAuth().status`: ocurre una vez, cuando el correo ya está confirmado Y
+ *   hay sesión, en el orden en que lleguen ambas cosas. Si el refresh falla,
+ *   la verificación ya ocurrió: no se le cuenta al usuario.
  *
  * Habla el lenguaje «Flow» del onboarding al que devuelve: pregunta grande y
  * un disco-parada como icono de estado (encendido en el color de «completado»
@@ -35,40 +37,22 @@ type Phase = "missing" | "verifying" | "verified" | "expired" | "error";
 export function VerifyEmailView() {
   const params = useSearchParams();
   const token = params.get("token")?.trim() ?? "";
-  const { user, refresh } = useAuth();
-  const [phase, setPhase] = useState<Phase>(token.length === 0 ? "missing" : "verifying");
-  const [error, setError] = useState<string | null>(null);
-  const firedRef = useRef(false);
+  const { status, refresh } = useAuth();
+  const verification = useEmailVerification(token);
+  const refreshedRef = useRef(false);
 
   useEffect(() => {
-    if (token.length === 0 || firedRef.current) return;
-    firedRef.current = true;
-    let cancelled = false;
-    void (async () => {
-      try {
-        await verifyEmail(token);
-        if (cancelled) return;
-        setPhase("verified");
-        // Con sesión abierta, `email_verified` cambia sin volver a entrar. Si el
-        // refresh falla, la verificación ya ocurrió: no se le cuenta al usuario.
-        if (user !== null) await refresh().catch(() => undefined);
-      } catch (cause) {
-        if (cancelled) return;
-        if (isHttpError(cause) && cause.is(API_ERROR_CODES.verificationExpired)) {
-          setPhase("expired");
-        } else {
-          setPhase("error");
-          setError(errorMessage(cause, "No pudimos confirmar tu correo. Inténtalo de nuevo en un momento."));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [token, refresh, user]);
+    if (verification.status !== "verified" || status !== "authenticated" || refreshedRef.current) return;
+    refreshedRef.current = true;
+    void refresh().catch(() => undefined);
+  }, [verification.status, status, refresh]);
 
-  const nextHref = user ? "/onboarding" : "/auth/login?next=/onboarding";
+  const phase = verification.status;
   const verified = phase === "verified";
+  // Mientras la sesión hidrata se apunta a `/onboarding`: si al final no la
+  // hay, `AuthProvider.redirectToLogin` ya manda al login con `next`.
+  const signedOut = status === "unauthenticated" || status === "suspended";
+  const nextHref = signedOut ? "/auth/login?next=/onboarding" : "/onboarding";
   const title =
     phase === "verifying"
       ? "Confirmando tu correo…"
@@ -87,7 +71,7 @@ export function VerifyEmailView() {
     ) : phase === "expired" ? (
       "Este enlace ya no sirve: venció o ya se usó. Pide uno nuevo desde el paso «WhatsApp» de tu configuración."
     ) : (
-      <span role="alert">{error}</span>
+      <span role="alert">{verification.message}</span>
     );
 
   return (
@@ -115,7 +99,9 @@ export function VerifyEmailView() {
             variant={verified ? "default" : "outline"}
             className="h-14 w-full max-w-[440px] rounded-[14px] text-[15.5px] font-semibold shadow-[0_18px_50px_rgb(0_0_0/.12)]"
           >
-            <Link href={nextHref}>{verified ? (user ? "Continuar con la configuración" : "Iniciar sesión") : user ? "Pedir un enlace nuevo desde mi panel" : "Iniciar sesión"}</Link>
+            <Link href={nextHref}>
+              {signedOut ? "Iniciar sesión" : verified ? "Continuar con la configuración" : "Pedir un enlace nuevo desde mi panel"}
+            </Link>
           </Button>
         ) : null}
       </FlowScreen>

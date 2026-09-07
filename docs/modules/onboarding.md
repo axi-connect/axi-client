@@ -94,6 +94,7 @@ infrastructure/
   services/                      onboarding · catalog-import · agent-templates (adapters `http`)
   stores/onboarding.store.ts     Zustand: progreso compartido entre /onboarding y el banner del dashboard
   hooks/use-catalog-import-job.ts sondeo 2 s → 5 s → «tarda más» a los 3 min
+  hooks/use-email-verification.ts consume el token del correo UNA vez y honra siempre el resultado (B.8)
   storage/signup-draft.storage.ts sessionStorage sin la contraseña
 ui/
   signup/                        SignupFunnelView (orquestador, 5 pantallas; las primitivas viven en flow/),
@@ -227,11 +228,28 @@ Puedes ampliarlo desde Facturación»); `details.upgrade_hint.path` del problem+
 
 El backend compone `PUBLIC_APP_URL/verificar-correo?token=…` en el correo de verificación. La página
 `src/app/(public)/verificar-correo/page.tsx` (pública en `PUBLIC_PATHS`, `noindex`) monta
-`ui/verify/VerifyEmailView`: lee el token, llama **una sola vez** a `verifyEmail` sin autenticar (quien pulsa
-puede venir de otro dispositivo), y según la respuesta muestra confirmado (CTA a `/onboarding`, o al login con
-`next=/onboarding` si no hay sesión), `410 onboarding/verification_expired` (venció, ya se usó o no existe: el
-backend no los distingue a propósito) o el error del backend. Con sesión abierta hace `useAuth().refresh()` para
-que `MeDto.email_verified` cambie sin volver a entrar: el paso WhatsApp lo lee. Hallazgo H2 de la auditoría
+`ui/verify/VerifyEmailView`, que separa dos responsabilidades en dos efectos con dependencias honestas:
+
+- **Consumir el token** lo hace `infrastructure/hooks/use-email-verification.ts`: llama **una sola vez por
+  token** a `verifyEmail` sin autenticar (quien pulsa puede venir de otro dispositivo) y expone
+  `missing | verifying | verified | expired | error`. Su efecto depende **solo del token** y guarda en un ref el
+  token ya enviado, así que ni el doble montaje de StrictMode ni los re-renders del padre repiten la petición; y
+  la promesa termina **siempre** en `setState` (el único guardián es «sigue montado»), porque el backend quema
+  el token en la primera llamada y responde `410 onboarding/verification_expired` a la segunda (venció, ya se
+  usó o no existe: no los distingue a propósito).
+- **Refrescar la sesión** para que `MeDto.email_verified` cambie sin volver a entrar (el paso WhatsApp lo lee)
+  es un efecto de la vista reactivo a `useAuth().status`: corre una vez cuando el correo ya está confirmado **y**
+  `status === "authenticated"`, en el orden en que lleguen las dos cosas. El CTA también sale de `status`
+  (`authenticated`/`loading` → «Continuar con la configuración» a `/onboarding`; `unauthenticated`/`suspended` →
+  «Iniciar sesión» con `next=/onboarding`).
+
+**Regla que deja el incidente 2026-09-07** (`axi-server/docs/incidentes/2026-09-07_verificar_correo_colgado.md`):
+una mutación de un solo uso **nunca** comparte efecto con estado reactivo ajeno ni descarta su resultado con un
+flag `cancelled` de limpieza. La versión anterior dependía de `user`, que cambia de identidad al hidratar la
+sesión; la re-ejecución marcaba `cancelled` y un `firedRef` impedía repetir la llamada, así que la respuesta
+`{ verified: true }` llegaba y se tiraba: la página se quedaba en «Confirmando tu correo…» con el token ya
+consumido. El patrón `cancelled` sigue siendo el correcto para **lecturas** idempotentes (`BusinessHoursStep`,
+`AgentTemplatesStep`, `DoneStep`). Hallazgo H2 de la auditoría
 (`axi-server/docs/incidentes/2026-09-03_auditoria_onboarding.md`): antes de esta página el enlace era un 404.
 
 ### B.7 Bienvenida tras crear la cuenta (2026-09-02)
