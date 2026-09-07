@@ -37,7 +37,14 @@ jest.mock("../../services/facebook-sdk", () => ({
 const { useMetaPopup } = require("../use-meta-popup") as typeof import("../use-meta-popup");
 
 function config(product: MetaProduct): MetaSignupConfigDTO {
-  return { enabled: true, app_id: "111", config_id: `cfg-${product}`, graph_api_version: "v21.0", product };
+  return {
+    enabled: true,
+    app_id: "111",
+    config_id: `cfg-${product}`,
+    graph_api_version: "v21.0",
+    product,
+    coexistence_enabled: false,
+  };
 }
 
 async function openFor(product: MetaProduct) {

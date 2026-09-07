@@ -9,6 +9,8 @@ import {
   manualKind,
   pageSignupProduct,
   signupFlavor,
+  prerequisitesFor,
+  WHATSAPP_COEXISTENCE_PREREQUISITES,
 } from "../channel-providers";
 
 /**
@@ -162,3 +164,30 @@ describe("registry de proveedores de canal", () => {
     expect(pageSignupProduct(channelProvider("facebook_messenger"))).toBe("messenger");
   });
 });
+
+describe("coexistencia (F1): el número sigue en la app del celular", () => {
+  it("WhatsApp tiene un checklist propio para ese camino, y solo WhatsApp", () => {
+    const whatsapp = channelProvider("whatsapp_cloud")
+    const coexistence = prerequisitesFor(whatsapp, "coexistence")
+
+    expect(coexistence).toBe(WHATSAPP_COEXISTENCE_PREREQUISITES)
+    expect(coexistence).not.toBe(whatsapp.prerequisites)
+    // El requisito que más altas rompía NO aplica cuando el número se mantiene en la app
+    expect(coexistence.map((item) => item.id)).not.toContain("phone_not_in_whatsapp")
+    expect(prerequisitesFor(whatsapp, "standard")).toBe(whatsapp.prerequisites)
+    expect(prerequisitesFor(whatsapp, undefined)).toBe(whatsapp.prerequisites)
+  })
+
+  it("para Instagram y Messenger el modo no significa nada", () => {
+    for (const kind of ["instagram_dm", "facebook_messenger"] as const) {
+      const provider = channelProvider(kind)
+      expect(prerequisitesFor(provider, "coexistence")).toBe(provider.prerequisites)
+    }
+  })
+
+  it("lo único tangible que el cliente pierde —los dispositivos vinculados— es el crítico", () => {
+    const critical = WHATSAPP_COEXISTENCE_PREREQUISITES.filter((item) => item.critical === true)
+    expect(critical.map((item) => item.id)).toEqual(["linked_devices_unlink"])
+    expect(critical[0]?.detail).toMatch(/vuelves a vincular/i)
+  })
+})

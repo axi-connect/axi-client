@@ -1,4 +1,5 @@
 import type { ChannelKind } from "./channel";
+import type { MetaOnboardingMode } from "./meta-signup";
 
 /**
  * Registry de proveedores de canal (F1).
@@ -94,7 +95,7 @@ const WHATSAPP_CLOUD_PREREQUISITES: readonly ChannelPrerequisite[] = [
     id: "phone_not_in_whatsapp",
     label: "Ese número no está usándose en WhatsApp ni en WhatsApp Business",
     detail:
-      "Al conectarlo, ese número deja de funcionar en el celular. Sus chats pasan a atenderse desde Axi y no se pueden recuperar en la app de WhatsApp.",
+      "Al conectarlo, ese número deja de funcionar en el celular. Sus chats pasan a atenderse desde Axi y no se pueden recuperar en la app de WhatsApp. Si hoy lo usas en WhatsApp Business y quieres mantener la app, vuelve atrás y elige «Sí, y quiero seguir usándola».",
     critical: true,
   },
   {
@@ -104,6 +105,59 @@ const WHATSAPP_CLOUD_PREREQUISITES: readonly ChannelPrerequisite[] = [
       "Axi no revende mensajes: tú pones tu método de pago en Meta y ellos te facturan lo que uses. Puedes conectar ahora y añadirlo después.",
   },
 ];
+
+/**
+ * Prerrequisitos del camino de COEXISTENCIA (F1): el número ya está en la app
+ * WhatsApp Business del celular y sigue ahí. Cada punto sale de la doc de Meta
+ * o del spike del 2026-09-07; el crítico es lo único que el cliente pierde de
+ * forma tangible y no anticipa: los dispositivos vinculados.
+ */
+export const WHATSAPP_COEXISTENCE_PREREQUISITES: readonly ChannelPrerequisite[] = [
+  {
+    id: "business_account_access",
+    label: "Puedo entrar a la cuenta de Facebook que administra mi negocio",
+    detail:
+      "Es la cuenta con la que autorizarás la conexión. Si la maneja otra persona, pídele que haga este paso contigo.",
+  },
+  {
+    id: "phone_with_app_open",
+    label: "Tengo el celular a mano, con WhatsApp Business actualizada y abierta",
+    detail:
+      "Necesitas la versión 2.24.17 o más reciente. Meta te mostrará un código QR o un código de 6 dígitos para confirmar desde la app.",
+  },
+  {
+    id: "linked_devices_unlink",
+    label: "Sé que WhatsApp Web y los demás dispositivos vinculados se desconectarán",
+    detail:
+      "Meta los desvincula una sola vez al conectar. Después los vuelves a vincular con normalidad (excepto WhatsApp para Windows y para relojes).",
+    critical: true,
+  },
+  {
+    id: "groups_stay_on_phone",
+    label: "Entiendo que los grupos y las listas de difusión siguen solo en el celular",
+    detail:
+      "Axi atiende los chats de uno a uno. Los grupos no llegan a Axi y las listas de difusión de la app pasan a solo lectura.",
+  },
+  {
+    id: "billing_understood",
+    label: "Entiendo que Meta cobra los mensajes que salgan desde Axi",
+    detail:
+      "Lo que respondas desde el celular sigue siendo gratis. Lo que envíe Axi por tu número lo factura Meta a tu negocio. Puedes conectar ahora y poner el método de pago después.",
+  },
+];
+
+/**
+ * Qué checklist toca. Solo WhatsApp tiene dos caminos; para el resto el modo
+ * no significa nada y se devuelve la lista del proveedor.
+ */
+export function prerequisitesFor(
+  provider: ChannelProvider,
+  mode: MetaOnboardingMode | undefined,
+): readonly ChannelPrerequisite[] {
+  return provider.meta_product === "whatsapp" && mode === "coexistence"
+    ? WHATSAPP_COEXISTENCE_PREREQUISITES
+    : provider.prerequisites;
+}
 
 /**
  * Instagram y Messenger comparten dos cosas que WhatsApp no tiene: cuelgan de una

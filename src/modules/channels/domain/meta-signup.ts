@@ -11,6 +11,21 @@ import type { Schemas } from "@/core/api/types";
 export type MetaSignupConfigDTO = Schemas["MetaSignupConfigDto"];
 export type MetaEmbeddedSignupDTO = Schemas["MetaEmbeddedSignupDto"];
 export type MetaRegisterPhoneDTO = Schemas["MetaRegisterPhoneDto"];
+export type MetaCoexistenceSyncDTO = Schemas["MetaCoexistenceSyncDto"];
+
+/**
+ * Cómo entra el número (F1). `coexistence` = ya está en la app WhatsApp Business
+ * del celular y SIGUE ahí: el popup se abre con el `featureType` de Meta para
+ * ese caso, el servidor no registra el número y el canal queda marcado.
+ */
+export type MetaOnboardingMode = MetaEmbeddedSignupDTO["onboarding_mode"] & string;
+
+/** Valor de `extras.featureType` que activa la pantalla de coexistencia en el popup. */
+export const COEXISTENCE_FEATURE_TYPE = "whatsapp_business_app_onboarding";
+
+export function featureTypeFor(mode: MetaOnboardingMode | undefined): string {
+  return mode === "coexistence" ? COEXISTENCE_FEATURE_TYPE : "";
+}
 
 /** Producto de Meta. Es query param OBLIGATORIO del endpoint de configuración. */
 export type MetaProduct = MetaSignupConfigDTO["product"];
@@ -130,7 +145,8 @@ export class FacebookSdkError extends Error {
  */
 export type WaEmbeddedSignupMessage = {
   type: "WA_EMBEDDED_SIGNUP";
-  event: "FINISH" | "CANCEL" | "ERROR" | string;
+  /** `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING` es el éxito del camino de coexistencia. */
+  event: "FINISH" | "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING" | "CANCEL" | "ERROR" | string;
   version?: number | string;
   data?: {
     phone_number_id?: string;
@@ -208,6 +224,32 @@ export const SIGNUP_STEPS: Record<MetaProduct, readonly string[]> = {
 };
 
 /** Qué paso está en curso según la fase. `exchanging` en páginas es «leemos». */
+/**
+ * Los pasos que el usuario ve dentro del popup cuando su número ya está en la
+ * app del celular (validado en el spike del 2026-09-07): no hay SMS; Meta le
+ * pide confirmar desde WhatsApp Business con un QR o un código.
+ */
+export const COEXISTENCE_SIGNUP_STEPS: readonly string[] = [
+  "Eliges el negocio y escribes tu número",
+  "Confirmas desde WhatsApp Business en el celular (QR o código)",
+  "Aceptas los permisos",
+  "Activamos el canal",
+];
+
+export function signupSteps(
+  product: MetaProduct,
+  mode: MetaOnboardingMode | undefined,
+): readonly string[] {
+  return product === "whatsapp" && mode === "coexistence"
+    ? COEXISTENCE_SIGNUP_STEPS
+    : SIGNUP_STEPS[product];
+}
+
+/** Los dos eventos con los que el popup de WhatsApp dice «terminé». */
+export function isWaSignupFinish(event: string): boolean {
+  return event === "FINISH" || event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING";
+}
+
 export function signupStepIndex(product: MetaProduct, phase: EmbeddedSignupPhase): number {
   if (phase !== "exchanging") return 0;
   return product === "whatsapp" ? 3 : 2;

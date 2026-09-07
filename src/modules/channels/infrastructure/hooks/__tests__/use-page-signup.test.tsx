@@ -47,6 +47,7 @@ const CONFIG: MetaSignupConfigDTO = {
   config_id: "cfg-ig",
   graph_api_version: "v21.0",
   product: "instagram",
+  coexistence_enabled: false,
 };
 
 const ASSETS = {

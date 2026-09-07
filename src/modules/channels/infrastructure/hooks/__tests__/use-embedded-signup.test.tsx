@@ -56,6 +56,7 @@ const CONFIG: MetaSignupConfigDTO = {
   config_id: "cfg-1",
   graph_api_version: "v21.0",
   product: "whatsapp",
+  coexistence_enabled: true,
 };
 
 const CHANNEL = {
@@ -67,12 +68,15 @@ const CHANNEL = {
 } as unknown as ChannelDTO;
 
 /** Mensaje del popup tal como lo manda Meta con `sessionInfoVersion: "3"`. */
-function finishMessage(origin = "https://www.facebook.com"): MessageEvent {
+function finishMessage(
+  origin = "https://www.facebook.com",
+  event: string = "FINISH",
+): MessageEvent {
   return new MessageEvent("message", {
     origin,
     data: JSON.stringify({
       type: "WA_EMBEDDED_SIGNUP",
-      event: "FINISH",
+      event,
       data: { phone_number_id: "555000111222", waba_id: "waba-1", business_id: "biz-1" },
     }),
   });
@@ -153,6 +157,58 @@ describe("useEmbeddedSignup", () => {
     });
   });
 
+  describe("coexistencia (F1): el número sigue en la app del celular", () => {
+    it("abre el popup con el featureType de Meta para números que ya están en la app", async () => {
+      const view = renderHook(() =>
+        useEmbeddedSignup({ product: "whatsapp", mode: "coexistence", channelName: "Ventas" }),
+      );
+      await waitFor(() => expect(view.result.current.phase).toBe("ready"));
+      act(() => view.result.current.start());
+
+      expect(loginOptions?.extras).toEqual({
+        setup: {},
+        featureType: "whatsapp_business_app_onboarding",
+        sessionInfoVersion: "3",
+      });
+    });
+
+    it("acepta FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING y manda onboarding_mode al backend", async () => {
+      completeMetaSignup.mockResolvedValue(CHANNEL);
+      const view = renderHook(() =>
+        useEmbeddedSignup({ product: "whatsapp", mode: "coexistence", channelName: "Ventas" }),
+      );
+      await waitFor(() => expect(view.result.current.phase).toBe("ready"));
+      act(() => view.result.current.start());
+
+      act(() => loginCallback?.({ authResponse: { code: "AQD-code" } }));
+      act(() => {
+        window.dispatchEvent(
+          finishMessage("https://www.facebook.com", "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING"),
+        );
+      });
+
+      await waitFor(() => expect(view.result.current.phase).toBe("success"));
+      expect(completeMetaSignup).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "AQD-code", onboarding_mode: "coexistence" }),
+      );
+    });
+
+    it("en el camino estándar manda onboarding_mode: standard", async () => {
+      completeMetaSignup.mockResolvedValue(CHANNEL);
+      const view = await mountReady();
+      act(() => view.result.current.start());
+      act(() => loginCallback?.({ authResponse: { code: "AQD-code" } }));
+      act(() => {
+        window.dispatchEvent(finishMessage());
+      });
+
+      await waitFor(() => expect(view.result.current.phase).toBe("success"));
+      expect(completeMetaSignup).toHaveBeenCalledWith(
+        expect.objectContaining({ onboarding_mode: "standard" }),
+      );
+    });
+  });
+
   it("envía cuando el `code` llega ANTES del sessionInfo", async () => {
     const view = await mountReady();
     act(() => view.result.current.start());
@@ -171,6 +227,7 @@ describe("useEmbeddedSignup", () => {
       phone_number_id: "555000111222",
       business_id: "biz-1",
       name: "Ventas",
+      onboarding_mode: "standard",
     });
     expect(upsertChannel).toHaveBeenCalledWith(CHANNEL);
   });

@@ -3,6 +3,7 @@ import type { Schemas } from "@/core/api/types";
 import { http } from "@/core/services/http";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import type {
+  MetaCoexistenceSyncDTO,
   MetaEmbeddedSignupDTO,
   MetaProduct,
   MetaSignupConfigDTO,
@@ -89,6 +90,18 @@ export function registerMetaPhoneNumber(
  * el negocio autorizó. Es `POST` y no `GET` porque consume el code —de un solo
  * uso— y crea la sesión en el servidor.
  */
+/**
+ * F1: pide a la app del celular que mande contactos y/o los últimos 6 meses de
+ * chats. Meta lo permite UNA vez por tipo y en las 24 h del alta; el backend lo
+ * verifica antes de gastar la oportunidad y devuelve el canal actualizado.
+ */
+export function requestCoexistenceSync(
+  channelId: string,
+  payload: MetaCoexistenceSyncDTO,
+): Promise<ChannelDTO> {
+  return http.post<ChannelDTO>(`/channels/${channelId}/meta/coexistence/sync`, payload);
+}
+
 export function listMetaPageAssets(payload: {
   code: string;
   product: "instagram" | "messenger";
