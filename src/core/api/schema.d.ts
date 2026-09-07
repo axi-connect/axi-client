@@ -6641,6 +6641,11 @@ export interface components {
                 };
                 /** Format: date-time */
                 sync_window_closes_at: string;
+                /** @enum {string} */
+                app_state: "connected" | "offboarded" | "disconnected_from_phone";
+                disconnect_reason: string | null;
+                /** Format: date-time */
+                last_echo_at: string | null;
             } | null;
             /** Format: date-time */
             created_at: string;
@@ -6741,6 +6746,11 @@ export interface components {
                     };
                     /** Format: date-time */
                     sync_window_closes_at: string;
+                    /** @enum {string} */
+                    app_state: "connected" | "offboarded" | "disconnected_from_phone";
+                    disconnect_reason: string | null;
+                    /** Format: date-time */
+                    last_echo_at: string | null;
                 } | null;
                 /** Format: date-time */
                 created_at: string;
