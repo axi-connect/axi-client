@@ -2324,6 +2324,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/shipping/provinces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ShippingController_provinces_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/shipping/zones": {
         parameters: {
             query?: never;
@@ -9446,6 +9462,12 @@ export interface components {
             rate_selection: "cheapest";
             require_address_before_confirm: boolean;
             governed_by: string | null;
+        };
+        CoProvincesListDto: {
+            data: {
+                code: string;
+                name: string;
+            }[];
         };
         UpdateShippingSettingsDto: {
             ai_enabled: boolean;
@@ -19286,6 +19308,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShippingSettingsDto"];
+                };
+            };
+        };
+    };
+    ShippingController_provinces_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoProvincesListDto"];
                 };
             };
         };

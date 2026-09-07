@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
@@ -17,7 +17,6 @@ import {
 } from "@/shared/components/ui/select";
 import { DetailSheet, DetailSheetFooter } from "@/shared/components/features/detail-sheet";
 import { MultiSelect } from "@/shared/components/features/multi-select";
-import { CO_PROVINCES } from "@/modules/shipping/domain/co-provinces";
 import type { ShippingZoneDTO } from "@/modules/shipping/domain/shipping";
 import {
   toCreateZoneDTO,
@@ -29,6 +28,7 @@ import {
 } from "@/modules/shipping/domain/shipping-form";
 import {
   createShippingZone,
+  listCoProvinces,
   updateShippingZone,
 } from "@/modules/shipping/infrastructure/services/shipping-service.adapter";
 
@@ -59,8 +59,19 @@ export function ZoneFormSheet({
   const [values, setValues] = useState<ZoneFormValues>(initialValues);
   const [errors, setErrors] = useState<ZoneFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  /** null = cargando; la lista viene del servidor (única fuente, E8). */
+  const [provinces, setProvinces] = useState<{ code: string; name: string }[] | null>(null);
+  const [provincesError, setProvincesError] = useState<string | null>(null);
   const isEditing = zone !== null;
   const isColombia = values.country_code.toUpperCase() === "CO";
+
+  useEffect(() => {
+    listCoProvinces()
+      .then(setProvinces)
+      .catch((error: unknown) =>
+        setProvincesError(errorMessage(error, "No se pudo cargar la lista de departamentos")),
+      );
+  }, []);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -143,16 +154,24 @@ export function ZoneFormSheet({
         {isColombia ? (
           <div className="space-y-1.5">
             <Label htmlFor={`${formId}-provinces`}>Departamentos</Label>
-            <MultiSelect
-              id={`${formId}-provinces`}
-              options={CO_PROVINCES.map((province) => ({ label: province.name, value: province.code }))}
-              defaultValue={values.province_codes}
-              onValueChange={(codes) => setValues((prev) => ({ ...prev, province_codes: codes }))}
-              placeholder="Buscar departamento…"
-              searchable
-              maxCount={4}
-              hideSelectAll
-            />
+            {provincesError !== null ? (
+              <p role="alert" className="text-xs text-destructive">
+                {provincesError}
+              </p>
+            ) : provinces === null ? (
+              <p className="text-xs text-muted-foreground">Cargando departamentos…</p>
+            ) : (
+              <MultiSelect
+                id={`${formId}-provinces`}
+                options={provinces.map((province) => ({ label: province.name, value: province.code }))}
+                defaultValue={values.province_codes}
+                onValueChange={(codes) => setValues((prev) => ({ ...prev, province_codes: codes }))}
+                placeholder="Buscar departamento…"
+                searchable
+                maxCount={4}
+                hideSelectAll
+              />
+            )}
             <p className="text-xs text-muted-foreground">
               Déjalo vacío para que la zona cubra el resto del país.
             </p>

@@ -15,6 +15,7 @@ jest.mock("@/modules/shipping/infrastructure/services/shipping-service.adapter",
   updateShippingZone: jest.fn(),
   createShippingRate: jest.fn(),
   updateShippingRate: jest.fn(),
+  listCoProvinces: () => Promise.resolve([]),
 }));
 
 let mockCanManage = true;

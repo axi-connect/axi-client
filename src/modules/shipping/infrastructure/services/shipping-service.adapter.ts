@@ -47,3 +47,13 @@ export function updateShippingRate(id: string, dto: UpdateShippingRateDTO): Prom
 export function deleteShippingRate(id: string): Promise<void> {
   return http.delete(`/shipping/rates/${id}`);
 }
+
+/**
+ * Departamentos ISO 3166-2:CO desde el servidor (kernel `co_provinces.ts`): el
+ * cliente NO duplica la lista — el espejo de Shopify casa por código y dos
+ * copias divergentes dejarían de cotizar en silencio.
+ */
+export async function listCoProvinces(): Promise<{ code: string; name: string }[]> {
+  const res = await http.get<Schemas["CoProvincesListDto"]>("/shipping/provinces");
+  return res.data;
+}

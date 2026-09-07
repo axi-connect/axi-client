@@ -6,7 +6,6 @@ import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { StatusDotBadge } from "@/shared/components/ui/status-badges";
-import { coProvinceName } from "@/modules/shipping/domain/co-provinces";
 import {
   describeRateCondition,
   describeRatePrice,
@@ -40,7 +39,8 @@ export function ZoneCard({
   onEditRate: (zone: ShippingZoneDTO, rate: ShippingRateDTO) => void;
   onDeleteRate: (zone: ShippingZoneDTO, rate: ShippingRateDTO) => void;
 }) {
-  const names = zone.province_codes.map(coProvinceName);
+  // Los nombres vienen en el DTO (el servidor es la única fuente de la lista).
+  const names = zone.provinces.map((province) => province.name);
   const shown = names.slice(0, MAX_PROVINCE_CHIPS);
   const rest = names.length - shown.length;
 
