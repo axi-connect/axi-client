@@ -188,7 +188,7 @@ export function VoiceSettingsView() {
  * técnico. Quitar la clave siempre está permitido: degrada a la cuenta de axi.
  */
 function ByokCredentialCard({ onRemoved }: { onRemoved?: () => void }) {
-  const { showAlert, showModal } = useAlert()
+  const { showAlert, showModal, closeModal } = useAlert()
   const [status, setStatus] = useState<TtsCredentialStatusDTO | null>(null)
   const [apiKey, setApiKey] = useState("")
   const [saving, setSaving] = useState(false)
@@ -259,6 +259,9 @@ function ByokCredentialCard({ onRemoved }: { onRemoved?: () => void }) {
                   open: true,
                 }),
               )
+              // `asClose: false` = el diálogo no se cierra solo: lo cierra quien
+              // lo abrió, cuando el trabajo terminó (bien o mal).
+              .finally(() => closeModal())
           },
         },
       ],

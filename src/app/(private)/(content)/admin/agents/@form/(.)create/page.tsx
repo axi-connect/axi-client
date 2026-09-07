@@ -24,7 +24,7 @@ export default function AgentsInterceptCreate() {
           {
             label: "Guardar",
             variant: "default",
-            asClose: false,
+            keepOpen: true,
             id: "agent-save",
             onClick: () => (document.getElementById("agent-form") as HTMLFormElement | null)?.requestSubmit(),
           },

@@ -3,14 +3,22 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Modal } from "../modal";
 
 /**
- * Lo que blinda este fichero es un defecto que el dueño encontró usando el
- * módulo: pulsaba «Sí, eliminar», los leads se borraban, salía el aviso «24
- * leads eliminados»… y el diálogo seguía en pantalla.
+ * Lo que blinda este fichero son dos defectos que el dueño encontró usando el
+ * panel, y que son las dos caras de la misma decisión: ¿quién cierra el diálogo?
  *
- * No era de la bandeja: `Modal` solo cerraba si la acción llevaba `asClose`, y
- * había trece confirmaciones en el panel que pasaban solo `onClick` —borrar
- * contactos, etiquetas, segmentos, embudos, reglas, canales, leads—. Cada una lo
- * tapaba a su manera, con un `closeModal()` a mano, o no lo tapaba.
+ * 1. (2026-08-31) Pulsaba «Sí, eliminar», los leads se borraban, salía el aviso
+ *    «24 leads eliminados»… y el diálogo seguía en pantalla. `Modal` solo cerraba
+ *    si la acción llevaba `asClose`, y trece confirmaciones pasaban solo
+ *    `onClick`. Desde entonces toda acción cierra por defecto.
+ *
+ * 2. (2026-09-07) Al arreglar lo anterior, `asClose: false` pasó a no hacer nada
+ *    y toda acción «Guardar» que hace `requestSubmit()` sobre un formulario
+ *    empezó a cerrar el diálogo con el formulario inválido; en las rutas
+ *    interceptadas (`/admin/agents/@form/(.)create`) ese cierre hace
+ *    `router.back()`, que se suma al `router.back()` del `onSuccess`, y el
+ *    usuario aterrizaba dos páginas atrás, en la bandeja. Una acción que pidió no
+ *    cerrar —`keepOpen: true` o su nombre anterior `asClose: false`— la cierra
+ *    quien la pasó, nunca el `Modal`.
  */
 describe("Modal · una acción confirma y CIERRA", () => {
   it("EL BUG: una acción con solo `onClick` cierra el diálogo", () => {
@@ -35,6 +43,23 @@ describe("Modal · una acción confirma y CIERRA", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  it("`asClose: true` es el comportamiento por defecto: cierra", () => {
+    const onOpenChange = jest.fn();
+    render(
+      <Modal
+        open
+        onOpenChange={onOpenChange}
+        config={{ actions: [{ label: "Cancelar", asClose: true }] }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
+describe("Modal · una acción que pidió no cerrar la cierra quien la pasó", () => {
   it("`keepOpen` es la excepción, y hay que pedirla", () => {
     const onOpenChange = jest.fn();
     const onClick = jest.fn();
@@ -52,22 +77,58 @@ describe("Modal · una acción confirma y CIERRA", () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it("`asClose` sigue aceptándose y ya no cambia nada", () => {
-    // Catorce llamadas lo pasan —unas en `true`, otras en `false` junto a un
-    // `onClick`— y quitarlo sería tocar catorce ficheros para no cambiar ninguna
-    // conducta. Lo que NO puede pasar es que `asClose: false` vuelva a dejar una
-    // confirmación abierta.
+  it("`asClose: false` es el nombre anterior de `keepOpen: true` y se sigue honrando", () => {
+    // Cuarenta y cinco llamadas lo pasan y cada una cierra por su cuenta
+    // (`closeModal()` tras el `await`, `onSuccess` del formulario). Volverlo
+    // inerte fue lo que cerró los formularios inválidos.
     const onOpenChange = jest.fn();
+    const onClick = jest.fn();
     render(
       <Modal
         open
         onOpenChange={onOpenChange}
-        config={{ actions: [{ label: "Eliminar", asClose: false, onClick: () => undefined }] }}
+        config={{ actions: [{ label: "Eliminar", asClose: false, onClick }] }}
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
 
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("EL BUG 2026-09-07: «Guardar» con `requestSubmit()` y formulario inválido deja el diálogo abierto", () => {
+    const onOpenChange = jest.fn();
+    const onSubmit = jest.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <Modal
+        open
+        onOpenChange={onOpenChange}
+        config={{
+          title: "Crear agente",
+          actions: [
+            { label: "Cancelar", variant: "outline", asClose: true },
+            {
+              label: "Guardar",
+              keepOpen: true,
+              onClick: () => (document.getElementById("agent-form") as HTMLFormElement | null)?.requestSubmit(),
+            },
+          ],
+        }}
+      >
+        <form id="agent-form" onSubmit={onSubmit}>
+          <input aria-label="Nombre" required defaultValue="" />
+        </form>
+      </Modal>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    // `requestSubmit` respeta la validación nativa: con el campo vacío no hay submit…
+    expect(onSubmit).not.toHaveBeenCalled();
+    // …y el diálogo sigue ahí, con el formulario y su error a la vista.
+    expect(onOpenChange).not.toHaveBeenCalled();
+    // (jsdom no expone el `role="dialog"` de Radix por accesibilidad; el título sí.)
+    expect(screen.getByRole("heading", { name: "Crear agente" })).toBeInTheDocument();
   });
 });

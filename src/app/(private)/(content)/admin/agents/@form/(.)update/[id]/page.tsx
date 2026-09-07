@@ -42,7 +42,7 @@ export default function AgentsInterceptUpdate() {
           {
             label: "Guardar",
             variant: "default",
-            asClose: false,
+            keepOpen: true,
             id: "agent-update-save",
             onClick: () => (document.getElementById("agent-form") as HTMLFormElement | null)?.requestSubmit(),
           },

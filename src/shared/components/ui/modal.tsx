@@ -18,19 +18,30 @@ export type ModalAction = {
   onClick?: () => void
   variant?: "default" | "outline" | "destructive" | "secondary"
   /**
-   * La EXCEPCIÓN: esta acción no cierra el diálogo.
+   * La EXCEPCIÓN: esta acción no cierra el diálogo; el cierre lo decide quien
+   * la pasó (el `onSuccess` del formulario, un `closeModal()` tras el `await`).
    *
    * Por defecto toda acción cierra, porque lo contrario era el defecto: una
    * confirmación se pulsaba, el trabajo se hacía, salía el aviso… y el diálogo
    * seguía ahí. Pasaba en trece sitios del panel —borrar leads, promover al CRM,
    * borrar una búsqueda, contactos, etiquetas, segmentos, embudos, reglas— y
    * cada uno lo tapaba a su manera o no lo tapaba.
+   *
+   * Es OBLIGATORIA en toda acción «Guardar» que hace `requestSubmit()` sobre
+   * un formulario: si el diálogo se cierra solo, se cierra también con el
+   * formulario inválido, y en las rutas interceptadas (`@form/(.)create`) el
+   * `onOpenChange(false)` → `router.back()` se suma al `router.back()` del
+   * `onSuccess` y el usuario aterriza dos páginas atrás (incidente 2026-09-07
+   * en `/admin/agents`).
    */
   keepOpen?: boolean
   /**
-   * @deprecated Ya no hace nada: toda acción cierra salvo `keepOpen`. Se sigue
-   * aceptando porque catorce llamadas lo pasan, y quitarlo sería tocar catorce
-   * ficheros para no cambiar ninguna conducta.
+   * Nombre anterior de la misma decisión, con la polaridad invertida:
+   * `asClose: false` significa `keepOpen: true` y se sigue honrando, porque
+   * cuarenta y cinco llamadas lo pasan y cada una cierra por su cuenta.
+   * `asClose: true` es el comportamiento por defecto y no añade nada.
+   *
+   * @deprecated En código nuevo, `keepOpen: true`.
    */
   asClose?: boolean
 }
@@ -100,11 +111,13 @@ export function Modal({ open, onOpenChange, config, children }: ModalProps) {
                 cerraría.
 
                 Cerrar antes de que un `onClick` asíncrono termine es lo
-                correcto: el desenlace lo cuenta el aviso o el panel de
-                resultado, y de paso desaparece el doble clic sobre un botón
-                destructivo, que hoy sí es posible.
+                correcto para una CONFIRMACIÓN: el desenlace lo cuenta el aviso
+                o el panel de resultado, y de paso desaparece el doble clic
+                sobre un botón destructivo. No lo es para un «Guardar» que
+                envía un formulario: ahí decide el formulario (`keepOpen`).
               */
-              return a.keepOpen === true ? (
+              const keepOpen = a.keepOpen === true || a.asClose === false
+              return keepOpen ? (
                 btn
               ) : (
                 <DialogClose asChild key={`${a.label}-${i}`}>

@@ -23,7 +23,7 @@ export default function AgentsInterceptCharactersUpdate() {
           {
             label: "Guardar",
             variant: "default",
-            asClose: false,
+            keepOpen: true,
             id: "character-save",
             onClick: () => (document.getElementById("character-form") as HTMLFormElement | null)?.requestSubmit(),
           },
