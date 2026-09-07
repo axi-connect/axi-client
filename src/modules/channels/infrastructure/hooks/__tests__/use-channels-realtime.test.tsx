@@ -12,8 +12,10 @@ jest.mock("@/core/realtime/use-socket", () => ({
 }))
 
 const setChannelStatus = jest.fn()
+const setChannelCoexistenceSync = jest.fn()
 jest.mock("@/modules/channels/infrastructure/stores/channels.store", () => ({
-  useChannelStore: (selector: (state: unknown) => unknown) => selector({ setChannelStatus }),
+  useChannelStore: (selector: (state: unknown) => unknown) =>
+    selector({ setChannelStatus, setChannelCoexistenceSync }),
 }))
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -58,5 +60,23 @@ describe("useChannelsRealtime", () => {
     expect(received).toEqual([API_ERROR_CODES.trialExpired, API_ERROR_CODES.companySuspended])
     // La suspensión no toca el store de canales
     expect(setChannelStatus).not.toHaveBeenCalled()
+  })
+
+  it("`channel.coexistence_sync` (F2b) lleva el progreso de la importación al store", () => {
+    renderHook(() => useChannelsRealtime())
+
+    handlers.get("channel.coexistence_sync")?.({
+      channel_id: "ch-1",
+      company_id: "co-1",
+      contacts: "completed",
+      history: "in_progress",
+      history_progress: 43,
+    })
+
+    expect(setChannelCoexistenceSync).toHaveBeenCalledWith("ch-1", {
+      contacts: "completed",
+      history: "in_progress",
+      history_progress: 43,
+    })
   })
 })

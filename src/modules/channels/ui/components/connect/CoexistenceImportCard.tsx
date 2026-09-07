@@ -4,12 +4,14 @@ import { useState } from "react";
 import { Hourglass, LoaderCircle, Smartphone } from "lucide-react";
 
 import { isHttpError } from "@/core/api/problem";
+import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import { requestCoexistenceSync } from "@/modules/channels/infrastructure/services/meta-signup.adapter";
+import { applyCoexistenceSync } from "@/modules/channels/infrastructure/stores/channels.store";
 
 type Coexistence = NonNullable<ChannelDTO["coexistence"]>;
 
@@ -36,6 +38,20 @@ export function CoexistenceImportCard({
   const [history, setHistory] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // F2b: el importador emite el progreso lote a lote; esta pantalla lo pinta
+  // sin recargar. Los hooks van ANTES del return condicional.
+  const { socket } = useSocket("channels");
+  useSocketEvent(socket, "channel.coexistence_sync", (payload) => {
+    if (payload.channel_id !== channel.id) return;
+    onChannel(
+      applyCoexistenceSync(channel, {
+        contacts: payload.contacts,
+        history: payload.history,
+        history_progress: payload.history_progress,
+      }),
+    );
+  });
 
   if (coexistence === null || coexistence === undefined) return null;
 
@@ -125,6 +141,11 @@ export function CoexistenceImportCard({
             checked={history}
             onCheckedChange={setHistory}
             disabled={!historyPending || submitting}
+            progress={
+              coexistence.sync.history === "in_progress" || coexistence.sync.history === "requested"
+                ? coexistence.sync.history_progress
+                : undefined
+            }
           />
           <li className="flex flex-wrap items-center justify-between gap-3 p-4">
             <p className="text-sm text-muted-foreground">
@@ -159,6 +180,7 @@ function ImportRow({
   checked,
   onCheckedChange,
   disabled,
+  progress,
 }: {
   id: string;
   label: string;
@@ -167,6 +189,8 @@ function ImportRow({
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   disabled: boolean;
+  /** 0–100 mientras importa; la barra solo aparece con valor. */
+  progress?: number;
 }) {
   return (
     <li className="flex items-start gap-3 p-4">
@@ -182,6 +206,21 @@ function ImportRow({
           {label}
         </label>
         <p className="text-sm text-muted-foreground">{detail}</p>
+        {progress !== undefined && (
+          <div
+            role="progressbar"
+            aria-label="Progreso de la importación de chats"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted"
+          >
+            <div
+              className="h-full rounded-full bg-accent-violet transition-[width]"
+              style={{ width: `${String(progress)}%` }}
+            />
+          </div>
+        )}
       </div>
       {state !== "pending" && <StatePill state={state} />}
     </li>

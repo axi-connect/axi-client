@@ -8,6 +8,15 @@ jest.mock("@/modules/channels/infrastructure/services/meta-signup.adapter", () =
   requestCoexistenceSync: (id: string, payload: unknown) => requestCoexistenceSync(id, payload),
 }));
 
+/** Handlers del socket por evento: el test dispara el progreso a mano (F2b). */
+const socketHandlers = new Map<string, (payload: unknown) => void>();
+jest.mock("@/core/realtime/use-socket", () => ({
+  useSocket: () => ({ socket: {}, connected: true }),
+  useSocketEvent: (_socket: unknown, event: string, handler: (payload: unknown) => void) => {
+    socketHandlers.set(event, handler);
+  },
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { CoexistenceImportCard } = require("../CoexistenceImportCard") as typeof import("../CoexistenceImportCard");
 
@@ -40,7 +49,10 @@ function channel(overrides: Partial<NonNullable<ChannelDTO["coexistence"]>> = {}
  * pida EXACTAMENTE lo que quedó marcado y pendiente.
  */
 describe("CoexistenceImportCard", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    socketHandlers.clear();
+  });
 
   it("no pinta nada para un canal estándar", () => {
     const { container } = render(
@@ -132,5 +144,52 @@ describe("CoexistenceImportCard", () => {
     fireEvent.click(screen.getByRole("button", { name: /importar ahora/i }));
 
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+  });
+
+  it("mientras importa muestra la barra con el progreso que llega por WS (F2b)", () => {
+    const onChannel = jest.fn();
+    const inProgress = channel({
+      sync: {
+        contacts: "completed",
+        history: "in_progress",
+        requested_at: new Date().toISOString(),
+        history_progress: 43,
+        request_ids: {},
+      },
+    });
+    render(<CoexistenceImportCard channel={inProgress} onChannel={onChannel} />);
+
+    expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "43");
+    expect(screen.getByText(/^importando$/i)).toBeInTheDocument();
+
+    // Llega un lote más: quien monta la tarjeta recibe el canal con el sync nuevo
+    socketHandlers.get("channel.coexistence_sync")?.({
+      channel_id: "ch-1",
+      company_id: "co-1",
+      contacts: "completed",
+      history: "completed",
+      history_progress: 100,
+    });
+    expect(onChannel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coexistence: expect.objectContaining({
+          sync: expect.objectContaining({ history: "completed", history_progress: 100 }),
+        }),
+      }),
+    );
+  });
+
+  it("ignora el progreso de OTRO canal", () => {
+    const onChannel = jest.fn();
+    render(<CoexistenceImportCard channel={channel()} onChannel={onChannel} />);
+
+    socketHandlers.get("channel.coexistence_sync")?.({
+      channel_id: "otro",
+      company_id: "co-1",
+      contacts: "completed",
+      history: "completed",
+      history_progress: 100,
+    });
+    expect(onChannel).not.toHaveBeenCalled();
   });
 });

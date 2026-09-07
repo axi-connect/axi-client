@@ -550,6 +550,19 @@ export type ChannelStatusChangedEvent = {
   phone_number?: string | null;
 };
 
+/**
+ * Coexistencia (F2b): progreso de la importación desde la app WhatsApp Business
+ * del celular. Lo emite el importador tras cada lote; la pantalla de éxito y
+ * la tarjeta del canal lo pintan sin recargar.
+ */
+export type ChannelCoexistenceSyncEvent = {
+  channel_id: string;
+  company_id: string;
+  contacts: NonNullable<Schemas["ChannelDto"]["coexistence"]>["sync"]["contacts"];
+  history: NonNullable<Schemas["ChannelDto"]["coexistence"]>["sync"]["history"];
+  history_progress: number;
+};
+
 // ---------------------------------------------------------------------------
 // Facturación de la licencia (slice billing)
 // ---------------------------------------------------------------------------
@@ -808,6 +821,7 @@ export type InboxServerEvents = {
 /** Namespace `/channels` — solo lectura (sin comandos). */
 export type ChannelsServerEvents = {
   "channel.status_changed": (payload: ChannelStatusChangedEvent) => void;
+  "channel.coexistence_sync": (payload: ChannelCoexistenceSyncEvent) => void;
   "company.suspended": (payload: CompanySuspendedEvent) => void;
 };
 
