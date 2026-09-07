@@ -188,4 +188,49 @@ describe("usePageSignup", () => {
     expect(view.result.current.phase).toBe("ready");
     expect(connectMetaPageChannel).not.toHaveBeenCalled();
   });
+
+  describe("lentitud del popup (espejo de WhatsApp)", () => {
+    async function mountPagesReady() {
+      getMetaSignupConfig.mockResolvedValue(CONFIG);
+      const sdk = { init: jest.fn(), login };
+      loadFacebookSdk.mockResolvedValue(sdk);
+      getFacebookSdk.mockReturnValue(sdk);
+      const view = renderHook(() => usePageSignup({ product: "instagram" }));
+      await waitFor(() => expect(view.result.current.phase).toBe("ready"));
+      return view;
+    }
+
+    it("tres minutos sin señal marcan el intento como LENTO, no como cancelado", async () => {
+      const view = await mountPagesReady();
+
+      jest.useFakeTimers();
+      act(() => view.result.current.start());
+      act(() => {
+        jest.advanceTimersByTime(180_000);
+      });
+      jest.useRealTimers();
+
+      expect(view.result.current.phase).toBe("popup_open");
+      expect(view.result.current.slow).toBe(true);
+    });
+
+    it("un code que llega DESPUÉS de los tres minutos se canjea igual", async () => {
+      listMetaPageAssets.mockResolvedValue(ASSETS);
+      const view = await mountPagesReady();
+
+      jest.useFakeTimers();
+      act(() => view.result.current.start());
+      act(() => {
+        jest.advanceTimersByTime(180_000);
+      });
+      jest.useRealTimers();
+      expect(view.result.current.slow).toBe(true);
+
+      act(() => loginCallback?.({ authResponse: { code: "AQD-tarde" } }));
+
+      await waitFor(() => expect(view.result.current.phase).toBe("choosing_asset"));
+      expect(listMetaPageAssets).toHaveBeenCalledWith({ code: "AQD-tarde", product: "instagram" });
+      expect(view.result.current.slow).toBe(false);
+    });
+  });
 });
