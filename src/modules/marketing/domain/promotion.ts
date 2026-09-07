@@ -154,3 +154,36 @@ export function matchesPromotionStateFilter(
 export function unredeemedCoupons(promotion: PromotionDTO): number {
   return Math.max(0, promotion.coupons_issued - promotion.redemptions_recorded);
 }
+
+/* ---------------------- Origen (plan envíos+promos E3) ---------------------- */
+
+/** Espejada del proveedor: se ve, se comunica, no se edita en axi. */
+export function isGovernedPromotion(
+  promotion: Pick<PromotionDTO, "governed_by_connection_id">,
+): boolean {
+  return promotion.governed_by_connection_id !== null;
+}
+
+export type PromotionOriginFilter = "all" | "external" | "local";
+
+export const PROMOTION_ORIGIN_FILTER_LABELS: Record<PromotionOriginFilter, string> = {
+  all: "Todos los orígenes",
+  external: "De la tienda",
+  local: "Creadas en axi",
+};
+
+export function matchesPromotionOriginFilter(
+  promotion: Pick<PromotionDTO, "governed_by_connection_id">,
+  filter: PromotionOriginFilter,
+): boolean {
+  if (filter === "all") return true;
+  return filter === "external" ? isGovernedPromotion(promotion) : !isGovernedPromotion(promotion);
+}
+
+/** Códigos que el cliente puede dar: el compartido local o los del proveedor. */
+export function promotionCodes(
+  promotion: Pick<PromotionDTO, "shared_code" | "external_codes">,
+): string[] {
+  if (promotion.shared_code) return [promotion.shared_code];
+  return promotion.external_codes;
+}

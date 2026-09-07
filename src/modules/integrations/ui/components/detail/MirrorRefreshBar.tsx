@@ -5,7 +5,7 @@ import { LoaderCircle, RefreshCw, TriangleAlert } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
-import { StatusDotBadge } from "../StatusDotBadge";
+import { StatusDotBadge } from "@/shared/components/ui/status-badges";
 
 /**
  * Cabecera común de los espejos ligeros (Envíos/Promociones): título, lead,

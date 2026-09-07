@@ -4,12 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AudioLines,
+  CircleCheck,
   ExternalLink,
   MessageSquareText,
   PackageCheck,
   Receipt,
   ShieldCheck,
   Sparkles,
+  Store,
+  Truck,
   X,
 } from "lucide-react";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -17,12 +20,18 @@ import { relativeTime } from "@/core/lib/relative-time";
 import { cn } from "@/core/lib/utils";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
 import {
+  describeDelivery,
+  describeShippingLine,
+  externalChargeDelta,
   formatMoney,
   mapOrderToRow,
   orderNumberLabel,
+  SHIPPING_STATE_LABELS,
   type ConversationUsageDTO,
   type OrderDTO,
   type OrderEventDTO,
@@ -213,6 +222,38 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                       <dd className="tabular-nums">−{formatMoney(order.discount_cents, order.currency)}</dd>
                     </div>
                   ) : null}
+                  {/* Plan envíos+promos: el flete entra SUMANDO; estimado o cotizado */}
+                  {order.delivery.method === "shipping" ? (
+                    <div className="flex items-start justify-between gap-2 text-muted-foreground">
+                      <dt className="flex flex-wrap items-center gap-1.5">
+                        Envío
+                        {describeShippingLine(order) !== null ? (
+                          <span className="text-xs">{describeShippingLine(order)}</span>
+                        ) : null}
+                        {order.shipping_state !== null ? (
+                          <StatusDotBadge
+                            tone={order.shipping_state === "quoted" ? "ok" : "warning"}
+                            className="text-[11px]"
+                          >
+                            {SHIPPING_STATE_LABELS[order.shipping_state]}
+                          </StatusDotBadge>
+                        ) : null}
+                      </dt>
+                      <dd className="shrink-0 tabular-nums">
+                        {order.shipping_state === null && order.shipping_cents === 0
+                          ? "Por definir"
+                          : formatMoney(order.shipping_cents, order.currency)}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {order.shipping_discount_cents > 0 ? (
+                    <div className="flex justify-between text-muted-foreground">
+                      <dt>Descuento de envío</dt>
+                      <dd className="tabular-nums">
+                        −{formatMoney(order.shipping_discount_cents, order.currency)}
+                      </dd>
+                    </div>
+                  ) : null}
                   <div className="flex items-baseline justify-between pt-1">
                     <dt className="text-sm font-semibold uppercase">Total</dt>
                     <dd className="text-lg font-semibold tabular-nums">
@@ -220,8 +261,17 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                       <span className="ml-1 text-xs font-normal text-muted-foreground">{order.currency}</span>
                     </dd>
                   </div>
+                  <ExternalChargeRow order={order} />
                 </dl>
               </section>
+
+              {/* Entrega */}
+              {describeDelivery(order) !== null ? (
+                <section className="rounded-2xl border border-border bg-background p-4">
+                  <SectionTitle>Entrega</SectionTitle>
+                  <DeliveryBlock order={order} />
+                </section>
+              ) : null}
 
               {/* Pagos */}
               <section className="space-y-3">
@@ -347,6 +397,13 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                         ) : null,
                     },
                     {
+                      label: "Códigos",
+                      value:
+                        order.promo_codes.length > 0 ? (
+                          <span className="font-mono text-xs">{order.promo_codes.join(", ")}</span>
+                        ) : null,
+                    },
+                    {
                       label: "Notas",
                       block: true,
                       value:
@@ -447,6 +504,60 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
           onDone={() => void afterMutation()}
         />
       </aside>
+    </div>
+  );
+}
+
+/**
+ * Lo que el proveedor cobra o cobró (plan envíos+promos §2). Solo aparece bajo
+ * gobierno externo; si no cuadra, se muestran las DOS cifras y la que manda es
+ * la cobrada — el desglose local queda como estaba, sin forzarlo.
+ */
+function ExternalChargeRow({ order }: { order: OrderDTO }) {
+  const delta = externalChargeDelta(order);
+  if (delta === null || order.external_total_cents === null) return null;
+  return (
+    <div className="flex items-start justify-between gap-2 border-t border-dashed border-border pt-2 text-muted-foreground">
+      <dt className="flex flex-wrap items-center gap-1.5">
+        <span className="flex items-center gap-1">
+          Cobrado en <ShopifyOriginBadge className="text-[11px]" />
+        </span>
+        {delta.aligned ? (
+          <Badge variant="secondary" className="gap-1 text-[11px]">
+            <CircleCheck aria-hidden="true" className="size-3" /> Coincide
+          </Badge>
+        ) : (
+          <Badge
+            variant="outline"
+            className="border-accent-amber/45 bg-accent-amber/10 text-[11px] text-accent-amber"
+          >
+            Difiere {delta.diff_cents > 0 ? "+" : "−"}
+            {formatMoney(Math.abs(delta.diff_cents), order.currency)}
+          </Badge>
+        )}
+      </dt>
+      <dd className="shrink-0 font-medium tabular-nums text-foreground">
+        {formatMoney(order.external_total_cents, order.currency)}
+      </dd>
+    </div>
+  );
+}
+
+function DeliveryBlock({ order }: { order: OrderDTO }) {
+  const delivery = describeDelivery(order);
+  if (delivery === null) return null;
+  const Icon = order.delivery.method === "pickup" ? Store : Truck;
+  return (
+    <div className="mt-3 flex gap-3 text-sm">
+      <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 space-y-0.5">
+        <p className="font-medium">{delivery.title}</p>
+        {delivery.lines.map((line, index) => (
+          <p key={index} className={cn(index === delivery.lines.length - 1 && "text-muted-foreground")}>
+            {line}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }

@@ -14,13 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Input } from "@/shared/components/ui/input";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { IntegrationDTO } from "@/modules/integrations/domain/integration";
 import {
   buildRotatePayload,
+  CAPABILITY_LABELS,
   integrationProvider,
+  OPTIONAL_CAPABILITY_HINTS,
   type AccessTokenConnectConfig,
+  type IntegrationCapabilityId,
   type IntegrationProviderDescriptor,
 } from "@/modules/integrations/domain/integration-providers";
 import {
@@ -105,6 +109,42 @@ export function EstadoTab({
         </div>
       )}
 
+      {integration.missing_optional_scopes.length > 0 && (
+        // Plan envíos+promos: sin el scope la pestaña no existe; el aviso dice
+        // exactamente qué activar y dónde, y que lo demás sigue igual.
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
+          <AlertTitle>
+            Tu app de {provider.label} aún no permite{" "}
+            {joinNatural(
+              integration.missing_optional_scopes.map(
+                (missing) =>
+                  OPTIONAL_CAPABILITY_HINTS[missing.capability as keyof typeof OPTIONAL_CAPABILITY_HINTS]?.what ??
+                  (CAPABILITY_LABELS[missing.capability as IntegrationCapabilityId] ?? missing.capability).toLowerCase(),
+              ),
+            )}
+            .
+          </AlertTitle>
+          <AlertDescription>
+            <p>
+              Activa{" "}
+              <code className="rounded bg-secondary px-1 py-0.5 font-mono text-xs">
+                {joinNatural(integration.missing_optional_scopes.flatMap((missing) => missing.scopes))}
+              </code>{" "}
+              en la configuración de la app ({provider.label} Dev Dashboard → tu app → Configuración →
+              Permisos), reinstálala en tu {provider.noun.singular} y vuelve a rotar las credenciales
+              aquí. El catálogo, el inventario y los pedidos siguen funcionando igual.
+            </p>
+            {rotateConfig !== null && (
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => setRotateOpen(true)}>
+                <KeyRound aria-hidden="true" className="size-4" />
+                Rotar credenciales
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <dl className="grid gap-x-8 gap-y-3 rounded-lg border border-border p-4 sm:grid-cols-2 md:p-6">
         <Row label="Cuenta remota" value={integration.external_account} />
         <Row
@@ -138,6 +178,16 @@ export function EstadoTab({
             ) : (
               "—"
             )
+          }
+        />
+        <Row
+          label="Impuestos"
+          value={
+            integration.taxes_included === null
+              ? "—"
+              : integration.taxes_included
+                ? "Incluidos en el precio"
+                : "Excluidos del precio · axi no puede gobernar los pedidos de esta tienda"
           }
         />
       </dl>
@@ -320,4 +370,10 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <dd className="text-sm font-medium break-words">{value}</dd>
     </div>
   );
+}
+
+/** «a, b y c» — sin coma de Oxford, que en español no existe. */
+function joinNatural(parts: readonly string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
 }

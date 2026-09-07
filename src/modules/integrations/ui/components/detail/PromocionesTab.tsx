@@ -26,7 +26,7 @@ import {
   type PromotionDTO,
 } from "@/modules/marketing/domain/promotion";
 import { listPromotions } from "@/modules/marketing/infrastructure/services/promotions-service.adapter";
-import { StatusDotBadge } from "../StatusDotBadge";
+import { StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { MirrorRefreshBar } from "./MirrorRefreshBar";
 
 /**
