@@ -1,7 +1,10 @@
 import type { ChannelDTO } from "../channel";
 import {
   DELETE_CONFIRMATION,
+  disconnectReasonText,
   readChannelActions,
+  readCoexistenceNotice,
+  readLastEcho,
   readConnectionMethod,
   readLastCheck,
   readMessagingLimit,
@@ -298,3 +301,78 @@ describe("readChannelActions — las acciones del detalle (F6)", () => {
     expect(text).toContain("las conversaciones quedan archivadas");
   });
 })
+
+describe("coexistencia (F3): lo que le pasa al número en el celular", () => {
+  const NOW = new Date("2026-09-07T12:00:00.000Z");
+  function coexistence(overrides: Partial<NonNullable<ChannelDTO["coexistence"]>> = {}) {
+    return {
+      connected_at: "2026-09-07T05:41:32.000Z",
+      phone_operator_user_id: "u-1",
+      handback_after_minutes: 720,
+      sync: { contacts: "completed", history: "completed", requested_at: null, history_progress: 100, request_ids: {} },
+      sync_window_closes_at: "2026-09-08T05:41:32.000Z",
+      app_state: "connected",
+      disconnect_reason: null,
+      last_echo_at: null,
+      ...overrides,
+    } as NonNullable<ChannelDTO["coexistence"]>;
+  }
+
+  it("un canal estándar no dice nada de coexistencia", () => {
+    expect(readCoexistenceNotice(channel({ coexistence: null }))).toBeNull();
+    expect(readLastEcho(channel({ coexistence: null }))).toBeNull();
+  });
+
+  it("conectado y con ecos: el último mensaje del celular, en verde", () => {
+    const view = channel({ coexistence: coexistence({ last_echo_at: "2026-09-07T11:48:00.000Z" }) });
+    expect(readCoexistenceNotice(view)).toBeNull();
+    expect(readLastEcho(view, NOW)).toMatchObject({ label: "hace 12 minutos", tone: "good" });
+  });
+
+  it("sin ecos todavía no inventa una fecha", () => {
+    expect(readLastEcho(channel({ coexistence: coexistence() }), NOW)).toMatchObject({
+      label: "Ninguno todavía",
+      tone: "neutral",
+    });
+  });
+
+  it("app desinstalada: en pausa, con la salida (reinstalar), sin pedir reconectar", () => {
+    const notice = readCoexistenceNotice(channel({ coexistence: coexistence({ app_state: "offboarded" }) }));
+    expect(notice?.tone).toBe("warning");
+    expect(notice?.title).toMatch(/en pausa/i);
+    expect(notice?.detail).toMatch(/plataforma empresarial/i);
+    expect(notice?.detail).toMatch(/se recupera sola/i);
+  });
+
+  it("desconectado desde el celular: dice por qué con la razón de Meta", () => {
+    const notice = readCoexistenceNotice(
+      channel({
+        coexistence: coexistence({ app_state: "disconnected_from_phone", disconnect_reason: "PRIMARY_INACTIVITY" }),
+      }),
+    );
+    expect(notice?.detail).toMatch(/dos semanas sin abrirse/i);
+    expect(notice?.detail).toMatch(/conservas el historial/i);
+  });
+
+  it("cada razón de Meta tiene frase propia y la desconocida no rompe", () => {
+    for (const reason of [
+      "PRIMARY_INACTIVITY",
+      "COMPANION_INACTIVITY",
+      "CHANGE_NUMBER",
+      "BUSINESS_DOWNGRADE",
+      "ACCOUNT_DISCONNECTED",
+      "USER_RE_REGISTERED",
+    ]) {
+      expect(disconnectReasonText(reason)).not.toMatch(/alguien desconectó/i);
+    }
+    expect(disconnectReasonText("ALGO_NUEVO")).toMatch(/alguien desconectó/i);
+    expect(disconnectReasonText(null)).toMatch(/alguien desconectó/i);
+  });
+
+  it("el detalle de un canal en coexistencia avisa que desconectar del todo pasa por la app", () => {
+    const actions = readChannelActions(channel({ coexistence: coexistence() }));
+    expect(actions.can_disconnect).toBe(true);
+    expect(actions.hint).toMatch(/plataforma empresarial/i);
+    expect(readChannelActions(channel({ coexistence: null })).hint).not.toMatch(/plataforma empresarial/i);
+  });
+});

@@ -206,6 +206,87 @@ export function readOnboardingNotice(
   }
 }
 
+/**
+ * Coexistencia (F3): qué le pasa al número en el CELULAR, que es distinto de lo
+ * que le pasa al token. `null` = canal estándar o todo en orden sin nada que
+ * decir. Tres situaciones, tres salidas distintas:
+ *
+ * - `offboarded`: el dueño desinstaló la app o cambió de celular. Meta pausó los
+ *   envíos pero conserva la conexión; se recupera sola al reinstalar.
+ * - `disconnected_from_phone`: alguien desconectó desde la app, o Meta lo hizo
+ *   por inactividad. Hay que volver a conectar.
+ * - conectado: solo se muestra el último mensaje desde el celular, que es la
+ *   prueba de que la coexistencia está viva.
+ */
+export type CoexistenceNotice = {
+  title: string;
+  detail: string;
+  tone: "warning" | "info";
+};
+
+export function readCoexistenceNotice(channel: ChannelDTO): CoexistenceNotice | null {
+  const coexistence = channel.coexistence;
+  if (coexistence === null || coexistence === undefined) return null;
+  switch (coexistence.app_state) {
+    case "offboarded":
+      return {
+        tone: "warning",
+        title: "En pausa: WhatsApp Business ya no está en el celular",
+        detail:
+          "Meta pausó los envíos desde Axi. Vuelve a instalar WhatsApp Business con este número y acepta «Plataforma empresarial»: la conexión se recupera sola en unos minutos. Mientras tanto los mensajes que lleguen se conservan.",
+      };
+    case "disconnected_from_phone":
+      return {
+        tone: "warning",
+        title: "El número se desconectó desde el celular",
+        detail: `${disconnectReasonText(coexistence.disconnect_reason)} Vuelve a conectarlo desde aquí; conservas el historial.`,
+      };
+    default:
+      return null;
+  }
+}
+
+/** Traduce el `disconnection_info.reason` de Meta a una frase. */
+export function disconnectReasonText(reason: string | null | undefined): string {
+  switch (reason) {
+    case "PRIMARY_INACTIVITY":
+      return "Meta lo desconectó porque WhatsApp Business llevaba unas dos semanas sin abrirse en el celular.";
+    case "COMPANION_INACTIVITY":
+      return "Meta lo desconectó por inactividad prolongada.";
+    case "CHANGE_NUMBER":
+      return "Se cambió el número en la app del celular.";
+    case "BUSINESS_DOWNGRADE":
+      return "El número pasó a la app de WhatsApp personal, que no admite la conexión.";
+    case "ACCOUNT_DISCONNECTED":
+      return "La cuenta se desconectó o se eliminó desde la app.";
+    case "USER_RE_REGISTERED":
+      return "El número se volvió a registrar en otro dispositivo.";
+    default:
+      return "Alguien desconectó el número de la Plataforma empresarial desde la app.";
+  }
+}
+
+/**
+ * «Último mensaje desde el celular hace 12 min». Es lo que distingue un canal
+ * en coexistencia vivo de uno «conectado y mudo».
+ */
+export function readLastEcho(channel: ChannelDTO, now: Date = new Date()): HealthReading | null {
+  const coexistence = channel.coexistence;
+  if (coexistence === null || coexistence === undefined) return null;
+  if (coexistence.last_echo_at === null) {
+    return {
+      label: "Ninguno todavía",
+      tone: "neutral",
+      hint: "Cuando respondas a un cliente desde el celular, el mensaje aparecerá también en Axi.",
+    };
+  }
+  return {
+    label: readLastCheck(coexistence.last_echo_at, now),
+    tone: "good",
+    hint: "Lo que respondes desde WhatsApp Business en el celular se ve aquí y pausa al agente en esa conversación.",
+  };
+}
+
 /** "hace 12 minutos". `null` → "Sin datos", nunca una fecha inventada. */
 export function readLastCheck(value: string | null | undefined, now: Date = new Date()): string {
   if (value == null) return "Sin datos";
@@ -290,11 +371,17 @@ export function readChannelActions(channel: ChannelDTO, now: Date = new Date()):
     isCloud && !disconnected && channel.onboarding?.status === "awaiting_registration";
 
   if (!disconnected) {
+    const coexistence = channel.coexistence !== null && channel.coexistence !== undefined;
     return {
       can_disconnect: true,
       can_reconnect: false,
       can_register_pin: canRegisterPin,
-      hint: activeHint(channel.kind),
+      // Coexistencia (F3): no existe «desregistrar» en Meta para este caso. Si
+      // el dueño quiere que el número deje de estar en la API también hay que
+      // desconectarlo en la app; decirlo aquí evita el «lo desconecté y sigue»
+      hint: coexistence
+        ? `${activeHint(channel.kind)} Como el número sigue en la app del celular, para desconectarlo del todo también hay que hacerlo en WhatsApp Business: Ajustes → Cuenta → Plataforma empresarial.`
+        : activeHint(channel.kind),
     };
   }
 
