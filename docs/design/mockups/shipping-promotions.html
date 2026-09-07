@@ -21,9 +21,7 @@
   --accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
   --input: color-mix(in srgb, var(--foreground) 14%, var(--background));
   --amber-soft: color-mix(in srgb, var(--axi-amber) 14%, var(--background));
-  --amber-ink: color-mix(in srgb, var(--axi-warning) 85%, var(--foreground));
-  --success-soft: color-mix(in srgb, var(--axi-success) 12%, var(--background));
-  --destructive-soft: color-mix(in srgb, var(--axi-destructive) 12%, var(--background));
+  --amber-ink: #8a4b06; /* tinta ámbar oscura: 6.4:1 sobre --amber-soft en claro */
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
   --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
   --shadow-overlay: 0 1px 2px rgb(0 0 0 / .06), 0 16px 48px rgb(0 0 0 / .16);
@@ -72,8 +70,6 @@ a { color: inherit; }
 .badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--accent); color: var(--foreground); white-space: nowrap; }
 .badge.muted { background: var(--secondary); color: var(--muted-foreground); }
 .badge.amber { background: var(--amber-soft); color: var(--amber-ink); }
-.badge.success { background: var(--success-soft); color: var(--axi-success); }
-.badge.destructive { background: var(--destructive-soft); color: var(--axi-destructive); }
 .badge.shopify { background: var(--secondary); color: var(--foreground); }
 .badge.shopify::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--logo-shopify); }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -281,7 +277,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
   <div class="crumb">Configuración · Integraciones · <span>Shopify</span></div>
   <div class="header">
     <div>
-      <h1>Savage Colombia <span class="badge success"><span class="dot ok"></span>Conectada</span></h1>
+      <h1>Savage Colombia <span class="badge muted"><span class="dot ok"></span>Conectada</span></h1>
       <p class="muted mono">tribal-store-4813.myshopify.com · API 2026-07</p>
     </div>
     <div class="right"><button class="btn outline pill sm">Rotar credenciales</button></div>
@@ -323,7 +319,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
     <h3>Decisiones que esta vista fija</h3>
     <ul>
       <li>Pestaña nueva derivada de la capacidad <code>shipping</code>; solo aparece si la app tiene <code>read_shipping</code>.</li>
-      <li>Solo lectura: la fuente es Shopify. Un solo acento secundario (ámbar) para «se calcula al cerrar».</li>
+      <li>Solo lectura: la fuente es Shopify. Un solo acento secundario (ámbar) para «se calcula al cerrar»; los estados («Conectada», «Activa») van en <code>Badge secondary</code> + punto: el color es señal redundante, no portador de contraste.</li>
       <li>Departamentos por nombre; el espejo casa por código ISO 3166-2:CO.</li>
     </ul>
   </div>
@@ -334,7 +330,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
   <div class="crumb">Configuración · Integraciones · <span>Shopify</span></div>
   <div class="header">
     <div>
-      <h1>Savage Colombia <span class="badge success"><span class="dot ok"></span>Conectada</span></h1>
+      <h1>Savage Colombia <span class="badge muted"><span class="dot ok"></span>Conectada</span></h1>
       <p class="muted mono">tribal-store-4813.myshopify.com · API 2026-07</p>
     </div>
   </div>
@@ -356,10 +352,10 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
       <table>
         <thead><tr><th>Promoción</th><th>Cómo se aplica</th><th>Código</th><th>Vigencia</th><th>Estado</th></tr></thead>
         <tbody>
-          <tr><td><b style="font-weight:500">Lleva 2, 20 % off</b><div class="muted" style="font-size:12.5px">20 % de descuento al comprar 2 o más productos</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Sin fecha de fin</td><td><span class="badge success">Activa</span></td></tr>
-          <tr><td><b style="font-weight:500">Lleva 3, 30 % off</b><div class="muted" style="font-size:12.5px">30 % de descuento al comprar 3 o más productos</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Sin fecha de fin</td><td><span class="badge success">Activa</span></td></tr>
-          <tr><td><b style="font-weight:500">Envío gratis Bogotá</b><div class="muted" style="font-size:12.5px">Envío gratis en pedidos desde $200.000 en Bogotá D.C.</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Hasta 30 sep</td><td><span class="badge success">Activa</span></td></tr>
-          <tr><td><b style="font-weight:500">Bienvenida</b><div class="muted" style="font-size:12.5px">$15.000 de descuento en tu primera compra</div></td><td>Con código</td><td><span class="mono">SAVAGE15</span></td><td class="tnum">Sin fecha de fin</td><td><span class="badge success">Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Lleva 2, 20 % off</b><div class="muted" style="font-size:12.5px">20 % de descuento al comprar 2 o más productos</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Sin fecha de fin</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Lleva 3, 30 % off</b><div class="muted" style="font-size:12.5px">30 % de descuento al comprar 3 o más productos</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Sin fecha de fin</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Envío gratis Bogotá</b><div class="muted" style="font-size:12.5px">Envío gratis en pedidos desde $200.000 en Bogotá D.C.</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Hasta 30 sep</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Bienvenida</b><div class="muted" style="font-size:12.5px">$15.000 de descuento en tu primera compra</div></td><td>Con código</td><td><span class="mono">SAVAGE15</span></td><td class="tnum">Sin fecha de fin</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
           <tr><td><b style="font-weight:500">Drop 08 · preventa</b><div class="muted" style="font-size:12.5px">10 % en la colección Drop 08</div></td><td>Con código</td><td><span class="mono">DROP08</span></td><td class="tnum">15 – 22 sep</td><td><span class="badge muted">Programada</span></td></tr>
         </tbody>
       </table>
@@ -381,7 +377,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
   <div class="crumb">Configuración · Integraciones · <span>Shopify</span></div>
   <div class="header">
     <div>
-      <h1>Savage Colombia <span class="badge success"><span class="dot ok"></span>Conectada</span></h1>
+      <h1>Savage Colombia <span class="badge muted"><span class="dot ok"></span>Conectada</span></h1>
       <p class="muted mono">tribal-store-4813.myshopify.com · API 2026-07</p>
     </div>
     <div class="right"><button class="btn outline pill sm">Rotar credenciales</button></div>
@@ -403,9 +399,9 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
     <h2>Capacidades</h2>
     <p class="lead muted">Lo que esta conexión puede hacer con los permisos que tiene hoy.</p>
     <div class="caps">
-      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Catálogo y variantes</div><div class="why">158 productos espejados · gobierna Shopify</div></div><span class="badge success">Activa</span></div>
-      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Inventario</div><div class="why">Ubicación contable: Sucursal de la tienda</div></div><span class="badge success">Activa</span></div>
-      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Pedidos</div><div class="why">Draft Order + link de pago · gobierna Shopify</div></div><span class="badge success">Activa</span></div>
+      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Catálogo y variantes</div><div class="why">158 productos espejados · gobierna Shopify</div></div><span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Inventario</div><div class="why">Ubicación contable: Sucursal de la tienda</div></div><span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Pedidos</div><div class="why">Draft Order + link de pago · gobierna Shopify</div></div><span class="badge muted"><span class="dot ok"></span>Activa</span></div>
       <div class="cap off"><svg><use href="#i-circle"/></svg><div><div class="name">Envíos</div><div class="why">Requiere el permiso <code class="kbd">read_shipping</code></div></div><span class="badge amber">Falta permiso</span></div>
       <div class="cap off"><svg><use href="#i-circle"/></svg><div><div class="name">Promociones</div><div class="why">Requiere el permiso <code class="kbd">read_discounts</code></div></div><span class="badge amber">Falta permiso</span></div>
     </div>
@@ -435,7 +431,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
   <div class="crumb">Pedidos · <span class="tnum">#1042</span></div>
   <div class="header">
     <div>
-      <h1><span class="tnum">Pedido #1042</span> <span class="badge">Pagado</span> <span class="badge shopify">Shopify</span></h1>
+      <h1><span class="tnum">Pedido #1042</span> <span class="badge muted"><span class="dot ok"></span>Pagado</span> <span class="badge shopify">Shopify</span></h1>
       <p class="muted">Laura Gómez · WhatsApp · hoy 11:24</p>
     </div>
     <div class="right"><button class="btn outline pill sm">Marcar enviado</button></div>
@@ -447,19 +443,17 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
         <h2>Productos</h2>
         <div class="lines" style="margin-top:8px">
           <div class="line"><div class="thumb"></div><div><div class="name">Jort Baggy Negro · Talla 30</div><div class="sku mono">JORT-BAGGY-NEGRO-30</div></div><div class="tnum">2 × $179.900</div></div>
-          <div class="line"><div class="thumb"></div><div><div class="name">Camiseta Oversize Blanca · Talla M</div><div class="sku mono">CAM-OVER-BLANCA-M</div></div><div class="tnum">1 × $89.900</div></div>
         </div>
       </div>
 
       <div class="card">
         <h2>Totales</h2>
         <div class="totals" style="margin-top:12px">
-          <div class="trow"><span class="lbl">Subtotal</span><span class="tnum">$449.700</span></div>
+          <div class="trow"><span class="lbl">Subtotal</span><span class="tnum">$359.800</span></div>
           <div class="trow"><span class="lbl">Descuento <span class="badge shopify">Lleva 2, 20 % off</span></span><span class="tnum neg">− $71.960</span></div>
-          <div class="trow"><span class="lbl">Envío <span class="muted" style="font-size:12.5px">Envío estándar · Medellín</span> <span class="badge success">Cotizado</span></span><span class="tnum">$12.000</span></div>
-          <div class="trow"><span class="lbl">Descuento de envío</span><span class="tnum neg">− $0</span></div>
-          <div class="trow total"><span>Total</span><span class="tnum">$389.740</span></div>
-          <div class="trow ext"><span class="lbl">Cobrado en Shopify <span class="badge success"><svg style="width:12px;height:12px"><use href="#i-check"/></svg>Coincide</span></span><span class="tnum">$389.740</span></div>
+          <div class="trow"><span class="lbl">Envío <span class="muted" style="font-size:12.5px">Envío estándar · Medellín</span> <span class="badge muted"><span class="dot ok"></span>Cotizado</span></span><span class="tnum">$12.000</span></div>
+          <div class="trow total"><span>Total</span><span class="tnum">$299.840</span></div>
+          <div class="trow ext"><span class="lbl">Cobrado en Shopify <span class="badge muted"><svg style="width:12px;height:12px"><use href="#i-check"/></svg>Coincide</span></span><span class="tnum">$299.840</span></div>
         </div>
       </div>
     </div>
@@ -500,7 +494,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
 
   <div class="card" style="border-style:dashed">
     <h2 style="font-size:15px">Variante: el estimado no coincidió con lo cobrado</h2>
-    <p class="lead muted">Cuando Shopify cobra distinto (tarifa de transportadora, promo aplicada al pagar), el rail muestra las dos cifras y no fuerza el desglose.</p>
+    <p class="lead muted">Otro pedido (#1043, Pasto). Cuando Shopify cobra distinto (tarifa de transportadora, promo aplicada al pagar), el rail muestra las dos cifras y no fuerza el desglose. La fila «Descuento de envío» solo aparece cuando existe.</p>
     <div class="totals" style="max-width:520px">
       <div class="trow"><span class="lbl">Envío <span class="muted" style="font-size:12.5px">Servientrega · Pasto</span> <span class="badge amber">Estimado</span></span><span class="tnum">$18.000</span></div>
       <div class="trow total"><span>Total</span><span class="tnum">$107.900</span></div>
@@ -526,7 +520,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
     <div class="item governed">
       <div class="ic"><svg><use href="#i-percent"/></svg></div>
       <div>
-        <div class="title">Lleva 2, 20 % off <span class="badge shopify">Shopify</span> <span class="badge success">Activa</span></div>
+        <div class="title">Lleva 2, 20 % off <span class="badge shopify">Shopify</span> <span class="badge muted"><span class="dot ok"></span>Activa</span></div>
         <div class="sub muted">20 % de descuento al comprar 2 o más productos · automática</div>
         <div class="meta"><span class="lockrow"><svg><use href="#i-lock"/></svg>Se edita en Shopify</span><span class="muted">·</span><span class="muted">Usada en 14 pedidos este mes</span></div>
       </div>
@@ -535,7 +529,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
     <div class="item governed">
       <div class="ic"><svg><use href="#i-tag"/></svg></div>
       <div>
-        <div class="title">Bienvenida <span class="badge shopify">Shopify</span> <span class="badge success">Activa</span></div>
+        <div class="title">Bienvenida <span class="badge shopify">Shopify</span> <span class="badge muted"><span class="dot ok"></span>Activa</span></div>
         <div class="sub muted">$15.000 de descuento en tu primera compra · código <span class="mono">SAVAGE15</span></div>
         <div class="meta"><span class="lockrow"><svg><use href="#i-lock"/></svg>Se edita en Shopify</span><span class="muted">·</span><span class="muted">3 redenciones</span></div>
       </div>
@@ -544,7 +538,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
     <div class="item">
       <div class="ic"><svg><use href="#i-gift"/></svg></div>
       <div>
-        <div class="title">Regalo por recuperación <span class="badge success">Activa</span></div>
+        <div class="title">Regalo por recuperación <span class="badge muted"><span class="dot ok"></span>Activa</span></div>
         <div class="sub muted">Producto de regalo: Medias Savage Logo · cupón por contacto · vence en 48 h</div>
         <div class="meta"><span class="muted">Creada en axi · usada por la automatización «Carrito abandonado»</span><span class="badge amber">No aplica a pedidos cobrados en Shopify</span></div>
       </div>
@@ -577,7 +571,6 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
         <div class="rates">
           <div class="rate"><div><div class="n">Domicilio en Bogotá</div><div class="c">Pedidos hasta $149.999</div></div><span class="p tnum">$8.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
           <div class="rate"><div><div class="n">Domicilio en Bogotá</div><div class="c">Pedidos desde $150.000</div></div><span class="p tnum">Gratis</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
-          <div class="rate"><div><div class="n">Mismo día</div><div class="c">Pedidos antes de las 2 p. m.</div></div><span class="p tnum">$15.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
         </div>
         <div class="addrate"><button class="btn ghost sm"><svg><use href="#i-plus"/></svg>Agregar tarifa</button></div>
       </div>
@@ -594,7 +587,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
         <header><div class="t"><svg style="width:16px;height:16px"><use href="#i-pin"/></svg>Resto del país <span class="chip more">Los demás departamentos</span></div><div class="acts" style="display:flex;gap:4px"><button class="iconbtn" aria-label="Editar zona"><svg><use href="#i-pencil"/></svg></button></div></header>
         <div class="rates">
           <div class="rate"><div><div class="n">Envío nacional</div><div class="c">Sin condición</div></div><span class="p tnum">$18.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
-          <div class="rate"><div><div class="n">Zonas apartadas</div><div class="c">Amazonas, Guainía, Vaupés: el costo se confirma con el cliente</div></div><span class="p live">Se confirma al cerrar</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
+          <div class="rate"><div><div class="n">Zonas apartadas</div><div class="c">Amazonas, Guainía, Vaupés y Vichada</div></div><span class="p tnum">$28.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
         </div>
         <div class="addrate"><button class="btn ghost sm"><svg><use href="#i-plus"/></svg>Agregar tarifa</button></div>
       </div>
@@ -606,7 +599,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
         <div class="stack" style="gap:0;margin-top:8px">
           <div class="switchrow"><div><div style="font-weight:500">Cotizar envíos por chat</div><div class="muted" style="font-size:12.5px">La IA pregunta ciudad y departamento y dice el valor del envío.</div></div><button class="switch" role="switch" aria-checked="true" aria-label="Cotizar envíos por chat"></button></div>
           <div class="switchrow"><div><div style="font-weight:500">Pedir la dirección antes de cerrar</div><div class="muted" style="font-size:12.5px">Sin dirección completa no se confirma el pedido.</div></div><button class="switch" role="switch" aria-checked="true" aria-label="Pedir la dirección antes de cerrar"></button></div>
-          <div class="switchrow"><div><div style="font-weight:500">Si hay varias tarifas</div><div class="muted" style="font-size:12.5px">Aplica la más barata; ofrece las otras solo si el cliente pregunta.</div></div><select class="select" style="width:190px;height:36px"><option>La más barata</option><option>La primera de la zona</option></select></div>
+          <div class="switchrow"><div><div style="font-weight:500">Si hay varias tarifas</div><div class="muted" style="font-size:12.5px">La IA aplica la más barata y ofrece las otras solo si el cliente pregunta.</div></div><span class="badge muted">Regla fija</span></div>
         </div>
         <div class="actions"><button class="btn">Guardar</button></div>
       </div>
@@ -633,7 +626,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
     <ul>
       <li>Las zonas se definen por departamento (lista cerrada de 33); la ciudad no decide.</li>
       <li>Tarifas con condición por monto del pedido; «gratis desde» son dos tarifas.</li>
-      <li>«Se confirma al cerrar» es una tarifa sin precio: la IA no inventa cifras.</li>
+      <li>Toda tarifa local tiene precio; «se confirma al cerrar» solo existe para las de transportadora que trae Shopify.</li>
     </ul>
   </div>
 </section>
@@ -685,7 +678,7 @@ tbody tr.zone td { background: var(--secondary); font-weight: 500; }
   <div class="chat" aria-label="Conversación de ejemplo">
     <div class="msg in">Hola! quiero 2 jorts baggy negros talla 30 <span class="t">11:23</span></div>
     <div class="tool">quote_order → subtotal $359.800 · envío por definir</div>
-    <div class="msg out">¡Listo, Laura! Dos Jort Baggy Negro talla 30 [sku JORT-BAGGY-NEGRO-30] quedan en $359.800. Y como llevas 2, aplica el 20 % de descuento de la tienda al pagar 🙌
+    <div class="msg out">¡Listo, Laura! Dos Jort Baggy Negro talla 30 quedan en $359.800. Y como llevas 2, aplica el 20 % de descuento de la tienda al pagar 🙌
 
 ¿Te lo enviamos a domicilio o lo recoges en la tienda? Si es a domicilio, dime tu ciudad y departamento para calcular el envío. <span class="t">11:23</span></div>
     <div class="msg in">a domicilio, medellin <span class="t">11:25</span></div>
@@ -699,14 +692,14 @@ El envío estándar a Medellín es de $12.000 (se confirma al cerrar el pedido).
 • Envío: $12.000
 El descuento del 20 % se aplica al pagar. ¿Confirmamos el pedido? <span class="t">11:27</span></div>
     <div class="msg in">dale <span class="t">11:30</span></div>
-    <div class="tool">create_order → draftOrderCalculate · total $299.840 · cotizado</div>
+    <div class="tool">create_order → draftOrderCalculate · subtotal $359.800 · descuentos −$71.960 («Lleva 2, 20 % off») · envío $12.000 · total $299.840 · cotizado</div>
     <div class="msg out">¡Pedido #1042 confirmado! 🎉
 • 2 × Jort Baggy Negro T30 — $359.800
 • Descuento «Lleva 2, 20 % off» — −$71.960
 • Envío estándar a Medellín — $12.000
 Total: $299.840
 
-Te dejo el link de pago: pay.savage.co/7f3a. Cuando pagues, te confirmo el despacho. <span class="t">11:31</span></div>
+Te dejo el link de pago: savagecolombia.com/…/invoices/7f3a Cuando pagues, te confirmo el despacho. <span class="t">11:31</span></div>
   </div>
 
   <div class="notes">
