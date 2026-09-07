@@ -212,4 +212,21 @@ describe("EmbeddedSignupButton", () => {
     expect(state.reset).toHaveBeenCalledTimes(1);
     expect(state.start).toHaveBeenCalledTimes(1);
   });
+
+  it("en coexistencia la pista de lentitud explica POR QUÉ tarda: celular e historial", () => {
+    state = { ...phaseState("popup_open"), slow: true };
+    render(
+      <EmbeddedSignupButton
+        provider={channelProvider("whatsapp_cloud")}
+        mode="coexistence"
+        onConnected={jest.fn()}
+        onManualCreated={jest.fn()}
+      />,
+    );
+
+    // Es la frase que el dueño lee a los tres minutos del incidente
+    expect(screen.getByText(/confirmar desde el celular/i)).toBeInTheDocument();
+    expect(screen.getByText(/compartes el historial/i)).toBeInTheDocument();
+    expect(screen.getByText(/el resultado llega solo/i)).toBeInTheDocument();
+  });
 });

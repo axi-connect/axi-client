@@ -96,4 +96,24 @@ describe("PageSignupButton", () => {
     expect(screen.getByText(/elige una página/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Conectar Instagram/i })).toBeNull();
   });
+
+  it("cuando el popup tarda, avisa sin culpar y «Volver a intentar» hace reset Y start", () => {
+    state = { ...phaseState("popup_open"), slow: true };
+    render(
+      <PageSignupButton
+        provider={channelProvider("instagram_dm")}
+        onConnected={jest.fn()}
+        onManualCreated={jest.fn()}
+      />,
+    );
+
+    // El botón de páginas dice «Conectando…» y sigue bloqueado: el intento vive
+    expect(screen.getByRole("button", { name: /Conectando/i })).toBeDisabled();
+    expect(screen.getByText(/tardando más de lo habitual/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No recibimos la autorización de Meta/i)).toBeNull();
+
+    screen.getByRole("button", { name: /Volver a intentar/i }).click();
+    expect(state.reset).toHaveBeenCalledTimes(1);
+    expect(state.start).toHaveBeenCalledTimes(1);
+  });
 });

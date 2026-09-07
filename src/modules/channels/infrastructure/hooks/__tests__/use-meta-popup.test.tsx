@@ -124,3 +124,52 @@ describe("useMetaPopup — la configuración que no se pudo LEER no es capacidad
     expect(loadFacebookSdk).not.toHaveBeenCalled();
   });
 });
+
+describe("useMetaPopup — el vigilante de lentitud", () => {
+  async function readyPopup() {
+    getMetaSignupConfig.mockResolvedValue(config("whatsapp"));
+    const sdk = { login };
+    loadFacebookSdk.mockResolvedValue(sdk);
+    getFacebookSdk.mockReturnValue(sdk);
+    const { result } = renderHook(() => useMetaPopup("whatsapp"));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    return result;
+  }
+
+  it("a los tres minutos emite `slow`, nunca `cancelled`, y el intento sigue vivo", async () => {
+    const onResult = jest.fn();
+    const result = await readyPopup();
+
+    jest.useFakeTimers();
+    act(() => result.current.open({ onResult }));
+    act(() => {
+      jest.advanceTimersByTime(180_000);
+    });
+
+    expect(onResult).toHaveBeenCalledTimes(1);
+    expect(onResult).toHaveBeenCalledWith({ outcome: "slow" });
+
+    // El callback de FB.login que llegue después sigue entregando el code
+    const callback = login.mock.calls[login.mock.calls.length - 1]?.[0] as
+      | ((response: FbLoginResponse) => void)
+      | undefined;
+    act(() => callback?.({ authResponse: { code: "AQD-tarde" } }));
+    jest.useRealTimers();
+
+    expect(onResult).toHaveBeenLastCalledWith({ outcome: "code", code: "AQD-tarde" });
+  });
+
+  it("antes de los tres minutos no emite nada por su cuenta", async () => {
+    const onResult = jest.fn();
+    const result = await readyPopup();
+
+    jest.useFakeTimers();
+    act(() => result.current.open({ onResult }));
+    act(() => {
+      jest.advanceTimersByTime(179_000);
+    });
+    jest.useRealTimers();
+
+    expect(onResult).not.toHaveBeenCalled();
+  });
+});

@@ -120,8 +120,8 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
           fail(SIGNUP_ERRORS.config_not_applied);
           return;
         }
-        // Por la guarda: el watchdog de abandono dispara hasta 180 s después,
-        // con el componente posiblemente desmontado
+        // Por la guarda: el callback de FB.login puede llegar con el componente
+        // ya desmontado (el usuario navegó con el popup abierto)
         if (result.outcome === "blocked") {
           if (mountedRef.current) setPhase("popup_blocked");
           return;

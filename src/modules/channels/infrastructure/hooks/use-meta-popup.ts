@@ -80,6 +80,14 @@ export function logSignup(step: string, fields: Record<string, unknown> = {}): v
  * descartaba: el usuario terminaba todo y veía «Cerraste la ventana».
  */
 const SLOW_AFTER_MS = 180_000;
+/*
+ * Consecuencia deliberada: `popup_open` pasa a ser una fase SIN cota superior.
+ * Un popup cerrado de una forma que no emite ni CANCEL ni callback de FB.login
+ * deja la UI esperando, con el aviso de lentitud y «Volver a intentar» como
+ * único cierre. Es el intercambio correcto —un «cancelado» falso es peor que
+ * una espera abierta, y el incidente lo demostró—, pero nada puede depender de
+ * que esa fase se resuelva sola.
+ */
 /** Un humano no autoriza ni cancela en menos de esto: por debajo, fue el navegador. */
 const POPUP_BLOCKED_THRESHOLD_MS = 600;
 
