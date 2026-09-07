@@ -15,6 +15,8 @@ export type IntegrationDetailTabId =
   | "ubicaciones"
   | "categorias"
   | "pedidos"
+  | "envios"
+  | "promociones"
   | "contactos"
   | "historial";
 
@@ -24,6 +26,9 @@ const CAPABILITY_TAB: Partial<Record<IntegrationCapabilityId, IntegrationDetailT
   inventory: "ubicaciones",
   catalog: "categorias",
   orders: "pedidos",
+  // Plan envíos+promos: espejos de solo lectura; existen solo con su scope.
+  shipping: "envios",
+  discounts: "promociones",
   contacts: "contactos",
 };
 
@@ -32,6 +37,8 @@ const CANONICAL_ORDER: readonly IntegrationDetailTabId[] = [
   "ubicaciones",
   "categorias",
   "pedidos",
+  "envios",
+  "promociones",
   "contactos",
 ];
 
