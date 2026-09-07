@@ -24,6 +24,14 @@ function dtoWith(capabilities: string[]): IntegrationDTO {
     last_synced_at: null,
     connected_at: null,
     counts: { locations_counting: 0, collections_selected: 0 },
+    mirrors: {
+      shipping_synced_at: null,
+      shipping_last_error: null,
+      discounts_synced_at: null,
+      discounts_last_error: null,
+    },
+    missing_optional_scopes: [],
+    taxes_included: null,
   };
 }
 
