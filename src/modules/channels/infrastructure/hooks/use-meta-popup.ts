@@ -7,7 +7,12 @@ import type {
   MetaSignupConfigDTO,
   SignupError,
 } from "@/modules/channels/domain/meta-signup";
-import { FacebookSdkError, SIGNUP_ERRORS } from "@/modules/channels/domain/meta-signup";
+import {
+  FacebookSdkError,
+  SIGNUP_ERRORS,
+  featureTypeFor,
+  type MetaOnboardingMode,
+} from "@/modules/channels/domain/meta-signup";
 import {
   getFacebookSdk,
   loadFacebookSdk,
@@ -113,6 +118,8 @@ export type UseMetaPopupResult = {
     /** Corre justo antes de `FB.login`: es donde registrar listeners. */
     beforeOpen?: () => void;
     onResult: (result: MetaPopupResult) => void;
+    /** Solo WhatsApp (F1): `coexistence` abre el popup para un número que ya está en la app. */
+    mode?: MetaOnboardingMode;
   }) => void;
   /** Corta el abandono del intento en curso. Lo llama el flujo al resolver. */
   clearWatchdog: () => void;
@@ -212,7 +219,11 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
   }, []);
 
   const open = useCallback(
-    (handlers: { beforeOpen?: () => void; onResult: (result: MetaPopupResult) => void }) => {
+    (handlers: {
+      beforeOpen?: () => void;
+      onResult: (result: MetaPopupResult) => void;
+      mode?: MetaOnboardingMode;
+    }) => {
       // Se lee AQUÍ, no de una referencia guardada: ver `getFacebookSdk`
       const sdk = getFacebookSdk();
       const configId = config?.config_id ?? null;
@@ -304,7 +315,15 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         // `sessionInfoVersion: "3"` es lo que garantiza que el `message` llegue
         // en JSON en vez de en el formato antiguo
         ...(product === "whatsapp"
-          ? { extras: { setup: {}, featureType: "", sessionInfoVersion: "3" } }
+          ? {
+              extras: {
+                setup: {},
+                // F1: `whatsapp_business_app_onboarding` hace que Meta ofrezca
+                // conectar el número que YA está en la app del celular
+                featureType: featureTypeFor(handlers.mode),
+                sessionInfoVersion: "3",
+              },
+            }
           : {}),
       };
 

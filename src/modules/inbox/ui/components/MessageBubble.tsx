@@ -1,11 +1,12 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
-import { AlertCircle, Bot, Check, CheckCheck, Clock, RotateCw, User } from "lucide-react"
+import { AlertCircle, Bot, Check, CheckCheck, Clock, RotateCw, Smartphone, User } from "lucide-react"
 import {
   extractInteractivePayload,
   extractInteractiveReply,
   isMediaContentType,
+  sentFromBusinessApp,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
 import { InteractiveMessage, InteractiveReplyChip } from "./interactive"
@@ -110,7 +111,16 @@ export function MessageBubble({
           )}
         >
           {message.sender_type === "ai_agent" && <Bot className="size-3" aria-label="Enviado por IA" />}
-          {message.sender_type === "user" && <User className="size-3" aria-label="Enviado por operador" />}
+          {message.sender_type === "user" &&
+            (sentFromBusinessApp(message.payload) ? (
+              // Coexistencia (F2): salió del celular del negocio, no de Axi
+              <span className="inline-flex items-center gap-0.5" title="Enviado desde el celular">
+                <Smartphone className="size-3" aria-label="Enviado desde el celular" />
+                <span className="font-medium">Celular</span>
+              </span>
+            ) : (
+              <User className="size-3" aria-label="Enviado por operador" />
+            ))}
           <span>{new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
           <StatusIcon message={message} />
           {failed && onRetry && (

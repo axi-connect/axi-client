@@ -39,6 +39,27 @@ jest.mock("../ProviderGallery", () => {
     ),
   }
 })
+// El paso «Tu número» (F1) habla con la configuración del popup: aquí se dobla
+// por un botón que elige el camino estándar y sigue.
+jest.mock("../WhatsAppNumberModeStep", () => ({
+  WhatsAppNumberModeStep: ({
+    onChange,
+    onContinue,
+  }: {
+    onChange: (mode: string) => void
+    onContinue: () => void
+  }) => (
+    <button
+      type="button"
+      onClick={() => {
+        onChange("standard")
+        onContinue()
+      }}
+    >
+      Número listo
+    </button>
+  ),
+}))
 jest.mock("../PrerequisitesChecklist", () => ({
   PrerequisitesChecklist: ({ onContinue }: { onContinue: () => void }) => (
     <button type="button" onClick={onContinue}>
@@ -70,6 +91,11 @@ jest.mock("../ConnectSuccess", () => ({
 async function walkToSuccess() {
   fireEvent.click(screen.getByRole("button", { name: /elegir whatsapp/i }))
   fireEvent.click(screen.getByRole("button", { name: /^continuar$/i }))
+  // F1: WhatsApp pregunta primero si el número ya está en la app del celular
+  expect(
+    screen.getByRole("heading", { name: /ese número ya se usa en la app whatsapp business/i }),
+  ).toBeInTheDocument()
+  fireEvent.click(screen.getByRole("button", { name: /número listo/i }))
   fireEvent.click(screen.getByRole("button", { name: /requisitos listos/i }))
   fireEvent.click(screen.getByRole("button", { name: /autorizar en meta/i }))
 }
@@ -77,7 +103,7 @@ async function walkToSuccess() {
 describe("ConnectChannelFlow", () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it("recorre los cuatro pasos y avisa del canal conectado a quien lo embebe", async () => {
+  it("recorre los cinco pasos de WhatsApp y avisa del canal conectado a quien lo embebe", async () => {
     const onConnected = jest.fn()
     render(<ConnectChannelFlow embedded onConnected={onConnected} onManualCreated={jest.fn()} />)
 
@@ -94,6 +120,8 @@ describe("ConnectChannelFlow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /elegir instagram/i }))
     fireEvent.click(screen.getByRole("button", { name: /^continuar$/i }))
+    // Instagram no tiene dos caminos: del canal se pasa directo a los requisitos
+    expect(screen.queryByRole("button", { name: /número listo/i })).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: /requisitos listos/i }))
 
     expect(screen.getByText(/botón de páginas: instagram/i)).toBeInTheDocument()
@@ -117,8 +145,13 @@ describe("ConnectChannelFlow", () => {
   it("con `only` de un solo proveedor se salta el paso «Canal»: elegir entre uno no informa de nada", () => {
     render(<ConnectChannelFlow embedded only={["whatsapp_cloud"]} onManualCreated={jest.fn()} />)
 
-    expect(screen.getByRole("heading", { level: 2, name: /antes de empezar/i })).toBeInTheDocument()
+    // Arranca en el primer paso REAL de WhatsApp: «Tu número» (F1)
+    expect(
+      screen.getByRole("heading", { level: 2, name: /ese número ya se usa en la app/i }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /elegir/i })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: /número listo/i }))
+    expect(screen.getByRole("heading", { level: 2, name: /antes de empezar/i })).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: /requisitos listos/i }))
     expect(screen.getByRole("heading", { level: 2, name: /conecta whatsapp/i })).toBeInTheDocument()
   })

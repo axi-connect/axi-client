@@ -7,10 +7,12 @@ import { errorMessage } from "@/core/lib/error-messages";
 import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import {
   isTrustedMetaOrigin,
+  isWaSignupFinish,
   parseWaSignupMessage,
   SIGNUP_ERRORS,
   type EmbeddedSignupPhase,
   type MetaEmbeddedSignupDTO,
+  type MetaOnboardingMode,
   type MetaOnboardingStatus,
   type MetaProduct,
   type MetaSignupConfigDTO,
@@ -50,6 +52,11 @@ export type EmbeddedSignupError = MetaPopupError;
 
 export type UseEmbeddedSignupOptions = {
   product: MetaProduct;
+  /**
+   * F1, solo WhatsApp: `coexistence` = el número sigue en la app del celular.
+   * Decide el `featureType` del popup y viaja al backend como `onboarding_mode`.
+   */
+  mode?: MetaOnboardingMode;
   /** Nombre del canal. El backend lo acepta en el alta: no hace falta PATCH. */
   channelName?: string;
   /**
@@ -79,6 +86,7 @@ export type UseEmbeddedSignupResult = {
 
 export function useEmbeddedSignup({
   product,
+  mode,
   channelName,
   onConnected,
 }: UseEmbeddedSignupOptions): UseEmbeddedSignupResult {
@@ -157,6 +165,8 @@ export function useEmbeddedSignup({
       code,
       waba_id: session.waba_id,
       phone_number_id: session.phone_number_id,
+      // F1: `standard` salvo que el paso «Tu número» dijera lo contrario
+      onboarding_mode: mode ?? "standard",
       ...(session.business_id !== undefined ? { business_id: session.business_id } : {}),
       ...(channelName !== undefined && channelName.trim() !== ""
         ? { name: channelName.trim() }
@@ -191,7 +201,7 @@ export function useEmbeddedSignup({
       setPhase(failureCode === "channels/meta_signup_disabled" ? "unavailable" : "error");
       setError({ code: failureCode, message: errorMessage(err, "No se pudo conectar el canal") });
     }
-  }, [channelName, clearAttempt, mountedRef, onConnected, setError, setPhase, upsertChannel]);
+  }, [channelName, clearAttempt, mode, mountedRef, onConnected, setError, setPhase, upsertChannel]);
 
   /**
    * Convergencia de las dos fuentes asíncronas: se llama desde AMBAS y solo
@@ -216,6 +226,7 @@ export function useEmbeddedSignup({
     setPhase("popup_open");
 
     openPopup({
+      mode,
       // El listener va ANTES de FB.login: el popup puede mandar su FINISH antes
       // de que el callback del SDK dispare, y ese mensaje no se puede perder.
       beforeOpen: () => {
@@ -224,7 +235,9 @@ export function useEmbeddedSignup({
           const message = parseWaSignupMessage(event.data);
           if (message === null) return;
 
-          if (message.event === "FINISH") {
+          // Dos eventos de éxito: el estándar y el del número que ya está en la
+          // app del celular (F1). Los dos traen los mismos identificadores.
+          if (isWaSignupFinish(message.event)) {
             const data = message.data ?? {};
             if (typeof data.phone_number_id === "string" && typeof data.waba_id === "string") {
               sessionRef.current = {
@@ -296,7 +309,7 @@ export function useEmbeddedSignup({
         tryComplete();
       },
     });
-  }, [clearAttempt, openPopup, setError, setPhase, settle, submit, tryComplete]);
+  }, [clearAttempt, mode, openPopup, setError, setPhase, settle, submit, tryComplete]);
 
   // -------------------------------------------------------------- PIN (409)
   const submitPin = useCallback(

@@ -17,10 +17,11 @@ import type { ChannelDTO } from "@/modules/channels/domain/channel";
 import type { ChannelProvider } from "@/modules/channels/domain/channel-providers";
 import {
   IN_PROGRESS_PHASES,
-  SIGNUP_STEPS,
   TERMINAL_PHASES,
   signupStepIndex,
+  signupSteps,
   type EmbeddedSignupPhase,
+  type MetaOnboardingMode,
   type MetaProduct,
 } from "@/modules/channels/domain/meta-signup";
 import {
@@ -67,6 +68,7 @@ export function focusAfterTerminal(
 
 export function EmbeddedSignupButton({
   provider,
+  mode,
   channelName,
   onConnected,
   onManualCreated,
@@ -74,6 +76,8 @@ export function EmbeddedSignupButton({
   intro,
 }: {
   provider: ChannelProvider;
+  /** F1, solo WhatsApp: `coexistence` = el número sigue en la app del celular. */
+  mode?: MetaOnboardingMode;
   /**
    * Solo lo manda la RECONEXIÓN, para conservar el nombre que el canal ya tiene.
    * El wizard no lo pide: el alta nombra el canal y el paso 4 permite renombrar.
@@ -94,7 +98,7 @@ export function EmbeddedSignupButton({
   const alertRef = useRef<HTMLDivElement>(null);
   const product: MetaProduct = provider.meta_product ?? "whatsapp";
   const { phase, error, channel, start, submitPin, submittingPin, reset, retryConfig } =
-    useEmbeddedSignup({ product, channelName, onConnected });
+    useEmbeddedSignup({ product, mode, channelName, onConnected });
 
   useEffect(() => {
     focusAfterTerminal(phase, error, { button: buttonRef.current, alert: alertRef.current });
@@ -120,7 +124,7 @@ export function EmbeddedSignupButton({
         {/* Región viva para lo que está EN CURSO: `polite` no interrumpe al
             lector de pantalla en mitad de una frase */}
         <div role="status" aria-live="polite" className="space-y-4">
-          {IN_PROGRESS_PHASES.includes(phase) && renderProgress(phase, product)}
+          {IN_PROGRESS_PHASES.includes(phase) && renderProgress(phase, product, mode)}
         </div>
 
         {/* Y `assertive` para lo terminal: si el intento se cayó, hay que
@@ -243,7 +247,11 @@ function renderAction({
   );
 }
 
-export function renderProgress(phase: EmbeddedSignupPhase, product: MetaProduct) {
+export function renderProgress(
+  phase: EmbeddedSignupPhase,
+  product: MetaProduct,
+  mode?: MetaOnboardingMode,
+) {
   if (phase === "preparing") {
     return (
       <p className="text-xs text-muted-foreground">
@@ -255,7 +263,7 @@ export function renderProgress(phase: EmbeddedSignupPhase, product: MetaProduct)
   // Saber cuánto falta reduce el abandono: son los pasos que verá DENTRO del
   // popup, no los nuestros — y son distintos por producto (en Instagram y
   // Messenger no hay número ni SMS; ver `SIGNUP_STEPS`)
-  const steps = SIGNUP_STEPS[product];
+  const steps = signupSteps(product, mode);
   const active = signupStepIndex(product, phase);
 
   return (

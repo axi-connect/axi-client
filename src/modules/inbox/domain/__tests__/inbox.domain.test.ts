@@ -13,6 +13,7 @@ import {
   waitingSince,
   type ConversationDTO,
   type UiMessage,
+  sentFromBusinessApp,
 } from "../inbox"
 
 describe("parsePreview (tokens de media del backend)", () => {
@@ -450,3 +451,18 @@ describe("extractInteractiveReply", () => {
     expect(extractInteractiveReply(payload)).toBeNull()
   })
 })
+
+describe("sentFromBusinessApp (coexistencia F2)", () => {
+  it("reconoce el saliente que el dueño escribió desde el celular", () => {
+    expect(sentFromBusinessApp({ origin: "business_app" })).toBe(true);
+    expect(sentFromBusinessApp({ origin: "business_app", media: {} })).toBe(true);
+  });
+
+  it("todo lo demás es un saliente normal", () => {
+    expect(sentFromBusinessApp(null)).toBe(false);
+    expect(sentFromBusinessApp(undefined)).toBe(false);
+    expect(sentFromBusinessApp({})).toBe(false);
+    expect(sentFromBusinessApp({ origin: "api" })).toBe(false);
+    expect(sentFromBusinessApp("business_app")).toBe(false);
+  });
+});

@@ -10,6 +10,8 @@ import {
   readLastCheck,
   readMessagingLimit,
   readMetaAccess,
+  readCoexistenceNotice,
+  readLastEcho,
   readOnboardingNotice,
   readQualityRating,
   type HealthReading,
@@ -58,6 +60,9 @@ export function ChannelHealthCard({
   const limit = readMessagingLimit(channel.messaging_limit);
   const access = readMetaAccess(channel);
   const notice = readOnboardingNotice(channel.onboarding?.status);
+  // Coexistencia (F3): qué le pasa al número en el celular
+  const coexistenceNotice = readCoexistenceNotice(channel);
+  const lastEcho = readLastEcho(channel);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -79,6 +84,19 @@ export function ChannelHealthCard({
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-semibold">{notice.title}</p>
             <p className="text-sm text-muted-foreground">{notice.detail}</p>
+          </div>
+        </div>
+      )}
+
+      {coexistenceNotice !== null && (
+        <div
+          role="status"
+          className="flex gap-3 rounded-md border border-warning/40 bg-warning/[0.09] p-3.5"
+        >
+          <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold">{coexistenceNotice.title}</p>
+            <p className="text-sm text-muted-foreground">{coexistenceNotice.detail}</p>
           </div>
         </div>
       )}
@@ -110,6 +128,7 @@ export function ChannelHealthCard({
         {isCloud && <Reading label="Calidad del número" reading={quality} />}
         {isCloud && <Reading label="Puedes iniciar" reading={limit} />}
         <Reading label="Acceso de Meta" reading={access} />
+        {lastEcho !== null && <Reading label="Último mensaje desde el celular" reading={lastEcho} />}
         <Reading
           label="Última comprobación"
           reading={{ label: readLastCheck(channel.last_health_check_at), tone: "neutral" }}

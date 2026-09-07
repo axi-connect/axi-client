@@ -179,6 +179,17 @@ export function extractInteractivePayload(payload: unknown): InteractivePayload 
   };
 }
 
+/**
+ * Coexistencia (F2): un saliente con `payload.origin === "business_app"` lo
+ * escribió el dueño desde la app WhatsApp Business del celular, no desde Axi.
+ * La bandeja lo distingue porque cambia lo que significa: no hubo operador en
+ * la pantalla y la IA se apartó sola.
+ */
+export function sentFromBusinessApp(payload: unknown): boolean {
+  if (typeof payload !== "object" || payload === null) return false;
+  return (payload as { origin?: unknown }).origin === "business_app";
+}
+
 /** Lee `payload.interactive_reply` de un mensaje entrante. */
 export function extractInteractiveReply(payload: unknown): InteractiveReply | null {
   if (typeof payload !== "object" || payload === null) return null;

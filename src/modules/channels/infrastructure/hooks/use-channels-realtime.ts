@@ -12,9 +12,19 @@ import { useChannelStore } from "@/modules/channels/infrastructure/stores/channe
 export function useChannelsRealtime() {
   const { socket, connected } = useSocket("channels")
   const setChannelStatus = useChannelStore((s) => s.setChannelStatus)
+  const setChannelCoexistenceSync = useChannelStore((s) => s.setChannelCoexistenceSync)
 
   useSocketEvent(socket, "channel.status_changed", (payload) => {
     setChannelStatus(payload.channel_id, payload.status, payload.phone_number ?? undefined)
+  })
+
+  // Coexistencia (F2b): la tarjeta del canal ve avanzar la importación del celular
+  useSocketEvent(socket, "channel.coexistence_sync", (payload) => {
+    setChannelCoexistenceSync(payload.channel_id, {
+      contacts: payload.contacts,
+      history: payload.history,
+      history_progress: payload.history_progress,
+    })
   })
 
   // F15: el AuthProvider (único listener) frena el tiempo real y muestra la

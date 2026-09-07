@@ -13,6 +13,7 @@ import ChannelForm from "@/modules/channels/ui/forms/ChannelForm";
 import { ChannelFormSubmitButton } from "@/modules/channels/ui/forms/ChannelFormSubmitButton";
 import { ChannelProviderIcon } from "../ChannelProviderIcon";
 import { ChannelStatusBadge } from "../ChannelStatusBadge";
+import { CoexistenceImportCard } from "./CoexistenceImportCard";
 
 /**
  * Paso 4: listo.
@@ -33,6 +34,9 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
   // El copy de los sub-estados pendientes vive en `domain/channel-health`, una
   // sola vez: aquí y en la tarjeta de salud tienen que decir lo mismo
   const notice = readOnboardingNotice(channel.onboarding?.status);
+  // F1: el número sigue en la app del celular. Cambia el copy y añade la
+  // importación, que solo se puede pedir en las 24 h siguientes.
+  const coexistence = channel.coexistence !== null && channel.coexistence !== undefined;
 
   return (
     <div className="space-y-5">
@@ -54,6 +58,7 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
                 {channel.display_phone_number ?? channel.name}
               </span>{" "}
               aparecen en Conversaciones.
+              {coexistence && " Tu celular sigue funcionando con normalidad."}
             </p>
           </div>
           <ChannelStatusBadge status={channel.status} />
@@ -95,6 +100,8 @@ export function ConnectSuccess({ channel: connected }: { channel: ChannelDTO }) 
           </div>
         )}
       </div>
+
+      {coexistence && <CoexistenceImportCard channel={channel} onChannel={setChannel} />}
 
       <div className="flex gap-3 rounded-md border border-success/40 bg-success/[0.09] p-4">
         <Check aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-success" />

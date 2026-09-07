@@ -45,6 +45,19 @@ type ChannelStore = {
   /** Lo quita del store tras un DELETE, para no esperar al refetch. */
   removeChannel: (channelId: string) => void
   setChannelStatus: (channelId: string, status: ChannelStatus, phoneNumber?: string | null) => void
+  /** Coexistencia (F2b): progreso de la importación desde el celular, por WS. */
+  setChannelCoexistenceSync: (channelId: string, sync: CoexistenceSyncPatch) => void
+}
+
+export type CoexistenceSyncPatch = Partial<NonNullable<ChannelDTO["coexistence"]>["sync"]>
+
+/** Aplica el progreso solo a un canal que ya está en coexistencia. */
+export function applyCoexistenceSync(channel: ChannelDTO, sync: CoexistenceSyncPatch): ChannelDTO {
+  if (channel.coexistence === null || channel.coexistence === undefined) return channel
+  return {
+    ...channel,
+    coexistence: { ...channel.coexistence, sync: { ...channel.coexistence.sync, ...sync } },
+  }
 }
 
 function applyEvent(channel: ChannelDTO, event: StatusEvent): ChannelDTO {
@@ -101,6 +114,14 @@ export const useChannelStore = create<ChannelStore>((set) => ({
       delete statusEvents[channelId]
       return { channels: state.channels.filter((item) => item.id !== channelId), statusEvents }
     })
+  },
+
+  setChannelCoexistenceSync: (channelId, sync) => {
+    set((state) => ({
+      channels: state.channels.map((channel) =>
+        channel.id === channelId ? applyCoexistenceSync(channel, sync) : channel,
+      ),
+    }))
   },
 
   setChannelStatus: (channelId, status, phoneNumber) => {
