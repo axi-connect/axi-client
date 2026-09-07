@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi empresa · sedes y pagos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* CAPA 1 — primitivos de marca, copiados de src/app/globals.css. Único lugar con hex. */
+:root {
+  --background: #ffffff; --foreground: #171717;
+  --axi-brand: #e65759; --axi-brand-2: #e02f2f; --axi-violet: #7c3aed; --axi-amber: #f0a431; --axi-muted: #f4f4f5;
+  --axi-success: #16a34a; --axi-warning: #d97706; --axi-destructive: #dc2626; --axi-info: #2563eb; --axi-on-color: #ffffff;
+  --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft: color-mix(in srgb, var(--border) 50%, transparent);
+  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+  --violet-soft: color-mix(in srgb, var(--axi-violet) 10%, var(--background));
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / .06), 0 16px 48px rgb(0 0 0 / .16);
+  --font-body: "Poppins", Helvetica, Arial, sans-serif; --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --background: #0a0a0a; --foreground: #ededed; --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35); --shadow-overlay: 0 1px 2px rgb(0 0 0 / .5), 0 16px 48px rgb(0 0 0 / .55);
+} }
+:root[data-theme="dark"] {
+  --background: #0a0a0a; --foreground: #ededed; --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35); --shadow-overlay: 0 1px 2px rgb(0 0 0 / .5), 0 16px 48px rgb(0 0 0 / .55);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+.muted { color: var(--muted-foreground); }
+.tnum { font-variant-numeric: tabular-nums; }
+button { font: inherit; }
+
+/* barra del mockup (no es producto) */
+.mk-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 16px; background: var(--foreground); color: var(--background); font-size: 12px; }
+.mk-tag { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.mk-views { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.mk-view, .mk-theme { border: 1px solid color-mix(in srgb, var(--background) 30%, transparent); background: transparent; color: inherit; border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.mk-view[aria-pressed="true"] { background: var(--background); color: var(--foreground); font-weight: 500; }
+
+/* shell del panel (grupo (content): max-w-7xl p-6) */
+.page { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 20px; }
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.header h1 { font-size: 30px; }
+.header p { margin: 4px 0 0; }
+.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--accent); color: var(--foreground); }
+.badge.violet { background: var(--violet-soft); color: var(--axi-violet); }
+.badge.muted { background: var(--secondary); color: var(--muted-foreground); }
+.badge.destructive { background: color-mix(in srgb, var(--axi-destructive) 12%, var(--background)); color: var(--axi-destructive); }
+
+/* NavTabs (segmented, surface=raised) */
+.seg { display: flex; width: fit-content; max-width: 100%; gap: 2px; padding: 4px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); box-shadow: var(--shadow-float); overflow-x: auto; scrollbar-width: none; }
+.seg a { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; color: var(--muted-foreground); text-decoration: none; white-space: nowrap; font-weight: 500; }
+.seg a[aria-current="page"] { background: var(--accent); color: var(--foreground); }
+.seg a:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+.seg svg { width: 16px; height: 16px; }
+
+/* tarjetas de contenido: SÓLIDAS (DESIGN §5.1: glass solo en flotantes) */
+.card { border: 1px solid var(--border); background: var(--background); border-radius: var(--radius-xl); padding: 20px 24px; }
+.card h2 { font-size: 18px; font-weight: 500; }
+.card .lead { margin: 2px 0 16px; }
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dl { display: grid; gap: 8px 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 720px) { .dl { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.dl dt { font-size: 12px; color: var(--muted-foreground); }
+.dl dd { margin: 0; font-weight: 500; }
+
+/* formulario */
+.grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span2 { grid-column: span 2; } }
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.field .help { font-size: 12px; margin-top: 4px; }
+.field .error { font-size: 12px; margin-top: 4px; color: var(--axi-destructive); }
+.input, .select, .textarea { width: 100%; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--input); background: var(--background); color: inherit; font: inherit; }
+.textarea { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; }
+.select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%), linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%); background-position: calc(100% - 18px) 17px, calc(100% - 13px) 17px; background-size: 5px 5px; background-repeat: no-repeat; }
+.input.invalid { border-color: var(--axi-destructive); }
+.counter { font-size: 12px; text-align: right; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 10px; border: 1px solid transparent; background: var(--axi-brand); color: var(--axi-on-color); font-weight: 500; cursor: pointer; }
+.btn.pill { border-radius: 999px; }
+.btn.ghost { background: transparent; color: var(--foreground); }
+.btn.outline { background: transparent; color: var(--foreground); border-color: var(--border); }
+.btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn.danger { background: transparent; color: var(--axi-destructive); border-color: var(--border); }
+.btn svg { width: 16px; height: 16px; }
+.switch { position: relative; width: 36px; height: 20px; border-radius: 999px; background: var(--input); border: none; cursor: pointer; flex-shrink: 0; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--background); box-shadow: var(--shadow-float); transition: transform 150ms; }
+.switch[aria-checked="true"] { background: var(--axi-brand); }
+.switch[aria-checked="true"]::after { transform: translateX(16px); }
+.row { display: flex; align-items: center; gap: 12px; }
+.day { display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+.day .name { width: 96px; font-weight: 500; }
+.day .input { max-width: 150px; }
+.note { border-left: 3px solid var(--axi-violet); background: var(--violet-soft); border-radius: 0 10px 10px 0; padding: 8px 12px; font-size: 13px; }
+
+/* listas de tarjetas (sedes / medios) */
+.items { display: grid; gap: 12px; }
+.item { display: grid; grid-template-columns: 40px 1fr auto; gap: 14px; align-items: start; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; background: var(--background); }
+.item .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--secondary); }
+.item .ic svg { width: 20px; height: 20px; }
+.item .ic.violet { background: var(--violet-soft); color: var(--axi-violet); }
+.item .title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 500; }
+.item .sub { margin-top: 2px; }
+.item .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12px; }
+.item .acts { display: flex; gap: 4px; }
+.iconbtn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--muted-foreground); display: grid; place-items: center; cursor: pointer; }
+.iconbtn:hover { background: var(--secondary); color: var(--foreground); }
+.iconbtn svg { width: 16px; height: 16px; }
+.empty { border: 1px dashed var(--border); border-radius: var(--radius-xl); padding: 40px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.empty .disc { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--violet-soft); color: var(--axi-violet); }
+.empty .disc svg { width: 22px; height: 22px; }
+.empty h3 { font-size: 16px; }
+.empty p { margin: 0; max-width: 42ch; }
+.empty .btn { margin-top: 8px; }
+
+/* sheet (Radix Dialog lateral, glass permitido: superficie flotante) */
+.sheet-wrap { position: relative; margin-top: 12px; }
+.scrim { position: absolute; inset: 0; background: rgb(0 0 0 / .32); border-radius: var(--radius-xl); }
+.sheet { position: relative; margin-left: auto; width: min(520px, 100%); background: color-mix(in srgb, var(--background) 92%, transparent); backdrop-filter: blur(14px) saturate(1.2); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-overlay); display: flex; flex-direction: column; max-height: 720px; }
+.sheet header { padding: 18px 20px 12px; border-bottom: 1px solid var(--border-soft); }
+.sheet header h3 { font-size: 17px; }
+.sheet .body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+.sheet footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); display: flex; justify-content: flex-end; gap: 8px; }
+.combo { position: relative; }
+.combo .input { padding-left: 34px; }
+.combo > svg { position: absolute; left: 10px; top: 12px; width: 16px; height: 16px; color: var(--muted-foreground); }
+.list { margin-top: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); box-shadow: var(--shadow-float); overflow: hidden; }
+.list div { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 12px; align-items: start; }
+.list div[aria-selected="true"] { background: var(--accent); }
+.list div svg { width: 16px; height: 16px; margin-top: 3px; color: var(--muted-foreground); }
+.list b { font-weight: 500; display: block; }
+.list small { color: var(--muted-foreground); }
+.map { position: relative; height: 148px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background:
+  repeating-linear-gradient(0deg, color-mix(in srgb, var(--foreground) 6%, transparent) 0 1px, transparent 1px 28px),
+  repeating-linear-gradient(90deg, color-mix(in srgb, var(--foreground) 6%, transparent) 0 1px, transparent 1px 28px),
+  color-mix(in srgb, var(--secondary) 70%, var(--background)); }
+.map::before { content: ""; position: absolute; left: 12%; top: 40%; width: 70%; height: 8px; background: color-mix(in srgb, var(--foreground) 14%, transparent); border-radius: 4px; transform: rotate(-8deg); }
+.map .pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); color: var(--axi-brand); }
+.map .pin svg { width: 30px; height: 30px; filter: drop-shadow(0 2px 4px rgb(0 0 0 / .25)); }
+.map .lbl { position: absolute; left: 10px; bottom: 8px; font-size: 12px; background: var(--background); border-radius: 999px; padding: 2px 10px; border: 1px solid var(--border); }
+.map .attr { position: absolute; right: 8px; bottom: 6px; font-size: 10px; color: var(--muted-foreground); }
+.hidden { display: none; }
+.view { display: none; } .view[data-active] { display: flex; flex-direction: column; gap: 20px; }
+.mono { font-family: var(--font-mono); }
+.notes { border-top: 1px solid var(--border); padding-top: 20px; display: grid; gap: 10px; font-size: 13px; }
+.notes h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); }
+.notes ul { margin: 0; padding-left: 18px; }
+@media (prefers-reduced-motion: reduce) { .switch::after { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-pin-fill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2a8 8 0 0 0-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18M6 18v-7M10 18v-7M14 18v-7M18 18v-7M12 2 3 7h18Z"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+</svg>
+
+<div class="mk-bar">
+  <span class="mk-tag">Mockup C0 · /settings/company</span>
+  <div class="mk-views" role="group" aria-label="Vistas del mockup">
+    <button class="mk-view" data-view="general" aria-pressed="true">General</button>
+    <button class="mk-view" data-view="sedes-empty" aria-pressed="false">Sedes · vacío</button>
+    <button class="mk-view" data-view="sedes" aria-pressed="false">Sedes · lista + sheet</button>
+    <button class="mk-view" data-view="pagos" aria-pressed="false">Pagos · lista + sheet</button>
+    <button class="mk-view" data-view="pagos-403" aria-pressed="false">Pagos · sin plan</button>
+    <button class="mk-theme" id="theme">Tema</button>
+  </div>
+</div>
+
+<main class="page">
+  <div class="header">
+    <div>
+      <h1>Mi empresa</h1>
+      <p class="muted">Datos, sedes y medios de pago del negocio. La IA los usa como contexto para atender.</p>
+    </div>
+    <span class="badge">Activa</span>
+  </div>
+
+  <nav class="seg" aria-label="Secciones de la empresa">
+    <a href="#" id="tab-general" aria-current="page"><svg><use href="#i-building"/></svg>General</a>
+    <a href="#" id="tab-sedes"><svg><use href="#i-pin"/></svg>Sucursales</a>
+    <a href="#" id="tab-pagos"><svg><use href="#i-wallet"/></svg>Medios de pago</a>
+  </nav>
+
+  <!-- ============ GENERAL ============ -->
+  <section class="view" data-view="general" data-active>
+    <div class="card">
+      <dl class="dl">
+        <div><dt>NIT</dt><dd class="tnum">901.234.567-8</dd></div>
+        <div><dt>País</dt><dd>Colombia</dd></div>
+        <div><dt>Moneda</dt><dd>COP</dd></div>
+        <div><dt>Creada</dt><dd class="tnum">14/08/2026</dd></div>
+      </dl>
+    </div>
+
+    <div class="card">
+      <h2>Información general</h2>
+      <p class="lead muted">Lo que la IA sabe de tu empresa cuando atiende.</p>
+      <div class="grid2">
+        <div class="field"><label>Nombre</label><input class="input" value="Savage Streetwear S.A.S."></div>
+        <div class="field"><label>Industria</label><input class="input" value="Moda urbana"></div>
+        <div class="field"><label>Ciudad</label><input class="input" value="Bogotá"></div>
+        <div class="field"><label>Dirección</label><input class="input" value="Cra 13 # 55-10, local 2"><div class="help muted">Se usa cuando no hay sucursales configuradas.</div></div>
+        <div class="field"><label>Zona horaria</label><select class="select"><option>America/Bogota (Colombia)</option><option>America/Mexico_City (México)</option><option>America/Lima (Perú)</option></select></div>
+        <div class="field"><label>Logo (URL)</label><input class="input" value="https://cdn.savage.co/logo.png"></div>
+        <div class="field span2"><label>Descripción de la actividad</label><textarea class="textarea">Ropa urbana y camisetas blank de 300 gramos para estampado. Ventas por WhatsApp e Instagram con envío nacional.</textarea><div class="counter muted tnum">128 / 500</div></div>
+      </div>
+      <div class="actions"><button class="btn">Guardar cambios</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h2>Horario de atención</h2><p class="lead muted">Horario general de la empresa. Cada sucursal puede definir el suyo; si no, usa este.</p></div></div>
+      <div class="items" style="gap:8px">
+        <div class="day"><button class="switch" aria-checked="false" role="switch" aria-label="Domingo"></button><span class="name">Domingo</span><span class="muted">Cerrado</span></div>
+        <div class="day"><button class="switch" aria-checked="true" role="switch" aria-label="Lunes"></button><span class="name">Lunes</span><input class="input tnum" type="time" value="09:00"><span class="muted">a</span><input class="input tnum" type="time" value="19:00"></div>
+        <div class="day"><button class="switch" aria-checked="true" role="switch" aria-label="Martes"></button><span class="name">Martes</span><input class="input tnum" type="time" value="09:00"><span class="muted">a</span><input class="input tnum" type="time" value="19:00"></div>
+        <div class="day"><button class="switch" aria-checked="true" role="switch" aria-label="Sábado"></button><span class="name">Sábado</span><input class="input tnum" type="time" value="10:00"><span class="muted">a</span><input class="input tnum" type="time" value="17:00"></div>
+      </div>
+      <div class="actions"><button class="btn">Guardar horario</button></div>
+    </div>
+  </section>
+
+  <!-- ============ SEDES · VACÍO ============ -->
+  <section class="view" data-view="sedes-empty">
+    <div class="card-head">
+      <div><h2 style="font-size:20px">Sucursales</h2><p class="muted" style="margin:2px 0 0">Direcciones, indicaciones y horario de cada sede. La IA responde «dónde están» y «cómo llego» con esto.</p></div>
+      <button class="btn pill"><svg><use href="#i-plus"/></svg>Agregar sucursal</button>
+    </div>
+    <div class="empty">
+      <div class="disc"><svg><use href="#i-pin"/></svg></div>
+      <h3>Aún no hay sucursales</h3>
+      <p class="muted">Hoy la IA usa la dirección general de la empresa. Crea la primera sede para darle indicaciones, horario propio y un pin de mapa que puede enviar por WhatsApp.</p>
+      <button class="btn outline pill">Crear sede principal desde la dirección de la empresa</button>
+    </div>
+  </section>
+
+  <!-- ============ SEDES · LISTA + SHEET ============ -->
+  <section class="view" data-view="sedes">
+    <div class="card-head">
+      <div><h2 style="font-size:20px">Sucursales</h2><p class="muted" style="margin:2px 0 0">Principal primero. Con dos o más sedes, la IA consulta cuál le queda más cerca al cliente.</p></div>
+      <button class="btn pill"><svg><use href="#i-plus"/></svg>Agregar sucursal</button>
+    </div>
+    <div class="items">
+      <div class="item">
+        <div class="ic violet"><svg><use href="#i-pin"/></svg></div>
+        <div>
+          <div class="title">Chapinero <span class="badge">Principal</span></div>
+          <div class="sub muted">Cra 13 # 55-10, local 2 · Bogotá</div>
+          <div class="meta"><span>Al frente del parque de los Hippies, junto a la farmacia</span><span class="muted">·</span><span class="muted">Horario de la empresa</span></div>
+        </div>
+        <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+      </div>
+      <div class="item">
+        <div class="ic"><svg><use href="#i-pin"/></svg></div>
+        <div>
+          <div class="title">Usaquén</div>
+          <div class="sub muted">Cl 120 # 6A-05 · Bogotá</div>
+          <div class="meta"><span>Centro comercial Santa Bárbara, local 2-14</span><span class="muted">·</span><span class="badge violet">Horario propio</span></div>
+        </div>
+        <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+      </div>
+      <div class="item" style="opacity:.7">
+        <div class="ic"><svg><use href="#i-pin"/></svg></div>
+        <div>
+          <div class="title">Bodega Fontibón <span class="badge muted">Inactiva</span></div>
+          <div class="sub muted">Cra 100 # 23-40 · Bogotá</div>
+          <div class="meta"><span class="muted">Sin indicaciones</span></div>
+        </div>
+        <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="sheet-wrap">
+      <div class="scrim"></div>
+      <aside class="sheet" aria-label="Editar sucursal">
+        <header><h3>Editar sucursal · Usaquén</h3><p class="muted" style="margin:2px 0 0">Lo que escribas aquí es lo que la IA le dice al cliente.</p></header>
+        <div class="body">
+          <div class="field"><label>Nombre</label><input class="input" value="Usaquén"></div>
+          <div class="field">
+            <label>Dirección</label>
+            <div class="combo"><svg><use href="#i-search"/></svg><input class="input" value="Calle 120 # 6A"></div>
+            <div class="list" role="listbox">
+              <div role="option" aria-selected="true"><svg><use href="#i-pin"/></svg><span><b>Calle 120 # 6A-05</b><small>Usaquén, Bogotá, Bogotá D.C., Colombia</small></span></div>
+              <div role="option"><svg><use href="#i-pin"/></svg><span><b>Calle 120A # 6A-10</b><small>Santa Bárbara, Bogotá, Colombia</small></span></div>
+            </div>
+            <div class="help muted">Escribe al menos 3 letras. Fuente: OpenStreetMap.</div>
+          </div>
+          <div class="map"><div class="pin"><svg><use href="#i-pin-fill"/></svg></div><span class="lbl">Usaquén</span><span class="attr">© OpenStreetMap</span></div>
+          <div class="grid2">
+            <div class="field"><label>Dirección (como la verá el cliente)</label><input class="input" value="Cl 120 # 6A-05"></div>
+            <div class="field"><label>Ciudad</label><input class="input" value="Bogotá"></div>
+          </div>
+          <div class="field"><label>Indicaciones para llegar</label><textarea class="textarea" style="min-height:72px">Centro comercial Santa Bárbara, local 2-14, segundo piso junto al ascensor.</textarea><div class="help muted">«Al frente de…», «entrada por…». La IA lo repite tal cual.</div></div>
+          <div class="row"><button class="switch" role="switch" aria-checked="false" aria-label="Sucursal principal"></button><div><div style="font-weight:500">Sucursal principal</div><div class="help muted">Es la que la IA menciona por defecto.</div></div></div>
+          <div class="row"><button class="switch" role="switch" aria-checked="false" aria-label="Usar el horario de la empresa"></button><div><div style="font-weight:500">Usar el horario de la empresa</div><div class="help muted">Apagado: esta sede define su propio horario.</div></div></div>
+          <div class="items" style="gap:8px">
+            <div class="day"><button class="switch" aria-checked="true" role="switch" aria-label="Lunes"></button><span class="name">Lunes</span><input class="input tnum" type="time" value="10:00"><span class="muted">a</span><input class="input tnum" type="time" value="20:00"></div>
+            <div class="day"><button class="switch" aria-checked="true" role="switch" aria-label="Sábado"></button><span class="name">Sábado</span><input class="input tnum" type="time" value="10:00"><span class="muted">a</span><input class="input tnum" type="time" value="14:00"></div>
+            <div class="day"><button class="switch" aria-checked="false" role="switch" aria-label="Domingo"></button><span class="name">Domingo</span><span class="muted">Cerrado</span></div>
+          </div>
+          <div class="row"><button class="switch" role="switch" aria-checked="true" aria-label="Activa"></button><div><div style="font-weight:500">Activa</div><div class="help muted">Inactiva: no aparece para la IA ni para el cliente.</div></div></div>
+        </div>
+        <footer><button class="btn ghost">Cancelar</button><button class="btn">Guardar sucursal</button></footer>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ PAGOS · LISTA + SHEET ============ -->
+  <section class="view" data-view="pagos">
+    <div class="card-head">
+      <div><h2 style="font-size:20px">Medios de pago</h2><p class="muted" style="margin:2px 0 0">Cuentas y formas de pago que la IA comparte al cobrar. Nunca inventa un número: usa exactamente lo que escribas aquí.</p></div>
+      <button class="btn pill"><svg><use href="#i-plus"/></svg>Agregar medio de pago</button>
+    </div>
+    <div class="items">
+      <div class="item">
+        <div class="ic"><svg><use href="#i-phone"/></svg></div>
+        <div>
+          <div class="title">Nequi principal <span class="badge violet"><svg width="12" height="12" style="margin-right:4px"><use href="#i-sparkle"/></svg>Visible para la IA</span></div>
+          <div class="sub muted mono tnum">•••• 4567 · Titular: Savage Streetwear S.A.S.</div>
+          <div class="meta"><span class="muted">Envía el comprobante por este mismo chat.</span></div>
+        </div>
+        <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+      </div>
+      <div class="item">
+        <div class="ic"><svg><use href="#i-bank"/></svg></div>
+        <div>
+          <div class="title">Bancolombia ahorros <span class="badge violet"><svg width="12" height="12" style="margin-right:4px"><use href="#i-sparkle"/></svg>Visible para la IA</span></div>
+          <div class="sub muted mono tnum">•••• 8821 · Titular: Savage Streetwear S.A.S.</div>
+          <div class="meta"><span class="muted">Transferencia o consignación. Comprobante por el chat.</span></div>
+        </div>
+        <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+      </div>
+      <div class="item">
+        <div class="ic"><svg><use href="#i-cash"/></svg></div>
+        <div>
+          <div class="title">Datáfono en tienda <span class="badge muted">Solo operadores</span> <span class="badge muted">Inactivo</span></div>
+          <div class="sub muted">Sin número de cuenta</div>
+        </div>
+        <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+      </div>
+    </div>
+
+    <div class="sheet-wrap">
+      <div class="scrim"></div>
+      <aside class="sheet" aria-label="Agregar medio de pago">
+        <header><h3>Agregar medio de pago</h3><p class="muted" style="margin:2px 0 0">La IA lo compartirá tal cual cuando el cliente pregunte cómo pagar.</p></header>
+        <div class="body">
+          <div class="grid2">
+            <div class="field"><label>Tipo</label><select class="select"><option>Nequi</option><option>Daviplata</option><option>Bancolombia</option><option>Efectivo</option><option>Datáfono</option><option>Enlace de pago</option><option>Otro</option></select></div>
+            <div class="field"><label>Nombre</label><input class="input invalid" value="Nequi principal"><div class="error">Ya existe un medio de pago con ese nombre.</div></div>
+            <div class="field"><label>Titular</label><input class="input" value="Savage Streetwear S.A.S."></div>
+            <div class="field"><label>Número</label><input class="input tnum" value="300 456 7890"><div class="help muted">Para Efectivo y Datáfono este campo no aparece.</div></div>
+            <div class="field span2"><label>Instrucciones</label><textarea class="textarea" style="min-height:72px">Envía el comprobante por este mismo chat y confirmamos tu pedido.</textarea></div>
+          </div>
+          <div class="row"><button class="switch" role="switch" aria-checked="true" aria-label="Activo"></button><div><div style="font-weight:500">Activo</div></div></div>
+          <div class="row"><button class="switch" role="switch" aria-checked="true" aria-label="Visible para la IA"></button><div><div style="font-weight:500">Visible para la IA</div><div class="help muted">Apagado: solo lo ven los operadores (p. ej. el datáfono de la tienda).</div></div></div>
+        </div>
+        <footer><button class="btn ghost">Cancelar</button><button class="btn">Guardar medio de pago</button></footer>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ PAGOS · SIN PLAN ============ -->
+  <section class="view" data-view="pagos-403">
+    <div class="note">Cuando el plan no incluye el módulo de ventas, la pestaña «Medios de pago» no se pinta en la barra. Este estado solo se ve si alguien entra a la URL directa.</div>
+    <div class="empty">
+      <div class="disc" style="background:var(--secondary);color:var(--muted-foreground)"><svg><use href="#i-lock"/></svg></div>
+      <h3>Tu plan no incluye ventas</h3>
+      <p class="muted">Los medios de pago forman parte del módulo de ventas. Actívalo para que la IA pueda cobrar y registrar comprobantes.</p>
+      <button class="btn pill">Ver planes</button>
+    </div>
+  </section>
+
+  <div class="notes">
+    <h3>Notas de implementación</h3>
+    <ul>
+      <li><b>Rutas reales</b>: <span class="mono">/settings/company</span>, <span class="mono">/settings/company/sucursales</span>, <span class="mono">/settings/company/pagos</span> con <span class="mono">layout.tsx</span> + <span class="mono">NavTabs</span> (General en modo exacto), como en Configuración del CRM. El ítem «Métodos de pago» del sidebar (Ventas) abre <span class="mono">/settings/company/pagos</span>; el rastro activo del sidebar pasará a ese ítem y no a «Empresa» mientras estés en esa pestaña.</li>
+      <li><b>Tarjetas de contenido sólidas</b> (hoy usan glass, que el sistema reserva a superficies flotantes); el sheet lateral sí es glass. Acento secundario: violeta (IA, sedes); coral solo para acción.</li>
+      <li><b>General</b>: zona horaria pasa de texto libre a selector; descripción limitada a 500 (el servidor ya lo exige); guardar refresca el nombre y logo del sidebar (hoy quedan viejos hasta recargar).</li>
+      <li><b>Sucursales</b>: buscador OpenStreetMap con mínimo 3 letras y sin espera en la petición (si el servicio está ocupado, «sin sugerencias»); la primera sede nace principal; horario propio opcional con herencia del general; la IA envía el pin del mapa por WhatsApp e Instagram recibe el enlace.</li>
+      <li><b>Medios de pago</b>: nombre único por empresa (error bajo el campo); «Visible para la IA» apagado = solo operadores; borrar un valor vacía el campo de verdad.</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+(function () {
+  var views = document.querySelectorAll('.view');
+  var buttons = document.querySelectorAll('.mk-view');
+  var tabs = { general: 'tab-general', 'sedes-empty': 'tab-sedes', sedes: 'tab-sedes', pagos: 'tab-pagos', 'pagos-403': 'tab-pagos' };
+  function show(name) {
+    views.forEach(function (v) { if (v.dataset.view === name) v.setAttribute('data-active', ''); else v.removeAttribute('data-active'); });
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === name)); });
+    document.querySelectorAll('.seg a').forEach(function (a) { if (a.id === tabs[name]) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  }
+  buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.view); }); });
+  document.getElementById('tab-general').addEventListener('click', function (e) { e.preventDefault(); show('general'); });
+  document.getElementById('tab-sedes').addEventListener('click', function (e) { e.preventDefault(); show('sedes'); });
+  document.getElementById('tab-pagos').addEventListener('click', function (e) { e.preventDefault(); show('pagos'); });
+  document.querySelectorAll('.switch').forEach(function (s) { s.addEventListener('click', function () { s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); }); });
+  var root = document.documentElement;
+  document.getElementById('theme').addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+})();
+</script>
+</body>
+</html>

@@ -308,6 +308,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/companies/me/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BranchesController_list_v1"];
+        put?: never;
+        post: operations["BranchesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/companies/me/branches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["BranchesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["BranchesController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/companies/me/branches/{id}/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["BranchesController_replaceSchedules_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -3380,6 +3428,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/geo/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GeoController_search_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -5908,6 +5972,85 @@ export interface components {
                 opens_at: string;
                 closes_at: string;
             }[];
+        };
+        BranchListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string;
+                city: string | null;
+                country_code: string;
+                latitude: number | null;
+                longitude: number | null;
+                directions: string | null;
+                is_main: boolean;
+                is_active: boolean;
+                position: number;
+                schedules: {
+                    /** Format: uuid */
+                    id: string;
+                    weekday: number;
+                    opens_at: string;
+                    closes_at: string;
+                }[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+            };
+        };
+        CreateBranchDto: {
+            name: string;
+            address: string;
+            city?: string | null;
+            country_code?: string;
+            latitude?: number | null;
+            longitude?: number | null;
+            directions?: string | null;
+            is_main?: boolean;
+            is_active?: boolean;
+            position?: number;
+        };
+        BranchDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            address: string;
+            city: string | null;
+            country_code: string;
+            latitude: number | null;
+            longitude: number | null;
+            directions: string | null;
+            is_main: boolean;
+            is_active: boolean;
+            position: number;
+            schedules: {
+                /** Format: uuid */
+                id: string;
+                weekday: number;
+                opens_at: string;
+                closes_at: string;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateBranchDto: {
+            name?: string;
+            address?: string;
+            city?: string | null;
+            country_code?: string;
+            latitude?: number | null;
+            longitude?: number | null;
+            directions?: string | null;
+            is_main?: boolean;
+            is_active?: boolean;
+            position?: number;
         };
         UserListDto: {
             data: {
@@ -10772,6 +10915,17 @@ export interface components {
         EvaluateAcceptedDto: {
             enqueued: boolean;
         };
+        GeoSearchResultsDto: {
+            items: {
+                id: string;
+                name: string;
+                detail: string;
+                locality: string | null;
+                lat: number;
+                lng: number;
+                kind: string;
+            }[];
+        };
         ConversationsListDto: {
             data: {
                 /** Format: uuid */
@@ -14524,6 +14678,115 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceSchedulesDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchListDto"];
+                };
+            };
+        };
+    };
+    BranchesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBranchDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchDto"];
+                };
+            };
+        };
+    };
+    BranchesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BranchesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBranchDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BranchDto"];
+                };
+            };
+        };
+    };
+    BranchesController_replaceSchedules_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -20931,6 +21194,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvaluateAcceptedDto"];
+                };
+            };
+        };
+    };
+    GeoController_search_v1: {
+        parameters: {
+            query: {
+                q: string;
+                country?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoSearchResultsDto"];
                 };
             };
         };
