@@ -38,8 +38,12 @@ export type ModalAction = {
   /**
    * Nombre anterior de la misma decisión, con la polaridad invertida:
    * `asClose: false` significa `keepOpen: true` y se sigue honrando, porque
-   * cuarenta y cinco llamadas lo pasan y cada una cierra por su cuenta.
-   * `asClose: true` es el comportamiento por defecto y no añade nada.
+   * treinta y nueve llamadas en treinta y cinco ficheros lo pasan y cada una
+   * cierra por su cuenta (`onSuccess` del formulario, `closeModal()` tras el
+   * `await`). Honrarlo NO reabre el defecto de las trece confirmaciones
+   * atascadas: aquellas pasaban solo `onClick`, sin `asClose`, y siguen
+   * cerrando por defecto. `asClose: true` es el comportamiento por defecto y
+   * no añade nada.
    *
    * @deprecated En código nuevo, `keepOpen: true`.
    */

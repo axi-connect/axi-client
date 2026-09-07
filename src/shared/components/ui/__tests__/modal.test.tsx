@@ -78,9 +78,11 @@ describe("Modal · una acción que pidió no cerrar la cierra quien la pasó", (
   });
 
   it("`asClose: false` es el nombre anterior de `keepOpen: true` y se sigue honrando", () => {
-    // Cuarenta y cinco llamadas lo pasan y cada una cierra por su cuenta
-    // (`closeModal()` tras el `await`, `onSuccess` del formulario). Volverlo
-    // inerte fue lo que cerró los formularios inválidos.
+    // Treinta y nueve llamadas en treinta y cinco ficheros lo pasan y cada una
+    // cierra por su cuenta (`closeModal()` tras el `await`, `onSuccess` del
+    // formulario). Volverlo inerte fue lo que cerró los formularios inválidos.
+    // Las trece confirmaciones atascadas de 2026-08-31 pasaban solo `onClick`:
+    // no les afecta y siguen cerrando (test de arriba).
     const onOpenChange = jest.fn();
     const onClick = jest.fn();
     render(
