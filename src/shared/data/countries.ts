@@ -31,3 +31,15 @@ export const COUNTRIES: readonly CountryOption[] = [
 export function countryByCode(code: string): CountryOption | undefined {
   return COUNTRIES.find((c) => c.code === code);
 }
+
+/**
+ * Zonas horarias del catálogo, sin repetidas. La única derivación: la usan el
+ * alta de tenants de /platform y «Mi empresa» — antes cada uno la recalculaba.
+ */
+export const TIMEZONES: readonly string[] = [...new Set(COUNTRIES.map((c) => c.timezone))];
+
+/** «America/Bogota (Colombia)»; una zona fuera del catálogo se muestra tal cual. */
+export function timezoneLabel(timezone: string): string {
+  const country = COUNTRIES.find((c) => c.timezone === timezone);
+  return country ? `${timezone} (${country.name})` : timezone;
+}

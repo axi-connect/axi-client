@@ -1,7 +1,6 @@
+import { TIMEZONES, timezoneLabel } from "@/shared/data/countries";
 import {
   companyFormSchema,
-  timezoneLabel,
-  TIMEZONES,
   toUpdateCompanyDTO,
 } from "@/modules/companies/ui/forms/config/company.config";
 

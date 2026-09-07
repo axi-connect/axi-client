@@ -12,20 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select"
-import { COUNTRIES } from "@/shared/data/countries"
+import { TIMEZONES, timezoneLabel } from "@/shared/data/countries"
 
-/**
- * Zonas horarias del catálogo de países (`shared/data/countries.ts`): la misma
- * fuente que el alta de tenants en /platform y el registro /comenzar — sin una
- * cuarta lista. Si la empresa trae una zona fuera del catálogo se conserva
- * como opción extra en vez de perderse al guardar.
- */
-export const TIMEZONES: readonly string[] = [...new Set(COUNTRIES.map((c) => c.timezone))]
-
-export function timezoneLabel(timezone: string): string {
-  const country = COUNTRIES.find((c) => c.timezone === timezone)
-  return country ? `${timezone} (${country.name})` : timezone
-}
+// Las zonas horarias salen del catálogo compartido (`shared/data/countries.ts`),
+// la misma fuente que el alta de tenants y el registro. Si la empresa trae una
+// zona fuera del catálogo se conserva como opción extra en vez de perderse.
 
 /**
  * Config del formulario "Mi empresa" (`PATCH /companies/me`).

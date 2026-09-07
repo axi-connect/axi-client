@@ -1,17 +1,9 @@
 import { http } from "@/core/services/http";
-import type { Schemas } from "@/core/api/types";
 import type {
   OrderDTO,
   ReportPaymentDTO,
   ReviewPaymentDTO,
 } from "@/modules/orders/domain/order";
-
-export type PaymentMethodDTO = Schemas["PaymentMethodDto"];
-
-/** Medios de pago del tenant (para el select de "Registrar pago"). */
-export function listPaymentMethods(): Promise<Schemas["PaymentMethodsListDto"]> {
-  return http.get<Schemas["PaymentMethodsListDto"]>("/payment-methods");
-}
 
 /** Pagos del pedido (F11): registrar reporte manual y verificar/rechazar. */
 export function reportPayment(orderId: string, dto: ReportPaymentDTO): Promise<OrderDTO> {

@@ -5,7 +5,7 @@
  */
 // Países: promovidos a `shared/data/countries.ts` (los consume también el
 // registro autoservicio). Se re-exportan para no tocar a los consumidores.
-export { COUNTRIES, countryByCode, type CountryOption } from "@/shared/data/countries";
+export { COUNTRIES, countryByCode, TIMEZONES, timezoneLabel, type CountryOption } from "@/shared/data/countries";
 
 export const INDUSTRIES = [
   "Retail",

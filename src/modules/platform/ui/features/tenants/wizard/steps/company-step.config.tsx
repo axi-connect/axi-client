@@ -17,7 +17,7 @@ import {
   createInputField,
 } from "@/shared/components/features/dynamic-form";
 import type { FieldConfig } from "@/shared/components/features/dynamic-form";
-import { COUNTRIES, countryByCode, INDUSTRIES } from "../../../../../domain/catalogs";
+import { COUNTRIES, countryByCode, INDUSTRIES, TIMEZONES } from "../../../../../domain/catalogs";
 
 export const companyStepSchema = z.object({
   name: z.string().min(2, "Mínimo 2 caracteres"),
@@ -44,7 +44,6 @@ export const defaultCompanyStepValues: CompanyStepValues = {
 };
 
 const CURRENCIES = [...new Map(COUNTRIES.map((c) => [c.currency, c.currencyLabel])).entries()];
-const TIMEZONES = [...new Set(COUNTRIES.map((c) => c.timezone))];
 
 /** `nitError`: error del backend (`identities/nit_taken`) inyectado inline. */
 export function buildCompanyFields(nitError?: string | null): FieldConfig<CompanyStepValues>[] {

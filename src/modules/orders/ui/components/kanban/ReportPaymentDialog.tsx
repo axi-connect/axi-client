@@ -23,11 +23,9 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { formatMoney, orderNumberLabel, type OrderRow } from "@/modules/orders/domain/order";
-import {
-  listPaymentMethods,
-  reportPayment,
-  type PaymentMethodDTO,
-} from "@/modules/orders/infrastructure/services/order-payments-service.adapter";
+import { reportPayment } from "@/modules/orders/infrastructure/services/order-payments-service.adapter";
+// El dueño del recurso es el slice payments: se consume por su barrel (§3.3).
+import { listPaymentMethods, type PaymentMethodDTO } from "@/modules/payments/public";
 import { useOrdersStore } from "@/modules/orders/infrastructure/stores/orders.store";
 
 /**
