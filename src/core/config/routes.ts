@@ -69,21 +69,20 @@ export const NAV_PATH_ALIASES: Record<string, string> = {
   "/catalog": "/catalog/products",
   // El ítem `contacts` del backend vive dentro del módulo CRM del cliente.
   "/contacts": "/crm/contacts",
+  // «Métodos de pago» (grupo Ventas) es una pestaña de Mi empresa: dos ítems
+  // del sidebar llegan a la misma pantalla y el rastro activo lo gana el más
+  // específico (ese ítem) mientras se está en la pestaña.
+  "/settings/sales": "/settings/company/pagos",
 };
 
 /**
  * Paths de navegación del backend que aún no tienen UI (módulos pendientes:
- * usage, audit, métodos de pago). Se filtran del sidebar para no producir 404.
+ * usage, audit). Se filtran del sidebar para no producir 404.
  *
- * `/settings/sales` estaba sembrado en el backend pero sin página en `app/`:
- * se pintaba en el sidebar y llevaba a un 404. Al filtrarlo desaparece del
- * menú hasta que exista su vista.
+ * `/settings/sales` estuvo aquí hasta 2026-09 (sembrado sin página): ahora
+ * tiene alias a la pestaña «Medios de pago» de Mi empresa.
  */
-export const UNIMPLEMENTED_NAV_PATHS = new Set([
-  "/usage",
-  "/settings/audit",
-  "/settings/sales",
-]);
+export const UNIMPLEMENTED_NAV_PATHS = new Set(["/usage", "/settings/audit"]);
 
 /** Resuelve el path del backend a la ruta real del frontend (o null si no hay UI). */
 export function resolveNavPath(backendPath: string | null): string | null {

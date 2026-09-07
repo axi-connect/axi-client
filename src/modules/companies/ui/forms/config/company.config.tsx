@@ -3,7 +3,29 @@
 import { z } from "zod"
 import type { CompanyDTO, UpdateCompanyDTO } from "@/modules/companies/domain/company"
 import type { FieldConfig } from "@/shared/components/features/dynamic-form"
-import { createInputField } from "@/shared/components/features/dynamic-form"
+import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
+import { Label } from "@/shared/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select"
+import { COUNTRIES } from "@/shared/data/countries"
+
+/**
+ * Zonas horarias del catálogo de países (`shared/data/countries.ts`): la misma
+ * fuente que el alta de tenants en /platform y el registro /comenzar — sin una
+ * cuarta lista. Si la empresa trae una zona fuera del catálogo se conserva
+ * como opción extra en vez de perderse al guardar.
+ */
+export const TIMEZONES: readonly string[] = [...new Set(COUNTRIES.map((c) => c.timezone))]
+
+export function timezoneLabel(timezone: string): string {
+  const country = COUNTRIES.find((c) => c.timezone === timezone)
+  return country ? `${timezone} (${country.name})` : timezone
+}
 
 /**
  * Config del formulario "Mi empresa" (`PATCH /companies/me`).
@@ -16,7 +38,7 @@ export const companyFormSchema = z.object({
   address: z.string().trim().optional().or(z.literal("")),
   city: z.string().trim().optional().or(z.literal("")),
   industry: z.string().trim().optional().or(z.literal("")),
-  activity_description: z.string().trim().max(2000, "Máximo 2000 caracteres").optional().or(z.literal("")),
+  activity_description: z.string().trim().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
   timezone: z.string().trim().min(1, "Zona horaria requerida"),
 })
 
@@ -39,13 +61,40 @@ export function buildCompanyFormFields(): ReadonlyArray<FieldConfig<CompanyFormV
     createInputField<CompanyFormValues>("name", { label: "Nombre", placeholder: "Mi empresa S.A.S." }),
     createInputField<CompanyFormValues>("industry", { label: "Industria", placeholder: "Retail, salud, educación…" }),
     createInputField<CompanyFormValues>("city", { label: "Ciudad", placeholder: "Bogotá" }),
-    createInputField<CompanyFormValues>("address", { label: "Dirección", placeholder: "Cra 1 # 2-34" }),
-    createInputField<CompanyFormValues>("timezone", { label: "Zona horaria", placeholder: "America/Bogota" }),
+    createInputField<CompanyFormValues>("address", {
+      label: "Dirección",
+      placeholder: "Cra 1 # 2-34",
+      description: "La IA la usa cuando no hay sucursales configuradas.",
+    }),
+    createCustomField<CompanyFormValues>("timezone", ({ value, setValue, getError }) => {
+      const current = typeof value === "string" ? value : ""
+      const options = current && !TIMEZONES.includes(current) ? [current, ...TIMEZONES] : TIMEZONES
+      const error = getError()
+      return (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="company-timezone">Zona horaria</Label>
+          <Select value={current} onValueChange={(next) => setValue("timezone", next)}>
+            <SelectTrigger id="company-timezone" className="w-full" aria-label="Zona horaria">
+              <SelectValue placeholder="Elige la zona horaria" />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((tz) => (
+                <SelectItem key={tz} value={tz}>
+                  {timezoneLabel(tz)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        </div>
+      )
+    }),
     createInputField<CompanyFormValues>("isotype_url", { label: "Logo (URL)", placeholder: "https://…/logo.png" }),
     createInputField<CompanyFormValues>("activity_description", {
       label: "Descripción de la actividad",
       inputKind: "textarea",
       placeholder: "Qué hace tu empresa: la IA usa esta descripción como contexto.",
+      description: "Máximo 500 caracteres.",
       colSpan: { base: 2 },
     }),
   ] as const

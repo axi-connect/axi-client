@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSession } from "@/shared/auth/auth.hooks";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { BrandMark } from "@/shared/components/ui/brand-mark";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { formatMoney } from "@/core/lib/format";
-import { getMyCompany } from "@/modules/companies/infrastructure/services/company-service.adapter";
-import type { CompanyDTO } from "@/modules/companies/domain/company";
+import { useMyCompany } from "@/modules/companies/public";
 import { PeriodSelector } from "@/modules/dashboard/ui/components/PeriodSelector";
 import type { DashboardPeriod } from "@/modules/dashboard/domain/dashboard";
 import { useDashboardStore } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
@@ -34,30 +32,11 @@ export function DashboardBanner({
   period: DashboardPeriod;
   onPeriodChange: (period: DashboardPeriod) => void;
 }) {
-  const { user, status } = useSession();
-  const [company, setCompany] = useState<CompanyDTO | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useSession();
+  const { company, loading } = useMyCompany();
 
   const attention = useDashboardStore((state) => state.attention);
   const sales = useDashboardStore((state) => state.sales);
-
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    let ignore = false;
-    getMyCompany()
-      .then((data) => {
-        if (!ignore) setCompany(data);
-      })
-      .catch(() => {
-        /* Fallback a marca Axi; el banner no se rompe. */
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [status]);
 
   const statusBits: string[] = [];
   if (attention.data && attention.data.queued > 0) {

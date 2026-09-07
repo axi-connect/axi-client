@@ -44,18 +44,26 @@ describe("mapNavigation", () => {
   });
 
   it("filtra los módulos sin UI y poda el grupo que se queda vacío", () => {
-    // /usage y /settings/sales están en UNIMPLEMENTED_NAV_PATHS.
-    // Antes el testigo era /settings/channels: dejó de servir cuando F1 le dio
-    // página y salió del Set. Un testigo de este test tiene que ser un path que
-    // el backend siembra y el frontend NO implementa todavía.
+    // /usage y /settings/audit están en UNIMPLEMENTED_NAV_PATHS.
+    // Antes el testigo era /settings/channels, y luego /settings/sales: ambos
+    // dejaron de servir cuando ganaron página (o alias) y salieron del Set. Un
+    // testigo de este test tiene que ser un path que el backend siembra y el
+    // frontend NO implementa todavía.
     const tree = mapNavigation([
       dto("analytics", "/analytics", 10, [dto("usage", "/usage", 10)]),
-      dto("settings", null, 20, [dto("sales", "/settings/sales", 10)]),
+      dto("settings", null, 20, [dto("audit", "/settings/audit", 10)]),
     ]);
 
     // Analítica sobrevive (tiene ruta propia) pero pierde su único hijo.
     expect(tree.map((item) => item.code)).toEqual(["analytics"]);
     expect(tree[0].children).toEqual([]);
+  });
+
+  it("«Métodos de pago» (/settings/sales) resuelve a la pestaña de pagos de Mi empresa", () => {
+    const tree = mapNavigation([
+      dto("sales", null, 10, [dto("sales_settings", "/settings/sales", 10)]),
+    ]);
+    expect(tree[0].children[0].url).toBe("/settings/company/pagos");
   });
 
   it("la poda es recursiva: subgrupos vacíos arrastran al grupo padre", () => {

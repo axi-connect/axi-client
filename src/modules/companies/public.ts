@@ -6,7 +6,8 @@
  * es una violación de frontera.
  *
  * Consumidores actuales: `modules/scheduling` (zona horaria del negocio y
- * franjas del horario de atención, que gobiernan el calendario y a la IA).
+ * franjas del horario de atención, que gobiernan el calendario y a la IA),
+ * `modules/onboarding` y `modules/dashboard` (la empresa reactiva del banner).
  */
 
 export {
@@ -20,6 +21,12 @@ export {
   loadMyCompanyOnce,
   invalidateMyCompanyCache,
 } from "./infrastructure/services/company-cache";
+
+/**
+ * La empresa como estado REACTIVO (store): quien la muestra (banner del
+ * dashboard, identidad del sidebar) se repinta al guardar «Mi empresa».
+ */
+export { useMyCompany } from "./infrastructure/hooks/use-my-company";
 
 /**
  * Editor autocontenido del horario de atención (`PUT /companies/me/schedules`).

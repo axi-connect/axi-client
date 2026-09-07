@@ -1,28 +1,20 @@
 import type { CompanyDTO } from "@/modules/companies/domain/company"
-import { getMyCompany } from "@/modules/companies/infrastructure/services/company-service.adapter"
+import { useMyCompanyStore } from "@/modules/companies/infrastructure/stores/my-company.store"
 
 /**
- * Cache a nivel de módulo de `GET /companies/me`: una sola petición por
- * sesión de página, compartida entre consumidores (identidad del sidebar,
- * chip y banner de trial). Se limpia en fallo para permitir reintento en
- * otro montaje.
+ * Compatibilidad: la API por promesa de `GET /companies/me` que consumen
+ * `scheduling` y `onboarding` vía `public.ts`. Desde 2026-09 delega en el
+ * store reactivo (`my-company.store.ts`): misma petición única, y además los
+ * suscriptores del store (sidebar, banner) se enteran de los cambios.
  */
-let companyPromise: Promise<CompanyDTO> | null = null
-
 export function loadMyCompanyOnce(): Promise<CompanyDTO> {
-  if (!companyPromise) {
-    companyPromise = getMyCompany().catch((err: unknown) => {
-      companyPromise = null
-      throw err
-    })
-  }
-  return companyPromise
+  return useMyCompanyStore.getState().load()
 }
 
 /**
- * Invalida el cache tras mutar la empresa (p.ej. reemplazar el horario desde
- * la agenda): el próximo consumidor re-fetchea en vez de leer datos viejos.
+ * Invalida tras mutar la empresa desde fuera de «Mi empresa» (p.ej. el
+ * horario desde la agenda): el próximo consumidor re-fetchea.
  */
 export function invalidateMyCompanyCache(): void {
-  companyPromise = null
+  useMyCompanyStore.getState().invalidate()
 }
