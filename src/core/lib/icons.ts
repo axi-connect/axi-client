@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   Target,
+  Truck,
   Users,
   Workflow,
   Zap,
@@ -73,6 +74,9 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "shopping-bag": ShoppingBag,
   "shopping-cart": ShoppingCart,
   target: Target,
+  // Envíos (slice shipping, plan envíos+promos F7). El seeder lo pide por este
+  // nombre; sin la entrada el ítem del sidebar caería a `Circle`.
+  truck: Truck,
   users: Users,
   workflow: Workflow,
   zap: Zap,
