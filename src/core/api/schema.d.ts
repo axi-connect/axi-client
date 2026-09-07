@@ -772,6 +772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/channels/{id}/meta/coexistence/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MetaChannelRegisterController_requestCoexistenceSync_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/channels/{id}/meta/register": {
         parameters: {
             query?: never;
@@ -6557,9 +6573,15 @@ export interface components {
             graph_api_version: string;
             /** @enum {string} */
             product: "whatsapp" | "instagram" | "messenger";
+            coexistence_enabled: boolean;
         };
         MetaEmbeddedSignupDto: {
             code: string;
+            /**
+             * @default standard
+             * @enum {string}
+             */
+            onboarding_mode: "standard" | "coexistence";
             waba_id: string;
             phone_number_id: string;
             business_id?: string;
@@ -6599,6 +6621,27 @@ export interface components {
                 attempted_at: string | null;
                 last_error_code: string | null;
             } | null;
+            coexistence: {
+                /** Format: date-time */
+                connected_at: string;
+                phone_operator_user_id: string | null;
+                handback_after_minutes: number;
+                sync: {
+                    /** @enum {string} */
+                    contacts: "pending" | "requested" | "completed";
+                    /** @enum {string} */
+                    history: "pending" | "requested" | "in_progress" | "completed" | "declined";
+                    /** Format: date-time */
+                    requested_at: string | null;
+                    history_progress: number;
+                    request_ids: {
+                        smb_app_state_sync?: string;
+                        history?: string;
+                    };
+                };
+                /** Format: date-time */
+                sync_window_closes_at: string;
+            } | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -6625,6 +6668,12 @@ export interface components {
             session_id: string;
             asset_id: string;
             name?: string;
+        };
+        MetaCoexistenceSyncDto: {
+            /** @default true */
+            contacts: boolean;
+            /** @default false */
+            history: boolean;
         };
         MetaRegisterPhoneDto: {
             register_pin: string;
@@ -6671,6 +6720,27 @@ export interface components {
                     method: string | null;
                     attempted_at: string | null;
                     last_error_code: string | null;
+                } | null;
+                coexistence: {
+                    /** Format: date-time */
+                    connected_at: string;
+                    phone_operator_user_id: string | null;
+                    handback_after_minutes: number;
+                    sync: {
+                        /** @enum {string} */
+                        contacts: "pending" | "requested" | "completed";
+                        /** @enum {string} */
+                        history: "pending" | "requested" | "in_progress" | "completed" | "declined";
+                        /** Format: date-time */
+                        requested_at: string | null;
+                        history_progress: number;
+                        request_ids: {
+                            smb_app_state_sync?: string;
+                            history?: string;
+                        };
+                    };
+                    /** Format: date-time */
+                    sync_window_closes_at: string;
                 } | null;
                 /** Format: date-time */
                 created_at: string;
@@ -15376,6 +15446,31 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChannelDto"];
+                };
+            };
+        };
+    };
+    MetaChannelRegisterController_requestCoexistenceSync_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetaCoexistenceSyncDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
