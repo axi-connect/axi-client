@@ -36,6 +36,7 @@ function phaseState(phase: EmbeddedSignupPhase, error: UseEmbeddedSignupResult["
     submittingPin: false,
     reset: jest.fn(),
     retryConfig: jest.fn(),
+    slow: false,
   } satisfies UseEmbeddedSignupResult;
 }
 
@@ -190,5 +191,25 @@ describe("EmbeddedSignupButton", () => {
 
     const fallback = screen.getByText(/Ya tengo mis credenciales de Meta \(avanzado\)/i);
     expect(fallback.closest("details")).not.toHaveAttribute("open");
+  });
+
+  it("cuando el popup tarda, avisa sin culpar y ofrece «Volver a intentar» sin cerrar el intento", () => {
+    state = { ...phaseState("popup_open"), slow: true };
+    render(
+      <EmbeddedSignupButton
+        provider={channelProvider("whatsapp_cloud")}
+        onConnected={jest.fn()}
+        onManualCreated={jest.fn()}
+      />,
+    );
+
+    // Sigue esperando: el resultado tardío se procesa igual
+    expect(screen.getByRole("button", { name: /Esperando a Meta/i })).toBeDisabled();
+    expect(screen.getByText(/tardando más de lo habitual/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Cerraste la ventana antes de terminar/i)).toBeNull();
+
+    screen.getByRole("button", { name: /Volver a intentar/i }).click();
+    expect(state.reset).toHaveBeenCalledTimes(1);
+    expect(state.start).toHaveBeenCalledTimes(1);
   });
 });

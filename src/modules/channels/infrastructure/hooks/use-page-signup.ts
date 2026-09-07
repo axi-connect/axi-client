@@ -48,6 +48,8 @@ export type UsePageSignupResult = {
   reset: () => void;
   /** Vuelve a pedir configuración y SDK tras un fallo de red (ver `useMetaPopup`). */
   retryConfig: () => void;
+  /** El popup lleva más de lo habitual sin señal. No es terminal; ver `useEmbeddedSignup.slow`. */
+  slow: boolean;
 };
 
 export function usePageSignup({ product, onConnected }: UsePageSignupOptions): UsePageSignupResult {
@@ -58,6 +60,7 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
   const [channel, setChannel] = useState<ChannelDTO | null>(null);
   const [assets, setAssets] = useState<PageAsset[]>([]);
   const [connecting, setConnecting] = useState(false);
+  const [slow, setSlow] = useState(false);
 
   const sessionRef = useRef<string | null>(null);
   // Fase, error y `mountedRef`: el mismo código que WhatsApp, una sola vez
@@ -96,12 +99,19 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
     setChannel(null);
     setAssets([]);
     setError(null);
+    setSlow(false);
     sessionRef.current = null;
     setPhase("popup_open");
 
     openPopup({
       onResult: (result) => {
+        // Lentitud: pista, no veredicto; el intento sigue vivo
+        if (result.outcome === "slow") {
+          if (mountedRef.current) setSlow(true);
+          return;
+        }
         clearWatchdog();
+        if (mountedRef.current) setSlow(false);
         if (result.outcome === "unavailable") {
           fail(SIGNUP_ERRORS.disabled);
           return;
@@ -182,5 +192,6 @@ export function usePageSignup({ product, onConnected }: UsePageSignupOptions): U
     choose,
     reset,
     retryConfig: popup.retryConfig,
+    slow,
   };
 }

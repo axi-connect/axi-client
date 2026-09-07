@@ -478,10 +478,15 @@ describe("useEmbeddedSignup — tiempos", () => {
     expect(view.result.current.error?.code).toBe("meta/session_info_missing");
   });
 
-  it("tres minutos de silencio tras abrir el popup se resuelven como abandono", async () => {
+  it("tres minutos de silencio marcan el intento como LENTO, no como cancelado", async () => {
+    // El flujo de coexistencia (QR + consentimiento en el celular) tarda más de
+    // tres minutos con normalidad. Antes el vigilante resolvía `cancelled` y el
+    // `code` real, que llegaba después, se descartaba: el usuario terminaba todo
+    // y leía «Cerraste la ventana antes de terminar».
+    getFacebookSdk.mockReturnValue({ init: jest.fn(), login });
     const view = await mountReady();
 
-    // Los timers falsos se instalan ANTES de `start`: el watchdog se programa
+    // Los timers falsos se instalan ANTES de `start`: el vigilante se programa
     // dentro de `start`, así que instalarlos después dejaría un timer real que
     // `advanceTimersByTime` no puede adelantar y el test pasaría en verde
     // asertando nada.
@@ -492,8 +497,50 @@ describe("useEmbeddedSignup — tiempos", () => {
     });
     jest.useRealTimers();
 
-    // Sin watchdog la UI se queda en "esperando a Meta" para siempre cuando el
-    // popup se cierra de una forma que no emite CANCEL
+    expect(view.result.current.phase).toBe("popup_open");
+    expect(view.result.current.slow).toBe(true);
+  });
+
+  it("un resultado que llega DESPUÉS de los tres minutos se procesa igual", async () => {
+    completeMetaSignup.mockResolvedValue(CHANNEL);
+    getFacebookSdk.mockReturnValue({ init: jest.fn(), login });
+    const view = await mountReady();
+
+    jest.useFakeTimers();
+    act(() => view.result.current.start());
+    act(() => {
+      jest.advanceTimersByTime(180_000);
+    });
+    jest.useRealTimers();
+    expect(view.result.current.slow).toBe(true);
+
+    act(() => loginCallback?.({ authResponse: { code: "AQD-tarde" } }));
+    act(() => {
+      window.dispatchEvent(finishMessage());
+    });
+
+    await waitFor(() => expect(view.result.current.phase).toBe("success"));
+    expect(view.result.current.slow).toBe(false);
+    expect(completeMetaSignup).toHaveBeenCalledWith(expect.objectContaining({ code: "AQD-tarde" }));
+  });
+
+  it("una cancelación REAL tras los tres minutos sigue diciéndolo", async () => {
+    getFacebookSdk.mockReturnValue({ init: jest.fn(), login });
+    const view = await mountReady();
+
+    jest.useFakeTimers();
+    act(() => view.result.current.start());
+    act(() => {
+      jest.advanceTimersByTime(180_000);
+    });
+    // El callback de FB.login sin code es la señal de cancelación. Se dispara
+    // con el reloj falso aún puesto: la heurística «blocked vs cancelled» mide
+    // el tiempo desde `start` con Date.now(), y volver al reloj real antes
+    // haría parecer que pasaron 0 ms (= popup bloqueado)
+    act(() => loginCallback?.({ status: "unknown", authResponse: null }));
+    jest.useRealTimers();
+
     expect(view.result.current.phase).toBe("cancelled");
+    expect(view.result.current.slow).toBe(false);
   });
 });

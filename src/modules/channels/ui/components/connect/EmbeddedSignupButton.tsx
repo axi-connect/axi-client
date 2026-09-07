@@ -97,7 +97,7 @@ export function EmbeddedSignupButton({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const product: MetaProduct = provider.meta_product ?? "whatsapp";
-  const { phase, error, channel, start, submitPin, submittingPin, reset, retryConfig } =
+  const { phase, error, channel, start, submitPin, submittingPin, reset, retryConfig, slow } =
     useEmbeddedSignup({ product, mode, channelName, onConnected });
 
   useEffect(() => {
@@ -125,6 +125,15 @@ export function EmbeddedSignupButton({
             lector de pantalla en mitad de una frase */}
         <div role="status" aria-live="polite" className="space-y-4">
           {IN_PROGRESS_PHASES.includes(phase) && renderProgress(phase, product, mode)}
+          {phase === "popup_open" && slow && (
+            <SlowNotice
+              coexistence={mode === "coexistence"}
+              onRetry={() => {
+                reset();
+                start();
+              }}
+            />
+          )}
         </div>
 
         {/* Y `assertive` para lo terminal: si el intento se cayó, hay que
@@ -344,6 +353,40 @@ function Notice({
         {children}
       </div>
     </div>
+  );
+}
+
+/**
+ * Tres minutos sin señal de Meta. NO es un fallo y no cierra nada: el flujo de
+ * coexistencia (QR y consentimiento en el celular) tarda más de eso con
+ * normalidad, y el resultado llega solo al terminar. La salida manual existe
+ * para quien cerró la ventana de una forma que Meta no avisa.
+ */
+export function SlowNotice({
+  coexistence,
+  onRetry,
+}: {
+  coexistence: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <Notice
+      tone="info"
+      icon={<Info aria-hidden="true" className="size-4.5" />}
+      title="Está tardando más de lo habitual"
+    >
+      <p className="text-muted-foreground">
+        {coexistence
+          ? "Es normal: confirmar desde el celular y elegir si compartes el historial lleva su tiempo. Si ya terminaste en la ventana de Meta, espera un momento: el resultado llega solo."
+          : "Si ya terminaste en la ventana de Meta, espera un momento: el resultado llega solo."}
+      </p>
+      <p className="text-muted-foreground">
+        Si cerraste la ventana sin terminar, vuelve a intentarlo.
+      </p>
+      <Button size="sm" variant="outline" onClick={onRetry}>
+        Volver a intentar
+      </Button>
+    </Notice>
   );
 }
 

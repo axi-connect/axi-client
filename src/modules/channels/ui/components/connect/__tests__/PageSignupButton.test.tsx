@@ -33,6 +33,7 @@ function phaseState(phase: EmbeddedSignupPhase, error: UsePageSignupResult["erro
     choose: jest.fn(),
     reset: jest.fn(),
     retryConfig: jest.fn(),
+    slow: false,
   } satisfies UsePageSignupResult;
 }
 

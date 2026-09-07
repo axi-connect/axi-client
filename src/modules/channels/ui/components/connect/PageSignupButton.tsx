@@ -24,6 +24,7 @@ import {
   focusAfterTerminal,
   isConfigUnreachable,
   renderProgress,
+  SlowNotice,
 } from "./EmbeddedSignupButton";
 import { ManualCredentialsFallback } from "./ManualCredentialsFallback";
 import { PageAssetPicker } from "./PageAssetPicker";
@@ -55,7 +56,7 @@ export function PageSignupButton({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const alertRef = useRef<HTMLDivElement>(null);
   const product = pageSignupProduct(provider);
-  const { phase, error, assets, connecting, start, choose, reset, retryConfig } = usePageSignup({
+  const { phase, error, assets, connecting, start, choose, reset, retryConfig, slow } = usePageSignup({
     product,
     onConnected,
   });
@@ -92,6 +93,15 @@ export function PageSignupButton({
 
         <div role="status" aria-live="polite" className="space-y-4">
           {IN_PROGRESS_PHASES.includes(phase) && renderProgress(phase, product)}
+          {phase === "popup_open" && slow && (
+            <SlowNotice
+              coexistence={false}
+              onRetry={() => {
+                reset();
+                start();
+              }}
+            />
+          )}
         </div>
 
         <div
