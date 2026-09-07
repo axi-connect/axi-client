@@ -82,6 +82,12 @@ export type UseEmbeddedSignupResult = {
   reset: () => void;
   /** Vuelve a pedir configuración y SDK tras un fallo de red (ver `useMetaPopup`). */
   retryConfig: () => void;
+  /**
+   * El intento lleva más de lo habitual sin señal de Meta. NO es terminal: si
+   * el usuario termina, el `code` llega y se procesa; la UI solo enseña una
+   * pista y «Volver a intentar» por si cerró la ventana sin terminar.
+   */
+  slow: boolean;
 };
 
 export function useEmbeddedSignup({
@@ -97,6 +103,7 @@ export function useEmbeddedSignup({
 
   const [channel, setChannel] = useState<ChannelDTO | null>(null);
   const [submittingPin, setSubmittingPin] = useState(false);
+  const [slow, setSlow] = useState(false);
 
   const codeRef = useRef<string | null>(null);
   const sessionRef = useRef<{
@@ -143,6 +150,7 @@ export function useEmbeddedSignup({
       settledRef.current = true;
       clearAttempt();
       if (!mountedRef.current) return;
+      setSlow(false);
       setError(failure);
       setPhase(next);
     },
@@ -159,7 +167,10 @@ export function useEmbeddedSignup({
     if (code === null || session === null || settledRef.current) return;
 
     settledRef.current = true;
-    if (mountedRef.current) setPhase("exchanging");
+    if (mountedRef.current) {
+      setSlow(false);
+      setPhase("exchanging");
+    }
 
     const payload: MetaEmbeddedSignupDTO = {
       code,
@@ -223,6 +234,7 @@ export function useEmbeddedSignup({
     settledRef.current = false;
     setChannel(null);
     setError(null);
+    setSlow(false);
     setPhase("popup_open");
 
     openPopup({
@@ -270,6 +282,11 @@ export function useEmbeddedSignup({
         window.addEventListener("message", listener);
       },
       onResult: (result) => {
+        // Lentitud: pista, no veredicto. El listener y el intento siguen vivos
+        if (result.outcome === "slow") {
+          if (mountedRef.current && !settledRef.current) setSlow(true);
+          return;
+        }
         if (result.outcome === "unavailable") {
           settle("unavailable", SIGNUP_ERRORS.disabled);
           return;
@@ -309,7 +326,7 @@ export function useEmbeddedSignup({
         tryComplete();
       },
     });
-  }, [clearAttempt, mode, openPopup, setError, setPhase, settle, submit, tryComplete]);
+  }, [clearAttempt, mode, mountedRef, openPopup, setError, setPhase, settle, submit, tryComplete]);
 
   // -------------------------------------------------------------- PIN (409)
   const submitPin = useCallback(
@@ -342,6 +359,7 @@ export function useEmbeddedSignup({
     settledRef.current = false;
     setChannel(null);
     setError(null);
+    setSlow(false);
     setPhase(popup.ready ? "ready" : "unavailable");
   }, [clearAttempt, popup.ready, setError, setPhase]);
 
@@ -356,5 +374,6 @@ export function useEmbeddedSignup({
     submittingPin,
     reset,
     retryConfig: popup.retryConfig,
+    slow,
   };
 }

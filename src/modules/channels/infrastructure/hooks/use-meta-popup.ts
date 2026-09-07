@@ -73,7 +73,13 @@ export function logSignup(step: string, fields: Record<string, unknown> = {}): v
   console.info(`[meta-signup] ${step}`, fields);
 }
 
-const ABANDON_WATCHDOG_MS = 180_000;
+/**
+ * A partir de aquí el intento se considera LENTO, no abandonado. Antes este
+ * vigilante resolvía `cancelled` a los 3 min y el resultado real, que llegaba
+ * después (la coexistencia pide QR y consentimiento en el celular), se
+ * descartaba: el usuario terminaba todo y veía «Cerraste la ventana».
+ */
+const SLOW_AFTER_MS = 180_000;
 /** Un humano no autoriza ni cancela en menos de esto: por debajo, fue el navegador. */
 const POPUP_BLOCKED_THRESHOLD_MS = 600;
 
@@ -94,6 +100,13 @@ export type MetaPopupResult =
    * ante un error de configuración lo manda a reintentar para siempre.
    */
   | { outcome: "config_ignored" }
+  /**
+   * NO terminal: pasaron `SLOW_AFTER_MS` sin señal. El intento sigue vivo y el
+   * `code` que llegue después se procesa igual; el consumidor solo enseña una
+   * pista y una salida manual. La cancelación real la dice el callback de
+   * `FB.login` (sin code) o el `CANCEL` del popup.
+   */
+  | { outcome: "slow" }
   /**
    * El SDK o el `config_id` no estaban al pulsar. **Siempre se reporta**, nunca
    * se vuelve en silencio: el flujo ya pintó "esperando a Meta" antes de
@@ -259,13 +272,13 @@ export function useMetaPopup(product: MetaProduct): UseMetaPopupResult {
         return;
       }
 
-      // Abandono: tres minutos sin ninguna señal. Sin esto la UI se queda en
-      // "esperando a Meta" para siempre si el usuario cierra el popup de una
-      // forma que no emite CANCEL.
+      // Lentitud, no abandono: tres minutos sin señal avisan y ofrecen una
+      // salida manual, pero NO cierran el intento. Un popup cerrado de una forma
+      // que no emite CANCEL deja la pista visible con «Volver a intentar».
       clearWatchdog();
       watchdogRef.current = setTimeout(() => {
-        handlers.onResult({ outcome: "cancelled" });
-      }, ABANDON_WATCHDOG_MS);
+        handlers.onResult({ outcome: "slow" });
+      }, SLOW_AFTER_MS);
 
       const callback = (response: FbLoginResponse) => {
         logSignup("callback de FB.login", {
