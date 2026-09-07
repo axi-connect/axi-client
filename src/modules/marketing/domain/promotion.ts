@@ -1,6 +1,6 @@
 import type { Schemas } from "@/core/api/types";
 import { formatMoney } from "@/core/lib/format";
-import { PROMOTION_KIND_LABELS, type PromotionKind } from "./enums";
+import { PROMOTION_KIND_LABELS, type CreatablePromotionKind } from "./enums";
 
 /** Contratos de promociones y cupones (`/marketing/promotions`). */
 
@@ -14,7 +14,7 @@ export type RedemptionDTO = Schemas["RedemptionsListDto"]["data"][number];
  * ningún otro (422 `promotion_invalid_params`), así que el formulario muestra
  * uno solo y limpia los demás al cambiar de tipo.
  */
-export const PROMOTION_KIND_PARAM: Record<PromotionKind, keyof PromotionDTO> = {
+export const PROMOTION_KIND_PARAM: Record<CreatablePromotionKind, keyof PromotionDTO> = {
   percent_discount: "percent",
   fixed_discount: "amount_cents",
   gift_product: "gift_variant_id",
@@ -53,6 +53,9 @@ export function describePromotionKind(promotion: PromotionDTO): string {
       const gift = giftVariantLabel(promotion);
       return gift ? `Producto de regalo · ${gift}` : PROMOTION_KIND_LABELS.gift_product;
     }
+    case "external_rule":
+      // Espejo de la tienda: el resumen lo escribe el proveedor, axi solo lo muestra.
+      return promotion.external_summary ?? PROMOTION_KIND_LABELS.external_rule;
   }
 }
 

@@ -6,7 +6,11 @@ import {
   type FieldConfig,
 } from "@/shared/components/features/dynamic-form";
 import { VariantPicker, type VariantSelection } from "@/modules/catalog/public";
-import { PROMOTION_KIND_LABELS, PROMOTION_KIND_ORDER } from "@/modules/marketing/domain/enums";
+import {
+  CREATABLE_PROMOTION_KINDS,
+  isCreatablePromotionKind,
+  PROMOTION_KIND_LABELS,
+} from "@/modules/marketing/domain/enums";
 import {
   giftVariantLabel,
   type CreatePromotionDTO,
@@ -24,7 +28,9 @@ import {
  * que el usuario tecleó antes de cambiar de tipo.
  */
 
-const KIND_VALUES = PROMOTION_KIND_ORDER;
+// Solo los kinds creables: el espejo de la tienda (`external_rule`) nunca se
+// ofrece en el formulario (el backend lo rechazaría con 422).
+const KIND_VALUES = CREATABLE_PROMOTION_KINDS;
 
 export const promotionFormSchema = z
   .object({
@@ -115,7 +121,10 @@ function fromDateInput(value: string): string | null {
 export function promotionToFormValues(promotion: PromotionDTO): PromotionFormValues {
   return {
     name: promotion.name,
-    kind: promotion.kind,
+    // Una promoción de la tienda (`external_rule`) no se edita en axi: el panel
+    // no abre este formulario para ella. Si llegara, cae al kind por defecto en
+    // vez de proponer un tipo que el backend rechazaría.
+    kind: isCreatablePromotionKind(promotion.kind) ? promotion.kind : defaultPromotionFormValues.kind,
     percent: promotion.percent,
     amount_cents: promotion.amount_cents,
     gift:

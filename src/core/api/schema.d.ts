@@ -10602,7 +10602,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+                kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping" | "external_rule";
                 percent: number | null;
                 amount_cents: number | null;
                 /** Format: uuid */
@@ -10626,6 +10626,10 @@ export interface components {
                 coupons_issued: number;
                 redemptions_recorded: number;
                 enabled: boolean;
+                /** Format: uuid */
+                governed_by_connection_id: string | null;
+                external_summary: string | null;
+                external_codes: string[];
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -10657,7 +10661,7 @@ export interface components {
             id: string;
             name: string;
             /** @enum {string} */
-            kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+            kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping" | "external_rule";
             percent: number | null;
             amount_cents: number | null;
             /** Format: uuid */
@@ -10681,6 +10685,10 @@ export interface components {
             coupons_issued: number;
             redemptions_recorded: number;
             enabled: boolean;
+            /** Format: uuid */
+            governed_by_connection_id: string | null;
+            external_summary: string | null;
+            external_codes: string[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
