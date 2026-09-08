@@ -10,6 +10,7 @@ import {
   ContactRound,
   CreditCard,
   Image as ImageIcon,
+  ScanSearch,
   Volume2,
   VolumeX,
   type LucideIcon,
@@ -315,7 +316,9 @@ function RevealHeading({ children }: { children: ReactNode }) {
 
 const BEAT_ICONS: Record<DemoBeat["icon"], LucideIcon> = {
   voice: AudioLines,
-  catalog: ImageIcon,
+  /* Reconocimiento de producto (F8): el beat de la tarjeta reconoce la
+     captura antes de responder con el catálogo. */
+  photo: ScanSearch,
   quote: Calculator,
   promo: BadgePercent,
   order: CreditCard,

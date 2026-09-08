@@ -10,6 +10,7 @@ import ProductosCarousel from "@/modules/landing/ui/sections/productos/Productos
 import ProductosInbox from "@/modules/landing/ui/sections/productos/ProductosInbox";
 import ProductosCrmBento from "@/modules/landing/ui/sections/productos/ProductosCrmBento";
 import ProductosCatalogo from "@/modules/landing/ui/sections/productos/ProductosCatalogo";
+import ProductosReconocimiento from "@/modules/landing/ui/sections/productos/ProductosReconocimiento";
 import ProductosConversaciones from "@/modules/landing/ui/sections/productos/ProductosConversaciones";
 import ProductosFinalCta from "@/modules/landing/ui/sections/productos/ProductosFinalCta";
 
@@ -20,7 +21,7 @@ import ProductosFinalCta from "@/modules/landing/ui/sections/productos/Productos
  *
  * Plan de fase: `docs/plans/public-gtm-f6-productos.md`.
  *
- * Las anclas `#agente #inbox #crm #catalogo` están enlazadas desde el
+ * Las anclas `#agente #inbox #crm #catalogo #reconocimiento` están enlazadas desde el
  * mega-menú y el footer: si se renombra una, hay que actualizar
  * `site-nav.content.ts` en el mismo commit. `#medicion` ya no vive aquí:
  * duplicaba la §6 de la home y su entrada del nav apunta a `/#medicion`.
@@ -32,7 +33,7 @@ import ProductosFinalCta from "@/modules/landing/ui/sections/productos/Productos
 export const metadata: Metadata = pageMetadata({
   title: "Productos",
   description:
-    "El agente vendedor, el inbox con handoff, el CRM, el catálogo con stock real, la agenda y la medición en pesos. Producto construido y en producción, no roadmap.",
+    "El agente vendedor, el inbox con handoff, el CRM, el catálogo con stock real, el reconocimiento de producto a partir de una foto, la agenda y la medición en pesos. Producto construido y en producción, no roadmap.",
   path: "/productos",
 });
 
@@ -46,6 +47,8 @@ export default function ProductosPage() {
       <ProductosInbox />
       <ProductosCrmBento />
       <ProductosCatalogo />
+      {/* Tras el catálogo, que es su prerrequisito: sin índice no hay nada que reconocer. */}
+      <ProductosReconocimiento />
       <ProductosConversaciones />
       <ProductosFinalCta />
     </div>

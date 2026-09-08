@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 
 import { PricingPlans } from "../PricingPlans"
 import {
@@ -269,6 +269,21 @@ describe("PricingPlans", () => {
       expect(cardOf(plan.id).getByText(formatCop(list))).toBeInTheDocument()
       expect(cardOf(plan.id).getByRole("link")).toHaveAttribute("href", `/comenzar?plan=${plan.id}&periodo=monthly`)
     }
+  })
+
+  it("la cuota de reconocimientos sale del catálogo y desaparece si no la publica", () => {
+    // Con el fixture: 200 / 600 / 1.500. La cifra jamás está escrita en el content.
+    render(<PricingPlans catalog={FIXTURE_CATALOG} />)
+    expect(screen.getAllByTestId("plan-recognition-quota")).toHaveLength(3)
+    expect(within(screen.getByTestId("plan-esencial")).getByTestId("plan-recognition-quota")).toHaveTextContent(
+      "200 reconocimientos de producto al mes",
+    )
+    expect(within(screen.getByTestId("plan-escala")).getByTestId("plan-recognition-quota")).toHaveTextContent(
+      "1.500 reconocimientos de producto",
+    )
+    cleanup()
+    render(<PricingPlans catalog={{ ...FIXTURE_CATALOG, planUnits: {} }} />)
+    expect(screen.queryByTestId("plan-recognition-quota")).toBeNull()
   })
 
   it("sin catálogo no inventa cifras: «precios a consulta» y ventas", () => {

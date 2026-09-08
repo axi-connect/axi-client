@@ -16,14 +16,16 @@
 
 | Ruta | Archivo | Estado |
 |---|---|---|
-| `/` (landing) | `src/app/(public)/page.tsx` | Real: 12 secciones de `src/modules/landing/ui/sections/` (§1–§11 de `landing-copy.md`) |
-| `/productos` | `src/app/(public)/productos/page.tsx` | **Andamio** (`PageOutline`) con las 5 anclas reales; contenido definitivo = F6 |
+| `/` (landing) | `src/app/(public)/page.tsx` | Real: 13 secciones de `src/modules/landing/ui/sections/` (§1–§11 de `landing-copy.md` + la isla oscura `#reconocimiento`, F8) |
+| `/productos` | `src/app/(public)/productos/page.tsx` | Real (F6 + F8): hero con video, escena pineada `#agente`, carrusel de siete capacidades, `#inbox`, `#crm`, `#catalogo`, `#reconocimiento`, muro y CTA. Plan: `public-gtm-f6-productos.md`, `public-gtm-f8-reconocimiento.md` |
+| `/precios` | `src/app/(public)/precios/page.tsx` | Real: `PricingPlans` + `ModulePlans` con cifras del catálogo público; la cuota de reconocimientos por paquete sale de `commercial_units` |
+| `/casos` · `/integraciones` | `src/app/(public)/{casos,integraciones}/page.tsx` | Reales; `/integraciones` lleva chip de estado `probado`/`listo` por integración |
 | `/soluciones` | `src/app/(public)/soluciones/page.tsx` | **Andamio** (`PageOutline`) con las 4 anclas reales; contenido definitivo = F5 |
 | `/contacto` | `src/app/(public)/contacto/page.tsx` | Real: reutiliza `DemoLeadForm` + WhatsApp del agente + datos de empresa |
 | `/legal/terminos` · `/legal/privacidad` | `src/app/(public)/legal/*/page.tsx` | Real (`LegalDocument`). ⚠️ **pendiente revisión legal** |
 | `/marketplace` | `src/app/(public)/marketplace/page.tsx` | Real: monta `marketplace-hero.tsx`. Badge "Pronto" y CTAs = F8 |
 
-**Redirects** (`next.config.ts`, todos 308): `/precios`→`/#planes`, `/demo`→`/contacto`,
+**Redirects** (`next.config.ts`, todos 308): `/demo`→`/contacto`,
 `/products`→`/productos`, `/solutions`→`/soluciones`, `/login`→`/auth/login`,
 `/signup`→`/contacto`, `/legal`→`/legal/terminos`.
 
@@ -172,6 +174,18 @@ táctil, el scroll horizontal de la landing (`w-screen`→`w-full`), el hover in
 botón primario, `lang="en"`→`"es"`, las animaciones ausentes de Radix
 (`tw-animate-css`), el isotipo servido desde Cloudinary, y las páginas `/contacto` y
 `/legal/*`.
+
+**Cerrado (F8, 2026-09-08) — reconocimiento de producto en la capa pública**
+(`docs/plans/public-gtm-f8-reconocimiento.md`): isla oscura `#reconocimiento` en la home
+(`LandingRecognition` + `RecognitionScanner`, Canvas 2D solo para los puntos, PRNG con
+semilla, estado final con `prefers-reduced-motion`); paso de foto en la escena `#agente` y
+sección `#reconocimiento` en `/productos`; línea de cuota en las tarjetas de `/precios`
+**solo si `GET /public/pricing` publica `product_recognitions`** (`planUnitQuantity`);
+tarjeta `listo` en `/integraciones`; frase en el caso de retail; tarjeta del mega-menú.
+Reglas de copy fijadas por test: nunca «enlace/link» de Instagram (fuera de la v1), nunca
+porcentajes de acierto, y «del reel, la captura» (un reel compartido llega como video y no
+se reconoce). Fotos de stock (Unsplash License) en `public/images/landing/recognition/`,
+inventario en el anexo A del plan.
 
 **Abierto:**
 

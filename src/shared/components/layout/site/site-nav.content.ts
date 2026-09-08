@@ -15,6 +15,7 @@ import {
   MessagesSquare,
   Mic,
   Package,
+  ScanSearch,
   PlayCircle,
   Shirt,
   ShoppingBag,
@@ -112,6 +113,12 @@ export const SITE_NAV: readonly SiteNavItem[] = [
         href: "/productos#catalogo",
         description: "Stock real por variante. Y si vendes tiempo, citas sobre disponibilidad real.",
         icon: Package,
+      },
+      {
+        name: "Reconocimiento de producto",
+        href: "/productos#reconocimiento",
+        description: "Le mandan una foto y el agente cotiza la referencia exacta.",
+        icon: ScanSearch,
       },
       {
         name: "Medición en pesos",

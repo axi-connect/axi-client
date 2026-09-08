@@ -78,7 +78,7 @@ const VERTICALS: readonly Vertical[] = [
     id: "retail",
     name: "Retail y moda",
     icon: Shirt,
-    body: "Catálogo con variantes, tallas y stock por variante, con las fotos reales de cada una. El agente encuentra la prenda aunque se la pidan mal escrita y cierra el pedido con el inventario del sistema.",
+    body: "Catálogo con variantes, tallas y stock por variante, con las fotos reales de cada una. El agente encuentra la prenda aunque se la pidan mal escrita o le manden la captura de lo que vieron en un reel, y cierra el pedido con el inventario del sistema.",
     proof: "Savage — 129 productos, 385 imágenes",
   },
   {

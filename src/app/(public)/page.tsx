@@ -13,6 +13,7 @@ import LandingProblem from "@/modules/landing/ui/sections/LandingProblem";
 import LandingHowItWorks from "@/modules/landing/ui/sections/LandingHowItWorks";
 import LandingAiGuardrails from "@/modules/landing/ui/sections/LandingAiGuardrails";
 import LandingMetrics from "@/modules/landing/ui/sections/LandingMetrics";
+import LandingRecognition from "@/modules/landing/ui/sections/LandingRecognition";
 import LandingTeamControl from "@/modules/landing/ui/sections/LandingTeamControl";
 import LandingCases from "@/modules/landing/ui/sections/LandingCases";
 import LandingPricing from "@/modules/landing/ui/sections/LandingPricing";
@@ -84,6 +85,8 @@ export default async function Home() {
       <LandingHowItWorks />
       <LandingAiGuardrails />
       <LandingMetrics />
+      {/* Isla oscura del reconocimiento (F8): entre dos secciones claras a propósito. */}
+      <LandingRecognition />
       <LandingTeamControl />
       <LandingCases />
       <LandingPricing catalog={catalog} />

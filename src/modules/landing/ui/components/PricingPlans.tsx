@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, MessageCircle } from "lucide-react";
+import { Check, MessageCircle, ScanSearch } from "lucide-react";
 
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { cn } from "@/core/lib/utils";
+import { formatQuantity } from "@/core/lib/commercial-units";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Reveal } from "@/modules/landing/ui/components/Reveal";
@@ -14,11 +15,13 @@ import { FoundersBar } from "@/modules/landing/ui/components/FoundersBar";
 import { VolumeChips } from "@/modules/landing/ui/components/VolumeChips";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import {
+  RECOGNITION_METRIC,
   annualTotalCop,
   discountLabel,
   hasVolumeAxis,
   planListCop,
   planMonthlyCop,
+  planUnitQuantity,
   promotionOpen,
   volumeById,
   type PublicCatalog,
@@ -27,6 +30,7 @@ import {
   ANNUAL_PAID_MONTHS,
   BILLING_PERIODS,
   MONTHS_PER_YEAR,
+  RECOGNITION,
   formatCop,
   foundersDiscountBadge,
   planById,
@@ -234,6 +238,8 @@ function PlanCard({
           ))}
         </ul>
 
+        <RecognitionQuota quantity={planUnitQuantity(catalog, plan.id, RECOGNITION_METRIC)} />
+
         <div className="flex flex-col gap-2">
           <Button asChild size="lg" variant={plan.featured ? "default" : "outline"} className="h-11 w-full">
             <Link href={overCatalog ? SALES_PATH : signupHref(plan, volumeId, period, twoAxis)}>
@@ -331,6 +337,29 @@ function PriceBlock({
         </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Cuota de reconocimientos de producto del paquete (F8). La cifra viene del
+ * catálogo; sin cifra no hay línea: la landing no puede prometer una cuota que
+ * billing no vende. Violeta solo en el icono, que es el marcador de IA.
+ */
+function RecognitionQuota({ quantity }: { quantity: number | null }) {
+  if (quantity === null) return null;
+  return (
+    <p
+      data-testid="plan-recognition-quota"
+      className="bg-secondary flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] leading-snug"
+      style={{ border: "1px dashed color-mix(in srgb, var(--axi-violet) 40%, transparent)" }}
+    >
+      <ScanSearch aria-hidden className="text-accent-violet size-4 shrink-0" />
+      <span>
+        <span className="font-semibold tabular-nums">{formatQuantity(quantity, "product_recognitions")}</span>{" "}
+        {RECOGNITION.quotaLine.suffix}
+        <span className="text-muted-foreground block text-[11px]">{RECOGNITION.quotaLine.note}</span>
+      </span>
+    </p>
   );
 }
 

@@ -93,7 +93,15 @@ const PRICING_FAQ = [
   },
   {
     q: "¿Qué se mide exactamente?",
-    a: "Diez métricas por empresa y en tiempo real: tokens de entrada y de salida de la IA, peticiones, caracteres de voz, mensajes enviados y recibidos, plantillas, llamadas a APIs externas, conversaciones activas y almacenamiento. De las diez, solo tres tienen costo unitario propio.",
+    a: "Cada métrica por empresa y en tiempo real: tokens de entrada y de salida de la IA, peticiones, caracteres de voz, minutos de llamada, reconocimientos de producto, mensajes enviados y recibidos, plantillas, llamadas a APIs externas, conversaciones activas y almacenamiento. Solo unas pocas tienen costo unitario propio; el resto son cuotas del plan.",
+  },
+  {
+    q: "¿Qué cuenta como un reconocimiento de producto?",
+    a: "Cada foto, captura de pantalla o publicación de Instagram compartida que el agente analiza para encontrar el producto en tu catálogo. Un comprobante de pago no cuenta: se detecta y pasa al flujo de pagos sin buscar en el catálogo. La cantidad incluida aparece en cada Paquete.",
+  },
+  {
+    q: "¿Qué pasa cuando se agota la cuota de reconocimientos?",
+    a: "Las fotos siguen llegando a tu inbox como siempre y el agente pide la referencia por texto, sin pausar nada más. Puedes ampliar la cuota con un bloque desde Facturación, y al iniciar el nuevo ciclo se reactiva sola.",
   },
   {
     q: "¿Qué pasa si me paso del volumen del plan?",

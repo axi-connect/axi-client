@@ -21,6 +21,7 @@ const SECTION_TO_LOCATION: Record<string, CtaLocation> = {
   planes: "pricing",
   modulos: "modules",
   casos: "cases",
+  reconocimiento: "recognition",
   faq: "unknown",
 };
 

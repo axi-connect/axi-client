@@ -12,6 +12,7 @@ import {
   MessagesSquare,
   Mic,
   PlugZap,
+  ScanSearch,
   ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
@@ -166,6 +167,22 @@ const EXTRAS: readonly Integration[] = [
       "Disponible en WhatsApp; Instagram y Messenger no admiten voz",
       "Topes y longitud máxima aplicados en el servidor",
       "Consumo medido con su propia métrica",
+    ],
+  },
+  {
+    id: "reconocimiento",
+    name: "Reconocimiento de producto",
+    icon: ScanSearch,
+    /* Desplegado, pero sin un cliente real usándolo todavía: `listo`, no
+       `probado`. Sube a `probado` cuando un tenant lo encienda y venda con él. */
+    status: "listo",
+    claim: "Le mandan una foto y sabe cuál es.",
+    body:
+      "Compara la foto, la captura de pantalla o la publicación de Instagram compartida con las fotos de tu catálogo y responde con la referencia exacta, tu precio y tu stock. Con duda propone hasta tres opciones con foto; sin coincidencias, pide la referencia.",
+    facts: [
+      "Fotos, capturas de pantalla y publicaciones compartidas de Instagram; del reel, la captura",
+      "Se activa desde Ajustes; cada empresa lo estrena apagado",
+      "Consumo medido con su propia métrica: reconocimientos por ciclo",
     ],
   },
 ];

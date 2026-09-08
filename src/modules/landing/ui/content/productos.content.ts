@@ -15,6 +15,10 @@
  * - La conversación de `#agente` es un negocio FICTICIO (Óptica Vértice), como
  *   el muro de `CHAT_WALL`. Es el tercer vertical de la plataforma a propósito:
  *   la home ya usa tecnología (`HERO_CHAT`) y moda (`STORY_CHAT`).
+ * - El reconocimiento de producto (F8) se cuenta tal como funciona: el cliente
+ *   recibe la RESPUESTA; los candidatos y la similitud los ve el EQUIPO en el
+ *   inbox (`RECOGNITION_SECTION.backstage`). Nunca se promete un porcentaje de
+ *   acierto ni exclusividad («único»): no son verificables.
  */
 
 /* ────────────────────────── Capturas reales ────────────────────────── */
@@ -151,6 +155,7 @@ export const PRODUCTOS_HERO = {
  */
 export type DemoMessage =
   | { id: string; from: "customer" | "agent"; kind: "text"; text: string }
+  | { id: string; from: "customer"; kind: "photo"; text: string; photo: DemoPhoto }
   | { id: string; from: "customer" | "agent"; kind: "voice"; text: string; audio: DemoAudio }
   | { id: string; from: "agent"; kind: "product"; text: string; product: DemoProduct }
   | { id: string; from: "agent"; kind: "order"; order: DemoOrder }
@@ -170,6 +175,18 @@ export interface DemoAudio {
   /** Duración ya escrita, no leída del archivo: la burbuja debe medir lo
    *  mismo antes y después de cargar los metadatos o el hilo daría un salto. */
   durationLabel: string;
+}
+
+/**
+ * Foto o publicación compartida que manda el CLIENTE (reconocimiento de
+ * producto, F8). `sourceLabel` es la cabecera del compartido («Reel · Óptica
+ * Vértice»): así se lee que llegó desde Instagram y no como foto suelta.
+ */
+export interface DemoPhoto {
+  /** Bajo `/images/`: única carpeta pública que el middleware deja pasar. */
+  imageSrc: string;
+  imageAlt: string;
+  sourceLabel: string;
 }
 
 export interface DemoProduct {
@@ -195,7 +212,7 @@ export interface DemoReceipt {
 export interface DemoBeat {
   id: string;
   /** Clave del mapa de iconos de la sección (el contenido no importa React). */
-  icon: "voice" | "catalog" | "quote" | "promo" | "order" | "payment" | "crm" | "agenda";
+  icon: "voice" | "photo" | "quote" | "promo" | "order" | "payment" | "crm" | "agenda";
   title: string;
   body: string;
   /** Índice del mensaje que lo demuestra. */
@@ -240,6 +257,22 @@ export const AGENT_DEMO = {
      * en texto. Repartir audios por toda la conversación enseñaría un
      * comportamiento que el producto no tiene.
      */
+    /**
+     * La captura del reel va ANTES de la nota de voz, como pasa en WhatsApp de
+     * verdad: la gente comparte la publicación y luego describe con audio.
+     * Los MP3 no cambian — «vi en el reel unas gafas…» gana la imagen delante.
+     */
+    {
+      id: "d0",
+      from: "customer",
+      kind: "photo",
+      text: "¿Estas las tienen?",
+      photo: {
+        imageSrc: "/images/landing/gafas-aviador-ambar.jpg",
+        imageAlt: "Captura del reel: gafas de montura negra con lente naranja",
+        sourceLabel: "Captura · Reel de Óptica Vértice",
+      },
+    },
     {
       id: "d1",
       from: "customer",
@@ -324,18 +357,21 @@ export const AGENT_DEMO = {
       icon: "voice",
       title: "Contesta en voz a quien le habla en voz",
       body: "Si el cliente manda un audio, el agente responde con nota de voz. Lo que lleva precio o tarjeta sigue saliendo en texto.",
-      atMessage: 1,
+      atMessage: 2,
       /* VACÍO A PROPÓSITO: la voz no es una herramienta, es una política de
          respuesta del agente (`voice_enabled`), así que no hay ningún
          `*.tool.ts` que citar sin mentir. */
       tools: [],
     },
     {
-      id: "catalogo",
-      icon: "catalog",
-      title: "Responde con tu catálogo real",
-      body: "Consulta stock y precio en el momento y manda la foto. No promete lo que no hay.",
-      atMessage: 2,
+      id: "reconoce",
+      icon: "photo",
+      title: "Reconoce la foto y responde con tu catálogo real",
+      body: "Compara la captura con las fotos de tu catálogo, da con la referencia exacta y manda stock, precio y foto real. No promete lo que no hay.",
+      atMessage: 3,
+      /* El reconocimiento no es una herramienta sino una política del turno
+         (`recognition.ai_enabled`), igual que la voz: aquí se citan los tools
+         que RESPALDAN la respuesta que el cliente recibe. */
       tools: ["catalog_lookup", "send_product_images"],
     },
     {
@@ -343,7 +379,7 @@ export const AGENT_DEMO = {
       icon: "quote",
       title: "Cotiza con tus precios",
       body: "Suma montura, lente y tiempos de entrega con tus reglas — no con una cifra inventada.",
-      atMessage: 4,
+      atMessage: 5,
       tools: ["quote_order"],
     },
     {
@@ -351,7 +387,7 @@ export const AGENT_DEMO = {
       icon: "promo",
       title: "Valida cupones y promociones",
       body: "Comprueba que el cupón exista y esté vigente antes de descontar un peso.",
-      atMessage: 6,
+      atMessage: 7,
       tools: ["validate_coupon", "apply_promotion"],
     },
     {
@@ -359,7 +395,7 @@ export const AGENT_DEMO = {
       icon: "order",
       title: "Arma el pedido y cobra",
       body: "Crea el pedido en tu sistema y ofrece tus medios de pago, no un número suelto.",
-      atMessage: 7,
+      atMessage: 8,
       tools: ["create_order", "get_payment_methods"],
     },
     {
@@ -367,7 +403,7 @@ export const AGENT_DEMO = {
       icon: "payment",
       title: "Verifica el pago",
       body: "Confirma contra la pasarela. Nadie de tu equipo revisa comprobantes a mano.",
-      atMessage: 9,
+      atMessage: 10,
       tools: ["report_payment", "get_order_status"],
     },
     {
@@ -375,7 +411,7 @@ export const AGENT_DEMO = {
       icon: "crm",
       title: "Registra todo en el CRM",
       body: "La conversación deja ficha, negocio y actividad. Sin que nadie digite nada.",
-      atMessage: 10,
+      atMessage: 11,
       tools: ["save_contact_data", "open_deal", "log_crm_activity"],
     },
     {
@@ -383,7 +419,7 @@ export const AGENT_DEMO = {
       icon: "agenda",
       title: "Agenda la cita",
       body: "Consulta tu agenda de verdad y reserva el cupo con recordatorio incluido.",
-      atMessage: 12,
+      atMessage: 13,
       tools: ["book_appointment", "schedule_availability"],
     },
   ] as readonly DemoBeat[],
@@ -417,11 +453,6 @@ export interface CapabilityItem {
   href: string;
 }
 
-export const CAPABILITIES_SECTION = {
-  kicker: "Un producto, seis capacidades",
-  title: "Explóralo pieza por pieza",
-} as const;
-
 export const CAPABILITIES: readonly CapabilityItem[] = [
   {
     id: "agente",
@@ -452,6 +483,13 @@ export const CAPABILITIES: readonly CapabilityItem[] = [
     href: "#catalogo",
   },
   {
+    id: "reconocimiento",
+    tag: "IA que ve",
+    title: "Reconocimiento de producto",
+    description: "Le mandan una foto; cotiza la referencia exacta.",
+    href: "#reconocimiento",
+  },
+  {
     id: "agenda",
     tag: "Tiempo",
     title: "Agenda",
@@ -467,6 +505,20 @@ export const CAPABILITIES: readonly CapabilityItem[] = [
     href: "/#medicion",
   },
 ];
+
+/** Numerales del kicker: la cifra se deriva de `CAPABILITIES.length`, no se escribe. */
+const CAPABILITY_COUNT_WORDS: Record<number, string> = {
+  5: "cinco",
+  6: "seis",
+  7: "siete",
+  8: "ocho",
+  9: "nueve",
+};
+
+export const CAPABILITIES_SECTION = {
+  kicker: `Un producto, ${CAPABILITY_COUNT_WORDS[CAPABILITIES.length] ?? String(CAPABILITIES.length)} capacidades`,
+  title: "Explóralo pieza por pieza",
+} as const;
 
 /* ────────────────────────── #inbox · handoff ───────────────────────── */
 
@@ -574,6 +626,97 @@ export const CATALOG_SECTION = {
   },
 } as const;
 
+/* ───────────── #reconocimiento · reconocimiento de producto ───────────── */
+
+/**
+ * La sección cuenta la capacidad tal como funciona (plan F8 §4.3): al cliente
+ * le llega la respuesta; a tu equipo, el porqué (`backstage`, que es el chip
+ * real del inbox). Cifras y candidatos son de la óptica FICTICIA de `#agente`.
+ */
+export const RECOGNITION_SECTION = {
+  kicker: "Reconocimiento de producto",
+  title: "Le mandan una foto. Él sabe cuál es.",
+  intro:
+    "Compara la foto del cliente con las fotos de tu catálogo y responde con la referencia exacta, tu precio y tu stock. Al cliente, la respuesta. A tu equipo, el porqué.",
+  outcomes: [
+    {
+      id: "high",
+      title: "Seguro: cotiza directo",
+      body: "Nombre, precio y disponibilidad de tu sistema, en la primera respuesta.",
+    },
+    {
+      id: "medium",
+      title: "Con duda: hasta tres opciones con foto",
+      body: "El cliente elige la suya. El agente nunca afirma lo que no sabe.",
+    },
+    {
+      id: "none",
+      title: "Sin coincidencias: pide la referencia",
+      body: "Describe lo que vio y pregunta. No inventa un producto.",
+    },
+  ],
+  /** Lo que el CLIENTE ve en su teléfono. */
+  phone: {
+    photo: {
+      id: "r0",
+      from: "customer",
+      kind: "photo",
+      text: "¿Estas las tienen?",
+      photo: {
+        imageSrc: "/images/landing/gafas-aviador-ambar.jpg",
+        imageAlt: "Captura del reel con las gafas",
+        sourceLabel: "Captura · Reel de Óptica Vértice",
+      },
+    } satisfies DemoMessage,
+    reply: {
+      id: "r1",
+      from: "agent",
+      kind: "product",
+      text: "Sí, son las Aviador Ámbar: quedan 4, $189.000. ¿Te las aparto?",
+      product: {
+        name: "Aviador Ámbar",
+        meta: "AV-AMB-U · $189.000",
+        imageSrc: "/images/landing/gafas-aviador-ambar.jpg",
+        imageAlt: "Gafas Aviador Ámbar: montura negra con lente naranja",
+      },
+    } satisfies DemoMessage,
+  },
+  /** Lo que ve el EQUIPO: el chip del inbox (`ProductRecognitionChip`). */
+  backstage: {
+    label: "Lo que ve tu equipo",
+    badge: "Inbox",
+    header: "Producto reconocido",
+    description: "Gafas de sol, montura aviador negra, lentes ámbar degradados.",
+    candidates: [
+      { id: "c1", name: "Aviador Ámbar", sku: "AV-AMB-U", price: "$189.000", score: 0.93, confidence: "high" },
+      { id: "c2", name: "Aviador Clásico", sku: "AV-CLS-U", price: "$169.000", score: 0.71, confidence: "medium" },
+      { id: "c3", name: "Redondas Miel", sku: "RD-MIE-U", price: "$149.000", score: 0.64, confidence: "low" },
+    ] as readonly RecognitionCandidate[],
+    foot: "Con confianza alta, el agente cotizó directo.",
+    confidenceLabel: { high: "Alta", medium: "Media", low: "Baja" } as const,
+  },
+  sources: [
+    { id: "photo", title: "Foto directa", body: "WhatsApp, Instagram y Messenger." },
+    { id: "screenshot", title: "Captura de pantalla", body: "De un reel, un video o una publicación. Lee el texto visible." },
+    { id: "share", title: "Publicación compartida", body: "Publicaciones y menciones de historia de Instagram. Del reel, la captura." },
+  ],
+  facts: [
+    { id: "settings", text: "Se activa desde Ajustes → Reconocimiento de producto" },
+    { id: "index", text: "Usa las fotos de tu catálogo; el índice se construye solo al guardar" },
+    { id: "receipt", text: "Un comprobante de pago nunca se confunde con un producto" },
+  ],
+} as const;
+
+export interface RecognitionCandidate {
+  id: string;
+  name: string;
+  sku: string;
+  price: string;
+  /** Similitud coseno 0..1, como la devuelve el backend. */
+  score: number;
+  confidence: "high" | "medium" | "low";
+}
+
 /* ─────────────── Muro de conversaciones (pre-CTA) ──────────────── */
 
 /**
@@ -604,7 +747,7 @@ export const CHAT_WALL: readonly (readonly WallMessage[])[] = [
     { id: "w1", business: "Moda Lunar", channel: "whatsapp", from: "customer", text: "¿La hoodie oversize la tienen en talla M?" },
     { id: "w2", business: "Moda Lunar", channel: "whatsapp", from: "agent", text: "Quedan 3 en M, $129.900. ¿Te la aparto?" },
     { id: "w3", business: "Kicks Bogotá", channel: "instagram", from: "customer", text: "Vi las tenis del reel, ¿en cuánto salen?" },
-    { id: "w4", business: "Kicks Bogotá", channel: "instagram", from: "agent", text: "$289.900 y hoy el envío va gratis. Te paso las fotos." },
+    { id: "w4", business: "Kicks Bogotá", channel: "instagram", from: "agent", text: "Son las Urban blancas: $289.900 y hoy el envío va gratis. Te paso las fotos." },
     { id: "w5", business: "Moda Lunar", channel: "whatsapp", from: "customer", text: "¿El cambio de talla tiene costo?" },
   ],
   [
