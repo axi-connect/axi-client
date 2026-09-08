@@ -17,13 +17,26 @@ const TIERS = [
 ] as const;
 const MODULES = { calls: 289_900, leads: 169_900, crm: 129_900, scheduling: 89_900 } as const;
 
-const plan = (slug: string, name: string, packageFeeCop: number | null = null) => ({
+/**
+ * `commercial_units` con la forma del seeder del servidor (`units()`): la
+ * conversación y el reconocimiento son las dos métricas que la landing lee;
+ * la entrada malformada demuestra que lo que no valida se omite sin romper.
+ */
+const units = (recognitions: number | null) => [
+  { metric: "ai_conversations", period: "billing_cycle", quantity: 500, raw_per_unit: 1, unit_label: "conversaciones con IA" },
+  ...(recognitions === null
+    ? []
+    : [{ metric: "product_recognitions", period: "billing_cycle", quantity: recognitions, raw_per_unit: 1, unit_label: "reconocimientos de producto" }]),
+  { metric: "sin_cantidad" },
+];
+
+const plan = (slug: string, name: string, packageFeeCop: number | null = null, recognitions: number | null = null) => ({
   public_slug: slug,
   name,
   description: null,
   package_fee_cents: packageFeeCop === null ? null : packageFeeCop * 100,
   capabilities: ["core"],
-  commercial_units: [],
+  commercial_units: units(recognitions),
 });
 
 export const FIXTURE_PRICING_DTO: PublicPricingDto = {
@@ -37,9 +50,9 @@ export const FIXTURE_PRICING_DTO: PublicPricingDto = {
     fee_cents: tier.fee * 100,
   })),
   packages: [
-    plan("esencial", "Esencial", PACKAGE_FEES.esencial),
-    plan("crecimiento", "Crecimiento", PACKAGE_FEES.crecimiento),
-    plan("escala", "Escala", PACKAGE_FEES.escala),
+    plan("esencial", "Esencial", PACKAGE_FEES.esencial, 200),
+    plan("crecimiento", "Crecimiento", PACKAGE_FEES.crecimiento, 600),
+    plan("escala", "Escala", PACKAGE_FEES.escala, 1_500),
     plan("enterprise", "Enterprise"),
   ],
   modules: [

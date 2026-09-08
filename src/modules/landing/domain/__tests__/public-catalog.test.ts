@@ -8,6 +8,8 @@ import {
   isVolumeId,
   modulePriceCop,
   planListCop,
+  planUnitQuantity,
+  RECOGNITION_METRIC,
   planMonthlyCop,
   promotionLastDay,
   promotionOpen,
@@ -55,6 +57,26 @@ describe("catalogFromApi", () => {
     expect(modulePriceCop(FIXTURE_CATALOG, "inventado")).toBeNull();
     expect(FIXTURE_CATALOG.enterpriseFloorCop).toBe(2_900_000);
     expect(FIXTURE_CATALOG.promotion).toMatchObject({ discount: 0.4, slots: 20, taken: 8 });
+  });
+
+  it("lee la cuota de reconocimientos de `commercial_units` y omite lo que no valida", () => {
+    // La cifra de /precios sale de aquí, nunca del content: si billing la
+    // cambia o la retira, la landing la sigue sin desplegar nada.
+    expect(planUnitQuantity(FIXTURE_CATALOG, "esencial", RECOGNITION_METRIC)).toBe(200);
+    expect(planUnitQuantity(FIXTURE_CATALOG, "escala", RECOGNITION_METRIC)).toBe(1_500);
+    expect(planUnitQuantity(FIXTURE_CATALOG, "enterprise", RECOGNITION_METRIC)).toBeNull();
+    expect(planUnitQuantity(FIXTURE_CATALOG, "inventado", RECOGNITION_METRIC)).toBeNull();
+    // La entrada malformada del fixture (`sin_cantidad`) no llega al modelo.
+    expect(FIXTURE_CATALOG.planUnits.esencial?.map((unit) => unit.metric)).toEqual([
+      "ai_conversations",
+      "product_recognitions",
+    ]);
+    // Un `commercial_units` que no es una lista tampoco rompe: cuota nula.
+    const roto = catalogFromApi({
+      ...FIXTURE_PRICING_DTO,
+      packages: FIXTURE_PRICING_DTO.packages.map((pkg) => ({ ...pkg, commercial_units: "basura" })),
+    });
+    expect(planUnitQuantity(roto, "esencial", RECOGNITION_METRIC)).toBeNull();
   });
 
   it("antes de la vigencia de dos ejes vende el catálogo de un eje sin eje de volumen", () => {

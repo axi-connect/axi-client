@@ -13,9 +13,38 @@
  * CELDAS; aquí se reconstruye la tarifa de paquete como `celda − tramo` para
  * que el visitante pueda mover el tramo y ver las tres tarjetas recalcularse.
  */
+import { z } from "zod";
+
 import type { Schemas } from "@/core/api/types";
 
 export type PublicPricingDto = Schemas["PublicPricingDto"];
+
+/**
+ * Cuota comercial de un plan tal como la publica el servidor en
+ * `commercial_units` (seeder `units()`): la métrica medida y la cantidad
+ * incluida por ciclo. El contrato la tipa como `unknown`, así que se valida
+ * aquí y lo que no cumpla la forma se OMITE: una cuota que no se entiende no
+ * se pinta, jamás se inventa.
+ */
+const planUnitSchema = z.object({
+  metric: z.string().min(1),
+  quantity: z.number().int().nonnegative(),
+  unit_label: z.string().optional(),
+});
+export type PlanUnit = z.infer<typeof planUnitSchema>;
+
+/** Métrica comercial del reconocimiento de producto (una por foto analizada). */
+export const RECOGNITION_METRIC = "product_recognitions";
+
+function planUnitsFrom(raw: unknown): PlanUnit[] {
+  if (!Array.isArray(raw)) return [];
+  const units: PlanUnit[] = [];
+  for (const entry of raw) {
+    const parsed = planUnitSchema.safeParse(entry);
+    if (parsed.success) units.push(parsed.data);
+  }
+  return units;
+}
 
 /** Meses facturados en el anual: doce de servicio, once cobrados (D2). */
 export const ANNUAL_PAID_MONTHS = 11;
@@ -64,6 +93,8 @@ export type PublicCatalog = {
   modulePrices: Record<string, number>;
   enterpriseFloorCop: number | null;
   promotion: CatalogPromotion | null;
+  /** Cuotas comerciales por slug de paquete (solo las que validan). */
+  planUnits: Record<string, PlanUnit[]>;
 };
 
 const centsToCop = (cents: number): number => Math.round(cents / 100);
@@ -92,7 +123,9 @@ export function catalogFromApi(dto: PublicPricingDto): PublicCatalog {
   const monthly = dto.prices.filter((price) => price.interval === "monthly");
   const packageFees: Record<string, number> = {};
   const legacyPackageCop: Record<string, number> = {};
+  const planUnits: Record<string, PlanUnit[]> = {};
   for (const pkg of dto.packages) {
+    planUnits[pkg.public_slug] = planUnitsFrom(pkg.commercial_units);
     // La tarifa de paquete viene del servidor (billing_plan_fee) y solo cuenta
     // si el plan tiene celdas de tramo vigentes: sin ellas no hay dos ejes.
     const hasTierCells = monthly.some((price) => price.plan === pkg.public_slug && price.tier !== null);
@@ -144,6 +177,7 @@ export function catalogFromApi(dto: PublicPricingDto): PublicCatalog {
     legacyPackageCop,
     modulePrices,
     enterpriseFloorCop: enterprise ? centsToCop(enterprise.amount_cents) : null,
+    planUnits,
     promotion:
       dto.promotion === null
         ? null
@@ -246,6 +280,19 @@ export function planMonthlyCop(
 
 export function modulePriceCop(catalog: PublicCatalog, slug: string): number | null {
   return catalog.modulePrices[slug] ?? null;
+}
+
+/* ───────────────────────────── cuotas ───────────────────────────── */
+
+/**
+ * Cantidad incluida de una métrica en un paquete, o `null` si el catálogo no
+ * la publica. La landing pinta la línea de cuota SOLO con un número de aquí:
+ * si el dueño cambia la cuota desde el panel, la página la sigue; si billing
+ * deja de venderla, la línea desaparece sola.
+ */
+export function planUnitQuantity(catalog: PublicCatalog, slug: string, metric: string): number | null {
+  const unit = catalog.planUnits[slug]?.find((entry) => entry.metric === metric);
+  return unit ? unit.quantity : null;
 }
 
 export function annualTotalCop(monthlyCop: number): number {

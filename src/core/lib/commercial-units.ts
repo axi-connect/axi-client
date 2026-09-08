@@ -19,7 +19,8 @@ export type CommercialUnit =
   | "contacts"
   | "appointments"
   | "copilot_actions"
-  | "voice_notes";
+  | "voice_notes"
+  | "product_recognitions";
 
 export type Allowance = {
   quantity: number;
@@ -38,6 +39,7 @@ const LABELS: Record<CommercialUnit, { one: string; many: string }> = {
   appointments: { one: "cita", many: "citas" },
   copilot_actions: { one: "acción del copiloto", many: "acciones del copiloto" },
   voice_notes: { one: "nota de voz", many: "notas de voz" },
+  product_recognitions: { one: "reconocimiento de producto", many: "reconocimientos de producto" },
 };
 
 /** Separador de miles es-CO («2.000»), sin decimales: las cuotas son enteras. */

@@ -1081,6 +1081,11 @@ export const RECOGNITION = {
     "Sin coincidencias, pide la referencia. No inventa",
     "Incluido en cada plan · se activa desde Ajustes",
   ],
+  /**
+   * Línea de cuota de las tarjetas de /precios. La CIFRA no está aquí: sale de
+   * `commercial_units` del catálogo (`planUnitQuantity`); esto es solo el copy.
+   */
+  quotaLine: { suffix: "al mes", note: "Fotos, capturas y publicaciones compartidas" },
 } as const;
 
 export interface RecognitionTile {
