@@ -53,13 +53,13 @@ El artefacto `.codebase-memory/graph.db.zst` está en **`.gitignore`**: cada dev
 
 ### 0.3 Gotchas de este grafo (verificados)
 
-- **Los nodos `Route` NO son los endpoints del backend.** Los 532 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
-- **Las llamadas reales al API son aristas `HTTP_CALLS`** (516). Filtra `callee STARTS WITH 'http.'` para quedarte con las **419 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
+- **Los nodos `Route` NO son los endpoints del backend.** Los 533 nodos mezclan rutas del App Router, navegaciones y literales sueltos de documentación. El path vive en la propiedad **`name`**, no en `path` (`key_path` está vacío salvo nodos de infra).
+- **Las llamadas reales al API son aristas `HTTP_CALLS`** (517). Filtra `callee STARTS WITH 'http.'` para quedarte con las **420 reales**; el resto son `router.push`/`router.replace`, o sea navegación de Next, no HTTP.
 - Los `url_path` de esas aristas son **relativos al prefijo `/api/v1`** (p.ej. `/orders/:id/cancel`), porque así los expresa `HttpClient` (§7.1).
 - **No existen aristas cross-repo automáticas con `axi-server`**: `index_repository(mode='cross-repo-intelligence')` devuelve 0 y es un límite estructural, no un error de configuración — el BFF proxy interpone la indirección y el backend no expone nodos `Route` reales. **Puente manual:** toma el `url_path` del frontend y busca en el backend el `@Controller` cuyo prefijo coincida (`MATCH (c:Class) WHERE c.decorators CONTAINS 'Controller'`). La fuente de verdad del contrato sigue siendo `axi-server/openapi/openapi.json`.
 - **Los contadores de `boundaries` de `get_architecture` tienen ruido de resolución.** Incluyen invocaciones de *props callback* (`onSubmit`, `isVisible`, `fetcher`, `onDelete`) que van de `shared` a `modules` **por diseño** — es la inversión de control de los componentes dirigidos por configuración (§12) — y falsos positivos por nombres genéricos (el `fetch` de `HttpClient` resuelto contra el `fetch` de un store, el `render` de Testing Library). **Antes de declarar una violación de las reglas de §3.3, confírmalo con aristas `IMPORTS`, no con `CALLS`.** En el índice actual hay **0 aristas `IMPORTS` desde `core/` y 1 desde `shared/`**, y esa única es un falso positivo verificado (`SiteHero.tsx` hace `import Image from 'next/image'` y el resolutor lo apunta a un test de `modules/catalog`): la regla se sostiene.
-- Hotspots de fan-in de este repo: `cn` (424), `errorMessage` (287), `useAlert` (138), `formatMoney` (70), `useAuth` (63), `isHttpError` (53), `HttpClient.post` (52). Tocarlos tiene alcance amplio.
-- **El ranking de `hotspots` también arrastra colisiones con los globals de los tests.** Al crecer la suite, funciones propias que se llaman igual que un global de Jest suben al top con fan-in falso: `channel-health.describe` (100 "callers", todos archivos `__tests__` que en realidad invocan el `describe()` de Jest — eran 57 hace un indexado, así que el artefacto crece con la suite) y `DatabaseConnectionSheet.render` (72, el `render` de Testing Library). Antes de tratar un hotspot como punto caliente real, mira de dónde vienen sus callers.
+- Hotspots de fan-in de este repo: `cn` (426), `errorMessage` (290), `useAlert` (139), `formatMoney` (70), `useAuth` (63), `isHttpError` (53), `HttpClient.post` (52). Tocarlos tiene alcance amplio.
+- **El ranking de `hotspots` también arrastra colisiones con los globals de los tests.** Al crecer la suite, funciones propias que se llaman igual que un global de Jest suben al top con fan-in falso: `channel-health.describe` (106 "callers", todos archivos `__tests__` que en realidad invocan el `describe()` de Jest — 57 → 100 → 106 en tres indexados, así que el artefacto crece con la suite) y `DatabaseConnectionSheet.render` (76, el `render` de Testing Library). Antes de tratar un hotspot como punto caliente real, mira de dónde vienen sus callers.
 
 ---
 
@@ -558,7 +558,7 @@ Registrar el origin del frontend (p.ej. `http://localhost:3001`) en `CORS_ORIGIN
 
 - Ubicación: `__tests__/` junto al componente (p.ej. `detail-sheet/__tests__/DetailSheet.test.tsx`).
 - Alias y CSS ya mapeados en `jest.config.cjs`.
-- **Prioridad de cobertura:** `DataTable`, `DynamicForm`, `DetailSheet`, hooks de `shared/api` y `core/hooks`, y la lógica de stores (dedupe/orden en `conversations.store`).
+- **Prioridad de cobertura:** `DataTable`, `DynamicForm`, `DetailSheet`, hooks de `shared/api` y `core/hooks`, y la lógica de stores (dedupe/orden en `inbox.store`).
 
 **Estado y reglas de build:**
 - `next build` está **verde con la verja de ESLint ACTIVA** (0 errores; quedan warnings menores en componentes de landing). `npm test`: suites de `parseHttpError`, `usePaginatedList`, refresh single-flight, reducers del `inbox.store` y `DetailSheet`.
