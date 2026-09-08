@@ -6679,6 +6679,7 @@ export interface components {
             version_supported: boolean;
             pg_trgm: boolean;
             unaccent: boolean;
+            vector: boolean;
             can_create: boolean;
             error?: string;
         };

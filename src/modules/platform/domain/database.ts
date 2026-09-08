@@ -116,6 +116,13 @@ export function buildChecklist(result: DbValidationResult): ChecklistItem[] {
       snippet: result.unaccent ? undefined : "CREATE EXTENSION unaccent;",
     },
     {
+      key: "vector",
+      label: "Extensión pgvector",
+      ok: result.vector,
+      remedy: result.vector ? undefined : "Instala la extensión en la base destino:",
+      snippet: result.vector ? undefined : "CREATE EXTENSION vector;",
+    },
+    {
       key: "can_create",
       label: "Privilegio CREATE",
       ok: result.can_create,

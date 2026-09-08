@@ -42,7 +42,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "tenant_db/connection_failed": "No se pudo conectar. Verifica host, puerto, credenciales y firewall",
   "tenant_db/unsupported_version": "Versión de PostgreSQL no soportada",
   "tenant_db/version_mismatch": "Las migraciones están desactualizadas: reprovisiona la base",
-  "tenant_db/missing_extension": "Falta una extensión (pg_trgm/unaccent) en la base destino",
+  "tenant_db/missing_extension": "Falta una extensión (pg_trgm/unaccent/pgvector) en la base destino",
   "tenant_db/insufficient_privileges": "El usuario necesita privilegio CREATE sobre la base",
   "usage/plan_code_taken": "Ya existe un plan con ese código",
   "usage/plan_not_found": "El plan no existe",
