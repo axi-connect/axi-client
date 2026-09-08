@@ -79,6 +79,11 @@ export const METRIC_LABELS: Record<string, string> = {
   template_sent: "Plantillas de Meta",
   lead_discoveries: "Leads descubiertos",
   lead_enrichments: "Leads verificados",
+  // En la consola de margen la que lleva dinero es `embedding_pixels`: es la
+  // única de las dos que tiene tarifa. `product_recognitions` aparece con
+  // costo cero a propósito, y verla así es correcto, no un hueco de tarifa.
+  embedding_pixels: "Píxeles de reconocimiento (Voyage)",
+  product_recognitions: "Reconocimientos de producto",
 };
 
 export function metricLabel(metric: string): string {

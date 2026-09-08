@@ -5869,7 +5869,7 @@ export interface components {
             ai_paused: boolean;
             metrics: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 used: number;
                 limit: {
                     value: number;
@@ -5901,7 +5901,7 @@ export interface components {
             data: {
                 id: string;
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 quantity: number;
                 cost_usd: number | null;
                 provider: string | null;
@@ -5933,7 +5933,7 @@ export interface components {
                     /** Format: uuid */
                     id: string;
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     /** @enum {string} */
@@ -6316,7 +6316,7 @@ export interface components {
         TenantLimitsDto: {
             data: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -6340,7 +6340,7 @@ export interface components {
         ReplaceTenantLimitsDto: {
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -6360,13 +6360,13 @@ export interface components {
         PricingListDto: {
             data: {
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq";
+                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage";
                 model: string;
                 /**
                  * @default tokens
                  * @enum {string}
                  */
-                unit: "tokens" | "characters" | "seconds" | "requests";
+                unit: "tokens" | "characters" | "seconds" | "requests" | "pixels";
                 display_name: string | null;
                 is_default: boolean;
                 input_cost_per_mtok_usd: number;
@@ -6383,13 +6383,13 @@ export interface components {
         };
         CreatePricingDto: {
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq";
+            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage";
             model: string;
             /**
              * @default tokens
              * @enum {string}
              */
-            unit: "tokens" | "characters" | "seconds" | "requests";
+            unit: "tokens" | "characters" | "seconds" | "requests" | "pixels";
             display_name?: string | null;
             is_default?: boolean;
             input_cost_per_mtok_usd: number;
@@ -6411,7 +6411,7 @@ export interface components {
              * @default tokens
              * @enum {string}
              */
-            unit: "tokens" | "characters" | "seconds" | "requests";
+            unit: "tokens" | "characters" | "seconds" | "requests" | "pixels";
             display_name?: string | null;
             is_default?: boolean;
             input_cost_per_mtok_usd?: number;
@@ -6479,7 +6479,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -6518,7 +6518,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -6545,7 +6545,7 @@ export interface components {
             /** @default [] */
             default_limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -6572,7 +6572,7 @@ export interface components {
                 tier: "sbs" | "enterprise";
                 default_limits: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                     /** @enum {string} */
                     period: "day" | "billing_cycle";
                     limit_value: number;
@@ -6606,7 +6606,7 @@ export interface components {
             billing_cycle_anchor: string | null;
             limits: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 /** @enum {string} */
                 period: "day" | "billing_cycle";
                 limit_value: number;
@@ -11882,7 +11882,7 @@ export interface components {
                 is_current: boolean;
                 overage_rates: {
                     /** @enum {string} */
-                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                    metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                     included_quantity: number | null;
                     unit_size: number;
                     amount_cents_per_unit: number;
@@ -11940,7 +11940,7 @@ export interface components {
             /** @default [] */
             overage_rates: {
                 /** @enum {string} */
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 /** @default null */
                 included_quantity: number | null;
                 unit_size: number;
@@ -14628,7 +14628,7 @@ export interface operations {
     UsageController_history_v1: {
         parameters: {
             query: {
-                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 granularity?: "hour" | "day";
                 from?: string;
                 to?: string;
@@ -14652,7 +14652,7 @@ export interface operations {
     UsageController_events_v1: {
         parameters: {
             query?: {
-                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations";
+                metric?: "ai_tokens_input" | "ai_tokens_output" | "ai_requests" | "messages_sent" | "messages_received" | "template_sent" | "external_api_calls" | "conversations_active" | "storage_bytes" | "tts_characters" | "cmo_analyses" | "lead_discoveries" | "lead_enrichments" | "call_seconds" | "ai_conversations" | "embedding_pixels" | "product_recognitions";
                 from?: string;
                 to?: string;
                 page?: number;

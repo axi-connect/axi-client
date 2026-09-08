@@ -58,6 +58,12 @@ export const OVERAGE_METRIC_LABELS: Record<OverageMetric, string> = {
   lead_enrichments: "Datos de leads verificados",
   call_seconds: "Segundos de llamada",
   ai_conversations: "Conversaciones con IA",
+  // Las DOS patas del reconocimiento de producto. La comercial es la que se
+  // vende por bloques; la de píxeles es contable y no debería facturarse nunca
+  // como excedente — si aparece en una factura, alguien le puso tarifa a la
+  // métrica equivocada.
+  product_recognitions: "Reconocimientos de producto",
+  embedding_pixels: "Píxeles de reconocimiento (Voyage)",
 };
 
 export const OVERAGE_METRICS = Object.keys(
