@@ -24,6 +24,14 @@ function dtoWith(capabilities: string[]): IntegrationDTO {
     last_synced_at: null,
     connected_at: null,
     counts: { locations_counting: 0, collections_selected: 0 },
+    mirrors: {
+      shipping_synced_at: null,
+      shipping_last_error: null,
+      discounts_synced_at: null,
+      discounts_last_error: null,
+    },
+    missing_optional_scopes: [],
+    taxes_included: null,
   };
 }
 
@@ -36,6 +44,19 @@ describe("detailTabsFor", () => {
       "ubicaciones",
       "categorias",
       "pedidos",
+      "historial",
+    ]);
+  });
+
+  it("las capacidades opcionales (scopes read_shipping/read_discounts) abren Envíos y Promociones tras Pedidos", () => {
+    expect(
+      detailTabsFor(shopify, dtoWith(["catalog", "inventory", "orders", "shipping", "discounts"])),
+    ).toEqual(["estado", "ubicaciones", "categorias", "pedidos", "envios", "promociones", "historial"]);
+    // Sin el scope, la pestaña no existe: el aviso de Estado dice qué activar.
+    expect(detailTabsFor(shopify, dtoWith(["orders", "discounts"]))).toEqual([
+      "estado",
+      "pedidos",
+      "promociones",
       "historial",
     ]);
   });

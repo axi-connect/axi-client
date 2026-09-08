@@ -1,12 +1,15 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { Lock, MoreHorizontal } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import {
   describePromotionKind,
+  isGovernedPromotion,
+  promotionCodes,
   promotionState,
   PROMOTION_STATE_LABELS,
   redemptionProgressPct,
@@ -27,11 +30,17 @@ const STATE_CLASSES: Record<PromotionState, string> = {
 /**
  * Fila de promoción. El rail izquierdo en ámbar señala "esto está dando algo
  * ahora"; apagada, agotada o vencida se atenúan y el rail pasa a neutro.
+ *
+ * Plan envíos+promos (E3): una promoción ESPEJADA del proveedor se ve para que
+ * Marketing y Axel la conozcan, pero no se edita, apaga ni borra en axi — el
+ * candado lo dice. Y cuando la tienda cobra los pedidos, una promoción LOCAL no
+ * se aplicaría en el pago: la insignia lo anticipa (`storeGovernsOrders`).
  */
 export function PromotionCard({
   promotion,
   now,
   canManage,
+  storeGovernsOrders = false,
   onEdit,
   onRedemptions,
   onToggle,
@@ -40,6 +49,8 @@ export function PromotionCard({
   promotion: PromotionDTO;
   now: Date;
   canManage: boolean;
+  /** Hay promociones espejadas ⇒ los pedidos los cobra el proveedor. */
+  storeGovernsOrders?: boolean;
   onEdit: () => void;
   onRedemptions: () => void;
   onToggle: () => void;
@@ -49,6 +60,8 @@ export function PromotionCard({
   const isLive = state === "live";
   const pct = redemptionProgressPct(promotion);
   const unredeemed = unredeemedCoupons(promotion);
+  const governed = isGovernedPromotion(promotion);
+  const codes = promotionCodes(promotion);
 
   const terms: string[] = [];
   if (promotion.min_order_cents !== null) {
@@ -72,6 +85,8 @@ export function PromotionCard({
       className={cn(
         "relative flex flex-wrap gap-4 px-5 py-4",
         !isLive && "text-muted-foreground",
+        // Gobernada: apenas atenuada, sin un segundo acento.
+        governed && "bg-secondary/40",
       )}
     >
       <span
@@ -87,14 +102,16 @@ export function PromotionCard({
           <h3 className={cn("text-[0.9375rem] font-semibold", !isLive && "text-foreground/70")}>
             {promotion.name}
           </h3>
-          {promotion.shared_code && (
+          {governed && <ShopifyOriginBadge className="text-[0.6875rem]" />}
+          {codes.map((code) => (
             <Badge
+              key={code}
               variant="outline"
               className="border-accent-amber/45 bg-accent-amber/10 font-mono text-[0.6875rem] text-accent-amber"
             >
-              {promotion.shared_code}
+              {code}
             </Badge>
-          )}
+          ))}
           <Badge variant="outline" className={STATE_CLASSES[state]}>
             {PROMOTION_STATE_LABELS[state]}
           </Badge>
@@ -106,7 +123,22 @@ export function PromotionCard({
             <> · el cupón vence {promotion.validity_hours} h después de emitirse</>
           )}
         </p>
-        <p className="mt-1.5 text-xs text-muted-foreground">{terms.join(" · ")}</p>
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          {governed ? (
+            <span className="inline-flex items-center gap-1">
+              <Lock aria-hidden="true" className="size-3" /> Se edita en la tienda
+            </span>
+          ) : null}
+          {governed && terms.length > 0 ? <span>·</span> : null}
+          <span>{terms.join(" · ")}</span>
+          {!governed && storeGovernsOrders ? (
+            // secondary + punto (AA por construcción; el tinte ámbar con texto
+            // ámbar da 1,95:1 en claro — auditoría F6)
+            <StatusDotBadge tone="warning" className="text-[0.6875rem]">
+              No aplica a pedidos cobrados en la tienda
+            </StatusDotBadge>
+          ) : null}
+        </p>
       </div>
 
       <div className="min-w-[11.5rem] space-y-1.5">
@@ -149,7 +181,7 @@ export function PromotionCard({
         <Button size="sm" variant="outline" onClick={onRedemptions}>
           Canjes
         </Button>
-        {canManage && (
+        {canManage && !governed && (
           <>
             <Button size="sm" variant="outline" onClick={onEdit}>
               Editar

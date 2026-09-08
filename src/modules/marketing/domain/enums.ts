@@ -74,12 +74,25 @@ export const TRIGGER_DESCRIPTIONS: Record<TriggerType, string> = {
 // --- Promociones -----------------------------------------------------------
 
 export type PromotionKind = Schemas["PromotionDto"]["kind"];
+/** Los que el tenant puede CREAR: `external_rule` es el espejo de una promoción
+ * de la tienda conectada y solo lo escribe la sincronización. */
+export type CreatablePromotionKind = Schemas["CreatePromotionDto"]["kind"];
 
-export const PROMOTION_KIND_ORDER: readonly PromotionKind[] = [
+export const CREATABLE_PROMOTION_KINDS: readonly CreatablePromotionKind[] = [
   "percent_discount",
   "fixed_discount",
   "gift_product",
   "free_shipping",
+] as const;
+
+export function isCreatablePromotionKind(kind: PromotionKind): kind is CreatablePromotionKind {
+  return (CREATABLE_PROMOTION_KINDS as readonly PromotionKind[]).includes(kind);
+}
+
+/** Orden de listado y filtros: todos los kinds que se pueden LEER. */
+export const PROMOTION_KIND_ORDER: readonly PromotionKind[] = [
+  ...CREATABLE_PROMOTION_KINDS,
+  "external_rule",
 ] as const;
 
 export const PROMOTION_KIND_LABELS: Record<PromotionKind, string> = {
@@ -87,6 +100,7 @@ export const PROMOTION_KIND_LABELS: Record<PromotionKind, string> = {
   fixed_discount: "Monto fijo",
   gift_product: "Producto de regalo",
   free_shipping: "Envío gratis",
+  external_rule: "Regla de la tienda",
 };
 
 // --- Plantillas ------------------------------------------------------------

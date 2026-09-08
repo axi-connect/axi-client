@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Envíos y promociones Shopify</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* CAPA 1 — primitivos de marca, copiados de src/app/globals.css. Único lugar con hex. */
+:root {
+  --background: #ffffff; --foreground: #171717;
+  --axi-brand: #e65759; --axi-brand-2: #e02f2f; --axi-violet: #7c3aed; --axi-amber: #f0a431; --axi-muted: #f4f4f5;
+  --axi-success: #16a34a; --axi-warning: #d97706; --axi-destructive: #dc2626; --axi-info: #2563eb; --axi-on-color: #ffffff;
+  --logo-shopify: #96bf48; --logo-whatsapp: #25d366;
+  --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft: color-mix(in srgb, var(--border) 50%, transparent);
+  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+  --amber-soft: color-mix(in srgb, var(--axi-amber) 14%, var(--background));
+  --amber-ink: #8a4b06; /* tinta ámbar oscura: 6.1:1 sobre --amber-soft en claro */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / .06), 0 16px 48px rgb(0 0 0 / .16);
+  --font-body: "Poppins", Helvetica, Arial, sans-serif; --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --background: #0a0a0a; --foreground: #ededed; --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --amber-ink: var(--axi-amber);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35); --shadow-overlay: 0 1px 2px rgb(0 0 0 / .5), 0 16px 48px rgb(0 0 0 / .55);
+} }
+:root[data-theme="dark"] {
+  --background: #0a0a0a; --foreground: #ededed; --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --amber-ink: var(--axi-amber);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35); --shadow-overlay: 0 1px 2px rgb(0 0 0 / .5), 0 16px 48px rgb(0 0 0 / .55);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p { margin: 0; }
+.muted { color: var(--muted-foreground); }
+.tnum { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); font-size: 13px; }
+button { font: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+
+/* barra del mockup (no es producto) */
+.mk-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 16px; background: var(--foreground); color: var(--background); font-size: 12px; }
+.mk-tag { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.mk-views { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.mk-view, .mk-theme { border: 1px solid color-mix(in srgb, var(--background) 30%, transparent); background: transparent; color: inherit; border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.mk-view[aria-pressed="true"] { background: var(--background); color: var(--foreground); font-weight: 500; }
+
+/* shell del panel */
+.page { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 20px; }
+.crumb { font-size: 12px; color: var(--muted-foreground); display: flex; gap: 6px; align-items: center; }
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.header h1 { font-size: 28px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.header p { margin: 4px 0 0; }
+.header .right { display: flex; gap: 8px; align-items: center; }
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--accent); color: var(--foreground); white-space: nowrap; }
+.badge.muted { background: var(--secondary); color: var(--muted-foreground); }
+.badge.amber { background: var(--amber-soft); color: var(--amber-ink); }
+.badge.shopify { background: var(--secondary); color: var(--foreground); }
+.badge.shopify::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--logo-shopify); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.ok { background: var(--axi-success); } .dot.amber { background: var(--axi-amber); }
+
+/* pastilla de pestañas (NavTabs segmented) */
+.seg { display: flex; width: fit-content; max-width: 100%; gap: 2px; padding: 4px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); box-shadow: var(--shadow-float); overflow-x: auto; scrollbar-width: none; }
+.seg a { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; color: var(--muted-foreground); text-decoration: none; white-space: nowrap; font-weight: 500; }
+.seg a[aria-current="page"] { background: var(--accent); color: var(--foreground); }
+.seg svg { width: 16px; height: 16px; }
+
+/* tarjetas SÓLIDAS (glass solo en flotantes) */
+.card { border: 1px solid var(--border); background: var(--background); border-radius: var(--radius-xl); padding: 20px 24px; }
+.card h2 { font-size: 18px; font-weight: 500; }
+.card .lead { margin: 2px 0 16px; }
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-head .acts { display: flex; gap: 8px; align-items: center; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.two { display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .two { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); } }
+
+/* avisos AA */
+.alert { display: grid; grid-template-columns: 20px 1fr; gap: 12px; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+.alert svg { width: 18px; height: 18px; margin-top: 2px; }
+.alert.warning { border-color: color-mix(in srgb, var(--axi-warning) 40%, var(--border)); background: var(--amber-soft); color: var(--foreground); }
+.alert.warning svg { color: var(--amber-ink); }
+.alert.info { background: var(--secondary); }
+.alert b { font-weight: 500; }
+.alert .actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.alert code, .kbd { font-family: var(--font-mono); font-size: 12px; background: var(--background); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+
+/* tabla de zonas / tarifas */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+th { font-size: 12px; font-weight: 500; color: var(--muted-foreground); letter-spacing: .02em; }
+tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr.zone td { background: var(--secondary); font-weight: 500; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); }
+.chip.more { color: var(--muted-foreground); }
+.sync { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted-foreground); }
+
+/* botones */
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 10px; border: 1px solid transparent; background: var(--axi-brand); color: var(--axi-on-color); font-weight: 500; cursor: pointer; text-decoration: none; }
+.btn.pill { border-radius: 999px; }
+.btn.outline { background: transparent; color: var(--foreground); border-color: var(--border); }
+.btn.ghost { background: transparent; color: var(--foreground); }
+.btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn.danger { background: transparent; color: var(--axi-destructive); border-color: var(--border); }
+.btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+.iconbtn { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--muted-foreground); display: grid; place-items: center; cursor: pointer; }
+.iconbtn:hover { background: var(--secondary); color: var(--foreground); }
+.iconbtn svg { width: 16px; height: 16px; }
+.lockrow { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-foreground); font-size: 12.5px; }
+.lockrow svg { width: 14px; height: 14px; }
+
+/* listas de tarjetas (promociones) */
+.items { display: grid; gap: 12px; }
+.item { display: grid; grid-template-columns: 40px 1fr auto; gap: 14px; align-items: start; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; background: var(--background); }
+.item .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--secondary); }
+.item .ic svg { width: 20px; height: 20px; }
+.item .title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 500; }
+.item .sub { margin-top: 2px; }
+.item .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12px; align-items: center; }
+.item .acts { display: flex; gap: 4px; align-items: center; }
+.item.governed { background: color-mix(in srgb, var(--secondary) 55%, var(--background)); }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters .seg a { height: 32px; padding: 0 12px; font-size: 13px; }
+
+/* estado de la conexión */
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+@media (min-width: 720px) { .kv { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kv dt { font-size: 12px; color: var(--muted-foreground); }
+.kv dd { margin: 0; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.caps { display: grid; gap: 8px; }
+.cap { display: grid; grid-template-columns: 24px 1fr auto; gap: 12px; align-items: center; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
+.cap svg { width: 18px; height: 18px; }
+.cap.on svg { color: var(--axi-success); }
+.cap.off { border-style: dashed; }
+.cap.off svg { color: var(--muted-foreground); }
+.cap .name { font-weight: 500; }
+.cap .why { font-size: 12.5px; color: var(--muted-foreground); }
+
+/* detalle de pedido: rail */
+.order { display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .order { grid-template-columns: minmax(0, 1fr) 360px; } }
+.lines { display: grid; gap: 10px; }
+.line { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+.line:last-child { border-bottom: none; }
+.thumb { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, var(--secondary), color-mix(in srgb, var(--foreground) 14%, var(--background))); }
+.line .name { font-weight: 500; }
+.line .sku { font-size: 12px; color: var(--muted-foreground); }
+.totals { display: grid; gap: 8px; }
+.trow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.trow .lbl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trow.total { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; font-weight: 600; font-size: 16px; }
+.trow.ext { font-size: 13px; color: var(--muted-foreground); }
+.trow .neg { color: var(--axi-success); }
+.rail { display: flex; flex-direction: column; gap: 16px; }
+.rail .card { padding: 16px 18px; }
+.rail h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-foreground); font-weight: 500; margin-bottom: 10px; }
+.addr { display: grid; grid-template-columns: 20px 1fr; gap: 10px; }
+.addr svg { width: 18px; height: 18px; color: var(--muted-foreground); margin-top: 2px; }
+.addr .l1 { font-weight: 500; }
+.timeline { display: grid; gap: 10px; font-size: 13px; }
+.tl { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: baseline; }
+.tl .d { width: 8px; height: 8px; border-radius: 50%; background: var(--border); margin-top: 6px; }
+.tl .d.brand { background: var(--axi-brand); }
+.tl time { color: var(--muted-foreground); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+/* ajustes de envíos (local) */
+.zone { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.zone header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--secondary); flex-wrap: wrap; }
+.zone header .t { display: flex; align-items: center; gap: 10px; font-weight: 500; flex-wrap: wrap; }
+.zone .rates { display: grid; }
+.rate { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--border-soft); }
+.rate .n { font-weight: 500; }
+.rate .c { font-size: 12.5px; color: var(--muted-foreground); }
+.rate .p { font-variant-numeric: tabular-nums; font-weight: 500; }
+.rate .p.live { color: var(--muted-foreground); font-weight: 400; font-style: normal; }
+.addrate { padding: 8px 16px; border-top: 1px dashed var(--border); }
+.grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .span2 { grid-column: span 2; } }
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.field .help { font-size: 12px; margin-top: 4px; color: var(--muted-foreground); }
+.input, .select { width: 100%; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--input); background: var(--background); color: inherit; font: inherit; }
+.select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%), linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%); background-position: calc(100% - 18px) 17px, calc(100% - 13px) 17px; background-size: 5px 5px; background-repeat: no-repeat; }
+.deps { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; min-height: 40px; border: 1px solid var(--input); border-radius: 10px; }
+.deps .chip { display: inline-flex; align-items: center; gap: 4px; background: var(--accent); border-color: transparent; }
+.deps .chip svg { width: 12px; height: 12px; }
+.deps input { border: none; background: transparent; color: inherit; font: inherit; min-width: 160px; flex: 1; outline: none; }
+.switchrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+.switchrow:last-child { border-bottom: none; }
+.switch { position: relative; width: 36px; height: 20px; border-radius: 999px; background: var(--input); border: none; cursor: pointer; flex-shrink: 0; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--background); box-shadow: var(--shadow-float); transition: transform 150ms; }
+.switch[aria-checked="true"] { background: var(--axi-brand); }
+.switch[aria-checked="true"]::after { transform: translateX(16px); }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+/* sheet flotante (glass permitido) */
+.sheet-wrap { position: relative; }
+.sheet { margin-left: auto; width: min(520px, 100%); background: color-mix(in srgb, var(--background) 92%, transparent); backdrop-filter: blur(14px) saturate(1.2); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-overlay); display: flex; flex-direction: column; }
+.sheet header { padding: 18px 20px 12px; border-bottom: 1px solid var(--border-soft); }
+.sheet header h3 { font-size: 17px; }
+.sheet .body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.sheet footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* conversación (copy del agente) */
+.chat { max-width: 520px; margin: 0 auto; display: grid; gap: 10px; padding: 20px; border-radius: var(--radius-xl); background: color-mix(in srgb, var(--secondary) 70%, var(--background)); border: 1px solid var(--border); }
+.msg { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; white-space: pre-line; }
+.msg.in { background: var(--background); border: 1px solid var(--border); border-bottom-left-radius: 6px; justify-self: start; }
+.msg.out { background: var(--accent); border-bottom-right-radius: 6px; justify-self: end; }
+.msg .t { display: block; margin-top: 4px; font-size: 11px; color: var(--muted-foreground); text-align: right; }
+.tool { justify-self: center; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-foreground); background: var(--background); border: 1px dashed var(--border); border-radius: 999px; padding: 2px 10px; }
+
+.view { display: none; } .view[data-active] { display: flex; flex-direction: column; gap: 20px; }
+.notes { border-top: 1px solid var(--border); padding-top: 20px; display: grid; gap: 10px; font-size: 13px; }
+.notes h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); }
+.notes ul { margin: 0; padding-left: 18px; }
+@media (prefers-reduced-motion: reduce) { .switch::after { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M21 14v7H3V3h7"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+  <symbol id="i-percent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+</svg>
+
+<div class="mk-bar">
+  <span class="mk-tag">Mockup F0 · Envíos y promociones</span>
+  <div class="mk-views" role="group" aria-label="Vistas del mockup">
+    <button class="mk-view" data-view="int-envios" aria-pressed="true">Integración · Envíos</button>
+    <button class="mk-view" data-view="int-promos" aria-pressed="false">Integración · Promociones</button>
+    <button class="mk-view" data-view="int-estado" aria-pressed="false">Estado · scopes</button>
+    <button class="mk-view" data-view="pedido" aria-pressed="false">Pedido · detalle</button>
+    <button class="mk-view" data-view="mkt" aria-pressed="false">Marketing · Promociones</button>
+    <button class="mk-view" data-view="settings" aria-pressed="false">Ajustes · Envíos (local)</button>
+    <button class="mk-view" data-view="settings-gov" aria-pressed="false">Ajustes · gobernado</button>
+    <button class="mk-view" data-view="chat" aria-pressed="false">Conversación</button>
+    <button class="mk-theme" id="theme">Tema</button>
+  </div>
+</div>
+
+<main class="page">
+
+<!-- ============ INTEGRACIÓN · ENVÍOS ============ -->
+<section class="view" data-view="int-envios" data-active>
+  <div class="crumb">Configuración · Integraciones · <span>Shopify</span></div>
+  <div class="header">
+    <div>
+      <h1>Savage Colombia <span class="badge muted"><span class="dot ok"></span>Conectada</span></h1>
+      <p class="muted mono">tribal-store-4813.myshopify.com · API 2026-07</p>
+    </div>
+    <div class="right"><button class="btn outline pill sm">Rotar credenciales</button></div>
+  </div>
+  <nav class="seg" aria-label="Secciones de la integración">
+    <a href="#">Estado</a><a href="#">Ubicaciones</a><a href="#">Categorías</a><a href="#">Pedidos</a>
+    <a href="#" aria-current="page"><svg><use href="#i-truck"/></svg>Envíos</a>
+    <a href="#"><svg><use href="#i-tag"/></svg>Promociones</a><a href="#">Historial</a>
+  </nav>
+
+  <div class="card">
+    <div class="card-head">
+      <div><h2>Zonas y tarifas de la tienda</h2><p class="lead muted">Espejo de los perfiles de envío de Shopify. La IA los usa para estimar el envío por departamento; el total exacto lo calcula Shopify al cerrar.</p></div>
+      <div class="acts">
+        <span class="sync"><span class="dot ok"></span>Actualizado hace 12 min</span>
+        <button class="btn outline pill sm"><svg><use href="#i-refresh"/></svg>Actualizar desde Shopify</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Zona / tarifa</th><th>Condición</th><th class="num">Precio</th><th>Tipo</th></tr></thead>
+        <tbody>
+          <tr class="zone"><td colspan="4"><div class="chips" style="align-items:center;gap:8px"><span>Colombia · principales</span><span class="chip">Bogotá D.C.</span><span class="chip">Antioquia</span><span class="chip">Valle del Cauca</span><span class="chip">Atlántico</span><span class="chip more">+3</span></div></td></tr>
+          <tr><td>Envío estándar</td><td class="muted">Pedidos hasta $199.999</td><td class="num">$12.000</td><td><span class="badge muted">Tarifa fija</span></td></tr>
+          <tr><td>Envío estándar</td><td class="muted">Pedidos desde $200.000</td><td class="num">Gratis</td><td><span class="badge muted">Tarifa fija</span></td></tr>
+          <tr><td>Express 24 h</td><td class="muted">—</td><td class="num">$25.000</td><td><span class="badge muted">Tarifa fija</span></td></tr>
+          <tr class="zone"><td colspan="4"><div class="chips" style="align-items:center;gap:8px"><span>Resto de Colombia</span><span class="chip more">Todos los demás departamentos</span></div></td></tr>
+          <tr><td>Envío nacional</td><td class="muted">—</td><td class="num">$18.000</td><td><span class="badge muted">Tarifa fija</span></td></tr>
+          <tr><td>Servientrega</td><td class="muted">Según peso</td><td class="num muted">Se calcula al cerrar</td><td><span class="badge amber">Transportadora</span></td></tr>
+          <tr class="zone"><td colspan="4"><div class="chips" style="align-items:center;gap:8px"><span>Internacional</span><span class="chip">Estados Unidos</span></div></td></tr>
+          <tr><td>DHL Express</td><td class="muted">Según peso</td><td class="num muted">Se calcula al cerrar</td><td><span class="badge amber">Transportadora</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:12px;font-size:12.5px">Las tarifas de transportadora y las condicionadas por peso no se pueden estimar: la IA le dice al cliente que el envío se confirma al cerrar el pedido.</p>
+  </div>
+
+  <div class="notes">
+    <h3>Decisiones que esta vista fija</h3>
+    <ul>
+      <li>Pestaña nueva derivada de la capacidad <code>shipping</code>; solo aparece si la app tiene <code>read_shipping</code>.</li>
+      <li>Solo lectura: la fuente es Shopify. Un solo acento secundario (ámbar) para «se calcula al cerrar»; los estados («Conectada», «Activa») van en <code>Badge secondary</code> + punto: el color es señal redundante, no portador de contraste.</li>
+      <li>Departamentos por nombre; el espejo casa por código ISO 3166-2:CO.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ INTEGRACIÓN · PROMOCIONES ============ -->
+<section class="view" data-view="int-promos">
+  <div class="crumb">Configuración · Integraciones · <span>Shopify</span></div>
+  <div class="header">
+    <div>
+      <h1>Savage Colombia <span class="badge muted"><span class="dot ok"></span>Conectada</span></h1>
+      <p class="muted mono">tribal-store-4813.myshopify.com · API 2026-07</p>
+    </div>
+  </div>
+  <nav class="seg" aria-label="Secciones de la integración">
+    <a href="#">Estado</a><a href="#">Ubicaciones</a><a href="#">Categorías</a><a href="#">Pedidos</a>
+    <a href="#"><svg><use href="#i-truck"/></svg>Envíos</a>
+    <a href="#" aria-current="page"><svg><use href="#i-tag"/></svg>Promociones</a><a href="#">Historial</a>
+  </nav>
+
+  <div class="card">
+    <div class="card-head">
+      <div><h2>Promociones activas en la tienda</h2><p class="lead muted">Se leen de Shopify y aparecen en Marketing como promociones de solo lectura. La IA las menciona tal como están escritas aquí; los montos los aplica Shopify al pagar.</p></div>
+      <div class="acts">
+        <span class="sync"><span class="dot ok"></span>Actualizado hace 12 min</span>
+        <button class="btn outline pill sm"><svg><use href="#i-refresh"/></svg>Actualizar desde Shopify</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Promoción</th><th>Cómo se aplica</th><th>Código</th><th>Vigencia</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td><b style="font-weight:500">Lleva 2, 20 % off</b><div class="muted" style="font-size:12.5px">20 % de descuento al comprar 2 o más productos</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Sin fecha de fin</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Lleva 3, 30 % off</b><div class="muted" style="font-size:12.5px">30 % de descuento al comprar 3 o más productos</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Sin fecha de fin</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Envío gratis Bogotá</b><div class="muted" style="font-size:12.5px">Envío gratis en pedidos desde $200.000 en Bogotá D.C.</div></td><td>Automática</td><td class="muted">—</td><td class="tnum">Hasta 30 sep</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Bienvenida</b><div class="muted" style="font-size:12.5px">$15.000 de descuento en tu primera compra</div></td><td>Con código</td><td><span class="mono">SAVAGE15</span></td><td class="tnum">Sin fecha de fin</td><td><span class="badge muted"><span class="dot ok"></span>Activa</span></td></tr>
+          <tr><td><b style="font-weight:500">Drop 08 · preventa</b><div class="muted" style="font-size:12.5px">10 % en la colección Drop 08</div></td><td>Con código</td><td><span class="mono">DROP08</span></td><td class="tnum">15 – 22 sep</td><td><span class="badge muted">Programada</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Decisiones que esta vista fija</h3>
+    <ul>
+      <li>Pestaña derivada de la capacidad <code>discounts</code> (scope <code>read_discounts</code>).</li>
+      <li>El «cómo se aplica» es el resumen de Shopify, sin montos calculados por axi.</li>
+      <li>Un código que el cliente dé viaja al pago de Shopify; axi nunca lo descuenta dos veces.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ ESTADO · SCOPES ============ -->
+<section class="view" data-view="int-estado">
+  <div class="crumb">Configuración · Integraciones · <span>Shopify</span></div>
+  <div class="header">
+    <div>
+      <h1>Savage Colombia <span class="badge muted"><span class="dot ok"></span>Conectada</span></h1>
+      <p class="muted mono">tribal-store-4813.myshopify.com · API 2026-07</p>
+    </div>
+    <div class="right"><button class="btn outline pill sm">Rotar credenciales</button></div>
+  </div>
+  <nav class="seg" aria-label="Secciones de la integración">
+    <a href="#" aria-current="page">Estado</a><a href="#">Ubicaciones</a><a href="#">Categorías</a><a href="#">Pedidos</a><a href="#">Historial</a>
+  </nav>
+
+  <div class="alert warning" role="status">
+    <svg><use href="#i-alert"/></svg>
+    <div>
+      <b>Tu app de Shopify aún no permite leer envíos ni promociones.</b>
+      <p class="muted" style="margin-top:2px">Activa los permisos <code>read_shipping</code> y <code>read_discounts</code> en la configuración de la app (Shopify Partners → tu app → Configuración → Permisos) y vuelve a rotar las credenciales. El catálogo, el inventario y los pedidos siguen funcionando igual.</p>
+      <div class="actions"><button class="btn sm">Rotar credenciales</button><a class="btn outline sm" href="#">Cómo activar permisos <svg><use href="#i-ext"/></svg></a></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Capacidades</h2>
+    <p class="lead muted">Lo que esta conexión puede hacer con los permisos que tiene hoy.</p>
+    <div class="caps">
+      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Catálogo y variantes</div><div class="why">158 productos espejados · gobierna Shopify</div></div><span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Inventario</div><div class="why">Ubicación contable: Sucursal de la tienda</div></div><span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+      <div class="cap on"><svg><use href="#i-check"/></svg><div><div class="name">Pedidos</div><div class="why">Draft Order + link de pago · gobierna Shopify</div></div><span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+      <div class="cap off"><svg><use href="#i-circle"/></svg><div><div class="name">Envíos</div><div class="why">Requiere el permiso <code class="kbd">read_shipping</code></div></div><span class="badge amber">Falta permiso</span></div>
+      <div class="cap off"><svg><use href="#i-circle"/></svg><div><div class="name">Promociones</div><div class="why">Requiere el permiso <code class="kbd">read_discounts</code></div></div><span class="badge amber">Falta permiso</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Conexión</h2>
+    <dl class="kv" style="margin-top:12px">
+      <div><dt>Credenciales</dt><dd class="mono">client_credentials · …7ffd</dd></div>
+      <div><dt>Última sincronización</dt><dd class="tnum">Hoy 06:12</dd></div>
+      <div><dt>Webhooks</dt><dd>8 suscritos <span class="dot ok"></span></dd></div>
+      <div><dt>Impuestos</dt><dd>Incluidos en el precio</dd></div>
+    </dl>
+  </div>
+
+  <div class="notes">
+    <h3>Decisiones que esta vista fija</h3>
+    <ul>
+      <li>Sin los scopes, las pestañas Envíos y Promociones no existen: el aviso dice exactamente qué activar y dónde.</li>
+      <li>«Impuestos: incluidos en el precio» viene de <code>shop.taxesIncluded</code>; con «excluidos» el gobierno de pedidos no se puede activar.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ PEDIDO · DETALLE ============ -->
+<section class="view" data-view="pedido">
+  <div class="crumb">Pedidos · <span class="tnum">#1042</span></div>
+  <div class="header">
+    <div>
+      <h1><span class="tnum">Pedido #1042</span> <span class="badge muted"><span class="dot ok"></span>Pagado</span> <span class="badge shopify">Shopify</span></h1>
+      <p class="muted">Laura Gómez · WhatsApp · hoy 11:24</p>
+    </div>
+    <div class="right"><button class="btn outline pill sm">Marcar enviado</button></div>
+  </div>
+
+  <div class="order">
+    <div class="stack">
+      <div class="card">
+        <h2>Productos</h2>
+        <div class="lines" style="margin-top:8px">
+          <div class="line"><div class="thumb"></div><div><div class="name">Jort Baggy Negro · Talla 30</div><div class="sku mono">JORT-BAGGY-NEGRO-30</div></div><div class="tnum">2 × $179.900</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Totales</h2>
+        <div class="totals" style="margin-top:12px">
+          <div class="trow"><span class="lbl">Subtotal</span><span class="tnum">$359.800</span></div>
+          <div class="trow"><span class="lbl">Descuento <span class="badge shopify">Lleva 2, 20 % off</span></span><span class="tnum neg">− $71.960</span></div>
+          <div class="trow"><span class="lbl">Envío <span class="muted" style="font-size:12.5px">Envío estándar · Medellín</span> <span class="badge muted"><span class="dot ok"></span>Cotizado</span></span><span class="tnum">$12.000</span></div>
+          <div class="trow total"><span>Total</span><span class="tnum">$299.840</span></div>
+          <div class="trow ext"><span class="lbl">Cobrado en Shopify <span class="badge muted"><svg style="width:12px;height:12px"><use href="#i-check"/></svg>Coincide</span></span><span class="tnum">$299.840</span></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <div class="card">
+        <h3>Entrega</h3>
+        <div class="addr">
+          <svg><use href="#i-truck"/></svg>
+          <div>
+            <div class="l1">Envío a domicilio</div>
+            <div>Laura Gómez · <span class="tnum">300 412 8877</span></div>
+            <div>Cra 43A # 5-15, apto 802</div>
+            <div class="muted">El Poblado, Medellín · Antioquia</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Pago</h3>
+        <div class="stack" style="gap:6px">
+          <div class="trow"><span class="muted">Link de pago</span><a class="mono" href="#" style="font-size:12px">…/invoices/7f3a</a></div>
+          <div class="trow"><span class="muted">Pagado</span><span class="tnum">hoy 11:41</span></div>
+          <div class="trow"><span class="muted">Códigos</span><span class="muted">—</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Historial</h3>
+        <div class="timeline">
+          <div class="tl"><span class="d"></span><span>Carrito creado por la IA</span><time>11:24</time></div>
+          <div class="tl"><span class="d"></span><span>Entrega: Medellín · envío estimado $12.000</span><time>11:27</time></div>
+          <div class="tl"><span class="d brand"></span><span>Confirmado · total cotizado con Shopify</span><time>11:31</time></div>
+          <div class="tl"><span class="d"></span><span>Link de pago enviado por WhatsApp</span><time>11:31</time></div>
+          <div class="tl"><span class="d brand"></span><span>Pagado en Shopify · totales conciliados</span><time>11:41</time></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="card" style="border-style:dashed">
+    <h2 style="font-size:15px">Variante: el estimado no coincidió con lo cobrado</h2>
+    <p class="lead muted">Otro pedido (#1043, Pasto). Cuando Shopify cobra distinto (tarifa de transportadora, promo aplicada al pagar), el rail muestra las dos cifras y no fuerza el desglose. La fila «Descuento de envío» solo aparece cuando existe.</p>
+    <div class="totals" style="max-width:520px">
+      <div class="trow"><span class="lbl">Envío <span class="muted" style="font-size:12.5px">Servientrega · Pasto</span> <span class="badge amber">Estimado</span></span><span class="tnum">$18.000</span></div>
+      <div class="trow total"><span>Total</span><span class="tnum">$107.900</span></div>
+      <div class="trow ext"><span class="lbl">Cobrado en Shopify <span class="badge amber">Difiere +$6.400</span></span><span class="tnum">$114.300</span></div>
+    </div>
+    <p class="muted" style="margin-top:10px;font-size:12.5px">La cifra que manda es la cobrada. El detalle del envío queda marcado como estimado.</p>
+  </div>
+</section>
+
+<!-- ============ MARKETING · PROMOCIONES ============ -->
+<section class="view" data-view="mkt">
+  <div class="crumb">Marketing · <span>Promociones</span></div>
+  <div class="header">
+    <div><h1>Promociones</h1><p class="muted">Las que creas aquí y las que vienen de tu tienda. La IA solo comunica; los montos los calcula el sistema.</p></div>
+    <div class="right"><button class="btn pill"><svg><use href="#i-plus"/></svg>Nueva promoción</button></div>
+  </div>
+  <div class="filters">
+    <nav class="seg" aria-label="Estado"><a href="#" aria-current="page">Activas</a><a href="#">Programadas</a><a href="#">Vencidas</a></nav>
+    <nav class="seg" aria-label="Origen"><a href="#" aria-current="page">Todas</a><a href="#"><span class="dot" style="background:var(--logo-shopify)"></span>Shopify</a><a href="#">Creadas en axi</a></nav>
+  </div>
+
+  <div class="items">
+    <div class="item governed">
+      <div class="ic"><svg><use href="#i-percent"/></svg></div>
+      <div>
+        <div class="title">Lleva 2, 20 % off <span class="badge shopify">Shopify</span> <span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+        <div class="sub muted">20 % de descuento al comprar 2 o más productos · automática</div>
+        <div class="meta"><span class="lockrow"><svg><use href="#i-lock"/></svg>Se edita en Shopify</span><span class="muted">·</span><span class="muted">Usada en 14 pedidos este mes</span></div>
+      </div>
+      <div class="acts"><a class="btn ghost sm" href="#">Ver en Shopify <svg><use href="#i-ext"/></svg></a></div>
+    </div>
+    <div class="item governed">
+      <div class="ic"><svg><use href="#i-tag"/></svg></div>
+      <div>
+        <div class="title">Bienvenida <span class="badge shopify">Shopify</span> <span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+        <div class="sub muted">$15.000 de descuento en tu primera compra · código <span class="mono">SAVAGE15</span></div>
+        <div class="meta"><span class="lockrow"><svg><use href="#i-lock"/></svg>Se edita en Shopify</span><span class="muted">·</span><span class="muted">3 redenciones</span></div>
+      </div>
+      <div class="acts"><a class="btn ghost sm" href="#">Ver en Shopify <svg><use href="#i-ext"/></svg></a></div>
+    </div>
+    <div class="item">
+      <div class="ic"><svg><use href="#i-gift"/></svg></div>
+      <div>
+        <div class="title">Regalo por recuperación <span class="badge muted"><span class="dot ok"></span>Activa</span></div>
+        <div class="sub muted">Producto de regalo: Medias Savage Logo · cupón por contacto · vence en 48 h</div>
+        <div class="meta"><span class="muted">Creada en axi · usada por la automatización «Carrito abandonado»</span><span class="badge amber">No aplica a pedidos cobrados en Shopify</span></div>
+      </div>
+      <div class="acts"><button class="iconbtn" aria-label="Editar"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Decisiones que esta vista fija</h3>
+    <ul>
+      <li>Las promociones de Shopify se ven aquí para que Marketing y Axel las conozcan, pero no se editan ni se borran en axi.</li>
+      <li>Una promoción local sobre un pedido que cobra Shopify se rechaza: la insignia lo anticipa.</li>
+      <li>Filtro «Origen» nuevo; la tarjeta gobernada va apenas atenuada, sin un segundo acento.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ AJUSTES · ENVÍOS (LOCAL) ============ -->
+<section class="view" data-view="settings">
+  <div class="crumb">Configuración · <span>Envíos</span></div>
+  <div class="header">
+    <div><h1>Envíos</h1><p class="muted">Zonas por departamento y tarifas. La IA las usa para decirle al cliente cuánto vale el envío antes de cerrar.</p></div>
+    <div class="right"><button class="btn pill"><svg><use href="#i-plus"/></svg>Nueva zona</button></div>
+  </div>
+
+  <div class="two">
+    <div class="stack">
+      <div class="zone">
+        <header><div class="t"><svg style="width:16px;height:16px"><use href="#i-pin"/></svg>Bogotá y alrededores <span class="chips"><span class="chip">Bogotá D.C.</span><span class="chip">Cundinamarca</span></span></div><div class="acts" style="display:flex;gap:4px"><button class="iconbtn" aria-label="Editar zona"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar zona"><svg><use href="#i-trash"/></svg></button></div></header>
+        <div class="rates">
+          <div class="rate"><div><div class="n">Domicilio en Bogotá</div><div class="c">Pedidos hasta $149.999</div></div><span class="p tnum">$8.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
+          <div class="rate"><div><div class="n">Domicilio en Bogotá</div><div class="c">Pedidos desde $150.000</div></div><span class="p tnum">Gratis</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
+        </div>
+        <div class="addrate"><button class="btn ghost sm"><svg><use href="#i-plus"/></svg>Agregar tarifa</button></div>
+      </div>
+
+      <div class="zone">
+        <header><div class="t"><svg style="width:16px;height:16px"><use href="#i-pin"/></svg>Ciudades principales <span class="chips"><span class="chip">Antioquia</span><span class="chip">Valle del Cauca</span><span class="chip">Atlántico</span><span class="chip">Santander</span></span></div><div class="acts" style="display:flex;gap:4px"><button class="iconbtn" aria-label="Editar zona"><svg><use href="#i-pencil"/></svg></button><button class="iconbtn" aria-label="Eliminar zona"><svg><use href="#i-trash"/></svg></button></div></header>
+        <div class="rates">
+          <div class="rate"><div><div class="n">Envío nacional</div><div class="c">Sin condición</div></div><span class="p tnum">$12.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
+        </div>
+        <div class="addrate"><button class="btn ghost sm"><svg><use href="#i-plus"/></svg>Agregar tarifa</button></div>
+      </div>
+
+      <div class="zone">
+        <header><div class="t"><svg style="width:16px;height:16px"><use href="#i-pin"/></svg>Resto del país <span class="chip more">Los demás departamentos</span></div><div class="acts" style="display:flex;gap:4px"><button class="iconbtn" aria-label="Editar zona"><svg><use href="#i-pencil"/></svg></button></div></header>
+        <div class="rates">
+          <div class="rate"><div><div class="n">Envío nacional</div><div class="c">Sin condición</div></div><span class="p tnum">$18.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
+          <div class="rate"><div><div class="n">Zonas apartadas</div><div class="c">Amazonas, Guainía, Vaupés y Vichada</div></div><span class="p tnum">$28.000</span><button class="iconbtn" aria-label="Editar tarifa"><svg><use href="#i-pencil"/></svg></button></div>
+        </div>
+        <div class="addrate"><button class="btn ghost sm"><svg><use href="#i-plus"/></svg>Agregar tarifa</button></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2>Cómo cotiza la IA</h2>
+        <div class="stack" style="gap:0;margin-top:8px">
+          <div class="switchrow"><div><div style="font-weight:500">Cotizar envíos por chat</div><div class="muted" style="font-size:12.5px">La IA pregunta ciudad y departamento y dice el valor del envío.</div></div><button class="switch" role="switch" aria-checked="true" aria-label="Cotizar envíos por chat"></button></div>
+          <div class="switchrow"><div><div style="font-weight:500">Pedir la dirección antes de cerrar</div><div class="muted" style="font-size:12.5px">Sin dirección completa no se confirma el pedido.</div></div><button class="switch" role="switch" aria-checked="true" aria-label="Pedir la dirección antes de cerrar"></button></div>
+          <div class="switchrow"><div><div style="font-weight:500">Si hay varias tarifas</div><div class="muted" style="font-size:12.5px">La IA aplica la más barata y ofrece las otras solo si el cliente pregunta.</div></div><span class="badge muted">Regla fija</span></div>
+        </div>
+        <div class="actions"><button class="btn">Guardar</button></div>
+      </div>
+
+      <div class="sheet-wrap">
+        <aside class="sheet" aria-label="Nueva zona">
+          <header><h3>Nueva zona</h3><p class="muted" style="margin:2px 0 0">Elige los departamentos que comparten tarifas.</p></header>
+          <div class="body">
+            <div class="field"><label>Nombre</label><input class="input" value="Eje Cafetero"></div>
+            <div class="field"><label>Departamentos</label>
+              <div class="deps"><span class="chip">Caldas<svg><use href="#i-x"/></svg></span><span class="chip">Quindío<svg><use href="#i-x"/></svg></span><span class="chip">Risaralda<svg><use href="#i-x"/></svg></span><input placeholder="Buscar departamento…"></div>
+              <div class="help">Déjalo vacío para que la zona cubra el resto del país.</div>
+            </div>
+            <div class="field"><label>País</label><select class="select"><option>Colombia</option><option>Otro país (zona internacional)</option></select></div>
+          </div>
+          <footer><button class="btn outline">Cancelar</button><button class="btn">Guardar zona</button></footer>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>Decisiones que esta vista fija</h3>
+    <ul>
+      <li>Las zonas se definen por departamento (lista cerrada de 33); la ciudad no decide.</li>
+      <li>Tarifas con condición por monto del pedido; «gratis desde» son dos tarifas.</li>
+      <li>Toda tarifa local tiene precio; «se confirma al cerrar» solo existe para las de transportadora que trae Shopify.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ AJUSTES · GOBERNADO ============ -->
+<section class="view" data-view="settings-gov">
+  <div class="crumb">Configuración · <span>Envíos</span></div>
+  <div class="header">
+    <div><h1>Envíos <span class="badge shopify">Gobernado por Shopify</span></h1><p class="muted">Las zonas y tarifas vienen de tu tienda. Para cambiarlas, edítalas en Shopify: aquí se actualizan solas.</p></div>
+    <div class="right"><a class="btn outline pill sm" href="#">Ver la integración</a><button class="btn pill" aria-disabled="true"><svg><use href="#i-plus"/></svg>Nueva zona</button></div>
+  </div>
+
+  <div class="alert info" role="status">
+    <svg><use href="#i-lock"/></svg>
+    <div><b>Solo lectura.</b> <span class="muted">Mientras Shopify gobierne los envíos, las tarifas locales quedan guardadas pero no se usan. Si desconectas la integración, vuelven a estar disponibles y se pueden editar.</span></div>
+  </div>
+
+  <div class="zone">
+    <header><div class="t"><svg style="width:16px;height:16px"><use href="#i-pin"/></svg>Colombia · principales <span class="chips"><span class="chip">Bogotá D.C.</span><span class="chip">Antioquia</span><span class="chip">Valle del Cauca</span><span class="chip">Atlántico</span><span class="chip more">+3</span></span></div><span class="lockrow"><svg><use href="#i-lock"/></svg>Shopify</span></header>
+    <div class="rates">
+      <div class="rate"><div><div class="n">Envío estándar</div><div class="c">Pedidos hasta $199.999</div></div><span class="p tnum">$12.000</span><span></span></div>
+      <div class="rate"><div><div class="n">Envío estándar</div><div class="c">Pedidos desde $200.000</div></div><span class="p tnum">Gratis</span><span></span></div>
+      <div class="rate"><div><div class="n">Express 24 h</div><div class="c">Sin condición</div></div><span class="p tnum">$25.000</span><span></span></div>
+    </div>
+  </div>
+  <div class="zone">
+    <header><div class="t"><svg style="width:16px;height:16px"><use href="#i-pin"/></svg>Resto de Colombia <span class="chip more">Los demás departamentos</span></div><span class="lockrow"><svg><use href="#i-lock"/></svg>Shopify</span></header>
+    <div class="rates">
+      <div class="rate"><div><div class="n">Envío nacional</div><div class="c">Sin condición</div></div><span class="p tnum">$18.000</span><span></span></div>
+      <div class="rate"><div><div class="n">Servientrega</div><div class="c">Según peso</div></div><span class="p live">Se confirma al cerrar</span><span></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cómo cotiza la IA</h2>
+    <div class="stack" style="gap:0;margin-top:8px">
+      <div class="switchrow"><div><div style="font-weight:500">Cotizar envíos por chat</div><div class="muted" style="font-size:12.5px">La IA estima con las zonas de Shopify y confirma el valor exacto al cerrar.</div></div><button class="switch" role="switch" aria-checked="true" aria-label="Cotizar envíos por chat"></button></div>
+      <div class="switchrow"><div><div style="font-weight:500">Pedir la dirección antes de cerrar</div><div class="muted" style="font-size:12.5px">Necesaria para calcular el envío real en Shopify.</div></div><button class="switch" role="switch" aria-checked="true" aria-label="Pedir la dirección antes de cerrar"></button></div>
+    </div>
+    <div class="actions"><button class="btn">Guardar</button></div>
+  </div>
+</section>
+
+<!-- ============ CONVERSACIÓN ============ -->
+<section class="view" data-view="chat">
+  <div class="header">
+    <div><h1>Lo que dice la IA</h1><p class="muted">Copy de las tools <span class="mono">set_delivery</span>, <span class="mono">quote_order</span> y <span class="mono">create_order</span> con envío. Nada de esto lo calcula el modelo: lo devuelve el sistema.</p></div>
+  </div>
+  <div class="chat" aria-label="Conversación de ejemplo">
+    <div class="msg in">Hola! quiero 2 jorts baggy negros talla 30 <span class="t">11:23</span></div>
+    <div class="tool">quote_order → subtotal $359.800 · envío por definir</div>
+    <div class="msg out">¡Listo, Laura! Dos Jort Baggy Negro talla 30 quedan en $359.800. Y como llevas 2, aplica el 20 % de descuento de la tienda al pagar 🙌
+
+¿Te lo enviamos a domicilio o lo recoges en la tienda? Si es a domicilio, dime tu ciudad y departamento para calcular el envío. <span class="t">11:23</span></div>
+    <div class="msg in">a domicilio, medellin <span class="t">11:25</span></div>
+    <div class="msg out">Perfecto. ¿Medellín, Antioquia? Y pásame la dirección completa con barrio para dejarla en el pedido. <span class="t">11:25</span></div>
+    <div class="msg in">si antioquia. Cra 43A #5-15 apto 802, el poblado <span class="t">11:27</span></div>
+    <div class="tool">set_delivery → Antioquia · Envío estándar $12.000 · estimado · alternativas: Express 24 h $25.000</div>
+    <div class="msg out">Anotado: Cra 43A # 5-15, apto 802, El Poblado, Medellín.
+
+El envío estándar a Medellín es de $12.000 (se confirma al cerrar el pedido). Resumen:
+• Subtotal: $359.800
+• Envío: $12.000
+El descuento del 20 % se aplica al pagar. ¿Confirmamos el pedido? <span class="t">11:27</span></div>
+    <div class="msg in">dale <span class="t">11:30</span></div>
+    <div class="tool">create_order → draftOrderCalculate · subtotal $359.800 · descuentos −$71.960 («Lleva 2, 20 % off») · envío $12.000 · total $299.840 · cotizado</div>
+    <div class="msg out">¡Pedido #1042 confirmado! 🎉
+• 2 × Jort Baggy Negro T30 — $359.800
+• Descuento «Lleva 2, 20 % off» — −$71.960
+• Envío estándar a Medellín — $12.000
+Total: $299.840
+
+Te dejo el link de pago: savagecolombia.com/…/invoices/7f3a. Cuando pagues, te confirmo el despacho. <span class="t">11:31</span></div>
+  </div>
+
+  <div class="notes">
+    <h3>Decisiones que esta vista fija</h3>
+    <ul>
+      <li>La IA menciona la promo automática tal como está escrita en Shopify, sin calcular el monto hasta que el sistema lo devuelve.</li>
+      <li>«Se confirma al cerrar» acompaña todo estimado; el total exacto solo aparece tras la cotización real.</li>
+      <li>Máximo dos alternativas de tarifa en el resultado de la tool; solo se mencionan si el cliente pregunta.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var views = document.querySelectorAll('.view');
+  var buttons = document.querySelectorAll('.mk-view');
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      buttons.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      views.forEach(function (v) { if (v.dataset.view === b.dataset.view) v.setAttribute('data-active', ''); else v.removeAttribute('data-active'); });
+      window.scrollTo({ top: 0 });
+    });
+  });
+  document.getElementById('theme').addEventListener('click', function () {
+    var root = document.documentElement;
+    var dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+  document.querySelectorAll('.switch').forEach(function (s) {
+    s.addEventListener('click', function () { s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); });
+  });
+})();
+</script>
+</body>
+</html>

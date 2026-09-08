@@ -108,3 +108,75 @@ export { formatMoney } from "@/core/lib/format";
 export function orderNumberLabel(orderNumber: number | null): string {
   return orderNumber !== null ? `#${String(orderNumber).padStart(4, "0")}` : "Borrador";
 }
+
+/* ------------------- Envío, entrega y total cobrado (plan envíos+promos) ------------------- */
+
+export const SHIPPING_STATE_LABELS: Record<NonNullable<OrderDTO["shipping_state"]>, string> = {
+  estimated: "Estimado",
+  quoted: "Cotizado",
+};
+
+/**
+ * Comparación entre el total local y lo que el proveedor cobra/cobró.
+ * `aligned` con ±1 unidad mínima (redondeos); `diff_cents` = externo − local,
+ * así «Difiere +$6.400» se lee como «cobró 6.400 más».
+ */
+export function externalChargeDelta(
+  order: Pick<OrderDTO, "total_cents" | "external_total_cents">,
+): { aligned: boolean; diff_cents: number } | null {
+  if (order.external_total_cents === null) return null;
+  const diff = order.external_total_cents - order.total_cents;
+  return { aligned: Math.abs(diff) <= 1, diff_cents: diff };
+}
+
+/** «Envío estándar · Medellín» — la tarifa y la ciudad, para la fila de envío. */
+export function describeShippingLine(order: Pick<OrderDTO, "shipping_label" | "delivery">): string | null {
+  const parts = [order.shipping_label, order.delivery.address?.city ?? null].filter(
+    (part): part is string => part !== null && part !== "",
+  );
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+/** Líneas de la tarjeta Entrega. `null` cuando el pedido no tiene entrega definida. */
+export function describeDelivery(
+  order: Pick<OrderDTO, "delivery">,
+): { title: string; lines: string[] } | null {
+  const { delivery } = order;
+  if (delivery.method === "pickup") {
+    return {
+      title: "Recoge en tienda",
+      lines: [delivery.pickup_branch_label, delivery.pickup_branch_address].filter(
+        (line): line is string => line !== null && line !== "",
+      ),
+    };
+  }
+  if (delivery.method === "shipping") {
+    const address = delivery.address;
+    if (address === null) return { title: "Envío a domicilio", lines: ["Dirección pendiente"] };
+    if (isRedactedAddress(address)) {
+      return { title: "Envío a domicilio", lines: ["Dirección anonimizada a petición del cliente"] };
+    }
+    const who = [address.name, address.phone].filter(
+      (part): part is string => typeof part === "string" && part !== "",
+    );
+    const street = [address.address1, address.address2].filter(
+      (part): part is string => typeof part === "string" && part !== "",
+    );
+    const place = `${address.city} · ${provinceName(address.province_code)}`;
+    return {
+      title: "Envío a domicilio",
+      lines: [who.join(" · "), street.join(", "), place].filter((line) => line !== ""),
+    };
+  }
+  return null;
+}
+
+function isRedactedAddress(address: Record<string, unknown>): boolean {
+  return typeof address.address1 !== "string";
+}
+
+/** `CO-ANT` → `ANT`: el nombre completo vive en el servidor; aquí basta el código legible. */
+function provinceName(code: string): string {
+  const separator = code.indexOf("-");
+  return separator === -1 ? code : code.slice(separator + 1);
+}

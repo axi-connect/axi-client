@@ -11,7 +11,7 @@ import {
   redemptionProgressPct,
   unredeemedCoupons,
 } from "../promotion";
-import { PROMOTION_KIND_ORDER } from "../enums";
+import { CREATABLE_PROMOTION_KINDS, PROMOTION_KIND_LABELS } from "../enums";
 
 const NOW = new Date("2026-08-06T12:00:00.000Z");
 
@@ -36,6 +36,9 @@ function promo(over: Partial<PromotionDTO> = {}): PromotionDTO {
     coupons_issued: 118,
     redemptions_recorded: 31,
     enabled: true,
+    governed_by_connection_id: null,
+    external_summary: null,
+    external_codes: [],
     created_at: "2026-08-01T00:00:00.000Z",
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
@@ -45,14 +48,31 @@ function promo(over: Partial<PromotionDTO> = {}): PromotionDTO {
 describe("PROMOTION_KIND_PARAM", () => {
   it("declara exactamente un parámetro por tipo", () => {
     // El backend rechaza con 422 si sobra cualquier otro (promotion_invalid_params).
-    for (const kind of PROMOTION_KIND_ORDER) {
+    for (const kind of CREATABLE_PROMOTION_KINDS) {
       expect(PROMOTION_KIND_PARAM[kind]).toBeDefined();
     }
-    expect(new Set(Object.values(PROMOTION_KIND_PARAM)).size).toBe(PROMOTION_KIND_ORDER.length);
+    expect(new Set(Object.values(PROMOTION_KIND_PARAM)).size).toBe(
+      CREATABLE_PROMOTION_KINDS.length,
+    );
   });
 });
 
 describe("describePromotionKind", () => {
+  it("external_rule muestra el resumen de la tienda tal cual, sin calcular nada", () => {
+    const text = describePromotionKind(
+      promo({
+        kind: "external_rule",
+        percent: null,
+        governed_by_connection_id: "conn-1",
+        external_summary: "20 % de descuento al comprar 2 o más productos",
+      }),
+    );
+    expect(text).toBe("20 % de descuento al comprar 2 o más productos");
+    expect(
+      describePromotionKind(promo({ kind: "external_rule", percent: null })),
+    ).toBe(PROMOTION_KIND_LABELS.external_rule);
+  });
+
   it("describe cada tipo con su parámetro", () => {
     expect(describePromotionKind(promo())).toBe("25% de descuento");
     // `formatMoney` usa Intl es-CO, que separa el símbolo con un espacio DURO:

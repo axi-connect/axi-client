@@ -1,5 +1,5 @@
 import type { PromotionDTO } from "@/modules/marketing/domain/promotion";
-import { PROMOTION_KIND_ORDER } from "@/modules/marketing/domain/enums";
+import { CREATABLE_PROMOTION_KINDS } from "@/modules/marketing/domain/enums";
 import {
   defaultPromotionFormValues,
   promotionFormSchema,
@@ -31,13 +31,13 @@ describe("validación por tipo", () => {
   });
 
   it("cada tipo pide su propio parámetro", () => {
-    const missing: Record<(typeof PROMOTION_KIND_ORDER)[number], string> = {
+    const missing: Record<(typeof CREATABLE_PROMOTION_KINDS)[number], string> = {
       percent_discount: "percent",
       fixed_discount: "amount_cents",
       gift_product: "gift",
       free_shipping: "shipping_value_cents",
     };
-    for (const kind of PROMOTION_KIND_ORDER) {
+    for (const kind of CREATABLE_PROMOTION_KINDS) {
       const result = promotionFormSchema.safeParse(values({ kind, percent: null }));
       expect(result.success).toBe(false);
       if (!result.success) {

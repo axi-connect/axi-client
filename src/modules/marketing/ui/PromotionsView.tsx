@@ -25,10 +25,15 @@ import {
   type PromotionKind,
 } from "@/modules/marketing/domain/enums";
 import {
+  isGovernedPromotion,
+  matchesPromotionOriginFilter,
   matchesPromotionStateFilter,
+  promotionCodes,
   promotionState,
+  PROMOTION_ORIGIN_FILTER_LABELS,
   PROMOTION_STATE_FILTER_LABELS,
   type PromotionDTO,
+  type PromotionOriginFilter,
   type PromotionStateFilter,
 } from "@/modules/marketing/domain/promotion";
 import {
@@ -36,6 +41,7 @@ import {
   listPromotions,
   updatePromotion,
 } from "@/modules/marketing/infrastructure/services/promotions-service.adapter";
+import { listIntegrations } from "@/modules/integrations/infrastructure/services/integrations-service.adapter";
 import { PromotionCard } from "./components/PromotionCard";
 import { RedemptionsSheet } from "./components/RedemptionsSheet";
 import { PromotionForm, PROMOTION_FORM_ID } from "./forms/PromotionForm";
@@ -57,9 +63,12 @@ export function PromotionsView() {
   const [promotions, setPromotions] = useState<PromotionDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Gobierno de pedidos declarado por la plataforma (null = no se pudo leer). */
+  const [ordersGoverned, setOrdersGoverned] = useState<boolean | null>(null);
 
   const [stateFilter, setStateFilter] = useState<PromotionStateFilter>("active");
   const [kindFilter, setKindFilter] = useState<PromotionKind | typeof ALL>(ALL);
+  const [originFilter, setOriginFilter] = useState<PromotionOriginFilter>("all");
   const [search, setSearch] = useState("");
 
   const [editing, setEditing] = useState<{ promotion: PromotionDTO | null } | null>(null);
@@ -84,6 +93,16 @@ export function PromotionsView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /* La señal de verdad de «la tienda cobra los pedidos» es el gobierno que
+     declara la plataforma, no que haya promos espejadas (una tienda gobernada
+     puede no tener ningún descuento activo). Best-effort: sin permiso de
+     integraciones se cae a la inferencia por espejo. */
+  useEffect(() => {
+    listIntegrations()
+      .then((res) => setOrdersGoverned(res.governance.orders === "provider_active"))
+      .catch(() => setOrdersGoverned(null));
+  }, []);
 
   /* Llegar desde el chat de Axel: `?promotion=<id>` abre ese borrador. Se pone
      el filtro en «todas» a propósito — lo que Axel deja nace APAGADO, y con el
@@ -111,11 +130,12 @@ export function PromotionsView() {
     return promotions
       .filter((p) => matchesPromotionStateFilter(promotionState(p, now), stateFilter))
       .filter((p) => kindFilter === ALL || p.kind === kindFilter)
+      .filter((p) => matchesPromotionOriginFilter(p, originFilter))
       .filter(
         (p) =>
           term === "" ||
           p.name.toLowerCase().includes(term) ||
-          (p.shared_code?.toLowerCase().includes(term) ?? false),
+          promotionCodes(p).some((code) => code.toLowerCase().includes(term)),
       )
       .sort((a, b) => {
         // Lo que está dando algo ahora, primero; dentro de cada grupo, lo más nuevo.
@@ -124,9 +144,12 @@ export function PromotionsView() {
         if (liveA !== liveB) return liveA - liveB;
         return b.created_at.localeCompare(a.created_at);
       });
-  }, [promotions, stateFilter, kindFilter, search, now]);
+  }, [promotions, stateFilter, kindFilter, originFilter, search, now]);
 
-  const hasFilters = stateFilter !== "all" || kindFilter !== ALL || search.trim() !== "";
+  const hasFilters =
+    stateFilter !== "all" || kindFilter !== ALL || originFilter !== "all" || search.trim() !== "";
+  // Gobierno declarado; a falta de lectura, hay espejo ⇒ la tienda cobra los pedidos.
+  const storeGovernsOrders = ordersGoverned ?? promotions?.some(isGovernedPromotion) ?? false;
   const isEmpty = promotions !== null && promotions.length === 0;
 
   function openEditor(promotion: PromotionDTO | null) {
@@ -202,7 +225,11 @@ export function PromotionsView() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Promociones"
-        description="Descuentos, regalos y envío gratis que el agente aplica solo a los pedidos."
+        description={
+          storeGovernsOrders
+            ? "Las que creas aquí y las que vienen de tu tienda. La IA solo comunica; los montos los calcula el sistema."
+            : "Descuentos, regalos y envío gratis que el agente aplica solo a los pedidos."
+        }
         actions={
           canManage && (
             <Button className="rounded-full" onClick={() => openEditor(null)}>
@@ -247,6 +274,24 @@ export function PromotionsView() {
               ))}
             </SelectContent>
           </Select>
+
+          {storeGovernsOrders && (
+            <Select
+              value={originFilter}
+              onValueChange={(v: string) => setOriginFilter(v as PromotionOriginFilter)}
+            >
+              <SelectTrigger className="h-9 w-auto min-w-40" aria-label="Filtrar por origen">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PROMOTION_ORIGIN_FILTER_LABELS) as PromotionOriginFilter[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {PROMOTION_ORIGIN_FILTER_LABELS[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <div className="relative min-w-44 flex-1 sm:max-w-72">
             <Search
@@ -311,6 +356,7 @@ export function PromotionsView() {
                 onClick={() => {
                   setStateFilter("all");
                   setKindFilter(ALL);
+                  setOriginFilter("all");
                   setSearch("");
                 }}
               >
@@ -331,6 +377,7 @@ export function PromotionsView() {
               promotion={promotion}
               now={now}
               canManage={canManage}
+              storeGovernsOrders={storeGovernsOrders}
               onEdit={() => openEditor(promotion)}
               onRedemptions={() => setRedemptionsOf(promotion)}
               onToggle={() => handleToggle(promotion)}

@@ -2276,6 +2276,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/integrations/{id}/shipping/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IntegrationsController_refreshShipping_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/integrations/{id}/collections": {
         parameters: {
             query?: never;
@@ -2338,6 +2354,102 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["IntegrationsController_updateSubscription_v1"];
+        trace?: never;
+    };
+    "/api/v1/shipping/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ShippingController_settings_v1"];
+        put: operations["ShippingController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipping/provinces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ShippingController_provinces_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipping/zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ShippingController_list_v1"];
+        put?: never;
+        post: operations["ShippingController_createZone_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipping/zones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ShippingController_removeZone_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ShippingController_updateZone_v1"];
+        trace?: never;
+    };
+    "/api/v1/shipping/zones/{id}/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ShippingController_createRate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipping/rates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ShippingController_removeRate_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["ShippingController_updateRate_v1"];
         trace?: never;
     };
     "/api/v1/payment-methods": {
@@ -5524,6 +5636,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/integrations/{id}/discounts/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IntegrationsDiscountsController_refreshDiscounts_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/onboarding/signups": {
         parameters: {
             query?: never;
@@ -6337,12 +6465,16 @@ export interface components {
             catalog_governed_by: "shopify" | null;
             /** @enum {string|null} */
             orders_governed_by: "shopify" | null;
+            /** @enum {string|null} */
+            shipping_governed_by?: "shopify" | null;
         };
         TenantIntegrationsDto: {
             /** @enum {string|null} */
             catalog_governed_by: "shopify" | null;
             /** @enum {string|null} */
             orders_governed_by: "shopify" | null;
+            /** @enum {string|null} */
+            shipping_governed_by?: "shopify" | null;
         };
         AuditLogListDto: {
             data: {
@@ -8827,8 +8959,33 @@ export interface components {
                 channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
                 subtotal_cents: number;
                 discount_cents: number;
+                shipping_cents: number;
+                shipping_discount_cents: number;
+                shipping_label: string | null;
+                /** @enum {string|null} */
+                shipping_state: "estimated" | "quoted" | null;
                 total_cents: number;
                 currency: string;
+                external_total_cents: number | null;
+                /** Format: date-time */
+                totals_reconciled_at: string | null;
+                delivery: {
+                    /** @enum {string|null} */
+                    method: "shipping" | "pickup" | null;
+                    address: {
+                        address1: string;
+                        address2?: string | null;
+                        city: string;
+                        province_code: string;
+                        country_code: string;
+                        zip?: string | null;
+                        name?: string | null;
+                        phone?: string | null;
+                    } | null;
+                    pickup_branch_label: string | null;
+                    pickup_branch_address: string | null;
+                };
+                promo_codes: string[];
                 intake_data: unknown;
                 notes: string | null;
                 /** @enum {string} */
@@ -8964,8 +9121,33 @@ export interface components {
             channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | null;
             subtotal_cents: number;
             discount_cents: number;
+            shipping_cents: number;
+            shipping_discount_cents: number;
+            shipping_label: string | null;
+            /** @enum {string|null} */
+            shipping_state: "estimated" | "quoted" | null;
             total_cents: number;
             currency: string;
+            external_total_cents: number | null;
+            /** Format: date-time */
+            totals_reconciled_at: string | null;
+            delivery: {
+                /** @enum {string|null} */
+                method: "shipping" | "pickup" | null;
+                address: {
+                    address1: string;
+                    address2?: string | null;
+                    city: string;
+                    province_code: string;
+                    country_code: string;
+                    zip?: string | null;
+                    name?: string | null;
+                    phone?: string | null;
+                } | null;
+                pickup_branch_label: string | null;
+                pickup_branch_address: string | null;
+            };
+            promo_codes: string[];
             intake_data: unknown;
             notes: string | null;
             /** @enum {string} */
@@ -9141,6 +9323,19 @@ export interface components {
                     locations_counting: number;
                     collections_selected: number;
                 };
+                mirrors: {
+                    /** Format: date-time */
+                    shipping_synced_at: string | null;
+                    shipping_last_error: string | null;
+                    /** Format: date-time */
+                    discounts_synced_at: string | null;
+                    discounts_last_error: string | null;
+                };
+                missing_optional_scopes: {
+                    capability: string;
+                    scopes: string[];
+                }[];
+                taxes_included: boolean | null;
             }[];
             governance: {
                 /** @enum {string} */
@@ -9191,6 +9386,19 @@ export interface components {
                 locations_counting: number;
                 collections_selected: number;
             };
+            mirrors: {
+                /** Format: date-time */
+                shipping_synced_at: string | null;
+                shipping_last_error: string | null;
+                /** Format: date-time */
+                discounts_synced_at: string | null;
+                discounts_last_error: string | null;
+            };
+            missing_optional_scopes: {
+                capability: string;
+                scopes: string[];
+            }[];
+            taxes_included: boolean | null;
         };
         ConnectIntegrationDto: {
             /** @enum {string} */
@@ -9231,6 +9439,15 @@ export interface components {
         };
         UpdateLocationsDto: {
             counting: string[];
+        };
+        ShippingMirrorRefreshDto: {
+            zones: number;
+            rates: number;
+            removed_zones: number;
+            removed_rates: number;
+            skipped_currency: number;
+            /** Format: date-time */
+            synced_at: string;
         };
         IntegrationCollectionsDto: {
             items: {
@@ -9302,6 +9519,122 @@ export interface components {
             /** @enum {string} */
             direction: "outbound" | "inbound";
             enabled: boolean;
+        };
+        ShippingSettingsDto: {
+            ai_enabled: boolean;
+            /** @enum {string} */
+            rate_selection: "cheapest";
+            require_address_before_confirm: boolean;
+            governed_by: string | null;
+        };
+        CoProvincesListDto: {
+            data: {
+                code: string;
+                name: string;
+            }[];
+        };
+        UpdateShippingSettingsDto: {
+            ai_enabled: boolean;
+            require_address_before_confirm: boolean;
+        };
+        ShippingZonesListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                country_code: string;
+                province_codes: string[];
+                provinces: {
+                    code: string;
+                    name: string;
+                }[];
+                position: number;
+                is_active: boolean;
+                /** Format: uuid */
+                governed_by_connection_id: string | null;
+                rates: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    /** @enum {string} */
+                    kind: "flat" | "live";
+                    price_cents: number | null;
+                    min_order_cents: number | null;
+                    max_order_cents: number | null;
+                    position: number;
+                    is_active: boolean;
+                    /** Format: uuid */
+                    governed_by_connection_id: string | null;
+                }[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            governed_by: string | null;
+        };
+        CreateShippingZoneDto: {
+            name: string;
+            country_code?: string;
+            province_codes: string[];
+            position?: number;
+            is_active?: boolean;
+        };
+        ShippingZoneDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            country_code: string;
+            province_codes: string[];
+            provinces: {
+                code: string;
+                name: string;
+            }[];
+            position: number;
+            is_active: boolean;
+            /** Format: uuid */
+            governed_by_connection_id: string | null;
+            rates: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "flat" | "live";
+                price_cents: number | null;
+                min_order_cents: number | null;
+                max_order_cents: number | null;
+                position: number;
+                is_active: boolean;
+                /** Format: uuid */
+                governed_by_connection_id: string | null;
+            }[];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpdateShippingZoneDto: {
+            name?: string;
+            country_code?: string;
+            province_codes?: string[];
+            position?: number;
+            is_active?: boolean;
+        };
+        CreateShippingRateDto: {
+            name: string;
+            price_cents: number;
+            min_order_cents?: number | null;
+            max_order_cents?: number | null;
+            position?: number;
+            is_active?: boolean;
+        };
+        UpdateShippingRateDto: {
+            name?: string;
+            price_cents?: number;
+            min_order_cents?: number | null;
+            max_order_cents?: number | null;
+            position?: number;
+            is_active?: boolean;
         };
         PaymentMethodsListDto: {
             data: {
@@ -10666,7 +10999,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+                kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping" | "external_rule";
                 percent: number | null;
                 amount_cents: number | null;
                 /** Format: uuid */
@@ -10690,6 +11023,10 @@ export interface components {
                 coupons_issued: number;
                 redemptions_recorded: number;
                 enabled: boolean;
+                /** Format: uuid */
+                governed_by_connection_id: string | null;
+                external_summary: string | null;
+                external_codes: string[];
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -10721,7 +11058,7 @@ export interface components {
             id: string;
             name: string;
             /** @enum {string} */
-            kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping";
+            kind: "percent_discount" | "fixed_discount" | "gift_product" | "free_shipping" | "external_rule";
             percent: number | null;
             amount_cents: number | null;
             /** Format: uuid */
@@ -10745,6 +11082,10 @@ export interface components {
             coupons_issued: number;
             redemptions_recorded: number;
             enabled: boolean;
+            /** Format: uuid */
+            governed_by_connection_id: string | null;
+            external_summary: string | null;
+            external_codes: string[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -13900,6 +14241,12 @@ export interface components {
                 page_size: number;
             };
             unread_count: number;
+        };
+        DiscountsMirrorRefreshDto: {
+            promotions: number;
+            removed: number;
+            /** Format: date-time */
+            synced_at: string;
         };
         SignupDto: {
             offer: {
@@ -18908,6 +19255,27 @@ export interface operations {
             };
         };
     };
+    IntegrationsController_refreshShipping_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingMirrorRefreshDto"];
+                };
+            };
+        };
+    };
     IntegrationsController_collections_v1: {
         parameters: {
             query?: never;
@@ -19033,6 +19401,220 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateEventSubscriptionDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ShippingController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingSettingsDto"];
+                };
+            };
+        };
+    };
+    ShippingController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateShippingSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingSettingsDto"];
+                };
+            };
+        };
+    };
+    ShippingController_provinces_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoProvincesListDto"];
+                };
+            };
+        };
+    };
+    ShippingController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingZonesListDto"];
+                };
+            };
+        };
+    };
+    ShippingController_createZone_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateShippingZoneDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingZoneDto"];
+                };
+            };
+        };
+    };
+    ShippingController_removeZone_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ShippingController_updateZone_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateShippingZoneDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingZoneDto"];
+                };
+            };
+        };
+    };
+    ShippingController_createRate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateShippingRateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingZoneDto"];
+                };
+            };
+        };
+    };
+    ShippingController_removeRate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ShippingController_updateRate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateShippingRateDto"];
             };
         };
         responses: {
@@ -24777,6 +25359,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    IntegrationsDiscountsController_refreshDiscounts_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscountsMirrorRefreshDto"];
+                };
             };
         };
     };
