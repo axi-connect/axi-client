@@ -1,4 +1,11 @@
-import { AGENT_DEMO, AGENT_TOOLS, PRODUCTOS_HERO } from "@/modules/landing/ui/content/productos.content";
+import {
+  AGENT_DEMO,
+  AGENT_TOOLS,
+  CAPABILITIES,
+  CAPABILITIES_SECTION,
+  PRODUCTOS_HERO,
+  RECOGNITION_SECTION,
+} from "@/modules/landing/ui/content/productos.content";
 
 /**
  * Invariantes del contenido de `/productos`.
@@ -79,5 +86,48 @@ describe("contenido de /productos", () => {
   it("la cifra de herramientas del hero deriva del registro, no está escrita a mano", () => {
     const tools = PRODUCTOS_HERO.stats.find((stat) => stat.id === "tools");
     expect(tools?.value).toBe(AGENT_TOOLS.length);
+  });
+
+  describe("reconocimiento de producto (F8)", () => {
+    it("el kicker del carrusel cuenta las capacidades reales, no una cifra escrita", () => {
+      const words: Record<number, string> = { 6: "seis", 7: "siete", 8: "ocho" };
+      expect(CAPABILITIES_SECTION.kicker).toBe(`Un producto, ${words[CAPABILITIES.length]} capacidades`);
+      expect(CAPABILITIES.some((item) => item.href === "#reconocimiento")).toBe(true);
+    });
+
+    it("la captura del reel va antes de la nota de voz y vive bajo /images/", () => {
+      // Como en WhatsApp de verdad: primero se comparte la publicación, luego se
+      // describe con audio. Los MP3 no cambian y la voz gana la imagen delante.
+      const [first, second] = AGENT_DEMO.messages;
+      expect(first?.kind).toBe("photo");
+      expect(first?.from).toBe("customer");
+      expect(second?.kind).toBe("voice");
+      const photos = AGENT_DEMO.messages.filter((message) => message.kind === "photo");
+      expect(photos.every((message) => message.photo.imageSrc.startsWith("/images/"))).toBe(true);
+    });
+
+    it("ningún copy vende enlaces de Instagram pegados: quedaron fuera de la v1", () => {
+      // La app no tiene aprobado `oEmbed Read`; prometer «mándale el link» sería
+      // vender algo que no existe. Se habla de publicaciones COMPARTIDAS y capturas.
+      const texts = JSON.stringify(RECOGNITION_SECTION) + JSON.stringify(CAPABILITIES);
+      expect(texts).not.toMatch(/enlace|\blink\b|\burl\b/i);
+      expect(JSON.stringify(RECOGNITION_SECTION.sources)).toMatch(/compartida/i);
+    });
+
+    it("un reel COMPARTIDO no se reconoce (llega como video): el copy pide la captura", () => {
+      // El adapter mapea reel/ig_reel a `video` y el job solo analiza imágenes
+      // (plan del servidor, limitación de la v1). Prometer «comparte el reel»
+      // vendería una entrada que el código descarta.
+      const photos = AGENT_DEMO.messages.filter((message) => message.kind === "photo");
+      for (const message of photos) expect(message.photo.sourceLabel).toMatch(/^Captura/);
+      expect(RECOGNITION_SECTION.phone.photo.photo.sourceLabel).toMatch(/^Captura/);
+      const share = RECOGNITION_SECTION.sources.find((source) => source.id === "share");
+      expect(share?.body).toMatch(/reel, la captura/i);
+    });
+
+    it("las cifras de la escena son ficción declarada: ningún porcentaje de acierto", () => {
+      // Se puede decir la similitud de UN candidato de demo; nunca «acierta el X %».
+      expect(JSON.stringify(RECOGNITION_SECTION)).not.toMatch(/acierto|precisi[oó]n|\d+\s?% de/i);
+    });
   });
 });

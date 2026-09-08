@@ -411,8 +411,12 @@ function Bubble({ message, voice }: { message: DemoMessage; voice?: VoiceControl
         )}
       >
         {message.kind === "receipt" ? <Receipt message={message} /> : null}
+        {message.kind === "photo" ? <Photo message={message} /> : null}
         {message.kind === "voice" ? <Voice message={message} voice={voice} /> : null}
-        {message.kind === "text" || message.kind === "product" || message.kind === "receipt" ? (
+        {message.kind === "text" ||
+        message.kind === "product" ||
+        message.kind === "receipt" ||
+        message.kind === "photo" ? (
           <span className="block">{message.text}</span>
         ) : null}
         {message.kind === "product" ? <Product message={message} /> : null}
@@ -515,6 +519,31 @@ function Product({ message }: { message: Extract<DemoMessage, { kind: "product" 
       </span>
       <span className="text-muted-foreground mt-0.5 block font-mono text-[clamp(9px,3.7cqw,12px)]">
         {message.product.meta}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Publicación compartida por el CLIENTE (reconocimiento de producto, F8): la
+ * cabecera con el origen dice que llegó desde Instagram, no como foto suelta.
+ * El icono va en texto, no en SVG: la marca de Instagram no se redibuja.
+ */
+function Photo({ message }: { message: Extract<DemoMessage, { kind: "photo" }> }) {
+  return (
+    <span className={cn(CARD, "border-border bg-card mb-[2.2cqw] overflow-hidden rounded-[9px] border")}>
+      <span className="text-muted-foreground border-border/60 flex items-center gap-[1.6cqw] border-b px-[2.6cqw] py-[1.6cqw] font-mono text-[clamp(8px,3.3cqw,10.5px)]">
+        <ImageIcon className="w-[clamp(9px,3.8cqw,12px)] shrink-0" aria-hidden />
+        <span className="truncate">{message.photo.sourceLabel}</span>
+      </span>
+      <span className="relative block aspect-[4/3]">
+        <Image
+          src={message.photo.imageSrc}
+          alt={message.photo.imageAlt}
+          fill
+          sizes="250px"
+          className="object-cover"
+        />
       </span>
     </span>
   );

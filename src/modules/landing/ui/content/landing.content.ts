@@ -43,6 +43,7 @@ export const LANDING_ANCHORS = {
   modules: "modulos",
   faq: "preguntas",
   demo: "demo",
+  recognition: "reconocimiento",
 } as const;
 
 /* ────────────────────────────── Mascotas ────────────────────────────── */
@@ -237,7 +238,7 @@ export const HOW_IT_WORKS = {
     {
       n: "02",
       title: "Tu agente responde en segundos, con tu catálogo real.",
-      body: "Encuentra el producto aunque el cliente escriba “hodie”, envía las fotos reales, responde con el precio de tu sistema. No improvisa: consulta.",
+      body: "Encuentra el producto aunque el cliente escriba “hodie” o mande la captura de lo que vio en un reel, envía las fotos reales, responde con el precio de tu sistema. No improvisa: consulta.",
     },
     {
       n: "03",
@@ -1010,11 +1011,83 @@ export const FAQ = {
       a: "Nadie. Los datos de tu empresa están aislados de cualquier otra por construcción del sistema — no por buenas intenciones. Y en el plan Enterprise, tu empresa opera sobre una base de datos exclusiva.",
     },
     {
+      q: "¿Qué pasa si el cliente manda una foto en vez de escribir?",
+      a: "El agente la compara con las fotos de tu catálogo. Si está seguro, cotiza la referencia exacta con tu precio; si duda, muestra hasta tres opciones con foto y el cliente elige; si no hay coincidencias, describe lo que vio y pide la referencia. Sirve con fotos, capturas de pantalla y publicaciones de Instagram compartidas. La cantidad incluida en cada plan está en Precios.",
+    },
+    {
       q: "¿Sirve si vendo servicios y no productos?",
       a: "Sí. El agente consulta tu disponibilidad real, agenda citas y el sistema envía recordatorios automáticos. Uno de nuestros clientes vende sesiones de estudio de grabación: puro tiempo, cero productos.",
     },
   ],
 } as const;
+
+/* ─────────────── §5b Reconocimiento de producto («El escáner») ─────────────── */
+
+/**
+ * Sección propia del reconocimiento en la home (plan F8 §4.1), isla oscura.
+ * El negocio es el mismo ficticio del hero («Tecnología, Medellín»): la home
+ * cuenta una sola historia. Fotos de stock con licencia libre (Unsplash),
+ * jamás imágenes oficiales de Apple — inventario y tratamiento en
+ * `docs/plans/public-gtm-f8-reconocimiento.md` anexo A. Cifras de demo.
+ */
+const RECOGNITION_IMG = "/images/landing/recognition";
+
+export const RECOGNITION = {
+  kicker: "Reconocimiento de producto",
+  title: "Le mandan una foto. Él sabe cuál es.",
+  intro:
+    "Una foto, una captura de pantalla o una publicación de Instagram compartida: el agente la compara con las fotos de tu catálogo, da con la referencia exacta y la cotiza con tu precio. Lo que hasta hoy solo tenían los gigantes del retail, en tu WhatsApp.",
+  ariaLabel: "Animación: una foto compartida se reconoce en el catálogo y se cotiza",
+  labels: { capture: "El cliente comparte", catalog: "Tu catálogo", reply: "El agente responde", similarity: "Similitud" },
+  capture: {
+    sourceLabel: "Captura · Reel de Tecnología, Medellín",
+    imageSrc: `${RECOGNITION_IMG}/iphone-capture.jpg`,
+    imageAlt: "Captura del reel: iPhone negro con fondo de pantalla verde",
+    caption: "¿Este lo tienen?",
+    time: "8:47 p.m.",
+  },
+  /** Retícula 3×3; `match` marca la ficha que se enciende. */
+  catalog: [
+    { id: "watch-a", imageSrc: `${RECOGNITION_IMG}/watch-a.jpg` },
+    { id: "macbook-a", imageSrc: `${RECOGNITION_IMG}/macbook-a.jpg` },
+    { id: "iphone-b", imageSrc: `${RECOGNITION_IMG}/iphone-b.jpg` },
+    { id: "airpods", imageSrc: `${RECOGNITION_IMG}/airpods.jpg` },
+    { id: "iphone-a", imageSrc: `${RECOGNITION_IMG}/iphone-a.jpg`, match: true },
+    { id: "ipad", imageSrc: `${RECOGNITION_IMG}/ipad.jpg` },
+    { id: "iphone-c", imageSrc: `${RECOGNITION_IMG}/iphone-c.jpg` },
+    { id: "watch-b", imageSrc: `${RECOGNITION_IMG}/watch-b.jpg` },
+    { id: "macbook-b", imageSrc: `${RECOGNITION_IMG}/macbook-b.jpg` },
+  ] as readonly RecognitionTile[],
+  /** Similitud coseno del candidato ganador, como la devuelve el backend. */
+  score: 0.93,
+  chip: "Reconocido · iPhone 15 128 GB",
+  reply: {
+    text: "Sí, es el iPhone 15 de 128 GB en negro: quedan 2, $3.899.000. ¿Te lo aparto?",
+    product: {
+      name: "iPhone 15 · 128 GB · Negro",
+      meta: "IP15-128-NG · $3.899.000 · 2 disp.",
+      imageSrc: `${RECOGNITION_IMG}/iphone-card.jpg`,
+      imageAlt: "iPhone 15 negro, foto real del catálogo",
+    },
+    time: "8:47 p.m.",
+  },
+  sources: [
+    { id: "photo", title: "Foto directa", body: "Del producto en la mano o en el espejo. WhatsApp, Instagram y Messenger." },
+    { id: "screenshot", title: "Captura de pantalla", body: "De un reel, un video o una historia. Lee también el texto visible." },
+    { id: "share", title: "Publicación compartida", body: "Publicaciones y menciones de historia de Instagram, tal como llegan al inbox. Del reel, la captura." },
+  ],
+  facts: [
+    "Con duda, muestra hasta tres opciones con foto y el cliente elige",
+    "Sin coincidencias, pide la referencia. No inventa",
+    "Incluido en cada plan · se activa desde Ajustes",
+  ],
+} as const;
+
+export interface RecognitionTile {
+  id: string;
+  imageSrc: string;
+  match?: boolean;
+}
 
 /* ──────────────────────── §10b Terminal (plantilla v2) ──────────────── */
 
