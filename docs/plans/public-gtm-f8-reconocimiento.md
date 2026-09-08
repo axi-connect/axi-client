@@ -210,6 +210,14 @@ delante).
 
 ## 5. Fases
 
+**Estado de ejecución (2026-09-08):** F0 `573eb57` · F1+F2 `cc8bf6e` (certificadas por
+`axi-80`: tsc 0, lint 0, jest 2284, build) · F3 `efdbd8a` · F4 `e23b6dd` · F5 en el commit
+siguiente. Desviaciones respecto al plan: la isla de la home va entre Métricas y «Tu equipo,
+en control» (guardarraíles ya es oscura); el beat `catalogo` de `#agente` se fusionó en
+`reconoce` (8 beats, MP3 intactos); hallazgo L1 del auditor aplicado (un reel COMPARTIDO
+llega como video y no se reconoce → «del reel, la captura», fijado por test). La función
+está en producción desde el 2026-09-08 (cada tenant la estrena apagada).
+
 | Fase | Contenido | Verja mía | Verja del auditor |
 |---|---|---|---|
 | **F0** | Este plan + mockup navegable (4 vistas: home, /productos, /precios, /integraciones) publicado como Artifact | — | Aprobación del dueño |
