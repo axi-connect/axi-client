@@ -19,7 +19,7 @@ describe("errorMessage — códigos del panel de plataforma (tabla §7)", () => 
     ["tenant_db/connection_failed", /verifica host, puerto/i],
     ["tenant_db/unsupported_version", /postgresql no soportada/i],
     ["tenant_db/version_mismatch", /reprovisiona la base/i],
-    ["tenant_db/missing_extension", /pg_trgm\/unaccent/i],
+    ["tenant_db/missing_extension", /pg_trgm\/unaccent\/pgvector/i],
     ["tenant_db/insufficient_privileges", /privilegio create/i],
     ["usage/plan_code_taken", /ya existe un plan con ese código/i],
     ["usage/plan_not_found", /el plan no existe/i],

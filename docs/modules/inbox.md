@@ -116,6 +116,19 @@ src/modules/inbox/
   lo mismo al auditar una confirmación, y `numeric` delata que el cliente respondió con un número a
   una lista degradada a texto en WhatsApp Web.
 
+- **Reconocimiento de producto** (`ui/components/media/ProductRecognitionChip.tsx`). El backend
+  analiza la foto entrante en un job aparte y escribe el resultado en `payload.recognition`
+  (`status: done | failed | skipped`, `kind`, `description`, hasta 3 `candidates`), simétrico a
+  `payload.transcription` del audio; el mismo evento `conversation.message_updated` trae una u otra
+  y `use-inbox-socket` bifurca por la clave presente. La burbuja **solo pinta lo que ayuda al
+  operador**: «Analizando la foto…» los primeros 20 s sin resultado, el producto con sus candidatos
+  (nombre, sku, precio es-CO, barra de similitud y confianza) o «Sin coincidencias»; un `receipt`
+  se etiqueta como comprobante y **no propone productos**; `skipped` (cuota, empresa apagada) y
+  `failed` no pintan nada, porque al operador no le sirve saber que la IA no miró. El payload se
+  valida con `extractRecognition` (candidatos malformados se filtran, `status` desconocido → `null`)
+  y el preview de la lista acepta los prefijos `📷` (foto reconocida) y `📎` (publicación de
+  Instagram compartida) como adjunto de imagen.
+
 ### B.3 Deuda abierta del slice
 
 - `bumpConversation` y `onHandoffEvent` re-consultan lista + counts en **cada** mensaje, sin

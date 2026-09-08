@@ -4,12 +4,14 @@ import { Package } from "lucide-react"
 import {
   extractCatalogSku,
   extractLocationPayload,
+  extractRecognition,
   extractTranscription,
   type MediaContentKind,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
 import { AudioPlayerBubble } from "./AudioPlayerBubble"
 import { AudioTranscription } from "./AudioTranscription"
+import { ProductRecognitionChip } from "./ProductRecognitionChip"
 import { DocumentCard } from "./DocumentCard"
 import { ImageBubble } from "./ImageBubble"
 import { LocationBubble } from "./LocationBubble"
@@ -68,6 +70,12 @@ export function MediaAttachment({
               <Package className="size-3" aria-hidden />
               <span className="font-mono">{catalogSku}</span>
             </span>
+          )}
+          {kind === "image" && !outbound && (
+            <ProductRecognitionChip
+              recognition={extractRecognition(message.payload)}
+              createdAt={message.created_at}
+            />
           )}
         </div>
       )

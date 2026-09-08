@@ -98,7 +98,42 @@ export type MessageUpdatedEvent = {
   company_id: string;
   message_id: string;
   content_type: Schemas["EnqueuedMessageDto"]["content_type"];
-  transcription: AudioTranscription;
+  /** Audio: la transcripción quedó lista (F12). */
+  transcription?: AudioTranscription;
+  /** Imagen: el reconocimiento de producto quedó listo. */
+  recognition?: ProductRecognition;
+};
+
+/**
+ * `payload.recognition` de una imagen entrante (reconocimiento de producto):
+ * qué vio la visión y qué productos del catálogo se parecen. Simétrico a
+ * `AudioTranscription`. `skipped` significa que NO se analizó (tenant sin la
+ * capacidad, cuota agotada, bytes que no son imagen): la burbuja no pinta nada.
+ */
+export type ProductRecognitionCandidate = {
+  product_id: string;
+  sku: string;
+  name: string;
+  /** Similitud coseno 0..1 de la mejor rama. */
+  score: number;
+  confidence: "high" | "medium" | "low";
+  has_image: boolean;
+  price_cents: number;
+  currency: string;
+  available: boolean;
+};
+
+export type ProductRecognition = {
+  status: "done" | "failed" | "skipped";
+  skip_reason?: "disabled" | "quota" | "not_image" | "too_large";
+  error_reason?: string;
+  kind?: "product" | "screenshot_of_post" | "receipt" | "document" | "other";
+  description?: string;
+  ocr_text?: string;
+  is_multi_product?: boolean;
+  candidates?: ProductRecognitionCandidate[];
+  degraded?: boolean;
+  analyzed_at?: string;
 };
 
 /** F9.1: hoy el backend lo emite solo con `failed` (markFailed del outbound). */

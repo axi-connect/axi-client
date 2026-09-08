@@ -29,6 +29,10 @@ export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   // Transcripción de notas de voz (Whisper). Faltaba y la tabla escondía sus
   // tarifas en silencio (pricing_margin_console_plan.md §4.7).
   { value: "groq", label: "Groq" },
+  // Reconocimiento de producto: embeddings multimodales. Sin esta entrada la
+  // tabla NO pinta sus tarifas — groupByProvider filtra por esta lista — y el
+  // operador no podría ver ni editar el precio del píxel.
+  { value: "voyage", label: "Voyage AI" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {
@@ -45,6 +49,9 @@ export const UNIT_LABELS: Record<PricingUnit, string> = {
   characters: "M caracteres",
   seconds: "M segundos",
   requests: "M requests",
+  // Voyage publica 0,60 USD por 10⁹ píxeles; en la fórmula «por millón de
+  // unidades» del backend eso son 0,0006 por millón.
+  pixels: "M píxeles",
 };
 
 export function unitLabel(unit: PricingUnit): string {

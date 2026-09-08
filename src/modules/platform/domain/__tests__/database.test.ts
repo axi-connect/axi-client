@@ -16,6 +16,7 @@ const validation = (over: Partial<DbValidationResult>): DbValidationResult => ({
   version_supported: true,
   pg_trgm: true,
   unaccent: true,
+  vector: true,
   can_create: true,
   ...over,
 });
@@ -41,9 +42,9 @@ const db = (over: Partial<TenantDatabaseView>): TenantDatabaseView => ({
 });
 
 describe("buildChecklist", () => {
-  it("todo verde → 6 checks ok y checklistPasses true", () => {
+  it("todo verde → 7 checks ok y checklistPasses true", () => {
     const items = buildChecklist(validation({}));
-    expect(items).toHaveLength(6);
+    expect(items).toHaveLength(7);
     expect(items.every((item) => item.ok)).toBe(true);
     expect(checklistPasses(validation({}))).toBe(true);
   });
@@ -54,6 +55,18 @@ describe("buildChecklist", () => {
     expect(unaccent.ok).toBe(false);
     expect(unaccent.snippet).toBe("CREATE EXTENSION unaccent;");
     expect(checklistPasses(validation({ unaccent: false }))).toBe(false);
+  });
+
+  // El reconocimiento de producto exige pgvector en TODAS las bases, así que una
+  // dedicada sin la extensión no puede aprovisionarse. Sin esta fila, el panel
+  // pintaba el checklist entero en verde mientras la validación fallaba: el
+  // operador leía «pasó» y buscaba la causa donde no estaba.
+  it("sin pgvector → ✘ con snippet, y el checklist NO pasa", () => {
+    const items = buildChecklist(validation({ vector: false }));
+    const vector = items.find((item) => item.key === "vector")!;
+    expect(vector.ok).toBe(false);
+    expect(vector.snippet).toBe("CREATE EXTENSION vector;");
+    expect(checklistPasses(validation({ vector: false }))).toBe(false);
   });
 
   it("sin conexión → usa el error del server como remedio si existe", () => {
