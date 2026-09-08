@@ -109,9 +109,15 @@ export function useInboxSocket() {
   // (y preview de la lista) sin re-consultar. El reducer es no-op si esa
   // conversación no está cargada en memoria.
   useSocketEvent(socket, "conversation.message_updated", (payload) => {
-    store
-      .getState()
-      .applyTranscription(payload.conversation_id, payload.message_id, payload.transcription)
+    const state = store.getState()
+    if (payload.transcription !== undefined) {
+      state.applyTranscription(payload.conversation_id, payload.message_id, payload.transcription)
+    }
+    // Reconocimiento de producto: la foto ya llegó por message_received; el
+    // análisis unos segundos después, y se funde en la burbuja sin re-consultar
+    if (payload.recognition !== undefined) {
+      state.applyRecognition(payload.conversation_id, payload.message_id, payload.recognition)
+    }
   })
 
   // F9.1: mensaje outbound recién PERSISTIDO (reply de IA, quick action,

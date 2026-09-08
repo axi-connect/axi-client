@@ -15,7 +15,12 @@ import {
   type Message,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
-import type { AudioTranscription, ConversationHandoffEvent, TypingEvent } from "@/core/realtime/events"
+import type {
+  AudioTranscription,
+  ConversationHandoffEvent,
+  ProductRecognition,
+  TypingEvent,
+} from "@/core/realtime/events"
 
 /**
  * Store del inbox. Los datos entran por REST (listas, historial con cursor)
@@ -118,6 +123,12 @@ type InboxStore = {
     conversationId: string,
     messageId: string,
     transcription: AudioTranscription,
+  ) => void
+  /** Reconocimiento de producto: análisis de la foto listo — merge en `payload`. */
+  applyRecognition: (
+    conversationId: string,
+    messageId: string,
+    recognition: ProductRecognition,
   ) => void
 
   /**
@@ -603,6 +614,44 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
                 payload: { ...basePayload, transcription },
                 transcription_pending: false,
               }
+            }),
+          },
+        },
+      }
+    })
+  },
+
+  applyRecognition: (conversationId, messageId, recognition) => {
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      // Preview en vivo de la lista, igual que el audio: si la foto sigue siendo
+      // el último mensaje, refleja la descripción con el candidato principal
+      const description = recognition.status === "done" ? recognition.description : undefined
+      const conversations =
+        description != null
+          ? state.conversations.map((c) => {
+              if (c.id !== conversationId) return c
+              const preview = c.last_message_preview?.trim()
+              const isLastImage = preview === "[image]" || preview?.startsWith("📷")
+              if (!isLastImage) return c
+              const top = recognition.candidates?.[0]
+              const label = top === undefined ? description : `${description} · ¿${top.name}?`
+              return { ...c, last_message_preview: `📷 ${label}` }
+            })
+          : state.conversations
+
+      if (!current) return { conversations }
+      return {
+        conversations,
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) => {
+              if (m.id !== messageId) return m
+              const basePayload =
+                typeof m.payload === "object" && m.payload !== null ? m.payload : {}
+              return { ...m, payload: { ...basePayload, recognition } }
             }),
           },
         },

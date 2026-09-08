@@ -1,7 +1,11 @@
 import type { Schemas } from "@/core/api/types";
-import type { AudioTranscription } from "@/core/realtime/events";
+import type {
+  AudioTranscription,
+  ProductRecognition,
+  ProductRecognitionCandidate,
+} from "@/core/realtime/events";
 
-export type { AudioTranscription };
+export type { AudioTranscription, ProductRecognition, ProductRecognitionCandidate };
 
 /**
  * Contratos del slice inbox — bandeja operable de conversaciones
@@ -67,6 +71,15 @@ export function parsePreview(preview: string | null): {
   if (trimmed.startsWith("🎤")) {
     return { kind: "audio", text: trimmed.slice("🎤".length).trim() };
   }
+  // Foto reconocida: el backend antepone 📷 a la descripción («📷 Vestido rojo ·
+  // ¿Vestido Luna?»). Mismo criterio: icono del tipo, sin emoji.
+  if (trimmed.startsWith("📷")) {
+    return { kind: "image", text: trimmed.slice("📷".length).trim() };
+  }
+  // Publicación de Instagram compartida sin caption
+  if (trimmed.startsWith("📎")) {
+    return { kind: "image", text: trimmed.slice("📎".length).trim() };
+  }
   return { kind: null, text: preview };
 }
 
@@ -90,6 +103,32 @@ export function extractLocationPayload(payload: unknown): LocationPayload | null
     name: typeof name === "string" ? name : undefined,
     address: typeof address === "string" ? address : undefined,
   };
+}
+
+/**
+ * Lee `payload.recognition` de una imagen entrante (reconocimiento de
+ * producto). Mismo patrón defensivo que la transcripción: el payload es
+ * `unknown` en el contrato y un JSONB viejo no debe romper la burbuja. Solo un
+ * `status` válido cuenta; lo demás es `null` y la burbuja no pinta el chip.
+ */
+export function extractRecognition(payload: unknown): ProductRecognition | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const recognition = (payload as { recognition?: unknown }).recognition;
+  if (typeof recognition !== "object" || recognition === null) return null;
+  const record = recognition as Record<string, unknown>;
+  if (record.status !== "done" && record.status !== "failed" && record.status !== "skipped") {
+    return null;
+  }
+  const candidates = Array.isArray(record.candidates)
+    ? (record.candidates as unknown[]).filter(
+        (item): item is ProductRecognitionCandidate =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof (item as { name?: unknown }).name === "string" &&
+          typeof (item as { sku?: unknown }).sku === "string",
+      )
+    : [];
+  return { ...(record as ProductRecognition), candidates };
 }
 
 /**

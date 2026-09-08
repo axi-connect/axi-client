@@ -1156,6 +1156,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ai-agents/recognition-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecognitionSettingsController_get_v1"];
+        put: operations["RecognitionSettingsController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ai-agents": {
         parameters: {
             query?: never;
@@ -1695,6 +1711,38 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["ProductImagesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/recognition/index-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CatalogRecognitionController_status_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/recognition/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CatalogRecognitionController_reindex_v1"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -7357,6 +7405,9 @@ export interface components {
         VoiceSettingsDto: {
             ai_enabled: boolean;
         };
+        RecognitionSettingsDto: {
+            ai_enabled: boolean;
+        };
         AiAgentListDto: {
             data: {
                 /** Format: uuid */
@@ -8258,6 +8309,18 @@ export interface components {
             /** Format: uuid */
             variant_id?: string | null;
             image_ids: string[];
+        };
+        RecognitionIndexStatusDto: {
+            enabled: boolean;
+            model: string;
+            products: number;
+            products_indexed: number;
+            images: number;
+            images_indexed: number;
+            products_without_photo: number;
+        };
+        RecognitionReindexAcceptedDto: {
+            queued: boolean;
         };
         AvailabilityDto: {
             timezone: string;
@@ -16419,6 +16482,46 @@ export interface operations {
             };
         };
     };
+    RecognitionSettingsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecognitionSettingsDto"];
+                };
+            };
+        };
+    };
+    RecognitionSettingsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecognitionSettingsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AiAgentsController_list_v1: {
         parameters: {
             query?: never;
@@ -17671,6 +17774,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    CatalogRecognitionController_status_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecognitionIndexStatusDto"];
+                };
+            };
+        };
+    };
+    CatalogRecognitionController_reindex_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecognitionReindexAcceptedDto"];
+                };
             };
         };
     };
