@@ -6,6 +6,7 @@ import {
   extractLocationPayload,
   extractRecognition,
   extractTranscription,
+  isSharedPost,
   type MediaContentKind,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
@@ -82,13 +83,24 @@ export function MediaAttachment({
     }
     case "video":
       return (
-        <VideoBubble
-          conversationId={conversationId}
-          messageId={message.id}
-          attachment={attachment}
-          outbound={outbound}
-          previewUrl={previewUrl}
-        />
+        <div className="flex flex-col gap-1">
+          <VideoBubble
+            conversationId={conversationId}
+            messageId={message.id}
+            attachment={attachment}
+            outbound={outbound}
+            previewUrl={previewUrl}
+          />
+          {/* Reel de Instagram compartido: el backend analiza su primer
+              fotograma. Un video cualquiera no se analiza y no promete nada. */}
+          {!outbound && isSharedPost(message.payload) && (
+            <ProductRecognitionChip
+              recognition={extractRecognition(message.payload)}
+              createdAt={message.created_at}
+              subject="reel"
+            />
+          )}
+        </div>
       )
     case "audio":
       return (

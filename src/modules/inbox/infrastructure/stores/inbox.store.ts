@@ -632,7 +632,12 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
           ? state.conversations.map((c) => {
               if (c.id !== conversationId) return c
               const preview = c.last_message_preview?.trim()
-              const isLastImage = preview === "[image]" || preview?.startsWith("📷")
+              // «[video]»/«📎 título» = reel compartido analizado por su fotograma
+              const isLastImage =
+                preview === "[image]" ||
+                preview === "[video]" ||
+                preview?.startsWith("📷") ||
+                preview?.startsWith("📎")
               if (!isLastImage) return c
               const top = recognition.candidates?.[0]
               const label = top === undefined ? description : `${description} · ¿${top.name}?`

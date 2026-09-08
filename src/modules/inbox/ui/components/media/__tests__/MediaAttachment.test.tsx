@@ -45,3 +45,39 @@ describe("MediaAttachment — media sin attachment", () => {
     expect(screen.getByText(/no disponible todavía/i)).toBeInTheDocument()
   })
 })
+
+describe("MediaAttachment — video", () => {
+  const attachment = { id: "a1", filename: "reel.mp4", mime_type: "video/mp4", size_bytes: 1 }
+
+  it("un reel de Instagram compartido muestra «Analizando el reel…» bajo el reproductor", () => {
+    render(
+      <MediaAttachment
+        message={makeMessage({
+          content_type: "video",
+          attachments: [attachment],
+          payload: { media: { share: { type: "ig_reel", title: "Jeans baggy" } } },
+          created_at: new Date().toISOString(),
+        })}
+        conversationId="c1"
+        outbound={false}
+      />,
+    )
+    expect(screen.getByLabelText("Analizando el reel")).toBeInTheDocument()
+  })
+
+  it("un video cualquiera de WhatsApp no promete análisis", () => {
+    render(
+      <MediaAttachment
+        message={makeMessage({
+          content_type: "video",
+          attachments: [attachment],
+          payload: { media: {} },
+          created_at: new Date().toISOString(),
+        })}
+        conversationId="c1"
+        outbound={false}
+      />,
+    )
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+  })
+})

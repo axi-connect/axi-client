@@ -254,6 +254,20 @@ export function extractCatalogSku(payload: unknown): string | null {
   return typeof sku === "string" && sku.trim() ? sku : null;
 }
 
+/**
+ * ¿El mensaje es una publicación compartida de Instagram (`payload.media.share`)?
+ * Un reel compartido llega como `video` y el backend analiza su primer
+ * fotograma; un video cualquiera de WhatsApp no se analiza, así que el chip
+ * «Analizando…» solo tiene sentido en el primero.
+ */
+export function isSharedPost(payload: unknown): boolean {
+  if (typeof payload !== "object" || payload === null) return false;
+  const media = (payload as { media?: unknown }).media;
+  if (typeof media !== "object" || media === null) return false;
+  const share = (media as { share?: unknown }).share;
+  return typeof share === "object" && share !== null;
+}
+
 /** Tabs de la bandeja: espejo de los contadores de `GET /inbox/counts`. */
 export type InboxTab = "queued" | "mine" | "ai" | "all_open";
 

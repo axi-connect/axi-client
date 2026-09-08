@@ -29,21 +29,25 @@ const CONFIDENCE_LABEL: Record<"high" | "medium" | "low", string> = {
 export function ProductRecognitionChip({
   recognition,
   createdAt,
+  subject = "foto",
 }: {
   recognition: ProductRecognition | null
   createdAt: string
+  /** «reel» cuando lo analizado es el fotograma de un reel compartido. */
+  subject?: "foto" | "reel"
 }) {
   if (recognition === null) {
     const ageMs = Date.now() - new Date(createdAt).getTime()
     if (Number.isNaN(ageMs) || ageMs > ANALYZING_WINDOW_MS) return null
+    const label = subject === "reel" ? "Analizando el reel" : "Analizando la foto"
     return (
       <div
         className="flex w-fit items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground"
         role="status"
-        aria-label="Analizando la foto"
+        aria-label={label}
       >
         <ScanSearch className="size-3 shrink-0 animate-pulse text-accent-violet" aria-hidden />
-        <span className="animate-pulse">Analizando la foto…</span>
+        <span className="animate-pulse">{label}…</span>
       </div>
     )
   }
