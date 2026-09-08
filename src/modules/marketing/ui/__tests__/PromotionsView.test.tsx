@@ -43,6 +43,14 @@ jest.mock("@/modules/marketing/infrastructure/services/promotions-service.adapte
   deletePromotion: jest.fn(),
 }));
 
+/* Gobierno de pedidos declarado por la plataforma: local salvo en el escenario
+   de la tienda. Mutable a propósito. */
+let mockOrdersGovernance: "local" | "provider_active" | "provider_declared_not_connected" = "local";
+jest.mock("@/modules/integrations/infrastructure/services/integrations-service.adapter", () => ({
+  listIntegrations: () =>
+    Promise.resolve({ items: [], governance: { catalog: "local", orders: mockOrdersGovernance } }),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const api = require("@/modules/marketing/infrastructure/services/promotions-service.adapter") as {
   listPromotions: jest.Mock;
@@ -60,6 +68,9 @@ function promo(over: Partial<PromotionDTO> = {}): PromotionDTO {
     gift_variant_id: null,
     gift_variant: null,
     shipping_value_cents: null,
+    external_codes: [],
+    external_summary: null,
+    governed_by_connection_id: null,
     min_order_cents: 5_000_000,
     shared_code: "VUELVE10",
     validity_hours: 6,
@@ -165,6 +176,81 @@ describe("catálogo con promociones", () => {
       }),
     );
     expect(api.deletePromotion).not.toHaveBeenCalled();
+  });
+});
+
+/* Plan envíos+promos (E3): las promociones de la tienda se ven pero no se
+   tocan; una local, cuando la tienda cobra, avisa de que no aplicará. */
+describe("con promociones espejadas de la tienda", () => {
+  afterEach(() => {
+    mockOrdersGovernance = "local";
+  });
+
+  beforeEach(async () => {
+    mockOrdersGovernance = "provider_active";
+    api.listPromotions.mockResolvedValue([
+      promo({
+        id: "s1",
+        name: "Lleva 2, 20 % off",
+        kind: "external_rule",
+        percent: null,
+        shared_code: null,
+        external_codes: [],
+        external_summary: "20 % de descuento al comprar 2 o más productos",
+        governed_by_connection_id: "int-1",
+        max_redemptions_total: null,
+        redemptions_count: 14,
+        coupons_issued: 0,
+        redemptions_recorded: 14,
+      }),
+      promo({
+        id: "s2",
+        name: "Bienvenida",
+        kind: "fixed_discount",
+        percent: null,
+        amount_cents: 1_500_000,
+        shared_code: null,
+        external_codes: ["SAVAGE15"],
+        governed_by_connection_id: "int-1",
+        max_redemptions_total: null,
+      }),
+      promo({ name: "Vuelve y ahorra" }),
+    ]);
+    render(<PromotionsView />);
+    await screen.findByText("Lleva 2, 20 % off");
+  });
+
+  it("marca el origen, bloquea la edición y muestra los códigos del proveedor", () => {
+    expect(screen.getAllByText("Shopify")).toHaveLength(2);
+    expect(screen.getAllByText("Se edita en la tienda")).toHaveLength(2);
+    expect(screen.getByText(/20 % de descuento al comprar 2 o más productos/)).toBeInTheDocument();
+    expect(screen.getByText("SAVAGE15")).toBeInTheDocument();
+    // Solo la local tiene Editar y menú; las espejadas, solo Canjes.
+    expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(1);
+    expect(screen.getAllByLabelText(/Más acciones de/)).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Canjes" })).toHaveLength(3);
+  });
+
+  it("la local avisa de que no aplica a pedidos cobrados en la tienda, y el filtro Origen separa", async () => {
+    expect(await screen.findByText("No aplica a pedidos cobrados en la tienda")).toBeInTheDocument();
+    expect(screen.getByLabelText("Filtrar por origen")).toBeInTheDocument();
+    const search = screen.getByLabelText("Buscar promoción");
+    fireEvent.change(search, { target: { value: "savage15" } });
+    expect(screen.getByText("Bienvenida")).toBeInTheDocument();
+    expect(screen.queryByText("Vuelve y ahorra")).not.toBeInTheDocument();
+  });
+});
+
+describe("tienda que cobra los pedidos sin ninguna promo espejada", () => {
+  afterEach(() => {
+    mockOrdersGovernance = "local";
+  });
+
+  it("aun sin espejo, la promo local avisa de que no aplicará: la señal es el gobierno, no el espejo", async () => {
+    mockOrdersGovernance = "provider_active";
+    api.listPromotions.mockResolvedValue([promo({ name: "Vuelve y ahorra" })]);
+    render(<PromotionsView />);
+    expect(await screen.findByText("No aplica a pedidos cobrados en la tienda")).toBeInTheDocument();
   });
 });
 

@@ -1,6 +1,6 @@
 import type { Schemas } from "@/core/api/types";
 import { formatMoney } from "@/core/lib/format";
-import { PROMOTION_KIND_LABELS, type PromotionKind } from "./enums";
+import { PROMOTION_KIND_LABELS, type CreatablePromotionKind } from "./enums";
 
 /** Contratos de promociones y cupones (`/marketing/promotions`). */
 
@@ -14,7 +14,7 @@ export type RedemptionDTO = Schemas["RedemptionsListDto"]["data"][number];
  * ningún otro (422 `promotion_invalid_params`), así que el formulario muestra
  * uno solo y limpia los demás al cambiar de tipo.
  */
-export const PROMOTION_KIND_PARAM: Record<PromotionKind, keyof PromotionDTO> = {
+export const PROMOTION_KIND_PARAM: Record<CreatablePromotionKind, keyof PromotionDTO> = {
   percent_discount: "percent",
   fixed_discount: "amount_cents",
   gift_product: "gift_variant_id",
@@ -53,6 +53,9 @@ export function describePromotionKind(promotion: PromotionDTO): string {
       const gift = giftVariantLabel(promotion);
       return gift ? `Producto de regalo · ${gift}` : PROMOTION_KIND_LABELS.gift_product;
     }
+    case "external_rule":
+      // Espejo de la tienda: el resumen lo escribe el proveedor, axi solo lo muestra.
+      return promotion.external_summary ?? PROMOTION_KIND_LABELS.external_rule;
   }
 }
 
@@ -150,4 +153,37 @@ export function matchesPromotionStateFilter(
  */
 export function unredeemedCoupons(promotion: PromotionDTO): number {
   return Math.max(0, promotion.coupons_issued - promotion.redemptions_recorded);
+}
+
+/* ---------------------- Origen (plan envíos+promos E3) ---------------------- */
+
+/** Espejada del proveedor: se ve, se comunica, no se edita en axi. */
+export function isGovernedPromotion(
+  promotion: Pick<PromotionDTO, "governed_by_connection_id">,
+): boolean {
+  return promotion.governed_by_connection_id !== null;
+}
+
+export type PromotionOriginFilter = "all" | "external" | "local";
+
+export const PROMOTION_ORIGIN_FILTER_LABELS: Record<PromotionOriginFilter, string> = {
+  all: "Todos los orígenes",
+  external: "De la tienda",
+  local: "Creadas en axi",
+};
+
+export function matchesPromotionOriginFilter(
+  promotion: Pick<PromotionDTO, "governed_by_connection_id">,
+  filter: PromotionOriginFilter,
+): boolean {
+  if (filter === "all") return true;
+  return filter === "external" ? isGovernedPromotion(promotion) : !isGovernedPromotion(promotion);
+}
+
+/** Códigos que el cliente puede dar: el compartido local o los del proveedor. */
+export function promotionCodes(
+  promotion: Pick<PromotionDTO, "shared_code" | "external_codes">,
+): string[] {
+  if (promotion.shared_code) return [promotion.shared_code];
+  return promotion.external_codes;
 }

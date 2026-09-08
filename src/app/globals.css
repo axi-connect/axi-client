@@ -310,6 +310,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .text-logo-instagram { color: var(--logo-instagram); }
 .text-logo-messenger { color: var(--logo-messenger); }
 .text-logo-shopify { color: var(--logo-shopify); }
+.bg-logo-shopify { background-color: var(--logo-shopify); }
 .text-logo-mercadopago { color: var(--logo-mercadopago); }
 .text-logo-salesforce { color: var(--logo-salesforce); }
 .text-logo-hubspot { color: var(--logo-hubspot); }

@@ -16,9 +16,11 @@ import { IntegrationProviderIcon } from "../IntegrationProviderIcon";
 import { IntegrationStatusBadge } from "../IntegrationStatusBadge";
 import { CollectionsTab } from "./CollectionsTab";
 import { ContactosTab } from "./ContactosTab";
+import { EnviosTab } from "./EnviosTab";
 import { EstadoTab } from "./EstadoTab";
 import { LocationsTab } from "./LocationsTab";
 import { OrdersTab } from "./OrdersTab";
+import { PromocionesTab } from "./PromocionesTab";
 import { RunsTab } from "./RunsTab";
 
 /**
@@ -60,6 +62,14 @@ const TAB_REGISTRY: Record<
   pedidos: {
     label: "Pedidos",
     render: () => <OrdersTab />,
+  },
+  envios: {
+    label: "Envíos",
+    render: (ctx) => <EnviosTab integration={ctx.integration} onChanged={ctx.refetch} />,
+  },
+  promociones: {
+    label: "Promociones",
+    render: (ctx) => <PromocionesTab integration={ctx.integration} onChanged={ctx.refetch} />,
   },
   contactos: {
     label: "Contactos",

@@ -47,7 +47,11 @@ export type IntegrationCapabilityId =
   | "payments"
   | "contacts"
   | "messages"
-  | "deals";
+  | "deals"
+  /** Plan envíos+promos: OPCIONALES — solo entran si la app concede su scope
+   * (`read_shipping` / `read_discounts`); el descriptor no las promete. */
+  | "shipping"
+  | "discounts";
 
 /**
  * Un campo del formulario de credenciales, como DATOS. El `id` de cada campo de
@@ -443,4 +447,16 @@ export const CAPABILITY_LABELS: Record<IntegrationCapabilityId, string> = {
   contacts: "Contactos",
   messages: "Mensajes",
   deals: "Negocios",
+  shipping: "Envíos",
+  discounts: "Promociones",
+};
+
+/**
+ * Qué permiso desbloquea cada capacidad opcional y dónde se activa. Es el texto
+ * exacto que el aviso de Estado le da al comerciante: nada de «revisa los
+ * permisos» — el scope y el camino en el admin.
+ */
+export const OPTIONAL_CAPABILITY_HINTS: Record<"shipping" | "discounts", { scope: string; what: string }> = {
+  shipping: { scope: "read_shipping", what: "leer las zonas y tarifas de envío" },
+  discounts: { scope: "read_discounts", what: "leer las promociones y códigos" },
 };

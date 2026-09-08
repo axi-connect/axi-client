@@ -46,6 +46,14 @@ const INTEGRATION = {
   last_synced_at: null,
   connected_at: "2026-09-06T15:00:00.000Z",
   created_at: "2026-09-06T15:00:00.000Z",
+  mirrors: {
+    shipping_synced_at: null,
+    shipping_last_error: null,
+    discounts_synced_at: null,
+    discounts_last_error: null,
+  },
+  missing_optional_scopes: [],
+  taxes_included: true,
 } as unknown as IntegrationDTO;
 
 /**
@@ -60,6 +68,41 @@ describe("EstadoTab", () => {
     mockStartSync.mockReset();
     mockDisconnect.mockReset();
     mockRemoveIntegration.mockReset();
+  });
+
+  it("sin los scopes opcionales, dice exactamente qué permiso activar y muestra los impuestos", () => {
+    render(
+      <EstadoTab
+        integration={
+          {
+            ...INTEGRATION,
+            missing_optional_scopes: [
+              { capability: "shipping", scopes: ["read_shipping"] },
+              { capability: "discounts", scopes: ["read_discounts"] },
+            ],
+          } as IntegrationDTO
+        }
+        onChanged={jest.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(/aún no permite leer las zonas y tarifas de envío y leer las promociones/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/read_shipping y read_discounts/)).toBeInTheDocument();
+    expect(screen.getByText("Incluidos en el precio")).toBeInTheDocument();
+    // Dos botones de rotar: el del aviso y el de siempre.
+    expect(screen.getAllByRole("button", { name: /Rotar credenciales/ })).toHaveLength(2);
+  });
+
+  it("con impuestos excluidos lo dice: el gobierno de pedidos no se puede activar", () => {
+    render(
+      <EstadoTab
+        integration={{ ...INTEGRATION, taxes_included: false } as IntegrationDTO}
+        onChanged={jest.fn()}
+      />,
+    );
+    expect(screen.getByText(/Excluidos del precio/)).toBeInTheDocument();
+    expect(screen.queryByText(/aún no permite/)).not.toBeInTheDocument();
   });
 
   it("«Sincronizar ahora» encola un backfill y pide saltar a Historial", async () => {

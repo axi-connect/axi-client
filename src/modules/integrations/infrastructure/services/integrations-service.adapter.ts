@@ -91,3 +91,20 @@ export function startIntegrationSync(
 export function listIntegrationRuns(id: string): Promise<Schemas["SyncRunsListDto"]> {
   return http.get<Schemas["SyncRunsListDto"]>(`/integrations/${id}/runs`);
 }
+
+/**
+ * Espejos ligeros (plan envíos+promos §4). «Actualizar desde Shopify»: el de
+ * envíos responde con el resumen ya aplicado; el de promociones ENCOLA (lo
+ * escribe marketing desde el companion) y devuelve el resumen al terminar.
+ */
+export function refreshIntegrationShipping(
+  id: string,
+): Promise<Schemas["ShippingMirrorRefreshDto"]> {
+  return http.post<Schemas["ShippingMirrorRefreshDto"]>(`/integrations/${id}/shipping/refresh`);
+}
+
+export function refreshIntegrationDiscounts(
+  id: string,
+): Promise<Schemas["DiscountsMirrorRefreshDto"]> {
+  return http.post<Schemas["DiscountsMirrorRefreshDto"]>(`/integrations/${id}/discounts/refresh`);
+}

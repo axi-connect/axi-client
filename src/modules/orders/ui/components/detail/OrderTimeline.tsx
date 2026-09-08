@@ -56,7 +56,7 @@ function visualFor(event: OrderEventDTO): EventVisual {
     case "payment_rejected":
       return { icon: CircleX, label: `Pago rechazado por ${actorName(event)}`, tone: "destructive" };
     case "updated":
-      return { icon: FilePen, label: `Editado por ${actorName(event)}` };
+      return updatedVisual(payload, actorName(event));
     case "customer_notified":
       return { icon: BellRing, label: "Cliente avisado por WhatsApp", tone: "success" };
     case "customer_notification_skipped": {
@@ -101,4 +101,44 @@ export function OrderTimeline({ events }: { events: OrderEventDTO[] }) {
   });
 
   return <Timeline items={items} />;
+}
+
+/**
+ * `updated` lleva un discriminador `kind` (plan envíos+promos): entrega
+ * definida, cotización externa, totales conciliados con el proveedor, código
+ * añadido o dirección anonimizada. Sin `kind`, es la edición de siempre.
+ */
+function updatedVisual(payload: Record<string, unknown>, actor: string): EventVisual {
+  switch (payload.kind) {
+    case "delivery_set":
+      return { icon: FilePen, label: "Entrega definida en el pedido" };
+    case "external_quote":
+      return payload.degraded === true
+        ? {
+            icon: FilePen,
+            label: "Cotización con la tienda no disponible: se conservó el estimado",
+            tone: "warning",
+          }
+        : { icon: CircleCheck, label: "Total cotizado con la tienda", tone: "success" };
+    case "totals_reconciled":
+      return payload.aligned === false
+        ? { icon: FilePen, label: "El total cobrado por la tienda difiere del local", tone: "warning" }
+        : {
+            icon: CircleCheck,
+            label:
+              payload.stage === "paid"
+                ? "Pagado en la tienda · totales conciliados"
+                : "Totales conciliados con el draft de la tienda",
+            tone: "success",
+          };
+    case "promo_code_attached":
+      return {
+        icon: FilePen,
+        label: typeof payload.code === "string" ? `Código ${payload.code} añadido al pedido` : "Código añadido al pedido",
+      };
+    case "address_redacted":
+      return { icon: FilePen, label: "Dirección de entrega anonimizada (solicitud de privacidad)" };
+    default:
+      return { icon: FilePen, label: `Editado por ${actor}` };
+  }
 }
