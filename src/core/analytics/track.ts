@@ -16,6 +16,7 @@ export type CtaLocation =
   | "demo_form"
   | "footer"
   | "modules"
+  | "recognition"
   | "signup"
   | "unknown";
 
