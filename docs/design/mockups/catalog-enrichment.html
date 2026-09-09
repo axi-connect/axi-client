@@ -1,0 +1,501 @@
+<title>Metadatos con IA del catálogo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* CAPA 1 — primitivos de marca, copiados de src/app/globals.css. Único lugar con hex. */
+:root {
+  --background: #ffffff; --foreground: #171717;
+  --axi-brand: #e65759; --axi-brand-2: #e02f2f; --axi-violet: #7c3aed; --axi-amber: #f0a431; --axi-muted: #f4f4f5;
+  --axi-success: #16a34a; --axi-warning: #d97706; --axi-destructive: #dc2626; --axi-info: #2563eb; --axi-on-color: #ffffff;
+  --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft: color-mix(in srgb, var(--border) 50%, transparent);
+  --secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --accent: color-mix(in srgb, var(--axi-brand) 14%, var(--background));
+  --input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+  --violet-soft: color-mix(in srgb, var(--axi-violet) 10%, var(--background));
+  --violet-line: color-mix(in srgb, var(--axi-violet) 30%, transparent);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
+  --font-body: "Poppins", Helvetica, Arial, sans-serif; --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --background: #0a0a0a; --foreground: #ededed; --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35);
+} }
+:root[data-theme="dark"] {
+  --background: #0a0a0a; --foreground: #ededed; --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-muted: #18181b;
+  --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa; --axi-on-color: #0a0a0a;
+  --accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
+  --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .35);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+p { margin: 0; }
+.muted { color: var(--muted-foreground); }
+.tnum { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, a:focus-visible, [role="switch"]:focus-visible, [contenteditable]:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+
+/* barra del mockup (no es producto) */
+.mk-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 16px; background: var(--foreground); color: var(--background); font-size: 12px; }
+.mk-tag { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.mk-views { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.mk-view, .mk-theme { border: 1px solid color-mix(in srgb, var(--background) 30%, transparent); background: transparent; color: inherit; border-radius: 999px; padding: 4px 10px; }
+.mk-view[aria-pressed="true"] { background: var(--background); color: var(--foreground); font-weight: 500; }
+.mk-note { padding: 10px 16px; font-size: 12px; color: var(--muted-foreground); border-bottom: 1px solid var(--border); }
+.view[hidden] { display: none; }
+.state-label { font-size: 11px; color: var(--muted-foreground); align-self: flex-start; padding: 2px 8px; border-radius: 999px; background: var(--secondary); }
+
+/* shell del panel (grupo (content): max-w-7xl p-6) */
+.page { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 24px; }
+.header h1 { font-size: 30px; }
+.header p { margin-top: 4px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); color: var(--muted-foreground); white-space: nowrap; }
+.badge.violet { border-color: color-mix(in srgb, var(--axi-violet) 40%, transparent); background: var(--violet-soft); color: var(--axi-violet); }
+.badge.warning { border-color: color-mix(in srgb, var(--axi-warning) 40%, transparent); background: color-mix(in srgb, var(--axi-warning) 10%, var(--background)); color: var(--axi-warning); }
+.badge.dot::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge.pending::before { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .badge.pending::before, .skeleton i { animation: none; } }
+
+/* tarjetas sólidas (DESIGN §5.1) */
+.card { border: 1px solid var(--border); background: var(--background); border-radius: var(--radius-xl); padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-head h2 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card-head h2 svg { width: 16px; height: 16px; color: var(--axi-violet); flex: none; }
+.card-head p { max-width: 62ch; margin-top: 4px; font-size: 12px; color: var(--muted-foreground); }
+.card-head p b { font-weight: 500; color: var(--foreground); }
+a.inline { color: var(--axi-brand); font-weight: 500; text-decoration: none; }
+a.inline:hover { text-decoration: underline; }
+
+/* la sección IA: la ÚNICA superficie teñida de la página (regla del techo del 14 %: aquí 10 %) */
+.card.ai { border-color: var(--violet-line); background: var(--violet-soft); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--background); color: var(--foreground); font-weight: 500; white-space: nowrap; }
+.btn:hover { background: var(--secondary); }
+.btn.sm { height: 30px; padding: 0 10px; font-size: 12px; }
+.btn.primary { background: var(--axi-brand); border-color: var(--axi-brand); color: var(--axi-on-color); }
+.btn.primary:hover { background: var(--axi-brand-2); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted-foreground); }
+.btn.ghost:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--foreground); }
+.btn svg { width: 16px; height: 16px; }
+.btn.sm svg { width: 14px; height: 14px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* cuerpo de la sección: descripción + términos | atributos */
+.ai-body { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .ai-body { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.label { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); }
+.count { font-size: 11px; color: var(--muted-foreground); }
+.editable { padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--input); background: var(--background); font-size: 14px; line-height: 1.5; min-height: 44px; }
+.editable:hover { border-color: color-mix(in srgb, var(--foreground) 26%, var(--background)); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--input); background: var(--background); min-height: 44px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 4px 0 10px; border-radius: 999px; background: var(--secondary); font-size: 12px; font-weight: 500; }
+.chip button { display: grid; place-items: center; width: 18px; height: 18px; border: 0; border-radius: 999px; background: transparent; color: var(--muted-foreground); padding: 0; }
+.chip button:hover { background: color-mix(in srgb, var(--foreground) 10%, transparent); color: var(--foreground); }
+.chip button svg { width: 12px; height: 12px; }
+.chip.add { background: transparent; border: 1px dashed var(--input); color: var(--muted-foreground); padding: 0 10px; }
+.chip.readonly { padding-right: 10px; }
+.attrs { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0; border: 1px solid var(--input); border-radius: var(--radius-md); background: var(--background); overflow: hidden; }
+.attrs > div { display: contents; }
+.attrs dt, .attrs dd { margin: 0; padding: 7px 12px; font-size: 13px; border-top: 1px solid var(--border-soft); }
+.attrs > div:first-child dt, .attrs > div:first-child dd { border-top: 0; }
+.attrs dt { color: var(--muted-foreground); }
+.attrs dd { font-weight: 500; }
+.attrs dd.empty { color: var(--muted-foreground); font-weight: 400; font-style: italic; }
+
+/* sugerencia de categoría: fila de acción, no card */
+.suggest { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radius-md); border: 1px dashed var(--violet-line); background: var(--background); font-size: 13px; }
+.suggest svg { width: 16px; height: 16px; color: var(--axi-violet); flex: none; }
+.suggest .text { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.suggest .text span b { font-weight: 600; }
+.arrow { color: var(--muted-foreground); }
+
+.meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted-foreground); }
+.meta .mono { font-size: 11px; }
+
+/* estados: skeleton, callouts */
+.skeleton { display: flex; flex-direction: column; gap: 8px; }
+.skeleton i { display: block; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--axi-violet) 18%, var(--background)); animation: pulse 1.4s ease-in-out infinite; }
+.callout { display: flex; gap: 8px; align-items: flex-start; padding: 12px; border-radius: var(--radius-sm); font-size: 12px; border: 1px solid color-mix(in srgb, var(--axi-warning) 40%, transparent); background: color-mix(in srgb, var(--axi-warning) 10%, var(--background)); }
+.callout svg { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--axi-warning); }
+.callout.info { border-color: var(--violet-line); background: var(--background); }
+.callout.info svg { color: var(--axi-violet); }
+.callout.error { border-color: color-mix(in srgb, var(--axi-destructive) 40%, transparent); background: color-mix(in srgb, var(--axi-destructive) 8%, var(--background)); }
+.callout.error svg { color: var(--axi-destructive); }
+
+/* resto del detalle (contexto, atenuado): ficha básica y fotos */
+.product-head { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.thumb { width: 72px; height: 96px; border-radius: var(--radius-md); flex: none; background:
+  radial-gradient(60% 40% at 50% 35%, color-mix(in srgb, #6b7a3a 60%, var(--background)), transparent 70%),
+  linear-gradient(160deg, color-mix(in srgb, #6b7a3a 35%, var(--background)), var(--secondary)); }
+.product-head h1 { font-size: 24px; }
+.product-head .sub { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; font-size: 12px; color: var(--muted-foreground); align-items: center; }
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--secondary); font-size: 12px; }
+.banner svg { width: 16px; height: 16px; flex: none; color: #95bf47; }
+.plain { color: var(--muted-foreground); font-size: 12px; border: 1px dashed var(--border); border-radius: var(--radius-xl); padding: 14px 16px; }
+.divider { height: 1px; background: var(--border-soft); margin: 8px 0; }
+
+/* switch (shadcn Switch) */
+.switch { position: relative; width: 36px; height: 20px; border-radius: 999px; border: 0; background: var(--input); padding: 0; flex: none; transition: background .15s; }
+.switch[aria-checked="true"] { background: var(--axi-brand); }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 999px; background: var(--background); box-shadow: 0 1px 2px rgb(0 0 0 / .2); transition: transform .15s; }
+.switch[aria-checked="true"]::after { transform: translateX(16px); }
+
+/* ajustes: cifras + acción, como «Índice del catálogo» */
+.index { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 640px) { .index { grid-template-columns: 1fr 1fr 1fr auto; align-items: end; } }
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.stat .label { font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+.stat .value { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+.stat .value small { font-size: 13px; font-weight: 400; color: var(--muted-foreground); }
+.stat .note { font-size: 12px; color: var(--muted-foreground); }
+.how { display: grid; gap: 12px; grid-template-columns: 1fr; font-size: 12px; }
+@media (min-width: 640px) { .how { grid-template-columns: repeat(3, 1fr); } }
+.how div { padding: 12px; border-radius: var(--radius-sm); background: var(--secondary); }
+.how b { display: block; font-weight: 600; margin-bottom: 2px; color: var(--foreground); }
+.how span { color: var(--muted-foreground); }
+.meter-head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+.meter { height: 8px; overflow: hidden; border-radius: 999px; border: 1px solid var(--border); background: var(--axi-muted); }
+.meter > div { height: 100%; border-radius: 999px; background: var(--axi-violet); }
+
+/* fila del grid de productos con el chip IA */
+.rowdemo { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; }
+.rowdemo .mini { width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(160deg, color-mix(in srgb, #6b7a3a 35%, var(--background)), var(--secondary)); }
+.rowdemo .name { font-weight: 500; }
+.rowdemo .desc { color: var(--muted-foreground); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.tag-ai { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; letter-spacing: .06em; padding: 1px 6px; border-radius: 999px; color: var(--axi-violet); border: 1px solid var(--violet-line); }
+.tag-ai svg { width: 10px; height: 10px; }
+</style>
+
+<div class="mk-bar">
+  <span class="mk-tag">Mockup · metadatos con IA del catálogo · F0</span>
+  <div class="mk-views">
+    <button class="mk-view" data-view="detail" aria-pressed="true">Detalle del producto</button>
+    <button class="mk-view" data-view="states" aria-pressed="false">Otros estados</button>
+    <button class="mk-view" data-view="settings" aria-pressed="false">Ajustes del tenant</button>
+    <button class="mk-theme" id="theme">Tema: sistema</button>
+  </div>
+</div>
+<p class="mk-note">Tres pantallas. La sección «Búsqueda con IA» vive en el detalle del producto, bajo las fotos; es la única superficie teñida de violeta de la página. En ajustes se suma una tarjeta a la página de Reconocimiento. Producto y cifras de ejemplo (tienda de ropa).</p>
+
+<!-- ============================ DETALLE ============================ -->
+<section class="view" id="view-detail">
+  <div class="page">
+    <div class="product-head">
+      <div class="thumb" role="img" aria-label="Foto principal: short cargo verde oliva"></div>
+      <div>
+        <h1>Short Cargo Verde Oliva</h1>
+        <div class="sub">
+          <span class="mono">SCV-28 · SCV-30 · SCV-32</span>
+          <span>·</span><span>Desde $79.900</span>
+          <span>·</span><span>Sin categoría</span>
+          <span class="badge">Espejo de Shopify</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="banner">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.3 3.2c-.1-.1-.3-.1-.4 0l-.9.2c-.3-.9-.9-1.8-1.9-1.8h-.1C11.6 1.1 11 1 10.6 1c-3 0-4.4 3.7-4.9 5.6l-2.1.6c-.6.2-.7.2-.8.8L1 20.4 14.6 23l7.4-1.6zM12 4c-.4.1-.9.3-1.3.4V4c0-.8-.1-1.5-.3-2 .8.1 1.3 1 1.6 2zM9 5c-.6.2-1.2.4-1.8.5.3-1.3 1-2.6 2.1-3.2.3.6.4 1.5.4 2.5V5z"/></svg>
+      <span><b>Este producto lo gobierna tu tienda conectada (Shopify).</b> Nombre, descripción, precio, fotos y categoría se actualizan desde allá. Lo que la IA genera abajo es de axi y sí puedes editarlo.</span>
+    </div>
+
+    <div class="plain">Ficha básica · Fotos (3) · Variantes (3) — secciones existentes, sin cambios</div>
+
+    <!-- ===== LA SECCIÓN NUEVA ===== -->
+    <div class="card ai">
+      <div class="card-head">
+        <div>
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>
+            Búsqueda con IA
+            <span class="badge violet dot">Listo</span>
+          </h2>
+          <p>Lo que la IA entendió de este producto para que tus clientes lo encuentren aunque lo pidan con otras palabras. <b>El agente usa esta descripción</b> en vez de la de la tienda; los términos y atributos solo sirven para buscar. No se escribe en Shopify.</p>
+        </div>
+        <div class="actions">
+          <button class="btn sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+            Regenerar
+          </button>
+          <button class="btn sm ghost">Desactivar para este producto</button>
+        </div>
+      </div>
+
+      <div class="ai-body">
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="field">
+            <div class="field-head"><span class="label">Descripción que ve el agente</span><span class="count tnum">142 / 160</span></div>
+            <div class="editable" contenteditable="true" spellcheck="false" aria-label="Descripción generada, editable">Short cargo verde oliva de dril, largo a la rodilla, bolsillos laterales con tapa y cintura con pasadores. Fit relajado, para el día a día.</div>
+          </div>
+          <div class="field">
+            <div class="field-head"><span class="label">Cómo lo piden tus clientes</span><span class="count tnum">9 / 12</span></div>
+            <div class="chips" aria-label="Términos de búsqueda, editables">
+              <span class="chip">bermuda<button aria-label="Quitar bermuda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">short<button aria-label="Quitar short"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">pantaloneta<button aria-label="Quitar pantaloneta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">cargo<button aria-label="Quitar cargo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">verde militar<button aria-label="Quitar verde militar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">oliva<button aria-label="Quitar oliva"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">dril<button aria-label="Quitar dril"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">pantalón corto<button aria-label="Quitar pantalón corto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip">cargo short<button aria-label="Quitar cargo short"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+              <span class="chip add">+ agregar</span>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="label">Atributos · moda</span><span class="count">clic para editar</span></div>
+          <dl class="attrs">
+            <div><dt>Género</dt><dd>Hombre</dd></div>
+            <div><dt>Color</dt><dd>Verde oliva</dd></div>
+            <div><dt>Material</dt><dd>Dril de algodón</dd></div>
+            <div><dt>Fit</dt><dd>Relajado</dd></div>
+            <div><dt>Largo</dt><dd>A la rodilla</dd></div>
+            <div><dt>Patrón</dt><dd>Liso</dd></div>
+            <div><dt>Ocasión</dt><dd>Casual</dd></div>
+            <div><dt>Estilo</dt><dd>Urbano</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="suggest">
+        <div class="text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span>Categoría sugerida: <b>Shorts y bermudas</b> <span class="arrow">· ya se usa para buscar</span></span>
+        </div>
+        <span class="muted" style="font-size:12px">La categoría la define Shopify · no se puede aplicar aquí</span>
+      </div>
+
+      <div class="meta">
+        <span>Generado con la foto principal y la ficha</span>
+        <span>·</span><span>hace 2 min</span>
+        <span>·</span><span class="mono">gpt-4o-mini · moda v1</span>
+      </div>
+    </div>
+
+    <div class="plain">Así se ve en la lista de productos: un chip discreto en la descripción cuando la IA ya la generó.</div>
+    <div class="rowdemo">
+      <div class="mini" role="img" aria-label="miniatura"></div>
+      <div>
+        <div class="name">Short Cargo Verde Oliva</div>
+        <div class="desc"><span class="tag-ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/></svg>IA</span> Short cargo verde oliva de dril, largo a la rodilla…</div>
+      </div>
+      <span class="tnum muted">3 variantes</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ OTROS ESTADOS ============================ -->
+<section class="view" id="view-states" hidden>
+  <div class="page">
+    <div class="header">
+      <h1>La misma sección, en sus otros estados</h1>
+      <p class="muted">Cada estado se explica en su sitio; no se oculta ningún control (regla de la página de Voz y Reconocimiento).</p>
+    </div>
+
+    <span class="state-label">1 · Producto local recién creado, sin foto todavía: se generó solo con el texto</span>
+    <div class="card ai">
+      <div class="card-head">
+        <div>
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>Búsqueda con IA <span class="badge violet dot">Listo · solo texto</span></h2>
+          <p>Generado a partir del nombre y la ficha. <b>Cuando subas la primera foto</b> se vuelve a generar mirando la prenda: color, material y patrón salen de la imagen.</p>
+        </div>
+        <div class="actions"><button class="btn sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Regenerar</button><button class="btn sm ghost">Desactivar para este producto</button></div>
+      </div>
+      <div class="ai-body">
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div class="field"><div class="field-head"><span class="label">Descripción que ve el agente</span><span class="count tnum">96 / 160</span></div>
+            <div class="editable" contenteditable="true" spellcheck="false">Camiseta básica de cuello redondo y manga corta en algodón, corte regular, para uso diario.</div></div>
+          <div class="field"><div class="field-head"><span class="label">Cómo lo piden tus clientes</span><span class="count tnum">6 / 12</span></div>
+            <div class="chips"><span class="chip readonly">camiseta</span><span class="chip readonly">camisa</span><span class="chip readonly">t-shirt</span><span class="chip readonly">básica</span><span class="chip readonly">cuello redondo</span><span class="chip readonly">manga corta</span><span class="chip add">+ agregar</span></div></div>
+        </div>
+        <div class="field"><div class="field-head"><span class="label">Atributos · moda</span></div>
+          <dl class="attrs">
+            <div><dt>Género</dt><dd>Unisex</dd></div>
+            <div><dt>Color</dt><dd class="empty">se verá en la foto</dd></div>
+            <div><dt>Material</dt><dd>Algodón</dd></div>
+            <div><dt>Fit</dt><dd>Regular</dd></div>
+            <div><dt>Manga</dt><dd>Corta</dd></div>
+            <div><dt>Cuello</dt><dd>Redondo</dd></div>
+            <div><dt>Patrón</dt><dd class="empty">se verá en la foto</dd></div>
+            <div><dt>Ocasión</dt><dd>Casual</dd></div>
+          </dl></div>
+      </div>
+      <div class="suggest">
+        <div class="text"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg><span>Categoría sugerida: <b>Camisetas</b></span></div>
+        <button class="btn sm primary">Aplicar categoría</button>
+      </div>
+      <div class="meta"><span>Generado con la ficha, sin foto</span><span>·</span><span>hace 20 s</span><span>·</span><span class="mono">gpt-4o-mini · moda v1</span></div>
+    </div>
+
+    <span class="state-label">2 · Generando (tras subir la primera foto o tocar «Regenerar»)</span>
+    <div class="card ai">
+      <div class="card-head">
+        <div>
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>Búsqueda con IA <span class="badge violet dot pending">Generando…</span></h2>
+          <p>Mirando la foto principal y la ficha. Suele tardar unos segundos; puedes seguir editando el resto del producto.</p>
+        </div>
+        <div class="actions"><button class="btn sm" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Regenerar</button></div>
+      </div>
+      <div class="ai-body" role="status" aria-label="Generando metadatos con IA">
+        <div class="skeleton"><i style="width:92%"></i><i style="width:78%"></i><i style="width:40%;margin-top:10px"></i><i style="width:64%"></i></div>
+        <div class="skeleton"><i style="width:70%"></i><i style="width:66%"></i><i style="width:74%"></i><i style="width:58%"></i></div>
+      </div>
+    </div>
+
+    <span class="state-label">3 · Editado por ti: el automático no lo pisa</span>
+    <div class="card ai">
+      <div class="card-head">
+        <div>
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>Búsqueda con IA <span class="badge dot">Editado por ti</span></h2>
+          <p>Corregiste la descripción y los términos el 8 de sep. <b>Aunque cambie la foto o la ficha, no se vuelve a generar solo</b>: si quieres partir de cero, usa «Regenerar» y reemplazará tus cambios.</p>
+        </div>
+        <div class="actions"><button class="btn sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Regenerar</button><button class="btn sm ghost">Desactivar para este producto</button></div>
+      </div>
+      <div class="ai-body">
+        <div class="field"><div class="field-head"><span class="label">Descripción que ve el agente</span><span class="count tnum">121 / 160</span></div>
+          <div class="editable" contenteditable="true" spellcheck="false">Jort azul índigo de denim rígido, tiro alto y largo por encima de la rodilla. Es el que sale en el reel del 3 de septiembre.</div></div>
+        <div class="field"><div class="field-head"><span class="label">Cómo lo piden tus clientes</span><span class="count tnum">7 / 12</span></div>
+          <div class="chips"><span class="chip readonly">jort</span><span class="chip readonly">jorts</span><span class="chip readonly">bermuda jean</span><span class="chip readonly">short de jean</span><span class="chip readonly">denim</span><span class="chip readonly">el del reel</span><span class="chip readonly">tiro alto</span><span class="chip add">+ agregar</span></div></div>
+      </div>
+      <div class="meta"><span>Editado por Isabel</span><span>·</span><span>8 sep, 11:42</span><span>·</span><span>generado originalmente con la foto principal</span></div>
+    </div>
+
+    <span class="state-label">4 · Desactivado para este producto</span>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted-foreground)"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>Búsqueda con IA <span class="badge dot">Desactivado</span></h2>
+          <p>Para este producto el agente usa solo la descripción de la ficha y los clientes lo encuentran por su nombre y categoría. Lo generado se conserva por si lo vuelves a activar.</p>
+        </div>
+        <div class="actions"><button class="btn sm">Activar de nuevo</button></div>
+      </div>
+    </div>
+
+    <span class="state-label">5 · Falló (el proveedor no respondió tres veces)</span>
+    <div class="card ai">
+      <div class="card-head">
+        <div>
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>Búsqueda con IA <span class="badge warning dot">No se pudo generar</span></h2>
+          <p>Mientras tanto el agente usa la descripción de la ficha, como hasta ahora.</p>
+        </div>
+        <div class="actions"><button class="btn sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Intentar de nuevo</button></div>
+      </div>
+      <div class="callout error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <span><b>El servicio de IA no respondió.</b> Lo reintentamos tres veces en los últimos minutos. Vuelve a intentarlo o espera al próximo cambio del producto: se generará solo.</span>
+      </div>
+    </div>
+
+    <span class="state-label">6 · Sin generar: el automático está apagado en Ajustes</span>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted-foreground)"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>Búsqueda con IA <span class="badge dot">Sin generar</span></h2>
+          <p>Puedes generarlo solo para este producto, o <a class="inline" href="#">activar el automático en Ajustes</a> para todo el catálogo. No tiene costo para tu plan.</p>
+        </div>
+        <div class="actions"><button class="btn sm primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/></svg>Generar con IA</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ AJUSTES ============================ -->
+<section class="view" id="view-settings" hidden>
+  <div class="page">
+    <div class="header">
+      <h1>Reconocimiento de producto</h1>
+      <p class="muted">Cuando un cliente envía una foto, una captura o comparte una publicación de Instagram, el agente reconoce qué producto es y lo cotiza.</p>
+    </div>
+
+    <div class="plain">Tarjeta «Reconocer productos en las fotos…» (interruptor + consumo) y tarjeta «Índice del catálogo» — existentes, sin cambios</div>
+
+    <!-- ===== LA TARJETA NUEVA ===== -->
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/><path d="M5 15l.6 2 2 .6-2 .6L5 20l-.6-1.8-2-.6 2-.6z"/></svg>
+            Metadatos con IA <span class="badge violet">Automático</span>
+          </h2>
+          <p>Cada producto nuevo o modificado, incluidos los que llegan de tu tienda conectada, recibe una descripción para el agente, atributos y los términos con que lo piden tus clientes. <b>No consume tu plan</b> y no escribe nada en tu tienda.</p>
+        </div>
+        <button class="switch" role="switch" aria-checked="true" aria-label="Enriquecer automáticamente el catálogo con IA"></button>
+      </div>
+      <div class="index">
+        <div class="stat">
+          <span class="label">Con metadatos</span>
+          <span class="value tnum">151 <small>/ 158</small></span>
+          <span class="note">4 con foto pendiente</span>
+        </div>
+        <div class="stat">
+          <span class="label">Editados por ti</span>
+          <span class="value tnum">12</span>
+          <span class="note">no se regeneran solos</span>
+        </div>
+        <div class="stat">
+          <span class="label">Desactivados</span>
+          <span class="value tnum">3</span>
+          <span class="note">usan la ficha original</span>
+        </div>
+        <button class="btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 2.1 11 6l3.9 1.1L11 8.2 9.9 12 8.8 8.2 5 7.1 8.8 6z"/><path d="M18 12l.8 2.7 2.7.8-2.7.8L18 19l-.8-2.7-2.7-.8 2.7-.8z"/></svg>
+          Enriquecer catálogo
+        </button>
+      </div>
+      <p class="muted" style="font-size:12px">«Enriquecer catálogo» genera solo lo que falta o quedó desactualizado; lo editado por ti y lo desactivado no se tocan.</p>
+      <div class="how">
+        <div><b>Qué genera</b><span>Descripción de hasta 160 caracteres, atributos según tu tipo de negocio (moda: género, color, material, fit…) y hasta 12 formas de pedirlo.</span></div>
+        <div><b>Qué ve el agente</b><span>Solo la descripción, en lugar de la de la ficha. Los atributos y términos mejoran la búsqueda por texto y por foto, sin gastar tokens del turno.</span></div>
+        <div><b>Qué no toca</b><span>Tu tienda conectada. Nombre, precio, fotos y categoría siguen siendo de Shopify; lo generado vive solo en axi.</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="gap:12px">
+      <div class="card-head">
+        <div>
+          <h2>Cuando se alcanza el tope del mes <span class="badge warning">Estado ejemplo</span></h2>
+          <p>El enriquecimiento tiene un tope interno de axi por empresa y mes (no es una cuota de tu plan). Al llegar, lo pendiente se retoma solo al iniciar el mes.</p>
+        </div>
+        <button class="switch" role="switch" aria-checked="true" aria-label="Ejemplo: automático con tope alcanzado"></button>
+      </div>
+      <div>
+        <div class="meter-head"><span class="muted">Productos enriquecidos este mes</span><span class="tnum">1.500 / 1.500</span></div>
+        <div class="meter" role="progressbar" aria-label="Enriquecimientos del mes" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><div style="width:100%"></div></div>
+      </div>
+      <div class="callout info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span><b>Tope del mes alcanzado.</b> 37 productos quedaron en espera y se enriquecen automáticamente el 1 de octubre. Si necesitas más este mes, escríbenos.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.documentElement;
+  const views = document.querySelectorAll('.mk-view');
+  views.forEach((button) => button.addEventListener('click', () => {
+    views.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+    document.querySelectorAll('.view').forEach((section) => {
+      section.hidden = section.id !== `view-${button.dataset.view}`;
+    });
+  }));
+  const themes = ['sistema', 'light', 'dark'];
+  let current = 0;
+  const themeButton = document.getElementById('theme');
+  themeButton.addEventListener('click', () => {
+    current = (current + 1) % themes.length;
+    const value = themes[current];
+    if (value === 'sistema') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', value);
+    themeButton.textContent = `Tema: ${value}`;
+  });
+</script>
