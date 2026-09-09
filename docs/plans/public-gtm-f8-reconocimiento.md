@@ -282,6 +282,8 @@ falta recorte de fondo. Para producción se suben a Cloudinary (como el hero) o 
 | Ficha | `photo-1611186871348-b1ce696e52c9` | MacBook plateado abierto (mac1) |
 | Ficha | `photo-1614630536369-2516d7c0a58c` | MacBook cerrado, fondo blanco (mac3) |
 
-Copy de la escena: captura «¿Este lo tienen?» · chip «Reconocido · iPhone 15 128 GB» · respuesta
-«Sí, es el iPhone 15 de 128 GB en negro: quedan 2, $3.899.000. ¿Te lo aparto?» · tarjeta
-`IP15-128-NG · $3.899.000 · 2 disp.`. Cifras ficticias de demo, como las del hero.
+Copy de la escena (2026-09-08, fotos nuevas del dueño: iPhone 17 lavanda): captura «¿Este lo tienen?» ·
+chip «Reconocido · iPhone 17 256 GB» · respuesta «Sí, es el iPhone 17 de 256 GB en lavanda: quedan 2,
+$4.699.000. ¿Te lo aparto?» · tarjeta `IP17-256-LV · $4.699.000 · 2 disp.`. El 17 base arranca en 256 GB,
+por eso la capacidad. Cifras ficticias de demo, como las del hero. Las URL llevan `?v=N`
+(`RECOGNITION_IMG_VERSION`) porque `next/image` cachea cada variante por URL 31 días.

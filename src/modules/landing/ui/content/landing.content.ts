@@ -1030,7 +1030,14 @@ export const FAQ = {
  * jamás imágenes oficiales de Apple — inventario y tratamiento en
  * `docs/plans/public-gtm-f8-reconocimiento.md` anexo A. Cifras de demo.
  */
+/**
+ * Versión de las fotos: `next/image` cachea cada variante por URL durante 31 días
+ * (`minimumCacheTTL`) en disco y en el navegador; al reemplazar un archivo con
+ * el mismo nombre hay que subir este número o nadie ve la foto nueva.
+ */
+const RECOGNITION_IMG_VERSION = 2;
 const RECOGNITION_IMG = "/images/landing/recognition";
+const recognitionImg = (file: string): string => `${RECOGNITION_IMG}/${file}?v=${String(RECOGNITION_IMG_VERSION)}`;
 
 export const RECOGNITION = {
   kicker: "Reconocimiento de producto",
@@ -1041,33 +1048,33 @@ export const RECOGNITION = {
   labels: { capture: "El cliente comparte", catalog: "Tu catálogo", reply: "El agente responde", similarity: "Similitud" },
   capture: {
     sourceLabel: "Captura · Reel de Tecnología, Medellín",
-    imageSrc: `${RECOGNITION_IMG}/iphone-capture.jpg`,
-    imageAlt: "Captura del reel: iPhone negro con fondo de pantalla verde",
+    imageSrc: recognitionImg("iphone-capture.jpg"),
+    imageAlt: "Captura del reel: iPhone 17 lavanda, por delante y por detrás, con fondo de pantalla floral",
     caption: "¿Este lo tienen?",
     time: "8:47 p.m.",
   },
   /** Retícula 3×3; `match` marca la ficha que se enciende. */
   catalog: [
-    { id: "watch-a", imageSrc: `${RECOGNITION_IMG}/watch-a.jpg` },
-    { id: "macbook-a", imageSrc: `${RECOGNITION_IMG}/macbook-a.jpg` },
-    { id: "iphone-b", imageSrc: `${RECOGNITION_IMG}/iphone-b.jpg` },
-    { id: "airpods", imageSrc: `${RECOGNITION_IMG}/airpods.jpg` },
-    { id: "iphone-a", imageSrc: `${RECOGNITION_IMG}/iphone-a.jpg`, match: true },
-    { id: "ipad", imageSrc: `${RECOGNITION_IMG}/ipad.jpg` },
-    { id: "iphone-c", imageSrc: `${RECOGNITION_IMG}/iphone-c.jpg` },
-    { id: "watch-b", imageSrc: `${RECOGNITION_IMG}/watch-b.jpg` },
-    { id: "macbook-b", imageSrc: `${RECOGNITION_IMG}/macbook-b.jpg` },
+    { id: "watch-a", imageSrc: recognitionImg("watch-a.jpg") },
+    { id: "macbook-a", imageSrc: recognitionImg("macbook-a.jpg") },
+    { id: "iphone-b", imageSrc: recognitionImg("iphone-b.jpg") },
+    { id: "airpods", imageSrc: recognitionImg("airpods.jpg") },
+    { id: "iphone-a", imageSrc: recognitionImg("iphone-a.jpg"), match: true },
+    { id: "ipad", imageSrc: recognitionImg("ipad.jpg") },
+    { id: "iphone-c", imageSrc: recognitionImg("iphone-c.jpg") },
+    { id: "watch-b", imageSrc: recognitionImg("watch-b.jpg") },
+    { id: "macbook-b", imageSrc: recognitionImg("macbook-b.jpg") },
   ] as readonly RecognitionTile[],
   /** Similitud coseno del candidato ganador, como la devuelve el backend. */
   score: 0.93,
-  chip: "Reconocido · iPhone 15 128 GB",
+  chip: "Reconocido · iPhone 17 256 GB",
   reply: {
-    text: "Sí, es el iPhone 15 de 128 GB en negro: quedan 2, $3.899.000. ¿Te lo aparto?",
+    text: "Sí, es el iPhone 17 de 256 GB en lavanda: quedan 2, $4.699.000. ¿Te lo aparto?",
     product: {
-      name: "iPhone 15 · 128 GB · Negro",
-      meta: "IP15-128-NG · $3.899.000 · 2 disp.",
-      imageSrc: `${RECOGNITION_IMG}/iphone-card.jpg`,
-      imageAlt: "iPhone 15 negro, foto real del catálogo",
+      name: "iPhone 17 · 256 GB · Lavanda",
+      meta: "IP17-256-LV · $4.699.000 · 2 disp.",
+      imageSrc: recognitionImg("iphone-card.jpg"),
+      imageAlt: "iPhone 17 lavanda, foto real del catálogo",
     },
     time: "8:47 p.m.",
   },
