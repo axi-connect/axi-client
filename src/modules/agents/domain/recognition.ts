@@ -27,8 +27,33 @@ export const ENRICHMENT_VERTICAL_LABELS: Record<EnrichmentVertical, string> = {
 };
 
 /** Cuántos productos activos siguen sin metadatos listos ni desactivados. */
+/** Productos activos que aún no tienen metadatos ni están desactivados (incluye los que nunca se encolaron). */
 export function enrichmentPending(stats: EnrichmentStatsDTO): number {
   return Math.max(0, stats.products - stats.ready - stats.disabled);
+}
+
+/**
+ * Nota bajo «Con metadatos». Distingue lo que la cifra sola confundía
+ * (incidente 2026-09-09: «107 pendientes» con la cola vacía se leía como «va
+ * en camino»): esperando al proveedor (se reanuda solo), esperando al tope del
+ * mes, o en curso.
+ */
+export function enrichmentPendingNote(stats: EnrichmentStatsDTO): string {
+  const pending = enrichmentPending(stats)
+  if (pending === 0) return "Todo al día"
+  const parts: string[] = []
+  if (stats.pending_rate_limited > 0) {
+    parts.push(`${fmt(stats.pending_rate_limited)} en espera por el límite del proveedor · se reanudan solos`)
+  }
+  if (stats.pending_cap > 0) parts.push(`${fmt(stats.pending_cap)} esperan al tope del mes`)
+  const inProgress = pending - stats.pending_rate_limited - stats.pending_cap
+  if (inProgress > 0) parts.push(`${fmt(inProgress)} pendientes · en curso`)
+  if (stats.failed > 0) parts.push(`${fmt(stats.failed)} fallidos`)
+  return parts.join(" · ")
+}
+
+function fmt(value: number): string {
+  return value.toLocaleString("es-CO")
 }
 
 /** Tope mensual alcanzado (o Redis sin respuesta: la UI no afirma nada). */

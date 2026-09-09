@@ -8631,6 +8631,8 @@ export interface components {
             products: number;
             ready: number;
             pending: number;
+            pending_rate_limited: number;
+            pending_cap: number;
             failed: number;
             disabled: number;
             user_edited: number;

@@ -30,6 +30,8 @@ const STATS = {
   products: 158,
   ready: 151,
   pending: 4,
+  pending_rate_limited: 0,
+  pending_cap: 0,
   failed: 0,
   disabled: 3,
   user_edited: 12,
@@ -111,8 +113,10 @@ describe("RecognitionSettingsView", () => {
     expect(screen.getByText("Automático")).toBeInTheDocument()
     expect(screen.getByText("151")).toBeInTheDocument()
     expect(screen.getByText("/ 158")).toBeInTheDocument()
-    expect(screen.getByText(/4 pendientes/)).toBeInTheDocument()
+    expect(screen.getByText(/4 pendientes · en curso/)).toBeInTheDocument()
     expect(screen.getByText("12")).toBeInTheDocument()
+    expect(screen.getByText(/Consumo del mes:/)).toBeInTheDocument()
+    expect(screen.getByText("151 de 1.500")).toBeInTheDocument()
 
     fireEvent.click(auto)
     await waitFor(() =>
@@ -130,6 +134,40 @@ describe("RecognitionSettingsView", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Enriquecer catálogo/ }))
     await waitFor(() => expect(requestEnrichmentBackfill).toHaveBeenCalledTimes(1))
     expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ title: "Enriquecimiento en marcha" }))
+  })
+
+  it("saturación del proveedor (incidente 2026-09-09): dice que esperan y que se reanudan solos, no «pendientes»", async () => {
+    getEnrichmentStats.mockResolvedValue({
+      ...STATS,
+      ready: 50,
+      pending: 107,
+      pending_rate_limited: 107,
+      failed: 0,
+      disabled: 0,
+      products: 157,
+    })
+    render(<RecognitionSettingsView />)
+    expect(
+      await screen.findByText(/107 en espera por el límite del proveedor · se reanudan solos/),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/pendientes · en curso/)).not.toBeInTheDocument()
+  })
+
+  it("pendientes por tope y fallidos se desglosan en la misma nota", async () => {
+    getEnrichmentStats.mockResolvedValue({
+      ...STATS,
+      ready: 100,
+      pending: 50,
+      pending_rate_limited: 0,
+      pending_cap: 40,
+      failed: 2,
+      disabled: 0,
+      products: 158,
+    })
+    render(<RecognitionSettingsView />)
+    expect(await screen.findByText(/40 esperan al tope del mes/)).toBeInTheDocument()
+    expect(screen.getByText(/18 pendientes · en curso/)).toBeInTheDocument()
+    expect(screen.getByText(/2 fallidos/)).toBeInTheDocument()
   })
 
   it("tope del mes alcanzado: lo dice y promete lo que el cron hace (retomar el próximo mes)", async () => {

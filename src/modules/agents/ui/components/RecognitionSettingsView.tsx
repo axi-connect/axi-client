@@ -19,7 +19,7 @@ import {
 import {
   ENRICHMENT_VERTICAL_LABELS,
   enrichmentCapReached,
-  enrichmentPending,
+  enrichmentPendingNote,
   indexComplete,
   pendingImages,
   pendingProducts,
@@ -419,11 +419,7 @@ export function RecognitionSettingsView() {
               label="Con metadatos"
               value={stats.ready}
               total={stats.products}
-              note={
-                enrichmentPending(stats) === 0
-                  ? "Todo al día"
-                  : `${enrichmentPending(stats).toLocaleString("es-CO")} pendientes${stats.failed > 0 ? ` · ${stats.failed.toLocaleString("es-CO")} fallidos` : ""}`
-              }
+              note={enrichmentPendingNote(stats)}
             />
             <PlainStat label="Editados por ti" value={stats.user_edited} note="no se regeneran solos" />
             <PlainStat label="Desactivados" value={stats.disabled} note="usan la ficha original" />
@@ -460,7 +456,18 @@ export function RecognitionSettingsView() {
 
         <p className="text-xs text-muted-foreground">
           «Enriquecer catálogo» genera solo lo que falta o quedó desactualizado; lo editado por ti y lo
-          desactivado no se tocan.
+          desactivado no se tocan. Va al ritmo que permite el proveedor de IA: un catálogo grande tarda
+          unos minutos.
+          {stats !== null && stats.enabled && stats.monthly_used !== null && (
+            <>
+              {" "}
+              Consumo del mes:{" "}
+              <span className="tabular-nums">
+                {stats.monthly_used.toLocaleString("es-CO")} de {stats.monthly_cap.toLocaleString("es-CO")}
+              </span>
+              .
+            </>
+          )}
         </p>
 
         <div className="grid gap-3 text-xs sm:grid-cols-3">
