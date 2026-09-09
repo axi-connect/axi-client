@@ -11,13 +11,31 @@ const updateRecognitionSettings = jest.fn()
 const getRecognitionUsage = jest.fn()
 const getRecognitionIndexStatus = jest.fn()
 const requestRecognitionReindex = jest.fn()
+const getEnrichmentStats = jest.fn()
+const requestEnrichmentBackfill = jest.fn()
 jest.mock("@/modules/agents/infrastructure/services/recognition-service.adapter", () => ({
   getRecognitionSettings: () => getRecognitionSettings(),
   updateRecognitionSettings: (dto: unknown) => updateRecognitionSettings(dto),
   getRecognitionUsage: () => getRecognitionUsage(),
   getRecognitionIndexStatus: () => getRecognitionIndexStatus(),
   requestRecognitionReindex: () => requestRecognitionReindex(),
+  getEnrichmentStats: () => getEnrichmentStats(),
+  requestEnrichmentBackfill: () => requestEnrichmentBackfill(),
 }))
+
+const STATS = {
+  enabled: true,
+  model: "gpt-4o-mini",
+  vertical: "fashion",
+  products: 158,
+  ready: 151,
+  pending: 4,
+  failed: 0,
+  disabled: 3,
+  user_edited: 12,
+  monthly_used: 151,
+  monthly_cap: 1500,
+}
 
 const INDEX = {
   enabled: true,
@@ -32,7 +50,13 @@ const INDEX = {
 describe("RecognitionSettingsView", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    getRecognitionSettings.mockResolvedValue({ ai_enabled: true })
+    getRecognitionSettings.mockResolvedValue({
+      ai_enabled: true,
+      enrichment_auto_enabled: true,
+      enrichment_vertical: null,
+    })
+    getEnrichmentStats.mockResolvedValue(STATS)
+    requestEnrichmentBackfill.mockResolvedValue({ queued: true })
     getRecognitionUsage.mockResolvedValue({
       metric: "product_recognitions",
       used: 57,
@@ -45,7 +69,9 @@ describe("RecognitionSettingsView", () => {
 
   it("pinta el switch, el consumo del ciclo y el estado del índice con las cifras reales", async () => {
     render(<RecognitionSettingsView />)
-    expect(await screen.findByRole("switch")).toBeChecked()
+    expect(
+      await screen.findByRole("switch", { name: "Activar reconocimiento de producto para la empresa" }),
+    ).toBeChecked()
     expect(screen.getByText("Activo")).toBeInTheDocument()
     expect(screen.getByText("57 / 200")).toBeInTheDocument()
     expect(screen.getByText("412")).toBeInTheDocument()
@@ -56,15 +82,68 @@ describe("RecognitionSettingsView", () => {
 
   it("apagar el switch llama al PUT y avisa; si falla, revierte", async () => {
     render(<RecognitionSettingsView />)
-    const toggle = await screen.findByRole("switch")
+    const toggle = await screen.findByRole("switch", {
+      name: "Activar reconocimiento de producto para la empresa",
+    })
     fireEvent.click(toggle)
-    await waitFor(() => expect(updateRecognitionSettings).toHaveBeenCalledWith({ ai_enabled: false }))
+    // El DTO viaja COMPLETO (strict): los flags del enriquecimiento no se pierden
+    await waitFor(() =>
+      expect(updateRecognitionSettings).toHaveBeenCalledWith({
+        ai_enabled: false,
+        enrichment_auto_enabled: true,
+        enrichment_vertical: null,
+      }),
+    )
     expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success" }))
 
     updateRecognitionSettings.mockRejectedValueOnce(new Error("500"))
     fireEvent.click(toggle)
     await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })))
-    expect(screen.getByRole("switch")).not.toBeChecked()
+    expect(
+      screen.getByRole("switch", { name: "Activar reconocimiento de producto para la empresa" }),
+    ).not.toBeChecked()
+  })
+
+  it("metadatos con IA: pinta las cifras y el interruptor automático escribe solo su hoja", async () => {
+    render(<RecognitionSettingsView />)
+    const auto = await screen.findByRole("switch", { name: "Enriquecer automáticamente el catálogo con IA" })
+    expect(auto).toBeChecked()
+    expect(screen.getByText("Automático")).toBeInTheDocument()
+    expect(screen.getByText("151")).toBeInTheDocument()
+    expect(screen.getByText("/ 158")).toBeInTheDocument()
+    expect(screen.getByText(/4 pendientes/)).toBeInTheDocument()
+    expect(screen.getByText("12")).toBeInTheDocument()
+
+    fireEvent.click(auto)
+    await waitFor(() =>
+      expect(updateRecognitionSettings).toHaveBeenCalledWith({
+        ai_enabled: true,
+        enrichment_auto_enabled: false,
+        enrichment_vertical: null,
+      }),
+    )
+    expect(screen.getByText("Bajo demanda")).toBeInTheDocument()
+  })
+
+  it("«Enriquecer catálogo» encola el backfill (202)", async () => {
+    render(<RecognitionSettingsView />)
+    fireEvent.click(await screen.findByRole("button", { name: /Enriquecer catálogo/ }))
+    await waitFor(() => expect(requestEnrichmentBackfill).toHaveBeenCalledTimes(1))
+    expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ title: "Enriquecimiento en marcha" }))
+  })
+
+  it("tope del mes alcanzado: lo dice y promete lo que el cron hace (retomar el próximo mes)", async () => {
+    getEnrichmentStats.mockResolvedValue({ ...STATS, monthly_used: 1500 })
+    render(<RecognitionSettingsView />)
+    expect(await screen.findByText(/Tope del mes alcanzado/)).toBeInTheDocument()
+    expect(screen.getByText(/próximo mes/)).toBeInTheDocument()
+  })
+
+  it("metadatos apagados en la plataforma: botón deshabilitado y explicación", async () => {
+    getEnrichmentStats.mockResolvedValue({ ...STATS, enabled: false })
+    render(<RecognitionSettingsView />)
+    expect(await screen.findByRole("button", { name: /Enriquecer catálogo/ })).toBeDisabled()
+    expect(screen.getByText(/no están disponibles en la plataforma/)).toBeInTheDocument()
   })
 
   it("«Indexar ahora» encola el reindexado", async () => {
