@@ -23,6 +23,7 @@ import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.cont
 import { ProductAttributesSection } from "@/modules/catalog/ui/components/ProductAttributesSection";
 import { ProductBaseSection } from "@/modules/catalog/ui/components/ProductBaseSection";
 import { ProductDetailHeader } from "@/modules/catalog/ui/components/ProductDetailHeader";
+import { ProductEnrichmentSection } from "@/modules/catalog/ui/components/ProductEnrichmentSection";
 import { ProductPhotosSection } from "@/modules/catalog/ui/components/ProductPhotosSection";
 import { VariantsTable } from "@/modules/catalog/ui/components/VariantsTable";
 
@@ -232,6 +233,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               setAlert={setAlert}
             />
           </div>
+
+          {/* Metadatos con IA: lo generado es de axi y se edita también en un
+              espejado; solo «Aplicar categoría» respeta el gobierno del sync */}
+          <ProductEnrichmentSection
+            product={product}
+            canManage={canManage}
+            canApplyCategory={canManage && !locked.has("category")}
+            onCategoryApplied={load}
+            setAlert={setAlert}
+          />
 
           {productType && (
             <div className="rounded-2xl border border-border bg-background p-4 md:p-6">

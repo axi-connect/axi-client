@@ -163,3 +163,73 @@ export function aggregateStock(item: ProductListItemDTO): {
   if (unavailable > 0) return { total, state: "low" };
   return { total, state: "ok" };
 }
+
+/**
+ * Metadatos con IA del producto (plan catalog_enrichment): la descripción que
+ * ve el agente en lugar de la ficha, los atributos según el vertical del
+ * negocio y los términos con que lo piden los clientes. Viven en axi, no en la
+ * tienda conectada; por eso se editan también en un producto espejado.
+ */
+export type ProductEnrichmentDTO = Schemas["ProductEnrichmentDto"];
+export type UpdateProductEnrichmentDTO = Schemas["UpdateProductEnrichmentDto"];
+export type ProductEnrichmentStatus = ProductEnrichmentDTO["status"];
+
+export const ENRICHMENT_DESCRIPTION_MAX = 160;
+export const ENRICHMENT_TERMS_MAX = 12;
+export const ENRICHMENT_TERM_MAX_CHARS = 40;
+
+/** Polling mientras el job genera (sin evento WS): mismo presupuesto que las fotos. */
+export const ENRICHMENT_POLL_MS = 3_000;
+export const ENRICHMENT_POLL_TIMEOUT_MS = 30_000;
+
+export function enrichmentPollInterval(pending: boolean, elapsedMs: number): number | false {
+  if (!pending) return false;
+  if (elapsedMs >= ENRICHMENT_POLL_TIMEOUT_MS) return false;
+  return ENRICHMENT_POLL_MS;
+}
+
+export type EnrichmentDisplayState =
+  | "none"
+  | "pending"
+  | "ready"
+  | "edited"
+  | "disabled"
+  | "failed";
+
+/** Qué estado pinta la sección. `edited` gana sobre `ready`: el tenant debe
+ * saber que el automático ya no toca esa fila. */
+export function enrichmentDisplayState(
+  enrichment: ProductEnrichmentDTO | null | undefined,
+): EnrichmentDisplayState {
+  if (!enrichment) return "none";
+  if (enrichment.status === "pending") return "pending";
+  if (enrichment.status === "disabled") return "disabled";
+  if (enrichment.status === "failed") return "failed";
+  return enrichment.edited_by_user_at ? "edited" : "ready";
+}
+
+export const ENRICHMENT_STATE_LABELS: Record<EnrichmentDisplayState, string> = {
+  none: "Sin generar",
+  pending: "Generando…",
+  ready: "Listo",
+  edited: "Editado por ti",
+  disabled: "Desactivado",
+  failed: "No se pudo generar",
+};
+
+/** Un `pending` sin nada generado aún es la espera del primer job. */
+export function enrichmentHasContent(enrichment: ProductEnrichmentDTO | null | undefined): boolean {
+  if (!enrichment) return false;
+  return (
+    (enrichment.description ?? "").length > 0 ||
+    enrichment.search_terms.length > 0 ||
+    Object.keys(enrichment.attributes).length > 0
+  );
+}
+
+/** Añade un término si cabe, normalizado y sin duplicar (misma regla que el backend). */
+export function addSearchTerm(terms: string[], raw: string): string[] {
+  const term = raw.trim().toLowerCase().slice(0, ENRICHMENT_TERM_MAX_CHARS);
+  if (term.length === 0 || terms.includes(term) || terms.length >= ENRICHMENT_TERMS_MAX) return terms;
+  return [...terms, term];
+}

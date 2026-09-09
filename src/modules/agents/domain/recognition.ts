@@ -12,6 +12,29 @@ import type { Schemas } from "@/core/api/types";
  */
 export type RecognitionSettingsDTO = Schemas["RecognitionSettingsDto"];
 export type RecognitionIndexStatusDTO = Schemas["RecognitionIndexStatusDto"];
+/** Metadatos con IA del catálogo (plan catalog_enrichment): agregado para Ajustes. */
+export type EnrichmentStatsDTO = Schemas["EnrichmentStatsDto"];
+export type EnrichmentVertical = EnrichmentStatsDTO["vertical"];
+
+/** Etiquetas del selector «Tipo de catálogo». `null` = deducir del nicho. */
+export const ENRICHMENT_VERTICAL_LABELS: Record<EnrichmentVertical, string> = {
+  fashion: "Moda y accesorios",
+  food: "Restaurantes y comida",
+  beauty: "Salud y belleza",
+  home: "Hogar y decoración",
+  tech: "Tecnología",
+  generic: "Genérico",
+};
+
+/** Cuántos productos activos siguen sin metadatos listos ni desactivados. */
+export function enrichmentPending(stats: EnrichmentStatsDTO): number {
+  return Math.max(0, stats.products - stats.ready - stats.disabled);
+}
+
+/** Tope mensual alcanzado (o Redis sin respuesta: la UI no afirma nada). */
+export function enrichmentCapReached(stats: EnrichmentStatsDTO): boolean {
+  return stats.monthly_used !== null && stats.monthly_used >= stats.monthly_cap;
+}
 
 /** Cuántos productos activos siguen sin vector de texto. */
 export function pendingProducts(status: RecognitionIndexStatusDTO): number {

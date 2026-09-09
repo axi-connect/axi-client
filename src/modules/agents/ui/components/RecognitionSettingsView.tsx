@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { LoaderCircle, RefreshCw, TriangleAlert } from "lucide-react"
+import { Info, LoaderCircle, RefreshCw, Sparkles, TriangleAlert } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
@@ -10,20 +10,37 @@ import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Switch } from "@/shared/components/ui/switch"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select"
+import {
+  ENRICHMENT_VERTICAL_LABELS,
+  enrichmentCapReached,
+  enrichmentPending,
   indexComplete,
   pendingImages,
   pendingProducts,
+  type EnrichmentStatsDTO,
+  type EnrichmentVertical,
   type RecognitionIndexStatusDTO,
   type RecognitionSettingsDTO,
 } from "@/modules/agents/domain/recognition"
 import {
+  getEnrichmentStats,
   getRecognitionIndexStatus,
   getRecognitionSettings,
   getRecognitionUsage,
+  requestEnrichmentBackfill,
   requestRecognitionReindex,
   updateRecognitionSettings,
   type RecognitionUsage,
 } from "@/modules/agents/infrastructure/services/recognition-service.adapter"
+
+/** Valor del selector cuando el vertical se deduce del nicho (`null` en el DTO). */
+const AUTO_VERTICAL = "__auto__"
 
 /**
  * Configuración → Reconocimiento de producto: el opt-in de empresa, el consumo
@@ -36,9 +53,12 @@ export function RecognitionSettingsView() {
   const [settings, setSettings] = useState<RecognitionSettingsDTO | null>(null)
   const [usage, setUsage] = useState<RecognitionUsage | null>(null)
   const [index, setIndex] = useState<RecognitionIndexStatusDTO | null>(null)
+  const [stats, setStats] = useState<EnrichmentStatsDTO | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [savingSwitch, setSavingSwitch] = useState(false)
+  const [savingEnrichment, setSavingEnrichment] = useState(false)
   const [reindexing, setReindexing] = useState(false)
+  const [enriching, setEnriching] = useState(false)
 
   const load = useCallback(() => {
     getRecognitionSettings()
@@ -50,6 +70,9 @@ export function RecognitionSettingsView() {
     getRecognitionIndexStatus()
       .then(setIndex)
       .catch(() => setIndex(null))
+    getEnrichmentStats()
+      .then(setStats)
+      .catch(() => setStats(null))
   }, [])
 
   useEffect(load, [load])
@@ -57,10 +80,12 @@ export function RecognitionSettingsView() {
   async function toggle(aiEnabled: boolean) {
     if (settings === null || savingSwitch) return
     const previous = settings
-    setSettings({ ai_enabled: aiEnabled })
+    const next = { ...settings, ai_enabled: aiEnabled }
+    setSettings(next)
     setSavingSwitch(true)
     try {
-      await updateRecognitionSettings({ ai_enabled: aiEnabled })
+      // El DTO es strict y viaja completo: los flags del enriquecimiento no se pierden
+      await updateRecognitionSettings(next)
       showAlert({
         tone: "success",
         title: aiEnabled ? "Reconocimiento activado" : "Reconocimiento desactivado",
@@ -106,6 +131,45 @@ export function RecognitionSettingsView() {
       })
     } finally {
       setReindexing(false)
+    }
+  }
+
+  /** Interruptor «Enriquecer automáticamente» y selector de vertical: misma
+   * escritura optimista con rollback que el switch principal. */
+  async function saveEnrichment(patch: Partial<RecognitionSettingsDTO>, success: { title: string; description: string }) {
+    if (settings === null || savingEnrichment) return
+    const previous = settings
+    const next = { ...settings, ...patch }
+    setSettings(next)
+    setSavingEnrichment(true)
+    try {
+      await updateRecognitionSettings(next)
+      showAlert({ tone: "success", ...success, open: true, autoCloseMs: 3000 })
+    } catch (err) {
+      setSettings(previous)
+      showAlert({ tone: "error", title: "No se pudo guardar el cambio", description: errorMessage(err), open: true })
+    } finally {
+      setSavingEnrichment(false)
+    }
+  }
+
+  async function enrichCatalog() {
+    if (enriching) return
+    setEnriching(true)
+    try {
+      await requestEnrichmentBackfill()
+      showAlert({
+        tone: "success",
+        title: "Enriquecimiento en marcha",
+        description: "Solo se genera lo que falta o quedó desactualizado. Las cifras se actualizan en segundos.",
+        open: true,
+        autoCloseMs: 3000,
+      })
+      window.setTimeout(() => void getEnrichmentStats().then(setStats).catch(() => undefined), 4000)
+    } catch (err) {
+      showAlert({ tone: "error", title: "No se pudo iniciar el enriquecimiento", description: errorMessage(err), open: true })
+    } finally {
+      setEnriching(false)
     }
   }
 
@@ -273,6 +337,157 @@ export function RecognitionSettingsView() {
           <HowItem title="Publicación compartida" text="Posts y menciones de historia en Instagram." />
         </div>
       </section>
+
+      <section className="space-y-4 rounded-2xl border border-border bg-background p-4" aria-labelledby="enrichment-title">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 id="enrichment-title" className="flex items-center gap-1.5 text-sm font-semibold">
+                <Sparkles className="size-4 text-accent-violet" aria-hidden />
+                Metadatos con IA
+              </h2>
+              <Badge
+                variant="outline"
+                className={cn(
+                  settings.enrichment_auto_enabled === true
+                    ? "border-accent-violet/40 bg-accent-violet/10 text-accent-violet"
+                    : "text-muted-foreground",
+                )}
+              >
+                {settings.enrichment_auto_enabled === true ? "Automático" : "Bajo demanda"}
+              </Badge>
+            </div>
+            <p className="mt-1 max-w-prose text-xs text-muted-foreground">
+              Cada producto nuevo o modificado, incluidos los que llegan de tu tienda conectada, recibe una
+              descripción para el agente, atributos y las palabras con que lo piden tus clientes.{" "}
+              <span className="font-medium text-foreground">No consume tu plan</span> y no escribe nada en tu
+              tienda.
+            </p>
+          </div>
+          <Switch
+            checked={settings.enrichment_auto_enabled === true}
+            onCheckedChange={(value) =>
+              void saveEnrichment(
+                { enrichment_auto_enabled: value },
+                value
+                  ? { title: "Enriquecimiento automático activado", description: "Cada producto nuevo o modificado recibe sus metadatos en segundos." }
+                  : { title: "Enriquecimiento automático desactivado", description: "Puedes generarlos por producto o con «Enriquecer catálogo»." },
+              )
+            }
+            disabled={savingEnrichment}
+            aria-label="Enriquecer automáticamente el catálogo con IA"
+          />
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="space-y-1.5">
+            <label htmlFor="enrichment-vertical" className="text-xs text-muted-foreground">
+              Tipo de catálogo
+            </label>
+            <Select
+              value={settings.enrichment_vertical ?? AUTO_VERTICAL}
+              onValueChange={(value) =>
+                void saveEnrichment(
+                  { enrichment_vertical: value === AUTO_VERTICAL ? null : (value as EnrichmentVertical) },
+                  { title: "Tipo de catálogo guardado", description: "Los atributos de los próximos productos siguen este tipo; «Enriquecer catálogo» regenera los demás." },
+                )
+              }
+              disabled={savingEnrichment}
+            >
+              <SelectTrigger id="enrichment-vertical" className="w-full sm:w-72" aria-label="Tipo de catálogo">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={AUTO_VERTICAL}>
+                  Según tu tipo de negocio{stats ? ` (${ENRICHMENT_VERTICAL_LABELS[stats.vertical]})` : ""}
+                </SelectItem>
+                {(Object.keys(ENRICHMENT_VERTICAL_LABELS) as EnrichmentVertical[]).map((vertical) => (
+                  <SelectItem key={vertical} value={vertical}>
+                    {ENRICHMENT_VERTICAL_LABELS[vertical]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {stats === null ? (
+          <p className="text-xs text-muted-foreground">El estado de los metadatos no está disponible ahora.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+            <IndexStat
+              label="Con metadatos"
+              value={stats.ready}
+              total={stats.products}
+              note={
+                enrichmentPending(stats) === 0
+                  ? "Todo al día"
+                  : `${enrichmentPending(stats).toLocaleString("es-CO")} pendientes${stats.failed > 0 ? ` · ${stats.failed.toLocaleString("es-CO")} fallidos` : ""}`
+              }
+            />
+            <PlainStat label="Editados por ti" value={stats.user_edited} note="no se regeneran solos" />
+            <PlainStat label="Desactivados" value={stats.disabled} note="usan la ficha original" />
+            <Button variant="outline" onClick={() => void enrichCatalog()} disabled={enriching || !stats.enabled}>
+              {enriching ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Sparkles className="size-4" aria-hidden />
+              )}
+              Enriquecer catálogo
+            </Button>
+          </div>
+        )}
+
+        {stats !== null && !stats.enabled && (
+          <p className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs">
+            <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
+            <span>
+              <span className="font-medium">Los metadatos con IA no están disponibles en la plataforma.</span>{" "}
+              El agente usa la descripción de la ficha hasta que se habiliten.
+            </span>
+          </p>
+        )}
+
+        {stats !== null && stats.enabled && enrichmentCapReached(stats) && (
+          <p className="flex items-start gap-2 rounded-md border border-accent-violet/30 bg-background p-3 text-xs">
+            <Info className="mt-0.5 size-3.5 shrink-0 text-accent-violet" aria-hidden />
+            <span>
+              <span className="font-medium">Tope del mes alcanzado.</span> Lo pendiente se enriquece solo al
+              iniciar el próximo mes. Si necesitas más este mes, escríbenos.
+            </span>
+          </p>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          «Enriquecer catálogo» genera solo lo que falta o quedó desactualizado; lo editado por ti y lo
+          desactivado no se tocan.
+        </p>
+
+        <div className="grid gap-3 text-xs sm:grid-cols-3">
+          <HowItem
+            title="Qué genera"
+            text="Descripción de hasta 160 caracteres, atributos según tu tipo de negocio y hasta 12 formas de pedirlo."
+          />
+          <HowItem
+            title="Qué ve el agente"
+            text="Solo la descripción, en lugar de la de la ficha. Atributos y términos mejoran la búsqueda por texto y por foto."
+          />
+          <HowItem
+            title="Qué no toca"
+            text="Tu tienda conectada. Nombre, precio, fotos y categoría siguen siendo de Shopify; lo generado vive en axi."
+          />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function PlainStat({ label, value, note }: { label: string; value: number; note: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xl font-semibold tracking-tight tabular-nums">{value.toLocaleString("es-CO")}</span>
+      <span className="text-xs text-muted-foreground">{note}</span>
     </div>
   )
 }

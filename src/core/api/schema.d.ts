@@ -1748,6 +1748,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/products/{id}/enrichment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductEnrichmentController_byProduct_v1"];
+        put?: never;
+        post: operations["ProductEnrichmentController_regenerate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ProductEnrichmentController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}/enrichment/apply-category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductEnrichmentController_applyCategory_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/enrichment/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductEnrichmentController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/enrichment/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductEnrichmentController_backfill_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduling/availability": {
         parameters: {
             query?: never;
@@ -7539,6 +7603,9 @@ export interface components {
         };
         RecognitionSettingsDto: {
             ai_enabled: boolean;
+            enrichment_auto_enabled?: boolean;
+            /** @enum {string|null} */
+            enrichment_vertical?: "fashion" | "food" | "beauty" | "home" | "tech" | "generic" | null;
         };
         AiAgentListDto: {
             data: {
@@ -8231,6 +8298,36 @@ export interface components {
                     created_at: string;
                 }[];
                 image_count?: number;
+                enrichment?: {
+                    /** @enum {string} */
+                    status: "pending" | "ready" | "failed" | "disabled";
+                    /** @enum {string|null} */
+                    source: "text" | "vision" | null;
+                    description: string | null;
+                    attributes: {
+                        [key: string]: string;
+                    };
+                    attribute_labels: {
+                        [key: string]: string;
+                    };
+                    search_terms: string[];
+                    suggested_category: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    } | null;
+                    locked_category: boolean;
+                    vertical_code: string | null;
+                    model: string | null;
+                    /** Format: date-time */
+                    edited_by_user_at: string | null;
+                    /** Format: date-time */
+                    generated_at: string | null;
+                    error: string | null;
+                    skipped_reason: string | null;
+                    /** Format: date-time */
+                    updated_at: string;
+                } | null;
             }[];
             meta: {
                 total: number;
@@ -8314,6 +8411,36 @@ export interface components {
                 created_at: string;
             }[];
             image_count?: number;
+            enrichment?: {
+                /** @enum {string} */
+                status: "pending" | "ready" | "failed" | "disabled";
+                /** @enum {string|null} */
+                source: "text" | "vision" | null;
+                description: string | null;
+                attributes: {
+                    [key: string]: string;
+                };
+                attribute_labels: {
+                    [key: string]: string;
+                };
+                search_terms: string[];
+                suggested_category: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                locked_category: boolean;
+                vertical_code: string | null;
+                model: string | null;
+                /** Format: date-time */
+                edited_by_user_at: string | null;
+                /** Format: date-time */
+                generated_at: string | null;
+                error: string | null;
+                skipped_reason: string | null;
+                /** Format: date-time */
+                updated_at: string;
+            } | null;
         };
         CreateProductDto: {
             /** Format: uuid */
@@ -8453,6 +8580,62 @@ export interface components {
         };
         RecognitionReindexAcceptedDto: {
             queued: boolean;
+        };
+        ProductEnrichmentDto: {
+            /** @enum {string} */
+            status: "pending" | "ready" | "failed" | "disabled";
+            /** @enum {string|null} */
+            source: "text" | "vision" | null;
+            description: string | null;
+            attributes: {
+                [key: string]: string;
+            };
+            attribute_labels: {
+                [key: string]: string;
+            };
+            search_terms: string[];
+            suggested_category: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            locked_category: boolean;
+            vertical_code: string | null;
+            model: string | null;
+            /** Format: date-time */
+            edited_by_user_at: string | null;
+            /** Format: date-time */
+            generated_at: string | null;
+            error: string | null;
+            skipped_reason: string | null;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        EnrichmentAcceptedDto: {
+            queued: boolean;
+        };
+        UpdateProductEnrichmentDto: {
+            description?: string | null;
+            attributes?: {
+                [key: string]: string;
+            };
+            search_terms?: string[];
+            /** @enum {string} */
+            status?: "ready" | "disabled";
+        };
+        EnrichmentStatsDto: {
+            enabled: boolean;
+            model: string;
+            /** @enum {string} */
+            vertical: "fashion" | "food" | "beauty" | "home" | "tech" | "generic";
+            products: number;
+            ready: number;
+            pending: number;
+            failed: number;
+            disabled: number;
+            user_edited: number;
+            monthly_used: number | null;
+            monthly_cap: number;
         };
         AvailabilityDto: {
             timezone: string;
@@ -18158,6 +18341,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecognitionReindexAcceptedDto"];
+                };
+            };
+        };
+    };
+    ProductEnrichmentController_byProduct_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductEnrichmentDto"];
+                };
+            };
+        };
+    };
+    ProductEnrichmentController_regenerate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichmentAcceptedDto"];
+                };
+            };
+        };
+    };
+    ProductEnrichmentController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProductEnrichmentDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProductEnrichmentController_applyCategory_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProductEnrichmentController_stats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichmentStatsDto"];
+                };
+            };
+        };
+    };
+    ProductEnrichmentController_backfill_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrichmentAcceptedDto"];
                 };
             };
         };

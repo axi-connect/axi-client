@@ -1,6 +1,7 @@
 import { http } from "@/core/services/http";
 import type { Schemas } from "@/core/api/types";
 import type {
+  EnrichmentStatsDTO,
   RecognitionIndexStatusDTO,
   RecognitionSettingsDTO,
 } from "@/modules/agents/domain/recognition";
@@ -46,4 +47,15 @@ export async function getRecognitionUsage(): Promise<RecognitionUsage | null> {
   } catch {
     return null;
   }
+}
+
+/** Metadatos con IA del catálogo: agregado para la tarjeta de Ajustes. */
+export function getEnrichmentStats(): Promise<EnrichmentStatsDTO> {
+  return http.get<EnrichmentStatsDTO>("/catalog/enrichment/stats");
+}
+
+/** «Enriquecer catálogo» (202): genera solo lo que falta o quedó desactualizado;
+ * lo editado por el tenant y lo desactivado no se tocan. */
+export function requestEnrichmentBackfill(): Promise<Schemas["EnrichmentAcceptedDto"]> {
+  return http.post<Schemas["EnrichmentAcceptedDto"]>("/catalog/enrichment/backfill", {});
 }
