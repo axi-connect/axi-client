@@ -42,6 +42,8 @@ export function useInboxSocket() {
   const { socket, connected } = useSocket("inbox")
   const store = useInboxStore
   const joinedRef = useRef<string | null>(null)
+  /** Hubo un `disconnect` antes: el próximo `connect` es una RECONEXIÓN y debe resincronizar la lista. */
+  const wasDisconnectedRef = useRef(false)
 
   /**
    * Pinta un mensaje recién llegado en el hilo abierto y arranca los dos
@@ -50,8 +52,8 @@ export function useInboxSocket() {
   const applyIncoming = useCallback((conversationId: string, message: UiMessage) => {
     const state = store.getState()
     state.appendMessage(conversationId, message)
-    // Media sin attachment: el backend lo descarga en un job aparte y NO
-    // emite evento de "media lista" → reintentamos el fetch hasta traerlo.
+    // Media sin attachment: el backend lo descarga en un job aparte y avisa con
+    // `message_updated` (applyAttachments). El sondeo es solo red de seguridad.
     if (isMediaContentType(message.content_type) && message.attachments.length === 0) {
       state.resolvePendingMedia(conversationId, message.id)
     }
@@ -64,14 +66,15 @@ export function useInboxSocket() {
 
   // --- Eventos → store -----------------------------------------------------
 
+  // Conversación nueva: puede entrar en la vista actual → refresco coalescido.
   useSocketEvent(socket, "conversation.created", () => {
-    store.getState().fetchConversations()
-    store.getState().fetchCounts()
+    store.getState().scheduleListRefresh({ counts: true })
   })
 
   useSocketEvent(socket, "conversation.message_received", async (payload) => {
     const state = store.getState()
-    state.bumpConversation(payload.conversation_id)
+    // La fila se actualiza EN SITIO con los denormalizados del evento (sin REST).
+    state.applyMessageEvent(payload.conversation_id, payload.message, payload.conversation)
     if (state.selectedId !== payload.conversation_id) return
 
     // Camino normal: el evento trae la vista completa del mensaje y se pinta
@@ -110,6 +113,16 @@ export function useInboxSocket() {
   // conversación no está cargada en memoria.
   useSocketEvent(socket, "conversation.message_updated", (payload) => {
     const state = store.getState()
+    // Media entrante lista (o no descargable): la burbuja deja el skeleton al
+    // instante y se corta el sondeo de rescate.
+    if (payload.attachments !== undefined) {
+      state.applyAttachments(payload.conversation_id, payload.message_id, {
+        attachments: payload.attachments,
+        content_type: payload.content_type,
+        body: payload.body,
+        unavailable_reason: payload.unavailable_reason,
+      })
+    }
     if (payload.transcription !== undefined) {
       state.applyTranscription(payload.conversation_id, payload.message_id, payload.transcription)
     }
@@ -126,7 +139,15 @@ export function useInboxSocket() {
   // optimista propio (ya reconciliado con el id real).
   useSocketEvent(socket, "conversation.message_created", (payload) => {
     const state = store.getState()
-    state.bumpConversation(payload.conversation_id)
+    // Rescate: sin vista del mensaje (payload de un backend anterior o
+    // malformado) no se descarta en silencio — se resincroniza.
+    if (!payload.message) {
+      if (state.selectedId === payload.conversation_id) void state.resyncMessages(payload.conversation_id)
+      state.scheduleListRefresh()
+      return
+    }
+    // Patch provisional de la fila (message_sent lo corrige con el del servidor).
+    state.applyMessageEvent(payload.conversation_id, payload.message)
     if (state.selectedId === payload.conversation_id) {
       applyIncoming(payload.conversation_id, payload.message as UiMessage)
     }
@@ -135,7 +156,7 @@ export function useInboxSocket() {
   useSocketEvent(socket, "conversation.message_sent", async (payload) => {
     const state = store.getState()
     state.confirmMessage(payload.conversation_id, payload.message_id)
-    state.bumpConversation(payload.conversation_id)
+    if (payload.conversation) state.patchConversation(payload.conversation_id, payload.conversation)
     // Robustez: si el created se perdió (reconexión), el mensaje no está en
     // el timeline abierto → mismo refetch dirigido que message_received.
     if (state.selectedId !== payload.conversation_id) return
@@ -169,6 +190,11 @@ export function useInboxSocket() {
 
   useSocketEvent(socket, "conversation.typing", (payload) => {
     store.getState().onTyping(payload)
+  })
+
+  // Otra pestaña (o esta) marcó leído: el badge baja en vivo sin refetch.
+  useSocketEvent(socket, "conversation.read", (payload) => {
+    store.getState().applyUnreadChanged(payload)
   })
 
   useSocketEvent(socket, "conversation.escalated", (p) => store.getState().onHandoffEvent(p))
@@ -274,12 +300,23 @@ export function useInboxSocket() {
     if (!socket) return
 
     const onConnect = () => {
+      // Reconexión (el token rota cada ~14 min con disconnect+connect): lo que
+      // se emitió en el hueco para conversaciones NO abiertas nunca actualizó
+      // la lista. Se resincronizan lista y counts ANTES del guard de abajo, que
+      // solo se ocupa del hilo abierto. El primer connect no pasa por aquí:
+      // la lista se está cargando por su cuenta.
+      if (wasDisconnectedRef.current) {
+        wasDisconnectedRef.current = false
+        void store.getState().resyncList()
+        void store.getState().fetchCounts()
+      }
       const conversationId = selectedIdRef.current
       if (!conversationId) return
       join(conversationId)
       void store.getState().resyncMessages(conversationId)
     }
     const onDisconnect = () => {
+      wasDisconnectedRef.current = true
       // La membresía del room muere con la conexión: olvidarla obliga a
       // re-joinear en lugar de dar por hecho que sigue vigente.
       joinedRef.current = null
@@ -305,7 +342,7 @@ export function useInboxSocket() {
         if (!ack.ok && ack.error.code === API_ERROR_CODES.handoffConflict) {
           // Otro operador ganó: sincroniza el estado real.
           void useInboxStore.getState().refreshSelected()
-          void useInboxStore.getState().fetchConversations()
+          useInboxStore.getState().scheduleListRefresh({ counts: true })
         }
         return ack as InboxCommandResult<T>
       } catch {

@@ -7,31 +7,53 @@ import {
   listInboxConversations,
 } from "@/modules/inbox/infrastructure/services/inbox-service.adapter"
 import {
-  tabToQuery,
+  compareConversations,
+  DEFAULT_INBOX_SORT,
   type ConversationDTO,
   type InboxConversation,
   type InboxCounts,
-  type InboxTab,
+  type InboxSort,
+  type InboxView,
   type Message,
+  type MessageAttachment,
+  type MessageStatus,
   type UiMessage,
 } from "@/modules/inbox/domain/inbox"
+import type { FilterValues } from "@/shared/components/features/filter-panel"
 import type {
   AudioTranscription,
   ConversationHandoffEvent,
+  ConversationListPatch,
+  ConversationReadEvent,
   ProductRecognition,
   TypingEvent,
 } from "@/core/realtime/events"
+import {
+  buildInboxQuery,
+  INBOX_MAX_LOADED,
+  INBOX_PAGE_SIZE,
+  INBOX_REFRESH_MAX_PAGE_SIZE,
+} from "./inbox-query"
 
 /**
  * Store del inbox. Los datos entran por REST (listas, historial con cursor)
  * y se mantienen vivos con los eventos del namespace WS `/inbox`.
  *
+ * Lista: vista + orden + búsqueda + filtros forman la «identidad» de la lista
+ * (`listRequestSeq`); cambiar cualquiera reinicia la paginación y descarta las
+ * respuestas en vuelo de la lista anterior. El scroll infinito añade páginas
+ * con dedupe por id. Los eventos WS actualizan la fila EN SITIO
+ * (`patchConversation`) y solo re-consultan la lista cuando puede cambiar la
+ * pertenencia a la vista (`scheduleListRefresh`, coalescido y consciente de
+ * cuántas páginas hay cargadas).
+ *
  * Mensajería optimista: `sendOptimistic` inserta un mensaje `pending` con
  * `local_id`; el ack del comando lo reconcilia con el id real (`queued`) y
- * el evento `conversation.message_sent` lo confirma. Un timeout lo marca
- * `failed` con reintento manual.
+ * el evento `conversation.message_sent` lo confirma. Si no llega el ack en el
+ * plazo se marca `failed` con reintento manual; si el ack llegó pero no la
+ * confirmación, se re-consulta el hilo y decide el servidor.
  */
-const SEND_CONFIRM_TIMEOUT_MS = 15_000
+const SEND_CONFIRM_TIMEOUT_MS = 60_000
 /**
  * Tras marcar un audio como "transcribiendo", si no llega `message_updated`
  * en este margen se limpia el flag (STT deshabilitado o fallo silencioso) y la
@@ -40,10 +62,11 @@ const SEND_CONFIRM_TIMEOUT_MS = 15_000
 const TRANSCRIBE_TIMEOUT_MS = 30_000
 /**
  * Media entrante: el attachment lo persiste un job aparte DESPUÉS de
- * `message_received` y el backend no emite un evento de "media lista". Se
- * reintenta el fetch con este backoff acotado hasta que aparezca el attachment.
+ * `message_received` y el backend avisa con `message_updated` cuando está
+ * listo (`applyAttachments`). Este sondeo queda solo como RED DE SEGURIDAD
+ * (evento perdido en una reconexión), por eso es lento y corto.
  */
-const MEDIA_RESOLVE_DELAYS_MS = [800, 1_500, 3_000, 5_000, 8_000]
+const MEDIA_RESOLVE_DELAYS_MS = [4_000, 12_000, 30_000]
 /** Ids con un bucle de resolución en curso (evita relanzarlo por varios eventos). */
 const resolvingMedia = new Set<string>()
 /**
@@ -57,6 +80,17 @@ const MESSAGES_PAGE_SIZE = 50
  * descarta en vez de pisar el estado actual.
  */
 const messagesRequestSeq = new Map<string, number>()
+/**
+ * Generación de la lista: sube al cambiar vista/orden/búsqueda/filtros y al
+ * refrescar. Una respuesta de una generación anterior se descarta.
+ */
+let listRequestSeq = 0
+/** Refresco de lista coalescido (ver `scheduleListRefresh`). */
+const LIST_REFRESH_DEBOUNCE_MS = 400
+let refreshTimer: ReturnType<typeof setTimeout> | null = null
+let refreshInFlight = false
+let refreshDirty = false
+let refreshWantsCounts = false
 
 type MessagesState = {
   items: UiMessage[]
@@ -66,12 +100,23 @@ type MessagesState = {
 
 type InboxStore = {
   // Lista
-  tab: InboxTab
+  view: InboxView
+  sort: InboxSort
+  /** Búsqueda APLICADA (el debounce vive en el campo). */
+  q: string
+  filters: FilterValues
   conversations: InboxConversation[]
   total: number
+  /** Última página cargada. */
   page: number
+  hasMore: boolean
+  /** Primera página en vuelo (reemplaza). */
   loadingList: boolean
+  /** Página siguiente en vuelo (añade). */
+  loadingMore: boolean
+  listError: string | null
   counts: InboxCounts | null
+  /** Errores de la conversación/hilo (la lista tiene `listError`). */
   error: string | null
 
   // Conversación activa
@@ -80,9 +125,30 @@ type InboxStore = {
   messagesById: Record<string, MessagesState>
   typingByConversation: Record<string, string[]> // user_ids escribiendo
 
-  // Acciones de datos
-  setTab: (tab: InboxTab) => void
-  fetchConversations: (page?: number) => Promise<void>
+  // Acciones de la lista
+  setView: (view: InboxView) => void
+  setSort: (sort: InboxSort) => void
+  setSearch: (q: string) => void
+  applyFilters: (filters: FilterValues) => void
+  /** Vacía filtros y búsqueda (el CTA del estado «sin resultados»). */
+  clearListFilters: () => void
+  /** Página 1 de la lista actual. `clear` vacía antes (cambio de vista). */
+  fetchFirstPage: (options?: { clear?: boolean }) => Promise<void>
+  /** Página siguiente, con dedupe por id. No-op si ya no hay más o hay una en vuelo. */
+  loadMore: () => Promise<void>
+  /**
+   * Re-consulta la lista SIN perder páginas: pide en una sola petición tantas
+   * filas como había cargadas (tope del backend) y recalcula la paginación.
+   * Inmediato: es el camino de la reconexión.
+   */
+  resyncList: () => Promise<void>
+  /**
+   * `resyncList` coalescido (400 ms, una sola petición en vuelo): lo usan los
+   * eventos que pueden cambiar la PERTENENCIA de una fila a la vista
+   * (conversación nueva, handoff). Un mensaje en una fila ya cargada NO pasa
+   * por aquí: se aplica en sitio.
+   */
+  scheduleListRefresh: (options?: { counts?: boolean }) => void
   fetchCounts: () => Promise<void>
   select: (id: string | null) => Promise<void>
   refreshSelected: () => Promise<void>
@@ -142,17 +208,53 @@ type InboxStore = {
   // Reducers de eventos WS
   onHandoffEvent: (event: ConversationHandoffEvent) => void
   onTyping: (event: TypingEvent) => void
-  bumpConversation: (conversationId: string) => void
+  /**
+   * Actualiza la fila (y la conversación abierta) en sitio, ajusta el total de
+   * no leídos y reubica la fila según el orden activo. Si la conversación no
+   * está cargada, programa un refresco: puede pertenecer a la vista y estar
+   * fuera de las páginas cargadas.
+   */
+  patchConversation: (conversationId: string, patch: Partial<InboxConversation>) => void
+  /**
+   * Mensaje entrante/saliente → fila. Con `patch` del servidor lo aplica tal
+   * cual; sin él deriva preview y actividad del mensaje (y suma un no leído si
+   * es entrante y la conversación no está abierta).
+   */
+  applyMessageEvent: (
+    conversationId: string,
+    message: Message | UiMessage | undefined,
+    patch?: ConversationListPatch,
+  ) => void
+  /** Leído optimista al abrir. Devuelve el valor anterior para poder revertir. */
+  markReadLocal: (conversationId: string) => number
+  rollbackUnread: (conversationId: string, previous: number) => void
+  /** `conversation.read` de cualquier pestaña del tenant. */
+  applyUnreadChanged: (event: ConversationReadEvent) => void
+  /** `message_updated` con el adjunto ya persistido: quita el skeleton y corta el sondeo. */
+  applyAttachments: (
+    conversationId: string,
+    messageId: string,
+    update: {
+      attachments: MessageAttachment[]
+      content_type?: Message["content_type"]
+      body?: string
+      unavailable_reason?: string
+    },
+  ) => void
 }
 
-const PAGE_SIZE = 25
-
 export const useInboxStore = create<InboxStore>((set, get) => ({
-  tab: "all_open",
+  view: "all_open",
+  sort: DEFAULT_INBOX_SORT,
+  q: "",
+  filters: {},
   conversations: [],
   total: 0,
   page: 1,
+  hasMore: true,
   loadingList: false,
+  loadingMore: false,
+  listError: null,
   counts: null,
   error: null,
 
@@ -170,21 +272,139 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
       },
     })),
 
-  setTab: (tab) => {
-    set({ tab, page: 1 })
-    void get().fetchConversations(1)
+  setView: (view) => {
+    if (get().view === view) return
+    set({ view })
+    // Vista nueva = lista distinta: se vacía para no enseñar filas ajenas.
+    void get().fetchFirstPage({ clear: true })
   },
 
-  fetchConversations: async (page = get().page) => {
-    set({ loadingList: true, error: null })
+  setSort: (sort) => {
+    if (get().sort === sort) return
+    set({ sort })
+    // Las filas actuales siguen siendo válidas: se conservan mientras carga.
+    void get().fetchFirstPage()
+  },
+
+  setSearch: (q) => {
+    if (get().q === q) return
+    set({ q })
+    void get().fetchFirstPage()
+  },
+
+  applyFilters: (filters) => {
+    set({ filters })
+    void get().fetchFirstPage()
+  },
+
+  clearListFilters: () => {
+    set({ filters: {}, q: "" })
+    void get().fetchFirstPage()
+  },
+
+  fetchFirstPage: async ({ clear = false } = {}) => {
+    const seq = ++listRequestSeq
+    set({
+      loadingList: true,
+      loadingMore: false,
+      listError: null,
+      page: 1,
+      hasMore: true,
+      ...(clear ? { conversations: [], total: 0 } : {}),
+    })
     try {
-      const res = await listInboxConversations({ page, page_size: PAGE_SIZE, ...tabToQuery(get().tab) })
-      set({ conversations: res.data, total: res.meta.total, page })
+      const state = get()
+      const res = await listInboxConversations(
+        buildInboxQuery({ view: state.view, sort: state.sort, q: state.q, filters: state.filters, page: 1 }),
+      )
+      if (seq !== listRequestSeq) return
+      set({
+        conversations: res.data,
+        total: res.meta.total,
+        page: 1,
+        hasMore: hasMorePages(res.data.length, 1, res.meta),
+        loadingList: false,
+      })
     } catch (err) {
-      set({ error: errorMessage(err, "No se pudo cargar el inbox") })
-    } finally {
-      set({ loadingList: false })
+      if (seq !== listRequestSeq) return
+      set({ listError: errorMessage(err, "No se pudo cargar el inbox"), loadingList: false })
     }
+  },
+
+  loadMore: async () => {
+    const state = get()
+    if (state.loadingList || state.loadingMore || !state.hasMore) return
+    if (state.conversations.length >= INBOX_MAX_LOADED) return
+    const seq = listRequestSeq
+    const nextPage = state.page + 1
+    set({ loadingMore: true, listError: null })
+    try {
+      const res = await listInboxConversations(
+        buildInboxQuery({ view: state.view, sort: state.sort, q: state.q, filters: state.filters, page: nextPage }),
+      )
+      // La lista cambió mientras volaba (otra vista, otro orden): esta página ya no es de aquí.
+      if (seq !== listRequestSeq) return
+      set((current) => ({
+        conversations: dedupeById([...current.conversations, ...res.data]),
+        total: res.meta.total,
+        page: nextPage,
+        hasMore: hasMorePages(res.data.length, nextPage, res.meta),
+        loadingMore: false,
+      }))
+    } catch (err) {
+      if (seq !== listRequestSeq) return
+      set({ listError: errorMessage(err, "No se pudieron cargar más conversaciones"), loadingMore: false })
+    }
+  },
+
+  resyncList: async () => {
+    const state = get()
+    const seq = ++listRequestSeq
+    const loaded = state.conversations.length
+    // Una sola petición del tamaño de lo cargado: refrescar solo la página 1
+    // truncaba las páginas 2..N en cada mensaje.
+    const pageSize = Math.min(Math.max(loaded, INBOX_PAGE_SIZE), INBOX_REFRESH_MAX_PAGE_SIZE)
+    try {
+      const res = await listInboxConversations({
+        ...buildInboxQuery({ view: state.view, sort: state.sort, q: state.q, filters: state.filters, page: 1 }),
+        page_size: pageSize,
+      })
+      if (seq !== listRequestSeq) return
+      set((current) => {
+        const freshIds = new Set(res.data.map((c) => c.id))
+        // Lo que estaba más allá de la ventana se conserva (deduplicado): el
+        // usuario ya había bajado hasta ahí.
+        const tail = current.conversations.slice(pageSize).filter((c) => !freshIds.has(c.id))
+        const conversations = [...res.data, ...tail]
+        const selectedFresh =
+          current.selected === null ? undefined : res.data.find((c) => c.id === current.selected?.id)
+        return {
+          conversations,
+          total: res.meta.total,
+          page: Math.max(1, Math.ceil(conversations.length / INBOX_PAGE_SIZE)),
+          hasMore: conversations.length < res.meta.total,
+          loadingList: false,
+          loadingMore: false,
+          listError: null,
+          selected: selectedFresh === undefined ? current.selected : { ...current.selected, ...selectedFresh },
+        }
+      })
+    } catch {
+      // Recuperación de fondo: sin banner. El próximo evento o interacción reintenta.
+    }
+  },
+
+  scheduleListRefresh: ({ counts = false } = {}) => {
+    refreshWantsCounts = refreshWantsCounts || counts
+    if (refreshInFlight) {
+      refreshDirty = true
+      return
+    }
+    if (refreshTimer !== null) return
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null
+      void runListRefresh(get)
+    }, LIST_REFRESH_DEBOUNCE_MS)
   },
 
   fetchCounts: async () => {
@@ -289,11 +509,17 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     }
     get().appendMessage(conversationId, optimistic)
 
-    // Sin confirmación en 15s → failed (retry manual en la UI).
+    // Sin confirmación en el plazo: si el ACK nunca llegó (sigue con id local)
+    // el envío no se aceptó → failed con reintento manual. Si el ack llegó
+    // (id real) el mensaje está en la cola del backend: se re-consulta el hilo
+    // y decide el servidor — antes se pintaba «fallido» a los 15 s aunque el
+    // proveedor lo entregara después, y el reintento lo duplicaba.
     setTimeout(() => {
       const messages = get().messagesById[conversationId]?.items ?? []
       const still = messages.find((m) => m.local_id === localId && m.delivery === "pending")
-      if (still) get().markSendFailed(conversationId, localId)
+      if (!still) return
+      if (still.id === localId) get().markSendFailed(conversationId, localId)
+      else void get().resyncMessages(conversationId)
     }, SEND_CONFIRM_TIMEOUT_MS)
 
     return localId
@@ -446,7 +672,7 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
                 local_id: m.local_id,
                 local_previews: m.local_previews,
                 local_payload: m.local_payload,
-                delivery: m.delivery,
+                delivery: deliveryFor(message.status, m.delivery),
                 transcription_pending: m.transcription_pending,
                 media_pending: false,
               }
@@ -502,6 +728,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     const attempt = (index: number) => {
       setTimeout(() => {
         void (async () => {
+          // `applyAttachments` (evento del backend) ya lo resolvió: no sondear.
+          if (!resolvingMedia.has(key)) return
           try {
             const res = await getConversationMessages(conversationId, { limit: 10 })
             const fresh = res.data.find((m) => m.id === messageId)
@@ -677,9 +905,8 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
           ? { ...state.selected, status: event.status, mode: event.mode, assigned_user_id: event.assigned_user_id }
           : state.selected,
     }))
-    // La pertenencia a tabs pudo cambiar → re-fetch de lista y counts.
-    void get().fetchConversations()
-    void get().fetchCounts()
+    // La pertenencia a la vista pudo cambiar → refresco coalescido de lista y counts.
+    get().scheduleListRefresh({ counts: true })
   },
 
   onTyping: (event) => {
@@ -694,18 +921,202 @@ export const useInboxStore = create<InboxStore>((set, get) => ({
     })
   },
 
-  bumpConversation: (conversationId) => {
-    // Un mensaje entrante puede pertenecer a una conversación fuera de la
-    // página actual: re-fetch barato de lista + counts.
-    void get().fetchConversations()
-    void get().fetchCounts()
-    if (get().selectedId === conversationId) void get().refreshSelected()
+  patchConversation: (conversationId, patch) => {
+    const state = get()
+    const existing = state.conversations.find((c) => c.id === conversationId)
+    if (existing === undefined) {
+      if (state.selected?.id === conversationId) {
+        set({ selected: { ...state.selected, ...patch } })
+      }
+      // No está cargada: puede pertenecer a la vista (fuera de las páginas
+      // cargadas, o recién creada). La única forma de saberlo es preguntar.
+      get().scheduleListRefresh()
+      return
+    }
+    set((current) => {
+      const nextUnread = patch.unread_count ?? existing.unread_count
+      const delta = nextUnread - existing.unread_count
+      const patched = current.conversations.map((c) =>
+        c.id === conversationId ? { ...c, ...patch } : c,
+      )
+      return {
+        // Las filas no tocadas conservan su referencia (React.memo en la lista).
+        conversations: [...patched].sort(compareConversations(current.sort)),
+        selected:
+          current.selected?.id === conversationId ? { ...current.selected, ...patch } : current.selected,
+        counts:
+          current.counts !== null && delta !== 0
+            ? { ...current.counts, unread_total: Math.max(0, current.counts.unread_total + delta) }
+            : current.counts,
+      }
+    })
+  },
+
+  applyMessageEvent: (conversationId, message, patch) => {
+    if (patch !== undefined) {
+      get().patchConversation(conversationId, patch)
+      return
+    }
+    if (message === undefined) {
+      get().scheduleListRefresh()
+      return
+    }
+    const state = get()
+    const existing = state.conversations.find((c) => c.id === conversationId)
+    const isOpen = state.selectedId === conversationId
+    const inbound = message.direction === "inbound"
+    get().patchConversation(conversationId, {
+      last_message_at: message.created_at,
+      last_message_preview: message.body ?? `[${message.content_type}]`,
+      ...(inbound && !isOpen && existing !== undefined
+        ? { unread_count: existing.unread_count + 1 }
+        : {}),
+    })
+  },
+
+  markReadLocal: (conversationId) => {
+    const state = get()
+    const previous =
+      state.conversations.find((c) => c.id === conversationId)?.unread_count ??
+      (state.selected?.id === conversationId ? state.selected.unread_count : 0)
+    if (previous > 0) setUnread(set, conversationId, 0)
+    return previous
+  },
+
+  rollbackUnread: (conversationId, previous) => {
+    setUnread(set, conversationId, previous)
+  },
+
+  applyUnreadChanged: (event) => {
+    setUnread(set, event.conversation_id, event.unread_count)
+  },
+
+  applyAttachments: (conversationId, messageId, update) => {
+    resolvingMedia.delete(`${conversationId}:${messageId}`)
+    set((state) => {
+      const current = state.messagesById[conversationId]
+      if (!current) return state
+      return {
+        messagesById: {
+          ...state.messagesById,
+          [conversationId]: {
+            ...current,
+            items: current.items.map((m) => {
+              if (m.id !== messageId) return m
+              const basePayload =
+                typeof m.payload === "object" && m.payload !== null
+                  ? (m.payload as Record<string, unknown>)
+                  : {}
+              const media =
+                typeof basePayload.media === "object" && basePayload.media !== null
+                  ? (basePayload.media as Record<string, unknown>)
+                  : {}
+              return {
+                ...m,
+                attachments: update.attachments,
+                content_type: update.content_type ?? m.content_type,
+                body: update.body ?? m.body,
+                payload:
+                  update.unavailable_reason === undefined
+                    ? m.payload
+                    : { ...basePayload, media: { ...media, unavailable_reason: update.unavailable_reason } },
+                media_pending: false,
+              }
+            }),
+          },
+        },
+      }
+    })
   },
 }))
 
 type SetState = (
   partial: (state: InboxStore) => Partial<InboxStore>,
 ) => void
+
+/** Hay otra página si aún no se alcanzó `total` y la página actual no vino vacía. */
+function hasMorePages(
+  received: number,
+  page: number,
+  meta: { total: number; page_size: number },
+): boolean {
+  return received > 0 && page * meta.page_size < meta.total
+}
+
+function dedupeById(conversations: InboxConversation[]): InboxConversation[] {
+  const seen = new Set<string>()
+  return conversations.filter((c) => {
+    if (seen.has(c.id)) return false
+    seen.add(c.id)
+    return true
+  })
+}
+
+/**
+ * Solo tests: los temporizadores falsos de Jest se descartan al volver a los
+ * reales, y un `refreshTimer` huérfano bloquearía todos los refrescos del
+ * siguiente test (en producción un timer siempre dispara).
+ */
+export function resetListRefreshSchedulerForTests(): void {
+  if (refreshTimer !== null) clearTimeout(refreshTimer)
+  refreshTimer = null
+  refreshInFlight = false
+  refreshDirty = false
+  refreshWantsCounts = false
+}
+
+async function runListRefresh(get: () => InboxStore): Promise<void> {
+  refreshInFlight = true
+  const withCounts = refreshWantsCounts
+  refreshWantsCounts = false
+  try {
+    await Promise.all([get().resyncList(), withCounts ? get().fetchCounts() : Promise.resolve()])
+  } finally {
+    refreshInFlight = false
+    if (refreshDirty) {
+      refreshDirty = false
+      get().scheduleListRefresh({ counts: refreshWantsCounts })
+    }
+  }
+}
+
+/**
+ * Fija el contador de no leídos de una conversación en la fila, en la
+ * conversación abierta y en el total del sidebar (por delta contra lo que
+ * había en memoria, así un optimista y el evento que lo confirma no descuentan
+ * dos veces).
+ */
+function setUnread(set: SetState, conversationId: string, value: number): void {
+  set((state) => {
+    const row = state.conversations.find((c) => c.id === conversationId)
+    const previous =
+      row?.unread_count ?? (state.selected?.id === conversationId ? state.selected.unread_count : value)
+    const delta = value - previous
+    return {
+      conversations:
+        row === undefined
+          ? state.conversations
+          : state.conversations.map((c) => (c.id === conversationId ? { ...c, unread_count: value } : c)),
+      selected:
+        state.selected?.id === conversationId ? { ...state.selected, unread_count: value } : state.selected,
+      counts:
+        state.counts !== null && delta !== 0
+          ? { ...state.counts, unread_total: Math.max(0, state.counts.unread_total + delta) }
+          : state.counts,
+    }
+  })
+}
+
+/**
+ * Estado de entrega de la UI a partir del status del servidor: lo que el
+ * servidor ya confirmó (o rechazó) manda sobre lo que la UI suponía. Un
+ * «fallido» local por timeout se corrige si el servidor dice `sent`.
+ */
+function deliveryFor(status: MessageStatus, local: UiMessage["delivery"]): UiMessage["delivery"] {
+  if (status === "sent" || status === "delivered" || status === "read") return "confirmed"
+  if (status === "failed") return "failed"
+  return local
+}
 
 /**
  * Trae la última página del timeline y la FUSIONA con lo que hay en memoria.
@@ -771,7 +1182,7 @@ function mergeMessages(current: UiMessage[], fresh: UiMessage[]): UiMessage[] {
       local_id: local.local_id,
       local_previews: local.local_previews,
       local_payload: local.local_payload,
-      delivery: local.delivery,
+      delivery: deliveryFor(server.status, local.delivery),
     })
     freshById.delete(local.id)
   }

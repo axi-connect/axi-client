@@ -19,7 +19,7 @@
 
 | Método | Path | Uso en el slice | Permiso |
 |---|---|---|---|
-| GET | `/inbox/conversations` | Lista de la columna izquierda. Filtros `status`, `mode`, `assigned=me\|unassigned`, `channel_id`, `priority`, `page`, `page_size` | `conversations:read` |
+| GET | `/inbox/conversations` | Lista del rail. Filtros `status` (multi CSV; `resolved,closed` = vista Cerradas), `mode`, `assigned=me\|unassigned`, `assigned_user_id` (ajeno ⇒ `conversations:manage`), `channel_id` (multi), `priority` (multi), `unread=true`, `q` (nombre/teléfono), `from`/`to` (ISO sobre `last_message_at`), `sort=recent\|oldest\|unread\|waiting\|priority`, `page`, `page_size` (≤100). Cada fila trae `queued_at` y `closed_at` | `conversations:read` |
 | GET | `/inbox/counts` | Badges de tabs y del sidebar → `{queued, mine, ai, all_open, unread_total}` | `conversations:read` |
 | GET | `/conversations/{id}` | Conversación seleccionada | `conversations:read` |
 | GET | `/conversations/{id}/messages` | Hilo por **cursor** (`cursor` uuid + `limit` ≤100, orden **desc**). Único filtro disponible | `conversations:read` |
@@ -45,7 +45,7 @@ por comando. Contrato tipado en `core/realtime/events.ts`.
 
 | Grupo | Eventos |
 |---|---|
-| Conversación | `conversation.created`, `.message_received`, `.message_created` (F9.1, vista completa del mensaje), `.message_updated` (F12, transcripción), `.message_sent`, `.message_status` (solo `failed`), `.typing` |
+| Conversación | `conversation.created`, `.message_received` (+ `conversation` con `unread_count/last_message_at/last_message_preview` → la fila se actualiza en sitio), `.message_created` (F9.1, vista completa del mensaje), `.message_updated` (F12 transcripción, reconocimiento y **adjunto listo** con `attachments`/`unavailable_reason`), `.message_sent` (+ `conversation`), `.message_status` (solo `failed`), `.read` (leído desde cualquier pestaña), `.typing` |
 | Handoff | `.escalated`, `.claimed`, `.taken_over`, `.returned_to_ai`, `.status_changed`, `.sla_breached` |
 | Contexto del contacto (rail) | `contact.lifecycle_changed`, `contact.merged`, `crm.activity_created`, `crm.task_completed`, los 6 `crm.deal_*`, `order.created`, `order.status_changed`, `order.payment_reported` |
 | Suspensión | `company.suspended` (F15) |
@@ -131,13 +131,11 @@ src/modules/inbox/
 
 ### B.3 Deuda abierta del slice
 
-- `bumpConversation` y `onHandoffEvent` re-consultan lista + counts en **cada** mensaje, sin
-  debounce: con tráfico alto son N peticiones/segundo.
 - `appendMessage` no reordena por `created_at` (dedupe solo por `id`).
 - `useUploadQueue.clear()` no revoca los object URLs → fuga por sesión.
-- La lista solo pide **página 1** (25): no hay paginación ni scroll infinito (el hilo sí pagina).
-- El `error` del store no se renderiza en `InboxList`.
 - Fallback REST de handoff muerto (A.1).
+- La lista carga como máximo `INBOX_MAX_LOADED` (500) filas; más allá el pie pide refinar la búsqueda.
+- Los chips del filtro de fechas muestran el rango en ISO crudo (`describeFilters` no formatea).
 
 ---
 
@@ -425,3 +423,106 @@ Manual: los tres modos; medir que la altura sigue siendo 57px al alternar de mod
 fallo para ver el rollback; contacto sin etapa ni etiquetas (sin huecos); conversación `urgent`;
 anchos 1400/1100/800/600; light y dark; recorrido con Tab comprobando que el `<Link>` de identidad no
 atrapa los controles de la derecha.
+
+---
+
+## Parte E — Lista de conversaciones (rail)
+
+### E.1 Qué es
+
+El rail izquierdo (`md:w-72`, 288 px; full-width en móvil) es el panel de operación: cinco vistas
+(«En cola», «Mías», «IA», «Abiertas», **«Cerradas»**), orden elegible, búsqueda por nombre/teléfono,
+filtros (canal multiselección, prioridad, solo no leídas, asignada a — con `conversations:manage` —,
+rango de fechas) y **scroll infinito** con «Mostrando X de Y». Cada fila: avatar con el logo del canal
+como badge, nombre, fecha con contexto (`14:32` · `Ayer` · `Lunes` · `08/09/26`, `title` con la fecha
+completa), preview, burbuja coral de no leídos, barra de prioridad (ámbar `high`, roja `urgent`) y una
+tercera línea SOLO en estados que informan algo (tiempo en cola, «IA» en Abiertas, fecha de cierre).
+Color: coral = acción (no leídos, selección); ámbar = espera; IA en neutro; cero violeta.
+
+```
+ui/components/list/
+├── InboxListHeader.tsx       # fila 1 título+total·SortMenu·FilterTrigger compact·drawer <lg; fila 2 InboxSearch;
+│                             #   fila 3 SegmentedControl (5 vistas, labels="active"); fila 4 FilterChips; FilterPanel
+├── InboxSearch.tsx           # campo compacto con debounce 300 ms (el store recibe la búsqueda APLICADA)
+├── SortMenu.tsx              # icon-button (el icono es el orden activo) + Popover role="menu" de radios
+├── ConversationList.tsx      # scroller de BLOQUE + IntersectionObserver sobre el sentinel + estados vacíos
+├── ConversationListItem.tsx  # la fila (React.memo); `conversationMeta()` decide la tercera línea
+├── ConversationListFooter.tsx# skeleton «cargando más» · error+Reintentar · «Mostrando X de Y»+sentinel
+├── InboxViewUrlSync.tsx      # `?view=` ⇄ store (replace, bajo el Suspense de InboxView)
+└── inbox.filters.ts          # `hydrateInboxFilters(base, {channels, users, canFilterAssignee})`
+infrastructure/stores/
+├── inbox-filters.base.ts     # esquema base (sin React) — el store serializa con él
+└── inbox-query.ts            # `buildInboxQuery(state)` puro · `inboxQueryKey` · INBOX_PAGE_SIZE/MAX_LOADED
+ui/hooks/use-minute-tick.ts   # un solo temporizador de 60 s para «Hoy→Ayer» y «12 min en cola»
+core/lib/day-label.ts         # formatConversationTime · formatDayLabel · formatClockTime · elapsedShort …
+```
+
+### E.2 Store (slice de lista) y contrato con el tiempo real
+
+`view · sort · q · filters` son la identidad de la lista (`listRequestSeq`): cambiar cualquiera pone
+`page=1` y descarta respuestas en vuelo de la lista anterior (`setView` además vacía; los otros
+conservan las filas mientras carga). `loadMore` añade páginas con dedupe por id y corta en
+`INBOX_MAX_LOADED`. `buildInboxQuery` serializa filtros con el esquema base (CSV para multi, `switch`
+solo cuando es true, `period` → `from`/`to` ISO con `to` exclusivo) y la **vista gana** sobre cualquier
+`status` colado.
+
+Tiempo real — la regla es **en sitio primero, refetch después**:
+
+- `applyMessageEvent` / `patchConversation`: la fila (y `selected`) se actualizan con el `conversation`
+  del evento; `counts.unread_total` por delta; re-orden local con `compareConversations(sort)`; las
+  filas no tocadas conservan referencia. Si la conversación no está cargada ⇒ `scheduleListRefresh()`.
+- `scheduleListRefresh({counts})`: coalescido (400 ms, una petición en vuelo, `dirty` re-encola) y
+  **consciente de páginas**: `resyncList` pide `page_size = min(max(cargadas, 25), 100)` en una sola
+  llamada y recalcula `page`/`hasMore`. Lo usan `conversation.created`, handoffs y el conflicto de claim.
+  Antes cada mensaje disparaba lista + counts sin debounce (6 REST por respuesta de la IA) y chocaba con
+  el throttle de 600/min por tenant.
+- Reconexión: `use-inbox-socket` recuerda el `disconnect` y en el siguiente `connect` hace `resyncList`
+  + `fetchCounts` **antes** del re-join del hilo (lo emitido en el hueco para conversaciones no abiertas
+  nunca llegaba a la lista).
+- Leído: `markReadLocal` (optimista, con rollback si el ack falla) + `conversation.read` del backend
+  (`applyUnreadChanged`) para las demás pestañas. El efecto de `ConversationPanel` depende de
+  `selected.unread_count`, así se re-dispara cuando entra un mensaje a la conversación abierta, y solo
+  con la pestaña visible. Nada de esto ocurre en una conversación cerrada.
+- Media: `message_updated` con `attachments` ⇒ `applyAttachments` (quita el skeleton y corta el sondeo);
+  el sondeo `resolvePendingMedia` queda como red de seguridad lenta (4 s / 12 s / 30 s).
+- Envío: timeout 60 s. Sin ack (id `local-`) ⇒ `failed`; con ack ⇒ `resyncMessages` y decide el
+  servidor. `mergeMessages`/`upsertMessage` promueven `pending→confirmed` si el servidor dice `sent`.
+
+### E.3 Vista «Cerradas» (solo lectura)
+
+`viewToQuery("closed")` = `status=resolved,closed`. `isReadOnlyConversation` apaga el composer
+(`ClosedConversationFooter`: «Conversación resuelta/cerrada el …»), el `markRead` y — ya antes — las
+acciones de handoff (`use-handoff-actions`). El servidor además responde `409 conversations/closed`
+al enviar. No existe reabrir: un mensaje nuevo del contacto abre otra conversación.
+
+### E.4 Hilo: separadores de día
+
+`groupMessagesByDay` agrupa por clave `YYYY-MM-DD` local (estable; la etiqueta la da
+`formatDayLabel` con el tick del minuto). `DaySeparator` es un chip `glass` `sticky top-1 z-[1]`: flota
+sobre las burbujas, misma materia que el pill «Mensajes nuevos» del mismo scroller. El scroller sigue
+siendo un contenedor de bloque (DS §4.2); el `space-y` bajó a un `div` interior y a cada `<section>`.
+`MessageTime`: `<time>` 24 h tabular con la fecha completa en `title`.
+
+| Antigüedad | Fila | Separador (long) | Adjuntos (short) |
+|---|---|---|---|
+| hoy | `14:32` | `Hoy` | `Hoy` |
+| ayer | `Ayer` | `Ayer` | `Ayer` |
+| 2–6 días | `Lunes` | `Lunes 7 de septiembre` | `7 sept` |
+| ≥7 días, mismo año | `08/09/26` | `Martes 8 de septiembre` | `8 sept` |
+| otro año | `10/03/25` | `10 de marzo de 2025` | `10 mar 2025` |
+
+### E.5 Verificación (lista)
+
+Suites: `core/lib/__tests__/day-label.test.ts`, `inbox/domain/__tests__/inbox.views.test.ts`,
+`inbox/infrastructure/stores/__tests__/{inbox-query,inbox.store}.test.ts`,
+`inbox/infrastructure/realtime/__tests__/use-inbox-socket.test.tsx`,
+`inbox/ui/components/list/__tests__/{ConversationListItem,InboxList}.test.tsx`,
+`inbox/ui/components/__tests__/ConversationPanel.test.tsx`,
+`inbox/ui/components/timeline/__tests__/group-messages-by-day.test.ts`,
+`channels/ui/components/__tests__/ChannelKindIcon.test.tsx`, `filter-panel/__tests__/FilterTrigger.test.tsx`.
+
+Manual: cambiar vista/orden/búsqueda/filtros vuelve a la página 1; el scroll al fondo trae la página 2
+y el contador avanza; «Cerradas» abre en solo lectura sin composer; separadores sticky al hacer scroll;
+con dos pestañas, abrir una conversación con no leídos baja el badge en AMBAS sin refrescar; DevTools
+offline 5 s ⇒ la lista y los counts se resincronizan al volver; una foto entrante aparece sin esperar el
+sondeo; light y dark; 1400/1100/800/390 px.

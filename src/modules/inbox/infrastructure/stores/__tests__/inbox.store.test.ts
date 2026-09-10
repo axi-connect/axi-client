@@ -1,4 +1,4 @@
-import { useInboxStore } from "../inbox.store"
+import { resetListRefreshSchedulerForTests, useInboxStore } from "../inbox.store"
 import type { UiMessage } from "@/modules/inbox/domain/inbox"
 import type { ConversationHandoffEvent } from "@/core/realtime/events"
 
@@ -11,6 +11,10 @@ jest.mock("@/modules/inbox/infrastructure/services/inbox-service.adapter", () =>
 }))
 
 const CID = "c1"
+
+const { listInboxConversations, getInboxCounts, getConversationMessages } = jest.requireMock(
+  "@/modules/inbox/infrastructure/services/inbox-service.adapter",
+) as { listInboxConversations: jest.Mock; getInboxCounts: jest.Mock; getConversationMessages: jest.Mock }
 
 function makeMessage(overrides: Partial<UiMessage> = {}): UiMessage {
   return {
@@ -39,6 +43,7 @@ beforeEach(() => {
     selected: null,
     selectedId: null,
   })
+  resetListRefreshSchedulerForTests()
   jest.useFakeTimers()
 })
 
@@ -82,13 +87,33 @@ describe("inbox.store — mensajería optimista", () => {
     expect(message.delivery).toBe("confirmed")
   })
 
-  it("marca failed si no hay confirmación en 15s", () => {
+  it("sin ACK en 60 s → failed (el envío nunca se aceptó); a los 15 s todavía no", () => {
     useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola" })
     jest.advanceTimersByTime(15_001)
+    expect(useInboxStore.getState().messagesById[CID].items[0].delivery).toBe("pending")
 
+    jest.advanceTimersByTime(45_000)
     const [message] = useInboxStore.getState().messagesById[CID].items
     expect(message.delivery).toBe("failed")
     expect(message.status).toBe("failed")
+  })
+
+  it("con ACK pero sin confirmación en 60 s NO se marca failed: se re-consulta el hilo y decide el servidor", async () => {
+    const localId = useInboxStore.getState().sendOptimistic(CID, { content_type: "text", body: "hola" })
+    useInboxStore.getState().reconcileSent(CID, localId, makeMessage({ id: "real-1", direction: "outbound", status: "queued" }))
+    useInboxStore.setState((state) => ({
+      messagesById: { ...state.messagesById, [CID]: { ...state.messagesById[CID], loaded: true } },
+    }))
+    // El servidor ya lo envió (la confirmación WS se perdió): el resync lo trae como sent
+    getConversationMessages.mockResolvedValueOnce({
+      data: [makeMessage({ id: "real-1", direction: "outbound", status: "sent" })],
+    })
+
+    await jest.advanceTimersByTimeAsync(60_001)
+
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.delivery).toBe("confirmed")
+    expect(message.status).toBe("sent")
   })
 
   it("appendMessage deduplica por id (re-join del WS)", () => {
@@ -210,8 +235,8 @@ describe("inbox.store — media entrante sin attachment (resolvePendingMedia)", 
     useInboxStore.getState().resolvePendingMedia(CID, "px-1")
     expect(useInboxStore.getState().messagesById[CID].items[0].media_pending).toBe(true)
 
-    await jest.advanceTimersByTimeAsync(800) // 1er intento (vacío)
-    await jest.advanceTimersByTimeAsync(1_500) // 2º intento (con attachment)
+    await jest.advanceTimersByTimeAsync(4_000) // 1er intento (vacío)
+    await jest.advanceTimersByTimeAsync(12_000) // 2º intento (con attachment)
 
     const [message] = useInboxStore.getState().messagesById[CID].items
     expect(message.attachments).toHaveLength(1)
@@ -227,7 +252,7 @@ describe("inbox.store — media entrante sin attachment (resolvePendingMedia)", 
 
     useInboxStore.getState().resolvePendingMedia(CID, "px-2")
     // Avanza más allá de la suma de todos los delays de backoff.
-    await jest.advanceTimersByTimeAsync(800 + 1_500 + 3_000 + 5_000 + 8_000 + 100)
+    await jest.advanceTimersByTimeAsync(4_000 + 12_000 + 30_000 + 100)
 
     const [message] = useInboxStore.getState().messagesById[CID].items
     expect(message.attachments).toHaveLength(0)
@@ -485,5 +510,218 @@ describe("inbox.store — resincronización del hilo", () => {
       .appendMessage(CID, makeMessage({ id: "m1", created_at: "2026-07-09T00:00:05Z" }))
 
     expect(useInboxStore.getState().messagesById[CID].items.map((m) => m.id)).toEqual(["m1", "m2"])
+  })
+})
+
+describe("inbox.store — fila en vivo (patchConversation / applyMessageEvent)", () => {
+  const row = (overrides: Partial<Record<string, unknown>> = {}) =>
+    ({
+      id: "x",
+      unread_count: 0,
+      last_message_at: "2026-09-10T10:00:00Z",
+      last_message_preview: "hola",
+      priority: "normal",
+      queued_at: null,
+      status: "open",
+      mode: "ai_active",
+      ...overrides,
+    }) as never
+
+  beforeEach(() => {
+    useInboxStore.setState({
+      sort: "recent",
+      conversations: [
+        row({ id: "a", last_message_at: "2026-09-10T10:00:00Z" }),
+        row({ id: "b", last_message_at: "2026-09-10T09:00:00Z", unread_count: 2 }),
+      ],
+      counts: { queued: 0, mine: 0, ai: 0, all_open: 2, unread_total: 2 },
+      selected: row({ id: "b", unread_count: 2 }),
+      selectedId: "b",
+    })
+    listInboxConversations.mockClear()
+  })
+
+  it("patchConversation actualiza fila + seleccionada, ajusta unread_total y reordena", () => {
+    useInboxStore.getState().patchConversation("b", {
+      unread_count: 3,
+      last_message_at: "2026-09-10T11:00:00Z",
+      last_message_preview: "nuevo",
+    })
+    const state = useInboxStore.getState()
+    expect(state.conversations.map((c) => c.id)).toEqual(["b", "a"]) // b subió (recent)
+    expect(state.conversations[0].last_message_preview).toBe("nuevo")
+    expect(state.selected?.unread_count).toBe(3)
+    expect(state.counts?.unread_total).toBe(3) // 2 → 3
+  })
+
+  it("las filas no tocadas conservan su referencia (React.memo)", () => {
+    const before = useInboxStore.getState().conversations.find((c) => c.id === "a")
+    useInboxStore.getState().patchConversation("b", { unread_count: 5 })
+    const after = useInboxStore.getState().conversations.find((c) => c.id === "a")
+    expect(after).toBe(before)
+  })
+
+  it("una conversación fuera de la lista programa un refresco (puede estar en otra página)", () => {
+    useInboxStore.getState().patchConversation("zzz", { unread_count: 1 })
+    expect(listInboxConversations).not.toHaveBeenCalled()
+    jest.advanceTimersByTime(401)
+    expect(listInboxConversations).toHaveBeenCalledTimes(1)
+  })
+
+  it("applyMessageEvent con patch del servidor lo aplica; sin patch deriva preview y suma no leído si no está abierta", () => {
+    useInboxStore.getState().applyMessageEvent("a", undefined, {
+      unread_count: 7,
+      last_message_at: "2026-09-10T12:00:00Z",
+      last_message_preview: "del servidor",
+    })
+    expect(useInboxStore.getState().conversations[0]).toMatchObject({ id: "a", unread_count: 7, last_message_preview: "del servidor" })
+
+    useInboxStore.getState().applyMessageEvent(
+      "a",
+      makeMessage({ id: "m9", body: "derivado", created_at: "2026-09-10T13:00:00Z" }),
+    )
+    const a = useInboxStore.getState().conversations.find((c) => c.id === "a")
+    expect(a).toMatchObject({ unread_count: 8, last_message_preview: "derivado", last_message_at: "2026-09-10T13:00:00Z" })
+
+    // Para la conversación ABIERTA no se suma: la va a leer ahora mismo
+    useInboxStore.getState().applyMessageEvent("b", makeMessage({ id: "m10", body: "abierta" }))
+    expect(useInboxStore.getState().conversations.find((c) => c.id === "b")?.unread_count).toBe(2)
+  })
+
+  it("markReadLocal baja a 0 fila, seleccionada y total; rollbackUnread lo devuelve", () => {
+    const previous = useInboxStore.getState().markReadLocal("b")
+    expect(previous).toBe(2)
+    let state = useInboxStore.getState()
+    expect(state.conversations.find((c) => c.id === "b")?.unread_count).toBe(0)
+    expect(state.selected?.unread_count).toBe(0)
+    expect(state.counts?.unread_total).toBe(0)
+    expect(useInboxStore.getState().markReadLocal("b")).toBe(0) // idempotente
+
+    useInboxStore.getState().rollbackUnread("b", previous)
+    state = useInboxStore.getState()
+    expect(state.conversations.find((c) => c.id === "b")?.unread_count).toBe(2)
+    expect(state.counts?.unread_total).toBe(2)
+  })
+
+  it("applyUnreadChanged (evento de otra pestaña) no descuenta dos veces tras un optimista", () => {
+    useInboxStore.getState().markReadLocal("b")
+    useInboxStore.getState().applyUnreadChanged({
+      conversation_id: "b",
+      company_id: "co",
+      unread_count: 0,
+      previous_unread_count: 2,
+      read_by_user_id: "u1",
+    })
+    expect(useInboxStore.getState().counts?.unread_total).toBe(0)
+  })
+})
+
+describe("inbox.store — lista: paginación y refresco", () => {
+  const page = (ids: string[], total: number, pageNo: number, size = 25) => ({
+    data: ids.map((id) => ({ id, unread_count: 0, last_message_at: null, priority: "normal" }) as never),
+    meta: { total, page: pageNo, page_size: size },
+  })
+
+  beforeEach(() => {
+    listInboxConversations.mockReset()
+    useInboxStore.setState({ view: "all_open", sort: "recent", q: "", filters: {}, conversations: [], page: 1, hasMore: true, total: 0 })
+  })
+
+  it("fetchFirstPage + loadMore encadenan páginas con dedupe y calculan hasMore", async () => {
+    listInboxConversations
+      .mockResolvedValueOnce(page(["1", "2"], 5, 1, 2))
+      .mockResolvedValueOnce(page(["2", "3"], 5, 2, 2))
+      .mockResolvedValueOnce(page(["4"], 5, 3, 2))
+    await useInboxStore.getState().fetchFirstPage()
+    expect(useInboxStore.getState().hasMore).toBe(true)
+    await useInboxStore.getState().loadMore()
+    expect(useInboxStore.getState().conversations.map((c) => c.id)).toEqual(["1", "2", "3"])
+    expect(useInboxStore.getState().page).toBe(2)
+    await useInboxStore.getState().loadMore()
+    expect(useInboxStore.getState().conversations.map((c) => c.id)).toEqual(["1", "2", "3", "4"])
+    expect(useInboxStore.getState().hasMore).toBe(false)
+    await useInboxStore.getState().loadMore() // no-op
+    expect(listInboxConversations).toHaveBeenCalledTimes(3)
+    expect(listInboxConversations.mock.calls[1][0]).toMatchObject({ page: 2, status: "open", sort: "recent" })
+  })
+
+  it("una respuesta de la lista anterior (cambio de vista en vuelo) se descarta", async () => {
+    let resolveOld: (value: unknown) => void = () => {}
+    listInboxConversations
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve }))
+      .mockResolvedValueOnce(page(["closed-1"], 1, 1))
+    const first = useInboxStore.getState().fetchFirstPage()
+    useInboxStore.getState().setView("closed")
+    await Promise.resolve()
+    resolveOld(page(["open-1"], 1, 1))
+    await first
+    await Promise.resolve()
+    expect(useInboxStore.getState().conversations.map((c) => c.id)).toEqual(["closed-1"])
+  })
+
+  it("scheduleListRefresh coalesce N llamadas en UNA petición del tamaño de lo cargado", async () => {
+    useInboxStore.setState({
+      conversations: Array.from({ length: 60 }, (_, i) => ({ id: String(i), unread_count: 0, last_message_at: null }) as never),
+      page: 3,
+    })
+    listInboxConversations.mockResolvedValue(page(["0"], 100, 1, 60))
+    const store = useInboxStore.getState()
+    store.scheduleListRefresh()
+    store.scheduleListRefresh({ counts: true })
+    store.scheduleListRefresh()
+    expect(listInboxConversations).not.toHaveBeenCalled()
+    await jest.advanceTimersByTimeAsync(401)
+    expect(listInboxConversations).toHaveBeenCalledTimes(1)
+    expect(listInboxConversations.mock.calls[0][0]).toMatchObject({ page: 1, page_size: 60 })
+    expect(getInboxCounts).toHaveBeenCalled()
+  })
+
+  it("resyncList conserva la cola más allá de la ventana y recalcula la página", async () => {
+    useInboxStore.setState({
+      conversations: Array.from({ length: 30 }, (_, i) => ({ id: `c${i}`, unread_count: 0, last_message_at: null }) as never),
+      page: 2,
+    })
+    listInboxConversations.mockResolvedValue(page(["c1", "c0", "nuevo"], 31, 1, 30))
+    await useInboxStore.getState().resyncList()
+    const ids = useInboxStore.getState().conversations.map((c) => c.id)
+    expect(ids.slice(0, 3)).toEqual(["c1", "c0", "nuevo"])
+    expect(ids).toHaveLength(3) // la ventana era 30: no había cola más allá
+    expect(useInboxStore.getState().page).toBe(1)
+    expect(useInboxStore.getState().hasMore).toBe(true)
+  })
+})
+
+describe("inbox.store — adjunto listo por evento (applyAttachments)", () => {
+  it("pone el attachment, quita el skeleton y corta el sondeo de rescate", async () => {
+    useInboxStore.setState({ conversations: [], messagesById: {}, selectedId: CID })
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "px-9", content_type: "image", body: null }))
+    getConversationMessages.mockReset().mockResolvedValue({ data: [] })
+    useInboxStore.getState().resolvePendingMedia(CID, "px-9")
+
+    useInboxStore.getState().applyAttachments(CID, "px-9", {
+      attachments: [{ id: "att", filename: "f.jpg", mime_type: "image/jpeg", size_bytes: 9 }],
+      content_type: "image",
+    })
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.attachments).toHaveLength(1)
+    expect(message.media_pending).toBe(false)
+
+    await jest.advanceTimersByTimeAsync(4_000 + 12_000 + 30_000 + 100)
+    expect(getConversationMessages).not.toHaveBeenCalled()
+  })
+
+  it("no descargable: sin attachment, con motivo en payload.media y cuerpo degradado", () => {
+    useInboxStore.setState({ conversations: [], messagesById: {} })
+    useInboxStore.getState().appendMessage(CID, makeMessage({ id: "px-8", content_type: "video", body: null }))
+    useInboxStore.getState().applyAttachments(CID, "px-8", {
+      attachments: [],
+      content_type: "text",
+      body: "[compartió un reel de Instagram — el contenido no se pudo descargar]",
+      unavailable_reason: "provider_returned_page",
+    })
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.content_type).toBe("text")
+    expect(message.body).toMatch(/no se pudo descargar/)
+    expect((message.payload as { media: { unavailable_reason: string } }).media.unavailable_reason).toBe("provider_returned_page")
   })
 })

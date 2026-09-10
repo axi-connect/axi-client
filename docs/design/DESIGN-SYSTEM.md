@@ -260,7 +260,7 @@ retiró la `GridCard` que vino con la plantilla del mega-menú).
 | `PrivateHeader`, `SiteHeader` (sticky) | Tablas (`DataTable`) y sus cards |
 | Panel del mega-menú público (`.glass-menu`) | Páginas de producto: sus tarjetas son sólidas |
 | Sidebar (`AppSidebar`) | Formularios (`DynamicForm`) |
-| `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) |
+| `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) — el chip de día `sticky` del hilo sí es glass: flota sobre las burbujas, no es superficie de contenido |
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |
 | `FloatingAlert`, tooltips | Cualquier superficie con texto denso |
 
@@ -384,6 +384,8 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Confirmación / alerta | `useAlert()` (`showModal` / `showAlert`) |
 | Selección múltiple | `MultiSelect` |
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
+| Icono de canal por `kind` (WhatsApp/Instagram/Messenger) | `ChannelKindIcon` (`channels/public`) — única implementación del mapa kind → logo |
+| Fechas estilo mensajería (lista, separadores de día, hora de burbuja) | `core/lib/day-label.ts` (`formatConversationTime`, `formatDayLabel`, `formatClockTime`) |
 | Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
 | Celebración puntual (una ráfaga, no un loop) | `Confetti` + `brandCelebration` (`shared/components/ui/confetti.tsx`) — canvas-confetti en diferido, colores de `readBrandPaletteCss`, reduced-motion lo apaga; ver §6 |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |

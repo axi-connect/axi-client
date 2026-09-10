@@ -21,12 +21,19 @@ export function FilterTrigger({
   onClick,
   label = "Filtros",
   disabled,
+  compact = false,
   className,
 }: {
   count: number;
   onClick: () => void;
   label?: string;
   disabled?: boolean;
+  /**
+   * Solo icono + número (el texto pasa a `sr-only`). Para barras estrechas como
+   * el rail del inbox (288 px), donde la etiqueta no cabe junto a la búsqueda.
+   * El nombre accesible es idéntico al del botón completo.
+   */
+  compact?: boolean;
   className?: string;
 }) {
   const active = count > 0;
@@ -40,7 +47,8 @@ export function FilterTrigger({
       // bandeja limpia de una con tres filtros puestos.
       aria-label={active ? `${label} (${count} activos)` : label}
       className={cn(
-        "inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium",
+        "inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border text-sm font-medium",
+        compact ? "relative w-9 justify-center px-0" : "px-3",
         "outline-none transition-[background-color,border-color,box-shadow,color] duration-200",
         "focus-visible:ring-ring/50 focus-visible:ring-[3px]",
         "disabled:pointer-events-none disabled:opacity-50",
@@ -51,9 +59,16 @@ export function FilterTrigger({
       )}
     >
       <SlidersHorizontal aria-hidden="true" className="size-4 shrink-0" />
-      <span>{label}</span>
+      <span className={compact ? "sr-only" : undefined}>{label}</span>
       {active ? (
-        <span className="bg-accent text-accent-foreground rounded-full px-1.5 py-px text-[0.6875rem] tabular-nums">
+        <span
+          className={cn(
+            "rounded-full text-[0.6875rem] tabular-nums",
+            compact
+              ? "bg-brand text-white dark:text-background absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center px-1 font-semibold"
+              : "bg-accent text-accent-foreground px-1.5 py-px",
+          )}
+        >
           {count}
         </span>
       ) : null}

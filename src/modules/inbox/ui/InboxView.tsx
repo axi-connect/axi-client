@@ -12,6 +12,7 @@ import { ContextRail } from "./components/context-rail/ContextRail"
 import { ContextPanel } from "./components/context-rail/ContextPanel"
 import { CONTEXT_PANELS } from "./components/context-rail/registry"
 import { useContextPanel } from "./components/context-rail/use-context-panel"
+import { InboxViewUrlSync } from "./components/list/InboxViewUrlSync"
 
 /**
  * Vista compuesta del inbox: conecta el namespace WS `/inbox` una sola vez
@@ -53,6 +54,7 @@ export function InboxView({ initialConversationId }: { initialConversationId?: s
         />
         {/* useSearchParams exige frontera Suspense; el rail no es crítico para el chat */}
         <Suspense fallback={null}>
+          <InboxViewUrlSync />
           <ContextSurface />
         </Suspense>
       </div>

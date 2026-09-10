@@ -45,6 +45,13 @@ export {
   type ContactDocumentType,
 } from "./domain/enums";
 
+/**
+ * Usuarios activos del tenant, cacheados (una sola petición compartida).
+ * `inbox` los usa para el filtro «Asignada a»; `/users` no acepta filtros.
+ */
+export { getTenantUsers } from "./infrastructure/services/tenant-users.cache";
+export type { AssignableUser } from "./infrastructure/services/contacts-service.adapter";
+
 /** Fan-out de contacto + profile + tags con degradación por permisos (§3.3.5). */
 export { useContactContext, type ContactContext } from "./infrastructure/hooks/use-contact-context";
 

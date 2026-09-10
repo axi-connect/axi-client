@@ -256,3 +256,15 @@ describe("MessageBubble — mensajes interactivos", () => {
     expect(screen.getByText("Respondió con el número")).toBeInTheDocument()
   })
 })
+
+describe("MessageBubble — hora de la burbuja", () => {
+  it("es un <time> en 24 h con la fecha completa en el title", () => {
+    const created = new Date(2026, 8, 10, 14, 32).toISOString()
+    render(<MessageBubble message={makeMessage({ created_at: created })} conversationId="c1" />)
+    const time = screen.getByText("14:32")
+    expect(time.tagName).toBe("TIME")
+    expect(time).toHaveAttribute("dateTime", created)
+    expect(time).toHaveAttribute("title", expect.stringMatching(/10 de septiembre de 2026/))
+    expect(time.className).toMatch(/tabular-nums/)
+  })
+})

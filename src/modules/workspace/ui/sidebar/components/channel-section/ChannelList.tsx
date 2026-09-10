@@ -4,12 +4,7 @@ import { cn } from "@/core/lib/utils"
 import { Plus } from "lucide-react"
 import { Badge } from "@/shared/components/ui/badge"
 import { Button } from "@/shared/components/ui/button"
-import { FaWhatsapp, FaInstagram, FaFacebookMessenger, FaRobot } from "react-icons/fa"
-import {
-  CHANNEL_STATUS_LABELS,
-  type ChannelDTO,
-  type ChannelKind,
-} from "@/modules/channels/domain/channel"
+import { CHANNEL_STATUS_LABELS, ChannelKindIcon, type ChannelDTO } from "@/modules/channels/public"
 // El punto de estado tiene una sola definición, en el slice channels: este mapa
 // vivía duplicado carácter a carácter aquí y en el ChannelDetailSheet
 import { channelStatusDotClass } from "@/modules/channels/ui/components/ChannelStatusBadge"
@@ -20,15 +15,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from "@/shared/components/layout/sidebar/core"
-
-const KIND_ICONS: Record<ChannelKind, React.ComponentType<{ size?: number }>> = {
-  whatsapp_cloud: FaWhatsapp,
-  whatsapp_web: FaWhatsapp,
-  instagram_dm: FaInstagram,
-  facebook_messenger: FaFacebookMessenger,
-  // Canal sintético del módulo quality: no aparece en el sidebar en la práctica
-  simulator: FaRobot,
-}
 
 const ChannelsLoadingState = () => (
   <div className="flex flex-col gap-2 w-full" role="status" aria-label="Cargando canales">
@@ -58,7 +44,6 @@ function ChannelItem({
   channel: ChannelDTO
   onOpenDetail: (channel: ChannelDTO) => void
 }) {
-  const Icon = KIND_ICONS[channel.kind]
 
   return (
     <SidebarMenuItem>
@@ -67,7 +52,7 @@ function ChannelItem({
         onClick={() => onOpenDetail(channel)}
         aria-label={`Abrir canal ${channel.name}, estado: ${CHANNEL_STATUS_LABELS[channel.status]}`}
       >
-        <Icon size={20} />
+        <ChannelKindIcon kind={channel.kind} className="size-5" />
         <span className="capitalize flex-1 line-clamp-1">{channel.name.toLowerCase()}</span>
         <Tooltip>
           <TooltipTrigger asChild>

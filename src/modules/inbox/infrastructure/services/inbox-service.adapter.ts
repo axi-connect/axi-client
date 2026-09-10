@@ -16,15 +16,14 @@ import type {
  * (use-inbox-socket) — estos endpoints REST espejo son el fallback cuando el
  * socket está caído.
  */
-export function listInboxConversations(params: {
-  page?: number;
-  page_size?: number;
-  status?: string;
-  mode?: string;
-  assigned?: string;
-  channel_id?: string;
-  priority?: string;
-}): Promise<Paginated<InboxConversation>> {
+/**
+ * Lista del inbox. Los parámetros los arma `buildInboxQuery` (vista + orden +
+ * búsqueda + filtros serializados): `status`/`channel_id`/`priority` viajan
+ * como CSV, `unread` solo cuando es true, `from`/`to` en ISO.
+ */
+export function listInboxConversations(
+  params: Record<string, string | number | boolean | undefined>,
+): Promise<Paginated<InboxConversation>> {
   return http.get<Paginated<InboxConversation>>("/inbox/conversations", params);
 }
 

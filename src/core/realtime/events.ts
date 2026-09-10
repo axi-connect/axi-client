@@ -54,6 +54,31 @@ export type MessageReceivedEvent = {
   company_id: string;
   content_type: Schemas["EnqueuedMessageDto"]["content_type"];
   message?: Schemas["ConversationMessagesDto"]["data"][number];
+  /** Denormalizados de la fila ya actualizados en DB (opcional: despliegue escalonado). */
+  conversation?: ConversationListPatch;
+};
+
+/**
+ * Lo que la FILA del inbox necesita para actualizarse en sitio cuando entra o
+ * sale un mensaje: sin esto cada evento obligaba a re-consultar lista + counts
+ * por REST en cada pestaña (seis peticiones por respuesta de la IA).
+ */
+export type ConversationListPatch = {
+  unread_count: number;
+  last_message_at: string | null;
+  last_message_preview: string | null;
+};
+
+/**
+ * El operador marcó leída una conversación: todas las pestañas del tenant
+ * bajan el badge de la fila y el total del sidebar sin refetch.
+ */
+export type ConversationReadEvent = {
+  conversation_id: string;
+  company_id: string;
+  unread_count: 0;
+  previous_unread_count: number;
+  read_by_user_id: string | null;
 };
 
 /**
@@ -72,6 +97,8 @@ export type MessageSentEvent = {
   message_id: string;
   company_id: string;
   content_type: Schemas["EnqueuedMessageDto"]["content_type"];
+  /** Denormalizados de la fila tras el envío real (orden y preview). */
+  conversation?: ConversationListPatch;
 };
 
 /**
@@ -102,6 +129,15 @@ export type MessageUpdatedEvent = {
   transcription?: AudioTranscription;
   /** Imagen: el reconocimiento de producto quedó listo. */
   recognition?: ProductRecognition;
+  /**
+   * Media entrante: el adjunto ya está persistido (antes el cliente tenía que
+   * sondear el timeline). Vacío + `unavailable_reason` cuando el proveedor
+   * devolvió una página en vez del archivo.
+   */
+  attachments?: Schemas["ConversationMessagesDto"]["data"][number]["attachments"];
+  unavailable_reason?: string;
+  /** Texto con el que quedó el mensaje si se degradó a texto (compartido no descargable). */
+  body?: string;
 };
 
 /**
@@ -781,6 +817,7 @@ export type InboxServerEvents = {
   "conversation.message_updated": (payload: MessageUpdatedEvent) => void;
   "conversation.message_sent": (payload: MessageSentEvent) => void;
   "conversation.message_status": (payload: MessageStatusEvent) => void;
+  "conversation.read": (payload: ConversationReadEvent) => void;
   "conversation.typing": (payload: TypingEvent) => void;
   "conversation.intent_detected": (payload: IntentDetectedEvent) => void;
   "conversation.escalated": (payload: ConversationHandoffEvent) => void;

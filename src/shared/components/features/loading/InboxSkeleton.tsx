@@ -2,11 +2,32 @@ import { cn } from "@/core/lib/utils"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 
 /** Anchos deterministas de las vistas previas de conversación (SSR-safe). */
-const PREVIEW_WIDTHS = ["78%", "62%", "84%", "56%", "70%", "64%", "76%"]
+const PREVIEW_WIDTHS = ["78%", "62%", "84%", "56%", "70%", "64%", "76%", "58%"]
 
 /**
- * Skeleton estructural del inbox: panel izquierdo (lista de conversaciones)
- * + panel derecho (conversación con burbujas y compositor).
+ * Silueta de UNA fila de la lista (avatar 40 + nombre + preview). La comparten
+ * el skeleton de ruta y la lista real (primera carga y «cargando más»), así la
+ * forma no se desvía de la fila verdadera.
+ */
+export function ConversationRowSkeleton({ previewWidth = "70%" }: { previewWidth?: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl px-3 py-2.5">
+      <Skeleton className="size-10 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-3.5 w-28" />
+          <Skeleton className="h-3 w-9" />
+        </div>
+        <Skeleton className="h-3" style={{ width: previewWidth }} />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Skeleton estructural del inbox: rail (cabecera de cuatro filas + lista de
+ * conversaciones) + panel de conversación con burbujas y compositor. Mide lo
+ * mismo que la vista real (`md:w-72`, controles `h-9`, segmentado `h-7`).
  */
 export function InboxSkeleton({ className }: { className?: string }) {
   return (
@@ -16,22 +37,28 @@ export function InboxSkeleton({ className }: { className?: string }) {
       aria-busy="true"
       className={cn("flex min-h-0 flex-1 overflow-hidden", className)}
     >
-      {/* Lista de conversaciones */}
-      <div className="flex w-full max-w-xs shrink-0 flex-col gap-1 border-r border-border p-3">
-        <Skeleton className="mb-2 h-9 w-full" />
-        {PREVIEW_WIDTHS.map((width, index) => (
-          <div key={index} className="flex items-center gap-3 rounded-md p-2.5">
-            <Skeleton className="size-10 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <Skeleton className="h-3.5 w-24" />
-              <Skeleton className="h-3" style={{ width }} />
+      {/* Rail */}
+      <div className="flex w-full shrink-0 flex-col border-r border-border md:w-72">
+        <div className="space-y-2 border-b border-border p-3">
+          <div className="flex h-9 items-center justify-between">
+            <Skeleton className="h-4 w-14" />
+            <div className="flex gap-1">
+              <Skeleton className="size-9 rounded-md" />
+              <Skeleton className="size-9 rounded-md" />
             </div>
           </div>
-        ))}
+          <Skeleton className="h-9 w-full rounded-md" />
+          <Skeleton className="h-7 w-full rounded-full" />
+        </div>
+        <div className="space-y-0.5 p-2">
+          {PREVIEW_WIDTHS.map((width, index) => (
+            <ConversationRowSkeleton key={index} previewWidth={width} />
+          ))}
+        </div>
       </div>
 
       {/* Panel de conversación */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="hidden min-w-0 flex-1 flex-col md:flex">
         <div className="flex items-center gap-3 border-b border-border p-3">
           <Skeleton className="size-9 rounded-full" />
           <div className="space-y-1.5">
