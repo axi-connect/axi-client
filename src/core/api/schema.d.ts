@@ -1460,6 +1460,22 @@ export interface paths {
         patch: operations["CatalogsController_update_v1"];
         trace?: never;
     };
+    "/api/v1/catalog/categories/platform-taxonomy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CatalogCategoriesController_ensurePlatformTaxonomy_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/categories": {
         parameters: {
             query?: never;
@@ -2366,6 +2382,38 @@ export interface paths {
         get: operations["IntegrationsController_collections_v1"];
         put: operations["IntegrationsController_setCollections_v1"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/readoption/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IntegrationsController_readoptionPreview_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{id}/readoption/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IntegrationsController_readoptionApply_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8086,6 +8134,13 @@ export interface components {
             code?: string;
             description?: string | null;
         };
+        PlatformTaxonomyResultDto: {
+            vertical: string;
+            version: number | null;
+            created: number;
+            adopted: number;
+            updated: number;
+        };
         CategoryListDto__schema0: {
             /** Format: uuid */
             id: string;
@@ -8095,6 +8150,10 @@ export interface components {
             description: string | null;
             position: number;
             is_active: boolean;
+            /** @enum {string} */
+            origin: "tenant" | "platform" | "integration";
+            taxonomy_code: string | null;
+            search_aliases: string[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -8111,6 +8170,10 @@ export interface components {
                 description: string | null;
                 position: number;
                 is_active: boolean;
+                /** @enum {string} */
+                origin: "tenant" | "platform" | "integration";
+                taxonomy_code: string | null;
+                search_aliases: string[];
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -8123,6 +8186,7 @@ export interface components {
             parent_id?: string;
             description?: string;
             position?: number;
+            search_aliases?: string[];
         };
         CategoryDto: {
             /** Format: uuid */
@@ -8133,6 +8197,10 @@ export interface components {
             description: string | null;
             position: number;
             is_active: boolean;
+            /** @enum {string} */
+            origin: "tenant" | "platform" | "integration";
+            taxonomy_code: string | null;
+            search_aliases: string[];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -8145,6 +8213,7 @@ export interface components {
             description?: string | null;
             position?: number;
             is_active?: boolean;
+            search_aliases?: string[];
         };
         ProductTypeListDto: {
             data: {
@@ -9647,6 +9716,38 @@ export interface components {
         };
         UpdateCollectionsDto: {
             selected: string[];
+        };
+        ReadoptionPreviewDto: {
+            connection_id: string;
+            previous_connection_ids: string[];
+            products_to_adopt: number;
+            products_to_retire: number;
+            links_to_move: number;
+            links_to_delete: number;
+            collection_rules_to_move: number;
+            locations_to_move: number;
+            unlinked_mirror_products: number;
+            groups: {
+                external_id: string;
+                keeper_id: string;
+                keeper_name: string;
+                loser_ids: string[];
+                blocked_loser_ids: string[];
+            }[];
+            blocked: {
+                external_id: string;
+                product_ids: string[];
+            }[];
+            can_apply: boolean;
+            paused: boolean;
+        };
+        ReadoptionAppliedDto: {
+            adopted: number;
+            retired: number;
+            links_moved: number;
+            links_deleted: number;
+            collection_rules_moved: number;
+            locations_moved: number;
         };
         StartSyncDto: {
             /**
@@ -17748,6 +17849,25 @@ export interface operations {
             };
         };
     };
+    CatalogCategoriesController_ensurePlatformTaxonomy_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformTaxonomyResultDto"];
+                };
+            };
+        };
+    };
     CatalogCategoriesController_list_v1: {
         parameters: {
             query?: {
@@ -19637,6 +19757,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IntegrationCollectionsDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_readoptionPreview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadoptionPreviewDto"];
+                };
+            };
+        };
+    };
+    IntegrationsController_readoptionApply_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadoptionAppliedDto"];
                 };
             };
         };
