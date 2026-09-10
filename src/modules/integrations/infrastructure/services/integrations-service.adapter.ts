@@ -69,15 +69,17 @@ export function listIntegrationCollections(
 }
 
 /**
- * Colecciones curadas (D5): el ORDEN del array es la prioridad. Devuelve 202
- * con `run_id` — recategorizar exige re-recorrer el catálogo, y responder 200
- * haría que la UI dijera "guardado" mientras el agente ve la taxonomía vieja.
+ * Colecciones curadas (D5): el ORDEN del array es la prioridad. Responde 200
+ * con el set guardado; si el catálogo ya está espejado, el backend relanza una
+ * sincronización que aplica las categorías (se sigue en Historial).
  */
 export function updateIntegrationCollections(
   id: string,
   selected: string[],
-): Promise<Schemas["SyncAcceptedDto"]> {
-  return http.put<Schemas["SyncAcceptedDto"]>(`/integrations/${id}/collections`, { selected });
+): Promise<Schemas["IntegrationCollectionsDto"]> {
+  return http.put<Schemas["IntegrationCollectionsDto"]>(`/integrations/${id}/collections`, {
+    selected,
+  });
 }
 
 export function startIntegrationSync(

@@ -114,13 +114,18 @@ export type ListProductsParams = {
   page_size?: number;
 };
 
-/** Estado agregado de stock de un producto (derivado de sus variantes activas). */
-export type ProductStockState = "ok" | "low" | "out" | "none";
+/**
+ * Estado agregado de stock de un producto (derivado de sus variantes activas).
+ * `untracked` = ninguna variante tiene fila de inventario: el negocio no lleva
+ * control de stock y el agente lo vende como disponible.
+ */
+export type ProductStockState = "ok" | "low" | "out" | "untracked" | "none";
 
 export const PRODUCT_STOCK_LABELS: Record<ProductStockState, string> = {
   ok: "Disponible",
   low: "Stock bajo",
   out: "Agotado",
+  untracked: "Sin control de stock",
   none: "—",
 };
 
@@ -147,8 +152,15 @@ export type ProductRow = {
 };
 
 /**
- * Agrega el stock de las variantes activas: servicios → `none`;
- * todas agotadas → `out`; alguna agotada → `low`; el resto → `ok`.
+ * Agrega el stock de las variantes activas: servicios → `none`; sin variantes
+ * activas → `out`; ninguna con fila de inventario → `untracked`; todas las
+ * rastreadas agotadas → `out`; alguna agotada → `low`; el resto → `ok`.
+ *
+ * `stock === null` significa «no rastreado», y el backend lo trata como
+ * DISPONIBLE (crear la fila es optar por control de stock). Leerlo como
+ * agotado pintaba en rojo catálogos enteros que el agente sí vendía, e invitaba
+ * a «arreglarlo» cargando inventario, que sí los habría apagado en el chat
+ * (incidente 2026-09-10 §5.1).
  */
 export function aggregateStock(item: ProductListItemDTO): {
   total: number | null;
@@ -157,8 +169,10 @@ export function aggregateStock(item: ProductListItemDTO): {
   if (item.kind === "service") return { total: null, state: "none" };
   const active = item.variants.filter((variant) => variant.is_active);
   if (active.length === 0) return { total: 0, state: "out" };
-  const total = active.reduce((sum, variant) => sum + (variant.stock?.on_hand ?? 0), 0);
-  const unavailable = active.filter((variant) => !(variant.stock?.available ?? false)).length;
+  const tracked = active.filter((variant) => variant.stock !== null && variant.stock !== undefined);
+  if (tracked.length === 0) return { total: null, state: "untracked" };
+  const total = tracked.reduce((sum, variant) => sum + (variant.stock?.on_hand ?? 0), 0);
+  const unavailable = tracked.filter((variant) => variant.stock?.available === false).length;
   if (unavailable === active.length) return { total, state: "out" };
   if (unavailable > 0) return { total, state: "low" };
   return { total, state: "ok" };

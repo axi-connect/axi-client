@@ -22,13 +22,23 @@ const STOCK_DOT_CLASS: Record<ProductStockState, string> = {
   ok: "bg-success",
   low: "bg-warning",
   out: "bg-destructive",
+  untracked: "bg-muted-foreground/40",
   none: "bg-muted-foreground/40",
 };
 
-/** Punto de estado + etiqueta de stock (ok/bajo/agotado; servicios “—”). */
+/** Punto de estado + etiqueta de stock (ok/bajo/agotado; servicios “—”;
+ * sin control de stock en neutro y sin cifra: no hay nada que contar). */
 export function ProductStockBadge({ row }: { row: ProductRow }) {
   if (row.stock_state === "none") {
     return <span className="text-muted-foreground">—</span>;
+  }
+  if (row.stock_state === "untracked") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+        <span className={cn("h-2 w-2 shrink-0 rounded-full", STOCK_DOT_CLASS.untracked)} aria-hidden />
+        <span>{PRODUCT_STOCK_LABELS.untracked}</span>
+      </span>
+    );
   }
   return (
     <span className="inline-flex items-center gap-1.5 text-sm">

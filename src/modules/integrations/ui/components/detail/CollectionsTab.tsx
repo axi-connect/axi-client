@@ -83,10 +83,11 @@ export function CollectionsTab({
     setNotice(null);
     try {
       await updateIntegrationCollections(integrationId, selected);
-      // 202 a propósito: recategorizar re-recorre el catálogo. Decir "guardado"
-      // sin más haría creer que el agente ya ve la taxonomía nueva.
+      // Recategorizar re-recorre el catálogo: si ya hay espejo el backend relanza
+      // la sincronización. Decir solo "guardado" haría creer que el agente ya ve
+      // la taxonomía nueva.
       setNotice(
-        "Guardado. Estamos recategorizando el catálogo: el avance se ve en la pestaña Historial.",
+        "Guardado. Si el catálogo ya está sincronizado, relanzamos la sincronización para recategorizarlo: el avance se ve en la pestaña Historial.",
       );
       await onChanged();
     } catch (err) {
