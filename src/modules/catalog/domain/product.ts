@@ -38,7 +38,11 @@ export type ProductImageStatus = ProductImageDTO["status"];
 export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 MB (tope de WhatsApp Cloud API)
 export const PRODUCT_GALLERY_MAX = 10; // fotos "comodín" del producto
 export const VARIANT_GALLERY_MAX = 5; // fotos por variante
-export const ACCEPTED_IMAGE_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
+export const ACCEPTED_IMAGE_MIME = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 export const ACCEPTED_IMAGE_ACCEPT = ACCEPTED_IMAGE_MIME.join(",");
 
 /** Polling del import por URL (no hay evento WS en esta fase). */
@@ -46,7 +50,9 @@ export const IMAGE_IMPORT_POLL_MS = 3_000;
 export const IMAGE_IMPORT_POLL_TIMEOUT_MS = 30_000;
 
 /** ¿Queda algún import por URL en curso? (dispara/detiene el polling). */
-export function hasPendingImages(images: ProductImageDTO[] | undefined): boolean {
+export function hasPendingImages(
+  images: ProductImageDTO[] | undefined,
+): boolean {
   return (images ?? []).some((image) => image.status === "pending");
 }
 
@@ -55,7 +61,10 @@ export function hasPendingImages(images: ProductImageDTO[] | undefined): boolean
  * el presupuesto de ~30 s → botón manual "Actualizar"). Patrón de función
  * pura + `elapsedMs` inyectado, como `platform/domain/polling.ts`.
  */
-export function imageImportPollInterval(pending: boolean, elapsedMs: number): number | false {
+export function imageImportPollInterval(
+  pending: boolean,
+  elapsedMs: number,
+): number | false {
   if (!pending) return false;
   if (elapsedMs >= IMAGE_IMPORT_POLL_TIMEOUT_MS) return false;
   return IMAGE_IMPORT_POLL_MS;
@@ -63,7 +72,11 @@ export function imageImportPollInterval(pending: boolean, elapsedMs: number): nu
 
 /** Resultado de validar un archivo en cliente: `null` = válido, string = motivo. */
 export function validateImageFile(file: File): string | null {
-  if (!ACCEPTED_IMAGE_MIME.includes(file.type as (typeof ACCEPTED_IMAGE_MIME)[number])) {
+  if (
+    !ACCEPTED_IMAGE_MIME.includes(
+      file.type as (typeof ACCEPTED_IMAGE_MIME)[number],
+    )
+  ) {
     return "Formato no soportado: usa JPEG, PNG o WebP.";
   }
   if (file.size > PRODUCT_IMAGE_MAX_BYTES) {
@@ -92,7 +105,8 @@ export function groupProductImages(images: ProductImageDTO[] | undefined): {
       byVariant.set(image.variant_id, bucket);
     }
   }
-  const byPosition = (a: ProductImageDTO, b: ProductImageDTO) => a.position - b.position;
+  const byPosition = (a: ProductImageDTO, b: ProductImageDTO) =>
+    a.position - b.position;
   productImages.sort(byPosition);
   for (const bucket of byVariant.values()) bucket.sort(byPosition);
   return { productImages, byVariant };
@@ -135,8 +149,11 @@ export type ProductRow = {
   name: string;
   kind: ProductKind;
   image_url: string | null;
+  /** D5: la categoría EFECTIVA (propia o automática aplicada), no `category_id`. */
   category_id: string | null;
   category_name: string;
+  /** La puso el clasificador y el tenant aún no la confirmó. */
+  category_is_automatic: boolean;
   price_cents: number;
   currency: string;
   price_label: string;
@@ -169,10 +186,17 @@ export function aggregateStock(item: ProductListItemDTO): {
   if (item.kind === "service") return { total: null, state: "none" };
   const active = item.variants.filter((variant) => variant.is_active);
   if (active.length === 0) return { total: 0, state: "out" };
-  const tracked = active.filter((variant) => variant.stock !== null && variant.stock !== undefined);
+  const tracked = active.filter(
+    (variant) => variant.stock !== null && variant.stock !== undefined,
+  );
   if (tracked.length === 0) return { total: null, state: "untracked" };
-  const total = tracked.reduce((sum, variant) => sum + (variant.stock?.on_hand ?? 0), 0);
-  const unavailable = tracked.filter((variant) => variant.stock?.available === false).length;
+  const total = tracked.reduce(
+    (sum, variant) => sum + (variant.stock?.on_hand ?? 0),
+    0,
+  );
+  const unavailable = tracked.filter(
+    (variant) => variant.stock?.available === false,
+  ).length;
   if (unavailable === active.length) return { total, state: "out" };
   if (unavailable > 0) return { total, state: "low" };
   return { total, state: "ok" };
@@ -196,19 +220,17 @@ export const ENRICHMENT_TERM_MAX_CHARS = 40;
 export const ENRICHMENT_POLL_MS = 3_000;
 export const ENRICHMENT_POLL_TIMEOUT_MS = 30_000;
 
-export function enrichmentPollInterval(pending: boolean, elapsedMs: number): number | false {
+export function enrichmentPollInterval(
+  pending: boolean,
+  elapsedMs: number,
+): number | false {
   if (!pending) return false;
   if (elapsedMs >= ENRICHMENT_POLL_TIMEOUT_MS) return false;
   return ENRICHMENT_POLL_MS;
 }
 
 export type EnrichmentDisplayState =
-  | "none"
-  | "pending"
-  | "ready"
-  | "edited"
-  | "disabled"
-  | "failed";
+  "none" | "pending" | "ready" | "edited" | "disabled" | "failed";
 
 /** Qué estado pinta la sección. `edited` gana sobre `ready`: el tenant debe
  * saber que el automático ya no toca esa fila. */
@@ -232,7 +254,9 @@ export const ENRICHMENT_STATE_LABELS: Record<EnrichmentDisplayState, string> = {
 };
 
 /** Un `pending` sin nada generado aún es la espera del primer job. */
-export function enrichmentHasContent(enrichment: ProductEnrichmentDTO | null | undefined): boolean {
+export function enrichmentHasContent(
+  enrichment: ProductEnrichmentDTO | null | undefined,
+): boolean {
   if (!enrichment) return false;
   return (
     (enrichment.description ?? "").length > 0 ||
@@ -244,14 +268,22 @@ export function enrichmentHasContent(enrichment: ProductEnrichmentDTO | null | u
 /** Añade un término si cabe, normalizado y sin duplicar (misma regla que el backend). */
 export function addSearchTerm(terms: string[], raw: string): string[] {
   const term = raw.trim().toLowerCase().slice(0, ENRICHMENT_TERM_MAX_CHARS);
-  if (term.length === 0 || terms.includes(term) || terms.length >= ENRICHMENT_TERMS_MAX) return terms;
+  if (
+    term.length === 0 ||
+    terms.includes(term) ||
+    terms.length >= ENRICHMENT_TERMS_MAX
+  )
+    return terms;
   return [...terms, term];
 }
 
 /** Categoría efectiva del producto (D5): la propia o la automática aplicada. */
-export type EffectiveCategoryDTO = NonNullable<ProductDTO["effective_category"]>;
+export type EffectiveCategoryDTO = NonNullable<
+  ProductDTO["effective_category"]
+>;
 
-export type EffectiveCategoryState = "none" | "automatic" | "external" | "fixed";
+export type EffectiveCategoryState =
+  "none" | "automatic" | "external" | "fixed";
 
 /**
  * Cómo se muestra la categoría en el detalle: `fixed` = la puso o confirmó el
@@ -286,4 +318,3 @@ export function effectiveCategoryNote(category: EffectiveCategoryDTO): string {
   if (source !== undefined) parts.push(source);
   return parts.join(" · ");
 }
-

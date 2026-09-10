@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Camera } from "lucide-react";
+import { Camera, Sparkles } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
 import type { ColumnDef } from "@/shared/components/features/data-table/types";
@@ -35,16 +39,30 @@ export function ProductStockBadge({ row }: { row: ProductRow }) {
   if (row.stock_state === "untracked") {
     return (
       <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", STOCK_DOT_CLASS.untracked)} aria-hidden />
+        <span
+          className={cn(
+            "h-2 w-2 shrink-0 rounded-full",
+            STOCK_DOT_CLASS.untracked,
+          )}
+          aria-hidden
+        />
         <span>{PRODUCT_STOCK_LABELS.untracked}</span>
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1.5 text-sm">
-      <span className={cn("h-2 w-2 shrink-0 rounded-full", STOCK_DOT_CLASS[row.stock_state])} aria-hidden />
+      <span
+        className={cn(
+          "h-2 w-2 shrink-0 rounded-full",
+          STOCK_DOT_CLASS[row.stock_state],
+        )}
+        aria-hidden
+      />
       <span className="tabular-nums">{row.stock_total}</span>
-      <span className="text-muted-foreground">· {PRODUCT_STOCK_LABELS[row.stock_state]}</span>
+      <span className="text-muted-foreground">
+        · {PRODUCT_STOCK_LABELS[row.stock_state]}
+      </span>
     </span>
   );
 }
@@ -58,12 +76,17 @@ export function ProductImageCountBadge({ count }: { count: number }) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="inline-flex items-center gap-1 text-muted-foreground/60" tabIndex={0}>
+          <span
+            className="inline-flex items-center gap-1 text-muted-foreground/60"
+            tabIndex={0}
+          >
             <Camera className="size-3.5" aria-hidden />
             <span className="tabular-nums text-sm">0</span>
           </span>
         </TooltipTrigger>
-        <TooltipContent>Sin fotos: tu agente no podrá mostrar este producto</TooltipContent>
+        <TooltipContent>
+          Sin fotos: tu agente no podrá mostrar este producto
+        </TooltipContent>
       </Tooltip>
     );
   }
@@ -109,20 +132,34 @@ export const productColumns: ColumnDef<ProductRow>[] = [
     header: "Tipo",
     minWidth: 100,
     cell: ({ row }) => (
-      <Badge variant="secondary">{PRODUCT_KIND_LABELS[row.original.kind]}</Badge>
+      <Badge variant="secondary">
+        {PRODUCT_KIND_LABELS[row.original.kind]}
+      </Badge>
     ),
   },
   {
     accessorKey: "category_name",
     header: "Categoría",
     minWidth: 140,
-    cell: ({ row }) => <span className="text-muted-foreground">{row.original.category_name}</span>,
+    cell: ({ row }) => (
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        {row.original.category_is_automatic && (
+          <Sparkles
+            aria-label="Categoría automática"
+            className="size-3.5 shrink-0 text-accent-violet"
+          />
+        )}
+        {row.original.category_name}
+      </span>
+    ),
   },
   {
     accessorKey: "price_label",
     header: "Precio",
     minWidth: 110,
-    cell: ({ row }) => <span className="tabular-nums">{row.original.price_label}</span>,
+    cell: ({ row }) => (
+      <span className="tabular-nums">{row.original.price_label}</span>
+    ),
   },
   {
     accessorKey: "stock_total",
@@ -134,7 +171,9 @@ export const productColumns: ColumnDef<ProductRow>[] = [
     accessorKey: "image_count",
     header: "Fotos",
     minWidth: 90,
-    cell: ({ row }) => <ProductImageCountBadge count={row.original.image_count} />,
+    cell: ({ row }) => (
+      <ProductImageCountBadge count={row.original.image_count} />
+    ),
   },
   {
     accessorKey: "is_active",
@@ -154,19 +193,29 @@ export const productColumns: ColumnDef<ProductRow>[] = [
   },
 ];
 
-/** Mapea el DTO del listado a la fila plana (categoría resuelta por lookup). */
+/**
+ * Mapea el DTO del listado a la fila plana. La categoría es la EFECTIVA (D5):
+ * un producto espejado de Shopify no tiene `category_id` propio —su categoría
+ * la puso el clasificador— y mirar solo ese campo dejaba la columna en «—»
+ * para todo el catálogo espejado.
+ */
 export function mapProductToRow(
   item: ProductListItemDTO,
   categoryNameById: Map<string, string>,
 ): ProductRow {
   const stock = aggregateStock(item);
+  const effective = item.effective_category;
+  const categoryId = effective?.id ?? item.category_id;
   return {
     id: item.id,
     name: item.name,
     kind: item.kind,
     image_url: item.image_url,
-    category_id: item.category_id,
-    category_name: item.category_id ? (categoryNameById.get(item.category_id) ?? "—") : "—",
+    category_id: categoryId,
+    category_name:
+      effective?.name ??
+      (categoryId !== null ? (categoryNameById.get(categoryId) ?? "—") : "—"),
+    category_is_automatic: effective?.is_automatic ?? false,
     price_cents: item.price_cents,
     currency: item.currency,
     price_label: formatMoney(item.price_cents, item.currency),
