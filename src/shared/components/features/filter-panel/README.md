@@ -159,3 +159,14 @@ del buscador viven en el mismo objeto de estado y los serializa quien los posee.
 - **No guarda estado.** Lo aplicado vive en el consumidor, con lo que aplicar un
   filtro pueda necesitar además (volver a la página 1, tirar la selección).
 - **No sabe de URL.** Sincronizar con el query string es del consumidor.
+
+## Notas del inbox (2026-09)
+
+- `FilterOption.icon` acepta cualquier componente con `className` (no solo lucide): el filtro por
+  canal pinta el logo del proveedor con `ChannelKindIcon`.
+- `FilterTrigger compact`: solo icono + píldora del número, con el mismo nombre accesible
+  («Filtros (2 activos)»). Para barras estrechas donde la etiqueta no cabe.
+- Serialización propia con `serialize` cuando el backend no habla `${key}_after/_before`: el rango
+  de fechas del inbox emite `from`/`to` ISO (medianoche local; `to` = día siguiente, exclusivo).
+- Esquema **base sin opciones** + hydrator en UI: el store serializa con el base (misma `key`/`kind`),
+  la hoja y los chips reciben el hidratado con canales/operadores. Ver `inbox-filters.base.ts`.

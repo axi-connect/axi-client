@@ -28,3 +28,10 @@ export {
 export { listChannels } from "./infrastructure/services/channels-service.adapter";
 
 export { ConnectChannelFlow } from "./ui/components/connect/ConnectChannelFlow";
+
+/**
+ * Logo del proveedor por `kind` (inbox: badge del avatar y filtro por canal;
+ * workspace: lista de canales del sidebar). Única implementación del mapa
+ * kind → icono; nadie vuelve a declarar `KIND_ICONS` a mano.
+ */
+export { ChannelKindIcon } from "./ui/components/ChannelKindIcon";

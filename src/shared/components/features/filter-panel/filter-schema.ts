@@ -32,7 +32,12 @@ export type FilterOption = {
   value: string;
   label: string;
   hint?: string;
-  icon?: LucideIcon;
+  /**
+   * Cualquier componente que acepte `className` (lucide o `react-icons`: el
+   * filtro por canal del inbox pinta el logo del proveedor). `LucideIcon` es
+   * asignable, así que los consumidores existentes no cambian.
+   */
+  icon?: React.ComponentType<{ className?: string }>;
   /**
    * Clase literal de un diccionario CERRADO del consumidor. Nunca `bg-${x}`:
    * Tailwind v4 extrae las clases estáticamente del fuente, así que una clase
