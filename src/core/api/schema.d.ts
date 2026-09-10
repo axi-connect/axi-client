@@ -1828,6 +1828,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/products/{id}/category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ProductClassificationController_setCategory_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}/category/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductClassificationController_confirm_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/products/{id}/classification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductClassificationController_reclassify_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/classification/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProductClassificationController_backfill_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/classification/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ProductClassificationController_stats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduling/availability": {
         parameters: {
             query?: never;
@@ -7654,6 +7734,7 @@ export interface components {
             enrichment_auto_enabled?: boolean;
             /** @enum {string|null} */
             enrichment_vertical?: "fashion" | "food" | "beauty" | "home" | "tech" | "generic" | null;
+            classification_auto_enabled?: boolean;
         };
         AiAgentListDto: {
             data: {
@@ -8298,6 +8379,14 @@ export interface components {
                 catalog_id: string;
                 /** Format: uuid */
                 category_id: string | null;
+                effective_category: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    source: string;
+                    confidence: number | null;
+                    is_automatic: boolean;
+                } | null;
                 /** Format: uuid */
                 product_type_id: string | null;
                 /** @enum {string} */
@@ -8411,6 +8500,14 @@ export interface components {
             catalog_id: string;
             /** Format: uuid */
             category_id: string | null;
+            effective_category: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                source: string;
+                confidence: number | null;
+                is_automatic: boolean;
+            } | null;
             /** Format: uuid */
             product_type_id: string | null;
             /** @enum {string} */
@@ -8707,6 +8804,21 @@ export interface components {
             user_edited: number;
             monthly_used: number | null;
             monthly_cap: number;
+        };
+        SetProductCategoryDto: {
+            /** Format: uuid */
+            category_id: string | null;
+        };
+        ClassificationQueuedDto: {
+            queued: boolean;
+        };
+        ClassificationStatsDto: {
+            products: number;
+            categorized: number;
+            automatic: number;
+            tenant_set: number;
+            unresolved: number;
+            pending: number;
         };
         AvailabilityDto: {
             timezone: string;
@@ -9712,10 +9824,16 @@ export interface components {
                 is_selected: boolean;
                 priority: number;
                 looks_campaign: boolean;
+                category_id: string | null;
             }[];
         };
         UpdateCollectionsDto: {
             selected: string[];
+            mappings?: {
+                external_collection_id: string;
+                /** Format: uuid */
+                category_id: string | null;
+            }[];
         };
         ReadoptionPreviewDto: {
             connection_id: string;
@@ -18597,6 +18715,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrichmentAcceptedDto"];
+                };
+            };
+        };
+    };
+    ProductClassificationController_setCategory_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProductCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductClassificationController_confirm_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDto"];
+                };
+            };
+        };
+    };
+    ProductClassificationController_reclassify_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassificationQueuedDto"];
+                };
+            };
+        };
+    };
+    ProductClassificationController_backfill_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassificationQueuedDto"];
+                };
+            };
+        };
+    };
+    ProductClassificationController_stats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassificationStatsDto"];
                 };
             };
         };
