@@ -81,9 +81,9 @@ jest.mock("@/modules/inbox/infrastructure/services/inbox-service.adapter", () =>
   getConversationMessages: jest.fn(),
 }))
 
-const { getConversationMessages } = jest.requireMock(
+const { getConversationMessages, listInboxConversations, getInboxCounts } = jest.requireMock(
   "@/modules/inbox/infrastructure/services/inbox-service.adapter",
-) as { getConversationMessages: jest.Mock }
+) as { getConversationMessages: jest.Mock; listInboxConversations: jest.Mock; getInboxCounts: jest.Mock }
 
 const CID = "c1"
 
@@ -262,5 +262,109 @@ describe("useInboxSocket — re-join tras reconexión", () => {
 
     expect(fakeSocket.listenerCount("connect")).toBe(0)
     expect(fakeSocket.listenerCount("disconnect")).toBe(0)
+  })
+})
+
+describe("useInboxSocket — lista en vivo y reconexión", () => {
+  beforeEach(() => {
+    listInboxConversations.mockClear()
+    getInboxCounts.mockClear()
+    useInboxStore.setState({
+      conversations: [
+        { id: CID, unread_count: 0, last_message_at: "2026-09-10T10:00:00Z", last_message_preview: "x", priority: "normal", queued_at: null } as never,
+      ],
+      counts: { queued: 0, mine: 0, ai: 0, all_open: 1, unread_total: 0 },
+      selectedId: null,
+      selected: null,
+    })
+  })
+
+  it("message_received con `conversation` actualiza la fila SIN pedir la lista por REST", async () => {
+    render(<Harness />)
+    await act(async () => {})
+    await act(async () => {
+      fakeSocket.emitServer("conversation.message_received", {
+        conversation_id: CID,
+        message_id: "m1",
+        company_id: "co",
+        content_type: "text",
+        message: makeMessage(),
+        conversation: { unread_count: 1, last_message_at: "2026-09-10T11:00:00Z", last_message_preview: "hola" },
+      })
+    })
+    const row = useInboxStore.getState().conversations[0]
+    expect(row).toMatchObject({ unread_count: 1, last_message_preview: "hola" })
+    expect(useInboxStore.getState().counts?.unread_total).toBe(1)
+    expect(listInboxConversations).not.toHaveBeenCalled()
+  })
+
+  it("conversation.read (otra pestaña) baja el badge en vivo", async () => {
+    useInboxStore.setState({
+      conversations: [{ id: CID, unread_count: 4, last_message_at: null, priority: "normal", queued_at: null } as never],
+      counts: { queued: 0, mine: 0, ai: 0, all_open: 1, unread_total: 4 },
+    })
+    render(<Harness />)
+    await act(async () => {})
+    await act(async () => {
+      fakeSocket.emitServer("conversation.read", {
+        conversation_id: CID,
+        company_id: "co",
+        unread_count: 0,
+        previous_unread_count: 4,
+        read_by_user_id: "u2",
+      })
+    })
+    expect(useInboxStore.getState().conversations[0].unread_count).toBe(0)
+    expect(useInboxStore.getState().counts?.unread_total).toBe(0)
+  })
+
+  it("message_created sin vista del mensaje NO se descarta: resincroniza el hilo abierto", async () => {
+    useInboxStore.setState({ selectedId: CID, messagesById: { [CID]: { items: [], loaded: true } } })
+    getConversationMessages.mockResolvedValue({ data: [makeMessage({ id: "rescatado" })] })
+    render(<Harness />)
+    await act(async () => {})
+    await act(async () => {
+      fakeSocket.emitServer("conversation.message_created", { conversation_id: CID, company_id: "co" })
+    })
+    expect(useInboxStore.getState().messagesById[CID].items.map((m) => m.id)).toEqual(["rescatado"])
+  })
+
+  it("message_updated con attachments quita el skeleton de la burbuja", async () => {
+    useInboxStore.setState({
+      selectedId: CID,
+      messagesById: { [CID]: { items: [makeMessage({ id: "img", content_type: "image", media_pending: true })], loaded: true } },
+    })
+    render(<Harness />)
+    await act(async () => {})
+    await act(async () => {
+      fakeSocket.emitServer("conversation.message_updated", {
+        conversation_id: CID,
+        company_id: "co",
+        message_id: "img",
+        content_type: "image",
+        attachments: [{ id: "a1", filename: "f.jpg", mime_type: "image/jpeg", size_bytes: 1 }],
+      })
+    })
+    const [message] = useInboxStore.getState().messagesById[CID].items
+    expect(message.attachments).toHaveLength(1)
+    expect(message.media_pending).toBe(false)
+  })
+
+  it("al RECONECTAR resincroniza lista y counts (una vez); el primer connect no", async () => {
+    render(<Harness />)
+    await act(async () => {})
+    await act(async () => {
+      fakeSocket.emitServer("connect")
+    })
+    expect(listInboxConversations).not.toHaveBeenCalled()
+
+    await act(async () => {
+      fakeSocket.emitServer("disconnect")
+    })
+    await act(async () => {
+      fakeSocket.emitServer("connect")
+    })
+    expect(listInboxConversations).toHaveBeenCalledTimes(1)
+    expect(getInboxCounts).toHaveBeenCalledTimes(1)
   })
 })

@@ -11617,6 +11617,10 @@ export interface components {
                 /** Format: date-time */
                 last_inbound_at: string | null;
                 last_message_preview: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                closed_at: string | null;
                 contact: {
                     /** Format: uuid */
                     id: string;
@@ -11662,6 +11666,10 @@ export interface components {
             /** Format: date-time */
             last_inbound_at: string | null;
             last_message_preview: string | null;
+            /** Format: date-time */
+            queued_at: string | null;
+            /** Format: date-time */
+            closed_at: string | null;
             contact: {
                 /** Format: uuid */
                 id: string;
@@ -11811,6 +11819,10 @@ export interface components {
                 /** Format: date-time */
                 last_inbound_at: string | null;
                 last_message_preview: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                closed_at: string | null;
                 contact: {
                     /** Format: uuid */
                     id: string;
@@ -22508,11 +22520,17 @@ export interface operations {
     InboxController_list_v1: {
         parameters: {
             query?: {
-                status?: "open" | "snoozed" | "resolved" | "closed";
+                status?: ("open" | "snoozed" | "resolved" | "closed")[];
                 mode?: "ai_active" | "human_queued" | "human_active";
                 assigned?: "me" | "unassigned";
-                channel_id?: string;
-                priority?: "low" | "normal" | "high" | "urgent";
+                assigned_user_id?: string;
+                channel_id?: string[];
+                priority?: ("low" | "normal" | "high" | "urgent")[];
+                unread?: string;
+                q?: string;
+                from?: string;
+                to?: string;
+                sort?: "recent" | "oldest" | "unread" | "waiting" | "priority";
                 page?: number;
                 page_size?: number;
             };

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Download, FileText, Mic } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { formatDayLabel } from "@/core/lib/day-label";
 import { formatBytes } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
 import { Button } from "@/shared/components/ui/button";
@@ -39,20 +40,9 @@ const FILTERS: Array<{ id: AttachmentCategory | "all"; label: string }> = [
   { id: "document", label: ATTACHMENT_CATEGORY_LABELS.document },
 ];
 
-/** Etiqueta del grupo por día: Hoy / Ayer / "28 jul". */
+/** Etiqueta del grupo por día (helper compartido con la lista y el hilo). */
 function dayLabel(iso: string): string {
-  const date = new Date(iso);
-  const today = new Date();
-  const startOfDay = (value: Date) =>
-    new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
-  const diffDays = Math.round((startOfDay(today) - startOfDay(date)) / 86_400_000);
-  if (diffDays <= 0) return "Hoy";
-  if (diffDays === 1) return "Ayer";
-  return date.toLocaleDateString("es", {
-    day: "numeric",
-    month: "short",
-    ...(date.getFullYear() !== today.getFullYear() ? { year: "numeric" } : {}),
-  });
+  return formatDayLabel(iso, Date.now(), "short");
 }
 
 function DocumentRow({

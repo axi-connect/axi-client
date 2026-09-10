@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/core/lib/utils"
+import { MessageTime } from "./timeline/MessageTime"
 import { AlertCircle, Bot, Check, CheckCheck, Clock, RotateCw, Smartphone, User } from "lucide-react"
 import {
   extractInteractivePayload,
@@ -121,7 +122,7 @@ export function MessageBubble({
             ) : (
               <User className="size-3" aria-label="Enviado por operador" />
             ))}
-          <span>{new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+          <MessageTime iso={message.created_at} />
           <StatusIcon message={message} />
           {failed && onRetry && (
             <button

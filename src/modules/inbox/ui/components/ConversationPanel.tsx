@@ -1,13 +1,19 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ArrowDown } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { useInboxStore } from "@/modules/inbox/infrastructure/stores/inbox.store"
 import { useSendMessage } from "@/modules/inbox/infrastructure/realtime/use-send-message"
 import type { InboxCommands } from "@/modules/inbox/infrastructure/realtime/use-inbox-socket"
 import { GlassGlyph } from "@/shared/components/ui/glyphs"
+import { isReadOnlyConversation } from "@/modules/inbox/domain/inbox"
+import { formatDayLabel } from "@/core/lib/day-label"
+import { useMinuteTick } from "@/modules/inbox/ui/hooks/use-minute-tick"
 import { MessageBubble } from "./MessageBubble"
+import { ClosedConversationFooter } from "./ClosedConversationFooter"
+import { DaySeparator } from "./timeline/DaySeparator"
+import { groupMessagesByDay } from "./timeline/group-messages-by-day"
 import { ConversationHeader } from "./header/ConversationHeader"
 import { Composer } from "./composer/Composer"
 
@@ -36,6 +42,10 @@ export function ConversationPanel({
 
   const messagesState = conversationId ? messagesById[conversationId] : undefined
   const messages = messagesState?.items ?? []
+  // Separadores de día: clave estable por día local; la etiqueta se recalcula
+  // con el tick para que «Hoy» pase a «Ayer» a medianoche sin recargar.
+  const dayGroups = useMemo(() => groupMessagesByDay(messages), [messages])
+  const now = useMinuteTick()
   const typingUsers = conversationId ? (typingByConversation[conversationId] ?? []) : []
   // El id del último mensaje, no solo la cantidad: un upsert (attachment
   // resuelto, transcripción lista) cambia el contenido sin cambiar la longitud.
@@ -69,13 +79,30 @@ export function ConversationPanel({
     if (el) el.scrollTop = el.scrollHeight
   }, [conversationId])
 
-  // Marca como leída al abrir/enfocar.
+  // Marca como leída al abrir y cada vez que entra un mensaje a la conversación
+  // abierta (antes solo dependía del id, así que el badge volvía a subir y no
+  // bajaba hasta refrescar). Optimista: la fila y el total bajan al instante;
+  // si el ack falla se revierte. Solo con la pestaña visible: leer en una
+  // pestaña oculta no es leer.
+  const selectedIdForRead = selected?.id
+  const selectedUnread = selected?.unread_count ?? 0
+  const readOnly = selected !== null && isReadOnlyConversation(selected)
+  const markReadLocal = useInboxStore((s) => s.markReadLocal)
+  const rollbackUnread = useInboxStore((s) => s.rollbackUnread)
   useEffect(() => {
-    if (selected && socketConnected && selected.unread_count > 0) {
-      void commands.markRead(selected.id)
+    if (!selectedIdForRead || !socketConnected || readOnly || selectedUnread === 0) return
+    const attempt = () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return
+      const previous = markReadLocal(selectedIdForRead)
+      if (previous === 0) return
+      void commands.markRead(selectedIdForRead).then((ack) => {
+        if (!ack.ok) rollbackUnread(selectedIdForRead, previous)
+      })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected?.id, socketConnected])
+    attempt()
+    document.addEventListener("visibilitychange", attempt)
+    return () => document.removeEventListener("visibilitychange", attempt)
+  }, [selectedIdForRead, selectedUnread, socketConnected, readOnly, commands, markReadLocal, rollbackUnread])
 
   if (!selected) {
     return (
@@ -118,27 +145,39 @@ export function ConversationPanel({
               })
             }
           }}
-          className="sidebar-scroll flex-1 space-y-2 overflow-y-auto p-4"
+          // Contenedor de BLOQUE (DS §4.2): el `sticky` de los separadores y
+          // el ancla del prepend dependen de que el scroller no sea flex-col.
+          className="sidebar-scroll flex-1 overflow-y-auto p-4"
           aria-live="polite"
         >
-          {messagesState?.next_cursor && (
-            <p className="text-center text-xs text-muted-foreground">Desplázate arriba para cargar más…</p>
-          )}
-          {messages.map((message) => (
-            <MessageBubble
-              key={message.local_id ?? message.id}
-              message={message}
-              conversationId={selected.id}
-              onRetry={retry}
-            />
-          ))}
-          {typingUsers.length > 0 && (
-            <div className="flex justify-start">
-              <span className="rounded-2xl rounded-bl-sm bg-muted px-3 py-2 text-sm text-muted-foreground">
-                escribiendo<span className="animate-pulse">…</span>
-              </span>
-            </div>
-          )}
+          <div className="space-y-3">
+            {messagesState?.next_cursor && (
+              <p className="text-center text-xs text-muted-foreground">Desplázate arriba para cargar más…</p>
+            )}
+            {dayGroups.map((group) => {
+              const label = formatDayLabel(group.key, now)
+              return (
+                <section key={group.key} aria-label={label} className="space-y-2">
+                  <DaySeparator label={label} />
+                  {group.items.map((message) => (
+                    <MessageBubble
+                      key={message.local_id ?? message.id}
+                      message={message}
+                      conversationId={selected.id}
+                      onRetry={retry}
+                    />
+                  ))}
+                </section>
+              )
+            })}
+            {typingUsers.length > 0 && (
+              <div className="flex justify-start">
+                <span className="rounded-2xl rounded-bl-sm bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  escribiendo<span className="animate-pulse">…</span>
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Llegaron mensajes mientras el operador leía más arriba: sin este
@@ -155,13 +194,17 @@ export function ConversationPanel({
         )}
       </div>
 
-      {/* Composer */}
-      <Composer
-        conversation={selected}
-        commands={commands}
-        socketConnected={socketConnected}
-        onSend={send}
-      />
+      {/* Composer — o el pie de solo lectura si la conversación está cerrada */}
+      {readOnly ? (
+        <ClosedConversationFooter conversation={selected} />
+      ) : (
+        <Composer
+          conversation={selected}
+          commands={commands}
+          socketConnected={socketConnected}
+          onSend={send}
+        />
+      )}
     </div>
   )
 }

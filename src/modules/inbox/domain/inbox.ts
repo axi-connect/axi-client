@@ -278,6 +278,58 @@ export const INBOX_TAB_LABELS: Record<InboxTab, string> = {
   all_open: "Abiertas",
 };
 
+/** Las cuatro vistas operables más «Cerradas» (resolved + closed, solo lectura). */
+export type InboxView = InboxTab | "closed";
+
+export const INBOX_VIEW_LABELS: Record<InboxView, string> = {
+  ...INBOX_TAB_LABELS,
+  closed: "Cerradas",
+};
+
+export const INBOX_VIEWS = Object.keys(INBOX_VIEW_LABELS) as InboxView[];
+
+export function isInboxView(value: unknown): value is InboxView {
+  return typeof value === "string" && value in INBOX_VIEW_LABELS;
+}
+
+/**
+ * Criterios de orden del listado (espejo de `INBOX_ORDER_BY` del backend).
+ * `recent` es cronológico puro: la prioridad se ve en la fila, no reordena
+ * salvo que se pida `priority`.
+ */
+export type InboxSort = "recent" | "oldest" | "unread" | "waiting" | "priority";
+
+export const INBOX_SORT_LABELS: Record<InboxSort, string> = {
+  recent: "Más recientes",
+  oldest: "Más antiguas",
+  unread: "Sin leer primero",
+  waiting: "Más tiempo en cola",
+  priority: "Por prioridad",
+};
+
+export const INBOX_SORTS = Object.keys(INBOX_SORT_LABELS) as InboxSort[];
+
+export const DEFAULT_INBOX_SORT: InboxSort = "recent";
+
+export type ConversationPriority = ConversationDTO["priority"];
+
+/** De más a menos urgente: el orden en que se ofrecen como filtro. */
+export const PRIORITY_ORDER: readonly ConversationPriority[] = ["urgent", "high", "normal", "low"];
+
+export const PRIORITY_LABELS: Record<ConversationPriority, string> = {
+  urgent: "Urgente",
+  high: "Alta",
+  normal: "Normal",
+  low: "Baja",
+};
+
+const PRIORITY_RANK: Record<ConversationPriority, number> = { low: 0, normal: 1, high: 2, urgent: 3 };
+
+/** `resolved`/`closed`: se lee el historial, no se continúa. */
+export function isReadOnlyConversation(conversation: { status: ConversationStatus }): boolean {
+  return conversation.status === "resolved" || conversation.status === "closed";
+}
+
 export const MODE_LABELS: Record<ConversationMode, string> = {
   ai_active: "IA",
   human_queued: "En cola",
@@ -530,16 +582,69 @@ export function attachmentCategory(message: UiMessage): AttachmentCategory {
   }
 }
 
-/** Filtros que la UI traduce a query params de `GET /inbox/conversations`. */
-export function tabToQuery(tab: InboxTab): Record<string, string> {
-  switch (tab) {
+/**
+ * Parámetros fijos de cada vista. `closed` = resolved + closed (CSV multivalor
+ * que el backend acepta). Ganan sobre cualquier filtro con la misma clave.
+ */
+export function viewToQuery(view: InboxView): Record<string, string> {
+  switch (view) {
     case "queued":
-      return { mode: "human_queued", status: "open" };
+      return { status: "open", mode: "human_queued" };
     case "mine":
-      return { assigned: "me", status: "open" };
+      return { status: "open", assigned: "me" };
     case "ai":
-      return { mode: "ai_active", status: "open" };
+      return { status: "open", mode: "ai_active" };
     case "all_open":
       return { status: "open" };
+    case "closed":
+      return { status: "resolved,closed" };
   }
+}
+
+function timeOrNull(iso: string | null): number | null {
+  if (iso === null) return null;
+  const value = Date.parse(iso);
+  return Number.isNaN(value) ? null : value;
+}
+
+/** Compara dos instantes; `null` siempre al final, en ambas direcciones. */
+function compareTimes(a: number | null, b: number | null, direction: "asc" | "desc"): number {
+  if (a === null && b === null) return 0;
+  if (a === null) return 1;
+  if (b === null) return -1;
+  return direction === "desc" ? b - a : a - b;
+}
+
+/**
+ * Comparador local espejo del `orderBy` del backend, para reubicar una fila
+ * tras un patch en vivo (mensaje nuevo, leído) sin re-consultar la lista.
+ * Desempate por `id` para que el orden no baile entre renders.
+ */
+export function compareConversations(
+  sort: InboxSort,
+): (a: InboxConversation, b: InboxConversation) => number {
+  return (a, b) => {
+    const byRecent = compareTimes(timeOrNull(a.last_message_at), timeOrNull(b.last_message_at), "desc");
+    switch (sort) {
+      case "recent":
+        return byRecent || b.id.localeCompare(a.id);
+      case "oldest":
+        return (
+          compareTimes(timeOrNull(a.last_message_at), timeOrNull(b.last_message_at), "asc") ||
+          a.id.localeCompare(b.id)
+        );
+      case "unread":
+        return b.unread_count - a.unread_count || byRecent || b.id.localeCompare(a.id);
+      case "waiting":
+        return (
+          compareTimes(timeOrNull(a.queued_at), timeOrNull(b.queued_at), "asc") ||
+          byRecent ||
+          b.id.localeCompare(a.id)
+        );
+      case "priority":
+        return (
+          PRIORITY_RANK[b.priority] - PRIORITY_RANK[a.priority] || byRecent || b.id.localeCompare(a.id)
+        );
+    }
+  };
 }
