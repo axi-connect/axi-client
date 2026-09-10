@@ -26,3 +26,22 @@ export function flattenCategoryTree(
     ...flattenCategoryTree(node.children ?? [], depth + 1),
   ]);
 }
+
+/** Origen de la categoría (plan catalog_taxonomy_classification, D2). */
+export type CategoryOrigin = CategoryDTO["origin"];
+
+export const CATEGORY_ORIGIN_LABELS: Record<CategoryOrigin, string> = {
+  platform: "De la plataforma",
+  tenant: "Propia",
+  integration: "De la tienda conectada",
+};
+
+/**
+ * Una categoría con `taxonomy_code` pertenece a la taxonomía del tipo de
+ * negocio: no se borra, se OCULTA (el backend la deja inactiva para que la
+ * siembra no la resucite). El panel usa el verbo correcto.
+ */
+export function isTaxonomyCategory(category: Pick<CategoryDTO, "taxonomy_code">): boolean {
+  return category.taxonomy_code !== null;
+}
+

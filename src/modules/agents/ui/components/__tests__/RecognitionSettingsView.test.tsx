@@ -13,6 +13,8 @@ const getRecognitionIndexStatus = jest.fn()
 const requestRecognitionReindex = jest.fn()
 const getEnrichmentStats = jest.fn()
 const requestEnrichmentBackfill = jest.fn()
+const getClassificationStats = jest.fn()
+const requestClassificationBackfill = jest.fn()
 jest.mock("@/modules/agents/infrastructure/services/recognition-service.adapter", () => ({
   getRecognitionSettings: () => getRecognitionSettings(),
   updateRecognitionSettings: (dto: unknown) => updateRecognitionSettings(dto),
@@ -21,7 +23,18 @@ jest.mock("@/modules/agents/infrastructure/services/recognition-service.adapter"
   requestRecognitionReindex: () => requestRecognitionReindex(),
   getEnrichmentStats: () => getEnrichmentStats(),
   requestEnrichmentBackfill: () => requestEnrichmentBackfill(),
+  getClassificationStats: () => getClassificationStats(),
+  requestClassificationBackfill: () => requestClassificationBackfill(),
 }))
+
+const CLASSIFICATION = {
+  products: 157,
+  categorized: 141,
+  automatic: 128,
+  tenant_set: 13,
+  unresolved: 9,
+  pending: 7,
+}
 
 const STATS = {
   enabled: true,
@@ -59,6 +72,8 @@ describe("RecognitionSettingsView", () => {
     })
     getEnrichmentStats.mockResolvedValue(STATS)
     requestEnrichmentBackfill.mockResolvedValue({ queued: true })
+    getClassificationStats.mockResolvedValue(CLASSIFICATION)
+    requestClassificationBackfill.mockResolvedValue({ queued: true })
     getRecognitionUsage.mockResolvedValue({
       metric: "product_recognitions",
       used: 57,
@@ -216,5 +231,22 @@ describe("RecognitionSettingsView", () => {
     render(<RecognitionSettingsView />)
     expect(await screen.findByText("Sin permiso para ver esta sección")).toBeInTheDocument()
     expect(screen.queryByRole("switch")).not.toBeInTheDocument()
+  })
+  it("clasificación automática: pinta las cifras, el interruptor escribe solo su hoja y «Clasificar catálogo» encola", async () => {
+    render(<RecognitionSettingsView />)
+    await screen.findByText("Clasificación automática")
+    expect(screen.getByText("141")).toBeInTheDocument()
+    expect(screen.getByText(/9 sin resolver · elígelas a mano/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("switch", { name: "Clasificar automáticamente el catálogo" }))
+    await waitFor(() => expect(updateRecognitionSettings).toHaveBeenCalled())
+    expect(updateRecognitionSettings.mock.calls.at(-1)?.[0]).toMatchObject({
+      ai_enabled: true,
+      enrichment_auto_enabled: true,
+      classification_auto_enabled: false,
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: /Clasificar catálogo/ }))
+    await waitFor(() => expect(requestClassificationBackfill).toHaveBeenCalledTimes(1))
   })
 })

@@ -12,6 +12,7 @@ import type {
  */
 export type IntegrationDetailTabId =
   | "estado"
+  | "reconexion"
   | "ubicaciones"
   | "categorias"
   | "pedidos"
@@ -34,6 +35,7 @@ const CAPABILITY_TAB: Partial<Record<IntegrationCapabilityId, IntegrationDetailT
 
 /** Orden canónico de las pestañas de capacidad, entre Estado e Historial. */
 const CANONICAL_ORDER: readonly IntegrationDetailTabId[] = [
+  "reconexion",
   "ubicaciones",
   "categorias",
   "pedidos",
@@ -63,6 +65,9 @@ export function detailTabsFor(
       .filter((capability) => KNOWN_CAPABILITIES.has(capability))
       .map((capability) => CAPABILITY_TAB[capability as IntegrationCapabilityId] as IntegrationDetailTabId),
   );
+  // Re-adopción de la tienda (D9): acompaña al catálogo espejado. La pestaña
+  // dice «nada que re-adoptar» cuando no hay rastro de una conexión anterior.
+  if (tabs.has("categorias")) tabs.add("reconexion");
 
   return ["estado", ...CANONICAL_ORDER.filter((tab) => tabs.has(tab)), "historial"];
 }

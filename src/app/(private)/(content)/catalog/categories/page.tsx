@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { FolderTree, MoreVertical, Pencil, Plus, Search, Tag, Trash } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
+import { EyeOff, MoreVertical, Pencil, Plus, RefreshCw, Search, Sparkles, Tag, Trash } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Modal } from "@/shared/components/ui/modal";
@@ -12,11 +11,16 @@ import { TreeView, type TreeNode } from "@/shared/components/features/tree-view"
 import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import {
+  CATEGORY_ORIGIN_LABELS,
   flattenCategoryTree,
+  isTaxonomyCategory,
   MAX_CATEGORY_DEPTH,
   type CategoryTreeNodeDTO,
 } from "@/modules/catalog/domain/category";
-import { deleteCategory } from "@/modules/catalog/infrastructure/services/category-service.adapter";
+import {
+  deleteCategory,
+  ensurePlatformTaxonomy,
+} from "@/modules/catalog/infrastructure/services/category-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { CategoryForm } from "@/modules/catalog/ui/forms/CategoryForm";
 import {
@@ -60,8 +64,9 @@ export default function CategoriesPage() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
   const [formDefaults, setFormDefaults] = useState<(Partial<CategoryFormValues> & { id?: string }) | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; hide: boolean } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const setAlert = (cfg: FloatingAlertConfig) => {
     setAlertConfig(cfg);
@@ -111,8 +116,32 @@ export default function CategoriesPage() {
       description: dto.description ?? "",
       position: dto.position,
       is_active: dto.is_active ? "active" : "inactive",
+      search_aliases: dto.search_aliases,
     });
     setModalOpen(true);
+  };
+
+  /** Siembra idempotente de la taxonomía del tipo de negocio (D2). */
+  const refreshTaxonomy = async () => {
+    if (seeding) return;
+    try {
+      setSeeding(true);
+      const result = await ensurePlatformTaxonomy();
+      const touched = result.created + result.adopted + result.updated;
+      setAlert({
+        variant: "success",
+        title: touched === 0 ? "La taxonomía ya estaba al día" : "Taxonomía actualizada",
+        description:
+          touched === 0
+            ? undefined
+            : `${result.created} nuevas · ${result.adopted} adoptadas por nombre · ${result.updated} con sinónimos nuevos`,
+      });
+      await fetchCategoryTree();
+    } catch (err) {
+      setAlert({ variant: "destructive", title: errorMessage(err, "No se pudo actualizar la taxonomía") });
+    } finally {
+      setSeeding(false);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -120,7 +149,13 @@ export default function CategoriesPage() {
     try {
       setDeleting(true);
       await deleteCategory(deleteTarget.id);
-      setAlert({ variant: "success", title: "Categoría eliminada correctamente" });
+      setAlert({
+        variant: "success",
+        title: deleteTarget.hide ? "Categoría oculta" : "Categoría eliminada correctamente",
+        description: deleteTarget.hide
+          ? "El agente ya no la ofrece y sus productos vuelven a la clasificación automática."
+          : undefined,
+      });
       setDeleteTarget(null);
       await fetchCategoryTree();
     } catch (err) {
@@ -156,13 +191,23 @@ export default function CategoriesPage() {
             <Pencil className="h-4 w-4" />
             <span>Editar</span>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className="flex items-center gap-2 text-destructive"
-            onClick={() => setDeleteTarget({ id: dto.id, name: dto.name })}
-          >
-            <Trash className="h-4 w-4" />
-            <span>Eliminar</span>
-          </DropdownMenuItem>
+          {isTaxonomyCategory(dto) ? (
+            <DropdownMenuItem
+              className="flex items-center gap-2"
+              onClick={() => setDeleteTarget({ id: dto.id, name: dto.name, hide: true })}
+            >
+              <EyeOff className="h-4 w-4" />
+              <span>Ocultar</span>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-destructive"
+              onClick={() => setDeleteTarget({ id: dto.id, name: dto.name, hide: false })}
+            >
+              <Trash className="h-4 w-4" />
+              <span>Eliminar</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -177,14 +222,21 @@ export default function CategoriesPage() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Categorías</h2>
           <p className="text-sm text-muted-foreground">
-            Organiza tus productos en un árbol de hasta 6 niveles.
+            La plataforma trae la base de tu tipo de negocio y la mantiene al día; tú renombras, ocultas
+            o agregas las tuyas. Árbol de hasta 6 niveles.
           </p>
         </div>
         {canManage && (
-          <Button className="rounded-full" onClick={() => openCreate()}>
-            <Plus className="h-4 w-4" />
-            Nueva categoría
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" className="rounded-full" onClick={() => void refreshTaxonomy()} disabled={seeding}>
+              <RefreshCw className={seeding ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+              Actualizar taxonomía
+            </Button>
+            <Button className="rounded-full" onClick={() => openCreate()}>
+              <Plus className="h-4 w-4" />
+              Nueva categoría
+            </Button>
+          </div>
         )}
       </div>
 
@@ -218,24 +270,55 @@ export default function CategoriesPage() {
               search={search || undefined}
               title="Árbol de categorías"
               header={({ expandAll, collapseAll }) => (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" size="sm" onClick={expandAll}>
                     Expandir todo
                   </Button>
                   <Button variant="outline" size="sm" onClick={collapseAll}>
                     Contraer todo
                   </Button>
+                  <span className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="size-3.5 text-accent-violet" aria-hidden="true" /> Plataforma
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Tag className="size-3.5" aria-hidden="true" /> Propia
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <EyeOff className="size-3.5 text-warning" aria-hidden="true" /> Oculta
+                    </span>
+                  </span>
                 </div>
               )}
-              getIcon={(node) =>
-                node.children ? <FolderTree className="h-4 w-4" /> : <Tag className="h-4 w-4" />
-              }
+              // El ORIGEN va como icono al inicio de la fila, no como chip junto al
+              // nombre (feedback del dueño sobre el mockup): violeta = plataforma,
+              // neutro = propia, ámbar = oculta.
+              getIcon={(node) => {
+                const dto = node.meta as CategoryTreeNodeDTO;
+                if (!dto.is_active) {
+                  return <EyeOff className="h-4 w-4 text-warning" aria-label="Oculta" />;
+                }
+                if (dto.origin === "platform") {
+                  return (
+                    <Sparkles
+                      className="h-4 w-4 text-accent-violet"
+                      aria-label={CATEGORY_ORIGIN_LABELS.platform}
+                    />
+                  );
+                }
+                return <Tag className="h-4 w-4" aria-label={CATEGORY_ORIGIN_LABELS[dto.origin]} />;
+              }}
               renderLabel={(node) => {
                 const dto = node.meta as CategoryTreeNodeDTO;
                 return (
                   <span className="flex items-center gap-2">
-                    {node.label}
-                    {!dto.is_active && <Badge variant="secondary">Inactiva</Badge>}
+                    <span className={dto.is_active ? undefined : "text-muted-foreground"}>{node.label}</span>
+                    {dto.search_aliases.length > 0 && (
+                      <span className="hidden truncate font-mono text-xs font-normal text-muted-foreground md:inline">
+                        {dto.search_aliases.slice(0, 4).join(" · ")}
+                        {dto.search_aliases.length > 4 ? ` · +${dto.search_aliases.length - 4}` : ""}
+                      </span>
+                    )}
                   </span>
                 );
               }}
@@ -260,13 +343,15 @@ export default function CategoriesPage() {
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         config={{
-          title: "Eliminar categoría",
-          description: `¿Seguro que deseas eliminar “${deleteTarget?.name ?? ""}”?`,
+          title: deleteTarget?.hide ? "Ocultar categoría" : "Eliminar categoría",
+          description: deleteTarget?.hide
+            ? `“${deleteTarget.name}” dejará de ofrecerse y de usarse para clasificar. Puedes mostrarla de nuevo desde Editar.`
+            : `¿Seguro que deseas eliminar “${deleteTarget?.name ?? ""}”?`,
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true, id: "category-delete-cancel" },
             {
-              label: deleting ? "Eliminando..." : "Eliminar",
-              variant: "destructive",
+              label: deleting ? "Guardando…" : deleteTarget?.hide ? "Ocultar" : "Eliminar",
+              variant: deleteTarget?.hide ? "default" : "destructive",
               asClose: false,
               onClick: handleConfirmDelete,
               id: "category-delete-confirm",
@@ -276,7 +361,9 @@ export default function CategoriesPage() {
         }}
       >
         <div className="text-sm text-muted-foreground">
-          Solo puede eliminarse si no tiene subcategorías ni productos asociados.
+          {deleteTarget?.hide
+            ? "Es una categoría de la taxonomía de tu tipo de negocio: no se borra, se oculta, para que la próxima actualización no la vuelva a crear."
+            : "Solo puede eliminarse si no tiene subcategorías ni productos asociados."}
         </div>
       </Modal>
 

@@ -68,3 +68,18 @@ export function deleteVariant(id: string): Promise<void> {
 export function adjustVariantStock(id: string, dto: AdjustStockDTO): Promise<StockDTO> {
   return http.patch<StockDTO>(`/catalog/variants/${id}/stock`, dto);
 }
+
+/**
+ * Fija (o quita, con null) la categoría del producto. En un espejo de Shopify
+ * NO toca el campo gobernado: escribe la clasificación, que la categoría
+ * efectiva prefiere. Devuelve el producto con `effective_category` al día.
+ */
+export function setProductCategory(id: string, categoryId: string | null): Promise<ProductDTO> {
+  return http.put<ProductDTO>(`/catalog/products/${id}/category`, { category_id: categoryId });
+}
+
+/** Un clic: la categoría automática pasa a ser del tenant. */
+export function confirmProductCategory(id: string): Promise<ProductDTO> {
+  return http.post<ProductDTO>(`/catalog/products/${id}/category/confirm`, {});
+}
+

@@ -1,6 +1,7 @@
 import { http } from "@/core/services/http";
 import type { Schemas } from "@/core/api/types";
 import type {
+  ClassificationStatsDTO,
   EnrichmentStatsDTO,
   RecognitionIndexStatusDTO,
   RecognitionSettingsDTO,
@@ -59,3 +60,14 @@ export function getEnrichmentStats(): Promise<EnrichmentStatsDTO> {
 export function requestEnrichmentBackfill(): Promise<Schemas["EnrichmentAcceptedDto"]> {
   return http.post<Schemas["EnrichmentAcceptedDto"]>("/catalog/enrichment/backfill", {});
 }
+
+/** Clasificación automática: agregado para la tarjeta de Ajustes. */
+export function getClassificationStats(): Promise<ClassificationStatsDTO> {
+  return http.get<ClassificationStatsDTO>("/catalog/classification/stats");
+}
+
+/** «Clasificar catálogo» (202): recorre el catálogo; lo fijado por el tenant no se toca. */
+export function requestClassificationBackfill(): Promise<Schemas["ClassificationQueuedDto"]> {
+  return http.post<Schemas["ClassificationQueuedDto"]>("/catalog/classification/backfill", {});
+}
+

@@ -54,3 +54,17 @@ export function syncRunsPollInterval(hasActive: boolean, elapsedMs: number): num
   if (elapsedMs > SYNC_RUNS_STALL_MS) return false;
   return 3_000;
 }
+
+/** Re-adopción de una tienda reconectada (D9): qué se mueve, fusiona o bloquea. */
+export type ReadoptionPreviewDTO = Schemas["ReadoptionPreviewDto"];
+export type ReadoptionAppliedDTO = Schemas["ReadoptionAppliedDto"];
+/** Colección → categoría destino (D10). */
+export type CollectionMappingDTO = NonNullable<
+  Schemas["UpdateCollectionsDto"]["mappings"]
+>[number];
+
+/** Hay algo que re-adoptar cuando existe rastro de una conexión anterior. */
+export function readoptionHasWork(preview: ReadoptionPreviewDTO): boolean {
+  return preview.products_to_adopt > 0 || preview.links_to_move > 0 || preview.groups.length > 0;
+}
+

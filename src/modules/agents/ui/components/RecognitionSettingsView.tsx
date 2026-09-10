@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Info, LoaderCircle, RefreshCw, Sparkles, TriangleAlert } from "lucide-react"
+import { Info, LoaderCircle, RefreshCw, Sparkles, Tags, TriangleAlert } from "lucide-react"
 import { cn } from "@/core/lib/utils"
 import { errorMessage } from "@/core/lib/error-messages"
 import { useAlert } from "@/core/providers/alert-provider"
@@ -17,22 +17,27 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select"
 import {
+  classificationPendingNote,
+  classificationUncategorized,
   ENRICHMENT_VERTICAL_LABELS,
   enrichmentCapReached,
   enrichmentPendingNote,
   indexComplete,
   pendingImages,
   pendingProducts,
+  type ClassificationStatsDTO,
   type EnrichmentStatsDTO,
   type EnrichmentVertical,
   type RecognitionIndexStatusDTO,
   type RecognitionSettingsDTO,
 } from "@/modules/agents/domain/recognition"
 import {
+  getClassificationStats,
   getEnrichmentStats,
   getRecognitionIndexStatus,
   getRecognitionSettings,
   getRecognitionUsage,
+  requestClassificationBackfill,
   requestEnrichmentBackfill,
   requestRecognitionReindex,
   updateRecognitionSettings,
@@ -54,6 +59,8 @@ export function RecognitionSettingsView() {
   const [usage, setUsage] = useState<RecognitionUsage | null>(null)
   const [index, setIndex] = useState<RecognitionIndexStatusDTO | null>(null)
   const [stats, setStats] = useState<EnrichmentStatsDTO | null>(null)
+  const [classification, setClassification] = useState<ClassificationStatsDTO | null>(null)
+  const [classifying, setClassifying] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [savingSwitch, setSavingSwitch] = useState(false)
   const [savingEnrichment, setSavingEnrichment] = useState(false)
@@ -73,6 +80,9 @@ export function RecognitionSettingsView() {
     getEnrichmentStats()
       .then(setStats)
       .catch(() => setStats(null))
+    getClassificationStats()
+      .then(setClassification)
+      .catch(() => setClassification(null))
   }, [])
 
   useEffect(load, [load])
@@ -170,6 +180,29 @@ export function RecognitionSettingsView() {
       showAlert({ tone: "error", title: "No se pudo iniciar el enriquecimiento", description: errorMessage(err), open: true })
     } finally {
       setEnriching(false)
+    }
+  }
+
+  async function classifyCatalog() {
+    if (classifying) return
+    setClassifying(true)
+    try {
+      await requestClassificationBackfill()
+      showAlert({
+        tone: "success",
+        title: "Clasificación en marcha",
+        description: "Lo que fijaste tú no se toca. Las cifras se actualizan en segundos.",
+        open: true,
+        autoCloseMs: 3000,
+      })
+      window.setTimeout(
+        () => void getClassificationStats().then(setClassification).catch(() => undefined),
+        4000,
+      )
+    } catch (err) {
+      showAlert({ tone: "error", title: "No se pudo iniciar la clasificación", description: errorMessage(err), open: true })
+    } finally {
+      setClassifying(false)
     }
   }
 
@@ -336,6 +369,63 @@ export function RecognitionSettingsView() {
           <HowItem title="Captura de pantalla" text="De un video o de una publicación." />
           <HowItem title="Publicación compartida" text="Posts y menciones de historia en Instagram." />
         </div>
+      </section>
+
+      <section className="space-y-4 rounded-2xl border border-accent-violet/30 bg-accent-violet/10 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <Tags className="size-4 text-accent-violet" aria-hidden />
+              Clasificación automática
+            </h2>
+            <p className="mt-1 max-w-prose text-xs text-muted-foreground">
+              Cada producto nuevo o modificado recibe su categoría de la taxonomía de tu tipo de negocio:
+              primero por señales de la tienda (colección, tipo, nombre) y, si no basta, con IA. Lo que tú
+              fijes no se toca.
+            </p>
+          </div>
+          <Switch
+            checked={settings.classification_auto_enabled !== false}
+            onCheckedChange={(value) =>
+              void saveEnrichment(
+                { classification_auto_enabled: value },
+                value
+                  ? { title: "Clasificación automática activada", description: "Cada producto nuevo o modificado recibe su categoría en segundos." }
+                  : { title: "Clasificación automática desactivada", description: "Puedes clasificar por producto o con «Clasificar catálogo»." },
+              )
+            }
+            disabled={savingEnrichment}
+            aria-label="Clasificar automáticamente el catálogo"
+          />
+        </div>
+
+        {classification === null ? (
+          <p className="text-xs text-muted-foreground">El estado de la clasificación no está disponible ahora.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] sm:items-end">
+            <IndexStat
+              label="Con categoría"
+              value={classification.categorized}
+              total={classification.products}
+              note={classificationPendingNote(classification)}
+            />
+            <PlainStat label="Automáticas" value={classification.automatic} note="sin confirmar" />
+            <PlainStat label="Fijadas por ti" value={classification.tenant_set} note="no se tocan" />
+            <PlainStat
+              label="Sin resolver"
+              value={classification.unresolved}
+              note={classificationUncategorized(classification) === 0 ? "todo al día" : "elígelas a mano"}
+            />
+            <Button variant="outline" onClick={() => void classifyCatalog()} disabled={classifying}>
+              {classifying ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Tags className="size-4" aria-hidden />
+              )}
+              Clasificar catálogo
+            </Button>
+          </div>
+        )}
       </section>
 
       <section className="space-y-4 rounded-2xl border border-border bg-background p-4" aria-labelledby="enrichment-title">

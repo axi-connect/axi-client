@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { AliasesInput } from "@/modules/catalog/ui/components/AliasesInput";
 
 /** Sentinel del select de padre: las categorías raíz no tienen `parent_id`. */
 export const ROOT_PARENT_VALUE = "__root__";
@@ -21,6 +22,8 @@ export const categoryFormSchema = z.object({
   description: z.string().trim().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
   position: z.coerce.number().int("Debe ser un entero").min(0, "Debe ser ≥ 0").optional(),
   is_active: z.enum(["active", "inactive"]).optional(),
+  /** Sinónimos con que el cliente pide la categoría (D3): entran a la búsqueda del agente. */
+  search_aliases: z.array(z.string().trim().min(1).max(60)).max(40).optional(),
 });
 
 export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
@@ -31,6 +34,7 @@ export const defaultCategoryFormValues: CategoryFormValues = {
   description: "",
   position: 0,
   is_active: undefined,
+  search_aliases: [],
 };
 
 export type ParentOption = { id: string; label: string; depth: number };
@@ -83,6 +87,22 @@ export function buildCategoryFormFields(opts: {
       description: "Orden entre hermanas (menor = primero)",
       inputProps: { min: 0, step: 1 },
     }),
+    createCustomField<CategoryFormValues>(
+      "search_aliases",
+      ({ value, setValue }) => (
+        <AliasesInput
+          id="df-search_aliases"
+          value={Array.isArray(value) ? (value as string[]) : []}
+          onChange={(next) => setValue("search_aliases", next)}
+        />
+      ),
+      {
+        label: "Sinónimos",
+        htmlFor: "df-search_aliases",
+        description: "Cómo la piden tus clientes por WhatsApp: «jean», «denim», «baggy». Sin tildes obligatorias.",
+        colSpan: { base: 1, md: 2 },
+      },
+    ),
   ];
 
   if (isEdit) {
@@ -119,6 +139,9 @@ export function toCreateCategoryDTO(values: CategoryFormValues): CreateCategoryD
     ...(parentId ? { parent_id: parentId } : {}),
     ...(values.description ? { description: values.description } : {}),
     ...(values.position !== undefined ? { position: values.position } : {}),
+    ...(values.search_aliases && values.search_aliases.length > 0
+      ? { search_aliases: values.search_aliases }
+      : {}),
   };
 }
 
@@ -129,5 +152,6 @@ export function toUpdateCategoryDTO(values: CategoryFormValues): UpdateCategoryD
     description: values.description || null,
     ...(values.position !== undefined ? { position: values.position } : {}),
     ...(values.is_active ? { is_active: values.is_active === "active" } : {}),
+    ...(values.search_aliases !== undefined ? { search_aliases: values.search_aliases } : {}),
   };
 }

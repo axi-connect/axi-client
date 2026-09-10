@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/shared/components/ui/button";
@@ -9,10 +9,10 @@ import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Separator } from "@/shared/components/ui/separator";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
-import { flattenCategoryTree } from "@/modules/catalog/domain/category";
 import type { ProductDTO } from "@/modules/catalog/domain/product";
 import { updateProduct } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
+import { EffectiveCategoryField } from "./EffectiveCategoryField";
 import { PriceInput } from "./PriceInput";
 import {
   NONE_VALUE,
@@ -54,7 +54,7 @@ export function ProductBaseSection({
   onSaved: (updated: ProductDTO) => void;
   setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
 }) {
-  const { categoryTree, productTypes } = useCatalog();
+  const { productTypes } = useCatalog();
   const [submitting, setSubmitting] = useState(false);
   const isService = product.kind === "service";
 
@@ -69,7 +69,6 @@ export function ProductBaseSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
-  const categoryOptions = useMemo(() => flattenCategoryTree(categoryTree), [categoryTree]);
   const currency = form.watch("currency");
   const isDirty = form.formState.isDirty;
 
@@ -150,30 +149,11 @@ export function ProductBaseSection({
             />
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <FormField
-                name="category_id"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoría</FormLabel>
-                    <Select value={field.value ?? NONE_VALUE} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Sin categoría" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE_VALUE}>Sin categoría</SelectItem>
-                        {categoryOptions.map((option) => (
-                          <SelectItem key={option.id} value={option.id}>
-                            {`${"— ".repeat(option.depth)}${option.label}`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <EffectiveCategoryField
+                product={product}
+                canManage={canManage}
+                onSaved={onSaved}
+                setAlert={setAlert}
               />
               <FormField
                 name="product_type_id"

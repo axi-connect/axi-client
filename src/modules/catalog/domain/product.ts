@@ -247,3 +247,43 @@ export function addSearchTerm(terms: string[], raw: string): string[] {
   if (term.length === 0 || terms.includes(term) || terms.length >= ENRICHMENT_TERMS_MAX) return terms;
   return [...terms, term];
 }
+
+/** Categoría efectiva del producto (D5): la propia o la automática aplicada. */
+export type EffectiveCategoryDTO = NonNullable<ProductDTO["effective_category"]>;
+
+export type EffectiveCategoryState = "none" | "automatic" | "external" | "fixed";
+
+/**
+ * Cómo se muestra la categoría en el detalle: `fixed` = la puso o confirmó el
+ * tenant (neutro); `external` = la trajo una colección de la tienda;
+ * `automatic` = la puso el clasificador y aún no se confirmó; `none` = sin resolver.
+ */
+export function effectiveCategoryState(
+  category: EffectiveCategoryDTO | null | undefined,
+): EffectiveCategoryState {
+  if (!category) return "none";
+  if (!category.is_automatic) return "fixed";
+  return category.source === "shopify_collection" ? "external" : "automatic";
+}
+
+const CLASSIFICATION_SOURCE_LABELS: Record<string, string> = {
+  shopify_collection: "por la colección de la tienda",
+  shopify_product_type: "por el tipo de producto de la tienda",
+  alias_match: "por el nombre",
+  llm: "por IA",
+  enrichment: "por los metadatos con IA",
+  tenant: "fijada por ti",
+};
+
+/** «automática · 80 % · por el nombre» */
+export function effectiveCategoryNote(category: EffectiveCategoryDTO): string {
+  const parts: string[] = [];
+  if (category.is_automatic) parts.push("automática");
+  if (category.confidence !== null && category.is_automatic) {
+    parts.push(`${String(Math.round(category.confidence * 100))} %`);
+  }
+  const source = CLASSIFICATION_SOURCE_LABELS[category.source];
+  if (source !== undefined) parts.push(source);
+  return parts.join(" · ");
+}
+

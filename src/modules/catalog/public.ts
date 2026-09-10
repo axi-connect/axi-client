@@ -30,3 +30,12 @@ export { VariantPicker, variantLabel, type VariantSelection } from "./ui/compone
 
 /** Lectura del catálogo (listado y resolución de nombres por id). */
 export { getProductById, listProducts } from "./infrastructure/services/product-service.adapter";
+
+/**
+ * Categorías del tenant para selects de otros slices (integraciones: la
+ * categoría DESTINO de una colección de la tienda, plan
+ * catalog_taxonomy_classification D10).
+ */
+export { flattenCategoryTree, type CategoryTreeNodeDTO } from "./domain/category";
+export { listCategoryTree } from "./infrastructure/services/category-service.adapter";
+

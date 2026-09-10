@@ -15,6 +15,7 @@ import { getIntegrationById } from "@/modules/integrations/infrastructure/servic
 import { IntegrationProviderIcon } from "../IntegrationProviderIcon";
 import { IntegrationStatusBadge } from "../IntegrationStatusBadge";
 import { CollectionsTab } from "./CollectionsTab";
+import { ReadoptionTab } from "./ReadoptionTab";
 import { ContactosTab } from "./ContactosTab";
 import { EnviosTab } from "./EnviosTab";
 import { EstadoTab } from "./EstadoTab";
@@ -50,6 +51,10 @@ const TAB_REGISTRY: Record<
         onSyncStarted={ctx.showHistory}
       />
     ),
+  },
+  reconexion: {
+    label: "Reconexión",
+    render: (ctx) => <ReadoptionTab integrationId={ctx.integration.id} onChanged={ctx.refetch} />,
   },
   ubicaciones: {
     label: "Ubicaciones",

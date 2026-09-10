@@ -12,6 +12,8 @@ import type { Schemas } from "@/core/api/types";
  */
 export type RecognitionSettingsDTO = Schemas["RecognitionSettingsDto"];
 export type RecognitionIndexStatusDTO = Schemas["RecognitionIndexStatusDto"];
+/** Clasificación automática del catálogo (plan catalog_taxonomy_classification): agregado para Ajustes. */
+export type ClassificationStatsDTO = Schemas["ClassificationStatsDto"];
 /** Metadatos con IA del catálogo (plan catalog_enrichment): agregado para Ajustes. */
 export type EnrichmentStatsDTO = Schemas["EnrichmentStatsDto"];
 export type EnrichmentVertical = EnrichmentStatsDTO["vertical"];
@@ -76,3 +78,21 @@ export function pendingImages(status: RecognitionIndexStatusDTO): number {
 export function indexComplete(status: RecognitionIndexStatusDTO): boolean {
   return pendingProducts(status) === 0 && pendingImages(status) === 0;
 }
+
+/** Productos activos que todavía no tienen categoría efectiva. */
+export function classificationUncategorized(stats: ClassificationStatsDTO): number {
+  return Math.max(0, stats.products - stats.categorized);
+}
+
+/** Nota bajo «Con categoría»: qué falta y en qué estado está. */
+export function classificationPendingNote(stats: ClassificationStatsDTO): string {
+  const missing = classificationUncategorized(stats);
+  if (missing === 0) return "Todo al día";
+  const parts: string[] = [];
+  if (stats.unresolved > 0) parts.push(`${stats.unresolved.toLocaleString("es-CO")} sin resolver · elígelas a mano`);
+  if (stats.pending > 0) parts.push(`${stats.pending.toLocaleString("es-CO")} en cola`);
+  const rest = missing - stats.unresolved - stats.pending;
+  if (rest > 0) parts.push(`${rest.toLocaleString("es-CO")} sin clasificar aún`);
+  return parts.join(" · ");
+}
+

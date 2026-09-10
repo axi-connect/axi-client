@@ -76,10 +76,22 @@ export function listIntegrationCollections(
 export function updateIntegrationCollections(
   id: string,
   selected: string[],
+  mappings: Schemas["UpdateCollectionsDto"]["mappings"] = [],
 ): Promise<Schemas["IntegrationCollectionsDto"]> {
   return http.put<Schemas["IntegrationCollectionsDto"]>(`/integrations/${id}/collections`, {
     selected,
+    mappings,
   });
+}
+
+/** Re-adopción de la tienda (D9): solo lectura; con `paused=true` la conexión no sincroniza. */
+export function getReadoptionPreview(id: string): Promise<Schemas["ReadoptionPreviewDto"]> {
+  return http.get<Schemas["ReadoptionPreviewDto"]>(`/integrations/${id}/readoption/preview`);
+}
+
+/** Aplica la re-adopción (idempotente). 409 si hay copias con pedidos en ambos lados. */
+export function applyReadoption(id: string): Promise<Schemas["ReadoptionAppliedDto"]> {
+  return http.post<Schemas["ReadoptionAppliedDto"]>(`/integrations/${id}/readoption/apply`, {});
 }
 
 export function startIntegrationSync(

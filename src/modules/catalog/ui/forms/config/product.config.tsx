@@ -150,7 +150,6 @@ export const productBaseFormSchema = z
     name: z.string().trim().min(1, "Nombre requerido").max(200, "Máximo 200 caracteres"),
     description: z.string().trim().max(2000, "Máximo 2000 caracteres").optional().or(z.literal("")),
     image_url: z.url("URL inválida").optional().or(z.literal("")),
-    category_id: z.string().optional(),
     product_type_id: z.string().optional(),
     price_cents: z
       .number({ message: "Precio requerido" })
@@ -191,7 +190,6 @@ export function productToBaseFormValues(product: ProductDTO): ProductBaseFormVal
     name: product.name,
     description: product.description ?? "",
     image_url: product.image_url ?? "",
-    category_id: product.category_id ?? NONE_VALUE,
     product_type_id: product.product_type_id ?? NONE_VALUE,
     price_cents: product.price_cents,
     currency: product.currency,
@@ -208,7 +206,9 @@ export function toUpdateProductDTO(values: ProductBaseFormValues): UpdateProduct
     name: values.name,
     description: values.description || null,
     image_url: values.image_url || null,
-    category_id: optionalId(values.category_id) ?? null,
+    // La categoría NO viaja en el PATCH: se fija por PUT /catalog/products/:id/category
+    // (categoría efectiva, D5), que en un espejo escribe la clasificación y no el
+    // campo gobernado.
     product_type_id: optionalId(values.product_type_id) ?? null,
     price_cents: values.price_cents ?? 0,
     currency: values.currency,
