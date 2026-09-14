@@ -34,8 +34,10 @@ import {
   BULK_SKIP_HINTS,
   BULK_SKIP_LABELS,
   bulkFinishesAt,
+  bulkOpeningCost,
   bulkPromise,
   exceedsDailyCap,
+  formatUsd,
   type BulkDTO,
   type BulkPreviewDTO,
 } from "@/modules/crm/domain/bulk-follow-up";
@@ -168,6 +170,8 @@ export function BulkFollowUpModal({
       ? null
       : quietHoursShift(when.date, when.time, settings.quiet_start_hour, settings.quiet_end_hour);
   const selectedTemplate = templates.find((template) => template.id === templateId);
+  const openingCost =
+    selectedTemplate === undefined ? null : bulkOpeningCost(eligible, selectedTemplate.category);
   const agentName = agents.find((agent) => agent.id === agentId)?.name ?? "El agente";
 
   const tooLate = when !== undefined && isInPast(when.date, when.time, tz, now);
@@ -378,11 +382,22 @@ export function BulkFollowUpModal({
                 onChange={(e) => setTopic(e.target.value)}
               />
             )}
-            <Notice tone="info" icon={CircleDollarSign}>
-              Solo se cobra a quien la reciba de verdad: los que hayan escrito en las últimas 24 h
-              siguen por mensaje normal. Como mucho, {eligible} × US$0,0008 ≈{" "}
-              <strong>US${(eligible * 0.0008).toFixed(2)}</strong>.
-            </Notice>
+            {selectedTemplate !== undefined && (
+              <Notice tone={openingCost?.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>
+                Solo se cobra a quien la reciba de verdad: los que hayan escrito en las últimas 24 h
+                siguen por mensaje normal. Como mucho, {eligible} ×{" "}
+                {formatUsd(openingCost?.unit_usd ?? 0, 4)} ≈{" "}
+                <strong>{formatUsd(openingCost?.total_usd ?? 0)}</strong>
+                {openingCost?.category === "marketing" && (
+                  <>
+                    {" "}
+                    — es una plantilla de <strong>marketing</strong>, unas 25 veces más cara que una
+                    utility.
+                  </>
+                )}
+                .
+              </Notice>
+            )}
           </Field>
         )}
 
