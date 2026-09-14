@@ -6,6 +6,15 @@ const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert, showModal: jest.fn(), closeModal: jest.fn() }),
 }));
+// El paso "report" ofrece BulkFollowUpButton/EnrollInSequenceButton cuando la
+// importación creó contactos (F4a/F4b): ambos llaman useAuth al montar, y el
+// modal del lote (montado pero cerrado) llama useEntitlements.
+jest.mock("@/shared/auth/auth.hooks", () => ({
+  useAuth: () => ({ hasPermission: () => true, status: "authenticated" }),
+}));
+jest.mock("@/shared/auth/entitlements.hooks", () => ({
+  useEntitlements: () => ({ entitlements: null, loaded: true, hasCapability: () => true }),
+}));
 jest.mock("@/core/realtime/use-socket", () => ({
   useSocket: () => ({ socket: null }),
   useSocketEvent: jest.fn(),
