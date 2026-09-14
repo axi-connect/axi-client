@@ -20,7 +20,9 @@ const NAV_ITEMS: readonly (NavTabItem & { permission: string })[] = [
   { href: "/crm/settings/pipelines", label: "Pipelines", icon: KanbanSquare, permission: "crm:manage" },
   { href: "/crm/settings/tags", label: "Etiquetas", icon: Tag, permission: "crm:manage" },
   { href: "/crm/settings/segments", label: "Segmentos", icon: Filter, permission: "crm:manage" },
-  { href: "/crm/settings/imports", label: "Imports", icon: Upload, permission: "crm:manage" },
+  // El import escribe PII de terceros: su permiso es propio (`contacts:import`,
+  // owner/admin), no el de configurar el CRM.
+  { href: "/crm/settings/imports", label: "Imports", icon: Upload, permission: "contacts:import" },
   // Leer la política basta para verla: quien atiende la bandeja necesita poder
   // explicar por qué una tarea salió «El agente está pausado».
   { href: "/crm/settings/agent-tasks", label: "Tareas de agente", icon: Sparkles, permission: "crm:read" },

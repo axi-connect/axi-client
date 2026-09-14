@@ -1730,3 +1730,45 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .flow-scan-beam--paused { animation-play-state: paused; opacity: 0.4; }
 @keyframes flow-scan { from { transform: translateY(14px); } to { transform: translateY(var(--flow-scan-travel, 220px)); } }
 @media (prefers-reduced-motion: reduce) { .flow-scan-beam, .flow-scan-beam--sweep { animation: none; transform: none; } }
+
+/* -------- Import de contactos (F3, mockup crm-contacts-import-export) -------- */
+/**
+ * La isla oscura de la guía de carga: rejilla tenue y halo coral anclado abajo
+ * a la derecha, sobre el fondo del tema oscuro anidado (`.dark
+ * .theme-dark-island`). Deriva de tokens; sin hex.
+ */
+.import-guide-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 70% at 70% 100%, color-mix(in srgb, var(--axi-brand) 22%, transparent), transparent 70%),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--foreground) 6%, transparent) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--foreground) 6%, transparent) 0 1px, transparent 1px 28px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 35%, #000 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 35%, #000 100%);
+}
+/* La hoja en perspectiva sobre la que caen las fichas. */
+.import-guide-sheet {
+  transform: translateX(-50%) perspective(600px) rotateX(58deg);
+  transform-origin: bottom;
+  background:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--foreground) 10%, transparent) 0 1px, transparent 1px 30px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--foreground) 10%, transparent) 0 1px, transparent 1px 95px),
+    color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+/**
+ * Barra de progreso indeterminada del import: existe solo mientras el job del
+ * servidor procesa (DESIGN-SYSTEM §6). Con reduced-motion queda fija.
+ */
+@keyframes import-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(280%); }
+}
+.progress-indeterminate {
+  animation: import-progress 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-indeterminate { animation: none; width: 100%; opacity: 0.5; }
+}

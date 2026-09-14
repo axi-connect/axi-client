@@ -139,8 +139,7 @@ export default function CrmContactsPage() {
             canImport={canImport}
             canExport={canExport}
             onDownloadTemplate={() => triggerDownload(importTemplateUrl())}
-            // F3 lo cambia al modal interceptado /crm/contacts/import
-            onImport={() => router.push("/crm/settings/imports")}
+            onImport={() => router.push("/crm/contacts/import")}
             onExport={handleExport}
           />
           {canManage && (
