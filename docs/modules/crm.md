@@ -120,14 +120,23 @@ DSL de `filters` (claves EXACTAS del zod backend — el builder del frontend deb
 
 | Método | Path | Permiso | Propósito |
 |---|---|---|---|
-| POST | `/crm/imports` | `contacts:import` | Multipart: `file` (CSV ≤10 MB, ≤20k filas) + fields `on_duplicate=skip\|update`, `tag_ids` (uuids separados por coma), `lifecycle_stage?`. Devuelve el job (`status: pending`) — el procesamiento es async |
+| POST | `/crm/imports` | `contacts:import` | Multipart: `file` (**CSV o XLSX**, ≤10 MB, ≤20k filas; el tipo lo deciden los bytes, no la extensión) + fields `on_duplicate=skip\|update`, `tag_ids` (uuids separados por coma), `lifecycle_stage?` (etapa inicial; la columna `etapa` de una fila la sobreescribe). Devuelve el job (`status: pending`) — el procesamiento es async |
+| GET | `/crm/imports/template` | `contacts:import` | Plantilla **XLSX** (`plantilla-contactos-axi.xlsx`): hoja «Contactos» con las 7 columnas, teléfono como texto y lista desplegable en «etapa», más hoja «Instrucciones». Misma para todos los tenants (cacheada; sin auditar). Descarga directa por el proxy (`Content-Disposition`) |
 | GET | `/crm/imports` · `/crm/imports/:id` | `contacts:import` | Reporte: `{status, total_rows, created_count, updated_count, skipped_count, error_count, errors[≤100 {row, field?, message}]}` |
 | GET | `/crm/exports/contacts` | `contacts:export` | CSV streaming (BOM UTF-8, cap 50k). Query: `segment_id` O `filters` (DSL como JSON string). **Auditado** — avisarlo en la UI |
 
-Columnas CSV reconocidas en el import (headers, alias es/en): `nombre/name/full_name`,
-`first_name`, `apellido/last_name`, `telefono/celular/phone` (normaliza a E.164, `3XXXXXXXXX`
-→ `+57...`), `correo/email`, `ciudad/city`, `direccion/address`. Errores: `crm/import_missing_file`
-400, `crm/import_invalid_file` 422, `crm/import_too_large` 422.
+Columnas reconocidas en el import (registro único del backend,
+`crm/application/imports/contact_import_columns.ts`; espejo tipado en `domain/import.ts`
+`CONTACT_IMPORT_COLUMNS`). Cabeceras normalizadas (minúsculas, sin acentos, `_` por espacio) con
+alias es/en: `nombre/name/full_name/nombre_completo`, `first_name/nombres`, `apellido/last_name`,
+`telefono/celular/movil/phone/whatsapp` (normaliza a E.164, `3XXXXXXXXX` → `+57...`),
+`correo/email/e-mail`, `ciudad/city`, `direccion/address`, **`etapa/lifecycle_stage/stage`**
+(valores `prospecto|prospect`, `lead`, `cliente|customer`, `otro|other`). La fila de cabecera es la
+primera que contenga algún alias (admite archivos de UNA columna y títulos encima); las columnas
+desconocidas se ignoran, así un export de axi se reimporta tal cual. «nombre» + «apellido» componen
+`full_name`. Los errores por fila llevan `field` con la cabecera que ve el usuario (`telefono`,
+`correo`, `etapa`) y el mensaje en español. Errores HTTP: `crm/import_missing_file` 400,
+`crm/import_invalid_file` 422 (no es CSV ni XLSX), `crm/import_too_large` 422.
 
 **Copiloto IA (on-demand — cada llamada consume tokens del tenant)**
 
@@ -156,7 +165,7 @@ created_by_type}`.
 | `crm.deal_stalled` | sweep horario: deal sin moverse > rotting_days | `stalled_days` |
 | `crm.activity_created` | actividad/tarea nueva (operador o IA) | payload de actividad (`kind, title, due_at, assigned_user_id...`) |
 | `crm.task_completed` | complete | |
-| `crm.import_completed` | fin del import CSV (éxito o fallo) | contadores del reporte |
+| `crm.import_completed` | fin del import de contactos (CSV o XLSX; éxito o fallo) | contadores del reporte |
 | `contact.lifecycle_changed` | promoción prospect→lead→customer | ya tipado en `core/realtime/events.ts` |
 | `contact.merged` | merge de duplicados | `{contact_id, merged_contact_id}` — quitar al perdedor de listados |
 
@@ -172,7 +181,7 @@ Tipos nuevos de `notification.created`: `crm.deal_created`, `crm.deal_won`, `crm
 | `crm:read` | Ver todo el CRM + operar deals/tareas propias + PUT tags de contacto | owner, admin, supervisor, operator |
 | `crm:manage` | Config (pipelines/etapas/tags/segmentos), DELETE, reasignar owner/ajenos | owner, admin, supervisor |
 | `crm:copilot` | Endpoints `ai/*` (queman tokens) | owner, admin, supervisor, operator |
-| `contacts:import` / `contacts:export` | Import CSV / Export CSV | owner, admin (export tb. supervisor) |
+| `contacts:import` / `contacts:export` | Import (CSV/XLSX + plantilla) / Export CSV | owner, admin (export tb. supervisor) |
 
 `GET /me/navigation` ya emite el ítem `{code: 'crm', name: 'CRM', path: '/crm', icon:
 'target', required_permission_code: 'crm:read'}`. El cliente hoy NO lo pinta: falta mapear
@@ -218,7 +227,7 @@ src/modules/crm/
 │   │   ├── deals-service.adapter.ts       # + move/win/lose/reopen + stats + events
 │   │   ├── activities-service.adapter.ts  # + tasks + complete/reopen/cancel
 │   │   ├── segments-service.adapter.ts    # + tags CRUD + segment contacts
-│   │   ├── imports-service.adapter.ts     # multipart FormData + polling
+│   │   ├── imports-service.adapter.ts     # multipart FormData + importTemplateUrl + exportContactsUrl
 │   │   └── copilot-service.adapter.ts
 │   ├── stores/
 │   │   ├── board.store.ts  # Zustand normalizado: dealsById + columns{stage_id→{ids,
@@ -261,7 +270,7 @@ src/app/(private)/crm/
     ├── pipelines/page.tsx      # editor etapas (reorder dnd)
     ├── tags/page.tsx
     ├── segments/page.tsx       # builder DSL + preview
-    └── imports/page.tsx        # wizard + historial
+    └── imports/page.tsx        # historial + el mismo ContactImportWizard, embebido
 ```
 
 **Transversales tocados**: `core/lib/icons.ts` (+`target`), `core/config/routes.ts`
@@ -273,6 +282,8 @@ src/app/(private)/crm/
 `usePaginatedList` (`shared/api/use-paginated-list.ts`), `DynamicForm`, `DetailSheet`,
 `MultiSelect`, `Modal`/`AlertProvider`, `BasicPagination`, `toCsv/downloadCsv`
 (`core/lib/csv.ts` — para el export usar el endpoint del backend, no CSV local),
+`triggerDownload` (`core/lib/download.ts` — descargas del proxy con `Content-Disposition`: ancla
+same-origin, nunca `window.open`),
 `relative-time.ts`, `formatMoney`. El kanban de orders
 (`modules/orders/ui/components/kanban/*` + `orders.store.ts`) es la **referencia de
 implementación** (@dnd-kit ya instalado): copiar el enfoque, no importar cross-slice.
@@ -297,7 +308,7 @@ Timeline visual: patrón `OrderTimeline.tsx` (ol + línea + badges tonales + `vi
   como chips toggle (`sources=`).
 - **Permisos como UX** (`hasPermission` de `useAuth` — el backend valida siempre):
   `crm:manage` gatea Configuración completa, DELETE y reasignar owner; `crm:copilot`
-  gatea el panel IA; `contacts:import|export` gatean sus botones.
+  gatea el panel IA; `contacts:import|export` gatean los ítems del botón «Importar / Exportar».
 - **Merge**: diálogo comparativo lado a lado (ganador ← perdedor) con aviso IRREVERSIBLE
   + `Modal` de confirmación con nombre tipeado. Tras 204/200, invalidar listas y navegar
   al ganador.
@@ -399,19 +410,39 @@ Timeline visual: patrón `OrderTimeline.tsx` (ol + línea + badges tonales + `vi
 - **QA**: reorder persiste tras reload; borrar etapa con deals exige destino; segmento
   "leads calientes" (lifecycle=lead + min_score 50) lista lo esperado.
 
-**F6 — Import / Export**
-- `/crm/settings/imports`: wizard — dropzone CSV (validar extensión/peso client-side) →
-  opciones (`on_duplicate` radio, tags MultiSelect, lifecycle select) → POST multipart
-  (FormData vía `http`) → vista del job con polling cada 2 s + `crm.import_completed` WS
-  → reporte (tiles de contadores + tabla de errores por fila). Historial de imports.
-- Export: botón en segmentos y en la lista de contactos (con filtros activos serializados
-  al DSL) → descarga directa del endpoint (link con `Content-Disposition`); toast "esta
-  exportación queda auditada".
-- **Archivos**: `imports-service.adapter.ts`, `settings/imports/page.tsx`,
-  `ui/components/ImportWizard.tsx`, botón export en `segments/page.tsx` y
-  `contacts/page.tsx`.
-- **QA**: CSV con fila mala reporta el row exacto; `on_duplicate=update` actualiza city;
-  export abre CSV legible en Excel (BOM).
+**F6 — Import / Export** (rediseñado 2026-09-14, plan
+`axi-server/docs/plans/crm_contacts_import_export_plan.md`, mockup
+`docs/design/mockups/crm-contacts-import-export.html`)
+- **Un solo botón** en la cabecera de `/crm/contacts`: `ImportExportMenu`
+  (`ui/components/imports/`) — `Button outline rounded-full` «Importar / Exportar» + el
+  `DropdownMenu` propio con tres ítems de dos líneas: Descargar plantilla, Importar contactos
+  (gate `contacts:import`), separador, Exportar contactos (gate `contacts:export`). Sin ninguno de
+  los dos permisos el botón no se pinta. Nada de botones sueltos nuevos.
+- **Importar** abre `/crm/contacts/import` como modal interceptado (`@form/(.)import`, back
+  cierra; `import/page.tsx` para navegación dura) con `ContactImportWizard`: **guía** (la
+  `ImportGuideCard`: isla oscura `dark theme-dark-island` donde tres fichas de columna entran en
+  cascada UNA vez con `spring.soft` + `useReducedMotion`; formato, límites y las 7 columnas con
+  exigencia/tipo/ejemplo; «No volver a mostrar» en `localStorage`
+  `axi.crm.import_guide_seen`) → **archivo + opciones** (dropzone CSV/XLSX con
+  `validateImportFile` y motivo en español; `on_duplicate`, tags, etapa inicial; enlace «Ver
+  estructura del archivo») → **procesando** (`useImportJob`: polling 2 s + WS
+  `crm.import_completed`; barra `.progress-indeterminate`, solo mientras el job corre) →
+  **reporte** (`ImportReport`: contadores con punto + tabla de errores por fila; «Importar otro»
+  / «Ver contactos»). Al completar con altas emite `crm:contacts:save:success` y la tabla se
+  refresca. El diálogo pone título/descripción por paso (`IMPORT_STEP_COPY`), el wizard su pie.
+- **Plantilla**: `importTemplateUrl()` → `triggerDownload` (ancla same-origin; el nombre lo
+  pone el backend). **Export**: mismo `triggerDownload` con los filtros activos serializados al
+  DSL + toast «esta exportación queda auditada».
+- `/crm/settings/imports` (`ImportsManager`) = historial + el MISMO wizard embebido; su pestaña
+  en `SettingsNav` se gatea por `contacts:import` (el permiso real), no por `crm:manage`.
+- **Archivos**: `ui/components/imports/{ImportExportMenu,ContactImportWizard,ImportGuideCard,ImportReport}.tsx`,
+  `infrastructure/hooks/use-import-job.ts`, `infrastructure/import-guide.storage.ts`,
+  `domain/import.ts` (columnas espejo, `validateImportFile`, `IMPORT_ACCEPT_ATTRIBUTE`),
+  `core/lib/download.ts`, rutas `@form/(.)import` + `import/page.tsx`.
+- **QA**: sin permisos no hay botón; un `.pdf` se rechaza en cliente con aviso; un XLSX con
+  `etapa: cliente` y teléfono numérico entra como `customer` y `+57…`; el reporte muestra la fila
+  y la columna en español; «Ver contactos» refresca la lista; la guía anima solo al entrar y queda
+  quieta con `prefers-reduced-motion`; el export abre en Excel (BOM).
 
 **F7 — Copiloto IA**
 - `CopilotPanel` en el 360: tres acciones (Resumen · Siguiente acción · Borrador de
