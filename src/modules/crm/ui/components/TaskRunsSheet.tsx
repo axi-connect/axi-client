@@ -139,6 +139,16 @@ export function TaskRunsSheet({
                 Ver el mensaje
               </Link>
             )}
+            {run.call_session_id !== null && (
+              // F3: la llamada con su grabación, transcripción y resumen.
+              <Link
+                href={`/calls/${run.call_session_id}`}
+                className="inline-flex items-center gap-1 text-brand hover:underline"
+              >
+                <PhoneCall className="size-3" aria-hidden />
+                Ver la llamada
+              </Link>
+            )}
           </span>
         ),
       };

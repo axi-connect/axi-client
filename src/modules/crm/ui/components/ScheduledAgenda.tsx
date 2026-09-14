@@ -68,9 +68,18 @@ export function ScheduledAgenda({
                 <span className="ml-1.5 font-medium text-muted-foreground">{dayLabel(day)}</span>
               )}
             </h3>
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <MessageSquare aria-hidden className="size-3.5" />
-              {items.length} {items.length === 1 ? "mensaje" : "mensajes"}
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              {/* Conteo por MEDIO: la agenda mezcla mensajes y llamadas (F3). */}
+              {mediumCounts(items).map(({ medium, count }) => (
+                <span key={medium} className="inline-flex items-center gap-1.5">
+                  {medium === "call" ? (
+                    <PhoneCall aria-hidden className="size-3.5" />
+                  ) : (
+                    <MessageSquare aria-hidden className="size-3.5" />
+                  )}
+                  {count} {mediumNoun(medium, count)}
+                </span>
+              ))}
             </span>
           </header>
           <ul className="divide-y divide-border">
@@ -96,7 +105,11 @@ export function ScheduledAgenda({
                   <div className={cn("font-mono text-sm tabular-nums", quiet && "text-muted-foreground")}>
                     {clock(minutes)}
                   </div>
-                  <MessageSquare aria-hidden className="size-4 text-accent-violet" />
+                  {task.task_medium === "call" ? (
+                    <PhoneCall aria-hidden className="size-4 text-accent-violet" />
+                  ) : (
+                    <MessageSquare aria-hidden className="size-4 text-accent-violet" />
+                  )}
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium">
                       <span className="truncate">{task.title ?? "Seguimiento"}</span>
@@ -135,7 +148,6 @@ export function ScheduledAgenda({
               : hour >= quietHours.start || hour < quietHours.end;
           }) && (
             <p className="flex items-center gap-2 border-t border-dashed border-border px-4 py-2 text-xs text-muted-foreground">
-              <PhoneCall aria-hidden className="hidden" />
               Lo sombreado cae en el horario silencioso ({clock(quietHours.start * 60)}–{clock(quietHours.end * 60)}):
               saldrá a las {clock(quietHours.end * 60)}.
             </p>
@@ -157,4 +169,21 @@ function dayLabel(day: DayKey): string {
   return new Date(Date.UTC(y, m - 1, d, 12))
     .toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
     .replace(/\./g, "");
+}
+
+type AgendaMedium = "message" | "call";
+
+/** Mensajes primero, llamadas después; solo los medios presentes. */
+function mediumCounts(items: readonly ActivityDTO[]): { medium: AgendaMedium; count: number }[] {
+  const calls = items.filter((task) => task.task_medium === "call").length;
+  const messages = items.length - calls;
+  return [
+    ...(messages > 0 ? [{ medium: "message" as const, count: messages }] : []),
+    ...(calls > 0 ? [{ medium: "call" as const, count: calls }] : []),
+  ];
+}
+
+function mediumNoun(medium: AgendaMedium, count: number): string {
+  if (medium === "call") return count === 1 ? "llamada" : "llamadas";
+  return count === 1 ? "mensaje" : "mensajes";
 }

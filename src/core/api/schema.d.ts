@@ -4132,6 +4132,342 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/calls/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listProviders_v1"];
+        put?: never;
+        post: operations["PlatformCallsController_createProvider_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/providers/{id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformCallsController_rotateCredentials_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/providers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PlatformCallsController_updateProvider_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/calls/providers/{id}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_probeProvider_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listNumbers_v1"];
+        put?: never;
+        post: operations["PlatformCallsController_buyNumber_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/tenants/{companyId}/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listTenantAgents_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/owned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listOwnedNumbers_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_importNumber_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/caller-ids/owned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformCallsController_listOwnedCallerIds_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/caller-ids/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_importCallerId_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_searchNumbers_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformCallsController_assignNumber_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/calls/numbers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformCallsController_releaseNumber_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_getOverview_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_listSessions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/sessions/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_listLiveSessions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_getSession_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/sessions/{id}/recording": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_getRecordingUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_getSettings_v1"];
+        put: operations["CallsAdminController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/test-call": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CallsAdminController_placeTestCall_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calls/numbers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CallsAdminController_listNumbers_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cmo/messages": {
         parameters: {
             query?: never;
@@ -4962,342 +5298,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["RemindersController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/platform/calls/providers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformCallsController_listProviders_v1"];
-        put?: never;
-        post: operations["PlatformCallsController_createProvider_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/providers/{id}/credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["PlatformCallsController_rotateCredentials_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/providers/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["PlatformCallsController_updateProvider_v1"];
-        trace?: never;
-    };
-    "/api/v1/platform/calls/providers/{id}/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformCallsController_probeProvider_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/numbers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformCallsController_listNumbers_v1"];
-        put?: never;
-        post: operations["PlatformCallsController_buyNumber_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/tenants/{companyId}/agents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformCallsController_listTenantAgents_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/numbers/owned": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformCallsController_listOwnedNumbers_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/numbers/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformCallsController_importNumber_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/caller-ids/owned": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformCallsController_listOwnedCallerIds_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/caller-ids/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformCallsController_importCallerId_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/numbers/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformCallsController_searchNumbers_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/numbers/{id}/assign": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformCallsController_assignNumber_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/calls/numbers/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["PlatformCallsController_releaseNumber_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_getOverview_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_listSessions_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/sessions/live": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_listLiveSessions_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/sessions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_getSession_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/sessions/{id}/recording": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_getRecordingUrl_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_getSettings_v1"];
-        put: operations["CallsAdminController_updateSettings_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/test-call": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["CallsAdminController_placeTestCall_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/calls/numbers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CallsAdminController_listNumbers_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/marketing/campaigns/{id}/launch": {
@@ -10604,6 +10604,10 @@ export interface components {
                 } | null;
                 /** Format: date-time */
                 awaiting_reply_until: string | null;
+                /** @enum {string|null} */
+                task_channel: "message" | "call" | "call_then_message" | null;
+                /** @enum {string|null} */
+                task_medium: "message" | "call" | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -10689,6 +10693,10 @@ export interface components {
             } | null;
             /** Format: date-time */
             awaiting_reply_until: string | null;
+            /** @enum {string|null} */
+            task_channel: "message" | "call" | "call_then_message" | null;
+            /** @enum {string|null} */
+            task_medium: "message" | "call" | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -10770,6 +10778,8 @@ export interface components {
                 params: ("first_name" | "full_name" | "company_name" | "topic")[];
                 topic?: string | null;
             } | null;
+            /** @enum {string} */
+            task_channel?: "message" | "call" | "call_then_message";
         };
         UpdateAgentTaskDto: {
             objective?: string;
@@ -10784,6 +10794,8 @@ export interface components {
                 params: ("first_name" | "full_name" | "company_name" | "topic")[];
                 topic?: string | null;
             } | null;
+            /** @enum {string} */
+            task_channel?: "message" | "call" | "call_then_message";
         };
         RunNowDto: {
             /** Format: date-time */
@@ -10816,6 +10828,8 @@ export interface components {
                 detail: string | null;
                 /** @enum {string} */
                 medium: "message" | "call";
+                /** Format: uuid */
+                call_session_id: string | null;
                 opened_with_template: boolean;
                 /** Format: date-time */
                 created_at: string;
@@ -10848,6 +10862,8 @@ export interface components {
                 detail: string | null;
                 /** @enum {string} */
                 medium: "message" | "call";
+                /** Format: uuid */
+                call_session_id: string | null;
                 opened_with_template: boolean;
                 /** Format: date-time */
                 created_at: string;
@@ -10866,6 +10882,7 @@ export interface components {
             max_attempts: number;
             max_defer_hours: number;
             reply_wait_hours: number;
+            call_daily_cap: number;
         };
         TagsListDto: {
             data: {
@@ -12237,6 +12254,367 @@ export interface components {
             risks: string[];
             opportunities: string[];
             cached: boolean;
+        };
+        CallProviderAccountDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            provider: "twilio";
+            label: string;
+            enabled: boolean;
+            config: unknown;
+            daily_cap: number | null;
+            monthly_cap: number | null;
+            spent_today: number;
+            spent_cycle: number;
+            healthy: boolean;
+            last_error: string | null;
+            /** Format: date-time */
+            last_checked_at: string | null;
+            token_last4: string | null;
+            /** Format: date-time */
+            credential_set_at: string | null;
+        };
+        CreateCallProviderDto: {
+            /** @enum {string} */
+            provider: "twilio";
+            label: string;
+            credentials: {
+                /** @enum {string} */
+                mode: "auth_token";
+                account_sid: string;
+                auth_token: string;
+            };
+            config?: {
+                [key: string]: unknown;
+            };
+            daily_cap?: number;
+            monthly_cap?: number;
+        };
+        RotateCallCredentialsDto: {
+            credentials: {
+                /** @enum {string} */
+                mode: "auth_token";
+                account_sid: string;
+                auth_token: string;
+            };
+        };
+        UpdateCallProviderDto: {
+            enabled?: boolean;
+            config?: {
+                [key: string]: unknown;
+            };
+            daily_cap?: number | null;
+            monthly_cap?: number | null;
+        };
+        CallProviderHealthDto: {
+            healthy: boolean;
+            detail?: string;
+        };
+        CallPhoneNumberDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            provider_account_id: string;
+            account_label: string;
+            /** Format: uuid */
+            company_id: string | null;
+            company_name: string | null;
+            phone_number: string;
+            provider_sid: string;
+            country_code: string;
+            /** @enum {string} */
+            status: "active" | "released";
+            /** @enum {string} */
+            kind: "twilio" | "caller_id";
+            /** Format: uuid */
+            default_ai_agent_id: string | null;
+            default_ai_agent_name: string | null;
+            inbound_enabled: boolean;
+            monthly_cost_cents: number | null;
+            /** Format: date-time */
+            assigned_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PlatformTenantAgentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        OwnedCallNumberDto: {
+            provider_sid: string;
+            phone_number: string;
+            friendly_name: string;
+            voice_capable: boolean;
+            imported: boolean;
+        };
+        ImportCallNumberDto: {
+            /** Format: uuid */
+            provider_account_id: string;
+            provider_sid: string;
+        };
+        OwnedCallerIdDto: {
+            provider_sid: string;
+            phone_number: string;
+            friendly_name: string;
+            imported: boolean;
+        };
+        ImportCallerIdDto: {
+            /** Format: uuid */
+            provider_account_id: string;
+            provider_sid: string;
+        };
+        SearchCallNumbersDto: {
+            /** Format: uuid */
+            provider_account_id: string;
+            /** @default CO */
+            country_code: string;
+            contains?: string;
+            limit?: number;
+        };
+        AvailableCallNumberDto: {
+            phone_number: string;
+            friendly_name: string;
+            locality: string | null;
+            region: string | null;
+            capabilities: {
+                voice: boolean;
+                sms: boolean;
+            };
+        };
+        BuyCallNumberDto: {
+            /** Format: uuid */
+            provider_account_id: string;
+            phone_number: string;
+            country_code: string;
+            monthly_cost_cents?: number;
+        };
+        AssignCallNumberDto: {
+            /** Format: uuid */
+            company_id: string | null;
+            /** Format: uuid */
+            default_ai_agent_id?: string | null;
+            inbound_enabled?: boolean;
+        };
+        CallsOverviewDto: {
+            period: {
+                /** Format: date-time */
+                start: string;
+                /** Format: date-time */
+                end: string;
+            };
+            kpis: {
+                total: number;
+                inbound: number;
+                outbound: number;
+                answered: number;
+                no_answer: number;
+                voicemail: number;
+                failed: number;
+                goal_met: number;
+                connection_pct: number;
+                goal_met_pct: number;
+                avg_duration_seconds: number | null;
+            };
+            previous: {
+                total: number;
+                inbound: number;
+                outbound: number;
+                answered: number;
+                no_answer: number;
+                voicemail: number;
+                failed: number;
+                goal_met: number;
+                connection_pct: number;
+                goal_met_pct: number;
+                avg_duration_seconds: number | null;
+            };
+            minutes: {
+                used_seconds: number;
+                limit_seconds: number | null;
+            };
+            series: {
+                /** Format: date-time */
+                bucket_start: string;
+                inbound: number;
+                outbound: number;
+            }[];
+        };
+        CallSessionsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                direction: "outbound" | "inbound";
+                /** @enum {string} */
+                purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+                /** @enum {string} */
+                status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
+                /** @enum {string|null} */
+                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
+                /** @enum {string|null} */
+                answered_by: "human" | "machine" | "unknown" | "fax" | null;
+                contact: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string | null;
+                } | null;
+                from_number: string;
+                to_number: string;
+                /** Format: uuid */
+                ai_agent_id: string | null;
+                ai_agent_name: string | null;
+                attempt: number;
+                duration_seconds: number | null;
+                has_recording: boolean;
+                cost_estimate_usd: number | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                ended_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        LiveCallSessionsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                direction: "outbound" | "inbound";
+                /** @enum {string} */
+                purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+                /** @enum {string} */
+                status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
+                /** @enum {string|null} */
+                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
+                /** @enum {string|null} */
+                answered_by: "human" | "machine" | "unknown" | "fax" | null;
+                contact: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string | null;
+                } | null;
+                from_number: string;
+                to_number: string;
+                /** Format: uuid */
+                ai_agent_id: string | null;
+                ai_agent_name: string | null;
+                attempt: number;
+                duration_seconds: number | null;
+                has_recording: boolean;
+                cost_estimate_usd: number | null;
+                /** Format: date-time */
+                started_at: string | null;
+                /** Format: date-time */
+                ended_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        CallSessionDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            direction: "outbound" | "inbound";
+            /** @enum {string} */
+            purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+            /** @enum {string} */
+            status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
+            /** @enum {string|null} */
+            outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
+            /** @enum {string|null} */
+            answered_by: "human" | "machine" | "unknown" | "fax" | null;
+            contact: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+            } | null;
+            from_number: string;
+            to_number: string;
+            /** Format: uuid */
+            ai_agent_id: string | null;
+            ai_agent_name: string | null;
+            attempt: number;
+            duration_seconds: number | null;
+            has_recording: boolean;
+            cost_estimate_usd: number | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            ended_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            metered_seconds: number;
+            recording_duration_seconds: number | null;
+            summary: string | null;
+            segments: {
+                seq: number;
+                /** @enum {string} */
+                role: "caller" | "agent" | "system";
+                text: string;
+                at_ms: number;
+                interrupted: boolean;
+            }[];
+            events: {
+                type: string;
+                payload: unknown;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        CallRecordingUrlDto: {
+            /** Format: uri */
+            url: string;
+            expires_in_seconds: number;
+        };
+        CallsSettingsDto: {
+            ai_enabled: boolean;
+            recording_enabled: boolean;
+            legal_notice_text: string;
+            max_duration_seconds: number;
+            max_concurrent: number;
+            quiet_hours: {
+                start_hour: number;
+                end_hour: number;
+            };
+            /** @default false */
+            hangup_on_machine: boolean;
+            /** @default 45 */
+            ring_timeout_seconds: number;
+            /** @default 12 */
+            silence_probe_seconds: number;
+            /** @default 15 */
+            silence_hangup_seconds: number;
+        };
+        TestCallDto: {
+            to: string;
+            /** Format: uuid */
+            ai_agent_id?: string;
+            objective?: string;
+        };
+        TestCallResultDto: {
+            /** Format: uuid */
+            call_session_id: string;
+        };
+        TenantCallNumberDto: {
+            /** Format: uuid */
+            id: string;
+            phone_number: string;
+            country_code: string;
+            /** @enum {string} */
+            kind: "twilio" | "caller_id";
+            /** Format: uuid */
+            default_ai_agent_id: string | null;
+            inbound_enabled: boolean;
+            /** Format: date-time */
+            assigned_at: string | null;
         };
         CmoSendMessageDto: {
             /** @description Lo que el dueño le pregunta o le pide a Axel */
@@ -13831,367 +14209,6 @@ export interface components {
             /** Format: date-time */
             next_run_at?: string | null;
             is_active?: boolean;
-        };
-        CallProviderAccountDto: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            provider: "twilio";
-            label: string;
-            enabled: boolean;
-            config: unknown;
-            daily_cap: number | null;
-            monthly_cap: number | null;
-            spent_today: number;
-            spent_cycle: number;
-            healthy: boolean;
-            last_error: string | null;
-            /** Format: date-time */
-            last_checked_at: string | null;
-            token_last4: string | null;
-            /** Format: date-time */
-            credential_set_at: string | null;
-        };
-        CreateCallProviderDto: {
-            /** @enum {string} */
-            provider: "twilio";
-            label: string;
-            credentials: {
-                /** @enum {string} */
-                mode: "auth_token";
-                account_sid: string;
-                auth_token: string;
-            };
-            config?: {
-                [key: string]: unknown;
-            };
-            daily_cap?: number;
-            monthly_cap?: number;
-        };
-        RotateCallCredentialsDto: {
-            credentials: {
-                /** @enum {string} */
-                mode: "auth_token";
-                account_sid: string;
-                auth_token: string;
-            };
-        };
-        UpdateCallProviderDto: {
-            enabled?: boolean;
-            config?: {
-                [key: string]: unknown;
-            };
-            daily_cap?: number | null;
-            monthly_cap?: number | null;
-        };
-        CallProviderHealthDto: {
-            healthy: boolean;
-            detail?: string;
-        };
-        CallPhoneNumberDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            provider_account_id: string;
-            account_label: string;
-            /** Format: uuid */
-            company_id: string | null;
-            company_name: string | null;
-            phone_number: string;
-            provider_sid: string;
-            country_code: string;
-            /** @enum {string} */
-            status: "active" | "released";
-            /** @enum {string} */
-            kind: "twilio" | "caller_id";
-            /** Format: uuid */
-            default_ai_agent_id: string | null;
-            default_ai_agent_name: string | null;
-            inbound_enabled: boolean;
-            monthly_cost_cents: number | null;
-            /** Format: date-time */
-            assigned_at: string | null;
-            /** Format: date-time */
-            created_at: string;
-        };
-        PlatformTenantAgentDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-        };
-        OwnedCallNumberDto: {
-            provider_sid: string;
-            phone_number: string;
-            friendly_name: string;
-            voice_capable: boolean;
-            imported: boolean;
-        };
-        ImportCallNumberDto: {
-            /** Format: uuid */
-            provider_account_id: string;
-            provider_sid: string;
-        };
-        OwnedCallerIdDto: {
-            provider_sid: string;
-            phone_number: string;
-            friendly_name: string;
-            imported: boolean;
-        };
-        ImportCallerIdDto: {
-            /** Format: uuid */
-            provider_account_id: string;
-            provider_sid: string;
-        };
-        SearchCallNumbersDto: {
-            /** Format: uuid */
-            provider_account_id: string;
-            /** @default CO */
-            country_code: string;
-            contains?: string;
-            limit?: number;
-        };
-        AvailableCallNumberDto: {
-            phone_number: string;
-            friendly_name: string;
-            locality: string | null;
-            region: string | null;
-            capabilities: {
-                voice: boolean;
-                sms: boolean;
-            };
-        };
-        BuyCallNumberDto: {
-            /** Format: uuid */
-            provider_account_id: string;
-            phone_number: string;
-            country_code: string;
-            monthly_cost_cents?: number;
-        };
-        AssignCallNumberDto: {
-            /** Format: uuid */
-            company_id: string | null;
-            /** Format: uuid */
-            default_ai_agent_id?: string | null;
-            inbound_enabled?: boolean;
-        };
-        CallsOverviewDto: {
-            period: {
-                /** Format: date-time */
-                start: string;
-                /** Format: date-time */
-                end: string;
-            };
-            kpis: {
-                total: number;
-                inbound: number;
-                outbound: number;
-                answered: number;
-                no_answer: number;
-                voicemail: number;
-                failed: number;
-                goal_met: number;
-                connection_pct: number;
-                goal_met_pct: number;
-                avg_duration_seconds: number | null;
-            };
-            previous: {
-                total: number;
-                inbound: number;
-                outbound: number;
-                answered: number;
-                no_answer: number;
-                voicemail: number;
-                failed: number;
-                goal_met: number;
-                connection_pct: number;
-                goal_met_pct: number;
-                avg_duration_seconds: number | null;
-            };
-            minutes: {
-                used_seconds: number;
-                limit_seconds: number | null;
-            };
-            series: {
-                /** Format: date-time */
-                bucket_start: string;
-                inbound: number;
-                outbound: number;
-            }[];
-        };
-        CallSessionsListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                direction: "outbound" | "inbound";
-                /** @enum {string} */
-                purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-                /** @enum {string} */
-                status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
-                /** @enum {string|null} */
-                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
-                /** @enum {string|null} */
-                answered_by: "human" | "machine" | "unknown" | "fax" | null;
-                contact: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string | null;
-                } | null;
-                from_number: string;
-                to_number: string;
-                /** Format: uuid */
-                ai_agent_id: string | null;
-                ai_agent_name: string | null;
-                attempt: number;
-                duration_seconds: number | null;
-                has_recording: boolean;
-                cost_estimate_usd: number | null;
-                /** Format: date-time */
-                started_at: string | null;
-                /** Format: date-time */
-                ended_at: string | null;
-                /** Format: date-time */
-                created_at: string;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        LiveCallSessionsDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                direction: "outbound" | "inbound";
-                /** @enum {string} */
-                purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-                /** @enum {string} */
-                status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
-                /** @enum {string|null} */
-                outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
-                /** @enum {string|null} */
-                answered_by: "human" | "machine" | "unknown" | "fax" | null;
-                contact: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string | null;
-                } | null;
-                from_number: string;
-                to_number: string;
-                /** Format: uuid */
-                ai_agent_id: string | null;
-                ai_agent_name: string | null;
-                attempt: number;
-                duration_seconds: number | null;
-                has_recording: boolean;
-                cost_estimate_usd: number | null;
-                /** Format: date-time */
-                started_at: string | null;
-                /** Format: date-time */
-                ended_at: string | null;
-                /** Format: date-time */
-                created_at: string;
-            }[];
-        };
-        CallSessionDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            direction: "outbound" | "inbound";
-            /** @enum {string} */
-            purpose: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-            /** @enum {string} */
-            status: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
-            /** @enum {string|null} */
-            outcome: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error" | null;
-            /** @enum {string|null} */
-            answered_by: "human" | "machine" | "unknown" | "fax" | null;
-            contact: {
-                /** Format: uuid */
-                id: string;
-                name: string | null;
-            } | null;
-            from_number: string;
-            to_number: string;
-            /** Format: uuid */
-            ai_agent_id: string | null;
-            ai_agent_name: string | null;
-            attempt: number;
-            duration_seconds: number | null;
-            has_recording: boolean;
-            cost_estimate_usd: number | null;
-            /** Format: date-time */
-            started_at: string | null;
-            /** Format: date-time */
-            ended_at: string | null;
-            /** Format: date-time */
-            created_at: string;
-            metered_seconds: number;
-            recording_duration_seconds: number | null;
-            summary: string | null;
-            segments: {
-                seq: number;
-                /** @enum {string} */
-                role: "caller" | "agent" | "system";
-                text: string;
-                at_ms: number;
-                interrupted: boolean;
-            }[];
-            events: {
-                type: string;
-                payload: unknown;
-                /** Format: date-time */
-                created_at: string;
-            }[];
-        };
-        CallRecordingUrlDto: {
-            /** Format: uri */
-            url: string;
-            expires_in_seconds: number;
-        };
-        CallsSettingsDto: {
-            ai_enabled: boolean;
-            recording_enabled: boolean;
-            legal_notice_text: string;
-            max_duration_seconds: number;
-            max_concurrent: number;
-            quiet_hours: {
-                start_hour: number;
-                end_hour: number;
-            };
-            /** @default false */
-            hangup_on_machine: boolean;
-            /** @default 45 */
-            ring_timeout_seconds: number;
-            /** @default 12 */
-            silence_probe_seconds: number;
-            /** @default 15 */
-            silence_hangup_seconds: number;
-        };
-        TestCallDto: {
-            to: string;
-            /** Format: uuid */
-            ai_agent_id?: string;
-            objective?: string;
-        };
-        TestCallResultDto: {
-            /** Format: uuid */
-            call_session_id: string;
-        };
-        TenantCallNumberDto: {
-            /** Format: uuid */
-            id: string;
-            phone_number: string;
-            country_code: string;
-            /** @enum {string} */
-            kind: "twilio" | "caller_id";
-            /** Format: uuid */
-            default_ai_agent_id: string | null;
-            inbound_enabled: boolean;
-            /** Format: date-time */
-            assigned_at: string | null;
         };
         LaunchResultDto: {
             /** @enum {string} */
@@ -23334,6 +23351,518 @@ export interface operations {
             };
         };
     };
+    PlatformCallsController_listProviders_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallProviderAccountDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_createProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCallProviderDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_rotateCredentials_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateCallCredentialsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_updateProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCallProviderDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_probeProvider_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallProviderHealthDto"];
+                };
+            };
+        };
+    };
+    PlatformCallsController_listNumbers_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallPhoneNumberDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_buyNumber_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuyCallNumberDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_listTenantAgents_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformTenantAgentDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_listOwnedNumbers_v1: {
+        parameters: {
+            query: {
+                provider_account_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnedCallNumberDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_importNumber_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCallNumberDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_listOwnedCallerIds_v1: {
+        parameters: {
+            query: {
+                provider_account_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnedCallerIdDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_importCallerId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCallerIdDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_searchNumbers_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchCallNumbersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvailableCallNumberDto"][];
+                };
+            };
+        };
+    };
+    PlatformCallsController_assignNumber_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignCallNumberDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformCallsController_releaseNumber_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallsAdminController_getOverview_v1: {
+        parameters: {
+            query?: {
+                granularity?: "day" | "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallsOverviewDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_listSessions_v1: {
+        parameters: {
+            query?: {
+                direction?: "outbound" | "inbound";
+                status?: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
+                outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error";
+                purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
+                ai_agent_id?: string;
+                contact_id?: string;
+                from?: string;
+                to?: string;
+                q?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallSessionsListDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_listLiveSessions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveCallSessionsDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_getSession_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallSessionDetailDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_getRecordingUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallRecordingUrlDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_getSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallsSettingsDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallsSettingsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallsAdminController_placeTestCall_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestCallDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TestCallResultDto"];
+                };
+            };
+        };
+    };
+    CallsAdminController_listNumbers_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantCallNumberDto"][];
+                };
+            };
+        };
+    };
     CmoController_send_v1: {
         parameters: {
             query?: never;
@@ -24792,518 +25321,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReminderDto"];
-                };
-            };
-        };
-    };
-    PlatformCallsController_listProviders_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallProviderAccountDto"][];
-                };
-            };
-        };
-    };
-    PlatformCallsController_createProvider_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCallProviderDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_rotateCredentials_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RotateCallCredentialsDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_updateProvider_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCallProviderDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_probeProvider_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallProviderHealthDto"];
-                };
-            };
-        };
-    };
-    PlatformCallsController_listNumbers_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallPhoneNumberDto"][];
-                };
-            };
-        };
-    };
-    PlatformCallsController_buyNumber_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BuyCallNumberDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_listTenantAgents_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                companyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlatformTenantAgentDto"][];
-                };
-            };
-        };
-    };
-    PlatformCallsController_listOwnedNumbers_v1: {
-        parameters: {
-            query: {
-                provider_account_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OwnedCallNumberDto"][];
-                };
-            };
-        };
-    };
-    PlatformCallsController_importNumber_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportCallNumberDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_listOwnedCallerIds_v1: {
-        parameters: {
-            query: {
-                provider_account_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OwnedCallerIdDto"][];
-                };
-            };
-        };
-    };
-    PlatformCallsController_importCallerId_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportCallerIdDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_searchNumbers_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SearchCallNumbersDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AvailableCallNumberDto"][];
-                };
-            };
-        };
-    };
-    PlatformCallsController_assignNumber_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssignCallNumberDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformCallsController_releaseNumber_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CallsAdminController_getOverview_v1: {
-        parameters: {
-            query?: {
-                granularity?: "day" | "week" | "month";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallsOverviewDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_listSessions_v1: {
-        parameters: {
-            query?: {
-                direction?: "outbound" | "inbound";
-                status?: "queued" | "initiated" | "ringing" | "in_progress" | "completed" | "no_answer" | "busy" | "failed" | "canceled";
-                outcome?: "goal_met" | "callback_requested" | "voicemail" | "hangup" | "no_answer" | "error" | "transferred" | "agent_closed" | "silence_timeout" | "max_duration" | "quota_exhausted" | "system_error";
-                purpose?: "inbound" | "appointment_reminder" | "crm_task" | "campaign" | "manual";
-                ai_agent_id?: string;
-                contact_id?: string;
-                from?: string;
-                to?: string;
-                q?: string;
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallSessionsListDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_listLiveSessions_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LiveCallSessionsDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_getSession_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallSessionDetailDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_getRecordingUrl_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallRecordingUrlDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_getSettings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CallsSettingsDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_updateSettings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CallsSettingsDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CallsAdminController_placeTestCall_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TestCallDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TestCallResultDto"];
-                };
-            };
-        };
-    };
-    CallsAdminController_listNumbers_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TenantCallNumberDto"][];
                 };
             };
         };

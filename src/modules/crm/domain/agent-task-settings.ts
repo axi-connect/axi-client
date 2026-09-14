@@ -16,6 +16,7 @@ export const AGENT_TASK_LIMITS = {
   max_attempts: { min: 1, max: 20 },
   max_defer_hours: { min: 1, max: 720 },
   reply_wait_hours: { min: 1, max: 168 },
+  call_daily_cap: { min: 1, max: 500 },
 } as const;
 
 /**
@@ -31,6 +32,7 @@ export const DEFAULT_AGENT_TASK_SETTINGS: AgentTaskSettings = {
   max_attempts: 8,
   max_defer_hours: 72,
   reply_wait_hours: 48,
+  call_daily_cap: 20,
 };
 
 export type AgentTaskSettingsErrors = Partial<Record<string, string>>;
@@ -63,6 +65,9 @@ export function validateAgentTaskSettings(
   }
   if (outOfRange(settings.reply_wait_hours, l.reply_wait_hours)) {
     errors.reply_wait_hours = `Entre ${String(l.reply_wait_hours.min)} y ${String(l.reply_wait_hours.max)} horas`;
+  }
+  if (outOfRange(settings.call_daily_cap, l.call_daily_cap)) {
+    errors.call_daily_cap = `Entre ${String(l.call_daily_cap.min)} y ${String(l.call_daily_cap.max)}`;
   }
   return errors;
 }

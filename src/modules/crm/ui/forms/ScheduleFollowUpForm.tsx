@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CircleUser, Sparkles } from "lucide-react";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
+import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 import { createCustomField, DynamicForm } from "@/shared/components/features/dynamic-form";
 import {
   Select,
@@ -27,6 +28,7 @@ import { getContact } from "@/modules/crm/infrastructure/services/contacts-servi
 import { getContactReachability } from "@/modules/crm/infrastructure/services/follow-up-service.adapter";
 import { ContactPicker } from "@/modules/crm/ui/forms/ContactPicker";
 import {
+  availableMedia,
   buildScheduleFollowUpSchema,
   defaultScheduleFollowUpValues,
   editScheduleFollowUpValues,
@@ -72,7 +74,12 @@ export function ScheduleFollowUpForm({
   onSuccess: () => void;
 }) {
   const { showAlert } = useAlert();
+  const { hasCapability } = useEntitlements();
   const now = useMemo(() => new Date(), []);
+  // F3: llamar es capacidad del plan. Si los entitlements no cargaron,
+  // `hasCapability` responde true y el backend es quien rechaza (422).
+  const hasCalls = hasCapability("calls");
+  const media = useMemo(() => availableMedia(hasCalls), [hasCalls]);
 
   const [agents, setAgents] = useState<readonly AssignableAgent[]>([]);
   const [company, setCompany] = useState<{ tz: string; name: string }>({ tz: DEFAULT_TZ, name: "" });
@@ -148,8 +155,8 @@ export function ScheduleFollowUpForm({
   // solo si, a la hora que el operador eligió, el contacto estará fuera de la
   // ventana — la misma regla que pinta el aviso.
   const schema = useMemo(
-    () => buildScheduleFollowUpSchema({ tz, now, reach, templates }),
-    [tz, now, reach, templates],
+    () => buildScheduleFollowUpSchema({ tz, now, reach, templates, media }),
+    [tz, now, reach, templates, media],
   );
 
   const fields = useMemo(
@@ -209,6 +216,7 @@ export function ScheduleFollowUpForm({
         ({ value, setValue }) => (
           <MediumPicker
             value={value as ScheduleFollowUpValues["medium"]}
+            available={media}
             onChange={(medium) => setValue("medium", medium)}
           />
         ),
@@ -300,7 +308,7 @@ export function ScheduleFollowUpForm({
         { colSpan: { base: 1, md: 2 } },
       ),
     ],
-    [agents, presetContact, editing, contact, reach, templates, tz, now, settings, company.name, firstName],
+    [agents, presetContact, editing, contact, reach, templates, media, tz, now, settings, company.name, firstName],
   );
 
   return (

@@ -10,6 +10,7 @@ import {
   History,
   LayoutList,
   MessageSquare,
+  PhoneCall,
   MoreVertical,
   Pencil,
   Plus,
@@ -201,12 +202,19 @@ function TaskRow({
       ) : agent ? (
         // Violeta = IA, y solo en el icono: el techo de tinte del 14 % deja
         // fuera cualquier superficie violeta en zona de trabajo. El icono es el
-        // MEDIO (mensaje hoy; llamada con F3), no un «es IA» genérico.
+        // MEDIO EN CURSO (una «llamar, y si no, escribir» que ya va por
+        // mensaje enseña el mensaje), no un «es IA» genérico.
         <span
           className="flex size-5 shrink-0 items-center justify-center"
-          aria-label="La ejecuta un agente por mensaje"
+          aria-label={
+            task.task_medium === "call" ? "La ejecuta un agente por llamada" : "La ejecuta un agente por mensaje"
+          }
         >
-          <MessageSquare className="size-4 text-accent-violet" aria-hidden />
+          {task.task_medium === "call" ? (
+            <PhoneCall className="size-4 text-accent-violet" aria-hidden />
+          ) : (
+            <MessageSquare className="size-4 text-accent-violet" aria-hidden />
+          )}
         </span>
       ) : (
         <button

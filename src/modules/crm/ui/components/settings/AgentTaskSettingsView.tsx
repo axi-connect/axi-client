@@ -274,12 +274,22 @@ export function AgentTaskSettingsView() {
             disabled={!canAutomate}
             onChange={(v) => patch({ daily_cap: v })}
           />
+          <NumberField
+            id="at-call-daily-cap"
+            label="Máximo de llamadas por día"
+            value={settings.call_daily_cap}
+            error={errors.call_daily_cap}
+            limits={AGENT_TASK_LIMITS.call_daily_cap}
+            disabled={!canAutomate}
+            onChange={(v) => patch({ call_daily_cap: v })}
+          />
         </div>
         <p className="mt-3 flex gap-2.5 text-xs text-muted-foreground">
           <Info aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
           <span>
-            Alcanzado el tope, el resto de tareas del día quedan en espera y se reintentan mañana.
-            No se pierden.
+            Alcanzado un tope, el resto de tareas de ese medio quedan en espera y se reintentan mañana.
+            No se pierden. Las llamadas tienen su propio cupo porque cada una cuesta lo que decenas de
+            mensajes; su horario silencioso se ajusta en Llamadas.
           </span>
         </p>
       </Card>

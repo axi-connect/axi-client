@@ -25,11 +25,14 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
 /**
- * Medios disponibles HOY. Las llamadas llegan con F3 del programa (el dominio
- * ya las conoce y el selector las pinta deshabilitadas con su explicación):
- * cuando el backend acepte `task_channel`, esta lista se amplía y nada más.
+ * Medios disponibles para ESTE tenant (F3). Llamar es una capacidad del plan
+ * (`calls`), no un permiso del rol: sin ella, el selector pinta las dos
+ * opciones de llamada deshabilitadas con su razón — prometer menos y decirlo.
+ * El backend lo vuelve a exigir al programar (422 `crm/task_calls_not_enabled`).
  */
-export const AVAILABLE_MEDIA: readonly FollowUpMedium[] = ["message"];
+export function availableMedia(hasCalls: boolean): readonly FollowUpMedium[] {
+  return hasCalls ? ["message", "call", "call_then_message"] : ["message"];
+}
 
 export type ScheduleFollowUpValues = {
   contact: { id: string; label: string } | null;
@@ -56,6 +59,8 @@ export function buildScheduleFollowUpSchema(rules: {
   reach: ContactReachabilityDTO | null;
   /** Plantillas aprobadas disponibles para abrir. */
   templates: readonly HsmTemplateDTO[];
+  /** Medios que el plan permite (`availableMedia`). */
+  media: readonly FollowUpMedium[];
 }): z.ZodType<ScheduleFollowUpValues> {
   return z
     .object({
@@ -75,8 +80,8 @@ export function buildScheduleFollowUpSchema(rules: {
       if (values.agent_id === NO_AGENT || values.agent_id === "") {
         ctx.addIssue({ code: "custom", path: ["agent_id"], message: "Elige qué agente lo hace" });
       }
-      if (!AVAILABLE_MEDIA.includes(values.medium)) {
-        ctx.addIssue({ code: "custom", path: ["medium"], message: "Ese medio aún no está disponible" });
+      if (!rules.media.includes(values.medium)) {
+        ctx.addIssue({ code: "custom", path: ["medium"], message: "Tu plan no incluye llamadas del agente" });
       }
       const objective = values.objective.trim();
       if (objective.length < OBJECTIVE_MIN) {
@@ -155,7 +160,9 @@ export function editScheduleFollowUpValues(
   return {
     contact: contact ?? { id: task.contact_id, label: "" },
     agent_id: task.assigned_agent_id ?? NO_AGENT,
-    medium: "message",
+    // La POLÍTICA elegida, no el medio en curso: una «llamar, y si no,
+    // escribir» que ya va por mensaje sigue siendo esa política al editarla.
+    medium: task.task_channel ?? "message",
     objective: task.objective ?? "",
     date: when.date,
     time: when.time,
@@ -194,6 +201,7 @@ export function toCreateFollowUpDTO(
     assigned_agent_id: values.agent_id,
     objective: values.objective.trim(),
     due_at: businessDateTimeToIso(values.date, values.time, ctx.tz),
+    task_channel: values.medium,
     ...(ctx.deal_id === undefined ? {} : { deal_id: ctx.deal_id }),
     ...(opening === null ? {} : { opening_template: opening }),
   };
@@ -208,6 +216,8 @@ export function toUpdateFollowUpDTO(
     objective: values.objective.trim(),
     due_at: businessDateTimeToIso(values.date, values.time, ctx.tz),
     assigned_agent_id: values.agent_id,
+    // Cambiar la política reinicia el medio y su presupuesto en el backend.
+    task_channel: values.medium,
     // `null` quita la plantilla; el backend distingue ausente de null.
     opening_template: openingTemplateInput(values, ctx.template),
   };

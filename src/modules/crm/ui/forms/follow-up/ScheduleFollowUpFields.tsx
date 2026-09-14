@@ -39,12 +39,7 @@ import {
 } from "@/modules/crm/domain/schedule-follow-up";
 import type { AgentTaskSettings } from "@/modules/crm/domain/agent-task-settings";
 import { countTemplateVariables, formatTemplateCost, type HsmTemplateDTO } from "@/modules/marketing/public";
-import {
-  AVAILABLE_MEDIA,
-  NO_TEMPLATE,
-  OBJECTIVE_MAX,
-  type ScheduleFollowUpValues,
-} from "../config/schedule-follow-up.config";
+import { NO_TEMPLATE, OBJECTIVE_MAX, type ScheduleFollowUpValues } from "../config/schedule-follow-up.config";
 
 /**
  * Bloques del formulario «Programar seguimiento» (F2). Cada uno reacciona a los
@@ -61,20 +56,23 @@ const MEDIUM_ICONS: Record<FollowUpMedium, React.ComponentType<{ className?: str
 };
 
 /** Tres tarjetas-radio: la tercera necesita dos líneas para explicarse, y en un
- *  `SegmentedControl` no caben. Las que aún no existen se ven deshabilitadas
- *  con su razón — prometer menos y decirlo, no esconderlo. */
+ *  `SegmentedControl` no caben. Las que el plan no incluye se ven
+ *  deshabilitadas con su razón — prometer menos y decirlo, no esconderlo. */
 export function MediumPicker({
   value,
+  available: availableMedia,
   onChange,
 }: {
   value: FollowUpMedium;
+  /** Medios que el plan del tenant permite (F3: llamar exige `calls`). */
+  available: readonly FollowUpMedium[];
   onChange: (medium: FollowUpMedium) => void;
 }) {
   return (
     <div role="radiogroup" aria-label="Cómo contacta" className="grid gap-2 sm:grid-cols-3">
       {FOLLOW_UP_MEDIA.map((option) => {
         const Icon = MEDIUM_ICONS[option.value];
-        const available = AVAILABLE_MEDIA.includes(option.value);
+        const available = availableMedia.includes(option.value);
         const checked = value === option.value;
         return (
           <button
@@ -97,7 +95,7 @@ export function MediumPicker({
             />
             <span className="text-sm font-medium">{option.label}</span>
             <span className="text-xs leading-snug text-muted-foreground">
-              {available ? option.description : "Se activa con el módulo de llamadas."}
+              {available ? option.description : "Tu plan no incluye llamadas del agente."}
             </span>
           </button>
         );
