@@ -9,6 +9,8 @@ import type { ImportJobDTO } from "@/modules/crm/domain/import";
 import { listImports } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { ContactImportWizard } from "@/modules/crm/ui/components/imports/ContactImportWizard";
 import { ImportReport, ImportStatusBadge } from "@/modules/crm/ui/components/imports/ImportReport";
+import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 
 /**
  * `/crm/settings/imports` (gate contacts:import): el MISMO asistente que abre
@@ -39,15 +41,31 @@ export function ImportsManager() {
                 <h3 className="text-base font-semibold">{selected.filename}</h3>
                 <ImportStatusBadge status={selected.status} />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={() => setSelected(null)}
-              >
-                <RotateCcw className="size-3.5" />
-                Nuevo import
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => setSelected(null)}
+                >
+                  <RotateCcw className="size-3.5" />
+                  Nuevo import
+                </Button>
+                {/* F4a: el final del camino. Sin esto, la lista entra y nadie
+                    la trabaja — que es donde un CRM se queda en agenda. */}
+                {selected.status !== "failed" && selected.created_count > 0 && (
+                  <>
+                    <BulkFollowUpButton
+                      audience={{ source: "import", import_job_id: selected.id }}
+                      audienceLabel={`Del import ${selected.filename}`}
+                      label={`Poner al agente a trabajar con los ${String(selected.created_count)}`}
+                    />
+                    <EnrollInSequenceButton
+                      audience={{ source: "import", import_job_id: selected.id }}
+                    />
+                  </>
+                )}
+              </div>
             </div>
             {selected.status === "failed" ? (
               <p

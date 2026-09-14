@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Info, RefreshCw } from "lucide-react";
+import { CircleDollarSign, Hourglass, Info, Plus, RefreshCw, WandSparkles } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -12,11 +12,15 @@ import { Button } from "@/shared/components/ui/button";
 import { listChannels, type ChannelDTO } from "@/modules/channels/public";
 import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
 import {
+  countTemplateVariables,
+  formatTemplateCost,
   HSM_STATUS_MAP,
+  isUsableAsOpening,
   isUsableForMarketing,
   whyUnusable,
   type HsmTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
+import { CreateHsmTemplateModal } from "@/modules/marketing/ui/components/CreateHsmTemplateModal";
 import {
   listHsmTemplates,
   syncHsmTemplates,
@@ -43,6 +47,7 @@ export function MetaTemplatesView() {
   const [templates, setTemplates] = useState<HsmTemplateDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     listChannels()
@@ -113,9 +118,23 @@ export function MetaTemplatesView() {
   }
 
   const usable = templates?.filter(isUsableForMarketing).length ?? 0;
+  const openers = templates?.filter(isUsableAsOpening).length ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
+      {/* F2: qué son y qué cuestan, antes de la tabla. Es lo que un tenant
+          necesita entender para decidir crear una. */}
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Step icon={WandSparkles} accent="text-accent-violet">
+          <strong className="font-medium text-foreground">Crea</strong> el texto con variables ({"{{1}}"}, {"{{2}}"}) y un ejemplo por cada una.
+        </Step>
+        <Step icon={Hourglass} accent="text-info">
+          <strong className="font-medium text-foreground">Meta revisa.</strong> Suele decidir en minutos; puede tardar hasta 48 h. El estado se actualiza solo.
+        </Step>
+        <Step icon={CircleDollarSign} accent="text-muted-foreground">
+          <strong className="font-medium text-foreground">Cuesta por mensaje entregado.</strong> Colombia: utility {formatTemplateCost("utility")} · marketing {formatTemplateCost("marketing")}.
+        </Step>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <label className="sr-only" htmlFor="hsm-channel">
           Canal
@@ -136,22 +155,37 @@ export function MetaTemplatesView() {
 
         {templates !== null && (
           <span className="text-xs tabular-nums text-muted-foreground">
-            {usable} de {templates.length} sirven para promociones
+            {openers} para abrir seguimientos · {usable} para promociones
           </span>
         )}
 
         <span className="flex-1" />
 
         {canManage && (
-          <Button size="sm" variant="outline" disabled={syncing} onClick={() => void handleSync()}>
-            <RefreshCw
-              aria-hidden="true"
-              className={syncing ? "size-4 animate-spin" : "size-4"}
-            />
-            {syncing ? "Sincronizando…" : "Sincronizar"}
-          </Button>
+          <>
+            <Button size="sm" variant="outline" disabled={syncing} onClick={() => void handleSync()}>
+              <RefreshCw
+                aria-hidden="true"
+                className={syncing ? "size-4 animate-spin" : "size-4"}
+              />
+              {syncing ? "Sincronizando…" : "Sincronizar"}
+            </Button>
+            <Button size="sm" disabled={channelId === null} onClick={() => setCreating(true)}>
+              <Plus aria-hidden="true" className="size-4" />
+              Nueva plantilla
+            </Button>
+          </>
         )}
       </div>
+
+      {channelId !== null && (
+        <CreateHsmTemplateModal
+          open={creating}
+          channelId={channelId}
+          onOpenChange={setCreating}
+          onCreated={() => void load(channelId)}
+        />
+      )}
 
       {error !== null ? (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-destructive/35 bg-destructive/5 px-4 py-3">
@@ -171,7 +205,15 @@ export function MetaTemplatesView() {
           glyph="connections"
           variant="solid"
           title="Este canal no tiene plantillas"
-          description="Créalas en el administrador de WhatsApp de Meta y pulsa Sincronizar para traerlas aquí."
+          description="Sin una plantilla aprobada, el agente no puede escribirle a quien lleve más de 24 h sin responder."
+          action={
+            canManage ? (
+              <Button size="sm" onClick={() => setCreating(true)}>
+                <Plus aria-hidden="true" className="size-4" />
+                Crear la primera
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-background">
@@ -179,11 +221,10 @@ export function MetaTemplatesView() {
             <caption className="sr-only">Plantillas de Meta del canal</caption>
             <thead>
               <tr className="border-b border-border/60 bg-foreground/[0.02]">
-                <Th>Nombre</Th>
-                <Th>Idioma</Th>
-                <Th>Categoría</Th>
-                <Th>Estado</Th>
+                <Th>Plantilla</Th>
                 <Th>Contenido</Th>
+                <Th>Estado en Meta</Th>
+                <Th>Costo / msg (CO)</Th>
               </tr>
             </thead>
             <tbody>
@@ -191,20 +232,34 @@ export function MetaTemplatesView() {
                 const reason = whyUnusable(template);
                 return (
                   <tr key={template.id} className="border-b border-border/60 last:border-none">
-                    <td className="px-4 py-2.5 font-mono text-xs">{template.name}</td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                      {template.language}
+                    <td className="px-4 py-2.5 align-top">
+                      <div className="font-mono text-xs">{template.name}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {HSM_CATEGORY_LABELS[template.category]} · {template.language} ·{" "}
+                        {countTemplateVariables(template.body)}{" "}
+                        {countTemplateVariables(template.body) === 1 ? "variable" : "variables"}
+                      </div>
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
-                      {HSM_CATEGORY_LABELS[template.category]}
+                    <td className="max-w-md px-4 py-2.5 align-top text-xs text-muted-foreground">
+                      <span className="line-clamp-2">{template.body}</span>
                     </td>
-                    <td className="px-4 py-2.5">
-                      <StatusBadge status={template.approval_status} map={HSM_STATUS_MAP} />
+                    <td className="px-4 py-2.5 align-top">
+                      <StatusBadge status={template.approval_status} map={HSM_STATUS_MAP} appearance="dot" />
+                      {/* Qué implica el estado, en las palabras del operador. */}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {template.approval_status === "pending"
+                          ? "Meta suele decidir en minutos; puede tardar hasta 48 h."
+                          : template.approval_status === "rejected"
+                            ? "Corrige el texto y envíala como plantilla nueva: el nombre queda bloqueado 30 días."
+                            : template.approval_status === "paused"
+                              ? "Varios destinatarios la marcaron como no deseada. Se reactiva si mejora la calidad."
+                              : template.approval_status === "disabled"
+                                ? "Meta la deshabilitó por reportes repetidos o una violación de política."
+                                : (reason ?? "Sirve para abrir seguimientos del agente.")}
+                      </p>
                     </td>
-                    <td className="max-w-md px-4 py-2.5 text-xs text-muted-foreground">
-                      {/* Por qué NO sirve pesa más que el texto: evita que alguien
-                          elija una `utility` aprobada y falle al lanzar. */}
-                      {reason ?? <span className="line-clamp-2">{template.body}</span>}
+                    <td className="px-4 py-2.5 align-top font-mono text-xs tabular-nums">
+                      {formatTemplateCost(template.category)}
                     </td>
                   </tr>
                 );
@@ -214,14 +269,31 @@ export function MetaTemplatesView() {
         </div>
       )}
 
-      <p className="flex gap-2.5 rounded-xl border border-info/25 bg-info/5 px-4 py-3 text-sm text-muted-foreground">
+      <p className="flex gap-2.5 rounded-xl border border-border px-4 py-3 text-sm text-muted-foreground">
         <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
         <span>
-          El estado lo decide Meta y puede tardar horas.{" "}
-          <strong className="font-medium text-foreground">No llega solo:</strong> pulsa
-          «Sincronizar» para traer el estado más reciente.
+          El estado lo decide Meta y llega solo por su aviso; si sospechas que va atrasado, «Sincronizar» lo
+          trae al momento. Las de <strong className="font-medium text-foreground">utility</strong> aprobadas son
+          las que el agente usa para abrir seguimientos con contactos que llevan más de 24 h sin escribir.
         </span>
       </p>
+    </div>
+  );
+}
+
+function Step({
+  icon: Icon,
+  accent,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  accent: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg bg-secondary/70 px-3 py-2 text-xs text-muted-foreground">
+      <Icon aria-hidden="true" className={`mt-0.5 size-3.5 shrink-0 ${accent}`} />
+      <span>{children}</span>
     </div>
   );
 }

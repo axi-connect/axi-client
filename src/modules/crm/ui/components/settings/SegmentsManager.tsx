@@ -19,6 +19,8 @@ import {
   type TagDTO,
 } from "@/modules/crm/domain/segment";
 import { AudienceFilterBuilder } from "@/modules/crm/ui/components/segments/AudienceFilterBuilder";
+import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 import {
   createSegment,
   deleteSegment,
@@ -158,7 +160,17 @@ function SegmentCard({
             {describeSegmentFilters(segment.filters as SegmentFilters, tags)}
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
+          {/* F4a: el segmento deja de ser solo una lista que se mira. Se
+              resuelve AL PROGRAMAR: los que entren después no reciben nada de
+              ese lote — para eso están las secuencias. */}
+          <BulkFollowUpButton
+            audience={{ source: "segment", segment_id: segment.id }}
+            audienceLabel={`Del segmento «${segment.name}»`}
+            label="Poner al agente a trabajar"
+            variant="outline"
+          />
+          <EnrollInSequenceButton audience={{ source: "segment", segment_id: segment.id }} />
           {canExport && (
             <Button
               variant="ghost"

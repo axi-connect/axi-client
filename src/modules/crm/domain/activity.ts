@@ -34,6 +34,8 @@ export type ListTasksParams = OffsetQuery & {
   agent_id?: string;
   /** Último desenlace del motor: es el filtro de "qué se me está atascando". */
   last_run_status?: NonNullable<ActivityDTO["last_run_status"]>;
+  /** F2: solo las que abrieron con plantilla y esperan la respuesta del cliente. */
+  awaiting_reply?: boolean;
 };
 
 export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {

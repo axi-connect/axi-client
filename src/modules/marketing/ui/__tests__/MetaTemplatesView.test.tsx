@@ -71,16 +71,25 @@ describe("canal cloud con plantillas", () => {
     expect(options[0]).toContain("WhatsApp Cloud");
   });
 
-  it("cuenta cuántas sirven de verdad para promociones", () => {
-    // Solo la aprobada + marketing: 1 de 3.
-    expect(screen.getByText("1 de 3 sirven para promociones")).toBeInTheDocument();
+  it("cuenta cuántas sirven de verdad, por uso: abrir seguimientos y promociones", () => {
+    // Abren seguimientos las aprobadas que no son de autenticación (marketing +
+    // utility: 2); promocionan solo las aprobadas de marketing (1). El contador
+    // se compone de varias expresiones JSX: se lee el texto del nodo entero.
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === "SPAN" && el.textContent === "2 para abrir seguimientos · 1 para promociones",
+      ),
+    ).toBeInTheDocument();
   });
 
-  it("explica por qué NO sirve cada una, en vez de enseñar su texto", () => {
+  it("explica qué implica el estado de cada una, en las palabras del operador", () => {
+    // Aprobada pero utility: sirve para abrir seguimientos, no para promociones.
     expect(screen.getByText("Solo las de categoría Marketing sirven para promociones")).toBeInTheDocument();
-    expect(screen.getByText(/Meta la tiene como pausada/)).toBeInTheDocument();
-    // La usable sí muestra su contenido.
-    expect(screen.getByText(/tenemos novedades/)).toBeInTheDocument();
+    // Pausada: F2 cambió «Meta la tiene como pausada» por el POR QUÉ y el remedio.
+    expect(screen.getByText(/Varios destinatarios la marcaron como no deseada/)).toBeInTheDocument();
+    // El contenido se muestra siempre: ahora es una columna propia (las tres).
+    expect(screen.getAllByText(/tenemos novedades/)).toHaveLength(3);
   });
 
   it("sincronizar vuelve a pedir la lista y dice cuántas trajo", async () => {

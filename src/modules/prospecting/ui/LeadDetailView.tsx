@@ -34,6 +34,7 @@ import {
   promoteLeads,
   verifyLead,
 } from "../infrastructure/services/prospecting-service.adapter";
+import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
 import { ChannelPermissions } from "./components/ChannelPermissions";
 import { EnrichmentRunCard } from "./components/EnrichmentRunCard";
 import { LeadIdentityCard } from "./components/LeadIdentityCard";
@@ -430,9 +431,20 @@ export function LeadDetailView({ leadId }: { leadId: string }) {
                 <Check className="size-4" aria-hidden />
                 Ya es un contacto de tu CRM
               </p>
-              <Button variant="outline" size="sm" className="mt-3" asChild>
-                <a href={`/crm/contacts/${lead.contact_id}`}>Ver en el CRM</a>
-              </Button>
+              {/* F4a: promover declara la base legal y crea el contacto;
+                  escribirle es otra decisión, y es del operador. Por eso el
+                  seguimiento se OFRECE aquí y no se dispara solo. */}
+              <p className="text-muted-foreground mt-1 text-xs">Todavía no le hemos escrito.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`/crm/contacts/${lead.contact_id}`}>Ver en el CRM</a>
+                </Button>
+                <BulkFollowUpButton
+                  audience={{ source: "contacts", contact_ids: [lead.contact_id] }}
+                  audienceLabel={`${lead.display_name ?? "El lead"} · recién promovido desde captación`}
+                  label="Poner al agente a trabajar"
+                />
+              </div>
             </section>
           )}
           <section className="border-border shadow-float bg-background rounded-lg border p-5">

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink, UserRound } from "lucide-react";
+import { ExternalLink, Sparkles, UserRound } from "lucide-react";
+import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge } from "@/shared/components/ui/badge";
@@ -23,6 +24,10 @@ export function ContactPanel() {
   // El contexto lo resuelve `InboxView` una sola vez y lo comparte con la
   // cabecera del chat: aquí no se vuelve a pedir nada.
   const { contact, profile, tags, ownerName, loading, error, reload } = useConversationContact();
+  const { hasPermission } = useAuth();
+  // F2: programar un seguimiento del agente desde la conversación — el
+  // operador acaba de hablar con el cliente y sabe qué hay que retomar.
+  const canAutomate = hasPermission("crm:automate");
 
   if (loading && contact === null) {
     return (
@@ -85,7 +90,17 @@ export function ContactPanel() {
         />
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="flex flex-col gap-2 border-t border-border p-3">
+        {canAutomate && (
+          <Button asChild variant="outline" size="sm" className="w-full rounded-full">
+            <Link
+              href={`/crm/tasks/create?executor=agent&contact_id=${contact.id}&contact_label=${encodeURIComponent(contactDisplayName(contact))}`}
+            >
+              <Sparkles className="size-3.5 text-accent-violet" aria-hidden />
+              Programar seguimiento
+            </Link>
+          </Button>
+        )}
         <Button asChild variant="outline" size="sm" className="w-full rounded-full">
           <Link href={`/crm/contacts/${contact.id}`}>
             Ver ficha completa

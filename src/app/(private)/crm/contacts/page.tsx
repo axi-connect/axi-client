@@ -29,6 +29,7 @@ import {
 } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { ImportExportMenu } from "@/modules/crm/ui/components/imports/ImportExportMenu";
 import { compactSegmentFilters } from "@/modules/crm/domain/segment";
+import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
 import { useAlert } from "@/core/providers/alert-provider";
 
 const PAGE_SIZE = 25;
@@ -50,6 +51,10 @@ export default function CrmContactsPage() {
 
   const [filters, setFilters] = useState<ContactFiltersValue>({});
   const [searchDraft, setSearchDraft] = useState("");
+  /** F4a: selección de la PÁGINA. Para trabajar «todos los que cumplen el
+   *  filtro» está el camino de guardar el filtro como segmento, que ya existe
+   *  aquí arriba y lleva su propio botón en la pantalla de segmentos. */
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
 
   const extraParams = useMemo(
     () => ({
@@ -202,6 +207,25 @@ export default function CrmContactsPage() {
               pagination={{ page, pageSize: PAGE_SIZE, total }}
               onPageChange={setPage}
               messages={{ empty: "Sin resultados para esta búsqueda" }}
+              selection={{
+                rowId: (row) => row.id,
+                rowLabel: (row) => row.full_name ?? "Contacto",
+                selected,
+                onChange: setSelected,
+                actions: ({ count }) => (
+                  <BulkFollowUpButton
+                    audience={{ source: "contacts", contact_ids: [...selected] }}
+                    audienceLabel={`${String(count)} contactos que marcaste en la lista`}
+                    label={`Programar seguimiento para ${String(count)}`}
+                  />
+                ),
+                note: (
+                  <span>
+                    ¿Quieres trabajar con todos los que cumplen el filtro? Guárdalo como segmento
+                    aquí arriba y ponlo a trabajar desde Segmentos.
+                  </span>
+                ),
+              }}
             />
           )}
         </div>

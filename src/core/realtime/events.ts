@@ -389,6 +389,10 @@ export type CrmAgentTaskRunEvent = {
   reason: string | null;
   message_id: string | null;
   conversation_id: string | null;
+  /** F0: por qué medio salió ESTA corrida. */
+  medium: "message" | "call";
+  /** F1: salió como plantilla de apertura, no como turno del agente. */
+  opened_with_template: boolean;
 };
 
 /** Fin del import CSV (éxito o fallo); con `failed` solo llegan los básicos. */

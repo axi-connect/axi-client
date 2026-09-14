@@ -2,8 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Clock, LoaderCircle, MessageSquare, TriangleAlert, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Hourglass,
+  LoaderCircle,
+  MessageSquare,
+  PhoneCall,
+  Send,
+  TriangleAlert,
+  XCircle,
+} from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
+import { formatDayTime } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
@@ -13,6 +24,7 @@ import { Timeline, TimelineSkeleton, type TimelineItem } from "@/shared/componen
 import type { ActivityDTO } from "@/modules/crm/domain/activity";
 import {
   TASK_BADGE_KEY,
+  TASK_MEDIUM_LABELS,
   TASK_RUN_TIMELINE_TONES,
   taskBadgeMap,
   taskDisplayState,
@@ -89,17 +101,33 @@ export function TaskRunsSheet({
   const items: TimelineItem[] =
     runs?.map((run) => {
       const reason = taskRunReasonLabel(run.reason);
+      const MediumIcon = run.medium === "call" ? PhoneCall : MessageSquare;
       return {
         id: run.id,
-        icon: RUN_ICONS[run.status],
+        icon: run.opened_with_template ? Send : RUN_ICONS[run.status],
         tone: TASK_RUN_TIMELINE_TONES[run.status],
-        title: taskRunTitle(run),
-        ...(reason === null && run.detail === null
-          ? {}
-          : { description: reason ?? run.detail }),
+        title: (
+          <span className="flex flex-wrap items-center gap-1.5">
+            {taskRunTitle(run)}
+            {/* El medio va en cada intento: una tarea «llamada, y si no conecta,
+                mensaje» tiene intentos de los dos y el rail debe decir cuál fue cuál. */}
+            <span className="inline-flex items-center gap-1 rounded-full border border-border px-1.5 text-[10px] font-normal text-muted-foreground">
+              <MediumIcon aria-hidden className="size-2.5" />
+              {TASK_MEDIUM_LABELS[run.medium].toLowerCase()}
+            </span>
+          </span>
+        ),
+        ...(run.opened_with_template
+          ? {
+              description:
+                "El cliente llevaba más de 24 h sin escribir: abrió con la plantilla de Meta. Cuando responda, el agente retoma el objetivo.",
+            }
+          : reason === null && run.detail === null
+            ? {}
+            : { description: reason ?? run.detail }),
         meta: (
           <span className="flex flex-wrap items-center gap-2">
-            <span>{relativeTime(taskRunTimestamp(run))}</span>
+            <span title={formatDayTime(taskRunTimestamp(run))}>{relativeTime(taskRunTimestamp(run))}</span>
             {run.conversation_id !== null && run.message_id !== null && (
               // El enlace al mensaje real es lo que cierra el círculo: el
               // operador ve LO QUE se envió, no solo que se envió.
@@ -109,6 +137,16 @@ export function TaskRunsSheet({
               >
                 <MessageSquare className="size-3" aria-hidden />
                 Ver el mensaje
+              </Link>
+            )}
+            {run.call_session_id !== null && (
+              // F3: la llamada con su grabación, transcripción y resumen.
+              <Link
+                href={`/calls/${run.call_session_id}`}
+                className="inline-flex items-center gap-1 text-brand hover:underline"
+              >
+                <PhoneCall className="size-3" aria-hidden />
+                Ver la llamada
               </Link>
             )}
           </span>
@@ -130,16 +168,30 @@ export function TaskRunsSheet({
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs text-muted-foreground">Estado</span>
               {state.label !== null && (
-                <StatusBadge status={TASK_BADGE_KEY} map={taskBadgeMap(state)} />
+                <StatusBadge status={TASK_BADGE_KEY} map={taskBadgeMap(state)} appearance="dot" />
               )}
             </div>
             {task.objective !== null && (
               <p className="text-sm leading-relaxed">{task.objective}</p>
             )}
-            {task.next_run_at !== null && task.task_status === "open" && (
-              <p className="text-xs text-muted-foreground">
-                Próximo intento {relativeTime(task.next_run_at)}
+            {task.task_status === "open" && task.awaiting_reply_until !== null ? (
+              <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <Hourglass aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
+                <span>
+                  Espera la respuesta del cliente hasta el{" "}
+                  <strong className="font-medium text-foreground">{formatDayTime(task.awaiting_reply_until)}</strong>
+                  . Si no responde, la tarea cierra como «Enviado · sin respuesta».
+                </span>
               </p>
+            ) : (
+              task.next_run_at !== null &&
+              task.task_status === "open" && (
+                <p className="text-xs text-muted-foreground">
+                  Próximo intento{" "}
+                  <strong className="font-medium text-foreground">{formatDayTime(task.next_run_at)}</strong>{" "}
+                  ({relativeTime(task.next_run_at)})
+                </p>
+              )
             )}
           </div>
         )}

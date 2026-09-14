@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Info, PauseCircle, Power, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Info, PauseCircle, Power, Sparkles } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -157,7 +158,7 @@ export function AgentTaskSettingsView() {
     );
   }
 
-  if (settings === null) return <FormSkeleton fields={6} />;
+  if (settings === null) return <FormSkeleton fields={7} />;
 
   const quiet = describeQuietHours(settings.quiet_start_hour, settings.quiet_end_hour);
 
@@ -232,7 +233,8 @@ export function AgentTaskSettingsView() {
         <p className="mt-3 flex gap-2.5 text-xs text-muted-foreground">
           <Info aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
           <span>
-            {quiet.text} Hora local de tu negocio (se cambia en el perfil de la empresa).
+            {quiet.text} Hora local de tu negocio (se cambia en el perfil de la empresa). Aplica a
+            mensajes y llamadas.
           </span>
         </p>
 
@@ -272,12 +274,51 @@ export function AgentTaskSettingsView() {
             disabled={!canAutomate}
             onChange={(v) => patch({ daily_cap: v })}
           />
+          <NumberField
+            id="at-call-daily-cap"
+            label="Máximo de llamadas por día"
+            value={settings.call_daily_cap}
+            error={errors.call_daily_cap}
+            limits={AGENT_TASK_LIMITS.call_daily_cap}
+            disabled={!canAutomate}
+            onChange={(v) => patch({ call_daily_cap: v })}
+          />
         </div>
         <p className="mt-3 flex gap-2.5 text-xs text-muted-foreground">
           <Info aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
           <span>
-            Alcanzado el tope, el resto de tareas del día quedan en espera y se reintentan mañana.
-            No se pierden.
+            Alcanzado un tope, el resto de tareas de ese medio quedan en espera y se reintentan mañana.
+            No se pierden. Las llamadas tienen su propio cupo porque cada una cuesta lo que decenas de
+            mensajes; su horario silencioso se ajusta en Llamadas.
+          </span>
+        </p>
+      </Card>
+
+      <Card title="Cuando abre con una plantilla de Meta">
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <NumberField
+            id="at-reply-wait"
+            label="Horas esperando la respuesta"
+            value={settings.reply_wait_hours}
+            error={errors.reply_wait_hours}
+            limits={AGENT_TASK_LIMITS.reply_wait_hours}
+            disabled={!canAutomate}
+            onChange={(v) => patch({ reply_wait_hours: v })}
+          />
+        </div>
+        <p className="mt-3 flex gap-2.5 text-xs text-muted-foreground">
+          <Info aria-hidden className="mt-0.5 size-3.5 shrink-0 text-info" />
+          <span className="tabular-nums">
+            Si el contacto lleva más de 24 h sin escribir, el agente abre con la plantilla elegida y
+            espera <strong className="text-foreground">{settings.reply_wait_hours} h</strong> a que
+            responda. Si responde, retoma el objetivo en ese mismo chat; si no, la tarea cierra como{" "}
+            <strong className="text-foreground">«Enviado · sin respuesta»</strong>.{" "}
+            <Link
+              href="/marketing/settings/meta-templates"
+              className="inline-flex items-center gap-1 font-medium text-brand hover:underline"
+            >
+              Gestionar plantillas <ArrowRight aria-hidden className="size-3" />
+            </Link>
           </span>
         </p>
       </Card>

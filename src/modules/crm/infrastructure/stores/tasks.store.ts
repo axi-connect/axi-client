@@ -57,15 +57,26 @@ type TasksStore = {
   status: TaskStatus | null;
   executor: TasksExecutor;
   runStatus: TaskRunStatus | null;
+  /** F2: «Esperando respuesta» — abrieron con plantilla y esperan al cliente.
+   *  Es un filtro aparte de `runStatus` porque no es un desenlace de corrida. */
+  awaiting: boolean;
+  /** F2: Lista o agenda «Programados». */
+  view: "list" | "scheduled";
+  /** F2: tareas de agente abiertas para la agenda, ordenadas por `next_run_at`. */
+  agenda: ActivityDTO[];
+  agendaLoading: boolean;
 
   setTab: (tab: TasksTab) => void;
   setDue: (due: TaskDueFilter | null) => void;
   setStatus: (status: TaskStatus | null) => void;
   setExecutor: (executor: TasksExecutor) => void;
   setRunStatus: (status: TaskRunStatus | null) => void;
+  setAwaiting: (awaiting: boolean) => void;
+  setView: (view: "list" | "scheduled") => void;
   setPage: (page: number) => void;
   fetch: () => Promise<void>;
   fetchStats: () => Promise<void>;
+  fetchAgenda: () => Promise<void>;
 
   /** Idempotentes en el backend; aquí optimistas con rollback. */
   act: (id: string, action: TaskAction) => Promise<ActionResult>;
@@ -96,6 +107,10 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
   status: "open",
   executor: null,
   runStatus: null,
+  awaiting: false,
+  view: "list",
+  agenda: [],
+  agendaLoading: false,
 
   setTab: (tab) => {
     set({ tab, page: 1 });
@@ -116,13 +131,29 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     // El filtro por desenlace del motor solo existe en el mundo de la IA: al
     // salir de él se limpia, o quedaría filtrando invisible sobre tareas que
     // ni siquiera tienen ejecuciones.
-    set({ executor, runStatus: executor === "agent" ? get().runStatus : null, page: 1 });
+    set({
+      executor,
+      runStatus: executor === "agent" ? get().runStatus : null,
+      awaiting: executor === "agent" ? get().awaiting : false,
+      page: 1,
+    });
     void get().fetch();
   },
 
   setRunStatus: (runStatus) => {
-    set({ runStatus, page: 1 });
+    // Excluyentes con «Esperando respuesta»: un solo segmentado los pinta.
+    set({ runStatus, awaiting: false, page: 1 });
     void get().fetch();
+  },
+
+  setAwaiting: (awaiting) => {
+    set({ awaiting, runStatus: awaiting ? null : get().runStatus, page: 1 });
+    void get().fetch();
+  },
+
+  setView: (view) => {
+    set({ view });
+    if (view === "scheduled") void get().fetchAgenda();
   },
 
   setPage: (page) => {
@@ -131,7 +162,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
   },
 
   fetch: async () => {
-    const { tab, due, status, executor, runStatus, page } = get();
+    const { tab, due, status, executor, runStatus, awaiting, page } = get();
     set({ loading: true, error: null });
     try {
       const params: ListTasksParams = {
@@ -142,6 +173,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
         status: status ?? undefined,
         assignee_type: executor ?? undefined,
         last_run_status: runStatus ?? undefined,
+        awaiting_reply: awaiting ? true : undefined,
         page,
         page_size: PAGE_SIZE,
       };
@@ -149,6 +181,30 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       set({ items: res.data, total: res.meta.total, loading: false });
     } catch (err) {
       set({ loading: false, error: errorMessage(err, "No se pudieron cargar las tareas") });
+    }
+  },
+
+  /**
+   * Agenda «Programados» (F2): todo lo que el agente va a hacer, ordenado por
+   * `next_run_at`. Una sola página grande: es una agenda, no un listado.
+   */
+  fetchAgenda: async () => {
+    set({ agendaLoading: true });
+    try {
+      const res = await listTasks({
+        assignee_type: "agent",
+        status: "open",
+        page: 1,
+        page_size: 100,
+      });
+      const agenda = [...res.data].sort((a, b) => {
+        const left = a.next_run_at ?? a.due_at ?? "";
+        const right = b.next_run_at ?? b.due_at ?? "";
+        return left.localeCompare(right);
+      });
+      set({ agenda, agendaLoading: false });
+    } catch {
+      set({ agendaLoading: false });
     }
   },
 
@@ -233,7 +289,10 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       };
     });
     // Los chips sí se recalculan: son un agregado del tenant, no de la lista.
-    if (evt.status !== "running") void get().fetchStats();
+    if (evt.status !== "running") {
+      void get().fetchStats();
+      if (get().view === "scheduled") void get().fetchAgenda();
+    }
   },
 
   onTaskCompleted: (evt) => {

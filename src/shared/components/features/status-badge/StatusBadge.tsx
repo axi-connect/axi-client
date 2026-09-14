@@ -21,16 +21,45 @@ const TONE_CLASSES: Record<StatusTone, string> = {
   neutral: "border-border bg-muted text-muted-foreground",
 };
 
+/**
+ * Apariencia «punto»: superficie `secondary` neutra, texto en `foreground` y
+ * el tono SOLO en un punto de 6px. Es la que pasa AA en claro — el tinte al
+ * 10 % con texto del mismo color da ~2,9:1 en verde— y la que usan las tareas
+ * de agente (F2 del seguimiento autónomo). El tinte sigue disponible para los
+ * consumidores que ya lo usan; migrarlos es decisión aparte.
+ */
+const DOT_CLASSES: Record<StatusTone, string> = {
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
+  info: "bg-info",
+  neutral: "bg-muted-foreground",
+};
+
 type StatusBadgeProps = {
   status: string;
   map: StatusMap;
   className?: string;
+  appearance?: "tint" | "dot";
 };
 
-export function StatusBadge({ status, map, className }: StatusBadgeProps) {
+export function StatusBadge({ status, map, className, appearance = "tint" }: StatusBadgeProps) {
   // Estado desconocido: neutro con el valor crudo. Nunca inventar semántica —
   // un estado nuevo del backend debe verse raro, no verse bien por accidente.
   const entry = map[status] ?? { label: status, tone: "neutral" as const };
+
+  if (appearance === "dot") {
+    return (
+      <Badge variant="secondary" className={cn("border-border", className)}>
+        {entry.transient ? (
+          <LoaderCircle aria-hidden="true" className="animate-spin text-info" />
+        ) : (
+          <span aria-hidden="true" className={cn("size-1.5 rounded-full", DOT_CLASSES[entry.tone])} />
+        )}
+        {entry.label}
+      </Badge>
+    );
+  }
 
   return (
     <Badge variant="outline" className={cn(TONE_CLASSES[entry.tone], className)}>

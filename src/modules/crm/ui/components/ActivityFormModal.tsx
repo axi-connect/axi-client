@@ -11,6 +11,7 @@ import { isAgentTask } from "@/modules/crm/domain/task-execution";
 import { getTask } from "@/modules/crm/infrastructure/services/activities-service.adapter";
 import { getContact } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { ActivityForm } from "@/modules/crm/ui/forms/ActivityForm";
+import { ScheduleFollowUpForm } from "@/modules/crm/ui/forms/ScheduleFollowUpForm";
 
 const TASKS_ROUTE = "/crm/tasks";
 
@@ -86,7 +87,10 @@ export function ActivityFormModal({
   const editing = taskId !== undefined;
   const loading = editing && task === null && !failed;
 
-  const agentBranch = task !== null && isAgentTask(task);
+  // F2: el ramal de IA tiene su propio flujo («Programar seguimiento»), con la
+  // zona del negocio, el aviso de ventana y la plantilla de apertura. Entra
+  // por `?executor=agent` al crear, o al editar una tarea de agente.
+  const agentBranch = (task !== null && isAgentTask(task)) || (!editing && executorParam === "agent");
 
   const presetContact =
     task !== null
@@ -108,7 +112,7 @@ export function ActivityFormModal({
         actions: [
           { label: "Cancelar", variant: "outline", asClose: true, id: "crm-activity-cancel" },
           {
-            label: "Guardar",
+            label: agentBranch ? (editing ? "Guardar cambios" : "Programar seguimiento") : "Guardar",
             variant: "default",
             asClose: false,
             id: "crm-activity-save",
@@ -116,7 +120,9 @@ export function ActivityFormModal({
               // Mientras carga no hay formulario montado: `requestSubmit` sobre
               // `null` no hace nada, que es exactamente lo correcto.
               (
-                document.getElementById("crm-activity-form") as HTMLFormElement | null
+                document.getElementById(
+                  agentBranch ? "crm-follow-up-form" : "crm-activity-form",
+                ) as HTMLFormElement | null
               )?.requestSubmit(),
           },
         ],
@@ -128,12 +134,21 @@ export function ActivityFormModal({
           <Skeleton className="h-9 w-full" />
           <Skeleton className="h-24 w-full" />
         </div>
+      ) : agentBranch ? (
+        <ScheduleFollowUpForm
+          {...(presetContact === undefined ? {} : { presetContact })}
+          {...(dealId === null ? {} : { dealId })}
+          {...(task === null ? {} : { task })}
+          onSuccess={() => {
+            window.dispatchEvent(new CustomEvent("crm:tasks:save:success"));
+            close();
+          }}
+        />
       ) : (
         <ActivityForm
           {...(presetContact === undefined ? {} : { presetContact })}
           {...(dealId === null ? {} : { dealId })}
           {...(task === null ? {} : { task })}
-          {...(executorParam === "agent" && !editing ? { presetExecutor: "agent" as const } : {})}
           onSuccess={() => {
             window.dispatchEvent(new CustomEvent("crm:tasks:save:success"));
             close();
@@ -145,13 +160,17 @@ export function ActivityFormModal({
 }
 
 function modalTitle(editing: boolean, agentBranch: boolean): string {
-  if (!editing) return "Nueva actividad";
-  return agentBranch ? "Editar tarea del agente" : "Editar actividad";
+  if (agentBranch) return editing ? "Editar seguimiento" : "Programar seguimiento";
+  return editing ? "Editar actividad" : "Nueva actividad";
 }
 
 function modalDescription(editing: boolean, agentBranch: boolean): string {
-  if (!editing) return "Nota, llamada, reunión o tarea con vencimiento y asignación.";
-  return agentBranch
-    ? "Cambiar el objetivo o la fecha reinicia los intentos: el agente vuelve a empezar."
-    : "Título, detalle, vencimiento y asignación.";
+  if (agentBranch) {
+    return editing
+      ? "Cambiar el objetivo o la fecha reinicia los intentos: el agente vuelve a empezar."
+      : "El agente contacta al cliente con tu objetivo, a la hora que elijas, y sigue la conversación.";
+  }
+  return editing
+    ? "Título, detalle, vencimiento y asignación."
+    : "Nota, llamada, reunión o tarea con vencimiento y asignación.";
 }

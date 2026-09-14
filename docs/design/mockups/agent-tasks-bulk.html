@@ -1,0 +1,813 @@
+<title>Trabajar la lista entera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root{ --background:#ffffff;--foreground:#171717;--axi-brand:#e65759;--axi-brand-2:#e02f2f;--axi-violet:#7c3aed;--axi-amber:#f0a431;--axi-muted:#f4f4f5;--axi-success:#16a34a;--axi-warning:#d97706;--axi-destructive:#dc2626;--axi-info:#2563eb;--axi-on-color:#ffffff;--accent-mix:14%;color-scheme:light; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --background:#0a0a0a;--foreground:#ededed;--axi-brand:#fb7185;--axi-brand-2:#df4f4f;--axi-violet:#a78bfa;--axi-amber:#fbbf24;--axi-muted:#18181b;--axi-success:#4ade80;--axi-warning:#fbbf24;--axi-destructive:#f87171;--axi-info:#60a5fa;--axi-on-color:#0a0a0a;--accent-mix:42%;color-scheme:dark; } }
+:root[data-theme="dark"]{ --background:#0a0a0a;--foreground:#ededed;--axi-brand:#fb7185;--axi-brand-2:#df4f4f;--axi-violet:#a78bfa;--axi-amber:#fbbf24;--axi-muted:#18181b;--axi-success:#4ade80;--axi-warning:#fbbf24;--axi-destructive:#f87171;--axi-info:#60a5fa;--axi-on-color:#0a0a0a;--accent-mix:42%;color-scheme:dark; }
+:root{
+  --border:color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft:color-mix(in srgb, var(--border) 50%, transparent);
+  --secondary:color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --muted:var(--axi-muted);
+  --muted-fg:color-mix(in srgb, var(--foreground) 70%, transparent);
+  --accent:color-mix(in srgb, var(--axi-brand) var(--accent-mix), var(--background));
+  --input:color-mix(in srgb, var(--foreground) 14%, var(--background));
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
+  --shadow-float:0 1px 2px rgb(0 0 0/.05),0 4px 12px rgb(0 0 0/.06);
+  --shadow-overlay:0 1px 2px rgb(0 0 0/.06),0 16px 48px rgb(0 0 0/.16);
+  --font-body:"Poppins",Helvetica,Arial,sans-serif;
+  --font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--background);color:var(--foreground);font-family:var(--font-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:88px}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:inherit;text-decoration:none}
+[hidden]{display:none!important}
+.ic{flex:none}
+.muted{color:var(--muted-fg)}
+.mono,.tnum{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--font-mono);font-size:.92em}
+.violet{color:var(--axi-violet)}
+.brand{color:var(--axi-brand)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--axi-brand) 50%,transparent)}
+
+/* ─────────── Chrome del mockup (NO es producto) ─────────── */
+.mk-bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:100;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;padding:6px 8px;border-radius:999px;font-size:11.5px;
+  background:color-mix(in srgb,var(--background) 80%,transparent);border:1px solid color-mix(in srgb,var(--border) 60%,transparent);box-shadow:var(--shadow-overlay);backdrop-filter:saturate(160%) blur(16px);max-width:calc(100vw - 24px)}
+.mk-tag{display:flex;align-items:center;gap:6px;padding:0 8px;font-weight:600;color:var(--muted-fg);white-space:nowrap}
+.mk-grp{display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--secondary)}
+.mk-grp b{padding:0 6px;font-weight:600;color:var(--muted-fg);align-self:center;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.mk-grp button{padding:5px 10px;border-radius:999px;color:var(--muted-fg);font-weight:500;white-space:nowrap}
+.mk-grp button[aria-pressed="true"]{background:var(--accent);color:var(--foreground)}
+.mk-theme{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;color:var(--muted-fg);font-weight:500}
+
+/* ─────────── Cabecera CRM (CrmNav) ─────────── */
+.crm-header{border-bottom:1px solid var(--border);padding:10px 24px}
+.crm-header .row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px}
+.crm-header h1{font-size:18px;font-weight:700}
+.wrap{max-width:1280px;margin:0 auto;padding:24px}
+.narrow{max-width:896px;margin:0 auto}
+
+/* ─────────── Pastilla única (segmented.tsx) ─────────── */
+.seg{position:relative;display:inline-flex;border-radius:999px;padding:4px;border:1px solid var(--border);background:var(--background);box-shadow:var(--shadow-float);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg[data-surface="inline"]{background:color-mix(in srgb,var(--secondary) 60%,transparent);box-shadow:none}
+.seg[data-size="sm"]{padding:2px}
+.seg-list{display:flex;gap:2px;margin:0;padding:0;list-style:none;position:relative;z-index:1}
+.seg-item{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted-fg);white-space:nowrap;transition:color .2s}
+.seg[data-size="sm"] .seg-item{padding:4px 10px;font-size:12px}
+.seg-item .ic{width:16px;height:16px}
+.seg[data-size="sm"] .seg-item .ic{width:14px;height:14px}
+.seg-item[aria-current="page"],.seg-item[data-active="true"],.seg-item[data-state="active"]{color:var(--foreground)}
+.seg-item[aria-current="page"] .ic,.seg-item[data-active="true"] .ic,.seg-item[data-state="active"] .ic{color:var(--axi-brand)}
+.seg-pill{position:absolute;z-index:0;border-radius:999px;background:var(--accent);transition:transform .25s cubic-bezier(.2,.8,.2,1),width .25s;opacity:0}
+.seg-count{margin-left:2px;font-size:11px;padding:0 6px;border-radius:999px;background:var(--secondary);color:var(--muted-fg)}
+@media (prefers-reduced-motion:reduce){.seg-pill{transition:none}}
+
+/* ─────────── Botones ─────────── */
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;font-weight:500;font-size:13px;border:1px solid transparent;transition:background .2s,color .2s,border-color .2s}
+.btn .ic{width:16px;height:16px}
+.btn-primary{background:var(--axi-brand);color:var(--axi-on-color)}
+.btn-primary:hover{background:var(--axi-brand-2)}
+.btn-outline{border-color:var(--border);background:var(--background)}
+.btn-outline:hover{background:var(--secondary)}
+.btn-ghost{color:var(--muted-fg)}
+.btn-ghost:hover{background:var(--secondary);color:var(--foreground)}
+.btn-icon{width:28px;height:28px;padding:0;justify-content:center;border-radius:var(--r-sm)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ─────────── Página de tareas ─────────── */
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
+.page-head h2{font-size:20px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;border:1px solid var(--border);background:var(--background);font-size:12px;color:var(--muted-fg)}
+.chip b{color:var(--foreground);font-weight:600;font-variant-numeric:tabular-nums}
+.chip.warn{border-color:color-mix(in srgb,var(--axi-warning) 40%,transparent);background:color-mix(in srgb,var(--axi-warning) 8%,transparent);color:var(--axi-warning)}
+.chip.warn b{color:var(--axi-warning)}
+.filters{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}
+.filters .lbl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-fg)}
+.filters-row{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:8px}
+
+.list{margin:16px 0 0;padding:0;list-style:none;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--background);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border)}
+.row:first-child{border-top:0}
+.row .lead{width:20px;height:20px;display:grid;place-items:center;flex:none}
+.row .body{min-width:0;flex:1}
+.row .title{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px;font-weight:500}
+.row .title .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .when{font-size:12px;color:var(--muted-fg);margin-top:1px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.row .when .abs{color:var(--foreground);font-weight:500}
+.row .reason{font-size:12px;color:var(--muted-fg);margin-top:2px}
+.row .who{font-size:12px;color:var(--muted-fg);display:inline-flex;align-items:center;gap:4px}
+.row .who .ic{width:12px;height:12px}
+.row .acts{display:flex;align-items:center;gap:4px;color:var(--muted-fg)}
+.row.done .t{color:var(--muted-fg);text-decoration:line-through}
+.checkbox{width:20px;height:20px;border-radius:6px;border:1px solid var(--input);display:grid;place-items:center}
+.checkbox.on{background:var(--axi-success);border-color:var(--axi-success);color:#fff}
+
+/* Badge de estado: superficie secondary + punto de tono (AA en claro) */
+.badge{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:500;border:1px solid var(--border);background:var(--secondary);color:var(--foreground);white-space:nowrap}
+.badge i{width:6px;height:6px;border-radius:50%;background:var(--muted-fg);flex:none}
+.badge.info i{background:var(--axi-info)}.badge.success i{background:var(--axi-success)}
+.badge.warning i{background:var(--axi-warning)}.badge.destructive i{background:var(--axi-destructive)}
+.badge .spin{width:11px;height:11px;animation:spin 1s linear infinite;color:var(--axi-info)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.badge .spin{animation:none}}
+
+/* ─────────── Pestañas con panel (Tabs pill) ─────────── */
+.tabs{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ─────────── Agenda «Programados» ─────────── */
+.agenda{margin-top:16px;display:flex;flex-direction:column;gap:20px}
+.day{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--background);overflow:hidden}
+.day-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 16px;background:var(--secondary);border-bottom:1px solid var(--border)}
+.day-head h3{font-size:13px;font-weight:600}
+.day-head h3 span{color:var(--muted-fg);font-weight:500;margin-left:6px}
+.day-head .sum{font-size:12px;color:var(--muted-fg);display:flex;gap:12px}
+.day-head .sum span{display:inline-flex;gap:4px;align-items:center}
+.slot{display:grid;grid-template-columns:64px 20px 1fr auto;gap:0 12px;align-items:center;padding:11px 16px;border-top:1px solid var(--border)}
+.slot:first-of-type{border-top:0}
+.slot .hh{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--foreground)}
+.slot .hh small{display:block;font-family:var(--font-body);font-size:10.5px;color:var(--muted-fg)}
+.slot .what{min-width:0}
+.slot .what .l1{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13.5px;font-weight:500}
+.slot .what .l2{font-size:12px;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot.quiet{background:color-mix(in srgb,var(--muted) 60%,transparent)}
+.slot.quiet .hh{color:var(--muted-fg)}
+.day-note{padding:8px 16px;font-size:12px;color:var(--muted-fg);display:flex;gap:8px;align-items:center;border-top:1px dashed var(--border)}
+.day-note .ic{width:14px;height:14px;color:var(--axi-info)}
+
+/* ─────────── Modal ─────────── */
+.modal-wrap{position:relative;min-height:70vh}
+.scrim{position:absolute;inset:0;background:color-mix(in srgb,#000 40%,transparent);border-radius:var(--r-lg)}
+.modal{position:relative;z-index:2;max-width:720px;margin:24px auto;background:var(--background);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-overlay);overflow:hidden}
+.modal-h{padding:20px 24px 12px}
+.modal-h h2{font-size:18px;display:flex;align-items:center;gap:8px}
+.modal-h p{margin:4px 0 0;font-size:13px;color:var(--muted-fg)}
+.modal-b{padding:4px 24px 20px;display:grid;gap:16px}
+.modal-f{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;border-top:1px solid var(--border);background:var(--secondary)}
+.modal-f .promise{font-size:13px;display:flex;gap:8px;align-items:flex-start;min-width:0}
+.modal-f .promise .ic{color:var(--axi-violet);margin-top:2px}
+.modal-f .promise b{font-weight:600}
+.modal-f .btns{display:flex;gap:8px;margin-left:auto}
+
+.field{display:grid;gap:6px}
+.field>label,.field .lab{font-size:12.5px;font-weight:500}
+.field .hint{font-size:12px;color:var(--muted-fg)}
+.grid2{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.control{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--input);border-radius:var(--r-md);background:var(--background);font-size:13.5px}
+.control.locked{background:var(--muted);border-color:var(--border);color:var(--foreground)}
+.control .ic{color:var(--muted-fg)}
+.control .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+textarea.control{height:auto;min-height:88px;padding:10px 12px;resize:vertical;display:block;width:100%;line-height:1.45}
+.counter{text-align:right;font-size:11px;color:var(--muted-fg);font-variant-numeric:tabular-nums}
+.ex-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ex{font-size:12px;padding:4px 10px;border-radius:999px;border:1px dashed var(--border);color:var(--muted-fg)}
+.ex:hover{border-color:var(--foreground);color:var(--foreground)}
+
+/* medio: tres opciones como radios en tarjetas (SegmentedControl no cabe con 2 líneas) */
+.medium{display:grid;gap:8px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:640px){.medium{grid-template-columns:1fr}}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);text-align:left;background:var(--background)}
+.opt .ic{grid-row:span 2;margin-top:2px;color:var(--muted-fg)}
+.opt b{font-size:13px;font-weight:500}
+.opt small{font-size:11.5px;color:var(--muted-fg);line-height:1.35}
+.opt[aria-checked="true"]{border-color:var(--axi-brand);background:var(--accent)}
+.opt[aria-checked="true"] .ic{color:var(--axi-violet)}
+.opt[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+
+.shortcuts{display:flex;flex-wrap:wrap;gap:6px}
+.shortcut{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted-fg)}
+.shortcut[aria-pressed="true"]{background:var(--accent);color:var(--foreground);border-color:transparent}
+.tz{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted-fg)}
+.tz .ic{width:13px;height:13px}
+
+.notice{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--background);font-size:12.5px;line-height:1.45}
+.notice .ic{margin-top:2px;flex:none;width:15px;height:15px}
+.notice.info .ic{color:var(--axi-info)}
+.notice.warn{border-color:color-mix(in srgb,var(--axi-warning) 35%,transparent);background:color-mix(in srgb,var(--axi-warning) 6%,transparent)}
+.notice.warn .ic{color:var(--axi-warning)}
+.notice.ok .ic{color:var(--axi-success)}
+.notice b{font-weight:600}
+.notice .cost{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--muted-fg);white-space:nowrap}
+
+.preview{border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;background:color-mix(in srgb,var(--muted) 70%,transparent)}
+.preview .from{font-size:11px;color:var(--muted-fg);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.bubble{max-width:420px;padding:10px 12px;border-radius:14px 14px 14px 4px;background:var(--background);border:1px solid var(--border);font-size:13.5px;line-height:1.45;box-shadow:var(--shadow-float)}
+.bubble mark{background:var(--accent);color:inherit;border-radius:4px;padding:0 3px}
+.bubble time{display:block;text-align:right;font-size:10.5px;color:var(--muted-fg);margin-top:4px}
+
+/* ─────────── Rail (DetailSheet) ─────────── */
+.sheet-wrap{display:grid;grid-template-columns:1fr 440px;gap:24px;align-items:start}
+@media (max-width:960px){.sheet-wrap{grid-template-columns:1fr}}
+.sheet{border:1px solid var(--border);border-radius:var(--r-xl);background:var(--background);box-shadow:var(--shadow-overlay);overflow:hidden}
+.sheet-h{padding:18px 20px 12px;border-bottom:1px solid var(--border)}
+.sheet-h h2{font-size:16px}
+.sheet-h .sub{font-size:13px;color:var(--muted-fg);margin-top:2px}
+.sheet-box{margin:12px 20px 0;padding:12px;border-radius:var(--r-md);background:var(--secondary);display:grid;gap:8px;font-size:13px}
+.sheet-box .kv{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.sheet-box .kv span:first-child{color:var(--muted-fg);font-size:12px}
+.sheet-b{padding:16px 20px 20px}
+.tl{list-style:none;margin:0;padding:0;display:grid}
+.tl li{display:grid;grid-template-columns:24px 1fr;gap:0 12px;position:relative;padding-bottom:16px}
+.tl li:not(:last-child)::before{content:"";position:absolute;left:11px;top:26px;bottom:-2px;width:2px;background:var(--border)}
+.tl .dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--secondary);color:var(--muted-fg)}
+.tl .dot .ic{width:13px;height:13px}
+.tl .dot.info{color:var(--axi-info)}.tl .dot.success{color:var(--axi-success)}.tl .dot.destructive{color:var(--axi-destructive)}
+.tl .dot.violet{color:var(--axi-violet);background:color-mix(in srgb,var(--axi-violet) 12%,transparent)}
+.tl .dot.warning{color:var(--axi-warning)}
+.tl .ttl{font-size:13.5px;font-weight:500;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tl .dsc{font-size:12.5px;color:var(--muted-fg);margin-top:1px}
+.tl .meta{font-size:12px;color:var(--muted-fg);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+.tl .meta a{color:var(--axi-brand);font-weight:500;display:inline-flex;gap:4px;align-items:center}
+.tl .meta a .ic{width:13px;height:13px}
+.pill-medium{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--border);color:var(--muted-fg);background:var(--background)}
+.pill-medium .ic{width:11px;height:11px}
+
+/* ─────────── Ajustes ─────────── */
+.cards{display:grid;gap:16px}
+.card{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--background);padding:20px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.card .info-line{display:flex;gap:10px;font-size:12px;color:var(--muted-fg);margin-top:12px;line-height:1.5}
+.card .info-line .ic{margin-top:2px;flex:none;width:14px;height:14px;color:var(--axi-info)}
+.card .info-line b{color:var(--foreground);font-weight:600}
+.num{display:grid;gap:6px}
+.num label{font-size:12.5px;font-weight:500}
+.num .control{width:140px;justify-content:space-between}
+.num .control .ic{width:14px;height:14px}
+.num small{font-size:11.5px;color:var(--muted-fg)}
+.kill{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px}
+.kill h3{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.kill p{margin:0;font-size:12px;color:var(--muted-fg)}
+.link{color:var(--axi-brand);font-weight:500;display:inline-flex;gap:4px;align-items:center}
+.link .ic{width:13px;height:13px}
+
+/* ─────────── Plantillas de Meta ─────────── */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.toolbar .control{height:34px}
+.tbl{width:100%;border-collapse:collapse;margin-top:16px;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;font-size:13px}
+.tbl thead th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-fg);font-weight:600;padding:10px 14px;background:var(--secondary);border-bottom:1px solid var(--border)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .name{font-family:var(--font-mono);font-size:12.5px}
+.tbl .body{color:var(--muted-fg);font-size:12.5px;max-width:360px}
+.tbl .cost{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl .why{font-size:12px;color:var(--muted-fg);margin-top:3px}
+.tbl .star{color:var(--axi-amber)}
+.suggest{display:grid;gap:10px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:760px){.suggest{grid-template-columns:1fr}}
+.sug{padding:12px;border:1px solid var(--border);border-radius:var(--r-md);text-align:left;background:var(--background);display:grid;gap:6px}
+.sug b{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.sug b .ic{color:var(--axi-violet);width:14px;height:14px}
+.sug p{margin:0;font-size:12px;color:var(--muted-fg);line-height:1.4}
+.sug .badge{justify-self:start}
+.cat{display:grid;gap:8px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:640px){.cat{grid-template-columns:1fr}}
+.varbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted-fg)}
+.varbar .ex{border-style:solid}
+.examples{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+@media (max-width:640px){.examples{grid-template-columns:1fr}}
+.examples .control{font-size:13px}
+.examples .control .k{font-family:var(--font-mono);color:var(--muted-fg);font-size:12px}
+.steps{display:grid;gap:8px;grid-template-columns:repeat(3,1fr);font-size:12px;color:var(--muted-fg)}
+@media (max-width:640px){.steps{grid-template-columns:1fr}}
+.steps div{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:var(--r-sm);background:var(--secondary)}
+.steps .ic{width:14px;height:14px;margin-top:2px;flex:none}
+.steps b{color:var(--foreground);font-weight:600}
+
+/* ─────────── F4: acción masiva ─────────── */
+.entry{display:grid;gap:12px;margin-bottom:28px}
+.entry>h3{font-size:13px;font-weight:600;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.06em}
+.entry>h3 span{text-transform:none;letter-spacing:0;font-weight:500;margin-left:8px}
+.selbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-bottom:0;border-radius:var(--r-lg) var(--r-lg) 0 0;background:var(--secondary);font-size:12.5px}
+.selbar b{font-variant-numeric:tabular-nums}
+.selbar .btns{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.selbar .all{color:var(--axi-brand);font-weight:500}
+.flat{margin-top:0;border-top-left-radius:0;border-top-right-radius:0}
+.done-banner{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:var(--r-lg);border:1px solid color-mix(in srgb,var(--axi-success) 35%,transparent);background:color-mix(in srgb,var(--axi-success) 6%,transparent)}
+.done-banner .ic-big{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--axi-success) 16%,transparent);color:var(--axi-success);flex:none}
+.done-banner .txt{min-width:220px;flex:1}
+.done-banner h4{font-size:15px;font-weight:600}
+.done-banner p{margin:3px 0 0;font-size:12.5px;color:var(--muted-fg);line-height:1.5}
+.done-banner .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.counts{display:flex;flex-wrap:wrap;gap:20px;padding:14px 0}
+.counts div{display:grid;gap:2px}
+.counts b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.counts span{font-size:12px;color:var(--muted-fg)}
+.counts .dim b{color:var(--muted-fg)}
+/* Reparto en el tiempo */
+.rate{display:grid;gap:10px;padding:12px 14px;border-radius:var(--r-md);background:var(--secondary)}
+.rate-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.rate .bar{position:relative;height:28px;border-radius:var(--r-sm);background:var(--background);border:1px solid var(--border);overflow:hidden;display:flex}
+.rate .bar i{display:block;height:100%;border-right:1px solid var(--background)}
+.rate .bar i.d1{background:color-mix(in srgb,var(--axi-violet) 55%,transparent)}
+.rate .bar i.d2{background:color-mix(in srgb,var(--axi-violet) 30%,transparent)}
+.rate .bar i.quiet{background:repeating-linear-gradient(45deg,var(--muted) 0 6px,transparent 6px 12px)}
+.rate .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--muted-fg)}
+.rate .legend span{display:inline-flex;align-items:center;gap:5px}
+.rate .legend i{width:9px;height:9px;border-radius:2px;flex:none}
+/* Exclusiones */
+.excl{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
+.excl>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;font-size:12.5px;background:var(--secondary)}
+.excl>summary::-webkit-details-marker{display:none}
+.excl>summary .ic{color:var(--muted-fg)}
+.excl>summary b{font-variant-numeric:tabular-nums}
+.excl[open]>summary .chev{transform:rotate(90deg)}
+.excl .chev{transition:transform .2s;margin-left:auto}
+.excl ul{margin:0;padding:6px 0;list-style:none}
+.excl li{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;padding:8px 14px;font-size:12.5px}
+.excl li b{font-variant-numeric:tabular-nums;min-width:26px;text-align:right}
+.excl li .why{color:var(--muted-fg);font-size:12px}
+.excl li .fix{margin-left:auto;color:var(--axi-brand);font-size:12px;font-weight:500}
+/* Resultado del lote */
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.tile{border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;display:grid;gap:3px}
+.tile b{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile span{font-size:12px;color:var(--muted-fg)}
+.tile.ok{border-color:color-mix(in srgb,var(--axi-success) 35%,transparent)}
+.tile.ok b{color:var(--axi-success)}
+/* ─────────── F4b: secuencias ─────────── */
+.seq-card{border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;display:grid;gap:10px;background:var(--background)}
+.seq-card .top{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.seq-card h3{font-size:14px;font-weight:600}
+.seq-card .top .btns{margin-left:auto;display:flex;gap:6px}
+.seq-flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--muted-fg)}
+.seq-flow .node{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--secondary)}
+.seq-flow .node .ic{width:12px;height:12px;color:var(--axi-violet)}
+.seq-flow .arr{color:var(--muted-fg);opacity:.6}
+.seq-rules{display:flex;flex-wrap:wrap;gap:8px}
+.rule{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:2px 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--axi-info) 35%,transparent);background:color-mix(in srgb,var(--axi-info) 6%,transparent);color:var(--muted-fg)}
+.rule .ic{width:12px;height:12px;color:var(--axi-info)}
+/* Editor: pasos en vertical */
+.steps-v{display:grid;gap:0;position:relative}
+.step{display:grid;grid-template-columns:76px 1fr;gap:14px;padding:14px 0;position:relative}
+.step+.step{border-top:1px dashed var(--border)}
+.step .when{display:grid;gap:4px;justify-items:end;text-align:right;padding-top:2px}
+.step .when b{font-size:12.5px;font-weight:600;white-space:nowrap}
+.step .when span{font-size:11px;color:var(--muted-fg)}
+.step .box{border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;display:grid;gap:8px;background:var(--background)}
+.step .box .hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step .box .hd .btns{margin-left:auto;display:flex;gap:4px}
+.step .obj{font-size:13px;line-height:1.5}
+.step .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--muted-fg)}
+.add-step{display:flex;align-items:center;gap:8px;justify-content:center;padding:12px;border:1px dashed var(--border);border-radius:var(--r-md);color:var(--muted-fg);font-size:12.5px;font-weight:500;margin-top:14px}
+/* Inscripciones */
+.prog{display:inline-flex;align-items:center;gap:4px}
+.prog i{width:7px;height:7px;border-radius:50%;background:var(--border);display:block}
+.prog i.on{background:var(--axi-violet)}
+.prog i.now{background:var(--axi-violet);box-shadow:0 0 0 3px color-mix(in srgb,var(--axi-violet) 22%,transparent)}
+.seq-rules .opt{flex:1;min-width:250px}
+@media (max-width:720px){
+  .cat{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .step{grid-template-columns:1fr}
+  .step .when{justify-items:start;text-align:left}
+  .steps{grid-template-columns:1fr}
+  .counts{gap:14px}
+  .wrap{padding:16px}
+}
+</style>
+
+    <div class="mk-bar" role="toolbar" aria-label="Chrome del mockup">
+      <span class="mk-tag"><svg class="ic violet" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>F4 · acción masiva y secuencias</span>
+      <div class="mk-grp"><button data-view="entradas" aria-pressed="true">Dónde aparece</button><button data-view="lote" aria-pressed="false">Programar en lote</button><button data-view="resultado" aria-pressed="false">Resultado</button><button data-view="secuencias" aria-pressed="false">Secuencias</button><button data-view="editor" aria-pressed="false">Editor</button><button data-view="inscritos" aria-pressed="false">Inscritos</button></div>
+      <div class="mk-grp" id="mk-medium" hidden><b>Medio</b><button data-medium="message" aria-pressed="true">Mensaje</button><button data-medium="call" aria-pressed="false">Llamada</button><button data-medium="both" aria-pressed="false">Llamada→mensaje</button></div>
+      <button class="mk-theme" id="theme-btn"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><span id="theme-txt">Oscuro</span></button>
+    </div>
+<div data-view-panel="entradas"><header class="crm-header"><div class="row"><h1>CRM</h1><nav class="seg" data-size="default" data-surface="raised" aria-label="Secciones del CRM"><span class="seg-pill" data-pill></span><ul class="seg-list"><li><a class="seg-item" href="#" aria-current="page"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Contactos</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>Pipeline</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>Tareas</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>Ajustes</a></li></ul></nav></div></header><div class="wrap"><div class="page-head"><div><h2>Dónde aparece la acción masiva</h2><p class="muted" style="margin:4px 0 0;font-size:13px;max-width:60ch">Tres finales de camino que hoy terminan en «ya está»: promover leads, terminar un import y mirar un segmento. El mismo modal en los tres.</p></div></div><div style="margin-top:20px">
+    <div class="entry">
+      <h3>1 · Captación <span>después de promover leads al CRM</span></h3>
+      <div class="selbar">
+        <span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <b>12</b> seleccionados
+        <span class="btns">
+          <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>Buscar datos de 8</button>
+          <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>Promover 12 al CRM</button>
+        </span>
+      </div>
+      <table class="tbl flat"><thead><tr><th></th><th>Lead</th><th>Ciudad</th><th>Estado</th></tr></thead>
+        <tbody><tr><td><span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td><td><b>Hotel Sierra Nevada</b><div class="why">hoteles · 34 habitaciones</div></td><td class="muted">Santa Marta</td><td><span class="badge success"><i></i>Con datos</span></td></tr><tr><td><span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td><td><b>Boutique Malecón</b><div class="why">retail · moda</div></td><td class="muted">Cartagena</td><td><span class="badge success"><i></i>Con datos</span></td></tr><tr><td><span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td><td><b>Café de la Loma</b><div class="why">restaurantes</div></td><td class="muted">Medellín</td><td><span class="badge success"><i></i>Con datos</span></td></tr></tbody></table>
+      <div class="done-banner">
+        <span class="ic-big"><svg class="ic " width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <div class="txt">
+          <h4>12 leads promovidos al CRM</h4>
+          <p>Ya son contactos tuyos. Todavía no les hemos escrito: promover declara la base
+             legal y crea el contacto — escribirle es otra decisión, y es tuya.</p>
+        </div>
+        <span class="btns">
+          <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver en el CRM</button>
+          <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Poner al agente a trabajar con los 12</button>
+        </span>
+      </div>
+    </div>
+    <div class="entry">
+      <h3>2 · Import terminado <span>/crm/settings/imports</span></h3>
+      <div class="card">
+        <div class="top" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+          <h3 style="margin:0"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> contactos-septiembre.csv</h3>
+          <span class="badge success"><i></i>Completado</span>
+          <span class="muted" style="margin-left:auto;font-size:12px">hace 2 minutos</span>
+        </div>
+        <div class="counts">
+          <div><b>300</b><span>filas</span></div>
+          <div><b>268</b><span>creados</span></div>
+          <div><b>24</b><span>actualizados</span></div>
+          <div class="dim"><b>5</b><span>saltados</span></div>
+          <div class="dim"><b>3</b><span>con error</span></div>
+        </div>
+        <div class="done-banner">
+          <span class="ic-big"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg></span>
+          <div class="txt">
+            <h4>268 contactos nuevos, sin una sola conversación</h4>
+            <p>Es el momento exacto en que un CRM se queda en agenda: la lista entró y nadie
+               la trabaja. El agente puede abrir la conversación con cada uno, repartido en el
+               tiempo para no quemar el número.</p>
+            <label style="display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px">
+              <span class="checkbox"></span> Incluir también los 24 actualizados
+            </label>
+          </div>
+          <span class="btns">
+            <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nuevo import</button>
+            <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Poner al agente a trabajar con los 268</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="entry">
+      <h3>3 · Contactos y segmentos <span>selección en la lista, o el segmento entero</span></h3>
+      <div class="selbar">
+        <span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <b>3</b> seleccionados ·
+        <a href="#" class="all">Seleccionar los 143 que cumplen el filtro</a>
+        <span class="btns">
+          <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Exportar</button>
+          <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Programar seguimiento para 3</button>
+        </span>
+      </div>
+      <table class="tbl flat"><thead><tr><th></th><th>Contacto</th><th>Etapa</th><th>Score</th></tr></thead>
+        <tbody><tr><td><span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td><td><b>Ana Gómez</b><div class="why">última conversación hace 97 días</div></td><td class="muted">Cliente</td><td class="tnum">72</td></tr><tr><td><span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td><td><b>Carlos Ruiz</b><div class="why">última conversación hace 104 días</div></td><td class="muted">Cliente</td><td class="tnum">65</td></tr><tr><td><span class="checkbox on"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></td><td><b>Marcela Peña</b><div class="why">última conversación hace 91 días</div></td><td class="muted">Oportunidad</td><td class="tnum">58</td></tr><tr><td><span class="checkbox"></span></td><td><b>Jorge Salas</b><div class="why">última conversación hace 120 días</div></td><td class="muted">Cliente</td><td class="tnum">44</td></tr></tbody></table>
+      <div class="card" style="margin-top:16px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+          <h3 style="margin:0"><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/></svg> Clientes inactivos 90 días</h3>
+          <span class="badge">143 contactos</span>
+          <span class="btns" style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Exportar</button>
+            <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Poner al agente a trabajar con estos 143</button>
+          </span>
+        </div>
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>El segmento se resuelve <b>al programar</b>, no ahora:
+          si mañana entran seis contactos más al filtro, no reciben nada de este lote. Un segmento que
+          se ejecuta solo cada vez que cambia es una secuencia, y eso se configura abajo.</span></div>
+      </div>
+    </div></div></div></div><div data-view-panel="lote" hidden>
+    <div class="wrap modal-wrap">
+      <div class="modal">
+        <div class="modal-h">
+          <h2><svg class="ic violet" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg> Seguimiento para 268 contactos</h2>
+          <p>Del import <b>contactos-septiembre.csv</b> · hace 2 minutos</p>
+        </div>
+        <div class="modal-b">
+          <div class="field">
+            <span class="lab">Agente</span>
+            <span class="control"><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg><span class="grow">Axi · asesora comercial</span><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+          </div>
+          <div class="field">
+            <span class="lab">Cómo contacta</span>
+            <div class="cat" role="radiogroup" aria-label="Cómo contacta"><button class="opt" role="radio" aria-checked="true" data-medium-opt="message"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg><b>Mensaje</b><small>Por WhatsApp, con el agente de siempre.</small></button><button class="opt" role="radio" aria-checked="false" data-medium-opt="call"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg><b>Llamada</b><small>El agente llama y conversa por voz.</small></button><button class="opt" role="radio" aria-checked="false" data-medium-opt="both"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg><b>Llamada y si no, mensaje</b><small>Llama; si no conecta, sigue por mensaje sin perder el objetivo.</small></button></div>
+          </div>
+          <div class="field">
+            <span class="lab">Objetivo</span>
+            <textarea class="control" style="height:74px;padding:10px 12px;resize:none;line-height:1.5"
+              >Presentarnos, preguntar qué necesita y ofrecerle una cita si le interesa</textarea>
+            <span class="hint">Una meta en tus palabras, no un guion. El agente redacta con su tono y tu catálogo.</span>
+            <div class="ex-chips">
+              <button class="ex">Reactivar a quien no compra hace 3 meses</button>
+              <button class="ex">Confirmar interés y agendar</button>
+            </div>
+          </div>
+          
+    <div class="field">
+      <span class="lab">Cuándo empieza y a qué ritmo</span>
+      <div class="rate">
+        <div class="rate-row">
+          <div class="field" style="flex:1;min-width:150px">
+            <span class="hint">Empieza</span>
+            <span class="control"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg><span class="grow">jue 18 sept · 9:00</span></span>
+          </div>
+          <div class="field" style="flex:1;min-width:150px">
+            <span class="hint">Ritmo</span>
+            <span class="control"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span class="grow">20 por hora</span><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+          </div>
+          <div class="field" style="flex:1.4;min-width:190px">
+            <span class="hint">Termina</span>
+            <span class="control locked"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg><span class="grow">vie 19 sept · 11:00</span></span>
+          </div>
+        </div>
+        <div class="bar" aria-hidden="true">
+          <i class="d1" style="width:31%"></i><i class="quiet" style="width:28%"></i>
+          <i class="d2" style="width:29%"></i><i class="quiet" style="width:12%"></i>
+        </div>
+        <div class="legend">
+          <span><i style="background:color-mix(in srgb,var(--axi-violet) 55%,transparent)"></i>jueves · 200</span>
+          <span><i style="background:color-mix(in srgb,var(--axi-violet) 30%,transparent)"></i>viernes · 68</span>
+          <span><i style="background:var(--muted)"></i>horario silencioso y noche</span>
+        </div>
+      </div>
+      <div class="notice warn"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Tu cupo diario son <b>200 tareas</b>, así que el lote cruza a la mañana siguiente. El agente no se lo salta: lo que sobra sale el viernes desde las 8:00.</span></div>
+      <div class="notice info"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>El ritmo no es decoración. Meta limita a cuántos destinatarios nuevos puedes escribir en 24 h y mide tu calidad; mandar 268 aperturas de golpe es la forma más rápida de que te bajen el límite.</span></div>
+    </div>
+          
+    <details class="excl">
+      <summary><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 21a8 8 0 0 1 11.873-7"/><circle cx="10" cy="8" r="5"/><path d="m17 17 5 5"/><path d="m22 17-5 5"/></svg><b>32</b> de 300 no van a recibir nada — mira por qué
+        <svg class="ic chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></summary>
+      <ul>
+        <li><b>18</b> se dieron de baja de comunicaciones comerciales
+            <span class="why">Es una obligación legal, no una preferencia.</span></li>
+        <li><b>9</b> ya tienen un seguimiento del agente abierto
+            <span class="why">Una tarea por contacto: tres mensajes encolados al mismo cliente son acoso.</span>
+            <a href="#" class="fix">Ver las 9</a></li>
+        <li><b>5</b> no tienen WhatsApp ni teléfono
+            <span class="why">Sin canal no hay a dónde escribir.</span>
+            <a href="#" class="fix">Completar datos</a></li>
+      </ul>
+    </details>
+          
+    <div class="field" data-when-medium="message both">
+      <span class="lab">Cómo abre la conversación</span>
+      <div class="notice info"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span><b>214 de los 268</b> llevan más de 24 h sin escribirte: a esos Meta solo deja entrar con una plantilla aprobada. Los otros 54 reciben el mensaje normal del agente.</span></div>
+      <div class="field">
+        <span class="hint">Plantilla de apertura</span>
+        <span class="control"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg><span class="grow">seguimiento_v1 · utility · es</span><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+      </div>
+      <div class="field">
+        <span class="hint">Tema (la variable {{2}} de la plantilla)</span>
+        <span class="control"><span class="grow">tu pedido de septiembre</span></span>
+      </div>
+      <div class="preview">
+        <div class="from"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg> Así le llega a Ana Gómez</div>
+        <div class="bubble">Hola <b class="violet">Ana</b>, te escribo por <b class="violet">tu pedido de
+          septiembre</b>. ¿Seguimos?</div>
+      </div>
+      <div class="notice info"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Las variables las rellenamos con los datos del contacto y el tema que escribiste — <b>nunca con texto del modelo</b>. El agente entra cuando el cliente responde.</span><span class="cost">214 × US$0,0008 ≈ <b>US$0,17</b></span></div>
+    </div>
+          
+    <div class="field" data-when-medium="call both" hidden>
+      <span class="lab">Llamadas</span>
+      <div class="notice warn"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>268 llamadas a 20 por hora son <b>13 horas de línea</b>. Tu cupo de llamadas del agente son 20 al día, así que este lote tardaría dos semanas en salir entero.</span></div>
+      <div class="notice info"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Para un lote grande, «llamada y si no, mensaje» reparte mejor: llama a quien puede atender y escribe al resto el mismo día.</span></div>
+    </div>
+        </div>
+        <div class="modal-f">
+          <p class="promise"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg><span>El agente escribirá a <b>268 contactos</b> desde el
+            <b>jueves 18 a las 9:00</b>, a <b>20 por hora</b>. Puedes pararlo entero mientras no haya salido.</span></p>
+          <span class="btns">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Programar 268 seguimientos</button>
+          </span>
+        </div>
+      </div>
+    </div></div><div data-view-panel="resultado" hidden><header class="crm-header"><div class="row"><h1>CRM</h1><nav class="seg" data-size="default" data-surface="raised" aria-label="Secciones del CRM"><span class="seg-pill" data-pill></span><ul class="seg-list"><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Contactos</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>Pipeline</a></li><li><a class="seg-item" href="#" aria-current="page"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>Tareas</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>Ajustes</a></li></ul></nav></div></header>
+    <div class="wrap narrow">
+      <div class="done-banner" style="margin-bottom:20px">
+        <span class="ic-big"><svg class="ic " width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <div class="txt">
+          <h4>268 seguimientos programados</h4>
+          <p>Empiezan el jueves 18 a las 9:00 y se reparten a 20 por hora. Nada ha salido todavía.</p>
+        </div>
+        <span class="btns">
+          <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Cancelar el lote</button>
+          <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>Ver en Programados</button>
+        </span>
+      </div>
+      <div class="tiles">
+        <div class="tile ok"><b>268</b><span>programadas</span></div>
+        <div class="tile"><b>32</b><span>no entraron</span></div>
+        <div class="tile"><b>214</b><span>abrirán con plantilla</span></div>
+        <div class="tile"><b>US$0,17</b><span>costo estimado de Meta</span></div>
+      </div>
+      <h3 style="margin:24px 0 0;font-size:14px">Los 32 que no entraron</h3>
+      <table class="tbl"><thead><tr><th>N.º</th><th>Motivo</th><th>Qué puedes hacer</th></tr></thead>
+        <tbody><tr><td class="tnum"><b>18</b></td><td>Se dieron de baja<div class="why">No se les puede escribir nada comercial.</div></td><td><a href="#" class="fix" style="color:var(--axi-brand);font-weight:500">Ver la lista</a></td></tr><tr><td class="tnum"><b>9</b></td><td>Ya tenían un seguimiento abierto<div class="why">El que estaba sigue su curso.</div></td><td><a href="#" class="fix" style="color:var(--axi-brand);font-weight:500">Ver esas tareas</a></td></tr><tr><td class="tnum"><b>5</b></td><td>Sin WhatsApp ni teléfono<div class="why">Entraron al CRM sin canal de contacto.</div></td><td><a href="#" class="fix" style="color:var(--axi-brand);font-weight:500">Completar datos</a></td></tr></tbody></table>
+      <div class="card" style="margin-top:20px">
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Esto es una <b>foto de ahora</b>. Cada tarea vuelve a
+          comprobar la baja, el horario silencioso y el cupo justo antes de ejecutarse: si alguien se da de
+          baja el miércoles, el jueves no recibe nada aunque esté en este lote.</span></div>
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span><b>«Cancelar el lote»</b> solo existe mientras no
+          haya salido nada. En cuanto el primer mensaje se envía, lo que se cancela son las tareas que
+          quedan — lo enviado no se recoge.</span></div>
+      </div>
+    </div></div><div data-view-panel="secuencias" hidden><header class="crm-header"><div class="row"><h1>CRM</h1><nav class="seg" data-size="default" data-surface="raised" aria-label="Secciones del CRM"><span class="seg-pill" data-pill></span><ul class="seg-list"><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Contactos</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>Pipeline</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>Tareas</a></li><li><a class="seg-item" href="#" aria-current="page"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>Ajustes</a></li></ul></nav></div></header>
+    <div class="wrap narrow">
+      <div class="page-head">
+        <div><h2>Secuencias</h2>
+          <p class="muted" style="margin:4px 0 0;font-size:13px;max-width:62ch">Varios contactos seguidos en el
+            tiempo, con un solo objetivo por paso. Se detienen solas cuando el cliente responde — que es lo
+            único que las separa de mandar tres mensajes seguidos.</p></div>
+        <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Nueva secuencia</button>
+      </div>
+      <div class="cards" style="margin-top:20px">
+    <div class="seq-card">
+      <div class="top">
+        <h3><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg> Post-captación</h3>
+        <span class="badge success"><i></i>Activa</span>
+        <span class="btns">
+          <button class="btn btn-outline btn-icon" aria-label="Editar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+          <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>12 inscritos</button>
+        </span>
+      </div>
+      <div class="seq-flow"><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>Día 0 · mensaje</span><span class="arr"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>+2 días · llamada</span><span class="arr"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>+5 días · mensaje</span></div>
+      <div class="seq-rules">
+        <span class="rule"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Para si responde</span>
+        <span class="rule"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>Para si compra</span>
+      </div>
+    </div>
+    <div class="seq-card">
+      <div class="top">
+        <h3><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg> Reactivación de fríos</h3>
+        <span class="badge success"><i></i>Activa</span>
+        <span class="btns">
+          <button class="btn btn-outline btn-icon" aria-label="Editar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+          <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>45 inscritos</button>
+        </span>
+      </div>
+      <div class="seq-flow"><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Día 0 · plantilla</span><span class="arr"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>+4 días · mensaje</span><span class="arr"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>+10 días · llamada y si no, mensaje</span></div>
+      <div class="seq-rules"><span class="rule"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Para si responde</span></div>
+    </div>
+    <div class="seq-card">
+      <div class="top">
+        <h3><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg> Post-import</h3>
+        <span class="badge "><i></i>Borrador</span>
+        <span class="btns">
+          <button class="btn btn-outline btn-icon" aria-label="Editar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+          <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>Activar</button>
+        </span>
+      </div>
+      <div class="seq-flow"><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Día 0 · plantilla</span><span class="arr"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="node"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>+3 días · mensaje</span></div>
+      <div class="seq-rules"><span class="rule"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Para si responde</span></div>
+    </div></div>
+      <h3 style="margin:28px 0 12px;font-size:14px">Empieza por una de estas</h3>
+      <div class="cat"><button class="sug"><b><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>Post-captación</b><p>Para leads recién promovidos: presentarse, entender la necesidad y ofrecer cita.</p><span class="badge">3 pasos</span></button><button class="sug"><b><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>Post-import</b><p>Para una lista que entra de golpe: abrir con plantilla y retomar a los 3 días.</p><span class="badge">2 pasos</span></button><button class="sug"><b><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>Reactivación de fríos</b><p>Para clientes que llevan meses sin comprar: recordar, escuchar y llamar.</p><span class="badge">3 pasos</span></button></div>
+      <div class="card" style="margin-top:20px">
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Cada paso es una <b>tarea de agente normal</b>: respeta el
+          horario silencioso, el cupo diario, la baja y la ventana de 24 h, y deja su rail de intentos.
+          Una secuencia no es un canal nuevo — es la misma tarea, tres veces, con memoria.</span></div>
+      </div>
+    </div></div><div data-view-panel="editor" hidden><header class="crm-header"><div class="row"><h1>CRM</h1><nav class="seg" data-size="default" data-surface="raised" aria-label="Secciones del CRM"><span class="seg-pill" data-pill></span><ul class="seg-list"><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Contactos</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>Pipeline</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>Tareas</a></li><li><a class="seg-item" href="#" aria-current="page"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>Ajustes</a></li></ul></nav></div></header>
+    <div class="wrap narrow">
+      <div class="page-head">
+        <div><h2>Post-captación</h2>
+          <p class="muted" style="margin:4px 0 0;font-size:13px">3 pasos · 12 inscritos ahora mismo</p></div>
+        <span style="display:flex;gap:8px">
+          <button class="btn btn-outline">Cancelar</button>
+          <button class="btn btn-primary"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Guardar secuencia</button>
+        </span>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h3>Cuándo se detiene sola</h3>
+        <div class="seq-rules">
+          <label class="opt" style="grid-template-columns:auto 1fr;cursor:pointer" aria-checked="true" role="checkbox">
+            <svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><b>Para si responde</b>
+            <small>En cuanto el cliente escribe o contesta la llamada, los pasos que quedan se cancelan.</small>
+          </label>
+          <label class="opt" style="grid-template-columns:auto 1fr;cursor:pointer" aria-checked="true" role="checkbox">
+            <svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg><b>Para si compra</b>
+            <small>Un pedido pagado o una oportunidad ganada cierran la secuencia como cumplida.</small>
+          </label>
+        </div>
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Sin ninguna de las dos, la secuencia sigue
+          escribiendo a quien ya te contestó. <b>Es la diferencia entre un seguimiento y un acoso</b>, así que
+          las dos vienen activadas.</span></div>
+      </div>
+
+      <h3 style="margin:24px 0 4px;font-size:14px">Los pasos</h3>
+      <div class="steps-v">
+        <div class="step">
+          <div class="when"><b>Día 0</b><span>al inscribir</span></div>
+          <div class="box">
+            <div class="hd"><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg><b style="font-size:13px;font-weight:600">Plantilla de apertura</b>
+              <span class="btns">
+                <button class="btn btn-ghost btn-icon" aria-label="Editar paso"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button class="btn btn-ghost btn-icon" aria-label="Quitar paso"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              </span>
+            </div>
+            <p class="obj" style="margin:0">Presentarnos, preguntar qué necesita y ofrecer una cita si le interesa</p>
+            <div class="meta"><span class="pill-medium"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>seguimiento_v1 · utility · es</span></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="when"><b>+2 días</b><span>jue 9:00</span></div>
+          <div class="box">
+            <div class="hd"><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg><b style="font-size:13px;font-weight:600">Llamada</b>
+              <span class="btns">
+                <button class="btn btn-ghost btn-icon" aria-label="Editar paso"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button class="btn btn-ghost btn-icon" aria-label="Quitar paso"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              </span>
+            </div>
+            <p class="obj" style="margin:0">Preguntar si revisó lo que le enviamos y resolver dudas por voz</p>
+            <div class="meta"></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="when"><b>+5 días</b><span>dom 9:00</span></div>
+          <div class="box">
+            <div class="hd"><svg class="ic violet" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg><b style="font-size:13px;font-weight:600">Llamada y si no, mensaje</b>
+              <span class="btns">
+                <button class="btn btn-ghost btn-icon" aria-label="Editar paso"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button class="btn btn-ghost btn-icon" aria-label="Quitar paso"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              </span>
+            </div>
+            <p class="obj" style="margin:0">Último intento: ofrecer una cita concreta o cerrar la conversación con elegancia</p>
+            <div class="meta"></div>
+          </div>
+        </div></div>
+      <button class="add-step"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Añadir paso</button>
+
+      <div class="card" style="margin-top:20px">
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Los días son <b>desde la inscripción</b>, no fechas fijas:
+          quien entre hoy recibirá el último paso el <b>martes 23</b>; quien entre mañana, el miércoles 24.
+          La hora la pone tu horario de trabajo — un paso que caiga a las 3 a. m. sale a las 8:00.</span></div>
+      </div>
+    </div></div><div data-view-panel="inscritos" hidden><header class="crm-header"><div class="row"><h1>CRM</h1><nav class="seg" data-size="default" data-surface="raised" aria-label="Secciones del CRM"><span class="seg-pill" data-pill></span><ul class="seg-list"><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Contactos</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>Pipeline</a></li><li><a class="seg-item" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>Tareas</a></li><li><a class="seg-item" href="#" aria-current="page"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>Ajustes</a></li></ul></nav></div></header>
+    <div class="wrap narrow">
+      <div class="page-head">
+        <div><h2>Inscritos en «Post-captación»</h2>
+          <p class="muted" style="margin:4px 0 0;font-size:13px">Quién va por dónde, y por qué se paró.</p></div>
+        <button class="btn btn-outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>Editar la secuencia</button>
+      </div>
+      <div class="chips" style="margin-top:12px">
+        <span class="chip"><b>12</b> activas</span>
+        <span class="chip"><b>18</b> paradas porque respondieron</span>
+        <span class="chip"><b>3</b> paradas porque compraron</span>
+        <span class="chip"><b>7</b> completadas sin respuesta</span>
+      </div>
+      <table class="tbl"><thead><tr><th>Contacto</th><th>Progreso</th><th>Próximo paso</th><th>Estado</th></tr></thead>
+        <tbody><tr><td><b>Ana Gómez</b><div class="why">inscrita al promover · hace 2 días</div></td><td><span class="prog"><i class="on"></i><i class="now"></i><i class=""></i></span><div class="why">Paso 2 de 3</div></td><td class="muted">mañana 9:00</td><td><span class="badge info"><i></i>Activa</span><div class="why">Llamada pendiente</div></td></tr><tr><td><b>Carlos Ruiz</b><div class="why">inscrito al promover · hace 2 días</div></td><td><span class="prog"><i class=""></i><i class=""></i><i class=""></i></span><div class="why">Paso 1 de 3</div></td><td class="muted">—</td><td><span class="badge success"><i></i>Parada</span><div class="why">Respondió el mismo día</div></td></tr><tr><td><b>Marcela Peña</b><div class="why">inscrita al promover · hace 4 días</div></td><td><span class="prog"><i class="on"></i><i class="on"></i><i class="now"></i></span><div class="why">Paso 3 de 3</div></td><td class="muted">hoy 9:00</td><td><span class="badge info"><i></i>Activa</span><div class="why">Último paso</div></td></tr><tr><td><b>Jorge Salas</b><div class="why">import de septiembre · hace 6 días</div></td><td><span class="prog"><i class="on"></i><i class="on"></i><i class=""></i></span><div class="why">Paso 3 de 3</div></td><td class="muted">—</td><td><span class="badge "><i></i>Completada</span><div class="why">Los 3 pasos salieron, sin respuesta</div></td></tr><tr><td><b>Luisa Prada</b><div class="why">import de septiembre · hace 6 días</div></td><td><span class="prog"><i class=""></i><i class=""></i><i class=""></i></span><div class="why">Paso 1 de 3</div></td><td class="muted">—</td><td><span class="badge success"><i></i>Parada</span><div class="why">Compró: oportunidad ganada</div></td></tr></tbody></table>
+      <div class="card" style="margin-top:20px">
+        <div class="info-line"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span><b>Parada</b> no es un fallo: es la secuencia haciendo lo que
+          prometió. Lo que hay que vigilar es «completada sin respuesta» — tres intentos y silencio suele
+          querer decir que el objetivo del paso 1 no era interesante.</span></div>
+      </div>
+    </div></div>
+<script>
+(function(){
+  "use strict";
+  var ACTIVE='[data-active="true"],[aria-current="page"],[data-state="active"]';
+  function placePill(seg){var pill=seg.querySelector("[data-pill]"),a=seg.querySelector(ACTIVE);if(!pill)return;
+    if(!a){pill.style.opacity="0";return}
+    var pad=seg.getAttribute("data-size")==="sm"?2:4;
+    pill.style.width=a.offsetWidth+"px";pill.style.height=a.offsetHeight+"px";pill.style.top=pad+"px";
+    pill.style.left="0";pill.style.transform="translateX("+(a.offsetLeft-pad)+"px)";pill.style.opacity="1"}
+  function placeAll(){document.querySelectorAll(".seg").forEach(placePill)}
+
+  /* Vistas del mockup */
+  function show(key){
+    document.querySelectorAll("[data-view-panel]").forEach(function(p){p.hidden=p.getAttribute("data-view-panel")!==key});
+    document.querySelectorAll(".mk-grp [data-view]").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-view")===key))});
+    document.getElementById("mk-medium").hidden = key!=="lote";
+    window.scrollTo(0,0); placeAll();
+  }
+  document.querySelectorAll(".mk-grp [data-view]").forEach(function(b){
+    b.addEventListener("click",function(){show(b.getAttribute("data-view"))})});
+
+  /* Medio elegido en el lote: cambia qué bloques aplican y la promesa */
+  function setMedium(m){
+    document.querySelectorAll('[data-medium-opt]').forEach(function(o){
+      o.setAttribute("aria-checked", String(o.getAttribute("data-medium-opt")===m))});
+    document.querySelectorAll(".mk-grp [data-medium]").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-medium")===m))});
+    document.querySelectorAll("[data-when-medium]").forEach(function(el){
+      el.hidden = el.getAttribute("data-when-medium").split(" ").indexOf(m)<0});
+    var p=document.querySelector(".modal-f .promise span");
+    if(p){p.innerHTML = m==="call"
+      ? 'El agente <b>llamará a 268 contactos</b> desde el <b>jueves 18 a las 9:00</b>, a <b>20 por hora</b>. Puedes pararlo entero mientras no haya salido.'
+      : m==="both"
+      ? 'El agente <b>llamará a 268 contactos</b> desde el <b>jueves 18 a las 9:00</b> y, a quien no conteste, le escribirá. Puedes pararlo entero mientras no haya salido.'
+      : 'El agente escribirá a <b>268 contactos</b> desde el <b>jueves 18 a las 9:00</b>, a <b>20 por hora</b>. Puedes pararlo entero mientras no haya salido.'}
+  }
+  document.querySelectorAll('[data-medium-opt]').forEach(function(o){
+    o.addEventListener("click",function(){setMedium(o.getAttribute("data-medium-opt"))})});
+  document.querySelectorAll(".mk-grp [data-medium]").forEach(function(b){
+    b.addEventListener("click",function(){setMedium(b.getAttribute("data-medium"))})});
+
+  /* Tema */
+  var tb=document.getElementById("theme-btn");
+  tb.addEventListener("click",function(){
+    var dark=document.documentElement.getAttribute("data-theme")==="dark";
+    document.documentElement.setAttribute("data-theme", dark?"light":"dark");
+    document.getElementById("theme-txt").textContent = dark?"Oscuro":"Claro";
+    placeAll();
+  });
+
+  window.addEventListener("resize", placeAll);
+  placeAll();
+})();
+</script>

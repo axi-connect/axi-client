@@ -47,6 +47,8 @@ import {
   importTemplateUrl,
 } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { listTags } from "@/modules/crm/infrastructure/services/segments-service.adapter";
+import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 import { ImportGuideCard } from "./ImportGuideCard";
 import { ImportReport, ImportStatusBadge } from "./ImportReport";
 
@@ -437,6 +439,21 @@ export function ContactImportWizard({
         </p>
       ) : (
         <ImportReport job={job} />
+      )}
+      {/* F4a: el final del camino. Sin esto, la lista entra y nadie la
+          trabaja — que es donde un CRM se queda en agenda. Va en el propio
+          asistente (no solo en el historial de /crm/settings/imports) porque
+          es el MISMO paso "importación terminada" tanto en modal como
+          embebido. */}
+      {failure === null && job.created_count > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <BulkFollowUpButton
+            audience={{ source: "import", import_job_id: job.id }}
+            audienceLabel={`Del import ${job.filename}`}
+            label={`Poner al agente a trabajar con los ${String(job.created_count)}`}
+          />
+          <EnrollInSequenceButton audience={{ source: "import", import_job_id: job.id }} />
+        </div>
       )}
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" size="sm" className="rounded-full" onClick={startOver}>

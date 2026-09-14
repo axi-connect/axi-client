@@ -34,6 +34,33 @@ export const TASK_RUN_STATUS_LABELS: Record<TaskRunStatus, string> = {
   skipped: "Omitida",
 };
 
+/** Medio por el que salió UNA corrida (F0). `call_then_message` es política de
+ *  la tarea, nunca de una corrida: el backend lo impide con un CHECK. */
+export type TaskMedium = TaskRunDTO["medium"];
+
+export const TASK_MEDIUM_LABELS: Record<TaskMedium, string> = {
+  message: "Mensaje",
+  call: "Llamada",
+};
+
+/** Las etiquetas de mensajería no sirven para una llamada: «Enviando» una
+ *  llamada no existe. Solo cambian los tres estados que hablan del acto. */
+const CALL_RUN_STATUS_LABELS: Partial<Record<TaskRunStatus, string>> = {
+  running: "Llamando",
+  done: "Llamada realizada",
+  failed: "No se pudo llamar",
+};
+
+export function runStatusLabel(status: TaskRunStatus, medium: TaskMedium): string {
+  return (medium === "call" ? CALL_RUN_STATUS_LABELS[status] : undefined) ?? TASK_RUN_STATUS_LABELS[status];
+}
+
+/** F1: la apertura con plantilla salió y el agente espera al cliente. */
+export const AWAITING_REPLY_LABEL = "Esperando respuesta";
+/** F1: la apertura salió, nadie respondió en el plazo: el seguimiento se hizo. */
+export const NO_REPLY_LABEL = "Enviado · sin respuesta";
+export const OPENED_WITH_TEMPLATE_LABEL = "Enviado con plantilla";
+
 /**
  * `deferred` va en **info**, nunca en warning ni destructive.
  *
@@ -86,6 +113,21 @@ export const TASK_RUN_REASON_LABELS: Partial<Record<string, string>> = {
   task_cancelled: "La tarea se canceló",
   expired: "Se agotaron los intentos",
   internal_error: "Error interno; se reintenta solo",
+  // F1 — apertura con plantilla de Meta
+  opening_template_unavailable: "La plantilla de apertura ya no está aprobada en Meta",
+  no_reply: "El cliente no respondió a la apertura",
+  // F3 — llamadas (el dominio ya las conoce)
+  calls_disabled: "Las llamadas están apagadas en esta empresa",
+  no_phone_number: "La empresa no tiene un número para llamar",
+  contact_unreachable: "El contacto no tiene teléfono",
+  no_agent: "El agente no puede hacer llamadas",
+  calls_paused: "Se agotó la cuota de minutos del plan",
+  call_no_answer: "No contestó",
+  call_busy: "Ocupado",
+  call_voicemail: "Buzón de voz",
+  call_failed: "La llamada falló",
+  call_concurrency: "Ya había demasiadas llamadas en curso",
+  medium_switched: "No se logró por teléfono: continúa por mensaje",
 };
 
 export function taskRunReasonLabel(reason: string | null): string | null {
@@ -129,7 +171,8 @@ export function taskDisplayState(
   task: Pick<
     ActivityDTO,
     "kind" | "assignee_type" | "task_status" | "last_run_status" | "last_run_reason"
-  >,
+  > &
+    Partial<Pick<ActivityDTO, "awaiting_reply_until">>,
 ): TaskDisplayState {
   const human = { label: null, tone: "neutral" as const, transient: false, reason: null };
 
@@ -143,6 +186,11 @@ export function taskDisplayState(
   const reason = taskRunReasonLabel(task.last_run_reason);
 
   if (task.task_status === "completed") {
+    // F1: la apertura salió y nadie respondió en el plazo. Se hizo, pero no
+    // hubo conversación: neutro, no éxito — y el porqué en la fila.
+    if (task.last_run_reason === "no_reply") {
+      return { ...base, label: NO_REPLY_LABEL, tone: "neutral", transient: false, reason };
+    }
     return { ...base, label: TASK_RUN_STATUS_LABELS.done, tone: "success", transient: false, reason: null };
   }
   if (task.task_status === "cancelled") {
@@ -153,6 +201,19 @@ export function taskDisplayState(
       tone: task.last_run_reason === "expired" ? "destructive" : "neutral",
       transient: false,
       reason,
+    };
+  }
+
+  // F1: abierta y esperando al cliente tras la apertura con plantilla. Manda
+  // sobre el último desenlace (que fue `done`, el de la plantilla): lo que el
+  // operador necesita saber es que la pelota está del lado del cliente.
+  if (task.awaiting_reply_until !== undefined && task.awaiting_reply_until !== null) {
+    return {
+      ...base,
+      label: AWAITING_REPLY_LABEL,
+      tone: "info",
+      transient: false,
+      reason: "Abrió con la plantilla de Meta. Si el cliente responde, el agente retoma el objetivo.",
     };
   }
 
@@ -190,10 +251,14 @@ export function taskBadgeMap(state: TaskDisplayState): StatusMap {
  * vuelve a pasar todos los guards.
  */
 export function canRunNow(
-  task: Pick<ActivityDTO, "kind" | "assignee_type" | "task_status" | "last_run_status">,
+  task: Pick<ActivityDTO, "kind" | "assignee_type" | "task_status" | "last_run_status"> &
+    Partial<Pick<ActivityDTO, "awaiting_reply_until">>,
 ): boolean {
   if (!isAgentTask(task)) return false;
   if (task.task_status !== "open") return false;
+  // F1: esperando respuesta no hay nada que adelantar — el backend responde 409
+  // y adelantarlo mandaría la plantilla otra vez.
+  if (task.awaiting_reply_until !== undefined && task.awaiting_reply_until !== null) return false;
   return task.last_run_status !== "running";
 }
 
@@ -219,8 +284,15 @@ export const TASK_RUN_TIMELINE_TONES: Record<
  * que dicen "En espera" parecen un error de renderizado en vez de tres
  * reintentos reales.
  */
-export function taskRunTitle(run: Pick<TaskRunDTO, "status" | "attempt">): string {
-  return `Intento ${String(run.attempt)} · ${TASK_RUN_STATUS_LABELS[run.status]}`;
+export function taskRunTitle(
+  run: Pick<TaskRunDTO, "status" | "attempt"> &
+    Partial<Pick<TaskRunDTO, "medium" | "opened_with_template">>,
+): string {
+  const label =
+    run.opened_with_template === true && run.status === "done"
+      ? OPENED_WITH_TEMPLATE_LABEL
+      : runStatusLabel(run.status, run.medium ?? "message");
+  return `Intento ${String(run.attempt)} · ${label}`;
 }
 
 /**

@@ -95,3 +95,55 @@ describe("describeTemplateContent", () => {
     ).toBe("Archivo document");
   });
 });
+
+import {
+  formatTemplateCost,
+  inspectTemplateVariables,
+  isUsableAsOpening,
+  SUGGESTED_OPENING_TEMPLATES,
+  whyUnusableAsOpening,
+} from "../template-catalog";
+
+/** F2 — plantillas como APERTURA de un seguimiento del agente. */
+describe("template-catalog — apertura (F2)", () => {
+  const base = {
+    id: "t1",
+    channel_id: "ch",
+    name: "seguimiento_v1",
+    language: "es",
+    body: "Hola {{1}}, te escribo por {{2}}.",
+    components: [],
+    approval_status: "approved" as const,
+    external_id: null,
+    updated_at: "2026-09-14T00:00:00.000Z",
+  };
+
+  it("una utility aprobada SÍ abre (al revés que en promociones); la de autenticación no", () => {
+    expect(isUsableAsOpening({ ...base, category: "utility" })).toBe(true);
+    expect(isUsableAsOpening({ ...base, category: "marketing" })).toBe(true);
+    expect(isUsableAsOpening({ ...base, category: "authentication" })).toBe(false);
+    expect(isUsableAsOpening({ ...base, category: "utility", approval_status: "pending" })).toBe(false);
+    expect(whyUnusableAsOpening({ ...base, category: "authentication" })).toContain("códigos");
+  });
+
+  it("espeja las reglas de variables de Meta que el backend aplica al alta", () => {
+    expect(inspectTemplateVariables("Hola {{1}}, sobre {{2}}. ¿Seguimos?")).toEqual({ ok: true, count: 2 });
+    expect(inspectTemplateVariables("Hola {{1}} y {{3}}")).toEqual({ ok: false, reason: "not_sequential" });
+    expect(inspectTemplateVariables("{{1}}, hola")).toEqual({ ok: false, reason: "at_edges" });
+    expect(inspectTemplateVariables("Hola {{1}} {{2}} saludos")).toEqual({ ok: false, reason: "adjacent" });
+  });
+
+  it("el costo se muestra en dólares con cuatro decimales, por categoría", () => {
+    expect(formatTemplateCost("utility")).toBe("≈ US$0,0008");
+    expect(formatTemplateCost("marketing")).toBe("≈ US$0,0200");
+  });
+
+  it("las tres sugeridas pasan las reglas de Meta y traen un ejemplo por variable", () => {
+    for (const suggestion of SUGGESTED_OPENING_TEMPLATES) {
+      const verdict = inspectTemplateVariables(suggestion.body);
+      expect(verdict).toEqual({ ok: true, count: 2 });
+      expect(suggestion.examples).toHaveLength(2);
+      expect(/^[a-z0-9_]+$/.test(suggestion.name)).toBe(true);
+    }
+  });
+});

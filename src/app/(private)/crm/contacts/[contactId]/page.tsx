@@ -25,6 +25,7 @@ import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/Con
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
 import { TagsEditor } from "@/modules/crm/ui/components/contact-detail/TagsEditor";
+import { useAuth } from "@/shared/auth/auth.hooks";
 
 type ContactBundle = {
   contact: ContactDTO;
@@ -47,6 +48,9 @@ export default function Contact360Page({
   const { contactId } = use(params);
   const router = useRouter();
   const { showAlert } = useAlert();
+  const { hasPermission } = useAuth();
+  // F2: «Programar seguimiento» solo para quien puede armar la automatización.
+  const canAutomate = hasPermission("crm:automate");
   const [bundle, setBundle] = useState<ContactBundle | null>(null);
 
   const load = useCallback(async () => {
@@ -113,6 +117,11 @@ export default function Contact360Page({
       <ContactTimeline
         contactId={contactId}
         createActivityHref={`/crm/tasks/create?contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`}
+        {...(canAutomate
+          ? {
+              scheduleFollowUpHref: `/crm/tasks/create?executor=agent&contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`,
+            }
+          : {})}
       />
     </div>
   );
