@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CopyCheck, Download, Plus, Search } from "lucide-react";
+import { CopyCheck, Plus, Search } from "lucide-react";
+import { triggerDownload } from "@/core/lib/download";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
@@ -21,7 +23,11 @@ import {
   contactColumns,
   fetchContacts,
 } from "@/modules/crm/ui/tables/config/contacts.config";
-import { exportContactsUrl } from "@/modules/crm/infrastructure/services/imports-service.adapter";
+import {
+  exportContactsUrl,
+  importTemplateUrl,
+} from "@/modules/crm/infrastructure/services/imports-service.adapter";
+import { ImportExportMenu } from "@/modules/crm/ui/components/imports/ImportExportMenu";
 import { compactSegmentFilters } from "@/modules/crm/domain/segment";
 import { useAlert } from "@/core/providers/alert-provider";
 
@@ -31,12 +37,15 @@ const SEARCH_DEBOUNCE_MS = 400;
 /**
  * Listado de contactos (`/crm/contacts`): paginación server-side, búsqueda `q`
  * (nombre/teléfono/correo) y filtros del CRM (etapa, fuente, ciudad, tag,
- * score). Crear/editar abren modal por ruta interceptada (@form).
+ * score). Crear/editar abren modal por ruta interceptada (@form). Plantilla,
+ * import y export viven en un solo botón (`ImportExportMenu`).
  */
 export default function CrmContactsPage() {
+  const router = useRouter();
   const { hasPermission } = useAuth();
   const { showAlert } = useAlert();
   const canManage = hasPermission("contacts:manage");
+  const canImport = hasPermission("contacts:import");
   const canExport = hasPermission("contacts:export");
 
   const [filters, setFilters] = useState<ContactFiltersValue>({});
@@ -88,6 +97,28 @@ export default function CrmContactsPage() {
   const hasFilters = Object.values(filters).some((value) => value !== undefined);
   const isEmpty = !loading && total === 0 && !searchValue && !hasFilters;
 
+  // Los filtros activos se serializan al DSL del export (F6); la descarga la
+  // resuelve el navegador (Content-Disposition) y el backend la audita.
+  const handleExport = () => {
+    triggerDownload(
+      exportContactsUrl({
+        filters: compactSegmentFilters({
+          lifecycle_stage: filters.lifecycle_stage ? [filters.lifecycle_stage] : undefined,
+          source: filters.source ? [filters.source] : undefined,
+          tag_ids: filters.tag_id ? { any: [filters.tag_id] } : undefined,
+          city: filters.city,
+          min_score: filters.min_score,
+          q: searchDraft.trim() || undefined,
+        }),
+      }),
+    );
+    showAlert({
+      tone: "info",
+      title: "Exportación iniciada — esta descarga queda auditada",
+      open: true,
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -104,36 +135,14 @@ export default function CrmContactsPage() {
               Duplicados
             </Link>
           </Button>
-          {canExport && (
-            <Button
-              variant="ghost"
-              className="rounded-full"
-              onClick={() => {
-                // Los filtros activos se serializan al DSL del export (F6)
-                window.open(
-                  exportContactsUrl({
-                    filters: compactSegmentFilters({
-                      lifecycle_stage: filters.lifecycle_stage ? [filters.lifecycle_stage] : undefined,
-                      source: filters.source ? [filters.source] : undefined,
-                      tag_ids: filters.tag_id ? { any: [filters.tag_id] } : undefined,
-                      city: filters.city,
-                      min_score: filters.min_score,
-                      q: searchDraft.trim() || undefined,
-                    }),
-                  }),
-                  "_blank",
-                );
-                showAlert({
-                  tone: "info",
-                  title: "Exportación iniciada — esta descarga queda auditada",
-                  open: true,
-                });
-              }}
-            >
-              <Download className="size-4" />
-              Exportar
-            </Button>
-          )}
+          <ImportExportMenu
+            canImport={canImport}
+            canExport={canExport}
+            onDownloadTemplate={() => triggerDownload(importTemplateUrl())}
+            // F3 lo cambia al modal interceptado /crm/contacts/import
+            onImport={() => router.push("/crm/settings/imports")}
+            onExport={handleExport}
+          />
           {canManage && (
             <Button asChild className="rounded-full">
               <Link href="/crm/contacts/create">

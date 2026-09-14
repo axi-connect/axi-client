@@ -3,8 +3,9 @@ import type { ImportJobDTO, ImportOptions } from "@/modules/crm/domain/import";
 import type { SegmentFilters } from "@/modules/crm/domain/segment";
 
 /**
- * Adapter HTTP del import CSV (`/crm/imports`, permiso contacts:import) y de
- * la URL del export (`/crm/exports/contacts`, contacts:export, AUDITADO).
+ * Adapter HTTP del import de contactos (`/crm/imports`, CSV o XLSX, permiso
+ * contacts:import), de su plantilla (`/crm/imports/template`) y de la URL del
+ * export (`/crm/exports/contacts`, contacts:export, AUDITADO).
  */
 
 /** Multipart: el job vuelve `pending` y se sigue por polling + WS. */
@@ -17,6 +18,15 @@ export function createImport(file: File, options: ImportOptions): Promise<Import
     form.append("lifecycle_stage", options.lifecycle_stage);
   }
   return http.post<ImportJobDTO>("/crm/imports", form);
+}
+
+/**
+ * URL de la plantilla XLSX (hoja «Contactos» + «Instrucciones»). Descarga
+ * directa por el proxy BFF; el nombre del archivo lo pone el backend
+ * (`Content-Disposition`). Se dispara con `triggerDownload`, nunca con fetch.
+ */
+export function importTemplateUrl(): string {
+  return "/api/proxy/crm/imports/template";
 }
 
 export async function listImports(): Promise<ImportJobDTO[]> {

@@ -60,7 +60,7 @@ export const CONTACT_DOCUMENT_TYPE_LABELS: Record<ContactDocumentType, string> =
 export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {
   inbound_conversation: "Conversación",
   manual: "Manual",
-  import: "Import CSV",
+  import: "Importación",
   lead_conversion: "Conversión de lead",
   integration: "Integración",
   // El mismo nombre que el módulo tiene en el menú: si en el panel se llama
