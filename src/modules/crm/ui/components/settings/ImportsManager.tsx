@@ -40,6 +40,7 @@ import {
 } from "@/modules/crm/infrastructure/services/imports-service.adapter";
 import { listTags } from "@/modules/crm/infrastructure/services/segments-service.adapter";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 
 const POLL_MS = 2000;
 const NO_STAGE = "__none__";
@@ -206,11 +207,16 @@ export function ImportsManager() {
                 {/* F4a: el final del camino. Sin esto, la lista entra y nadie
                     la trabaja — que es donde un CRM se queda en agenda. */}
                 {activeJob.created_count > 0 && (
-                  <BulkFollowUpButton
-                    audience={{ source: "import", import_job_id: activeJob.id }}
-                    audienceLabel={`Del import ${activeJob.filename}`}
-                    label={`Poner al agente a trabajar con los ${String(activeJob.created_count)}`}
-                  />
+                  <>
+                    <BulkFollowUpButton
+                      audience={{ source: "import", import_job_id: activeJob.id }}
+                      audienceLabel={`Del import ${activeJob.filename}`}
+                      label={`Poner al agente a trabajar con los ${String(activeJob.created_count)}`}
+                    />
+                    <EnrollInSequenceButton
+                      audience={{ source: "import", import_job_id: activeJob.id }}
+                    />
+                  </>
                 )}
               </div>
             )}

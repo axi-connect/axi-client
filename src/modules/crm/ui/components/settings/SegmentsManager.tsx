@@ -20,6 +20,7 @@ import {
 } from "@/modules/crm/domain/segment";
 import { AudienceFilterBuilder } from "@/modules/crm/ui/components/segments/AudienceFilterBuilder";
 import { BulkFollowUpButton } from "@/modules/crm/ui/components/BulkFollowUpButton";
+import { EnrollInSequenceButton } from "@/modules/crm/ui/components/EnrollInSequenceButton";
 import {
   createSegment,
   deleteSegment,
@@ -169,6 +170,7 @@ function SegmentCard({
             label="Poner al agente a trabajar"
             variant="outline"
           />
+          <EnrollInSequenceButton audience={{ source: "segment", segment_id: segment.id }} />
           {canExport && (
             <Button
               variant="ghost"

@@ -3364,6 +3364,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/sequences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmSequencesController_list_v1"];
+        put?: never;
+        post: operations["CrmSequencesController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/sequences/{sequenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmSequencesController_byId_v1"];
+        put: operations["CrmSequencesController_update_v1"];
+        post?: never;
+        delete: operations["CrmSequencesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/sequences/{sequenceId}/enrollments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmSequencesController_enrollments_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/campaigns": {
         parameters: {
             query?: never;
@@ -4190,6 +4238,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["AgentTaskBulksController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/sequences/{sequenceId}/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SequenceEnrollmentsController_enroll_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11122,6 +11186,123 @@ export interface components {
                 page_size: number;
             };
         };
+        SequencesListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string | null;
+                stop_on_reply: boolean;
+                stop_on_conversion: boolean;
+                is_active: boolean;
+                steps: {
+                    /** Format: uuid */
+                    id: string;
+                    position: number;
+                    offset_hours: number;
+                    /** @enum {string} */
+                    task_channel: "message" | "call" | "call_then_message";
+                    objective: string;
+                    opening_template: {
+                        /** Format: uuid */
+                        channel_template_id: string;
+                        /** Format: uuid */
+                        channel_id: string;
+                        name: string;
+                        language: string;
+                        params: string[];
+                        topic: string | null;
+                    } | null;
+                }[];
+                active_enrollments: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        SequenceDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            stop_on_reply: boolean;
+            stop_on_conversion: boolean;
+            is_active: boolean;
+            steps: {
+                /** Format: uuid */
+                id: string;
+                position: number;
+                offset_hours: number;
+                /** @enum {string} */
+                task_channel: "message" | "call" | "call_then_message";
+                objective: string;
+                opening_template: {
+                    /** Format: uuid */
+                    channel_template_id: string;
+                    /** Format: uuid */
+                    channel_id: string;
+                    name: string;
+                    language: string;
+                    params: string[];
+                    topic: string | null;
+                } | null;
+            }[];
+            active_enrollments: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UpsertSequenceDto: {
+            name: string;
+            description?: string | null;
+            /** @default true */
+            stop_on_reply: boolean;
+            /** @default true */
+            stop_on_conversion: boolean;
+            /** @default false */
+            is_active: boolean;
+            steps: {
+                offset_hours: number;
+                /**
+                 * @default message
+                 * @enum {string}
+                 */
+                task_channel: "message" | "call" | "call_then_message";
+                objective: string;
+                opening_template?: {
+                    /** Format: uuid */
+                    channel_template_id: string;
+                    params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                    topic?: string | null;
+                } | null;
+            }[];
+        };
+        EnrollmentsListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                sequence_id: string;
+                /** Format: uuid */
+                contact_id: string;
+                /** @enum {string} */
+                status: "active" | "completed" | "stopped";
+                current_position: number;
+                /** @enum {string|null} */
+                stop_reason: "replied" | "converted" | "opted_out" | "task_cancelled" | "stopped_by_user" | null;
+                /** Format: date-time */
+                enrolled_at: string;
+                /** Format: date-time */
+                finished_at: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
         CampaignsListDto: {
             data: {
                 /** Format: uuid */
@@ -12416,6 +12597,24 @@ export interface components {
         };
         BulkCancelDto: {
             cancelled_tasks: number;
+        };
+        EnrollContactsDto: {
+            /** @enum {string} */
+            source: "contacts" | "segment" | "import";
+            contact_ids?: string[];
+            /** Format: uuid */
+            segment_id?: string | null;
+            /** Format: uuid */
+            import_job_id?: string | null;
+        };
+        EnrollResultDto: {
+            enrolled: number;
+            skipped: {
+                /** @enum {string} */
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
+                count: number;
+                contact_ids: string[];
+            }[];
         };
         CallProviderAccountDto: {
             /** Format: uuid */
@@ -22111,6 +22310,138 @@ export interface operations {
             };
         };
     };
+    CrmSequencesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequencesListDto"];
+                };
+            };
+        };
+    };
+    CrmSequencesController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertSequenceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequenceDto"];
+                };
+            };
+        };
+    };
+    CrmSequencesController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequenceDto"];
+                };
+            };
+        };
+    };
+    CrmSequencesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertSequenceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SequenceDto"];
+                };
+            };
+        };
+    };
+    CrmSequencesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CrmSequencesController_enrollments_v1: {
+        parameters: {
+            query?: {
+                status?: "active" | "completed" | "stopped";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollmentsListDto"];
+                };
+            };
+        };
+    };
     CampaignsController_list_v1: {
         parameters: {
             query?: {
@@ -23597,6 +23928,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkCancelDto"];
+                };
+            };
+        };
+    };
+    SequenceEnrollmentsController_enroll_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sequenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnrollContactsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnrollResultDto"];
                 };
             };
         };

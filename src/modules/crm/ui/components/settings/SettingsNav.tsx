@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Filter, KanbanSquare, Sparkles, Tag, Upload } from "lucide-react";
+import { Filter, KanbanSquare, Layers, Sparkles, Tag, Upload } from "lucide-react";
 
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
@@ -24,6 +24,9 @@ const NAV_ITEMS: readonly (NavTabItem & { permission: string })[] = [
   // Leer la política basta para verla: quien atiende la bandeja necesita poder
   // explicar por qué una tarea salió «El agente está pausado».
   { href: "/crm/settings/agent-tasks", label: "Tareas de agente", icon: Sparkles, permission: "crm:read" },
+  // F4b. Pide `crm:read` por lo mismo que las tareas: quien atiende la bandeja
+  // necesita poder mirar por qué una secuencia se paró sola.
+  { href: "/crm/settings/sequences", label: "Secuencias", icon: Layers, permission: "crm:read" },
 ];
 
 /** Sub-nav de Configuración del CRM (guard UX — el backend valida siempre). */
