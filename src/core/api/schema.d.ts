@@ -4132,6 +4132,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/agent-tasks/bulk/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AgentTaskBulksController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AgentTaskBulksController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/bulk/{bulkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AgentTaskBulksController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/agent-tasks/bulk/{bulkId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AgentTaskBulksController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/calls/providers": {
         parameters: {
             query?: never;
@@ -12254,6 +12318,104 @@ export interface components {
             risks: string[];
             opportunities: string[];
             cached: boolean;
+        };
+        PreviewBulkDto: {
+            /** @enum {string} */
+            source: "contacts" | "segment" | "import";
+            contact_ids?: string[];
+            /** Format: uuid */
+            segment_id?: string | null;
+            /** Format: uuid */
+            import_job_id?: string | null;
+        };
+        BulkPreviewDto: {
+            total: number;
+            eligible: number;
+            skipped: {
+                /** @enum {string} */
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
+                count: number;
+                contact_ids: string[];
+            }[];
+            within_limit: boolean;
+            max: number;
+        };
+        CreateBulkDto: {
+            /** @enum {string} */
+            source: "contacts" | "segment" | "import";
+            contact_ids?: string[];
+            /** Format: uuid */
+            segment_id?: string | null;
+            /** Format: uuid */
+            import_job_id?: string | null;
+            /** Format: uuid */
+            assigned_agent_id: string;
+            objective: string;
+            /**
+             * @default message
+             * @enum {string}
+             */
+            task_channel: "message" | "call" | "call_then_message";
+            opening_template?: {
+                /** Format: uuid */
+                channel_template_id: string;
+                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                topic?: string | null;
+            } | null;
+            /** Format: date-time */
+            starts_at: string;
+            per_hour: number;
+        };
+        BulkDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "running" | "completed" | "cancelled" | "failed";
+            /** @enum {string} */
+            source: "contacts" | "segment" | "import";
+            /** Format: uuid */
+            segment_id: string | null;
+            /** Format: uuid */
+            import_job_id: string | null;
+            /** Format: uuid */
+            assigned_agent_id: string;
+            objective: string;
+            /** @enum {string} */
+            task_channel: "message" | "call" | "call_then_message";
+            opening_template: {
+                /** Format: uuid */
+                channel_template_id: string;
+                /** Format: uuid */
+                channel_id: string;
+                name: string;
+                language: string;
+                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                topic: string | null;
+            } | null;
+            /** Format: date-time */
+            starts_at: string;
+            per_hour: number;
+            total_count: number;
+            created_count: number;
+            skipped_count: number;
+            skipped: {
+                /** @enum {string} */
+                reason: "opted_out" | "task_open" | "no_channel" | "contact_not_found" | "error";
+                count: number;
+                contact_ids: string[];
+            }[];
+            /** Format: date-time */
+            finishes_at: string;
+            detail: string | null;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        BulkCancelDto: {
+            cancelled_tasks: number;
         };
         CallProviderAccountDto: {
             /** Format: uuid */
@@ -23347,6 +23509,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CopilotPipelineDto"];
+                };
+            };
+        };
+    };
+    AgentTaskBulksController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewBulkDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPreviewDto"];
+                };
+            };
+        };
+    };
+    AgentTaskBulksController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBulkDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDto"];
+                };
+            };
+        };
+    };
+    AgentTaskBulksController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bulkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDto"];
+                };
+            };
+        };
+    };
+    AgentTaskBulksController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bulkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCancelDto"];
                 };
             };
         };
