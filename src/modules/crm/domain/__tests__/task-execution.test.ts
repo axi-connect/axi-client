@@ -11,7 +11,13 @@ import {
 
 type TaskShape = Pick<
   ActivityDTO,
-  "kind" | "assignee_type" | "task_status" | "last_run_status" | "last_run_reason" | "due_at"
+  | "kind"
+  | "assignee_type"
+  | "task_status"
+  | "last_run_status"
+  | "last_run_reason"
+  | "due_at"
+  | "awaiting_reply_until"
 >;
 
 function task(overrides: Partial<TaskShape> = {}): TaskShape {
@@ -22,6 +28,7 @@ function task(overrides: Partial<TaskShape> = {}): TaskShape {
     last_run_status: null,
     last_run_reason: null,
     due_at: "2026-09-01T10:00:00.000Z",
+    awaiting_reply_until: null,
     ...overrides,
   };
 }
@@ -222,5 +229,65 @@ describe("taskBadgeMap", () => {
     );
 
     expect(taskBadgeMap(state)[TASK_BADGE_KEY]).toMatchObject({ tone: "info", transient: false });
+  });
+});
+
+import {
+  AWAITING_REPLY_LABEL,
+  NO_REPLY_LABEL,
+  OPENED_WITH_TEMPLATE_LABEL,
+  runStatusLabel,
+  taskRunTitle,
+} from "../task-execution";
+
+/** F1/F2 — apertura con plantilla, espera de respuesta y medios. */
+describe("task-execution — F1/F2", () => {
+  it("abierta y esperando respuesta manda sobre el último desenlace (que fue done)", () => {
+    const state = taskDisplayState(
+      task({
+        assignee_type: "agent",
+        last_run_status: "done",
+        awaiting_reply_until: "2026-09-20T14:00:00.000Z",
+      }),
+    );
+    expect(state.label).toBe(AWAITING_REPLY_LABEL);
+    expect(state.tone).toBe("info");
+    expect(state.reason).toContain("plantilla");
+    expect(state.completable).toBe(false);
+  });
+
+  it("completada por no_reply es neutra, no éxito, y dice por qué", () => {
+    const state = taskDisplayState(
+      task({ assignee_type: "agent", task_status: "completed", last_run_reason: "no_reply" }),
+    );
+    expect(state.label).toBe(NO_REPLY_LABEL);
+    expect(state.tone).toBe("neutral");
+    expect(state.reason).toBe("El cliente no respondió a la apertura");
+  });
+
+  it("esperando respuesta no se puede «ejecutar ahora»: mandaría la plantilla otra vez", () => {
+    expect(
+      canRunNow(
+        task({ assignee_type: "agent", last_run_status: "done", awaiting_reply_until: "2026-09-20T14:00:00.000Z" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("las etiquetas hablan del medio: una llamada no se «envía»", () => {
+    expect(runStatusLabel("running", "call")).toBe("Llamando");
+    expect(runStatusLabel("done", "call")).toBe("Llamada realizada");
+    expect(runStatusLabel("failed", "call")).toBe("No se pudo llamar");
+    expect(runStatusLabel("deferred", "call")).toBe("En espera");
+    expect(runStatusLabel("done", "message")).toBe("Enviada");
+  });
+
+  it("el título del intento distingue la apertura con plantilla del turno del agente", () => {
+    expect(taskRunTitle({ status: "done", attempt: 1, medium: "message", opened_with_template: true })).toBe(
+      `Intento 1 · ${OPENED_WITH_TEMPLATE_LABEL}`,
+    );
+    expect(taskRunTitle({ status: "done", attempt: 2, medium: "message", opened_with_template: false })).toBe(
+      "Intento 2 · Enviada",
+    );
+    expect(taskRunTitle({ status: "failed", attempt: 3, medium: "call" })).toBe("Intento 3 · No se pudo llamar");
   });
 });

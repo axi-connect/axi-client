@@ -33,6 +33,9 @@ export const PROVIDERS: { value: PricingProvider; label: string }[] = [
   // tabla NO pinta sus tarifas — groupByProvider filtra por esta lista — y el
   // operador no podría ver ni editar el precio del píxel.
   { value: "voyage", label: "Voyage AI" },
+  // F1 del seguimiento autónomo: plantillas de WhatsApp por categoría y país
+  // (`utility_co`, `marketing_co`…), USD por millón de mensajes entregados.
+  { value: "meta", label: "Meta (plantillas de WhatsApp)" },
 ];
 
 export function providerLabel(provider: PricingProvider): string {

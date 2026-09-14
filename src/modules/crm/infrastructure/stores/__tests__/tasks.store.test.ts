@@ -17,7 +17,7 @@ const STATS: TaskStatsDTO = {
   overdue: 1,
   due_today: 2,
   unassigned: 0,
-  agent: { open: 4, deferred: 2, failed: 1 },
+  agent: { open: 4, deferred: 2, failed: 1, awaiting: 0 },
 };
 
 function page(items: ActivityDTO[] = []) {

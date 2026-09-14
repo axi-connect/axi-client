@@ -34,6 +34,7 @@ function settings(over: Partial<AgentTaskSettings> = {}): AgentTaskSettings {
     quiet_end_hour: 8,
     max_attempts: 8,
     max_defer_hours: 72,
+    reply_wait_hours: 48,
     ...over,
   };
 }

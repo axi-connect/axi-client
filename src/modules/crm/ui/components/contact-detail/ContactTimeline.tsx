@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { ContactTimelineFeed } from "./ContactTimelineFeed";
 
@@ -11,10 +11,13 @@ import { ContactTimelineFeed } from "./ContactTimelineFeed";
 export function ContactTimeline({
   contactId,
   createActivityHref,
+  scheduleFollowUpHref,
 }: {
   contactId: string;
   /** Link al modal de nueva actividad/tarea (@form de la bandeja, F4). */
   createActivityHref?: string;
+  /** F2: link al flujo «Programar seguimiento» (solo con `crm:automate`). */
+  scheduleFollowUpHref?: string;
 }) {
   return (
     <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
@@ -28,6 +31,14 @@ export function ContactTimeline({
                 <Link href={createActivityHref}>
                   <Plus className="size-3" />
                   Actividad
+                </Link>
+              </Button>
+            )}
+            {scheduleFollowUpHref !== undefined && (
+              <Button asChild variant="outline" size="sm" className="h-7 rounded-full text-xs">
+                <Link href={scheduleFollowUpHref}>
+                  <Sparkles className="size-3 text-accent-violet" />
+                  Programar seguimiento
                 </Link>
               </Button>
             )}

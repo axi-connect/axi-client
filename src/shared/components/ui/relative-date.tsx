@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * Fecha relativa con la absoluta en tooltip. Primitivo transversal: lo usan la
+ * Fecha relativa con la absoluta (fecha Y hora) en tooltip. Primitivo transversal: lo usan la
  * consola de plataforma, el rail de contexto del inbox y las tablas del panel.
  * Reutiliza los formatters de `core/lib` — no re-implementa `Intl`.
  */
 import { relativeTime } from "@/core/lib/relative-time";
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDateTime } from "@/core/lib/format";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
 
 export function RelativeDate({ iso, className }: { iso: string | null; className?: string }) {
@@ -19,7 +19,7 @@ export function RelativeDate({ iso, className }: { iso: string | null; className
           {relativeTime(iso)}
         </time>
       </TooltipTrigger>
-      <TooltipContent>{formatShortDate(iso)}</TooltipContent>
+      <TooltipContent>{formatShortDateTime(iso)}</TooltipContent>
     </Tooltip>
   );
 }

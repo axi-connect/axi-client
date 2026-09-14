@@ -73,6 +73,7 @@ export function DealDetailRail({ dealId, onClose }: { dealId: string; onClose: (
   const { showAlert } = useAlert();
   const { hasPermission } = useAuth();
   const canManage = hasPermission("crm:manage");
+  const canAutomate = hasPermission("crm:automate");
   const transition = useBoardStore((s) => s.transition);
   const refreshBoardDeal = useBoardStore((s) => s.refreshDeal);
 
@@ -335,14 +336,27 @@ export function DealDetailRail({ dealId, onClose }: { dealId: string; onClose: (
             </div>
 
             {deal.status === "open" && (
-              <Button asChild variant="outline" size="sm" className="w-full rounded-full">
-                <Link
-                  href={`/crm/tasks/create?contact_id=${deal.contact_id}&contact_label=${encodeURIComponent(contactName)}&deal_id=${deal.id}`}
-                >
-                  <CalendarPlus className="size-4" />
-                  Agendar seguimiento
-                </Link>
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button asChild variant="outline" size="sm" className="w-full rounded-full">
+                  <Link
+                    href={`/crm/tasks/create?contact_id=${deal.contact_id}&contact_label=${encodeURIComponent(contactName)}&deal_id=${deal.id}`}
+                  >
+                    <CalendarPlus className="size-4" />
+                    Agendar seguimiento
+                  </Link>
+                </Button>
+                {/* F2: que lo haga el agente. Violeta solo en el icono. */}
+                {canAutomate && (
+                  <Button asChild variant="outline" size="sm" className="w-full rounded-full">
+                    <Link
+                      href={`/crm/tasks/create?executor=agent&contact_id=${deal.contact_id}&contact_label=${encodeURIComponent(contactName)}&deal_id=${deal.id}`}
+                    >
+                      <Sparkles className="size-4 text-accent-violet" />
+                      Programar seguimiento del agente
+                    </Link>
+                  </Button>
+                )}
+              </div>
             )}
 
             {/* Historial */}

@@ -580,6 +580,22 @@ export interface paths {
         patch: operations["PlatformPricingController_update_v1"];
         trace?: never;
     };
+    "/api/v1/platform/usage/service-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformServiceMessagesController_serviceMessages_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/analytics/agents-health": {
         parameters: {
             query?: never;
@@ -4036,6 +4052,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/contacts/{contactId}/reachability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ContactReachabilityController_reachabilityOf_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/contacts/{contact_id}/ai/summary": {
         parameters: {
             query?: never;
@@ -6732,7 +6764,7 @@ export interface components {
         PricingListDto: {
             data: {
                 /** @enum {string} */
-                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage";
+                provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta";
                 model: string;
                 /**
                  * @default tokens
@@ -6755,7 +6787,7 @@ export interface components {
         };
         CreatePricingDto: {
             /** @enum {string} */
-            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage";
+            provider: "openai_compatible" | "anthropic" | "elevenlabs" | "twilio" | "groq" | "voyage" | "meta";
             model: string;
             /**
              * @default tokens
@@ -6793,6 +6825,17 @@ export interface components {
             margin_multiplier: number;
             /** Format: date-time */
             effective_to?: string | null;
+        };
+        ServiceMessagesDto: {
+            month: string;
+            free_tier_per_number: number;
+            data: {
+                company_id: string;
+                company_name: string | null;
+                channel_id: string;
+                service_messages: number;
+                billable_messages: number;
+            }[];
         };
         AgentsHealthDto: {
             period_days: number;
@@ -10551,6 +10594,16 @@ export interface components {
                 last_run_status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped" | null;
                 last_run_reason: string | null;
                 attempt_count: number;
+                opening_template: {
+                    channel_template_id: string;
+                    channel_id: string;
+                    name: string;
+                    language: string;
+                    params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                    topic: string | null;
+                } | null;
+                /** Format: date-time */
+                awaiting_reply_until: string | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -10626,6 +10679,16 @@ export interface components {
             last_run_status: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped" | null;
             last_run_reason: string | null;
             attempt_count: number;
+            opening_template: {
+                channel_template_id: string;
+                channel_id: string;
+                name: string;
+                language: string;
+                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                topic: string | null;
+            } | null;
+            /** Format: date-time */
+            awaiting_reply_until: string | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -10650,6 +10713,7 @@ export interface components {
                 open: number;
                 deferred: number;
                 failed: number;
+                awaiting: number;
             };
         };
         TimelineDto: {
@@ -10700,6 +10764,12 @@ export interface components {
             deal_id?: string | null;
             /** Format: uuid */
             conversation_id?: string | null;
+            opening_template?: {
+                /** Format: uuid */
+                channel_template_id: string;
+                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                topic?: string | null;
+            } | null;
         };
         UpdateAgentTaskDto: {
             objective?: string;
@@ -10708,6 +10778,12 @@ export interface components {
             /** Format: uuid */
             assigned_agent_id?: string;
             title?: string | null;
+            opening_template?: {
+                /** Format: uuid */
+                channel_template_id: string;
+                params: ("first_name" | "full_name" | "company_name" | "topic")[];
+                topic?: string | null;
+            } | null;
         };
         RunNowDto: {
             /** Format: date-time */
@@ -10738,6 +10814,9 @@ export interface components {
                 /** Format: uuid */
                 message_id: string | null;
                 detail: string | null;
+                /** @enum {string} */
+                medium: "message" | "call";
+                opened_with_template: boolean;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -10767,6 +10846,9 @@ export interface components {
                 /** Format: uuid */
                 message_id: string | null;
                 detail: string | null;
+                /** @enum {string} */
+                medium: "message" | "call";
+                opened_with_template: boolean;
                 /** Format: date-time */
                 created_at: string;
             }[];
@@ -10783,6 +10865,7 @@ export interface components {
             quiet_end_hour: number;
             max_attempts: number;
             max_defer_hours: number;
+            reply_wait_hours: number;
         };
         TagsListDto: {
             data: {
@@ -11261,6 +11344,7 @@ export interface components {
             /** @enum {string} */
             category: "marketing" | "utility" | "authentication";
             body: string;
+            examples?: string[];
         };
         HsmTemplateDto: {
             /** Format: uuid */
@@ -12118,6 +12202,19 @@ export interface components {
         CloseConversationDto: {
             resolved?: boolean;
             reason?: string;
+        };
+        ContactReachabilityDto: {
+            can_message_now: boolean;
+            /** @enum {string|null} */
+            reason: "no_channel" | "channel_not_found" | "channel_not_connected" | "unsupported_channel_kind" | "no_contact_identity" | "outside_service_window" | null;
+            /** Format: uuid */
+            channel_id: string | null;
+            /** @enum {string|null} */
+            channel_kind: "whatsapp_cloud" | "whatsapp_web" | "instagram_dm" | "facebook_messenger" | "simulator" | null;
+            /** Format: date-time */
+            last_inbound_at: string | null;
+            window_hours: number | null;
+            supports_templates: boolean;
         };
         CopilotSummaryDto: {
             summary: string;
@@ -16164,6 +16261,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlatformServiceMessagesController_serviceMessages_v1: {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceMessagesDto"];
+                };
             };
         };
     };
@@ -21132,6 +21250,7 @@ export interface operations {
                 agent_id?: string;
                 trigger?: "manual" | "scheduled" | "automation" | "agent";
                 last_run_status?: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
+                awaiting_reply?: "true" | "false";
                 page?: number;
                 page_size?: number;
             };
@@ -23107,6 +23226,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ContactReachabilityController_reachabilityOf_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactReachabilityDto"];
+                };
             };
         };
     };

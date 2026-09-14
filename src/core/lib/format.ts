@@ -57,3 +57,51 @@ export function parseMoneyToCents(input: string): number | null {
   if (!Number.isFinite(value) || value < 0) return null;
   return Math.round(value * 100);
 }
+
+/**
+ * ISO → «jue 18 sep · 9:00 a. m.» en una zona horaria dada (la del negocio).
+ * Es la hora ABSOLUTA que la bandeja de tareas pinta junto a la relativa: «se
+ * ejecuta mañana» no le sirve a nadie que tenga que decidir si llega antes.
+ * Sin `tz` usa la del navegador.
+ */
+export function formatDayTime(iso: string, tz?: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("es-CO", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    ...(tz === undefined ? {} : { timeZone: tz }),
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const day = `${get("weekday").replace(".", "")} ${get("day")} ${get("month").replace(".", "")}`;
+  const time = `${get("hour")}:${get("minute")} ${get("dayPeriod")}`.trim();
+  return plainSpaces(`${day} · ${time}`);
+}
+
+/** `Intl` emite espacios no separables (U+202F/U+00A0) dentro de «a. m.»:
+ *  se normalizan para que el texto se compare, copie y parta como texto. */
+function plainSpaces(text: string): string {
+  return text.replace(/[\u202f\u00a0]/g, " ");
+}
+
+/** ISO → «10 jul 2026, 9:00 a. m.» (tooltip de las fechas relativas). */
+export function formatShortDateTime(iso: string, tz?: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return plainSpaces(
+    date.toLocaleString("es-CO", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      ...(tz === undefined ? {} : { timeZone: tz }),
+    }),
+  );
+}
