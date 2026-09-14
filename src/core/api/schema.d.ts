@@ -3316,6 +3316,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/imports/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmImportsController_template_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/imports/{id}": {
         parameters: {
             query?: never;
@@ -10884,16 +10900,6 @@ export interface components {
                 page: number;
                 page_size: number;
             };
-        };
-        ImportOptionsDto: {
-            /**
-             * @default skip
-             * @enum {string}
-             */
-            on_duplicate: "skip" | "update";
-            tag_ids?: string;
-            /** @enum {string} */
-            lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
         };
         ImportJobDto: {
             /** Format: uuid */
@@ -21758,7 +21764,19 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["ImportOptionsDto"];
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description CSV o XLSX (≤10 MB)
+                     */
+                    file: string;
+                    /** @enum {string} */
+                    on_duplicate?: "skip" | "update";
+                    /** @description uuids separados por coma (máx. 10) */
+                    tag_ids?: string;
+                    /** @enum {string} */
+                    lifecycle_stage?: "prospect" | "lead" | "customer" | "other";
+                };
             };
         };
         responses: {
@@ -21768,6 +21786,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportJobDto"];
+                };
+            };
+        };
+    };
+    CrmImportsController_template_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Plantilla de importación (hoja «Contactos» + hoja «Instrucciones») */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
                 };
             };
         };
