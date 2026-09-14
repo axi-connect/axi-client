@@ -430,6 +430,12 @@ export function TasksView() {
                       empuja al tenant a apagar la automatización. */}
                   <StatChip label="en espera" value={stats.agent.deferred} />
                   <StatChip label="sin enviar" value={stats.agent.failed} warn />
+                  {/* F5: la única cifra del bloque que responde a «¿esto sirve
+                      para algo?». Mide 7 días, no hoy: un seguimiento del lunes
+                      que cierra la venta el jueves cuenta igual. */}
+                  {stats.agent.converted > 0 && (
+                    <StatChip label="acabaron en compra (7 días)" value={stats.agent.converted} />
+                  )}
                 </>
               ) : (
                 <>
