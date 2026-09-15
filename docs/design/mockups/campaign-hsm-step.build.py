@@ -151,17 +151,25 @@ img{max-width:100%}
 .btn-sm .ic{width:14px;height:14px}
 
 /* ─────────── Indicador de pasos ─────────── */
-/* Una sola línea con filete: los pasos hechos llevan palomita, el actual va en
-   pastilla de acento. No es una barra de progreso con porcentaje: son cuatro
-   preguntas, y el usuario puede volver a cualquiera. */
-.steps{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -4px;padding:2px 4px}
-.steps::-webkit-scrollbar{display:none}
-.steps .st{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:999px;font-size:12.5px;color:var(--faint-fg);white-space:nowrap}
-.steps .st .ic{width:14px;height:14px}
-.steps .st.done{color:var(--muted-fg)}
-.steps .st.done .ic{color:var(--axi-success)}
-.steps .st.now{background:var(--accent);color:var(--foreground);font-weight:600}
-.steps .sep{width:14px;height:1px;background:var(--border);flex:none}
+/* NO es propio: es el `StepIndicator` compartido de shared/components/ui, tal
+   como lo pintan los otros consumidores del panel. Gramática de marca: coral =
+   actual, violeta suave = completado, neutro = pendiente. La etiqueta se
+   esconde por debajo de sm y quedan solo los números. */
+.steps{display:flex;align-items:center;gap:8px;list-style:none;margin:0;padding:0}
+.steps li{display:flex;align-items:center;gap:8px;min-width:0}
+.steps li+li{flex:1}
+.steps .line{height:1px;flex:1;border-radius:999px;background:var(--border)}
+.steps .line.on{background:color-mix(in srgb,var(--axi-violet) 50%,transparent)}
+.steps .st{display:flex;align-items:center;gap:8px;border-radius:999px;padding:4px 12px 4px 4px;font-size:14px;color:var(--muted-fg);transition:background .2s}
+.steps .dot{width:24px;height:24px;flex:none;display:grid;place-items:center;border-radius:999px;font-size:12px;font-weight:600;background:var(--muted);color:var(--muted-fg)}
+.steps .dot .ic{width:14px;height:14px}
+.steps .st.now{color:var(--foreground);font-weight:500}
+.steps .st.now .dot{background:var(--axi-brand);color:var(--axi-on-color)}
+.steps .st.done .dot{background:color-mix(in srgb,var(--axi-violet) 15%,transparent);color:var(--axi-violet)}
+.steps .st.done{cursor:pointer}
+.steps .st.done:hover{background:var(--accent)}
+.steps .lab{display:none;white-space:nowrap}
+@media (min-width:640px){.steps .lab{display:inline}}
 
 .head{margin-top:18px}
 .head h2{font-size:22px;letter-spacing:-.02em}
@@ -418,21 +426,23 @@ def header():
 
 
 def steps(current="contenido"):
+    """Calca el `StepIndicator` compartido: filete que se tiñe, círculo numerado
+    y palomita al completar. Se maqueta aquí solo para poder verlo; en el código
+    es `<StepIndicator steps={STEP_LABELS} current={stepIndex} … />`."""
     items = [("audiencia", "Audiencia"), ("contenido", "Contenido"),
              ("programacion", "Programaci&oacute;n"), ("revision", "Revisi&oacute;n")]
-    order = [k for k, _ in items]
-    here = order.index(current)
+    here = [k for k, _ in items].index(current)
     out = []
-    for i, (key, label) in enumerate(items):
+    for i, (_key, label) in enumerate(items):
+        line = f'<span class="line{" on" if i <= here else ""}" aria-hidden="true"></span>' if i > 0 else ""
         if i < here:
-            out.append(f'<span class="st done">{ic("circle-check", "", 14)}{label}</span>')
-        elif i == here:
-            out.append(f'<span class="st now" aria-current="step">{label}</span>')
+            cls, dot = "st done", ic("check", "", 14)
         else:
-            out.append(f'<span class="st">{label}</span>')
-        if i < len(items) - 1:
-            out.append('<span class="sep"></span>')
-    return f'<div class="steps" role="list" aria-label="Pasos">{"".join(out)}</div>'
+            cls, dot = ("st now", str(i + 1)) if i == here else ("st", str(i + 1))
+        cur = ' aria-current="step"' if i == here else ""
+        out.append(f'<li>{line}<span class="{cls}"{cur}>'
+                   f'<span class="dot">{dot}</span><span class="lab">{label}</span></span></li>')
+    return f'<ol class="steps" aria-label="Progreso de la campa&ntilde;a">{"".join(out)}</ol>'
 
 
 def panel_tenant(body_html):
@@ -711,6 +721,12 @@ def view_notas():
          "Meta abre 250 conversaciones nuevas cada 24 h en un portafolio nuevo, y el cupo lo comparten "
          "todos los n&uacute;meros. La campa&ntilde;a no se bloquea: se reparte sola en d&iacute;as y se dice "
          "cu&aacute;ntos. Lanzar de golpe es justo lo que hunde la calificaci&oacute;n de calidad del n&uacute;mero."),
+        ("layers", "El indicador de pasos deja de tener copia propia",
+         "El asistente ten&iacute;a su propio indicador escrito a mano, con &laquo;completado&raquo; en "
+         "verde, mientras otras seis pantallas usaban el <code>StepIndicator</code> compartido con "
+         "violeta &mdash;que es lo que documenta el sistema de dise&ntilde;o&mdash;. Ahora usa el "
+         "compartido, se puede volver a un paso ya hecho, y de paso desaparece el alias "
+         "<code>WizardStepper</code>: un segundo nombre para el mismo componente."),
         ("badge-check", "Dos controles nuevos, compartidos desde el d&iacute;a uno",
          "El selector de plantilla existe hoy <strong>cuatro veces</strong> reescrito a mano en cuatro "
          "pantallas distintas. Este nace compartido para que las otras converjan. Y la franja de aviso ya "

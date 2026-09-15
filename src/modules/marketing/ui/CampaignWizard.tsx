@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Check, Info, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Info, Users } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import { FormSkeleton } from "@/shared/components/features/loading";
 import {
   AudienceFilterBuilder,
@@ -48,6 +49,9 @@ import {
   updateCampaign,
 } from "@/modules/marketing/infrastructure/services/campaigns-service.adapter";
 import { listTemplates } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+
+/** Las etiquetas en el orden del asistente, que es lo que pide `StepIndicator`. */
+const STEP_LABELS = WIZARD_STEPS.map((step) => WIZARD_STEP_LABELS[step]);
 
 /**
  * Wizard de creación de campaña.
@@ -202,35 +206,15 @@ export function CampaignWizard() {
         <h1 className="text-2xl font-semibold tracking-tight">Nueva campaña</h1>
       </div>
 
-      <ol className="flex flex-wrap items-center gap-2">
-        {WIZARD_STEPS.map((s, index) => {
-          const state = index < stepIndex ? "done" : index === stepIndex ? "current" : "todo";
-          return (
-            <li key={s} className="flex items-center gap-2">
-              {index > 0 && <span aria-hidden="true" className="h-px w-5 bg-border" />}
-              <span
-                className={cn(
-                  "flex items-center gap-1.5 text-sm",
-                  state === "current" ? "font-medium text-foreground" : "text-muted-foreground",
-                )}
-                aria-current={state === "current" ? "step" : undefined}
-              >
-                <span
-                  className={cn(
-                    "flex size-5.5 items-center justify-center rounded-full border text-[0.6875rem] font-semibold",
-                    state === "current" && "border-primary bg-primary text-primary-foreground",
-                    state === "done" && "border-success/45 bg-success/15 text-success",
-                    state === "todo" && "border-border",
-                  )}
-                >
-                  {state === "done" ? <Check className="size-3" aria-hidden="true" /> : index + 1}
-                </span>
-                {WIZARD_STEP_LABELS[s]}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      {/* El indicador es el compartido: este asistente tenía una copia propia
+          que pintaba «completado» en verde, contra la gramática de marca
+          (violeta) que ya seguían los otros seis consumidores. */}
+      <StepIndicator
+        steps={STEP_LABELS}
+        current={stepIndex}
+        onStepClick={(index) => setStep(WIZARD_STEPS[index])}
+        ariaLabel="Progreso de la campaña"
+      />
 
       <section className="rounded-2xl border border-border bg-background p-5">
         {step === "audiencia" && (

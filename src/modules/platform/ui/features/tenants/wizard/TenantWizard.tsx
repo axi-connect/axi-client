@@ -16,7 +16,7 @@ import type { CreateTenantDTO } from "../../../../domain/tenant";
 import { PENDING_CREDENTIALS_KEY, type PendingOwnerCredentials } from "../../../../domain/tenant";
 import { useCreateTenant } from "../../../../infrastructure/api/hooks/use-tenants";
 import { usePlansQuery } from "../../../../infrastructure/api/hooks/use-plans";
-import { WizardStepper } from "./WizardStepper";
+import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import { CompanyStep } from "./steps/CompanyStep";
 import { OwnerStep } from "./steps/OwnerStep";
 import { PlanStep } from "./steps/PlanStep";
@@ -97,7 +97,7 @@ export function TenantWizard() {
         </p>
       </header>
 
-      <WizardStepper steps={STEPS} current={step} onStepClick={setStep} ariaLabel="Progreso del alta" />
+      <StepIndicator steps={STEPS} current={step} onStepClick={setStep} ariaLabel="Progreso del alta" />
 
       <section
         aria-label={`Paso ${step + 1} de ${STEPS.length}: ${STEPS[step]}`}
