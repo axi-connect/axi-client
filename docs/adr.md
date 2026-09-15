@@ -6,13 +6,13 @@
 > Si actualizas algo, actualízalo **aquí primero** y luego recarga el grafo.
 
 Documento maestro de arquitectura: `docs/architecture.md`. Este ADR resume lo que el grafo NO expresa por sí solo.
-Índice al día de: commit `bcd7d2b` (main, 5 commits por delante de origin/main; incluye el frontend del reconocimiento de producto F7) — 13.051 nodos / 34.763 aristas.
+Índice al día de: commit `0e7c162` (main, **al día con origin/main**; incluye el enriquecimiento de catálogo con IA y su hotfix del 429) — 13.379 nodos / 35.800 aristas.
 
 ## Contexto
 App web de **axi-connect** (SaaS multi-tenant de atención omnicanal). Next.js 15 App Router + React 19 + TS strict. Consume `axi-server` vía REST `/api/v1/*` y WebSocket (`/inbox`, `/channels`). Repo hermano indexado como `home-davela-dev-axi-axi-server`.
 
 ## Decisiones estructurales
-1. **Vertical slices** en `src/modules/<slice>/`: agents, analytics, billing, calls, catalog, channels, cmo, companies, crm, dashboard, forms, inbox, integrations, landing, marketing, notifications, onboarding, orders, payments, platform, prospecting, quick-actions, rbac, scheduling, users, workspace. El reconocimiento de producto NO es un slice propio: sus ajustes viven en `agents` (`domain/recognition.ts`, `RecognitionSettingsView`) y su chip del inbox en `inbox` (`ui/components/media/ProductRecognitionChip.tsx`). Un slice es dueño de su dominio, datos, estado y UI.
+1. **Vertical slices** en `src/modules/<slice>/`: agents, analytics, billing, calls, catalog, channels, cmo, companies, crm, dashboard, forms, inbox, integrations, landing, marketing, notifications, onboarding, orders, payments, platform, prospecting, quick-actions, rbac, scheduling, shipping, users, workspace. (Lista leída del disco en cada indexado, no de memoria.) El reconocimiento de producto NO es un slice propio: sus ajustes viven en `agents` (`domain/recognition.ts`, `RecognitionSettingsView`) y su chip del inbox en `inbox` (`ui/components/media/ProductRecognitionChip.tsx`). Un slice es dueño de su dominio, datos, estado y UI.
 2. **Clean + Hexagonal por slice**: `domain/` (TS puro: cero React, cero http, cero zod) → `application/` (puertos + casos de uso, opcional en slices CRUD) → `infrastructure/` (adapters HTTP, stores, hooks) → `ui/`.
 3. **Regla de escape sancionada**: un slice puramente CRUD omite `application/`. No se fabrica ceremonia sin dominio real.
 4. **`workspace` es capa de composición** (única excepción): solo `ui/`, agrega stores de `channels` + `inbox` para el inbox. Sin dominio propio. ⚠️ **El slice `conversations` ya no existe en este repo** (pasó a llamarse `inbox`, con `infrastructure/stores/inbox.store.ts`). `docs/architecture.md` ya está corregido (§15 pasó a citar `inbox.store`); la mención de `conversations:reply` en §5 es un permiso RBAC y es correcta, no un slice.
@@ -23,18 +23,18 @@ App web de **axi-connect** (SaaS multi-tenant de atención omnicanal). Next.js 1
 ## Reglas de dependencia (estado verificado)
 - `domain` no importa React/http/zod. `application` jamás importa `infrastructure`/`ui`.
 - **La UI nunca llama a `http` directamente**: pasa por un `*-service.adapter.ts` del slice.
-- `core/` y `shared/` **nunca** importan de `modules/`. **Estado real del índice: 0 aristas `IMPORTS` desde `core/`; 1 desde `shared/`, y es un falso positivo verificado y estable a través de 9 indexados** — `SiteHero.tsx` hace `import Image from 'next/image'` y el resolutor lo apunta a `modules/catalog/domain/__tests__/product-images.test.ts`. La regla se sostiene; no hay violación real.
+- `core/` y `shared/` **nunca** importan de `modules/`. **Estado real del índice: 0 aristas `IMPORTS` desde `core/`; 1 desde `shared/`, y es un falso positivo verificado y estable a través de 10 indexados** — `SiteHero.tsx` hace `import Image from 'next/image'` y el resolutor lo apunta a `modules/catalog/domain/__tests__/product-images.test.ts`. La regla se sostiene; no hay violación real.
 
 ## Cómo consultar este grafo (gotchas verificados)
-- **El re-indexado BORRA el ADR del grafo.** `index_repository` deja `adr_present: false` y `manage_adr(mode='sections')` vuelve vacío. Confirmado en nueve indexados consecutivos. Por eso existe este archivo: recarga el grafo desde aquí.
-- **Nodos `Route` NO son endpoints del backend.** Son 533 nodos que mezclan rutas del App Router, navegaciones y literales de docs. El path vive en la propiedad **`name`**, no en `path` (`key_path` vacío salvo nodos `infra`).
-- **Llamadas reales al API**: aristas `HTTP_CALLS` (517) con `url_path` + `callee`. Filtrar `callee STARTS WITH 'http.'` deja **420 llamadas reales**; el resto son `router.push/replace` (navegación Next, no HTTP).
+- **El re-indexado BORRA el ADR del grafo.** `index_repository` deja `adr_present: false` y `manage_adr(mode='sections')` vuelve vacío. Confirmado en diez indexados consecutivos. Por eso existe este archivo: recarga el grafo desde aquí.
+- **Nodos `Route` NO son endpoints del backend.** Son 555 nodos que mezclan rutas del App Router, navegaciones y literales de docs. El path vive en la propiedad **`name`**, no en `path` (`key_path` vacío salvo nodos `infra`).
+- **Llamadas reales al API**: aristas `HTTP_CALLS` (545) con `url_path` + `callee`. Filtrar `callee STARTS WITH 'http.'` deja **448 llamadas reales**; el resto son `router.push/replace` (navegación Next, no HTTP).
 - Los `url_path` son **relativos al prefijo** `/api/v1` (p.ej. `/orders/:id/cancel`), porque `HttpClient` los expresa así. Para cruzar al backend hay que buscar el controller por decorador (ver `axi-server/docs/rules/adr.md`), no por match de path.
 - **Los contadores de `boundaries` tienen ruido de resolución**: incluyen (a) invocaciones de props callback (`onSubmit`, `isVisible`, `fetcher`, `onDelete`) que van de `shared` a `modules` por diseño — inversión de control de los componentes dirigidos por configuración —, y (b) falsos positivos por nombres genéricos (`fetch` del `HttpClient` resuelto contra el `fetch` de un store, `render` de Testing Library, `Image` de `next/image`). **Antes de declarar una violación de capas, confirmar con aristas `IMPORTS` y abrir el archivo.**
 - **La documentación cuenta como nodos.** Editar `docs/architecture.md` cambia el conteo del grafo (los `.md` se indexan como nodos `Section`) sin que haya cambiado una línea de código.
 - **`certificates/` se excluye del índice** (apareció al añadir HTTPS local para el popup de Meta).
-- Hotspots de fan-in: `cn` (426), `errorMessage` (290), `useAlert` (139), `formatMoney` (70), `useAuth` (63), `isHttpError` (53), `HttpClient.post` (52). Tocarlos tiene alcance amplio.
-- **El ranking de `hotspots` arrastra colisiones con los globals de los tests.** Al crecer la suite, funciones propias homónimas de un global de Jest suben al top con fan-in falso: `channel-health.describe` (106 "callers", todos `__tests__` invocando el `describe()` de Jest — 57 → 100 → 106 en tres indexados: el artefacto crece con la suite) y `DatabaseConnectionSheet.render` (76, el `render` de Testing Library). Verificar el origen de los callers antes de tratar un hotspot como punto caliente real.
+- Hotspots de fan-in: `cn` (437), `errorMessage` (306), `useAlert` (143), `formatMoney` (74), `useAuth` (64), `HttpClient.post` (57), `isHttpError` (53). Tocarlos tiene alcance amplio.
+- **El ranking de `hotspots` arrastra colisiones con los globals de los tests.** Al crecer la suite, funciones propias homónimas de un global de Jest suben al top con fan-in falso: `channel-health.describe` (121 "callers", todos `__tests__` invocando el `describe()` de Jest — 57 → 100 → 106 → 121 en cuatro indexados: el artefacto crece con la suite) y `DatabaseConnectionSheet.render` (81, el `render` de Testing Library). Verificar el origen de los callers antes de tratar un hotspot como punto caliente real.
 
 ## Consecuencias
 - Un listado nuevo = `DataTable` + `usePaginatedList`; un formulario = `DynamicForm` + `*.config.tsx` con Zod; un detalle = `DetailSheet` con `fetchDetail`.
