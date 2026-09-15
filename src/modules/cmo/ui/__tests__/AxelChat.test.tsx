@@ -21,6 +21,9 @@ const mockState = {
     seq: number;
   } | null,
   settled: {} as Record<string, ProposalDTO | null>,
+  // El avatar del hero lee estos dos por su propio selector (`selectMoodSnapshot`).
+  blocker: null as "disabled" | "quota" | null,
+  unseen: 0,
   resolveSettled: jest.fn(),
   ask: jest.fn(),
   answer: jest.fn(),

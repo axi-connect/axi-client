@@ -17,7 +17,8 @@ export default function CmoLoading() {
     >
       <div className="axel-field flex min-w-0 flex-1 flex-col">
         <div className="flex flex-1 flex-col items-center px-6 pt-8">
-          <Skeleton className="size-[96px] rounded-full" />
+          {/* La silueta de Axel (136×140 con su sombra), para que la cara no salte al llegar. */}
+          <Skeleton className="mt-1 h-[124px] w-[112px] rounded-[46%]" />
           <Skeleton className="mt-5 h-3.5 w-56" />
           <Skeleton className="mt-4 h-7 w-[22rem] max-w-full" />
           <Skeleton className="mt-2.5 h-7 w-[17rem] max-w-full" />

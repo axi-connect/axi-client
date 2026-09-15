@@ -16,9 +16,12 @@ import {
   reactivateDirective,
   saveCmoSettings,
 } from "@/modules/cmo/infrastructure/services/cmo-service.adapter";
+import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Switch } from "@/shared/components/ui/switch";
+import { AxelAvatar } from "./components/AxelAvatar";
 
 /** Espejo del mínimo del backend (createDirectiveSchema.min(8)): con menos, el
  * botón se deshabilita y el placeholder ya sugiere una frase completa. */
@@ -50,6 +53,7 @@ export function CmoSettingsView() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [accessory, setAccessory] = useAxelAccessory();
 
   // Cada carga falla POR SU CUENTA (patrón del resto del módulo): con
   // Promise.all + showAlert la vista se quedaba en skeleton para siempre ante
@@ -180,6 +184,36 @@ export function CmoSettingsView() {
           </select>
           <span className="text-xs text-muted-foreground">hora local de tu negocio</span>
         </label>
+      </section>
+
+      {/* Apariencia: preferencia LOCAL del navegador, no un ajuste del tenant.
+          No pasa por `patch` ni exige `cmo:approve`: cambiar cómo se ve Axel
+          en tu pantalla no cambia nada de lo que hace. */}
+      <section className="rounded-lg border border-border bg-background p-5">
+        <div className="flex items-center gap-4">
+          <AxelAvatar
+            expression="neutral"
+            accessory={accessory}
+            transitionMs={0}
+            className="size-16 flex-none"
+          />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-heading text-base">Apariencia</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Cómo se ve Axel en tu despacho. Se guarda en este navegador.
+            </p>
+          </div>
+          <label className="flex flex-none items-center gap-2.5 text-sm">
+            <span>Diadema</span>
+            <Switch
+              checked={accessory === "headset"}
+              onCheckedChange={(on) => {
+                setAccessory(on ? "headset" : "none");
+              }}
+              aria-label="Axel lleva diadema"
+            />
+          </label>
+        </div>
       </section>
 
       <section className="rounded-lg border border-border bg-background p-5">

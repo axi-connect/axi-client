@@ -959,121 +959,20 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 /* ==========================================================================
    MÓDULO CMO — Axel, el director de mercadeo
    ==========================================================================
-   Dos utilidades y ninguna es nueva de raíz: el orbe reutiliza el ANILLO COMETA
-   de `.channel-surface::after` (misma `@property --comet-angle`, §canales F1) y
-   el campo ambiental parte del lenguaje de `.bg-brand-ambient` — elipses
-   ancladas a esquina, en `srgb` — pero LO ROMPE a propósito: ver §EL CAMPO.
+   El campo ambiental parte del lenguaje de `.bg-brand-ambient` — elipses
+   ancladas a esquina, en `srgb` — pero LO ROMPE a propósito: ver §EL CAMPO. La
+   tarjeta de propuesta reutiliza el ANILLO COMETA de `.channel-surface::after`
+   (misma `@property --comet-angle`). El antiguo orbe con retrato y anillo se
+   eliminó (2026-09-15): Axel es ahora una cara procedural, ver §LA CARA.
 
    Se declaran aquí y no como valores arbitrarios de Tailwind por la misma razón
    que el cometa de canales: un `color-mix` anidado dentro de `bg-[...]` es
    frágil de extraer, y el sistema pide que los degradados vivan una sola vez.
    ========================================================================== */
 
-/* Halo difuso detrás del orbe. Violeta porque violeta = IA en todo el panel. */
-.axel-orb-glow {
-  position: absolute;
-  inset: -26px;
-  border-radius: 9999px;
-  pointer-events: none;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%,
-    transparent 68%
-  );
-  filter: blur(6px);
-}
-
-/* El retrato de Axel dentro del orbe (`/images/mascots/cmo-orb.webp`, el mismo
-   render del personaje recortado en cuadrado sobre la cabeza). El disco es
-   `overflow:hidden`, así que la imagen se recorta al círculo. */
-.axel-orb-face {
-  object-fit: cover;
-  object-position: 50% 50%;
-}
-
-/* Vignette violeta pegada al borde interior del retrato. No es decoración: es lo
-   que funde la foto con el anillo para que el cometa no parezca un aro puesto
-   encima de un avatar recortado. `screen` sobre un render oscuro lee como luz. */
-.axel-orb-veil {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  background:
-    radial-gradient(
-      circle at 50% 40%,
-      transparent 44%,
-      color-mix(in srgb, var(--axi-violet) 20%, transparent) 84%,
-      color-mix(in srgb, var(--axi-violet) 40%, transparent) 100%
-    ),
-    radial-gradient(
-      circle at 50% 116%,
-      color-mix(in srgb, var(--axi-brand) 24%, transparent),
-      transparent 62%
-    );
-}
-
-/* Derrame del cometa sobre el retrato: el MISMO cónico, difuminado y recortado a
-   la corona interior. Lleva animación propia con idéntica duración y curva
-   porque `--comet-angle` está declarada `inherits: false` (arriba, con el cometa
-   de canales) y un hijo no puede heredar el ángulo animado del padre: la
-   sincronía se consigue con dos animaciones en fase, no heredando el valor. */
-.axel-orb-spill {
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.5;
-  filter: blur(4px);
-  mix-blend-mode: screen;
-  background: conic-gradient(
-    from var(--comet-angle),
-    transparent 0deg 210deg,
-    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
-    var(--axi-brand) 336deg,
-    var(--axi-amber) 350deg,
-    transparent 360deg
-  );
-  -webkit-mask-image: radial-gradient(circle, transparent 54%, #000 90%);
-  mask-image: radial-gradient(circle, transparent 54%, #000 90%);
-  animation: axel-comet 5.5s linear infinite;
-}
-
-/* Cuando Axel piensa el derrame se aviva: el cometa se nota más sin añadir otra
-   animación al DOM. */
-.axel-orb--busy .axel-orb-spill {
-  opacity: 0.72;
-}
-
-/* El cometa: cónico con cola y núcleo, recortado a la franja del borde con dos
-   máscaras que se excluyen. Gira animando `--comet-angle`, que ya existe como
-   propiedad TIPADA arriba (sin `@property` un custom property no interpola).
-   Tricolor del isotipo: es el ÚNICO momento hero del módulo (DESIGN §3.2).
-   `z-index: 2` lo deja por encima del retrato y del derrame. */
-.axel-orb::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  padding: 1.5px;
-  background: conic-gradient(
-    from var(--comet-angle),
-    transparent 0deg 210deg,
-    color-mix(in srgb, var(--axi-violet) 45%, transparent) 292deg,
-    var(--axi-brand) 336deg,
-    var(--axi-amber) 350deg,
-    transparent 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  animation: axel-comet 5.5s linear infinite;
-  pointer-events: none;
-}
-
+/* El anillo cometa: cónico con cola y núcleo que gira animando `--comet-angle`
+   (propiedad TIPADA arriba, con el cometa de canales). Hoy solo lo usa la
+   tarjeta de propuesta nueva, tres vueltas y se apaga. */
 @keyframes axel-comet {
   to {
     --comet-angle: 360deg;
@@ -1089,7 +988,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
    El relieve son tres capas y ninguna estrena color: un realce violeta en el
    borde superior (la luz), una sombra proyectada teñida hacia abajo (el peso) y
-   el anillo cónico recortado al borde, con la MISMA técnica de `.axel-orb::after`
+   el anillo cónico recortado al borde, con la técnica de `.channel-surface::after`
    — dos máscaras que se excluyen sobre `@property --comet-angle`.
 
    El anillo solo gira mientras la tarjeta es NUEVA: tres vueltas y se apaga
@@ -1179,20 +1078,259 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   }
 }
 
-/* Axel pensando. Existe porque NO hay streaming: un turno tarda decenas de
-   segundos y sin señal de vida el usuario cree que se colgó. Solo `transform`,
-   así que no provoca layout ni repaint del texto. */
-.axel-orb--busy {
-  animation: axel-breathe 1.4s ease-in-out infinite;
+/* ==========================================================================
+   LA CARA DE AXEL — `AxelAvatar` (src/modules/cmo/ui/components/AxelAvatar.tsx)
+   --------------------------------------------------------------------------
+   El componente es geometría; el material vive aquí y entra por `data-layer` /
+   `data-stop`, igual que `.glass-glyph`. Cero `filter`, cero `backdrop-filter`:
+   el volumen es un radial de tres paradas más una oclusión abajo-derecha.
+
+   El movimiento es SOLO `transform` sobre los grupos «rig», dirigido por
+   variables: las de la POSE las escribe React en el `style` del `<svg>`
+   (`--axel-yaw`, `--axel-mouth`, `--axel-l-top`…) y las de RUNTIME las escriben
+   los hooks por ref (`--gaze-x/y` la mirada, `--axel-sac-x/y` las sacadas,
+   `data-blink` el parpadeo). Nunca compiten por la misma propiedad.
+
+   Dos decisiones que explican la forma que tiene:
+
+   1. **El material es propio y estable en los dos temas.** La arcilla blanca ES
+      el personaje (como el retrato de Lumo): en oscuro no se invierte, solo se
+      hunden un punto las sombras. Son los únicos literales del avatar y viven
+      aquí, como los blancos «de física» del glifo de cristal.
+
+   2. **La regla genérica del rig va con `:where()`.** Con especificidad normal
+      ganaba a los orígenes de cada pieza y boca, párpados y apertura escalaban
+      alrededor del centro de la cara: la boca «viajaba» al hablar y la de
+      tristeza aparecía sobre los ojos (bug visto en el mockup). Con `:where()` el
+      origen de cada pieza manda siempre.
+   ========================================================================== */
+.axel-avatar {
+  display: block;
+  overflow: visible;
+
+  --axel-body-hi: #ffffff;
+  --axel-body-mid: #f7f5f0;
+  --axel-body-deep: #e1ddd4;
+  --axel-occ: #b9b3a8;
+  --axel-hot: #ffffff;
+  --axel-ink: #2b2b30;
+  --axel-ink-hi: #55555c;
+  --axel-glint: #ffffff;
+  --axel-lid: #f7f5f0;
+
+  /* Curvas: las mismas que `cssEase` en core/styles/motion.ts (hay un test que lo comprueba). */
+  --axel-ease-spring: linear(0, 0.0263, 0.0905, 0.1755, 0.2694, 0.3643, 0.4553, 0.5393, 0.6148, 0.6813, 0.7388, 0.7879, 0.8292, 0.8636, 0.892, 0.9151, 0.9339, 0.949, 0.961, 0.9705, 0.9779, 0.9837, 0.9881, 0.9915, 0.994, 0.9959, 0.9973, 0.9983, 1);
+  --axel-ease-snappy: linear(0, 0.0353, 0.122, 0.2363, 0.3611, 0.4846, 0.599, 0.7, 0.7855, 0.8554, 0.9105, 0.9523, 0.9826, 1.0035, 1.0169, 1.0245, 1.0279, 1.0282, 1.0266, 1.0238, 1.0204, 1.0168, 1.0134, 1.0103, 1.0075, 1.0053, 1.0035, 1.0021, 1);
+  --axel-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Defaults de la pose (React los sobreescribe) y del runtime (los hooks). */
+  --axel-yaw: 0;
+  --axel-pitch: 0;
+  --axel-roll: 0;
+  --axel-depth: 1;
+  --axel-face-sx: 1;
+  --axel-gap: 12;
+  --axel-gx: 0;
+  --axel-gy: 0;
+  --axel-mouth: 0.9;
+  --axel-mouth-w: 1;
+  --axel-open: 0;
+  --axel-dur: 480ms;
+  --axel-ease: var(--axel-ease-spring);
+
+  /* Giro efectivo = pose + seguimiento del puntero (la cabeza sigue al 30 %). */
+  --yaw: calc(var(--axel-yaw) + var(--gaze-x, 0) * 6);
+  --pitch: calc(var(--axel-pitch) + var(--gaze-y, 0) * 4);
 }
 
-@keyframes axel-breathe {
-  0%,
-  100% {
-    transform: scale(1);
+.dark .axel-avatar {
+  --axel-body-hi: #fbfaf7;
+  --axel-body-mid: #f1eee7;
+  --axel-body-deep: #d2cdc3;
+  --axel-occ: #9a948a;
+  --axel-ink: #1d1d21;
+  --axel-ink-hi: #4a4a52;
+  --axel-lid: #f1eee7;
+}
+
+@supports not (transition-timing-function: linear(0, 1)) {
+  .axel-avatar {
+    --axel-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --axel-ease-snappy: cubic-bezier(0.22, 1, 0.36, 1);
   }
-  50% {
-    transform: scale(1.045);
+}
+
+/* Material por data-stop / data-layer. */
+.axel-avatar [data-stop="body-hi"] { stop-color: var(--axel-body-hi); }
+.axel-avatar [data-stop="body-mid"] { stop-color: var(--axel-body-mid); }
+.axel-avatar [data-stop="body-deep"] { stop-color: var(--axel-body-deep); }
+.axel-avatar [data-stop="occ"] { stop-color: var(--axel-occ); }
+.axel-avatar [data-stop="hot"] { stop-color: var(--axel-hot); }
+.axel-avatar [data-stop="ink"] { stop-color: var(--axel-ink); }
+.axel-avatar [data-stop="ink-hi"] { stop-color: var(--axel-ink-hi); }
+.axel-avatar [data-stop="none"] { stop-color: transparent; }
+.axel-avatar [data-layer="glint"] { fill: var(--axel-glint); }
+.axel-avatar [data-layer="lid"] { fill: var(--axel-lid); }
+.axel-avatar [data-layer="mouth"] { stroke: var(--axel-ink); fill: none; stroke-linecap: round; }
+.axel-avatar [data-layer="mouth-open"] { fill: var(--axel-ink); }
+.axel-avatar [data-layer="acc"] { fill: var(--axel-ink); }
+.axel-avatar [data-layer="acc-line"] { stroke: var(--axel-ink); fill: none; stroke-linecap: round; }
+.axel-avatar [data-layer="acc-hi"] { fill: var(--axel-ink-hi); }
+
+/* Accesorio: uno a la vez, por `data-acc` en la raíz. */
+.axel-avatar [data-acc-part] { display: none; }
+.axel-avatar[data-acc="headset"] [data-acc-part="headset"] { display: inline; }
+
+/* El rig. `:where()` = especificidad cero: los orígenes de cada pieza ganan (decisión 2). */
+.axel-avatar :where([class^="axel-rig-"]) {
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  transition: transform var(--axel-dur) var(--axel-ease);
+}
+.axel-avatar[data-tracking="1"] :where([class^="axel-rig-"]) {
+  transition-duration: 90ms;
+  transition-timing-function: linear;
+}
+.axel-avatar[data-gaze="settle"] :where([class^="axel-rig-"]) {
+  transition-duration: 400ms;
+  transition-timing-function: ease-out;
+}
+
+.axel-rig-body {
+  transform: translate(calc(var(--yaw) * 0.25px * var(--axel-depth)), calc(var(--pitch) * 0.2px * var(--axel-depth)))
+    rotate(calc(var(--axel-roll) * 1deg));
+}
+.axel-rig-hot {
+  transform: translate(calc(var(--yaw) * -0.45px), calc(var(--pitch) * -0.4px));
+}
+.axel-rig-band {
+  transform: translate(calc(var(--yaw) * 0.4px), calc(var(--pitch) * 0.3px)) rotate(calc(var(--axel-roll) * 1deg));
+}
+.axel-rig-face {
+  transform: translate(calc(var(--yaw) * 0.9px * var(--axel-depth)), calc(var(--pitch) * 0.7px * var(--axel-depth)))
+    rotate(calc(var(--axel-roll) * 1deg)) scaleX(var(--axel-face-sx));
+}
+.axel-rig-eye-l {
+  transform: translate(calc(var(--axel-gap) * -1px), 0) scaleX(var(--axel-l-sx)) scale(var(--axel-l-scale));
+  transform-origin: 50px 47px;
+}
+.axel-rig-eye-r {
+  transform: translate(calc(var(--axel-gap) * 1px), 0) scaleX(var(--axel-r-sx)) scale(var(--axel-r-scale));
+  transform-origin: 50px 47px;
+}
+/* Brillo del ojo: mirada de la expresión + puntero + sacadas. */
+.axel-rig-pupil {
+  transform: translate(
+    calc((var(--axel-gx) + var(--gaze-x, 0) + var(--axel-sac-x, 0)) * 1.6px),
+    calc((var(--axel-gy) + var(--gaze-y, 0) + var(--axel-sac-y, 0)) * 1.4px)
+  );
+}
+.axel-rig-lips {
+  transform: translate(calc((var(--axel-gx) + var(--gaze-x, 0)) * 0.6px), calc(var(--axel-gy) * 0.5px));
+}
+/* La boca pivota en la línea del labio: sonríe, se aplana o se invierte sin moverse de sitio. */
+.axel-rig-mouth {
+  transform: scaleY(var(--axel-mouth)) scaleX(var(--axel-mouth-w));
+  transform-origin: 50px 60px;
+}
+.axel-rig-open {
+  transform: scaleY(var(--axel-open));
+  transform-origin: 50px 60.2px;
+}
+.axel-rig-lid-top { transform-box: fill-box; transform-origin: 50% 0%; }
+.axel-rig-lid-bot { transform-box: fill-box; transform-origin: 50% 100%; }
+.axel-rig-eye-l .axel-rig-lid-top { transform: rotate(calc(var(--axel-l-tilt) * 1deg)) scaleY(var(--axel-l-top)); }
+.axel-rig-eye-l .axel-rig-lid-bot { transform: scaleY(var(--axel-l-bot)); }
+.axel-rig-eye-r .axel-rig-lid-top { transform: rotate(calc(var(--axel-r-tilt) * -1deg)) scaleY(var(--axel-r-top)); }
+.axel-rig-eye-r .axel-rig-lid-bot { transform: scaleY(var(--axel-r-bot)); }
+
+/* Parpadeo: grupo propio para no pisar las transforms de los párpados. Solo lo dispara el hook. */
+.axel-rig-blink { transform-box: fill-box; transform-origin: 50% 50%; transition: none; }
+.axel-avatar[data-blink="1"] .axel-rig-blink { animation: axel-blink 150ms ease-in-out; }
+@keyframes axel-blink { 50% { transform: scaleY(0.08); } }
+
+/* Gestos: finitos; el hook los apaga por temporizador. */
+.axel-rig-gesture { transition: none; }
+.axel-avatar[data-gesture="nod"] .axel-rig-gesture { animation: axel-nod 500ms cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes axel-nod { 35% { transform: translateY(3.5px); } 70% { transform: translateY(-1.5px); } }
+.axel-avatar[data-gesture="wave"] .axel-rig-gesture { animation: axel-wave 900ms ease-in-out; }
+@keyframes axel-wave { 20% { transform: rotate(-9deg); } 45% { transform: rotate(8deg); } 70% { transform: rotate(-5deg); } }
+.axel-avatar[data-gesture="wink"] .axel-rig-eye-r .axel-rig-blink { animation: axel-wink 600ms ease-in-out; }
+@keyframes axel-wink { 25%, 70% { transform: scaleY(0.08); } }
+
+/* Hablando: la boca se abre y cierra y la cabeza asiente apenas — SOLO mientras
+   llegan deltas. El nodo existe mientras el servidor escribe: indicador de un
+   trabajo en curso, no un loop del workspace (DESIGN-SYSTEM §6). */
+.axel-avatar[data-expression="speaking"] .axel-rig-gesture { animation: axel-talk 1.7s ease-in-out infinite; }
+.axel-avatar[data-expression="speaking"] .axel-rig-open { animation: axel-open 640ms ease-in-out infinite alternate; }
+@keyframes axel-talk { 50% { transform: translateY(1.2px); } }
+@keyframes axel-open { from { transform: scaleY(0.12); } to { transform: scaleY(1); } }
+
+/* ==========================================================================
+   EL SUELO — `AxelStage`: el personaje de pie sobre una sombra de contacto
+   --------------------------------------------------------------------------
+   Sustituye al orbe. La sombra es un radial sin `filter`. La respiración va en
+   el raíz HTML (compositor) y SOLO con `--busy`, o sea con un turno en curso;
+   la sombra se encoge en contrafase, como si el personaje se levantara.
+   ========================================================================== */
+.axel-stage {
+  position: relative;
+  display: block;
+  width: 136px;
+  height: 140px;
+  flex: none;
+  --axel-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
+}
+.dark .axel-stage {
+  --axel-shadow: color-mix(in srgb, #000000 55%, transparent);
+}
+.axel-stage-figure {
+  position: absolute;
+  inset: 0 0 8px;
+  display: block;
+  transform-origin: 50% 90%;
+}
+.axel-stage-figure > .axel-avatar {
+  width: 100%;
+  height: 100%;
+}
+.axel-ground {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 96px;
+  height: 18px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    var(--axel-shadow) 0%,
+    color-mix(in srgb, var(--axel-shadow) 45%, transparent) 45%,
+    transparent 72%
+  );
+}
+.axel-stage--busy .axel-stage-figure { animation: axel-breathe 1.6s ease-in-out infinite; }
+.axel-stage--busy .axel-ground { animation: axel-ground-breathe 1.6s ease-in-out infinite; }
+@keyframes axel-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035) translateY(-1.5px); }
+}
+@keyframes axel-ground-breathe {
+  0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 1; }
+  50% { transform: translateX(-50%) scaleX(0.92); opacity: 0.8; }
+}
+
+/* Movimiento reducido: las expresiones SÍ cambian (de golpe), nada viaja ni respira. */
+@media (prefers-reduced-motion: reduce) {
+  .axel-avatar,
+  .axel-avatar * {
+    transition: none !important;
+    animation: none !important;
+  }
+  .axel-stage--busy .axel-stage-figure,
+  .axel-stage--busy .axel-ground {
+    animation: none;
   }
 }
 
@@ -1373,9 +1511,6 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .axel-orb::after,
-  .axel-orb-spill,
-  .axel-orb--busy,
   .axel-comet-card--new,
   .axel-comet-card--new::after,
   /* La aurora se queda quieta y completa: el degradado sigue ahí, solo deja de

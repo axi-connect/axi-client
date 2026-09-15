@@ -4,8 +4,11 @@ import Link from "next/link";
 import { Clock, Power } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
-import { AxelOrb } from "./AxelOrb";
+import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
 import type { CmoBlocker } from "@/modules/cmo/infrastructure/stores/cmo.store";
+import { AxelAvatar } from "./AxelAvatar";
+import { AXEL_LABEL } from "./AxelHeroAvatar";
+import { AxelStage } from "./AxelStage";
 
 interface CmoBlockedStateProps {
   blocker: NonNullable<CmoBlocker>;
@@ -28,10 +31,16 @@ interface CmoBlockedStateProps {
  */
 export function CmoBlockedState({ blocker, canManage }: CmoBlockedStateProps) {
   const isQuota = blocker === "quota";
+  const [accessory] = useAxelAccessory();
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-6 py-16 text-center">
-      <AxelOrb />
+      {/* Dormido y estático: sin botón (no saluda), sin mirada, sin vida. */}
+      <div role="img" aria-label={AXEL_LABEL} data-mood="asleep">
+        <AxelStage>
+          <AxelAvatar expression="asleep" accessory={accessory} transitionMs={0} />
+        </AxelStage>
+      </div>
       <h2 className="mt-6 text-xl">
         {isQuota ? "Axel se quedó sin análisis este ciclo" : "Axel está apagado"}
       </h2>

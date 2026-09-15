@@ -313,6 +313,15 @@ Reglas:
   arranca solo, es un loop y necesita permiso aquí; si lo enciende el ratón, es
   respuesta a una acción. Los tres se apagan igualmente con
   `prefers-reduced-motion` y ninguno se engancha sin puntero fino.
+- **La cara de Axel (módulo CMO, `AxelAvatar`) tampoco es una excepción**, y se
+  diseñó para no serlo: en reposo no hay un solo temporizador ni `rAF` vivo. La
+  mirada la enciende el puntero (`useAxelGaze`: un `rAF` por movimiento, ninguno
+  cuando el ratón se para); el guiño y el saludo son gestos finitos (≤ 900 ms)
+  disparados por un toque; el parpadeo, las sacadas y la respiración existen
+  **solo mientras hay un turno del servidor en curso** (`useAxelLife`), como el
+  haz de `CatalogScan`; y el cambio de humor es una transición finita de
+  `transform`. El antiguo anillo cometa del orbe giraba en reposo repintando un
+  `conic-gradient` cada frame: se eliminó con el orbe.
 - **Celebraciones**: una ráfaga de confeti **finita** (`Confetti` +
   `brandCelebration`, ~2,5 s, termina sola) tampoco es un loop: la dispara una
   acción del usuario que merece celebrarse y acaba. Hoy hay **dos, ambas en el

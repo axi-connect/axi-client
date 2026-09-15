@@ -7,7 +7,7 @@ import { cn } from "@/core/lib/utils";
 import type { BriefingDTO } from "@/modules/cmo/domain/cmo";
 import { formatHour } from "@/modules/cmo/domain/proposal-labels";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { AxelOrb } from "./AxelOrb";
+import { AxelHeroAvatar } from "./AxelHeroAvatar";
 
 interface BriefingHeroProps {
   briefing: BriefingDTO | null;
@@ -22,12 +22,14 @@ interface BriefingHeroProps {
   ownerName: string | null;
   /** Propuestas pendientes: es lo que el hero promete que hay más abajo. */
   proposalCount: number;
-  /** true mientras Axel piensa: el orbe respira. */
-  busy: boolean;
+  /** Foco en el compositor o borrador sin enviar: Axel escucha. El resto del
+   *  humor (pensando, hablando, orgulloso…) lo deriva el avatar del store por
+   *  su cuenta, para no re-renderizarse con cada delta del streaming. */
+  ownerTyping: boolean;
 }
 
 /**
- * El hero del despacho: el orbe con el personaje y, debajo, **el briefing
+ * El hero del despacho: Axel de pie sobre su sombra y, debajo, **el briefing
  * destilado**.
  *
  * Antes esto era una tarjeta con borde y franja tricolor metida en una banda
@@ -63,13 +65,13 @@ export function BriefingHero({
   briefingHour,
   ownerName,
   proposalCount,
-  busy,
+  ownerTyping,
 }: BriefingHeroProps) {
   const today = useTodayLabel();
 
   return (
     <div className="flex flex-col items-center text-center">
-      <AxelOrb busy={busy} />
+      <AxelHeroAvatar ownerTyping={ownerTyping} />
 
       <p className="mt-5 text-[13px] text-muted-foreground">
         {ownerName === null ? "Buen día" : `Buen día, ${ownerName}`}

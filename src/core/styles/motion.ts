@@ -107,3 +107,37 @@ export const flowStage = {
   lightEvery: 0.14,
   staggerEvery: 0.08,
 } as const
+
+/**
+ * Muestrea un resorte (masa 1) como curva CSS `linear()`: el mismo rebote que
+ * framer da a `spring.soft`/`spring.snappy`, pero ejecutado por el compositor y
+ * sin JavaScript por frame. Muestreo hasta que la amplitud baja de 0,1 %.
+ */
+export function springToLinear(stiffness: number, damping: number, samples = 28): string {
+  const w0 = Math.sqrt(stiffness)
+  const zeta = damping / (2 * Math.sqrt(stiffness))
+  const wd = w0 * Math.sqrt(1 - zeta * zeta)
+  const x = (t: number) =>
+    Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + ((zeta * w0) / wd) * Math.sin(wd * t))
+  let duration = 0.05
+  while (Math.abs(x(duration)) > 0.001 && duration < 3) duration += 0.01
+  const points = Array.from({ length: samples + 1 }, (_, i) =>
+    i === samples ? 1 : Math.round((1 - x((duration * i) / samples)) * 10000) / 10000,
+  )
+  return `linear(${points.map((p) => String(p)).join(", ")})`
+}
+
+/**
+ * Curvas CSS de la cara de Axel (módulo CMO). Como en el splash, la
+ * implementación real vive en `globals.css` (`--axel-ease-*`) porque el
+ * `@supports` de `linear()` solo puede resolverse allí; estos valores documentan
+ * la coreografía y un test comprueba que el CSS no se ha desincronizado.
+ * `spring` ≡ `spring.soft` (260/30, ~430 ms) · `snappy` ≡ `spring.snappy` (400/30, ~400 ms).
+ */
+export const cssEase = {
+  spring: springToLinear(spring.soft.stiffness, spring.soft.damping),
+  snappy: springToLinear(spring.snappy.stiffness, spring.snappy.damping),
+  smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+  /** Navegadores sin `linear()`: la curva «salida» ya usada en el módulo. */
+  fallback: "cubic-bezier(0.22, 1, 0.36, 1)",
+} as const

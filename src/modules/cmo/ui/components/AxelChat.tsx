@@ -131,6 +131,10 @@ export function AxelChat({
   const newThread = useCmoStore((state) => state.newThread);
 
   const [draft, setDraft] = useState("");
+  /* Axel «escucha» cuando el dueño le está escribiendo: foco en el compositor
+     o borrador sin enviar. Es estado local de UI, no del store: nadie más lo
+     necesita y meterlo en el store lo re-emitiría a todo el módulo. */
+  const [composerFocused, setComposerFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const hasMessages = thread.messages.length > 0;
@@ -218,7 +222,7 @@ export function AxelChat({
                 briefingHour={briefingHour}
                 ownerName={ownerName}
                 proposalCount={proposals.length}
-                busy={thread.thinking}
+                ownerTyping={composerFocused || draft.trim() !== ""}
               />
 
               {starters === "none" ? null : <StarterEyebrow />}
@@ -385,6 +389,12 @@ export function AxelChat({
                   event.preventDefault();
                   submit(draft);
                 }
+              }}
+              onFocus={() => {
+                setComposerFocused(true);
+              }}
+              onBlur={() => {
+                setComposerFocused(false);
               }}
               rows={1}
               /* CONSTANTE a propósito: es la invariante de
