@@ -79,13 +79,7 @@ export function CmoView() {
   const rail = (
     <CmoBoardRail
       proposals={proposals.data}
-      briefing={briefing.data ?? null}
       loading={proposals.status === "loading"}
-      briefingLoading={briefing.status === "loading"}
-      briefingError={briefing.status === "error" ? briefing.error : null}
-      onRetryBriefing={() => {
-        void reloadBriefing();
-      }}
       error={proposals.error}
       onRetry={() => {
         void reloadProposals();

@@ -11,11 +11,11 @@ import { CmoBlockedState } from "../components/CmoBlockedState";
 describe("CmoBlockedState", () => {
   it("cuota agotada: dice EXPLÍCITAMENTE que los agentes siguen atendiendo", () => {
     render(<CmoBlockedState blocker="quota" canManage />);
-    expect(screen.getByText(/se quedó sin análisis/iu)).toBeVisible();
-    // La frase que quita la ansiedad. Es la promesa D8 hecha pantalla.
-    expect(screen.getByText(/siguen atendiendo y vendiendo con normalidad/iu)).toBeVisible();
-    // No hay interruptor que arregle una cuota: el botón lleva a ver la config.
-    expect(screen.getByRole("link", { name: /ver la configuración/iu })).toBeVisible();
+    expect(screen.getByText(/agotó sus análisis/iu)).toBeVisible();
+    // La frase que quita la ansiedad. Es la promesa D8 hecha pantalla, en dos frases.
+    expect(screen.getByText(/tus agentes siguen atendiendo/iu)).toBeVisible();
+    // No hay interruptor que arregle una cuota: el botón lleva a ver los ajustes.
+    expect(screen.getByRole("link", { name: /ver ajustes/iu })).toBeVisible();
   });
 
   it("apagado: el que puede encenderlo recibe el botón, no una explicación", () => {
@@ -27,6 +27,6 @@ describe("CmoBlockedState", () => {
   it("sin permiso de aprobar NO se pinta un botón que daría 403: se dice a quién pedir", () => {
     render(<CmoBlockedState blocker="disabled" canManage={false} />);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
-    expect(screen.getByText(/pídele a un administrador/iu)).toBeVisible();
+    expect(screen.getByText(/pídeselo a un administrador/iu)).toBeVisible();
   });
 });

@@ -1907,3 +1907,120 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 @media (prefers-reduced-motion: reduce) {
   .progress-indeterminate { animation: none; width: 100%; opacity: 0.5; }
 }
+
+/* ==========================================================================
+   EL DESPACHO — la barra de Axel (`AxelDock`) y el compositor que baja
+   --------------------------------------------------------------------------
+   Plan: docs/plans/cmo_despacho_minimalista_plan.md §3–§4.
+
+   La barra es sticky dentro del scroller del chat. En reposo es TRANSPARENTE y
+   Axel cuelga de ella a tamaño completo, centrado; cuando el centinela (bajo el
+   hero) cruza el borde superior, `useDockedHero` pone `data-docked` en la raíz
+   del chat y esto acopla: el stage se ESCALA (136 → 40 px, rasteriza grande y
+   reduce: nítido) a la esquina, y el cristal, el nombre y la fecha entran por
+   `opacity`. Solo `transform` y `opacity`: compositor. Un solo Axel vivo.
+
+   Con `data-empty` (sin conversación) la raíz centra el conjunto —barra con
+   Axel, saludo, compositor y píldoras— y el scroller deja de crecer; al primer
+   mensaje el atributo cae y `useComposerFlip` anima el viaje del compositor con
+   un único `translateY` (WAAPI). El `<form>` nunca se remonta.
+
+   Los tres números que se hablan con el hook viven aquí como variables:
+   `--dock-h` (altura de la barra = `DOCK_HEIGHT_PX`), `--dock-scale` (40/140) y
+   la reserva `.axel-hero-spacer`.
+   ========================================================================== */
+.axel-chat[data-empty] {
+  justify-content: center;
+}
+.axel-chat[data-empty] > .axel-scroller {
+  /* Del tamaño de su contenido, pero encogible: si el informe trae dos tarjetas
+     y no caben, vuelve a hacer scroll en vez de desbordar el campo. */
+  flex: 0 1 auto;
+}
+
+.axel-dock {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  --dock-h: 56px;
+  --dock-scale: 0.2857;
+}
+.axel-dock__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--dock-h);
+  padding-right: 14px;
+  border-radius: 16px;
+  container-type: inline-size;
+}
+/* El cristal, como pseudo: se enciende por `opacity` (receta de `.glass`, §5.1;
+   permitido en §5.2 como superficie flotante sticky). */
+.axel-dock__bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  background-color: color-mix(in srgb, var(--color-background) 68%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  box-shadow: var(--shadow-float);
+  transition: opacity 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.axel-chat[data-docked] .axel-dock__bar::before {
+  opacity: 1;
+}
+/* El stage de Axel: tamaño intrínseco del hero, centrado en la barra con
+   unidades de contenedor (`50cqw`), sin JavaScript. */
+.axel-dock__hero {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 136px;
+  height: 140px;
+  transform-origin: 0 0;
+  transform: translate(calc(50cqw - 68px - 8px), 0) scale(1);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.axel-chat[data-docked] .axel-dock__hero {
+  transform: translate(0, 0) scale(var(--dock-scale));
+}
+.axel-dock__title,
+.axel-dock__day {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.axel-dock__title {
+  margin-left: 52px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.axel-dock__day {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--color-muted-foreground);
+}
+.axel-chat[data-docked] .axel-dock__title,
+.axel-chat[data-docked] .axel-dock__day {
+  opacity: 1;
+}
+/* Reserva para el avatar colgando: (140 + 8) − 56 + holgura. */
+.axel-hero-spacer {
+  height: 132px;
+}
+.axel-chat[data-empty] .axel-hero-spacer {
+  height: 116px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axel-dock__hero,
+  .axel-dock__bar::before,
+  .axel-dock__title,
+  .axel-dock__day {
+    transition: none;
+  }
+}

@@ -13,7 +13,7 @@ import { useCmoStore } from "../cmo.store";
 jest.mock("@/modules/cmo/infrastructure/services/cmo-service.adapter", () => ({
   sendMessage: jest.fn(),
   listThreads: jest.fn(),
-  createThread: jest.fn(),
+  archiveThread: jest.fn(),
   getTranscript: jest.fn(),
   listProposals: jest.fn(),
   getProposal: jest.fn(),

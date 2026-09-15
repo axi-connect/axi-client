@@ -21,13 +21,7 @@ import type { LiveStep } from "@/modules/cmo/infrastructure/stores/cmo.store";
  */
 
 /** Fases del respaldo, en el orden en que el runtime las suele recorrer. */
-const PHASES = [
-  "Revisando tus números…",
-  "Mirando dónde se está yendo la plata…",
-  "Cruzando el calendario comercial…",
-  "Armando la recomendación…",
-  "Ya casi: puliendo las cifras…",
-] as const;
+const PHASES = ["Revisando tus números…", "Armando la recomendación…", "Ya casi…"] as const;
 
 /** Cada frase dura lo suficiente para leerse sin parecer un carrusel. */
 const PHASE_MS = 6000;
@@ -85,9 +79,7 @@ function Steps({ steps }: { steps: LiveStep[] }) {
         <ScanLine className="size-3 flex-none" aria-hidden="true" />
         {/* Lo que se puede afirmar sin inventar: cuántas lecturas hay hechas. El
             cliente no sabe cuántas faltan, así que no promete un total. */}
-        {done === 0
-          ? "Axel está trabajando"
-          : `Axel está trabajando · ${String(done)} ${done === 1 ? "lectura" : "lecturas"} hasta ahora`}
+        {done === 0 ? "Trabajando" : `Trabajando · ${String(done)} ${done === 1 ? "lectura" : "lecturas"}`}
       </p>
     </>
   );

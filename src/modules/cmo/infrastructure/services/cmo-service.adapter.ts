@@ -51,9 +51,13 @@ export async function listThreads(): Promise<CmoThreadDTO[]> {
   return data;
 }
 
-export async function createThread(): Promise<CmoThreadDTO> {
-  const { data } = await http.post<{ data: CmoThreadDTO }>("/cmo/threads", {});
-  return data;
+/**
+ * Archiva una conversación. El spec declara `201` sin cuerpo. No hay `create`:
+ * el hilo nace en el servidor con el primer mensaje (`sendMessage` sin
+ * `thread_id`), así el conmutador nunca lista conversaciones vacías.
+ */
+export async function archiveThread(threadId: string): Promise<void> {
+  await http.post<void>(`/cmo/threads/${threadId}/archive`, {});
 }
 
 export async function getTranscript(threadId: string): Promise<CmoMessageDTO[]> {

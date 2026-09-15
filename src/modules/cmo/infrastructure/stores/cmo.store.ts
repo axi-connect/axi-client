@@ -16,13 +16,14 @@ import type {
   ApprovalResultDTO,
   BriefingDTO,
   CmoMessageDTO,
+  CmoThreadDTO,
   CmoQuestionDTO,
   CmoSettingsDTO,
   ProposalDTO,
 } from "@/modules/cmo/domain/cmo";
 import {
   approveProposal,
-  createThread,
+  archiveThread as archiveThreadApi,
   getCmoSettings,
   getLatestBriefing,
   getProposal,
@@ -150,8 +151,15 @@ interface CmoState {
    * consulta): la marca evita volver a pedirla en cada render.
    */
   settled: Record<string, ProposalDTO | null>;
+  /** Las conversaciones del dueño con Axel, para el conmutador. */
+  threads: Section<CmoThreadDTO[]>;
 
   load: () => Promise<void>;
+  refreshThreads: () => Promise<void>;
+  /** Abre otra conversación. Ignorado mientras Axel trabaja o si ya es la actual. */
+  selectThread: (threadId: string) => Promise<void>;
+  /** Archiva una conversación (optimista, con vuelta atrás si el servidor falla). */
+  archiveThread: (threadId: string) => Promise<void>;
   reloadProposals: () => Promise<void>;
   /** Reintenta SOLO el briefing: el hero muestra su error con este botón. */
   reloadBriefing: () => Promise<void>;
@@ -168,7 +176,13 @@ interface CmoState {
    */
   answer: (label: string) => Promise<void>;
   retryLast: () => Promise<void>;
-  newThread: () => Promise<void>;
+  /**
+   * Empieza una conversación nueva, EN LOCAL. No llama al servidor: `ask` manda
+   * `thread_id` vacío y adopta el que devuelve, así que el hilo nace con su
+   * primer mensaje. Crearlo antes producía conversaciones vacías «del 15 sep»
+   * en el conmutador a cada toque de «Nueva».
+   */
+  newThread: () => void;
   approve: (proposalId: string) => Promise<ApprovalResultDTO>;
   reject: (
     proposalId: string,
@@ -235,8 +249,7 @@ function isTimeout(error: unknown): boolean {
   return error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
 }
 
-const TIMEOUT_MESSAGE =
-  "Axel tardó más de lo normal y dejamos de esperar. Si alcanzó a terminar, su respuesta aparece sola: no hace falta repetir la pregunta.";
+const TIMEOUT_MESSAGE = "Tardé más de lo normal. Si terminé, la respuesta aparece sola.";
 
 export const useCmoStore = create<CmoState>((set, get) => {
   /** Ids de propuesta decidida que se están pidiendo ahora mismo. Vive en el
@@ -253,6 +266,7 @@ export const useCmoStore = create<CmoState>((set, get) => {
   live: null,
   unseen: 0,
   settled: {},
+  threads: idle(),
 
   /**
    * Carga inicial de la pantalla. Las tres peticiones van en paralelo y **cada
@@ -289,9 +303,10 @@ export const useCmoStore = create<CmoState>((set, get) => {
         .catch((error: unknown) => {
           set((state) => ({ proposals: failed(state.proposals, errorMessage(error)) }));
         }),
-      // El hilo más reciente, si existe: la conversación continúa donde quedó.
+      // Las conversaciones, y abierta la más reciente: se continúa donde quedó.
       listThreads()
         .then(async (threads) => {
+          set({ threads: ready(threads) });
           const current = threads[0];
           if (current === undefined) return;
           const transcript = await getTranscript(current.id);
@@ -303,10 +318,76 @@ export const useCmoStore = create<CmoState>((set, get) => {
             },
           });
         })
-        .catch(() => {
-          // Sin hilo previo se arranca en blanco: no es un error que reportar.
+        .catch((error: unknown) => {
+          // Sin hilo previo se arranca en blanco: no es un error que reportar en
+          // el chat; el conmutador sí lo sabe.
+          set((state) => ({ threads: failed(state.threads, errorMessage(error)) }));
         }),
     ]);
+  },
+
+  refreshThreads: async () => {
+    try {
+      set({ threads: ready(await listThreads()) });
+    } catch (error) {
+      set((state) => ({ threads: failed(state.threads, errorMessage(error)) }));
+    }
+  },
+
+  selectThread: async (threadId: string) => {
+    if (get().thread.thinking || get().thread.id === threadId) return;
+    /* `live` y `settled` se resetean con el hilo: un turno en vuelo pertenece al
+       hilo anterior (aunque la guarda de arriba impide llegar aquí con uno), y
+       `settled` acumula las decididas de TODOS los hilos (F10). */
+    set({
+      thread: { id: threadId, messages: [], thinking: false },
+      live: null,
+      settled: {},
+      blocker: null,
+    });
+    try {
+      const transcript = await getTranscript(threadId);
+      // Guarda de carrera: si mientras cargaba el dueño abrió otra, esta llega tarde.
+      if (get().thread.id !== threadId) return;
+      set((state) => ({ thread: { ...state.thread, messages: transcript.map(toUiMessage) } }));
+    } catch (error) {
+      if (get().thread.id !== threadId) return;
+      set((state) => ({
+        thread: {
+          ...state.thread,
+          messages: [
+            {
+              id: nextLocalId(),
+              role: "system",
+              body: `No pude abrir esta conversación. ${errorMessage(error)}`,
+              created_at: new Date().toISOString(),
+              tool_calls: null,
+              proposal_id: null,
+              question: null,
+            },
+          ],
+        },
+      }));
+    }
+  },
+
+  archiveThread: async (threadId: string) => {
+    if (get().thread.thinking) return;
+    const before = get().threads;
+    const remaining = (before.data ?? []).filter((thread) => thread.id !== threadId);
+    set({ threads: ready(remaining) });
+    try {
+      await archiveThreadApi(threadId);
+    } catch (error) {
+      set({ threads: failed(before, errorMessage(error)) });
+      return;
+    }
+    // Si era la abierta, se salta a la más reciente que queda o se empieza en blanco.
+    if (get().thread.id === threadId) {
+      const next = remaining[0];
+      if (next === undefined) get().newThread();
+      else await get().selectThread(next.id);
+    }
   },
 
   reloadProposals: async () => {
@@ -431,6 +512,8 @@ export const useCmoStore = create<CmoState>((set, get) => {
       // La tarjeta del hilo necesita la propuesta COMPLETA (titular, cifra,
       // vencimiento) y el POST solo trae su id.
       void get().reloadProposals();
+      // El hilo puede haber nacido en este turno, o cambiado de título y fecha.
+      void get().refreshThreads();
     } catch (error) {
       /* Rescate: si el turno ya cerró por WS, la respuesta está persistida y
          `onTurnCompleted` la insertó. Que el POST fallara después de eso —una
@@ -488,19 +571,16 @@ export const useCmoStore = create<CmoState>((set, get) => {
     await get().ask(failedMessage.body);
   },
 
-  newThread: async () => {
-    try {
-      const thread = await createThread();
-      // `settled` se poda aquí: acumulaba las decididas de TODOS los hilos y
-      // un hilo nuevo no ancla ninguna (F10).
-      set({
-        thread: { id: thread.id, messages: [], thinking: false },
-        blocker: null,
-        settled: {},
-      });
-    } catch (error) {
-      set({ blocker: blockerFor(error) });
-    }
+  newThread: () => {
+    if (get().thread.thinking) return;
+    // Sin POST: el hilo nace en el servidor con el primer `ask`. `settled` se
+    // poda aquí: acumulaba las decididas de TODOS los hilos (F10).
+    set({
+      thread: { id: null, messages: [], thinking: false },
+      live: null,
+      blocker: null,
+      settled: {},
+    });
   },
 
   approve: async (proposalId: string) => {

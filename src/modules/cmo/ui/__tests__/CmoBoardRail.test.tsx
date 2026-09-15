@@ -8,9 +8,10 @@ import { CmoBoardRail } from "../components/CmoBoardRail";
  * `flex flex-col` y la `<section>` de propuestas, hija directa, es contenedor de
  * scroll por su `overflow-hidden`. El tamaño mínimo automático de un contenedor
  * de scroll es 0 (CSS Box Sizing), así que flex la aplastaba a la altura
- * disponible y el `overflow-hidden` recortaba las tarjetas de más — el scroller
- * nunca desbordaba, luego nunca aparecía barra. jsdom no calcula layout, así que
- * lo que se blinda es la estructura que lo provoca. Ver DESIGN-SYSTEM §4.2.
+ * disponible y el `overflow-hidden` recortaba las tarjetas de más. jsdom no
+ * calcula layout, así que lo que se blinda es la estructura que lo provoca. Ver
+ * DESIGN-SYSTEM §4.2. Y desde el rediseño minimalista el rail es SOLO la
+ * bandeja: sin resumen del informe ni enlace a ajustes.
  */
 
 function proposal(id: string): ProposalDTO {
@@ -36,11 +37,7 @@ function renderRail(count: number) {
   return render(
     <CmoBoardRail
       proposals={Array.from({ length: count }, (_, i) => proposal(`prop-${i}`))}
-      briefing={null}
       loading={false}
-      briefingLoading={false}
-      briefingError={null}
-      onRetryBriefing={jest.fn()}
       error={null}
       onRetry={jest.fn()}
     />,
@@ -52,29 +49,30 @@ describe("CmoBoardRail", () => {
     const { container } = renderRail(12);
 
     const scrollers = container.querySelectorAll("[class*='overflow-y-auto']");
-    // Un solo scroll por área (§4.2): el del rail.
     expect(scrollers).toHaveLength(1);
 
     const scroller = scrollers[0];
-    // De BLOQUE: `flex-1` sí (es propiedad del ítem, y la necesita), pero ni
-    // `display:flex` ni `flex-col`. Si vuelve a ser un scroller flex, la sección
-    // de propuestas —contenedor de scroll— se encoge a 0 y recorta.
     const classes = scroller.className.split(/\s+/);
     expect(classes).not.toContain("flex");
     expect(classes).not.toContain("flex-col");
     expect(scroller).toHaveClass("min-h-0", "flex-1", "space-y-3");
 
-    // Y las doce llegan al DOM: lo que faltaba era poder alcanzarlas.
     expect(screen.getAllByRole("link", { name: /Propuesta prop-/ })).toHaveLength(12);
+    expect(screen.getByRole("heading", { name: "Por decidir" })).toBeVisible();
+    expect(screen.getByText("12")).toBeVisible();
   });
 
-  it("«La lectura de Axel» queda fuera del scroller, anclada al pie", () => {
-    const { container } = renderRail(12);
+  it("solo la bandeja: el informe y los ajustes ya no viven aquí", () => {
+    renderRail(2);
 
-    const scroller = container.querySelector("[class*='overflow-y-auto']");
-    const lectura = screen.getByRole("heading", { name: /la lectura de axel/i });
+    expect(screen.queryByRole("heading", { name: /la lectura de axel/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /directrices y ajustes/i })).toBeNull();
+  });
 
-    expect(scroller?.contains(lectura)).toBe(false);
-    expect(lectura.closest("div.flex-none")).not.toBeNull();
+  it("sin pendientes dice «Estás al día.» y nada más", () => {
+    renderRail(0);
+
+    expect(screen.getByText("Estás al día.")).toBeVisible();
+    expect(screen.queryByText(/Cuando Axel encuentre algo/)).toBeNull();
   });
 });

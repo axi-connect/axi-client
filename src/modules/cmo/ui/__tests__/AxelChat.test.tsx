@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 import type { ProposalDTO } from "@/modules/cmo/domain/cmo";
 import type { UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
@@ -24,6 +24,10 @@ const mockState = {
   // El avatar del hero lee estos dos por su propio selector (`selectMoodSnapshot`).
   blocker: null as "disabled" | "quota" | null,
   unseen: 0,
+  threads: { status: "ready" as const, data: [] as never[], error: null as string | null },
+  selectThread: jest.fn(),
+  archiveThread: jest.fn(),
+  refreshThreads: jest.fn(),
   resolveSettled: jest.fn(),
   ask: jest.fn(),
   answer: jest.fn(),
@@ -131,7 +135,7 @@ describe("mientras Axel trabaja", () => {
 
     expect(screen.getByText("Leyendo tu embudo y tus ventas")).toBeInTheDocument();
     expect(screen.getByText("420 ms")).toBeInTheDocument();
-    expect(screen.getByText(/1 lectura hasta ahora/)).toBeInTheDocument();
+    expect(screen.getByText(/Trabajando · 1 lectura/)).toBeInTheDocument();
     expect(screen.queryByText(/Revisando tus números/)).not.toBeInTheDocument();
   });
 
@@ -253,43 +257,45 @@ describe("la propuesta que nace en la conversación", () => {
   });
 });
 
-/* El primer contacto. Era tres párrafos centrados con pesos parecidos y sin
-   orden de lectura, y uno de ellos repetía la nota del compositor. Lo que se
-   prueba aquí es la ESTRUCTURA: que haya un primer paso declarado, que cada
-   tarjeta diga qué hace, y que la promesa de «nada se envía» aparezca una vez. */
+/* El primer contacto, minimalista (plan del despacho §4 y §6): el conjunto se
+   centra, las acciones rápidas son píldoras DEBAJO del compositor, cada píldora
+   anuncia la frase completa que envía, y la promesa de confianza aparece una
+   vez. Y un solo Axel vivo en toda la vista, con y sin conversación. */
 describe("la pantalla de inicio", () => {
-  it("declara un primer paso sobre las sugerencias", () => {
-    view();
+  it("las píldoras van debajo del compositor y el conjunto se marca como vacío", () => {
+    const { container } = view();
 
-    const eyebrow = screen.getByText("Empieza por aquí");
-    const cards = screen.getByRole("button", { name: /¿Cómo vamos\?/ });
-    expect(
-      eyebrow.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    const form = container.querySelector("form");
+    const pill = screen.getByRole("button", { name: "¿Cómo vamos este mes?" });
+    expect(form).not.toBeNull();
+    expect(form!.compareDocumentPosition(pill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector(".axel-chat")?.hasAttribute("data-empty")).toBe(true);
   });
 
-  it("cada sugerencia dice QUÉ hace, no solo cómo se llama", () => {
+  it("cada píldora anuncia la frase completa que envía, sin pista aparte", () => {
     view();
 
-    // El nombre accesible del botón junta label + hint: es exactamente lo que
-    // oye un lector de pantalla, y por eso se comprueba sobre él.
-    // `[\s\S]*` y no la bandera `s`: el target del tsconfig de la app es previo
-    // a es2018 y `dotAll` no compila, aunque el de jest sí lo acepte.
     expect(
-      screen.getByRole("button", { name: /Ármame algo[\s\S]*Una campaña o una promo/ }),
+      screen.getByRole("button", { name: "Ármame una campaña para lo que veas más urgente." }),
     ).toBeVisible();
-    expect(
-      screen.getByRole("button", { name: /¿Cómo vamos\?[\s\S]*Embudo, ventas y qué cambió/ }),
-    ).toBeVisible();
+    expect(screen.queryByText(/Una campaña o una promo/)).toBeNull();
+    expect(screen.queryByText("Empieza por aquí")).toBeNull();
   });
 
-  it("la promesa de que nada se envía solo aparece UNA vez", () => {
+  it("la promesa de confianza aparece UNA vez, bajo el compositor", () => {
     view();
 
-    // Estaba en el hero Y bajo el compositor. Su sitio es el segundo: pegada al
-    // botón de enviar, que es donde el dueño duda.
-    expect(screen.getAllByText(/nunca envía nada por su cuenta/i)).toHaveLength(1);
-    expect(screen.queryByText(/Nada se envía a un cliente sin que tú lo apruebes/)).toBeNull();
+    expect(screen.getAllByText(/nada sale sin tu aprobación/i)).toHaveLength(1);
+    expect(screen.queryByText(/nunca envía nada por su cuenta/i)).toBeNull();
+    expect(screen.queryByText(/Miro tus números cada día/)).toBeNull();
+  });
+
+  it("hay UN solo Axel vivo, con y sin conversación", () => {
+    view();
+    expect(screen.getAllByRole("button", { name: "Saludar a Axel" })).toHaveLength(1);
+    cleanup();
+    view({ messages: [message({})] });
+    expect(screen.getAllByRole("button", { name: "Saludar a Axel" })).toHaveLength(1);
   });
 
   it("la hora del primer informe se lee como dato de servicio, no como propuesta", () => {
@@ -299,11 +305,11 @@ describe("la pantalla de inicio", () => {
     expect(screen.getByText("4:00 p.m.")).toBeVisible();
   });
 
-  it("las sugerencias se van al conversar, y con ellas su encabezado", () => {
-    view({ messages: [message({})] });
+  it("las píldoras se van al conversar y el conjunto deja de estar centrado", () => {
+    const { container } = view({ messages: [message({})] });
 
-    expect(screen.queryByText("Empieza por aquí")).toBeNull();
-    expect(screen.queryByRole("button", { name: /Ármame algo/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Ármame una campaña/ })).toBeNull();
+    expect(container.querySelector(".axel-chat")?.hasAttribute("data-empty")).toBe(false);
   });
 });
 
@@ -325,7 +331,8 @@ describe("la pregunta con opciones en el hilo", () => {
        ancla ahí y no en el texto del cuerpo porque `closest("div")` sobre el
        cuerpo devuelve el envoltorio del renderer de markdown, que está DENTRO de
        la burbuja y no la representa. */
-    const bubble = screen.getByText("Axel").closest("div")?.parentElement;
+    // Dentro del log: la barra de arriba también dice «Axel».
+    const bubble = within(screen.getByRole("log")).getByText("Axel").closest("div")?.parentElement;
     expect(bubble).not.toBeNull();
     expect(bubble?.contains(option)).toBe(true);
   });

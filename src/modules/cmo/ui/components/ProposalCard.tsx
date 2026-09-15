@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, Check, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Sparkles, Tag, Users } from "lucide-react";
+import { ArrowRight, Bot, Check, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Tag, Users } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { ProposalDTO, ProposalKind } from "@/modules/cmo/domain/cmo";
@@ -9,7 +9,6 @@ import {
   expiryLabel,
   isUrgent,
   proposalKindLabel,
-  proposalSourceLabel,
   proposalStatusLabel,
 } from "@/modules/cmo/domain/proposal-labels";
 
@@ -48,12 +47,6 @@ interface ProposalCardProps {
   /** Variante compacta para el rail; la ancha va dentro del hilo. */
   compact?: boolean;
   /**
-   * Sello de origen para la variante ancha. Solo tiene sentido dentro del hilo:
-   * ahí la tarjeta convive con la conversación y hay que decir si Axel la trajo
-   * por su cuenta o si la armó porque se la pidieron.
-   */
-  stamped?: boolean;
-  /**
    * La propuesta ACABA de nacer en este turno de la conversación.
    *
    * Enciende el anillo cometa y la entrada en relieve: es la señal de que hay
@@ -74,12 +67,7 @@ interface ProposalCardProps {
  * El vencimiento se pinta con color de alarma solo dentro de las 48 horas. Si
  * todo urgiera, nada urgiría: es el mismo principio del tope de propuestas.
  */
-export function ProposalCard({
-  proposal,
-  compact = false,
-  stamped = false,
-  fresh = false,
-}: ProposalCardProps) {
+export function ProposalCard({ proposal, compact = false, fresh = false }: ProposalCardProps) {
   const Icon = KIND_ICONS[proposal.kind] ?? Lightbulb;
   const expiry = expiryLabel(proposal.expires_at);
   const urgent = isUrgent(proposal.expires_at);
@@ -134,12 +122,6 @@ export function ProposalCard({
         // exactamente el patrón que el KB del slice prohíbe (F11).
         <div aria-hidden="true" className="axel-card-halo pointer-events-none absolute inset-0 -z-10" />
       )}
-      {stamped ? (
-        <p className="flex items-center gap-1.5 text-[10.5px] text-muted-foreground/70">
-          <Sparkles className="size-3 text-accent-violet" aria-hidden="true" />
-          Axel · {proposalSourceLabel(proposal.source)}
-        </p>
-      ) : null}
       <div className="flex items-center gap-2.5">
         <span
           className={cn(
@@ -206,13 +188,13 @@ export function ProposalCard({
           {settled ? "Ver qué quedó" : "Revisar"}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
-        {/* Cuántos borradores esperan, solo mientras esperan. Al aprobar, lo que
-            quedó encendido y lo que falló lo dice el detalle: aquí sería una
-            afirmación sin comprobar. */}
+        {/* Cuántos borradores esperan, solo mientras esperan, y la palabra que
+            importa: «apagados». Es la promesa del módulo (nada se enciende sin
+            aprobar) en un chip. Al aprobar, lo que quedó encendido lo dice el
+            detalle: aquí sería una afirmación sin comprobar. */}
         {!settled && proposal.artifacts.length > 0 ? (
-          <span className="text-[10.5px] text-muted-foreground/70">
-            {proposal.artifacts.length}{" "}
-            {proposal.artifacts.length === 1 ? "borrador listo" : "borradores listos"}, apagados
+          <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[10.5px] text-muted-foreground tabular-nums">
+            {proposal.artifacts.length} {proposal.artifacts.length === 1 ? "borrador" : "borradores"} · apagados
           </span>
         ) : null}
       </div>
