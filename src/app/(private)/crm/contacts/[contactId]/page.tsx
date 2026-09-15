@@ -19,6 +19,7 @@ import {
   listAssignableUsers,
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
+import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
@@ -113,6 +114,9 @@ export default function Contact360Page({
           />
         </div>
       </div>
+
+      {/* F1: lo que el agente recopiló, con origen y revisión (`docs/modules/crm.md` Parte D). */}
+      <ContactDataPanel contactId={contactId} variant="card" />
 
       <ContactTimeline
         contactId={contactId}

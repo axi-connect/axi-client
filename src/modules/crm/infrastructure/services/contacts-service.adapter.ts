@@ -1,5 +1,9 @@
 import { http } from "@/core/services/http";
-import type { CursorPage, Paginated } from "@/core/api/types";
+import type { CursorPage, Paginated, Schemas } from "@/core/api/types";
+import type {
+  ContactDataDTO,
+  ContactFieldReviewBody,
+} from "@/modules/crm/domain/contact-data";
 import type {
   ContactDTO,
   ContactListItemDTO,
@@ -83,6 +87,42 @@ export function getContactTimeline(
     cursor: params.cursor,
     limit: params.limit,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Datos del cliente (F1): lo recopilado por el agente, con origen y revisión
+// ---------------------------------------------------------------------------
+
+/**
+ * Proyección de `custom_fields` + columnas sobre los formularios de captura
+ * (permiso `contacts:read`). `conversationId` acota la sección «En esta
+ * conversación» (pedido en borrador, cita) y de dónde salió cada dato.
+ */
+export function getContactData(
+  contactId: string,
+  conversationId?: string,
+): Promise<ContactDataDTO> {
+  return http.get<ContactDataDTO>(
+    `/crm/contacts/${contactId}/data`,
+    conversationId === undefined ? undefined : { conversation_id: conversationId },
+  );
+}
+
+/**
+ * Revisión de UN dato (permiso `contacts:manage`): `{ value }` corrige y deja
+ * el campo verificado; `{ action }` confirma, rechaza (borra y el agente puede
+ * volver a pedirlo) o libera (el agente vuelve a poder escribirlo). Devuelve la
+ * proyección completa para que la UI la reemplace de una pieza.
+ */
+export function reviewContactField(
+  contactId: string,
+  code: string,
+  body: ContactFieldReviewBody,
+): Promise<ContactDataDTO> {
+  return http.patch<ContactDataDTO>(
+    `/crm/contacts/${contactId}/data/${encodeURIComponent(code)}`,
+    body satisfies Schemas["ReviewContactFieldDto"],
+  );
 }
 
 /** Pares sugeridos deterministas (máx 50): email exacto o nombre similar. */

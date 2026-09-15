@@ -207,10 +207,14 @@ export function useInboxSocket() {
   })
 
   // --- Contexto del contacto (rail) ----------------------------------------
-  // El backend NO emite `contact.updated`: si la IA captura la dirección con
-  // `save_contact_data` o un operador edita la ficha, no llega nada. Lo que sí
-  // llega son estos eventos, que traen `contact_id` y bastan para invalidar el
-  // panel abierto.
+  // Todos traen `contact_id`, que basta para invalidar el panel abierto.
+  // `contact.updated` llega cuando cambia un dato de la ficha (edición del
+  // operador, `save_contact_data` de la IA, revisión en «Datos del cliente»,
+  // import, integración); el panel «Datos del cliente» además lo escucha por su
+  // cuenta para resaltar las filas que cambiaron.
+  useSocketEvent(socket, "contact.updated", (payload) => {
+    store.getState().bumpContactContext(payload.contact_id)
+  })
   useSocketEvent(socket, "contact.lifecycle_changed", (payload) => {
     store.getState().bumpContactContext(payload.contact_id)
   })

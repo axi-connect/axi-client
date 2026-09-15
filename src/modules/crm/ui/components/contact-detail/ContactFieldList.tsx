@@ -18,13 +18,14 @@ import {
 } from "@/modules/crm/domain/enums";
 
 /**
- * Bloque de SOLO LECTURA con todo lo que se sabe de un contacto: datos de
- * identidad, identidades de canal, etiquetas y responsable comercial.
+ * Bloque de SOLO LECTURA con la identidad de un contacto: datos de contacto,
+ * identidades de canal, etiquetas y responsable comercial.
  *
  * Presentacional puro (no hace fetch) para poder montarse tanto en el rail de
- * contexto del inbox como en una card del 360. Cubre los campos que hasta ahora
- * no se pintaban en ninguna vista: `address`, `document_*`, `birthdate`,
- * `source`, `created_at` y `custom_fields`.
+ * contexto del inbox como en una card del 360. Cubre `address`, `document_*`,
+ * `birthdate`, `source` y `created_at`. Los `custom_fields` NO se pintan aquí:
+ * desde F1 los muestra `ContactDataPanel` («Datos del cliente») con su origen,
+ * estado de verificación y acciones — volcarlos también aquí los duplicaría.
  */
 
 const CHANNEL_META: Record<
@@ -51,20 +52,6 @@ function documentValue(contact: ContactDTO): string | null {
   const prefix =
     contact.document_type !== null ? `${CONTACT_DOCUMENT_TYPE_LABELS[contact.document_type]} ` : "";
   return `${prefix}${contact.document_number}`;
-}
-
-/**
- * `custom_fields` es un mapa libre por tenant: se pintan solo los valores
- * primitivos, con la clave humanizada. Objetos y arrays se omiten — un panel no
- * es el sitio para volcar JSON.
- */
-function customFieldItems(contact: ContactDTO): FieldItem[] {
-  return Object.entries(contact.custom_fields ?? {})
-    .filter(([, value]) => ["string", "number", "boolean"].includes(typeof value))
-    .map(([key, value]) => ({
-      label: key.replace(/[_-]+/g, " ").replace(/^./, (char) => char.toUpperCase()),
-      value: typeof value === "boolean" ? (value ? "Sí" : "No") : String(value),
-    }));
 }
 
 export function ContactFieldList({
@@ -94,7 +81,6 @@ export function ContactFieldList({
     },
     { label: "Origen", value: CONTACT_SOURCE_LABELS[contact.source] },
     { label: "Creado", value: relativeTime(contact.created_at) },
-    ...customFieldItems(contact),
   ];
 
   const channels = contact.channel_identities;

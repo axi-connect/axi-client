@@ -10,17 +10,21 @@ import { Avatar } from "@/shared/components/ui/avatar";
 import {
   CONTACT_STAGE_BADGE_CLASSES,
   CONTACT_STAGE_LABELS,
+  ContactDataPanel,
   ContactFieldList,
   contactDisplayName,
 } from "@/modules/crm/public";
 import { useConversationContact } from "@/modules/inbox/infrastructure/stores/contact-context.context";
+import type { ContextPanelProps } from "../registry";
 
 /**
- * Ficha del contacto de la conversación, en solo lectura. La edición vive en el
- * 360 del CRM (link del footer): el operador consulta en caliente, no
- * administra desde el inbox.
+ * Ficha del contacto de la conversación. Identidad, canales, etiquetas y
+ * responsable en solo lectura (la edición vive en el 360, link del footer);
+ * debajo, «Datos del cliente» (F1) con confirmar/corregir en línea para quien
+ * tiene `contacts:manage` — el operador acaba de hablar con el cliente y es el
+ * momento de verificar lo que el agente anotó.
  */
-export function ContactPanel() {
+export function ContactPanel({ conversation }: Pick<ContextPanelProps, "conversation">) {
   // El contexto lo resuelve `InboxView` una sola vez y lo comparte con la
   // cabecera del chat: aquí no se vuelve a pedir nada.
   const { contact, profile, tags, ownerName, loading, error, reload } = useConversationContact();
@@ -88,6 +92,8 @@ export function ContactPanel() {
           tags={tags}
           ownerName={ownerName}
         />
+
+        <ContactDataPanel contactId={contact.id} conversationId={conversation.id} variant="rail" />
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border p-3">

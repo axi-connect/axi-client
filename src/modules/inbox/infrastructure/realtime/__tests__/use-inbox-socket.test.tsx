@@ -265,6 +265,31 @@ describe("useInboxSocket — re-join tras reconexión", () => {
   })
 })
 
+describe("useInboxSocket — contexto del contacto (rail)", () => {
+  /**
+   * F1: el backend ya emite `contact.updated` cuando cambia un dato de la ficha
+   * (edición, `save_contact_data` de la IA, revisión del operador). Antes el
+   * rail solo se refrescaba con los eventos `crm.*`/`order.*` colaterales.
+   */
+  it("contact.updated invalida el contexto del contacto (bump de contextVersion)", async () => {
+    useInboxStore.setState({ contextVersion: {} })
+    render(<Harness />)
+    await act(async () => {})
+
+    await act(async () => {
+      fakeSocket.emitServer("contact.updated", {
+        company_id: "co",
+        contact_id: "ct-1",
+        changes: [{ code: "company", value: "Kodecol" }],
+        origin: { source: "ai_agent" },
+      })
+    })
+
+    expect(useInboxStore.getState().contextVersion["ct-1"]).toBe(1)
+    expect(useInboxStore.getState().contextVersion["otro"]).toBeUndefined()
+  })
+})
+
 describe("useInboxSocket — lista en vivo y reconexión", () => {
   beforeEach(() => {
     listInboxConversations.mockClear()

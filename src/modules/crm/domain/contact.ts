@@ -38,6 +38,12 @@ export type ContactRow = {
   lifecycle_stage: ContactLifecycleStage;
   source: ContactSource;
   created_at: string;
+  /**
+   * Columna «Datos» (F1): campos de los formularios de captura con valor /
+   * definidos. `null` en ambos = el tenant no tiene formularios activos («—»).
+   */
+  data_filled: number | null;
+  data_total: number | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -152,7 +158,14 @@ export function contactDisplayName(
   return dto.full_name?.trim() || composed || dto.phone || dto.email || "Sin nombre";
 }
 
-export function mapContactToRow(dto: ContactListItemDTO): ContactRow {
+/**
+ * `completeness` la calcula `fetchContacts` con `dataCompleteness()` sobre los
+ * formularios activos del tenant; `null` = sin formularios (celda «—»).
+ */
+export function mapContactToRow(
+  dto: ContactListItemDTO,
+  completeness: { filled: number; total: number } | null = null,
+): ContactRow {
   return {
     id: dto.id,
     full_name: contactDisplayName(dto),
@@ -163,5 +176,7 @@ export function mapContactToRow(dto: ContactListItemDTO): ContactRow {
     lifecycle_stage: dto.lifecycle_stage,
     source: dto.source,
     created_at: dto.created_at,
+    data_filled: completeness?.filled ?? null,
+    data_total: completeness?.total ?? null,
   };
 }

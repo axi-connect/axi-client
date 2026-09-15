@@ -422,6 +422,19 @@ export type ContactMergedEvent = {
   merged_contact_id: string;
 };
 
+/**
+ * Cambió un dato de la ficha del contacto: edición del operador, captura de la
+ * IA (`save_contact_data`), revisión de un dato («Datos del cliente»), import o
+ * integración. `changes` trae los `code` tocados con su valor nuevo (null =
+ * borrado) para resaltar las filas en vivo; el detalle se re-consulta por REST.
+ */
+export type ContactUpdatedEvent = {
+  company_id: string;
+  contact_id: string;
+  changes: { code: string; value: string | number | boolean | null }[];
+  origin: { source: string; connection_id?: string } | null;
+};
+
 // ---------------------------------------------------------------------------
 // Marketing — payloads espejo de axi-server
 // src/modules/marketing/application/marketing_events.ts
@@ -848,6 +861,7 @@ export type InboxServerEvents = {
   "crm.import_completed": (payload: CrmImportCompletedEvent) => void;
   "contact.lifecycle_changed": (payload: ContactLifecycleChangedEvent) => void;
   "contact.merged": (payload: ContactMergedEvent) => void;
+  "contact.updated": (payload: ContactUpdatedEvent) => void;
   "marketing.campaign_status_changed": (
     payload: MarketingCampaignStatusChangedEvent,
   ) => void;

@@ -199,8 +199,8 @@ type InboxStore = {
 
   /**
    * Contador por contacto que invalida los paneles del rail de contexto.
-   * El backend no emite `contact.updated`, así que el refresco lo disparan los
-   * eventos que SÍ traen `contact_id` (`contact.*`, `crm.*`, `order.*`).
+   * Lo incrementan los eventos WS que traen `contact_id`: `contact.updated`
+   * (cambió un dato de la ficha), el resto de `contact.*`, `crm.*` y `order.*`.
    */
   contextVersion: Record<string, number>
   bumpContactContext: (contactId: string) => void

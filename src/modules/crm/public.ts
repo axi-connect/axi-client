@@ -58,6 +58,19 @@ export { useContactContext, type ContactContext } from "./infrastructure/hooks/u
 /** Bloque presentacional de solo lectura; no depende del contexto del slice. */
 export { ContactFieldList } from "./ui/components/contact-detail/ContactFieldList";
 
+/**
+ * «Datos del cliente» (F1): lo que el agente recopiló, con origen, verificación
+ * y acciones en línea. Autosuficiente (trae sus datos por `contactId` y escucha
+ * `contact.updated`); el inbox lo monta en el rail con `variant="rail"`.
+ */
+export { ContactDataPanel } from "./ui/components/contact-data/ContactDataPanel";
+export {
+  FIELD_SOURCE_LABELS,
+  type ContactDataDTO,
+  type ContactDataField,
+  type ContactFieldSource,
+} from "./domain/contact-data";
+
 /** Historial 360 sin chrome de card: trae sus propios datos por `contactId`. */
 export { ContactTimelineFeed } from "./ui/components/contact-detail/ContactTimelineFeed";
 

@@ -168,6 +168,7 @@ created_by_type}`.
 | `crm.import_completed` | fin del import de contactos (CSV o XLSX; éxito o fallo) | contadores del reporte |
 | `contact.lifecycle_changed` | promoción prospect→lead→customer | ya tipado en `core/realtime/events.ts` |
 | `contact.merged` | merge de duplicados | `{contact_id, merged_contact_id}` — quitar al perdedor de listados |
+| `contact.updated` | cambió un dato de la ficha (edición, `save_contact_data` de la IA, revisión en «Datos del cliente», import, integración) | `{contact_id, changes: {code, value}[], origin: {source, connection_id?} \| null}` — F1, ver Parte D |
 
 `crm.deal_*` llegan también al room `conversation_{id}` si el deal nació de una conversación.
 **`crm.task_due` NO viaja por WS** — llega solo como `notification.created` (campanita).
@@ -559,3 +560,96 @@ ejecutar F0–F7 (detalle completo en `docs/plans/crm_frontend_plan.md` §2–§
 10. Decisiones de producto aprobadas: alias de sidebar (`/contacts` → `/crm/contacts`,
     ambos ítems visibles), acento secundario **violeta** (✦IA/copiloto; warning para
     estancados/vencidas), `/crm` aterriza en `/crm/pipeline`.
+
+---
+
+## Parte D — «Datos del cliente» (F1, 2026-09-15)
+
+Lo que el agente de IA, el equipo, una importación o un formulario web han recopilado de un
+contacto, campo a campo, con su origen, su estado de verificación y lo que queda por revisar.
+Mockup aprobado: `docs/design/mockups/crm-contact-data.html` (v2: una lista limpia, acciones al
+pasar el ratón).
+
+### D.1 Contrato del backend
+
+```
+GET   /crm/contacts/:id/data?conversation_id=      contacts:read    → ContactDataDTO
+PATCH /crm/contacts/:id/data/:code                  contacts:manage  → ContactDataDTO
+      body: { value: FieldScalar | null }  XOR  { action: 'confirm' | 'reject' | 'release' }
+WS    /inbox  contact.updated  { company_id, contact_id, changes: {code, value}[], origin }
+```
+
+`ContactDataDTO` = `{ contact_id, protected_fields[], conversation | null, fields[], system[],
+session }`. Cada `fields[]` trae: `code`, `label`, `defined` (false = huérfano: valor sin campo que
+lo defina), `storage` (`column|custom`), `type`, `options`, `required`, `flow`, `value`, `state`
+(`captured|confirmed|corrected|missing|invalid`), `protected`, `source`
+(`ai_agent|user|import|public_form|integration|merge|system`), `captured_at`, `conversation_id`,
+`actor_user_id`, `canonical_from`, `raw_value`, `invalid_reason`, `attempts`, `proposal`
+(valor que el agente quiso escribir sobre un campo protegido). `system[]` son las claves técnicas
+de `custom_fields`; `session` trae `order_draft` (`{draft_id, items_count, total_cents}` — es el
+carrito de la conversación, NO un pedido: sin ruta propia), `last_order`
+(`{order_id, order_number, status}`) y `last_appointment` (`{appointment_id, starts_at, product_id}`).
+
+Tipos en `domain/contact-data.ts` derivados del contrato generado (`Schemas['ContactDataDto']`,
+`Schemas['ReviewContactFieldDto']`): si el backend cambia el wire, rompe en compilación.
+
+### D.2 Reglas de dominio (`domain/contact-data.ts`, puro, con tests)
+
+- `isVerified` = `confirmed | corrected` → ✓ verde. Lo verificado queda **protegido**: el agente ya
+  no lo sobreescribe, solo propone (`proposal`).
+- `needsReview` = `invalid`, o `proposal !== null`, o obligatorio sin valor con `attempts > 0` →
+  punto ámbar. Un obligatorio que aún no se pidió NO es una alerta.
+- `summarize` → `{ filled, total, review }`: total = definidos + huérfanos con valor.
+- `groupByFlow`: Registro · Pedido · Cita en el orden de `/settings/forms`; los huérfanos
+  (`flow: null`) van a Registro (viven en `custom_fields`, el registro del cliente); los grupos
+  vacíos no se pintan.
+- `dataCompleteness(custom_fields, columnas, forms)` para la columna «Datos» de la tabla: cuenta
+  solo los codes de los formularios **activos** (los huérfanos no se distinguen de las claves
+  técnicas sin el endpoint de detalle); `null` = sin formularios → «—».
+- `capturedAtLabel`: «hoy 10:12» · «ayer» · «12 sep» (año si es otro). `formatFieldValue` por
+  `type` (boolean → Sí/No, number es-CO, date sin corrimiento de zona).
+
+### D.3 Componentes (`ui/components/contact-data/`)
+
+| Pieza | Qué hace |
+|---|---|
+| `ContactDataPanel` (`contactId`, `conversationId?`, `variant: card \| rail`) | Autosuficiente: `useContactData` + gate `contacts:manage`. `card` = sección del 360 con cabecera «Datos del cliente», botón fantasma «Formularios de captura» (`forms:read`) y pie con las claves técnicas; `rail` = bloque compacto sin cabecera + «En esta conversación». |
+| `ContactDataSummary` | «9 de 11 datos» + barra fina coral + «2 por revisar» con punto ámbar. |
+| `ContactDataGroup` | Cabecera uppercase del grupo. |
+| `ContactDataRow` | Fila `<dl>`: etiqueta (180px en card; encima del valor en rail), valor medium con ✓, línea secundaria (quién · cuándo · detalle, punto ámbar si hay revisión; «Sin dato» en missing; propuesta con Usar/Ignorar; huérfano con «Añadir al formulario» → `/settings/forms?flow=`). Acciones solo al hover/focus-within (siempre en táctil, `[@media(hover:none)]`). |
+| `ContactFieldEditor` | Corregir en línea: control por `type` (Select con `options`, Input text/email/tel/number/date, Switch sí/no), Guardar/Cancelar, Enter/Esc, hint «Al guardar queda verificado…». |
+| `ContactDataRowMenu` | ⋯ (solo card, solo con valor): Ver historial (deshabilitado, tooltip «Próximamente»), «Dejar que el agente lo actualice» (solo si `protected`), separador, «Rechazar dato» en destructive. |
+| `RejectFieldDialog` | `Modal` de confirmación «¿Rechazar «valor»?» con botón destructive. |
+| `SessionLinks` | Rail: «Pedido en borrador» (fila informativa: `draft_id` no tiene ruta), «Último pedido · #N» → `/orders/:id`, «Cita · jue 18 sep · 10:00 a. m.» → `/scheduling/calendar/appointment/:id`. |
+| `ContactDataEmpty` | Sin campos: dos líneas + «Configurar formularios de captura» (`forms:manage`). |
+
+Infra: `getContactData`/`reviewContactField` en `contacts-service.adapter.ts`;
+`use-contact-data.ts` (fetch con guard anti-carrera, `contact.updated` → reload + `changedCodes`
+resaltados 2,4 s, nombres de operador vía `getTenantUserNames`, `review` reemplaza `data` con la
+respuesta del PATCH); `forms.cache.ts` (`/forms` una vez por sesión para la tabla).
+
+Acciones y su wire: Confirmar → `{action:'confirm'}`; Corregir/Guardar → `{value}`; Usar la
+propuesta → `{value: proposal.value}`; Ignorar → solo oculta en la vista (F1, sin endpoint);
+Dejar que el agente lo actualice → `{action:'release'}`; Rechazar → `{action:'reject'}`. Los
+errores van por `errorMessage()` + `useAlert`.
+
+### D.4 Montajes y consumidores
+
+- `/crm/contacts/[contactId]` → `<ContactDataPanel variant="card" />` entre el grid y el historial.
+- Rail del inbox (`ContactPanel`) → `<ContactDataPanel variant="rail" conversationId />` debajo de
+  `ContactFieldList`, que **dejó de pintar `custom_fields`**. El inbox importa solo de
+  `@/modules/crm/public` (`ContactDataPanel`, `ContactDataDTO`, `FIELD_SOURCE_LABELS`).
+- Tabla `/crm/contacts`: columna «Datos» = `n / total` + punto (verde completo · ámbar incompleto ·
+  gris «—» sin formularios), calculada en `fetchContacts` con los formularios cacheados. Es el
+  primer consumidor externo de `modules/forms` → nació `modules/forms/public.ts`.
+- `core/realtime/events.ts`: `ContactUpdatedEvent` + `'contact.updated'` en `InboxServerEvents`;
+  `use-inbox-socket.ts` hace `bumpContactContext` con él.
+
+### D.5 Verificación
+
+Suites: `crm/domain/__tests__/contact-data.test.ts`,
+`crm/ui/components/contact-data/__tests__/ContactDataPanel.test.tsx`,
+`inbox/infrastructure/realtime/__tests__/use-inbox-socket.test.tsx` (`contact.updated`).
+Recorrido manual pendiente: 360 y rail en light/dark, hover vs. táctil, Tab por las acciones,
+rol sin `contacts:manage` (solo lectura), tenant sin formularios (vacío), y una captura real del
+agente con el inbox abierto (fila resaltada sin recargar).

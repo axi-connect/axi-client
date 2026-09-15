@@ -47,7 +47,7 @@ por comando. Contrato tipado en `core/realtime/events.ts`.
 |---|---|
 | Conversación | `conversation.created`, `.message_received` (+ `conversation` con `unread_count/last_message_at/last_message_preview` → la fila se actualiza en sitio), `.message_created` (F9.1, vista completa del mensaje), `.message_updated` (F12 transcripción, reconocimiento y **adjunto listo** con `attachments`/`unavailable_reason`), `.message_sent` (+ `conversation`), `.message_status` (solo `failed`), `.read` (leído desde cualquier pestaña), `.typing` |
 | Handoff | `.escalated`, `.claimed`, `.taken_over`, `.returned_to_ai`, `.status_changed`, `.sla_breached` |
-| Contexto del contacto (rail) | `contact.lifecycle_changed`, `contact.merged`, `crm.activity_created`, `crm.task_completed`, los 6 `crm.deal_*`, `order.created`, `order.status_changed`, `order.payment_reported` |
+| Contexto del contacto (rail) | `contact.updated` (F1: cambió un dato de la ficha — edición, `save_contact_data` de la IA, revisión en «Datos del cliente», import, integración; payload `{company_id, contact_id, changes: {code, value}[], origin}`), `contact.lifecycle_changed`, `contact.merged`, `crm.activity_created`, `crm.task_completed`, los 6 `crm.deal_*`, `order.created`, `order.status_changed`, `order.payment_reported` |
 | Suspensión | `company.suspended` (F15) |
 
 **Comandos (ack tipado):** `inbox.join_conversation`, `leave_conversation`, `claim`, `takeover`,
@@ -55,8 +55,9 @@ por comando. Contrato tipado en `core/realtime/events.ts`.
 `client/socket_disconnected`, `client/ack_timeout`. Un ack `conversations/handoff_conflict`
 auto-corrige con `refreshSelected()` + `fetchConversations()`.
 
-**Hueco conocido: no existe `contact.updated`.** Editar la ficha o que la IA capture la dirección
-con `save_contact_data` no emite nada. Ver C.4.
+**`contact.updated` existe desde F1 («Datos del cliente»).** Lo escuchan dos consumidores: este
+hook (bump del `contextVersion` del contacto → el rail re-consulta) y `useContactData` del CRM
+(re-consulta `/crm/contacts/{id}/data` y resalta las filas de `changes` durante 2,4 s). Ver C.4.
 
 ---
 
@@ -218,6 +219,16 @@ nivel de módulo. Solo lectura: la edición vive en el 360 (`/crm/contacts/{id}`
 > `city` está casi siempre `null`. Nunca se tratan como dato estructurado, y los campos vacíos se
 > omiten (`FieldList` los oculta por defecto).
 
+**«Datos del cliente» (F1)** — debajo de `ContactFieldList`, el panel monta
+`<ContactDataPanel contactId conversationId variant="rail" />` (de `@/modules/crm/public`): lo que
+el agente recopiló sobre `GET /crm/contacts/{id}/data?conversation_id=`, agrupado como los
+formularios de captura (Registro · Pedido · Cita), con origen, ✓ de verificación y las acciones
+Confirmar · Corregir en línea (gate `contacts:manage`; el ⋯ con liberar/rechazar es solo del 360).
+Cierra con «En esta conversación»: pedido en borrador (`/orders/{id}`) y cita
+(`/scheduling/calendar/appointment/{id}`) de `session`. `ContactFieldList` **ya no pinta
+`custom_fields`**: los dos bloques se duplicaban. Contrato y componentes en `docs/modules/crm.md`
+Parte D.
+
 **Adjuntos** — **derivado del store**, cero peticiones extra: los mensajes de `messagesById` ya
 traen sus `attachments`. Se filtra con `isAttachmentMessage` (incluye optimistas con solo
 `local_previews` y media entrante con `media_pending`; excluye `location`) y se agrupa por día.
@@ -231,9 +242,10 @@ fuentes. Los labels **no se construyen aquí**: el backend entrega `title` (enti
 (novedad) ya en español con estructura uniforme para toda fuente. Badge ✦IA cuando
 `payload.created_by_type ?? payload.actor_type === "ai_agent"`.
 
-**Refresco en vivo.** Como no hay `contact.updated`, el refresco lo disparan los eventos que sí
-traen `contact_id` → `inbox.store#bumpContactContext(contactId)` incrementa
-`contextVersion[contactId]`, que los paneles reciben como prop y usan para re-consultar. Adjuntos no
+**Refresco en vivo.** Todos los eventos que traen `contact_id` (`contact.updated` incluido) →
+`inbox.store#bumpContactContext(contactId)` incrementa `contextVersion[contactId]`, que los paneles
+reciben como prop y usan para re-consultar. `ContactDataPanel` además escucha `contact.updated` por
+su cuenta (`useContactData`) para resaltar las filas cambiadas sin esperar al bump. Adjuntos no
 necesita nada: `conversation.message_created` ya inserta en el store y el panel es un selector.
 
 ### C.5 Piezas compartidas que introdujo este rail
@@ -249,11 +261,11 @@ Para no crear la cuarta copia de patrones existentes (`architecture.md` §12):
 
 ### C.6 Pendientes (no bloqueantes)
 
-- **Peticiones al backend:** evento `contact.updated` en `/inbox`, y un endpoint de adjuntos
-  (`GET /conversations/{id}/attachments`) que evitaría paginar el hilo completo.
+- **Peticiones al backend:** un endpoint de adjuntos (`GET /conversations/{id}/attachments`) que
+  evitaría paginar el hilo completo. (`contact.updated` ya existe desde F1.)
 - Adjuntos de **todas** las conversaciones del contacto (requiere el endpoint anterior; el contrato
   del panel ya está preparado).
-- Edición inline del contacto, etiquetas y responsable desde el inbox.
+- Edición inline de identidad, etiquetas y responsable desde el inbox (los datos de captura ya se confirman/corrigen en línea desde F1).
 - UI del timeline de handoff (`GET /inbox/conversations/{id}/events`): tipado y con adapter, sin
   vista.
 - Items futuros del rail (Pedidos, Oportunidades, Copiloto IA, Notas): el registry ya los admite.
