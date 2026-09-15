@@ -6,6 +6,9 @@ import { TaskScoreboard } from "../TaskScoreboard";
 jest.mock("@/modules/crm/infrastructure/services/activities-service.adapter", () => ({
   listTasks: jest.fn().mockResolvedValue({ data: [], meta: { total: 0, page: 1, page_size: 25 } }),
   getTaskStats: jest.fn().mockResolvedValue(null),
+  // Declarado aunque el marcador no lo dispare: si un refresco acabara
+  // llamándolo, la factoría sin esta clave revienta con «is not a function».
+  getAgentDigest: jest.fn().mockResolvedValue(null),
 }));
 
 const STATS: TaskStatsDTO = {
@@ -17,7 +20,15 @@ const STATS: TaskStatsDTO = {
 };
 
 function reset() {
-  useTasksStore.setState({ tab: "me", due: null, executor: null, runStatus: null, awaiting: false });
+  useTasksStore.setState({
+    tab: "me",
+    due: null,
+    executor: null,
+    runStatus: null,
+    awaiting: false,
+    q: "",
+    digest: null,
+  });
 }
 
 afterEach(cleanup);
@@ -77,23 +88,18 @@ describe("TaskScoreboard — modo agente", () => {
     expect(useTasksStore.getState()).toMatchObject({ awaiting: true, runStatus: null });
   });
 
-  it("la conversión se muestra pero NO finge ser un filtro", () => {
-    // No hay consulta que devuelva «las que acabaron en compra»: pintarla como
-    // botón prometería un filtro que al pulsarlo no haría nada.
+  it("la conversión NO vive aquí: el marcador es de filtros", () => {
+    // No hay consulta que devuelva «las que acabaron en compra», así que
+    // pintarla como ficha prometería un filtro que al pulsarlo no haría nada.
+    // Su sitio es la línea del parte, donde se cuentan resultados.
     render(<TaskScoreboard stats={STATS} executor="agent" />);
 
-    expect(screen.getByText("acabaron en compra (7 días)")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /acabaron en compra/i })).toBeNull();
+    expect(screen.queryByText(/acabaron en compra/i)).toBeNull();
   });
 
-  it("sin conversiones no ocupa sitio", () => {
-    render(
-      <TaskScoreboard
-        stats={{ ...STATS, agent: { ...STATS.agent, converted: 0 } }}
-        executor="agent"
-      />,
-    );
+  it("cada celda lleva su icono, y es decorativo para el lector de pantalla", () => {
+    const { container } = render(<TaskScoreboard stats={STATS} executor={null} />);
 
-    expect(screen.queryByText(/acabaron en compra/i)).toBeNull();
+    expect(container.querySelectorAll("svg[aria-hidden='true']").length).toBe(4);
   });
 });

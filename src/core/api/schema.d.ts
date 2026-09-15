@@ -3012,6 +3012,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/tasks/agent-digest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmActivitiesController_agentDigest_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/tasks": {
         parameters: {
             query?: never;
@@ -10731,6 +10747,7 @@ export interface components {
                 id: string;
                 /** Format: uuid */
                 contact_id: string;
+                contact_name: string | null;
                 /** Format: uuid */
                 deal_id: string | null;
                 /** Format: uuid */
@@ -10820,6 +10837,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             contact_id: string;
+            contact_name: string | null;
             /** Format: uuid */
             deal_id: string | null;
             /** Format: uuid */
@@ -10899,6 +10917,18 @@ export interface components {
                 failed: number;
                 awaiting: number;
                 converted: number;
+            };
+        };
+        AgentDigestDto: {
+            /** @enum {string} */
+            window: "today" | "yesterday";
+            day: string;
+            counts: {
+                reached: number;
+                replied: number;
+                converted: number;
+                calls_connected: number;
+                failed: number;
             };
         };
         TimelineDto: {
@@ -21731,7 +21761,9 @@ export interface operations {
     };
     CrmActivitiesController_taskStats_v1: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -21748,6 +21780,25 @@ export interface operations {
             };
         };
     };
+    CrmActivitiesController_agentDigest_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentDigestDto"];
+                };
+            };
+        };
+    };
     CrmActivitiesController_tasks_v1: {
         parameters: {
             query?: {
@@ -21759,6 +21810,7 @@ export interface operations {
                 trigger?: "manual" | "scheduled" | "automation" | "agent";
                 last_run_status?: "scheduled" | "running" | "done" | "deferred" | "failed" | "cancelled" | "skipped";
                 awaiting_reply?: "true" | "false";
+                q?: string;
                 page?: number;
                 page_size?: number;
             };

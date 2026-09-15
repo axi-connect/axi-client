@@ -14,9 +14,11 @@ import type {
   TaskStatus,
 } from "@/modules/crm/domain/activity";
 import type { TaskRunStatus } from "@/modules/crm/domain/task-execution";
+import type { AgentDigestDTO } from "@/modules/crm/domain/activity";
 import {
   cancelTask,
   completeTask,
+  getAgentDigest,
   getTaskStats,
   listTasks,
   reopenTask,
@@ -30,6 +32,16 @@ import {
  * (solo campanita) — la bandeja se actualiza al navegar, no en vivo.
  */
 const PAGE_SIZE = 25;
+
+/**
+ * Secuencia de la última petición de lista en vuelo.
+ *
+ * Vive fuera del store porque no es estado que se pinte. Existe desde que hay
+ * buscador: con un rebote de 300 ms sobre una consulta de texto, «zz» puede
+ * aterrizar DESPUÉS de «zzz» y dejar la bandeja mostrando el resultado de una
+ * búsqueda que el operador ya descartó.
+ */
+let listSeq = 0;
 
 export type TaskAction = "complete" | "reopen" | "cancel";
 export type TasksTab = Extract<TaskAssigneeFilter, "me" | "unassigned"> | "all";
@@ -60,6 +72,10 @@ type TasksStore = {
   /** F2: «Esperando respuesta» — abrieron con plantilla y esperan al cliente.
    *  Es un filtro aparte de `runStatus` porque no es un desenlace de corrida. */
   awaiting: boolean;
+  /** Búsqueda APLICADA: el rebote vive en el campo, no aquí. */
+  q: string;
+  /** Parte diario del agente. `null` = aún no llegó o falló: no se pinta. */
+  digest: AgentDigestDTO | null;
   /** F2: Lista o agenda «Programados». */
   view: "list" | "scheduled";
   /** F2: tareas de agente abiertas para la agenda, ordenadas por `next_run_at`. */
@@ -76,11 +92,13 @@ type TasksStore = {
   setExecutor: (executor: TasksExecutor) => void;
   setRunStatus: (status: TaskRunStatus | null) => void;
   setAwaiting: (awaiting: boolean) => void;
+  setQuery: (q: string) => void;
   setView: (view: "list" | "scheduled") => void;
   setPage: (page: number) => void;
   fetch: () => Promise<void>;
   fetchStats: () => Promise<void>;
   fetchAgenda: () => Promise<void>;
+  fetchDigest: () => Promise<void>;
 
   /** Idempotentes en el backend; aquí optimistas con rollback. */
   act: (id: string, action: TaskAction) => Promise<ActionResult>;
@@ -112,6 +130,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
   executor: null,
   runStatus: null,
   awaiting: false,
+  q: "",
+  digest: null,
   view: "list",
   agenda: [],
   agendaLoading: false,
@@ -160,6 +180,17 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     void get().fetch();
   },
 
+  setQuery: (q) => {
+    // El campo comitea por temporizador Y por Enter, y limpiar uno ya vacío no
+    // es un cambio: sin esta guarda serían dos peticiones idénticas.
+    if (get().q === q) return;
+    set({ q, page: 1 });
+    void get().fetch();
+    // La agenda sale del MISMO endpoint: buscar y saltar a «Programados» sin
+    // esto ignoraría la búsqueda en silencio.
+    if (get().view === "scheduled") void get().fetchAgenda();
+  },
+
   setView: (view) => {
     set({ view });
     if (view === "scheduled") void get().fetchAgenda();
@@ -171,7 +202,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
   },
 
   fetch: async () => {
-    const { tab, due, status, executor, runStatus, awaiting, page } = get();
+    const { tab, due, status, executor, runStatus, awaiting, q, page } = get();
+    const seq = ++listSeq;
     set({ loading: true, error: null });
     try {
       const params: ListTasksParams = {
@@ -183,12 +215,16 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
         assignee_type: executor ?? undefined,
         last_run_status: runStatus ?? undefined,
         awaiting_reply: awaiting ? true : undefined,
+        q: q === "" ? undefined : q,
         page,
         page_size: PAGE_SIZE,
       };
       const res = await listTasks(params);
+      // Una consulta más nueva ya está en vuelo: su resultado manda.
+      if (seq !== listSeq) return;
       set({ items: res.data, total: res.meta.total, loading: false });
     } catch (err) {
+      if (seq !== listSeq) return;
       set({ loading: false, error: errorMessage(err, "No se pudieron cargar las tareas") });
     }
   },
@@ -203,6 +239,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       const res = await listTasks({
         assignee_type: "agent",
         status: "open",
+        q: get().q === "" ? undefined : get().q,
         page: 1,
         page_size: 100,
       });
@@ -219,9 +256,23 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
 
   fetchStats: async () => {
     try {
-      set({ stats: await getTaskStats() });
+      // Con `q`, el marcador cuenta lo BUSCADO: es el filtro principal de la
+      // vista y no puede decir «14 abiertas» mientras la lista enseña dos.
+      const q = get().q;
+      set({ stats: await getTaskStats(q === "" ? undefined : q) });
     } catch {
-      // Chips no críticos: la bandeja funciona sin ellos.
+      // Marcador no crítico: la bandeja funciona sin él.
+    }
+  },
+
+  fetchDigest: async () => {
+    try {
+      set({ digest: await getAgentDigest() });
+    } catch {
+      // Silencioso como el marcador —la bandeja funciona sin la línea— pero
+      // por otro motivo: el marcador es redundante con la lista y esto no lo
+      // es. Por eso `digest` se queda en `null` y NO se marca «ya intentado»:
+      // la siguiente corrida del motor vuelve a pedirlo y se cura solo.
     }
   },
 
@@ -300,6 +351,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     // Los chips sí se recalculan: son un agregado del tenant, no de la lista.
     if (evt.status !== "running") {
       void get().fetchStats();
+      // Una corrida que termina mueve `reached`, `replied` y `failed`.
+      void get().fetchDigest();
       if (get().view === "scheduled") void get().fetchAgenda();
     }
   },

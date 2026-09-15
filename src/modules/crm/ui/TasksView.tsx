@@ -12,6 +12,8 @@ import { getAgentTaskSettings } from "@/modules/crm/infrastructure/services/agen
 import { ScheduledAgenda } from "@/modules/crm/ui/components/ScheduledAgenda";
 import { TaskDayList } from "@/modules/crm/ui/components/TaskDayList";
 import { TaskScoreboard } from "@/modules/crm/ui/components/TaskScoreboard";
+import { AgentDigestLine } from "@/modules/crm/ui/components/AgentDigestLine";
+import { SearchField } from "@/shared/components/ui/search-field";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { Button } from "@/shared/components/ui/button";
 import BasicPagination from "@/shared/components/ui/pagination";
@@ -82,6 +84,15 @@ export function TasksView() {
   const setPage = useTasksStore((s) => s.setPage);
   const fetch = useTasksStore((s) => s.fetch);
   const fetchStats = useTasksStore((s) => s.fetchStats);
+  const q = useTasksStore((s) => s.q);
+  const setQuery = useTasksStore((s) => s.setQuery);
+  const digest = useTasksStore((s) => s.digest);
+  const fetchDigest = useTasksStore((s) => s.fetchDigest);
+  const due = useTasksStore((s) => s.due);
+  const runStatus = useTasksStore((s) => s.runStatus);
+  const awaiting = useTasksStore((s) => s.awaiting);
+  const setScope = useTasksStore((s) => s.setScope);
+  const setRunStatus = useTasksStore((s) => s.setRunStatus);
 
   useSocketEvent(socket, "crm.activity_created", (payload) => {
     useTasksStore.getState().onActivityCreated(payload);
@@ -99,13 +110,17 @@ export function TasksView() {
   useEffect(() => {
     void fetch();
     void fetchStats();
+    // En el montaje y no al entrar en modo agente: pedirlo al cambiar de filtro
+    // bajaría la lista medio segundo después, que es el salto de layout que
+    // este rediseño lleva prohibido.
+    void fetchDigest();
     const onSave = () => {
       void fetch();
       void fetchStats();
     };
     window.addEventListener("crm:tasks:save:success", onSave);
     return () => window.removeEventListener("crm:tasks:save:success", onSave);
-  }, [fetch, fetchStats]);
+  }, [fetch, fetchStats, fetchDigest]);
 
   const totalPages = Math.max(1, Math.ceil(total / TASKS_PAGE_SIZE));
   const [inspected, setInspected] = useState<ActivityDTO | null>(null);
@@ -138,6 +153,9 @@ export function TasksView() {
   }, []);
   const agendaTz = useMemo(() => tz ?? "America/Bogota", [tz]);
   const abbr = useMemo(() => zoneAbbr(agendaTz), [agendaTz]);
+
+  /** Hay algún filtro puesto además del alcance por defecto. */
+  const filtered = due !== null || tab !== "me" || runStatus !== null || awaiting;
 
   // La fila del rail se mantiene fresca con la de la lista: si el motor cierra
   // un intento mientras el panel está abierto, el encabezado no puede quedarse
@@ -182,47 +200,64 @@ export function TasksView() {
 
       {stats !== null && <TaskScoreboard stats={stats} executor={executor} />}
 
+      {/* La línea del agente. En la bandeja mezclada es un resumen de una
+          línea que lleva al modo agente; en «Del agente», el parte completo. */}
+      {digest !== null && (
+        <AgentDigestLine digest={digest} variant={executor === "agent" ? "full" : "teaser"} />
+      )}
+
       {/* Una sola barra de trabajo. Antes eran tres filas de segmentados: el
-          vencimiento y el desenlace del motor viven ahora en el marcador. */}
-      <div className="flex flex-wrap items-center gap-2">
-        {executor !== "agent" && (
+          vencimiento y el desenlace del motor viven ahora en el marcador.
+          Rejilla y no `flex-wrap`: con el buscador dentro, envolver produce
+          cuatro filas apiladas a 400 px. */}
+      <div className="grid gap-2 sm:grid-cols-[minmax(11rem,22rem)_1fr] sm:items-center">
+        <SearchField
+          value={q}
+          onChange={setQuery}
+          busy={loading}
+          shortcut
+          placeholder="Buscar por contacto u objetivo"
+          label="Buscar tareas por contacto u objetivo"
+        />
+        {/* Los controles, SIEMPRE en una línea: si no caben scrollean dentro de
+            sí mismos, porque el cuerpo de la vista nunca scrollea en horizontal. */}
+        <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 [scrollbar-width:none] sm:justify-end [&::-webkit-scrollbar]:hidden">
+          {executor !== "agent" && (
+            <SegmentedControl
+              value={tab}
+              onValueChange={setTab}
+              label="Filtrar por asignación"
+              size="sm"
+              surface="inline"
+              items={TABS}
+            />
+          )}
+          <Tabs value={view} onValueChange={(value) => setView(value as "list" | "scheduled")}>
+            <TabsList aria-label="Vista de tareas" size="sm">
+              <TabsTrigger value="list">
+                <LayoutList className="size-3.5" aria-hidden />
+                Lista
+              </TabsTrigger>
+              <TabsTrigger value="scheduled">
+                <CalendarDays className="size-3.5" aria-hidden />
+                Programados
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="list" />
+            <TabsContent value="scheduled" />
+          </Tabs>
+          <span aria-hidden className="hidden h-5 w-px shrink-0 bg-border sm:block" />
           <SegmentedControl
-            value={tab}
-            onValueChange={setTab}
-            label="Filtrar por asignación"
+            value={executor ?? EXEC_MIXED}
+            onValueChange={(value: ExecutorValue) =>
+              setExecutor(value === EXEC_MIXED ? null : (value satisfies TasksExecutor))
+            }
+            label="Filtrar por quién ejecuta"
             size="sm"
             surface="inline"
-            items={TABS}
+            items={EXECUTORS}
           />
-        )}
-        <span className="grow" />
-        {/* Lista / Programados cambian de VISTA en la misma URL → Tabs con
-            panel (DESIGN-SYSTEM §9.3), no navegación ni segmentado. */}
-        <Tabs value={view} onValueChange={(value) => setView(value as "list" | "scheduled")}>
-          <TabsList aria-label="Vista de tareas" size="sm">
-            <TabsTrigger value="list">
-              <LayoutList className="size-3.5" aria-hidden />
-              Lista
-            </TabsTrigger>
-            <TabsTrigger value="scheduled">
-              <CalendarDays className="size-3.5" aria-hidden />
-              Programados
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="list" />
-          <TabsContent value="scheduled" />
-        </Tabs>
-        <span aria-hidden className="hidden h-5 w-px bg-border sm:block" />
-        <SegmentedControl
-          value={executor ?? EXEC_MIXED}
-          onValueChange={(value: ExecutorValue) =>
-            setExecutor(value === EXEC_MIXED ? null : (value satisfies TasksExecutor))
-          }
-          label="Filtrar por quién ejecuta"
-          size="sm"
-          surface="inline"
-          items={EXECUTORS}
-        />
+        </div>
       </div>
 
       {view === "scheduled" ? (
@@ -243,6 +278,42 @@ export function TasksView() {
         </div>
       ) : loading && items.length === 0 ? (
         <TableSkeleton rows={6} showHeader={false} />
+      ) : items.length === 0 && q !== "" ? (
+        // «Nada pendiente por aquí» sería mentira con algo escrito: el sistema
+        // de diseño exige distinguir «aún no hay nada» de «sin resultados».
+        <EmptyState
+          glyph="noresults"
+          variant="solid"
+          title={`Sin resultados para «${q}»`}
+          description="Se busca en el título y el objetivo de la tarea, y en el nombre, teléfono y correo del contacto."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button variant="outline" className="rounded-full" onClick={() => setQuery("")}>
+                Limpiar búsqueda
+              </Button>
+            </div>
+          }
+        />
+      ) : items.length === 0 && filtered ? (
+        // Con un filtro puesto tampoco es «no hay nada»: es «no hay nada AQUÍ».
+        <EmptyState
+          glyph="uptodate"
+          variant="solid"
+          title="Nada en este filtro"
+          description="Prueba a quitarlo para ver el resto de la bandeja."
+          action={
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => {
+                setScope({ tab: "me", due: null });
+                if (executor === "agent") setRunStatus(null);
+              }}
+            >
+              Ver todas
+            </Button>
+          }
+        />
       ) : items.length === 0 ? (
         // Un tenant nuevo aterriza aquí con cero tareas: es la pantalla que más
         // se ve el primer día, y la que menos trabajo tenía. En vez de un reloj

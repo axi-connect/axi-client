@@ -2,6 +2,7 @@ import { http } from "@/core/services/http";
 import type { Paginated } from "@/core/api/types";
 import type {
   ActivityDTO,
+  AgentDigestDTO,
   CreateActivityDTO,
   CreateAgentTaskDTO,
   ListActivitiesParams,
@@ -47,8 +48,15 @@ export function listTasks(params: ListTasksParams = {}): Promise<Paginated<Activ
 }
 
 /** Del solicitante: `{open, overdue, due_today, unassigned}`. */
-export function getTaskStats(): Promise<TaskStatsDTO> {
-  return http.get<TaskStatsDTO>("/crm/tasks/stats");
+export function getTaskStats(q?: string): Promise<TaskStatsDTO> {
+  // Con búsqueda activa el marcador cuenta lo BUSCADO: es el filtro principal
+  // de la bandeja y no puede contar un universo distinto al de la lista.
+  return http.get<TaskStatsDTO>("/crm/tasks/stats", { q });
+}
+
+/** Parte diario del agente (F5): hoy, o ayer si hoy todavía está a cero. */
+export function getAgentDigest(): Promise<AgentDigestDTO> {
+  return http.get<AgentDigestDTO>("/crm/tasks/agent-digest");
 }
 
 // Idempotentes; sobre una nota → 409 `crm/not_a_task`.

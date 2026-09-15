@@ -1,5 +1,6 @@
 import type { ActivityDTO, TaskStatsDTO } from "@/modules/crm/domain/activity";
 import {
+  getAgentDigest,
   getTaskStats,
   listTasks,
   runAgentTaskNow,
@@ -11,6 +12,7 @@ jest.mock("@/modules/crm/infrastructure/services/activities-service.adapter");
 const mockedList = listTasks as jest.MockedFunction<typeof listTasks>;
 const mockedStats = getTaskStats as jest.MockedFunction<typeof getTaskStats>;
 const mockedRunNow = runAgentTaskNow as jest.MockedFunction<typeof runAgentTaskNow>;
+const mockedDigest = getAgentDigest as jest.MockedFunction<typeof getAgentDigest>;
 
 const STATS: TaskStatsDTO = {
   open: 3,
@@ -40,6 +42,12 @@ describe("tasks.store — dimensión de ejecutor (T2)", () => {
       status: "open",
       executor: null,
       runStatus: null,
+      // Sin resetear estos, un test que busque contamina a todos los
+      // siguientes y cada `fetch` posterior viaja con `q`.
+      awaiting: false,
+      q: "",
+      digest: null,
+      view: "list",
     });
   });
 
@@ -113,5 +121,90 @@ describe("tasks.store — runNow", () => {
 
     expect(result.ok).toBe(false);
     expect(useTasksStore.getState().items).toEqual([task]);
+  });
+});
+
+describe("tasks.store — búsqueda", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedList.mockResolvedValue(page());
+    mockedStats.mockResolvedValue(STATS);
+    useTasksStore.setState({ q: "", page: 4, due: "overdue", tab: "me", view: "list" });
+  });
+
+  it("viaja como `q` y vuelve a la primera página", async () => {
+    useTasksStore.getState().setQuery("ana");
+    await Promise.resolve();
+
+    expect(useTasksStore.getState().page).toBe(1);
+    expect(mockedList.mock.calls.at(-1)?.[0]?.q).toBe("ana");
+  });
+
+  it("buscar NO borra los demás filtros", async () => {
+    // Buscar dentro de «Vencidas» es un refinamiento legítimo: quitarle al
+    // operador el alcance que eligió es peor que devolver cero resultados.
+    useTasksStore.getState().setQuery("ana");
+    await Promise.resolve();
+
+    expect(useTasksStore.getState().due).toBe("overdue");
+    expect(mockedList.mock.calls.at(-1)?.[0]?.due).toBe("overdue");
+  });
+
+  it("el mismo término no dispara una segunda petición", async () => {
+    // El campo comitea por temporizador Y por Enter; limpiar uno ya vacío
+    // tampoco es un cambio.
+    useTasksStore.getState().setQuery("ana");
+    await Promise.resolve();
+    const calls = mockedList.mock.calls.length;
+
+    useTasksStore.getState().setQuery("ana");
+    await Promise.resolve();
+
+    expect(mockedList.mock.calls.length).toBe(calls);
+  });
+
+  it("sin búsqueda no manda la clave vacía", async () => {
+    await useTasksStore.getState().fetch();
+    expect(mockedList.mock.calls.at(-1)?.[0]?.q).toBeUndefined();
+  });
+
+  it("una respuesta vieja NO pisa a una nueva", async () => {
+    // Con un rebote de 300 ms sobre una consulta de texto, «zz» puede aterrizar
+    // después de «zzz» y dejar la bandeja mostrando lo que ya se descartó.
+    const vieja = page([{ id: "vieja" } as ActivityDTO]);
+    const nueva = page([{ id: "nueva" } as ActivityDTO]);
+    let resolveVieja: (value: typeof vieja) => void = () => undefined;
+    mockedList.mockReturnValueOnce(
+      new Promise<typeof vieja>((resolve) => {
+        resolveVieja = resolve;
+      }),
+    );
+    mockedList.mockResolvedValueOnce(nueva);
+
+    const first = useTasksStore.getState().fetch();
+    const second = useTasksStore.getState().fetch();
+    await second;
+    resolveVieja(vieja);
+    await first;
+
+    expect(useTasksStore.getState().items.map((item) => item.id)).toEqual(["nueva"]);
+  });
+});
+
+describe("tasks.store — parte del agente", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedList.mockResolvedValue(page());
+    mockedStats.mockResolvedValue(STATS);
+  });
+
+  it("si falla se queda en null y NO rompe la bandeja", async () => {
+    mockedDigest.mockRejectedValue(new Error("boom"));
+    useTasksStore.setState({ digest: null, error: null });
+
+    await useTasksStore.getState().fetchDigest();
+
+    expect(useTasksStore.getState().digest).toBeNull();
+    expect(useTasksStore.getState().error).toBeNull();
   });
 });

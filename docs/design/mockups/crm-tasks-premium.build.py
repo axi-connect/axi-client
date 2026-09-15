@@ -23,7 +23,7 @@ ICONS = [
     "circle-user", "history", "pencil", "send", "circle-x", "refresh-cw", "search", "users",
     "sun", "moon", "loader-circle", "circle-check", "arrow-right", "bell", "hourglass",
     "sliders-horizontal", "circle-dollar-sign", "wand-sparkles", "inbox", "check-check",
-    "circle-alert", "user-round", "corner-down-right", "external-link", "star", "zap",
+    "circle-alert", "user-round", "corner-down-right", "external-link", "star", "zap", "x",
 ]
 
 
@@ -153,26 +153,55 @@ img{max-width:100%}
 .head .actions{display:flex;flex-wrap:wrap;gap:8px}
 
 /* ─────────── Marcador: las cifras SON el filtro ─────────── */
-.score{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:16px}
-@media (max-width:860px){.score{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:520px){.score{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.tile{position:relative;display:flex;flex-direction:column;gap:1px;align-items:flex-start;padding:10px 12px 11px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--background);text-align:left;transition:border-color .18s,background .18s}
-.tile:hover{border-color:color-mix(in srgb,var(--foreground) 24%,var(--background))}
-.tile .v{font-size:22px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.tile .k{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted-fg);line-height:1.3}
-.tile .k .ic{width:12px;height:12px}
-.tile[aria-checked="true"]{background:var(--accent);border-color:color-mix(in srgb,var(--axi-brand) 45%,var(--background))}
-.tile[aria-checked="true"] .k{color:var(--foreground)}
-.tile.alarm .v,.tile.alarm .k .ic{color:var(--axi-destructive)}
-.tile.warnish .v,.tile.warnish .k .ic{color:var(--axi-warning)}
-.tile.good .v,.tile.good .k .ic{color:var(--axi-success)}
-.tile.zero .v{color:var(--faint-fg)}
+/* UN instrumento, no cuatro tarjetas. Los filetes se dibujan con `gap:1px`
+   sobre el fondo del contenedor: así salen solos también al envolver a dos
+   columnas, sin reglas `nth-child`. Sin iconos: a este tamaño son ruido, y lo
+   que hay que leer es la cifra. */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:16px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-md);overflow:clip}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* `align-items:center` centra el icono contra el BLOQUE de los dos textos, no
+   contra la caja con su relleno: por eso la marca óptica cae entre la cifra y
+   la etiqueta y no en el centro geométrico de la celda. */
+.kpi{display:flex;align-items:center;gap:10px;padding:9px 13px 10px;background:var(--background);text-align:left;transition:background .15s}
+.kpi .glyph{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:var(--r-sm);background:color-mix(in srgb,var(--foreground) 5%,transparent);color:var(--muted-fg);transition:background .15s,color .15s}
+.kpi .glyph .ic{width:16px;height:16px}
+.kpi .txt{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0}
+.kpi[aria-pressed="true"] .glyph{background:color-mix(in srgb,var(--background) 70%,transparent);color:var(--axi-brand)}
+.kpi.alarm .glyph{color:var(--axi-destructive)}
+.kpi.good .glyph{color:var(--axi-success)}
+.kpi.zero .glyph{color:var(--faint-fg)}
+.kpi:hover{background:var(--secondary)}
+.kpi[aria-pressed="true"]{background:var(--accent)}
+.kpi b{font-size:18px;line-height:1.1;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi i{font-style:normal;font-size:11px;line-height:1.3;color:var(--muted-fg)}
+.kpi[aria-pressed="true"] i{color:var(--foreground)}
+.kpi.alarm b{color:var(--axi-destructive)}
+.kpi.good b{color:var(--axi-success)}
+.kpi.zero b{color:var(--faint-fg)}
+/* La conversión no filtra: no hay consulta que devuelva «las que acabaron en
+   compra». Se pinta igual pero no finge ser un botón. */
+.kpi.flat{cursor:default}
+.kpi.flat:hover{background:var(--background)}
 
 /* ─────────── Barra única de trabajo ─────────── */
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
-.searchbox{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid var(--input);border-radius:999px;background:var(--background);flex:1 1 220px;min-width:0;max-width:340px;color:var(--muted-fg)}
-.searchbox input{border:0;outline:0;background:none;width:100%;min-width:0;font-size:13px}
+/* Dos columnas, no `flex-wrap`: con el buscador dentro, envolver produce
+   CUATRO filas apiladas a 400 px — justo lo que el rediseño acababa de quitar.
+   Aquí son dos: buscador arriba, controles abajo en UNA línea que scrollea. */
+.toolbar{display:grid;gap:8px;margin-top:14px}
+@media (min-width:640px){.toolbar{grid-template-columns:minmax(11rem,22rem) 1fr;align-items:center}}
+.toolbar .controls{display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -4px;padding:0 4px}
+.toolbar .controls::-webkit-scrollbar{display:none}
+@media (min-width:640px){.toolbar .controls{justify-content:flex-end}}
+.searchbox{display:flex;align-items:center;gap:8px;height:34px;padding:0 6px 0 11px;border:1px solid var(--input);border-radius:999px;background:var(--background);min-width:0;color:var(--muted-fg);transition:border-color .18s,box-shadow .18s}
+.searchbox input{border:0;outline:0;background:none;width:100%;min-width:0;font-size:13px;color:var(--foreground)}
 .searchbox input::placeholder{color:var(--faint-fg)}
+/* El foco NO ensancha el campo: crecer al enfocar desplaza los segmentados de
+   al lado bajo el cursor, que es el salto de layout que este rediseño quitó. */
+.searchbox.on{border-color:color-mix(in srgb,var(--axi-brand) 45%,var(--background));box-shadow:0 0 0 3px color-mix(in srgb,var(--axi-brand) 16%,transparent)}
+.searchbox .kbd{font-family:var(--font-mono);font-size:10px;line-height:1;padding:4px 6px;border-radius:6px;border:1px solid var(--border);color:var(--faint-fg);background:var(--secondary)}
+.searchbox .clear{display:grid;place-items:center;width:22px;height:22px;border-radius:999px;color:var(--muted-fg);flex:none}
+.searchbox .clear:hover{background:var(--secondary);color:var(--foreground)}
+.searchbox .spin{animation:spin 1s linear infinite;color:var(--axi-brand)}
 .picker{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 11px;border:1px solid var(--border);border-radius:999px;font-size:12.5px;color:var(--muted-fg);white-space:nowrap}
 .picker b{font-weight:500;color:var(--foreground)}
 .picker .ic{width:14px;height:14px}
@@ -193,21 +222,30 @@ img{max-width:100%}
 """
 
 CSS += r"""
-/* ─────────── Franja del agente (digest de F5, traído a la vista) ─────────── */
-.agent-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:14px;padding:11px 14px;border:1px solid var(--border);border-left:3px solid var(--axi-violet);border-radius:var(--r-md);background:var(--secondary)}
-.agent-strip .lead{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500}
-.agent-strip .lead .ic{color:var(--axi-violet)}
-.agent-strip .facts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted-fg)}
-.agent-strip .facts span{display:inline-flex;align-items:center;gap:5px}
-.agent-strip .facts b{font-weight:600;color:var(--foreground);font-variant-numeric:tabular-nums}
-.agent-strip .facts .ic{width:13px;height:13px}
-.agent-strip a{margin-left:auto;font-size:12.5px;color:var(--muted-fg);display:inline-flex;align-items:center;gap:5px}
-.agent-strip a:hover{color:var(--foreground)}
+/* ─────────── La línea del agente (el parte de F5) ─────────── */
+/* NO es una franja con icono y una frase: eso se lee como el aviso de un
+   chatbot. Es una línea de datos con la misma tipografía que el marcador —
+   mismo instrumento, otro trabajo— y sin caja ni tinte: solo un filete violeta
+   de 2 px que es lo único que dice «esto es de la IA». */
+.agentline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;width:100%;margin-top:10px;padding:9px 12px 9px 11px;border-left:2px solid color-mix(in srgb,var(--axi-violet) 60%,transparent);border-radius:0 var(--r-sm) var(--r-sm) 0;background:none;text-align:left;transition:background .15s}
+button.agentline:hover{background:var(--secondary)}
+.agentline .eyebrow{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-fg);white-space:nowrap}
+.agentline .figs{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;min-width:0}
+.agentline .fig{font-size:12px;color:var(--muted-fg);white-space:nowrap}
+.agentline .fig b{font-size:14.5px;font-weight:600;color:var(--foreground);letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-right:4px}
+.agentline .fig.good b{color:var(--axi-success)}
+.agentline .go{margin-left:auto;color:var(--faint-fg);display:inline-flex;flex:none}
+button.agentline:hover .go{color:var(--foreground)}
+/* «Sin enviar» es la única cifra que exige una decisión, y la única con control. */
+.agentline .alarm{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:27px;padding:0 11px;border-radius:999px;border:1px solid var(--border);background:var(--background);font-size:12px;color:var(--muted-fg);white-space:nowrap;flex:none}
+.agentline .alarm:hover{border-color:color-mix(in srgb,var(--axi-destructive) 45%,transparent);color:var(--foreground)}
+.agentline .alarm b{font-weight:600;color:var(--foreground);font-variant-numeric:tabular-nums}
+.agentline .alarm .ic{width:13px;height:13px;color:var(--axi-destructive)}
 
 /* ─────────── Lista agrupada por día ─────────── */
 .glist{margin-top:18px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--background);overflow:clip}
 .ghead{position:sticky;top:0;z-index:3;display:flex;align-items:baseline;gap:8px;padding:8px 16px;background:var(--secondary);border-bottom:1px solid var(--border);border-top:1px solid var(--border)}
-.glist>.ghead:first-child{border-top:0}
+.glist>section:first-child .ghead{border-top:0}
 .ghead h3{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .ghead .dt{font-size:11.5px;color:var(--muted-fg);letter-spacing:0;text-transform:none;font-weight:400}
 .ghead .n{margin-left:auto;font-size:11.5px;color:var(--muted-fg);font-variant-numeric:tabular-nums}
@@ -232,9 +270,15 @@ CSS += r"""
 .tbody{min-width:0}
 .tline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
 .tline .t{font-size:13.5px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12px;color:var(--muted-fg);margin-top:2px}
-.meta .who{display:inline-flex;align-items:center;gap:5px;color:var(--foreground);font-weight:500}
-.meta .who .av{width:16px;height:16px;border-radius:999px;display:grid;place-items:center;font-size:8.5px;font-weight:600;background:var(--secondary);color:var(--muted-fg);border:1px solid var(--border)}
+.meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-fg);margin-top:2px;min-width:0}
+.meta>*:not(.who){flex:none}
+/* El nombre ES el enlace al contacto: antes era un icono de 16 px sin nombre
+   al otro extremo de la fila. Una afordancia en vez de dos, y un objetivo de
+   clic de varias palabras. Sin chip de iniciales: no hay avatar en el DTO y
+   compite con el glifo del canalón, a tres píxeles de ahí. */
+.meta .who{color:var(--foreground);font-weight:500;min-width:0;flex-shrink:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta .who:hover{text-decoration:underline;text-underline-offset:2px}
+.meta .who.none{color:var(--muted-fg);font-weight:400}
 .meta .dot{color:var(--faint-fg)}
 .meta .ai{display:inline-flex;align-items:center;gap:4px;color:var(--axi-violet)}
 .meta .ai .ic{width:12px;height:12px}
@@ -325,13 +369,8 @@ def badge(label, tone="neutral", spin=False):
     return f'<span class="badge {tone}">{inner}{label}</span>'
 
 
-def initials(name):
-    parts = [p for p in name.split(" ") if p]
-    return (parts[0][0] + (parts[1][0] if len(parts) > 1 else "")).upper()
-
-
 def trow(hour, title, contact, *, day=None, medium="human", state=None, reason=None,
-         agent=None, flags=(), acts=None, done=False):
+         agent=None, flags=(), acts=None, done=False, run=None, un=False):
     """Una fila. El canalon lleva la hora ABSOLUTA; el estado va a la derecha."""
     cls = " ".join(["trow", *flags])
     gut = f'<div class="gut">{hour}' + (f"<small>{day}</small>" if day else "") + "</div>"
@@ -344,7 +383,9 @@ def trow(hour, title, contact, *, day=None, medium="human", state=None, reason=N
         lbl = "La ejecuta un agente por llamada" if medium == "call" else "La ejecuta un agente por mensaje"
         lead = f'<span class="lead-ic"><span class="sr">{lbl}</span>{ic(name, "", 16)}</span>'
 
-    who = f'<span class="who"><span class="av">{initials(contact)}</span>{contact}</span>'
+    named = contact is not None
+    label = contact if named else "Sin nombre"
+    who = f'<a class="who{"" if named else " none"}" href="#">{label}</a>'
     bits = [who]
     if agent:
         bits.append(f'<span class="dot">&middot;</span><span class="ai">{ic("sparkles","",12)}{agent}</span>')
@@ -358,27 +399,42 @@ def trow(hour, title, contact, *, day=None, medium="human", state=None, reason=N
         tail.append(badge(*state))
     if acts:
         tail.append(f'<div class="inline-acts">{acts}</div>')
+    # Sin `CircleUser`: el nombre del contacto YA es el enlace. Quitarlo libera
+    # ~28 px del rail, que es justo lo que gana el cuerpo de la fila — el ancho
+    # neto no cambia.
     tail.append('<div class="acts"><button class="btn btn-icon" aria-label="Mas acciones">'
                 + ic("ellipsis-vertical", "", 14) + "</button></div>")
-    return (f'<div class="{cls}"><span class="stripe"></span>{gut}{lead}'
+    data = (f' data-run="{run}"' if run else "") + (" data-un" if un else "")
+    return (f'<div class="{cls}"{data}><span class="stripe"></span>{gut}{lead}'
             f'<div class="tbody">{"".join(body)}</div>'
             f'<div class="tail">{"".join(tail)}</div></div>')
 
 
-def ghead(title, when=None, n=None, late=False):
+def group(bucket, title, rows, *, when=None, late=False):
+    """Un cubo del dia, envuelto para que el marcador pueda ocultarlo entero."""
     dt = f'<span class="dt">{when}</span>' if when else ""
-    cnt = f'<span class="n">{n}</span>' if n else ""
-    return f'<div class="ghead{" late" if late else ""}"><h3>{title}</h3>{dt}{cnt}</div>'
+    n = rows.count('<div class="trow')
+    head = (f'<div class="ghead{" late" if late else ""}"><h3>{title}</h3>{dt}'
+            f'<span class="n">{n}</span></div>')
+    return f'<section data-bucket="{bucket}">{head}{rows}</section>'
 
 
 NOW = '<div class="now"><span></span><span class="lbl">11:20</span><span class="rule"></span></div>'
 
 
-def tile(value, label, icon, *, active=False, tone="", zero=False):
-    cls = " ".join(["tile", tone] + (["zero"] if zero else []))
-    return (f'<button class="{cls}" role="radio" aria-checked="{str(active).lower()}">'
-            f'<span class="v">{value}</span>'
-            f'<span class="k">{ic(icon,"",12)}{label}</span></button>')
+def kpi(value, label, icon, key=None, *, active=False, tone="", zero=False):
+    """Una celda del marcador. Sin icono y sin caja propia: el instrumento es la
+    fila entera, y lo que hay que leer es la cifra.
+
+    `key=None` es una cifra que NO filtra (la conversion): se pinta igual pero
+    no finge ser un boton."""
+    cls = " ".join(["kpi", tone] + (["zero"] if zero else []) + ([] if key else ["flat"]))
+    body = (f'<span class="glyph">{ic(icon, "", 16)}</span>'
+            f'<span class="txt"><b>{value}</b><i>{label}</i></span>')
+    if key is None:
+        return f'<div class="{cls}">{body}</div>'
+    return (f'<button class="{cls}" data-kpi="{key}" '
+            f'aria-pressed="{str(active).lower()}">{body}</button>')
 
 
 def seg(items, label):
@@ -427,18 +483,32 @@ def exec_seg(active):
                "Filtrar por quien ejecuta")
 
 
-def toolbar(*, executor="mixed", view="list", picker=None):
+def search_box(*, value=None, busy=False, focused=False):
+    """El campo. El icono ES el estado: la lupa se convierte en spinner mientras
+    el servidor contesta, en el MISMO hueco de 16 px (sin salto de un pixel)."""
+    lead = ic("loader-circle", "spin", 16) if busy else ic("search", "", 16)
+    if value is None:
+        # En reposo la pista del atajo ocupa el sitio del contador.
+        tailbits = '<span class="kbd">/</span>'
+        field = '<input type="text" placeholder="Buscar por contacto u objetivo" aria-label="Buscar tareas">'
+    else:
+        tailbits = f'<button class="clear" aria-label="Borrar busqueda">{ic("x","",14)}</button>'
+        field = f'<input type="text" value="{value}" aria-label="Buscar tareas">'
+    return (f'<label class="searchbox{" on" if focused else ""}">{lead}{field}{tailbits}</label>')
+
+
+def toolbar(*, executor="mixed", view="list", picker=None, q=None, busy=False):
     pick = picker or f'{ic("user-round","",14)}<b>Mis tareas</b>{ic("chevron-down","",14)}'
-    return (
-        '<div class="toolbar">'
-        f'<label class="searchbox">{ic("search","",15)}'
-        '<input type="text" placeholder="Buscar por contacto u objetivo" aria-label="Buscar tareas">'
-        "</label>"
+    controls = (
         f'<button class="picker">{pick}</button>'
-        '<span class="spacer"></span>'
         f'{seg(VIEW_SEG if view == "list" else VIEW_SEG_SCHED, "Vista de tareas")}'
         '<span class="divider"></span>'
         f"{exec_seg(executor)}"
+    )
+    return (
+        '<div class="toolbar">'
+        f"{search_box(value=q, busy=busy, focused=q is not None)}"
+        f'<div class="controls">{controls}</div>'
         "</div>"
     )
 
@@ -455,13 +525,45 @@ FAIL_ACTS = (f'<button class="btn btn-outline btn-sm">{ic("history","",13)}Ver e
 
 # ───────────────────────── Vista 1: bandeja mezclada ─────────────────────────
 def score_mixed():
-    return ('<div class="score" role="radiogroup" aria-label="Filtrar la bandeja">'
-            + tile("14", "abiertas", "inbox", active=True)
-            + tile("2", "vencidas", "triangle-alert", tone="alarm")
-            + tile("6", "para hoy", "clock")
-            + tile("9", "esta semana", "calendar-days")
-            + tile("1", "sin asignar", "user-round")
+    return ('<div class="kpis" role="group" aria-label="Filtrar la bandeja">'
+            + kpi("14", "abiertas", "inbox", "all", active=True)
+            + kpi("2", "vencidas", "triangle-alert", "overdue", tone="alarm")
+            + kpi("6", "para hoy", "clock", "today")
+            + kpi("1", "sin asignar", "user-round", "unassigned")
             + "</div>")
+
+
+def agentline(*, window="today", figs=None, failed=None, go=False):
+    """El parte del agente. Mismo lenguaje que el marcador: cifra grande,
+    etiqueta pequena. Cero prosa, cero icono de chispas, cero superficie
+    tenida — eso es lo que hace que un bloque se lea como un aviso de IA."""
+    items = "".join(
+        f'<span class="fig {tone}"><b>{value}</b>{label}</span>'
+        for value, label, tone in (figs or [])
+    )
+    tail = ""
+    if failed is not None:
+        tail = (f'<button class="alarm">{ic("triangle-alert","",13)}'
+                f'<b>{failed}</b> sin enviar</button>')
+    elif go:
+        tail = f'<span class="go">{ic("chevron-right","",15)}</span>'
+    tag = "button" if go else "div"
+    return (f'<{tag} class="agentline">'
+            f'<span class="eyebrow">Tus agentes &middot; {"ayer" if window == "yesterday" else "hoy"}</span>'
+            f'<span class="figs">{items}</span>{tail}</{tag}>')
+
+
+TEASER = agentline(figs=[("12", "seguimientos", ""), ("2", "en compra", "good")], go=True)
+
+FULL_DIGEST = agentline(
+    figs=[
+        ("2", "en compra", "good"),
+        ("12", "seguimientos", ""),
+        ("4", "respondieron", ""),
+        ("2", "llamadas atendidas", ""),
+    ],
+    failed=1,
+)
 
 
 ROWS_LATE = (
@@ -475,23 +577,23 @@ ROWS_TODAY_A = (
     trow("09:00", "Preguntarle si ya revis&oacute; la cotizaci&oacute;n del plan anual", "Ana Guti&eacute;rrez",
          medium="message", agent="Aria", state=("Esperando respuesta", "info"),
          reason="Abri&oacute; con la plantilla de Meta. Si el cliente responde, el agente retoma el objetivo.",
-         flags=["ai", "past"]) +
+         flags=["ai", "past"], run="awaiting") +
     trow("10:30", "Confirmar inter&eacute;s en el plan Pro", "Camilo V&eacute;lez",
          medium="call", agent="Aria", state=("Llamando", "info", True), flags=["ai", "past"])
 )
 
 ROWS_TODAY_B = (
-    trow("12:00", "Llamar a recepci&oacute;n de Cl&iacute;nica Norte", "Patricia Ruiz",
-         state=("Sin asignar", "neutral")) +
+    trow("12:00", "Llamar a recepci&oacute;n de Cl&iacute;nica Norte", "+57 310 448 21 90",
+         state=("Sin asignar", "neutral"), un=True) +
     trow("14:00", "Retomar la conversaci&oacute;n del carrito abandonado", "Laura Pe&ntilde;a",
          medium="message", agent="Aria", state=("En espera", "info"),
          reason="Fuera de la ventana de 24 h de WhatsApp &mdash; lo reintenta a las 20:00.",
-         flags=["ai"]) +
+         flags=["ai"], run="deferred") +
     trow("16:30", "Confirmar si recibi&oacute; el cat&aacute;logo", "Diego Salas",
          medium="message", agent="Aria", state=("No se pudo enviar", "destructive"),
          reason="El contacto no tiene ning&uacute;n canal alcanzable.",
-         flags=["ai", "fail"], acts=FAIL_ACTS) +
-    trow("18:00", "Revisar la propuesta de Distribuidora del Valle", "&Oacute;scar Tamayo")
+         flags=["ai", "fail"], acts=FAIL_ACTS, run="failed") +
+    trow("18:00", "Revisar la propuesta de Distribuidora del Valle", None)
 )
 
 ROWS_TOMORROW = (
@@ -517,38 +619,25 @@ def view_inbox():
     return (f'<main class="wrap" id="view-inbox">'
             + head("Lo que el equipo y los agentes tienen entre manos, en hora de Bogot&aacute;.")
             + score_mixed()
+            + TEASER
             + toolbar()
             + '<div class="glist">'
-            + ghead("Vencidas", n="2", late=True) + ROWS_LATE
-            + ghead("Hoy", "jueves 18 de septiembre", "6") + ROWS_TODAY_A + NOW + ROWS_TODAY_B
-            + ghead("Ma&ntilde;ana", "viernes 19 de septiembre", "3") + ROWS_TOMORROW
-            + ghead("Esta semana", "22 &ndash; 26 de septiembre", "3") + ROWS_WEEK
+            + group("overdue", "Vencidas", ROWS_LATE, late=True)
+            + group("today", "Hoy", ROWS_TODAY_A + NOW + ROWS_TODAY_B, when="jueves 18 de septiembre")
+            + group("tomorrow", "Ma&ntilde;ana", ROWS_TOMORROW, when="viernes 19 de septiembre")
+            + group("week", "Esta semana", ROWS_WEEK, when="22 &ndash; 26 de septiembre")
             + "</div>" + FOOT + "</main>")
 
 
 # ───────────────────────── Vista 2: solo agente ─────────────────────────
 def score_agent():
-    return ('<div class="score" role="radiogroup" aria-label="Filtrar los seguimientos del agente">'
-            + tile("18", "programadas", "sparkles", active=True)
-            + tile("5", "esperando respuesta", "hourglass")
-            + tile("3", "en espera", "clock")
-            + tile("1", "sin enviar", "triangle-alert", tone="alarm")
-            + tile("3", "acabaron en compra", "circle-dollar-sign", tone="good")
+    return ('<div class="kpis" role="group" aria-label="Filtrar los seguimientos del agente">'
+            + kpi("18", "programadas", "sparkles", "all", active=True)
+            + kpi("5", "esperando respuesta", "hourglass", "awaiting")
+            + kpi("3", "en espera", "clock", "deferred")
+            + kpi("1", "sin enviar", "triangle-alert", "failed", tone="alarm")
             + "</div>")
 
-
-AGENT_STRIP = (
-    '<div class="agent-strip">'
-    f'<span class="lead">{ic("wand-sparkles","",16)}Hoy, tus agentes</span>'
-    '<span class="facts">'
-    f'<span>{ic("send","",13)}<b>12</b> seguimientos</span>'
-    f'<span>{ic("message-square","",13)}<b>4</b> respondieron</span>'
-    f'<span>{ic("phone-call","",13)}<b>2</b> llamadas conectadas</span>'
-    f'<span>{ic("calendar-days","",13)}<b>1</b> cita agendada</span>'
-    "</span>"
-    f'<a href="#">Ver el resumen{ic("arrow-right","",13)}</a>'
-    "</div>"
-)
 
 ROWS_AGENT_DONE = (
     trow("08:15", "Confirmar si le lleg&oacute; el comprobante", "Valeria C&oacute;rdoba",
@@ -572,27 +661,29 @@ def view_agent():
     return (f'<main class="wrap" id="view-agent" hidden>'
             + head("Lo que tus agentes van a hacer, y lo que ya hicieron hoy.")
             + score_agent()
-            + AGENT_STRIP
+            + FULL_DIGEST
             + toolbar(executor="agent", picker=picker)
             + '<div class="glist">'
-            + ghead("Hoy", "jueves 18 de septiembre", "7") + ROWS_AGENT_DONE + ROWS_TODAY_A + NOW
-            + trow("14:00", "Retomar la conversaci&oacute;n del carrito abandonado", "Laura Pe&ntilde;a",
-                   medium="message", agent="Aria", state=("En espera", "info"),
-                   reason="Fuera de la ventana de 24 h de WhatsApp &mdash; lo reintenta a las 20:00.",
-                   flags=["ai"])
-            + trow("16:30", "Confirmar si recibi&oacute; el cat&aacute;logo", "Diego Salas",
-                   medium="message", agent="Aria", state=("No se pudo enviar", "destructive"),
-                   reason="El contacto no tiene ning&uacute;n canal alcanzable.",
-                   flags=["ai", "fail"], acts=FAIL_ACTS)
-            + ghead("Ma&ntilde;ana", "viernes 19 de septiembre", "2")
-            + trow("09:00", "Preguntar si ya decidi&oacute; sobre el plan anual", "Sof&iacute;a Mendoza",
-                   medium="message", agent="Aria", state=("Programada", "neutral"),
-                   reason="Contacto fr&iacute;o: abrir&aacute; con la plantilla <em>retomar_conversacion</em> &middot; &asymp; US$0,0008.",
-                   flags=["ai"])
-            + trow("09:00", "Confirmar la cita del lunes", "Andr&eacute;s Quintero",
-                   medium="call", agent="Leo", state=("Programada", "neutral"),
-                   reason="Llamar&aacute; y, si no conecta, le escribir&aacute;.", flags=["ai"])
-            + ghead("Esta semana", "22 &ndash; 26 de septiembre", "2") + ROWS_AGENT_WEEK
+            + group("today", "Hoy", ROWS_AGENT_DONE + ROWS_TODAY_A + NOW
+                    + trow("14:00", "Retomar la conversaci&oacute;n del carrito abandonado", "Laura Pe&ntilde;a",
+                           medium="message", agent="Aria", state=("En espera", "info"),
+                           reason="Fuera de la ventana de 24 h de WhatsApp &mdash; lo reintenta a las 20:00.",
+                           flags=["ai"], run="deferred")
+                    + trow("16:30", "Confirmar si recibi&oacute; el cat&aacute;logo", "Diego Salas",
+                           medium="message", agent="Aria", state=("No se pudo enviar", "destructive"),
+                           reason="El contacto no tiene ning&uacute;n canal alcanzable.",
+                           flags=["ai", "fail"], acts=FAIL_ACTS, run="failed"),
+                    when="jueves 18 de septiembre")
+            + group("tomorrow", "Ma&ntilde;ana",
+                    trow("09:00", "Preguntar si ya decidi&oacute; sobre el plan anual", "Sof&iacute;a Mendoza",
+                         medium="message", agent="Aria", state=("Programada", "neutral"),
+                         reason="Contacto fr&iacute;o: abrir&aacute; con la plantilla <em>retomar_conversacion</em> &middot; &asymp; US$0,0008.",
+                         flags=["ai"])
+                    + trow("09:00", "Confirmar la cita del lunes", "Andr&eacute;s Quintero",
+                           medium="call", agent="Leo", state=("Programada", "neutral"),
+                           reason="Llamar&aacute; y, si no conecta, le escribir&aacute;.", flags=["ai"]),
+                    when="viernes 19 de septiembre")
+            + group("week", "Esta semana", ROWS_AGENT_WEEK, when="22 &ndash; 26 de septiembre")
             + "</div>" + FOOT + "</main>")
 
 
@@ -632,12 +723,11 @@ def view_scheduled():
 def view_empty():
     return (f'<main class="wrap" id="view-empty" hidden>'
             + head("Lo que el equipo y los agentes tienen entre manos, en hora de Bogot&aacute;.")
-            + '<div class="score" role="radiogroup" aria-label="Filtrar la bandeja">'
-            + tile("0", "abiertas", "inbox", active=True, zero=True)
-            + tile("0", "vencidas", "triangle-alert", zero=True)
-            + tile("0", "para hoy", "clock", zero=True)
-            + tile("0", "esta semana", "calendar-days", zero=True)
-            + tile("0", "sin asignar", "user-round", zero=True)
+            + '<div class="kpis" role="group" aria-label="Filtrar la bandeja">'
+            + kpi("0", "abiertas", "inbox", "all", active=True, zero=True)
+            + kpi("0", "vencidas", "triangle-alert", "overdue", zero=True)
+            + kpi("0", "para hoy", "clock", "today", zero=True)
+            + kpi("0", "sin asignar", "user-round", "unassigned", zero=True)
             + "</div>"
             + toolbar()
             + '<div class="empty">'
@@ -653,7 +743,138 @@ def view_empty():
             "</div></div></main>")
 
 
+# ───────────────────────── Vista 4b: búsqueda ─────────────────────────
+def view_search():
+    """Con búsqueda activa el marcador cuenta LO BUSCADO, no la bandeja entera.
+
+    Es lo que obliga a que `/crm/tasks/stats` acepte también `q`: si no, arriba
+    pondría «14 abiertas» mientras la lista enseña dos, y el marcador es el
+    filtro principal de la vista.
+    """
+    return (f'<main class="wrap" id="view-search" hidden>'
+            + head("Lo que el equipo y los agentes tienen entre manos, en hora de Bogot&aacute;.")
+            + '<div class="kpis" role="group" aria-label="Filtrar la bandeja">'
+            + kpi("2", "abiertas", "inbox", "all", active=True)
+            + kpi("1", "vencidas", "triangle-alert", "overdue", tone="alarm")
+            + kpi("1", "para hoy", "clock", "today")
+            + kpi("0", "sin asignar", "user-round", "unassigned", zero=True)
+            + "</div>"
+            + toolbar(q="ana")
+            + '<div class="glist">'
+            + group("overdue", "Vencidas",
+                    trow("09:00", "Enviar la ficha t&eacute;cnica que pidi&oacute;", "Ana Mar&iacute;a Sep&uacute;lveda",
+                         day="ayer", state=("1 d&iacute;a de retraso", "destructive"), flags=["late"]),
+                    late=True)
+            + group("today", "Hoy",
+                    trow("09:00", "Preguntarle si ya revis&oacute; la cotizaci&oacute;n del plan anual", "Ana Guti&eacute;rrez",
+                         medium="message", agent="Aria", state=("Esperando respuesta", "info"),
+                         reason="Abri&oacute; con la plantilla de Meta. Si el cliente responde, el agente retoma el objetivo.",
+                         flags=["ai"], run="awaiting"),
+                    when="jueves 18 de septiembre")
+            + "</div>"
+            + '<div class="foot"><span>2 de 2 tareas &middot; Hora de Bogot&aacute; (GMT-5)</span></div>'
+            + "</main>")
+
+
+def view_noresults():
+    """«Nada pendiente por aqu&iacute;» ser&iacute;a mentira con algo escrito en el buscador.
+    El sistema de dise&ntilde;o exige distinguir «a&uacute;n no hay nada» de «sin resultados»."""
+    return (f'<main class="wrap" id="view-noresults" hidden>'
+            + head("Lo que el equipo y los agentes tienen entre manos, en hora de Bogot&aacute;.")
+            + '<div class="kpis" role="group" aria-label="Filtrar la bandeja">'
+            + kpi("0", "abiertas", "inbox", "all", active=True, zero=True)
+            + kpi("0", "vencidas", "triangle-alert", "overdue", zero=True)
+            + kpi("0", "para hoy", "clock", "today", zero=True)
+            + kpi("0", "sin asignar", "user-round", "unassigned", zero=True)
+            + "</div>"
+            + toolbar(q="zzz")
+            + '<div class="empty">'
+            f'<div class="glyph">{ic("search","",24)}</div>'
+            "<h3>Sin resultados para &laquo;zzz&raquo;</h3>"
+            "<p>Se busca en el t&iacute;tulo y el objetivo de la tarea, y en el nombre, tel&eacute;fono "
+            "y correo del contacto.</p>"
+            '<div class="paths">'
+            f'<button class="path">{ic("x","",16)}<span><b>Limpiar la b&uacute;squeda</b>'
+            "<small>Vuelve a la bandeja completa con los filtros que ten&iacute;as.</small></span></button>"
+            f'<button class="path">{ic("history","",16)}<span><b>Buscar tambi&eacute;n en cerradas</b>'
+            "<small>La bandeja solo muestra abiertas: puede que lo que buscas ya se complet&oacute;.</small></span></button>"
+            "</div></div></main>")
+
+
 # ───────────────────────── Vista 5: qué cambia ─────────────────────────
+TRIO = [
+    ("El nombre del contacto <em>es</em> el enlace",
+     "Antes la fila llevaba un icono de 16&nbsp;px sin nombre al otro extremo. Ahora el nombre vive "
+     "en la l&iacute;nea secundaria, en color de texto y peso medio, y es lo que navega al contacto. "
+     "Una afordancia en vez de dos. <b>Sin chip de iniciales</b>: no hay avatar en el contrato, "
+     "compite con el glifo del canal&oacute;n a tres p&iacute;xeles y cuesta 22 de los 400."),
+    ("Cascada de nombre, y &laquo;Sin nombre&raquo; solo si no hay nada",
+     "El servidor compone <code>full_name &rarr; nombre+apellido &rarr; tel&eacute;fono &rarr; correo</code> "
+     "y devuelve <code>null</code> si no hay ninguno: el literal es de la interfaz, no de la API. "
+     "Un contacto entrado por WhatsApp se identifica por su tel&eacute;fono, que es lo &uacute;nico que trae."),
+    ("Buscador que no salta",
+     "Primero en la barra. <b>No crece al enfocar</b>: ensancharse desplazar&iacute;a los segmentados de "
+     "al lado bajo el cursor, que es el salto de layout que este redise&ntilde;o quit&oacute;. El foco se marca "
+     "con el anillo coral de siempre."),
+    ("El icono ES el estado",
+     "La lupa se convierte en spinner mientras el servidor contesta, en el mismo hueco de 16&nbsp;px. "
+     "Y cuenta tambi&eacute;n el rebote de 300&nbsp;ms: entre la tecla y la petici&oacute;n tampoco hay respuesta."),
+    ("Atajo <code>/</code> para buscar",
+     "Con la tecla pintada dentro del campo en reposo. <code>Esc</code> limpia; con el campo ya vac&iacute;o, "
+     "sale. Se <b>reserva <code>⌘K</code></b> para una paleta global futura &mdash; el primitivo "
+     "<code>command.tsx</code> ya existe sin usar, y quemar el atajo m&aacute;s caro del producto en el "
+     "filtro de una vista ser&iacute;a tirarlo."),
+    ("El marcador cuenta LO BUSCADO",
+     "Con algo escrito, las cifras de arriba se recalculan sobre la b&uacute;squeda. Si no, dir&iacute;an "
+     "&laquo;14 abiertas&raquo; mientras la lista ense&ntilde;a dos, y el marcador es el filtro principal de la "
+     "vista. Obliga a que <code>/crm/tasks/stats</code> acepte <code>q</code>: es el mismo <code>WHERE</code>."),
+    ("&laquo;Sin resultados&raquo; no es &laquo;nada pendiente&raquo;",
+     "Con b&uacute;squeda activa el vac&iacute;o dice qu&eacute; se busc&oacute; y ofrece dos salidas: limpiar, y buscar "
+     "tambi&eacute;n en cerradas &mdash;la bandeja solo muestra abiertas, as&iacute; que lo que buscas puede estar "
+     "completado&mdash;. El sistema de dise&ntilde;o exige esta distinci&oacute;n."),
+    ("El marcador es UN instrumento, no cuatro tarjetas",
+     "Una sola caja con filetes internos, sin iconos y sin bordes por celda: a ese tama&ntilde;o el icono "
+     "es ruido y lo que hay que leer es la cifra. Baja de ~64 a ~48&nbsp;px y, sobre todo, <b>se pulsa y "
+     "filtra de verdad</b> &mdash;pru&eacute;balo en el mockup&mdash;. La celda activa se rellena con el coral "
+     "al 14&nbsp;%, que es el mismo tratamiento del resto de controles activos del panel."),
+    ("El parte del agente deja de ser una frase con chispas",
+     "Un icono de chispas sobre una superficie te&ntilde;ida con una frase en prosa es exactamente el "
+     "aviso de chatbot que todo producto con IA pinta igual. Ahora es <b>una l&iacute;nea de datos con la "
+     "misma tipograf&iacute;a que el marcador</b> &mdash;mismo instrumento, otro trabajo&mdash;, sin caja, sin "
+     "tinte y sin icono: lo &uacute;nico que dice &laquo;esto es de la IA&raquo; es un filete violeta de 2&nbsp;px. "
+     "Las cifras mandan, no las palabras."),
+    ("Y dentro de esa l&iacute;nea, el orden importa",
+     "<b>Lo que acab&oacute; en compra va primero</b> y en verde: es la &uacute;nica cifra que responde &laquo;&iquest;esto "
+     "da dinero?&raquo;. Los seguimientos son el denominador y van despu&eacute;s. Y <b>&laquo;sin enviar&raquo; es la "
+     "&uacute;nica con control</b>: al pulsarla activa la ficha del marcador y te deja en esas filas. No te "
+     "informa de un fallo, te lleva a &eacute;l."),
+    ("&laquo;Tus agentes &middot; ayer&raquo; cuando hoy est&aacute; a cero",
+     "A las nueve de la ma&ntilde;ana un &laquo;0 seguimientos&raquo; se lee como aver&iacute;a. El t&iacute;tulo cambia "
+     "&mdash;no un selector&mdash; y una c&aacute;psula neutra explica por qu&eacute; ves ayer. Si ayer tampoco hubo nada, "
+     "la franja no se pinta."),
+]
+
+DELTAS = [
+    ("La franja completa sigue en &laquo;Del agente&raquo;, pero la bandeja mezclada gana un teaser",
+     "Decidiste que la franja viva en &laquo;Del agente&raquo;. El problema: quien necesita saber si la "
+     "automatizaci&oacute;n sirve es justo quien nunca toca ese filtro. Propuesta: una sola l&iacute;nea de "
+     "32&nbsp;px en la bandeja mezclada, <b>solo cuando hay algo que decir</b>, que lleva al modo agente. "
+     "Un tenant sin agentes no ve nada. <b>Dilo y la quito.</b>"),
+    ("Fuera &laquo;Ver el resumen &rarr;&raquo;",
+     "El mockup anterior lo llevaba y no apunta a ninguna parte: no existe p&aacute;gina de resumen de "
+     "agentes. Un enlace muerto en el bloque cuyo trabajo es dar confianza es lo peor que puede llevar."),
+    ("La barra a 400&nbsp;px son dos filas, no cuatro",
+     "Buscador arriba a todo el ancho; los tres controles abajo en <b>una sola l&iacute;nea que scrollea "
+     "dentro de s&iacute; misma</b>. La alternativa, si el scroll horizontal te parece d&eacute;bil en t&aacute;ctil, es "
+     "colapsar &laquo;Mis tareas / Sin asignar / Todas&raquo; en un selector &laquo;Mis tareas&nbsp;&#9662;&raquo;, "
+     "que libera ~180&nbsp;px. <b>Decisi&oacute;n tuya.</b>"),
+    ("La b&uacute;squeda no quita tildes",
+     "<code>cotizacion</code> no encuentra &laquo;cotizaci&oacute;n&raquo;. Es una limitaci&oacute;n conocida y fijada con "
+     "un test, no un olvido: arreglarla bien pide una columna generada con &iacute;ndice, que es un cambio "
+     "de otra escala. Las extensiones de Postgres ya est&aacute;n instaladas para cuando toque."),
+]
+
+
 PROPOSALS = [
     ("Marcador que <em>es</em> el filtro",
      "Las cinco cifras de arriba dejan de ser texto muerto y pasan a ser el filtro "
@@ -732,11 +953,13 @@ def view_notes():
             "la primera tarea, y encabeza con cuatro cifras que no se pueden pulsar. El rendimiento del rediseño no "
             "es est&eacute;tico: es que la pantalla pase de describir filtros a responder &laquo;qu&eacute; sigue&raquo;.</p>"
             + '<div class="cols">'
-            + note_card("Controles nuevos &mdash; a aprobar antes de codificar", PROPOSALS, numbered=True)
+            + note_card("Esta tanda &mdash; a aprobar antes de codificar", TRIO, numbered=True)
             + "<div>"
-            + note_card("Lo que desaparece", REMOVALS)
+            + note_card("Decisiones que te devuelvo", DELTAS)
             + '<div style="height:14px"></div>'
             + note_card("Lo que no se toca, a prop&oacute;sito", KEEP)
+            + '<div style="height:14px"></div>'
+            + note_card("Ya desplegado el 15-sep", REMOVALS)
             + "</div></div></section>")
 
 
@@ -763,11 +986,41 @@ JS = r"""
     });
   });
 
-  /* fichas del marcador: son el filtro */
-  document.querySelectorAll('.score [role="radio"]').forEach(function(b){
+  /* Las cifras SON el filtro: al pulsarlas, la lista se filtra de verdad. */
+  function applyFilter(root,key){
+    root.querySelectorAll("section[data-bucket]").forEach(function(sec){
+      var shown=0;
+      sec.querySelectorAll(".trow").forEach(function(row){
+        var ok = key==="all" ? true
+          : key==="overdue"||key==="today"||key==="tomorrow"||key==="week" ? sec.dataset.bucket===key
+          : key==="unassigned" ? row.hasAttribute("data-un")
+          : row.dataset.run===key;
+        row.hidden=!ok; if(ok) shown++;
+      });
+      sec.hidden = shown===0;
+      var n=sec.querySelector(".ghead .n"); if(n) n.textContent=String(shown);
+    });
+    /* La línea de «ahora» solo dice algo dentro del día completo. */
+    root.querySelectorAll(".now").forEach(function(el){el.hidden = !(key==="all"||key==="today")});
+  }
+  document.querySelectorAll(".kpis [data-kpi]").forEach(function(b){
     b.addEventListener("click",function(){
-      b.parentElement.querySelectorAll('[role="radio"]').forEach(function(o){o.setAttribute("aria-checked","false")});
-      b.setAttribute("aria-checked","true");
+      var kpis=b.closest(".kpis");
+      kpis.querySelectorAll("[data-kpi]").forEach(function(o){o.setAttribute("aria-pressed","false")});
+      b.setAttribute("aria-pressed","true");
+      applyFilter(b.closest("main"),b.getAttribute("data-kpi"));
+    });
+  });
+  /* El teaser de la bandeja mezclada lleva al modo agente. */
+  document.querySelectorAll("button.agentline").forEach(function(b){
+    b.addEventListener("click",function(){show("agent")});
+  });
+  /* «Sin enviar» del parte activa la ficha homónima del marcador. */
+  document.querySelectorAll(".agentline .alarm").forEach(function(b){
+    b.addEventListener("click",function(e){
+      e.stopPropagation();
+      var f=document.querySelector('#view-agent [data-kpi="failed"]');
+      if(f) f.click();
     });
   });
 
@@ -781,7 +1034,7 @@ JS = r"""
   });
 
   /* vistas del mockup */
-  var ids={inbox:"view-inbox",agent:"view-agent",scheduled:"view-scheduled",empty:"view-empty",notes:"view-notes"};
+  var ids={inbox:"view-inbox",agent:"view-agent",search:"view-search",noresults:"view-noresults",scheduled:"view-scheduled",empty:"view-empty",notes:"view-notes"};
   function show(n){
     Object.keys(ids).forEach(function(k){document.getElementById(ids[k]).hidden=(k!==n)});
     document.querySelectorAll(".mk-view").forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute("data-view")===n))});
@@ -804,7 +1057,8 @@ JS = r"""
 })();
 """
 
-VIEWS = [("inbox", "Bandeja"), ("agent", "Del agente"), ("scheduled", "Programados"),
+VIEWS = [("inbox", "Bandeja"), ("agent", "Del agente"), ("search", "Buscando"),
+         ("noresults", "Sin resultados"), ("scheduled", "Programados"),
          ("empty", "Vac&iacute;a"), ("notes", "Qu&eacute; cambia")]
 
 
@@ -829,6 +1083,8 @@ def build():
 {header()}
 {view_inbox()}
 {view_agent()}
+{view_search()}
+{view_noresults()}
 {view_scheduled()}
 {view_empty()}
 {view_notes()}

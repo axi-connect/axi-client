@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Check,
-  CircleUser,
   History,
   MessageSquare,
   MoreVertical,
@@ -26,6 +25,7 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { isOverdue, type ActivityDTO } from "@/modules/crm/domain/activity";
+import { UNNAMED_CONTACT } from "@/modules/crm/domain/contact";
 import {
   bucketDateLabel,
   bucketMixesDays,
@@ -326,13 +326,40 @@ function TaskRow({
             <Sparkles className="size-3.5 shrink-0 text-accent-violet" aria-label="Creada por IA" />
           )}
         </div>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-          {!agent && task.assigned_user_id === null && open && <span>Sin asignar</span>}
+        {/* Dos anclas de lectura —qué hay que hacer y con quién— sin que
+            compitan: el nombre en color de texto, el resto atenuado. SIN
+            envolver: con `flex-wrap`, un nombre largo parte la fila en dos y
+            descuadra el canalón de horas respecto a las vecinas. */}
+        <p className="mt-0.5 flex min-w-0 items-center gap-x-1.5 text-xs">
+          <Link
+            href={`/crm/contacts/${task.contact_id}`}
+            className={cn(
+              "min-w-0 shrink truncate rounded-sm underline-offset-2 transition-colors hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              task.contact_name === null
+                ? "text-muted-foreground"
+                : "font-medium text-foreground",
+            )}
+          >
+            {task.contact_name ?? UNNAMED_CONTACT}
+          </Link>
+          {!agent && task.assigned_user_id === null && open && (
+            <>
+              <span aria-hidden className="shrink-0 text-muted-foreground/60">
+                ·
+              </span>
+              <span className="shrink-0 text-muted-foreground">Sin asignar</span>
+            </>
+          )}
           {agent && agentName !== null && (
-            <span className="inline-flex items-center gap-1">
-              <Sparkles aria-hidden className="size-3 text-accent-violet" />
-              {agentName}
-            </span>
+            <>
+              <span aria-hidden className="shrink-0 text-muted-foreground/60">
+                ·
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-1 text-muted-foreground">
+                <Sparkles aria-hidden className="size-3 text-accent-violet" />
+                {agentName}
+              </span>
+            </>
           )}
         </p>
         {state.reason !== null && (
@@ -370,13 +397,6 @@ function TaskRow({
             )}
           </div>
         )}
-        <Link
-          href={`/crm/contacts/${task.contact_id}`}
-          aria-label="Ver contacto"
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <CircleUser className="size-4" aria-hidden />
-        </Link>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

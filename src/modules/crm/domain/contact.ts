@@ -150,12 +150,16 @@ export function milestoneEvidenceLabel(entry: MilestoneEntry | undefined): strin
   return map[evidence] ?? evidence;
 }
 
+/** Lo que se pinta cuando un contacto no tiene con qué identificarse. Una sola
+ *  copia en el repo: el servidor manda `null` y el literal es de la interfaz. */
+export const UNNAMED_CONTACT = "Sin nombre";
+
 /** Nombre visible con fallback: full_name → first+last → teléfono → correo. */
 export function contactDisplayName(
   dto: Pick<ContactListItemDTO, "full_name" | "first_name" | "last_name" | "phone" | "email">,
 ): string {
   const composed = [dto.first_name, dto.last_name].filter(Boolean).join(" ").trim();
-  return dto.full_name?.trim() || composed || dto.phone || dto.email || "Sin nombre";
+  return dto.full_name?.trim() || composed || dto.phone || dto.email || UNNAMED_CONTACT;
 }
 
 /**

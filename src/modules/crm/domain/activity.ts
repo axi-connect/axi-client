@@ -12,6 +12,7 @@ export type UpdateAgentTaskDTO = Schemas["UpdateAgentTaskDto"];
 export type CreateActivityDTO = Schemas["CreateActivityDto"];
 export type UpdateActivityDTO = Schemas["UpdateActivityDto"];
 export type TaskStatsDTO = Schemas["TaskStatsDto"];
+export type AgentDigestDTO = Schemas["AgentDigestDto"];
 export type ActivityKind = ActivityDTO["kind"];
 export type TaskStatus = NonNullable<ActivityDTO["task_status"]>;
 
@@ -36,6 +37,9 @@ export type ListTasksParams = OffsetQuery & {
   last_run_status?: NonNullable<ActivityDTO["last_run_status"]>;
   /** F2: solo las que abrieron con plantilla y esperan la respuesta del cliente. */
   awaiting_reply?: boolean;
+  /** Texto libre: título y objetivo de la tarea, y nombre, teléfono y correo
+   *  del contacto. Insensible a mayúsculas pero **no a tildes**. */
+  q?: string;
 };
 
 export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
