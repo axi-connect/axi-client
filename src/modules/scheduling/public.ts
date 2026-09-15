@@ -10,6 +10,7 @@
 export {
   addDaysToKey,
   businessDayKey,
+  diffDays,
   hhmmFromInstant,
   instantFromBusiness,
   minutesIntoDay,

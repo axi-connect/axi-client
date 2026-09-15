@@ -68,6 +68,10 @@ type TasksStore = {
 
   setTab: (tab: TasksTab) => void;
   setDue: (due: TaskDueFilter | null) => void;
+  /** Las fichas del marcador mueven DOS ejes a la vez (asignación y
+   *  vencimiento). Con un setter por eje serían dos peticiones, y la
+   *  segunda saldría con el estado a medio aplicar. */
+  setScope: (scope: { tab: TasksTab; due: TaskDueFilter | null }) => void;
   setStatus: (status: TaskStatus | null) => void;
   setExecutor: (executor: TasksExecutor) => void;
   setRunStatus: (status: TaskRunStatus | null) => void;
@@ -119,6 +123,11 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
 
   setDue: (due) => {
     set({ due, page: 1 });
+    void get().fetch();
+  },
+
+  setScope: ({ tab, due }) => {
+    set({ tab, due, page: 1 });
     void get().fetch();
   },
 
