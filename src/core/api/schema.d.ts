@@ -3428,6 +3428,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crm/contacts/{contact_id}/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmContactDataController_data_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/contacts/{contact_id}/data/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CrmContactDataController_review_v1"];
+        trace?: never;
+    };
     "/api/v1/marketing/campaigns": {
         parameters: {
             query?: never;
@@ -11309,6 +11341,78 @@ export interface components {
                 page: number;
                 page_size: number;
             };
+        };
+        ContactDataDto: {
+            /** Format: uuid */
+            contact_id: string;
+            fields: {
+                code: string;
+                label: string;
+                defined: boolean;
+                /** @enum {string} */
+                storage: "column" | "custom";
+                /** @enum {string|null} */
+                type: "text" | "number" | "select" | "date" | "boolean" | "phone" | "email" | null;
+                options: string[] | null;
+                required: boolean;
+                /** @enum {string|null} */
+                flow: "contact_registration" | "order_intake" | "appointment_booking" | null;
+                value: (string | number | boolean) | null;
+                /** @enum {string} */
+                state: "captured" | "confirmed" | "corrected" | "missing" | "invalid";
+                protected: boolean;
+                /** @enum {string|null} */
+                source: "ai_agent" | "user" | "import" | "public_form" | "integration" | "merge" | "system" | null;
+                /** Format: date-time */
+                captured_at: string | null;
+                conversation_id: string | null;
+                actor_user_id: string | null;
+                canonical_from: string | null;
+                raw_value: string | null;
+                invalid_reason: string | null;
+                attempts: number;
+                proposal: {
+                    value: (string | number | boolean) | null;
+                    /** Format: date-time */
+                    captured_at: string;
+                    conversation_id: string | null;
+                } | null;
+            }[];
+            protected_fields: string[];
+            conversation: {
+                id: string;
+                /** @enum {string} */
+                status: "open" | "snoozed" | "resolved" | "closed";
+                /** Format: date-time */
+                last_message_at: string | null;
+            } | null;
+            system: {
+                code: string;
+                value: (string | number | boolean) | null;
+            }[];
+            session: {
+                order_draft?: {
+                    draft_id: string | null;
+                    items_count: number;
+                    total_cents: number | null;
+                } | null;
+                last_order?: {
+                    order_id: string;
+                    order_number: number | null;
+                    status: string | null;
+                } | null;
+                last_appointment?: {
+                    appointment_id: string;
+                    /** Format: date-time */
+                    starts_at: string;
+                    product_id: string | null;
+                } | null;
+            };
+        };
+        ReviewContactFieldDto: {
+            value?: (string | number | boolean) | null;
+            /** @enum {string} */
+            action?: "confirm" | "reject" | "release";
         };
         CampaignsListDto: {
             data: {
@@ -22496,6 +22600,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnrollmentsListDto"];
+                };
+            };
+        };
+    };
+    CrmContactDataController_data_v1: {
+        parameters: {
+            query?: {
+                conversation_id?: string;
+            };
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDataDto"];
+                };
+            };
+        };
+    };
+    CrmContactDataController_review_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewContactFieldDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDataDto"];
                 };
             };
         };
