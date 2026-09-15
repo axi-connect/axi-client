@@ -259,9 +259,10 @@ export function AxelChat({
         </div>
       </div>
 
-      {/* `axel-composer-glow`: el bloom violeta que hace que el input lea como la
-          fuente de luz de la pantalla. */}
-      <div ref={composerRef} className="axel-composer-glow flex-none px-6 pt-3 pb-5">
+      {/* El bloom violeta que hace que el input lea como la fuente de luz de la
+          pantalla ya no es suyo: lo pone el núcleo del aura del campo
+          (`.axel-field::after`), que cae justo detrás de esta franja. */}
+      <div ref={composerRef} className="flex-none px-6 pt-3 pb-5">
         <div className="mx-auto w-full max-w-[640px]">
           <form
             onSubmit={(event) => {

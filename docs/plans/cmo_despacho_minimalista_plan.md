@@ -141,3 +141,33 @@ Nuevas del conmutador: «Conversaciones», «Nueva conversación», «Hoy / Ayer
 - El FLIP del compositor al primer mensaje corre una vez por conversación en el hilo principal (framer); si en el spike visual se nota, la alternativa es el salto directo (como reduced-motion), que también es aceptable.
 - `.axel-hero` se usa como clase en `AxelHeroAvatar` y hoy no existe en `globals.css`: pasa a ser la raíz del stage acoplable, sin renombrar.
 - `getTranscript` no manda el `limit` que el spec declara requerido; funciona por default del backend. Si el conmutador trae hilos largos, revisar.
+
+## 12. F6 — El fondo del campo: el aura (2026-09-15, HECHA)
+
+Petición del dueño después del deploy: **un fondo más profesional, con una burbuja
+que suba desde abajo**. Se propusieron primero tres fondos con cúpula abajo y haz
+de luz arriba; el dueño rechazó el haz («no me gustó ninguna luz o destello desde
+arriba») y se rehízo el mockup con **seis burbujas sin nada arriba**
+(`docs/design/mockups/cmo-fondo-despacho.html`, artifact publicado). Eligió
+**E · Aura, sin borde**.
+
+Qué cambia en `globals.css`, bloque «El campo del despacho»:
+
+- **`::before` = el halo ancho** (`left/right: -20%`, `bottom: -70%`, `height: 140%`)
+  y **`::after` = el núcleo** (`left/right: 8%`, `bottom: -34%`, `height: 74%`), los
+  dos `radial-gradient(closest-side, …)` de violeta anclados al borde inferior. De
+  una elipse que sobra por abajo solo entra su casquete: eso es la burbuja.
+- **Se retira la aurora que derivaba 72 s en bucle** (`@keyframes axel-drift`, los
+  cuatro halos y su excepción de `prefers-reduced-motion`) y **el dot-grid**. El
+  campo queda sin `animation`, sin `filter` y sin `backdrop-filter`: pinta una vez
+  y no se vuelve a tocar hasta que cambie el tamaño de la ventana.
+- **`.axel-composer-glow` desaparece**: el núcleo del aura cae justo detrás del
+  compositor y hace ese trabajo. `AxelChat` pierde la clase, conserva `composerRef`
+  (lo usa el FLIP).
+- **DESIGN-SYSTEM §6 pierde su única excepción de loop.** La regla vuelve a ser
+  «nada se mueve en bucle en el workspace», sin excepciones, y se deja escrito qué
+  tendría que justificar una futura. La desviación de tinte (26% sobre el techo del
+  14%) se mantiene y sigue declarada en §2.3.
+
+Verja antes del push: `tsc` sin errores nuevos, 23 suites / 222 tests de `modules/cmo`
+y `core/styles`, `eslint` limpio, `next build` en verde.

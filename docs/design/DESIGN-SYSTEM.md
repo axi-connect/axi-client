@@ -80,7 +80,7 @@ Definidos una sola vez como utilidades en `globals.css` (nunca inline en compone
 **Techo de tinte y sus dos excepciones.** El techo del sistema para teñir una
 superficie es el 14% de `--color-accent`. Lo rompen a propósito dos superficies, y
 las dos están declaradas en `globals.css` con su motivo: `.channel-surface`
-(7–34%, el color oficial del proveedor) y `.axel-field` (hasta el 26%, la aurora
+(7–34%, el color oficial del proveedor) y `.axel-field` (hasta el 26%, el aura
 del despacho de Axel). El criterio que las autoriza es el mismo: el tinte no
 compite con el coral de acción ni con los colores de estado, y la superficie
 existe para sentirse habitada, no para presentar datos. Una tercera excepción no
@@ -296,15 +296,15 @@ Reglas:
 - Toda animación no esencial se desactiva con `prefers-reduced-motion` (`useReducedMotion` de framer-motion o la media query CSS ya presente en `globals.css`).
 - Animar solo `transform` y `opacity` (compositor); nunca `width`/`height`/`top` en listas grandes.
 - **Animaciones que deben sobrevivir a cargas pesadas** (splash, loaders de transición) van en **CSS, no en framer-motion**: framer anima por rAF en el hilo principal y se congela si la página destino está hidratando; el CSS corre en el compositor (caso real: LOADING.md §6.3).
-- Nada parpadea ni se mueve en loop en el workspace. **Excepción única y
-  declarada: la aurora del despacho de Axel** (`.axel-field::before`, módulo
-  CMO). Se concede porque cumple las tres condiciones que la hacen inocua: 72 s
-  por vuelta (no se percibe movimiento mirando la pantalla, se nota al volver a
-  ella), solo `transform` sobre una capa sin texto encima, y `alternate` para que
-  no dé un salto al reiniciar el ciclo. Se apaga entera con
-  `prefers-reduced-motion`. Cualquier otra superficie del panel sigue quieta: si
-  aparece una segunda, esto deja de ser una excepción y pasa a ser la regla nueva
-  — y entonces se discute aquí, no en el componente.
+- Nada parpadea ni se mueve en loop en el workspace. **Sin excepciones.** Hubo
+  una declarada aquí hasta 2026-09-15 — la aurora del despacho de Axel, que
+  derivaba 72 s por vuelta — y se retiró al rediseñar el fondo: `.axel-field` es
+  hoy un aura estática (dos resplandores anclados al borde inferior) que pinta
+  una vez y no se vuelve a tocar. Si alguna superficie vuelve a necesitar un
+  loop, se discute aquí antes que en el componente, y tendrá que justificar las
+  tres condiciones que hacían inocua a aquella: vuelta tan lenta que no se
+  perciba mirando la pantalla, solo `transform` sobre una capa sin texto encima,
+  y `alternate` para que no salte al reiniciar el ciclo.
 - **Lo que NO cuenta como excepción**: un efecto que solo corre mientras el
   puntero está encima. En reposo la superficie está quieta, no hay animación ni
   `requestAnimationFrame` vivo, y el usuario decide cuándo empieza y cuándo

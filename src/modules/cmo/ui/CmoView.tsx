@@ -19,8 +19,8 @@ import { CmoBoardRail } from "./components/CmoBoardRail";
  * propuestas se leen DENTRO del hilo, no en una pantalla aparte.
  *
  * **Un solo campo.** `axel-field` vive aquí, en el `<main>`, y no en el chat: su
- * fondo (los tres halos y el dot-grid) tiene que quedar detrás del hero, del
- * hilo y del composer a la vez. Cuando el campo empezaba debajo del briefing, la
+ * fondo (el aura que sube del borde inferior) tiene que quedar detrás del hero,
+ * del hilo y del composer a la vez. Cuando el campo empezaba debajo del briefing, la
  * banda de arriba heredaba el degradado `muted` de la superficie del panel y
  * aparecía una costura horizontal de 1px que partía la pantalla en dos. El único
  * corte de superficie legítimo de esta vista es el `border-l` del rail.

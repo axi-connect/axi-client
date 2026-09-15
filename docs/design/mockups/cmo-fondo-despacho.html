@@ -1,0 +1,743 @@
+<title>Fondos del despacho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  /* ================= Tokens (literales de axi-client/src/app/globals.css) ================= */
+  :root {
+    --axi-brand: #e65759; --axi-brand-2: #e02f2f; --axi-violet: #7c3aed; --axi-amber: #f0a431;
+    --axi-muted: #f4f4f5; --axi-success: #16a34a; --axi-on-color: #ffffff;
+
+    --axel-body-hi: #ffffff; --axel-body-mid: #f7f5f0; --axel-body-deep: #e1ddd4;
+    --axel-occ: #b9b3a8; --axel-hot: #ffffff;
+    --axel-ink: #2b2b30; --axel-ink-hi: #55555c; --axel-glint: #ffffff; --axel-lid: #f7f5f0;
+    --axel-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
+
+    --background: #ffffff; --foreground: #0a0a0a;
+    --page: #f3f2f4; --page-2: #ffffff;
+    --border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+    --hair: color-mix(in srgb, var(--foreground) 8%, transparent);
+    --muted-fg: color-mix(in srgb, var(--foreground) 62%, transparent);
+    --shadow-float: 0 1px 2px rgb(0 0 0 / .05), 0 4px 12px rgb(0 0 0 / .06);
+    --shadow-frame: 0 2px 6px rgb(0 0 0 / .06), 0 24px 60px rgb(0 0 0 / .10);
+    --font-sans: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-heading: "Nexa", "Poppins", system-ui, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --veil: .8;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: #0a0a0a; --foreground: #fafafa; --axi-muted: #18181b;
+      --page: #08080a; --page-2: #101013;
+      --axi-brand: #fb7185; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-success: #4ade80;
+      --axel-body-hi: #fbfaf7; --axel-body-mid: #f1eee7; --axel-body-deep: #d2cdc3;
+      --axel-occ: #9a948a; --axel-ink: #1d1d21; --axel-ink-hi: #4a4a52; --axel-lid: #f1eee7;
+      --axel-shadow: color-mix(in srgb, #000 55%, transparent);
+      --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .5);
+      --shadow-frame: 0 2px 6px rgb(0 0 0 / .5), 0 24px 60px rgb(0 0 0 / .6);
+      --hair: color-mix(in srgb, var(--foreground) 14%, transparent);
+      --veil: 1;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --background: #0a0a0a; --foreground: #fafafa; --axi-muted: #18181b;
+    --page: #08080a; --page-2: #101013;
+    --axi-brand: #fb7185; --axi-violet: #a78bfa; --axi-amber: #fbbf24; --axi-success: #4ade80;
+    --axel-body-hi: #fbfaf7; --axel-body-mid: #f1eee7; --axel-body-deep: #d2cdc3;
+    --axel-occ: #9a948a; --axel-ink: #1d1d21; --axel-ink-hi: #4a4a52; --axel-lid: #f1eee7;
+    --axel-shadow: color-mix(in srgb, #000 55%, transparent);
+    --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 4px 12px rgb(0 0 0 / .5);
+    --shadow-frame: 0 2px 6px rgb(0 0 0 / .5), 0 24px 60px rgb(0 0 0 / .6);
+    --hair: color-mix(in srgb, var(--foreground) 14%, transparent);
+    --veil: 1;
+    color-scheme: dark;
+  }
+
+  /* ================= Página ================= */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--foreground);
+    font-family: var(--font-sans); font-size: 14px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 40px 72px; padding-inline: 20px; }
+  h1, h2, h3 { font-family: var(--font-heading); margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+  h1 { font-size: clamp(28px, 4.4vw, 40px); font-weight: 700; line-height: 1.12; }
+  h2 { font-size: 20px; font-weight: 700; }
+  h3 { font-size: 16px; font-weight: 700; }
+  p { margin: 0; }
+  code { font-family: var(--font-mono); font-size: .92em; }
+  :focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 3px; border-radius: 8px; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted-fg);
+  }
+  .lede { max-width: 64ch; color: var(--muted-fg); font-size: 15px; }
+
+  /* barra de control */
+  .controls {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin: 28px 0 18px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 14px;
+    background: color-mix(in srgb, var(--page-2) 88%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-float);
+  }
+  .seg { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--foreground) 4%, transparent); }
+  .seg button {
+    font: inherit; font-size: 12.5px; font-weight: 500; color: var(--muted-fg);
+    border: 0; background: transparent; border-radius: 7px; padding: 5px 11px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--page-2); color: var(--foreground); box-shadow: var(--shadow-float); font-weight: 600; }
+  .seg--big button[aria-pressed="true"] { color: var(--axi-violet); }
+  .spacer { flex: 1 1 auto; }
+  .check { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted-fg); cursor: pointer; }
+  .check input { accent-color: var(--axi-brand); margin: 0; }
+
+  /* ==========================================================================
+     EL CAMPO — base común a las seis
+     El elemento pone color y grano; `::before` es la burbuja. Nada arriba.
+     ========================================================================== */
+  .axel-field {
+    position: relative; isolation: isolate; overflow: clip;
+    display: flex; flex-direction: column; min-width: 0;
+    background-color: color-mix(in srgb, var(--foreground) 3%, var(--background));
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+  .axel-field::before { content: ""; position: absolute; z-index: -2; pointer-events: none; opacity: var(--veil); }
+
+  /* ---------- A · Domo ---------- */
+  [data-bg="a"] .axel-field::before {
+    left: -28%; right: -28%; bottom: -56%; height: 112%;
+    background-image:
+      radial-gradient(closest-side,
+        transparent 0 calc(100% - 1.5px),
+        color-mix(in srgb, var(--axi-violet) 38%, transparent) calc(100% - 1.5px) 100%,
+        transparent 100%),
+      radial-gradient(closest-side,
+        color-mix(in srgb, var(--axi-violet) 24%, transparent) 0%,
+        color-mix(in srgb, var(--axi-violet) 10%, transparent) 44%,
+        transparent 100%);
+  }
+
+  /* ---------- B · Filo ---------- */
+  [data-bg="b"] .axel-field::before {
+    left: -45%; right: -45%; bottom: -88%; height: 150%;
+    background-image:
+      radial-gradient(closest-side,
+        transparent 0 calc(100% - 1.1px),
+        color-mix(in srgb, var(--foreground) 24%, transparent) calc(100% - 1.1px) 100%,
+        transparent 100%),
+      radial-gradient(closest-side,
+        transparent 0 56%,
+        color-mix(in srgb, var(--axi-violet) 12%, transparent) 100%);
+  }
+
+  /* ---------- C · Horizonte ---------- */
+  [data-bg="c"] .axel-field::before {
+    left: -90%; right: -90%; bottom: -150%; height: 210%;
+    background-image:
+      radial-gradient(closest-side,
+        transparent 0 calc(100% - 1.2px),
+        color-mix(in srgb, var(--axi-amber) 48%, transparent) calc(100% - 1.2px) 100%,
+        transparent 100%),
+      radial-gradient(closest-side,
+        color-mix(in srgb, var(--axi-brand) 17%, transparent) 0%,
+        color-mix(in srgb, var(--axi-violet) 13%, transparent) 40%,
+        transparent 100%);
+  }
+
+  /* ---------- D · Eco ---------- */
+  [data-bg="d"] .axel-field::before {
+    left: -60%; right: -60%; bottom: -110%; height: 180%;
+    background-image:
+      radial-gradient(closest-side,
+        transparent 0 calc(100% - 1px),
+        color-mix(in srgb, var(--foreground) 8%, transparent) calc(100% - 1px) 100%,
+        transparent 100%),
+      radial-gradient(closest-side,
+        transparent 0 calc(86% - 1px),
+        color-mix(in srgb, var(--foreground) 13%, transparent) calc(86% - 1px) 86%,
+        transparent 86%),
+      radial-gradient(closest-side,
+        transparent 0 calc(72% - 1px),
+        color-mix(in srgb, var(--axi-violet) 34%, transparent) calc(72% - 1px) 72%,
+        transparent 72%),
+      radial-gradient(closest-side,
+        color-mix(in srgb, var(--axi-violet) 15%, transparent) 0%,
+        transparent 72%);
+  }
+
+  /* ---------- E · Aura ---------- */
+  [data-bg="e"] .axel-field::before {
+    left: -20%; right: -20%; bottom: -70%; height: 140%;
+    background-image: radial-gradient(closest-side,
+      color-mix(in srgb, var(--axi-violet) 22%, transparent) 0%,
+      color-mix(in srgb, var(--axi-violet) 11%, transparent) 38%,
+      color-mix(in srgb, var(--axi-violet) 3%, transparent) 70%,
+      transparent 100%);
+  }
+  [data-bg="e"] .axel-field::after {
+    content: ""; position: absolute; z-index: -1; pointer-events: none; opacity: var(--veil);
+    left: 8%; right: 8%; bottom: -34%; height: 74%;
+    background-image: radial-gradient(closest-side,
+      color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%,
+      color-mix(in srgb, var(--axi-brand) 9%, transparent) 46%,
+      transparent 100%);
+  }
+
+  /* ---------- F · Malla ---------- */
+  [data-bg="f"] .axel-field::before {
+    left: -34%; right: -34%; bottom: -62%; height: 124%;
+    background-image:
+      radial-gradient(closest-side,
+        transparent 0 calc(100% - 1.4px),
+        color-mix(in srgb, var(--axi-violet) 34%, transparent) calc(100% - 1.4px) 100%,
+        transparent 100%),
+      radial-gradient(58% 64% at 24% 86%, color-mix(in srgb, var(--axi-brand) 22%, transparent), transparent 72%),
+      radial-gradient(60% 66% at 78% 92%, color-mix(in srgb, var(--axi-violet) 26%, transparent), transparent 72%),
+      radial-gradient(70% 52% at 50% 26%, color-mix(in srgb, var(--axi-amber) 12%, transparent), transparent 76%);
+    -webkit-mask-image: radial-gradient(closest-side, #000 0 99.4%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 0 99.4%, transparent 100%);
+  }
+
+  /* ---------- Hoy (referencia: la aurora que deriva) ---------- */
+  [data-bg="hoy"] .axel-field::before {
+    inset: -20%;
+    background-image:
+      radial-gradient(42% 38% at 16% 14%, color-mix(in srgb, var(--axi-brand) 26%, transparent), transparent 68%),
+      radial-gradient(40% 36% at 84% 17%, color-mix(in srgb, var(--axi-violet) 24%, transparent), transparent 66%),
+      radial-gradient(34% 30% at 70% 62%, color-mix(in srgb, var(--axi-amber) 15%, transparent), transparent 70%),
+      radial-gradient(44% 34% at 50% 86%, color-mix(in srgb, var(--axi-violet) 20%, transparent), transparent 68%);
+    animation: axel-drift 72s ease-in-out infinite alternate;
+  }
+  [data-bg="hoy"] .axel-field::after {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image: radial-gradient(color-mix(in srgb, var(--foreground) 12%, transparent) 1px, transparent 1px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+    mask-image: radial-gradient(72% 62% at 50% 30%, #000, transparent 76%);
+    opacity: .34;
+  }
+  @keyframes axel-drift {
+    0% { transform: translate3d(0,0,0) scale(1); }
+    50% { transform: translate3d(-2.2%, 1.6%, 0) scale(1.045); }
+    100% { transform: translate3d(1.8%, -1.4%, 0) scale(1.02); }
+  }
+
+  /* ================= El marco del /cmo ================= */
+  .frame {
+    display: grid; grid-template-columns: minmax(0, 1fr) 232px;
+    height: 580px; border: 1px solid var(--border); border-radius: 18px;
+    overflow: clip; background: var(--background); box-shadow: var(--shadow-frame);
+  }
+  .rail {
+    border-left: 1px solid var(--border);
+    background: color-mix(in srgb, var(--foreground) 2%, var(--background));
+    padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  }
+  .rail-head { display: flex; align-items: center; justify-content: space-between; }
+  .rail-head span:first-child { font-family: var(--font-heading); font-weight: 700; font-size: 13px; }
+  .count { font-family: var(--font-mono); font-size: 11px; padding: 1px 7px; border-radius: 9999px; background: color-mix(in srgb, var(--axi-violet) 14%, transparent); color: var(--axi-violet); }
+  .rail-item { border: 1px solid var(--hair); border-radius: 10px; padding: 9px 10px; background: color-mix(in srgb, var(--background) 70%, transparent); font-size: 12px; line-height: 1.45; }
+  .rail-item b { display: block; font-weight: 600; }
+  .rail-item small { color: var(--muted-fg); font-size: 11px; }
+
+  /* dock */
+  .dock { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 10px 14px; height: 56px; flex: none; }
+  .dock .ibtns { margin-left: auto; display: flex; gap: 4px; }
+  .ibtn { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: var(--muted-fg); cursor: pointer; }
+  .ibtn:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--foreground); }
+  .ibtn svg { width: 16px; height: 16px; }
+  .dock-id { display: flex; align-items: baseline; gap: 8px; opacity: 0; transition: opacity 180ms ease; }
+  .frame[data-state="thread"] .dock-id { opacity: 1; }
+  .dock-id .nm { font-family: var(--font-heading); font-weight: 700; font-size: 13px; }
+  .dock-id .dy { font-family: var(--font-mono); font-size: 11px; color: var(--muted-fg); }
+  .dock-mini { width: 40px; height: 42px; flex: none; display: none; }
+  .frame[data-state="thread"] .dock-mini { display: block; }
+
+  /* cuerpo */
+  .body { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .frame[data-state="empty"] .body { justify-content: center; }
+  .frame[data-state="thread"] .body { justify-content: flex-end; }
+  .col { width: min(560px, 100%); margin: 0 auto; padding: 0 20px; }
+
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+  .frame[data-state="thread"] .hero { display: none; }
+  .hero h2 { font-size: 26px; }
+  .hero p { color: var(--muted-fg); font-size: 13.5px; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 3px 10px; border-radius: 9999px; border: 1px solid var(--hair); background: color-mix(in srgb, var(--background) 62%, transparent); color: var(--muted-fg); }
+  .chip svg { width: 12px; height: 12px; }
+  .chip--violet { color: var(--axi-violet); border-color: color-mix(in srgb, var(--axi-violet) 34%, transparent); }
+
+  /* avatar */
+  .axel-stage { position: relative; display: block; width: 136px; height: 140px; flex: none; }
+  .axel-stage-figure { position: absolute; inset: 0 0 8px; display: block; }
+  .axel-stage-figure > svg { width: 100%; height: 100%; }
+  .axel-ground {
+    position: absolute; left: 50%; bottom: 0; width: 96px; height: 18px; transform: translateX(-50%);
+    border-radius: 9999px; pointer-events: none;
+    background: radial-gradient(closest-side, var(--axel-shadow), transparent);
+  }
+  .dock-mini .axel-stage { width: 40px; height: 42px; }
+  .dock-mini .axel-ground { width: 28px; height: 6px; }
+
+  /* hilo */
+  .thread { display: none; flex-direction: column; gap: 12px; padding-bottom: 8px; }
+  .frame[data-state="thread"] .thread { display: flex; }
+  .msg { max-width: 82%; font-size: 13px; line-height: 1.55; }
+  .msg.me { align-self: flex-end; background: color-mix(in srgb, var(--axi-brand) 12%, var(--background)); border: 1px solid color-mix(in srgb, var(--axi-brand) 24%, transparent); border-radius: 14px 14px 4px 14px; padding: 9px 13px; }
+  .msg.ax { align-self: flex-start; }
+  .msg.ax .who { font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--axi-violet); display: block; margin-bottom: 3px; }
+  .prop { border: 1px solid color-mix(in srgb, var(--axi-violet) 30%, transparent); border-radius: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--background) 74%, transparent); display: flex; flex-direction: column; gap: 7px; }
+  .prop b { font-family: var(--font-heading); font-size: 14px; }
+  .prop p { font-size: 12.5px; color: var(--muted-fg); }
+  .prop .cta { align-self: flex-start; font: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 9999px; border: 0; color: var(--axi-on-color); background: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); cursor: pointer; }
+
+  /* compositor */
+  .composer { flex: none; padding: 14px 0 16px; }
+  .field-box {
+    display: flex; align-items: flex-end; gap: 8px; padding: 11px 12px 11px 16px;
+    border: 1px solid var(--border); border-radius: 18px;
+    background: color-mix(in srgb, var(--background) 84%, transparent);
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow-float);
+  }
+  .field-box .ph { flex: 1; color: var(--muted-fg); font-size: 13.5px; padding-bottom: 2px; }
+  .send { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9999px; border: 0; color: var(--axi-on-color); background: linear-gradient(to right, var(--axi-brand), var(--axi-brand-2)); cursor: pointer; flex: none; }
+  .send svg { width: 15px; height: 15px; }
+  .pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 11px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12.5px; padding: 6px 13px; border-radius: 9999px; border: 1px solid var(--hair); background: color-mix(in srgb, var(--background) 74%, transparent); color: var(--foreground); cursor: pointer; }
+  .pill svg { width: 14px; height: 14px; color: var(--muted-fg); }
+  .pill:hover svg { color: var(--axi-violet); }
+  .trust { margin-top: 10px; text-align: center; font-size: 11.5px; color: var(--muted-fg); }
+  .frame[data-state="thread"] .pills, .frame[data-state="thread"] .trust { display: none; }
+
+  /* ================= Comparación ================= */
+  .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .mini { display: flex; flex-direction: column; gap: 8px; }
+  .mini .axel-field { height: 220px; border: 1px solid var(--border); border-radius: 14px; align-items: center; justify-content: center; }
+  .mini .axel-stage { width: 80px; height: 84px; }
+  .mini .axel-ground { width: 56px; height: 12px; }
+  .mini-bar { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .mini-bar b { font-family: var(--font-heading); font-size: 14px; }
+  .mini-bar span { font-size: 12px; color: var(--muted-fg); }
+  .mini .fake-input { width: 72%; height: 32px; border-radius: 14px; border: 1px solid var(--border); background: color-mix(in srgb, var(--background) 84%, transparent); margin-top: 10px; }
+
+  /* ================= Fichas ================= */
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .card { border: 1px solid var(--border); border-radius: 16px; background: var(--page-2); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .card header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .card .tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--axi-violet); }
+  .card--wide { grid-column: 1 / -1; }
+  .facts { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; }
+  .facts li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; }
+  .facts b { font-weight: 500; color: var(--muted-fg); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-family: var(--font-mono); padding-top: 3px; }
+  pre { margin: 0 0 auto; overflow-x: auto; padding: 14px; border-radius: 12px; border: 1px solid var(--hair); background: color-mix(in srgb, var(--foreground) 4%, transparent); font-family: var(--font-mono); font-size: 11px; line-height: 1.65; }
+  .note-box { border-left: 2px solid color-mix(in srgb, var(--axi-amber) 60%, transparent); padding-left: 14px; font-size: 13.5px; color: var(--muted-fg); }
+  section { margin-top: 44px; }
+  .sec-head { display: grid; gap: 6px; margin-bottom: 18px; }
+
+  @media (max-width: 900px) {
+    .frame { grid-template-columns: minmax(0, 1fr); height: 540px; }
+    .rail { display: none; }
+    .trio { grid-template-columns: minmax(0, 1fr); }
+    .cards { grid-template-columns: minmax(0, 1fr); }
+    .facts li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  }
+
+  /* ================= Avatar (material y rig, idénticos a globals.css) ================= */
+  .axel-avatar { display: block; overflow: visible; }
+  .axel-avatar [data-stop="body-hi"] { stop-color: var(--axel-body-hi); }
+  .axel-avatar [data-stop="body-mid"] { stop-color: var(--axel-body-mid); }
+  .axel-avatar [data-stop="body-deep"] { stop-color: var(--axel-body-deep); }
+  .axel-avatar [data-stop="occ"] { stop-color: var(--axel-occ); }
+  .axel-avatar [data-stop="hot"] { stop-color: var(--axel-hot); }
+  .axel-avatar [data-stop="ink"] { stop-color: var(--axel-ink); }
+  .axel-avatar [data-stop="ink-hi"] { stop-color: var(--axel-ink-hi); }
+  .axel-avatar [data-stop="none"] { stop-color: transparent; }
+  .axel-avatar [data-layer="glint"] { fill: var(--axel-glint); }
+  .axel-avatar [data-layer="lid"] { fill: var(--axel-lid); }
+  .axel-avatar [data-layer="mouth"] { stroke: var(--axel-ink); fill: none; stroke-linecap: round; }
+  .axel-avatar :where([class^="axel-rig-"]) { transform-box: view-box; transform-origin: 50px 50px; }
+  .axel-rig-eye-l { transform: translate(-12px, 0); transform-origin: 50px 47px; }
+  .axel-rig-eye-r { transform: translate(12px, 0); transform-origin: 50px 47px; }
+  .axel-rig-mouth { transform: scaleY(.9); transform-origin: 50px 60px; }
+  .axel-rig-lid-top { transform-box: fill-box; transform-origin: 50% 0%; transform: scaleY(.02); }
+  .axel-rig-lid-bot { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0); }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  .rm *, .rm *::before, .rm *::after { animation: none !important; transition: none !important; }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Despacho de Axel · fondo · fase 0 · revisión 2</p>
+  <h1>Seis burbujas para el despacho</h1>
+  <p class="lede" style="margin-top:12px">
+    Fuera el haz de arriba: no queda ni un destello sobre la cabeza de Axel. El gesto es uno solo —
+    la burbuja que sube desde el borde inferior— y aquí están seis maneras de resolverla, de la más
+    llena a la más contenida. Ninguna se mueve.
+  </p>
+
+  <div class="controls">
+    <div class="seg seg--big" role="group" aria-label="Fondo">
+      <button data-bg-pick="a" aria-pressed="true">A · Domo</button>
+      <button data-bg-pick="b" aria-pressed="false">B · Filo</button>
+      <button data-bg-pick="c" aria-pressed="false">C · Horizonte</button>
+      <button data-bg-pick="d" aria-pressed="false">D · Eco</button>
+      <button data-bg-pick="e" aria-pressed="false">E · Aura</button>
+      <button data-bg-pick="f" aria-pressed="false">F · Malla</button>
+      <button data-bg-pick="hoy" aria-pressed="false">Hoy</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="Estado">
+      <button data-state-pick="empty" aria-pressed="true">Vacío</button>
+      <button data-state-pick="thread" aria-pressed="false">Con hilo</button>
+    </div>
+    <div class="seg" role="group" aria-label="Tema">
+      <button data-theme-pick="system" aria-pressed="true">Sistema</button>
+      <button data-theme-pick="light" aria-pressed="false">Claro</button>
+      <button data-theme-pick="dark" aria-pressed="false">Oscuro</button>
+    </div>
+    <label class="check"><input type="checkbox" id="rm"> Movimiento reducido</label>
+  </div>
+
+  <div class="frame" id="frame" data-state="empty" data-bg="a">
+    <div class="axel-field">
+      <div class="dock">
+        <span class="dock-mini"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span></span>
+        <span class="dock-id"><span class="nm">Axel</span><span class="dy">mié 15 sep</span></span>
+        <span class="ibtns">
+          <button class="ibtn" aria-label="Conversaciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg></button>
+          <button class="ibtn" aria-label="Nueva conversación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></button>
+          <button class="ibtn" aria-label="Ajustes de Axel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button>
+        </span>
+      </div>
+
+      <div class="body">
+        <div class="col">
+          <div class="hero">
+            <span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span>
+            <h2>Hola, Cristian</h2>
+            <p>Miro tus números y te dejo propuestas.</p>
+            <div class="chips">
+              <span class="chip chip--violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Primer informe mañana · 8:00</span>
+              <span class="chip">3 por decidir</span>
+              <span class="chip">22 carritos</span>
+            </div>
+          </div>
+
+          <div class="thread">
+            <div class="msg me">¿Cómo vamos esta semana?</div>
+            <div class="msg ax"><span class="who">Axel</span>Las ventas subieron 12 % frente a la semana pasada, pero el carrito abandonado se disparó: 22 personas dejaron algo sin pagar en tres días.</div>
+            <div class="prop">
+              <b>Persigue los 22 carritos</b>
+              <p>Un recordatorio a las 6 p. m., con la talla que cada quien dejó. 3 borradores · apagados.</p>
+              <button class="cta">Revisar</button>
+            </div>
+            <div class="msg me">Ármame la campaña de recompra</div>
+          </div>
+        </div>
+
+        <div class="composer">
+          <div class="col">
+            <div class="field-box">
+              <span class="ph">Pregúntale a Axel…</span>
+              <button class="send" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+            </div>
+            <div class="pills">
+              <button class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>¿Cómo vamos?</button>
+              <button class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Clientes calientes</button>
+              <button class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Ármame una campaña</button>
+            </div>
+            <p class="trust">Nada sale sin tu aprobación.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <div class="rail-head"><span>Por decidir</span><span class="count">3</span></div>
+      <div class="rail-item"><b>Persigue los 22 carritos</b><small>Vence en 2 días</small></div>
+      <div class="rail-item"><b>«Te guardamos tu talla»</b><small>Vence en 4 días</small></div>
+      <div class="rail-item"><b>Recompra Denim</b><small>Vence en 6 días</small></div>
+    </aside>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Las seis juntas</p>
+      <h2>Comparación a la misma escala</h2>
+      <p class="lede">El marco de arriba manda; esto es para ver los seis caracteres de un golpe.</p>
+    </div>
+    <div class="trio">
+      <div class="mini" data-bg="a">
+        <div class="axel-field"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span><span class="fake-input"></span></div>
+        <p class="mini-bar"><b>A · Domo</b><span>Lleno, con filo</span></p>
+      </div>
+      <div class="mini" data-bg="b">
+        <div class="axel-field"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span><span class="fake-input"></span></div>
+        <p class="mini-bar"><b>B · Filo</b><span>Solo el borde</span></p>
+      </div>
+      <div class="mini" data-bg="c">
+        <div class="axel-field"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span><span class="fake-input"></span></div>
+        <p class="mini-bar"><b>C · Horizonte</b><span>Arco casi recto</span></p>
+      </div>
+      <div class="mini" data-bg="d">
+        <div class="axel-field"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span><span class="fake-input"></span></div>
+        <p class="mini-bar"><b>D · Eco</b><span>Tres arcos</span></p>
+      </div>
+      <div class="mini" data-bg="e">
+        <div class="axel-field"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span><span class="fake-input"></span></div>
+        <p class="mini-bar"><b>E · Aura</b><span>Sin borde</span></p>
+      </div>
+      <div class="mini" data-bg="f">
+        <div class="axel-field"><span class="axel-stage"><span class="axel-ground"></span><span class="axel-stage-figure" data-axel></span></span><span class="fake-input"></span></div>
+        <p class="mini-bar"><b>F · Malla</b><span>Color por dentro</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Lo que comparten</p>
+      <h2>Una sola capa, seis caracteres</h2>
+    </div>
+    <div class="card">
+      <ul class="facts">
+        <li><b>Capas</b><span>Dos: el elemento pone color base y grano, y <code>::before</code> es la burbuja. Arriba no hay nada.</span></li>
+        <li><b>Se va</b><span>La aurora que deriva 72 s en bucle, que era la única excepción de §6 en esta vista, y el dot-grid.</span></li>
+        <li><b>Se queda</b><span>El grano tileado, el recorte del campo y el aislamiento: la decoración no puede pisar el rail.</span></li>
+        <li><b>Coste</b><span>0 ms de JS, 0 <code>animation</code>, 0 <code>filter</code> sobre el árbol, 0 <code>backdrop-filter</code> nuevo. Pinta una vez.</span></li>
+        <li><b>Color</b><span>Solo <code>--axi-violet</code>, <code>--axi-brand</code>, <code>--axi-amber</code> y <code>--foreground</code>. Ni un hex nuevo.</span></li>
+      </ul>
+      <p class="note-box">
+        La burbuja vive en el campo, no en el scroller: al bajar por un hilo largo se queda quieta donde está.
+        Es lo que hace que el compositor se lea como la fuente de luz de la pantalla en vez de una caja pegada
+        abajo, y por eso absorbe el resplandor que hoy lleva el compositor por separado.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Ficha por propuesta</p>
+      <h2>Qué hace cada una y con qué CSS</h2>
+    </div>
+    <div class="cards">
+
+      <article class="card">
+        <header><h3>A · Domo</h3><span class="tag">La más luminosa</span></header>
+        <ul class="facts">
+          <li><b>Forma</b><span>Elipse ancha con relleno violeta y un filo de 1,5 px. La cresta cae al 44 % de la altura, justo detrás del compositor.</span></li>
+          <li><b>Carácter</b><span>Una tarima de luz bajo Axel. Es la que más presencia da y la que mejor casa con la sombra de contacto del avatar.</span></li>
+        </ul>
+<pre>.axel-field::before {
+  left: -28%; right: -28%; bottom: -56%; height: 112%;
+  background-image:
+    radial-gradient(closest-side,
+      transparent 0 calc(100% - 1.5px),
+      color-mix(in srgb, var(--axi-violet) 38%, transparent)
+        calc(100% - 1.5px) 100%,
+      transparent 100%),
+    radial-gradient(closest-side,
+      color-mix(in srgb, var(--axi-violet) 24%, transparent) 0%,
+      color-mix(in srgb, var(--axi-violet) 10%, transparent) 44%,
+      transparent 100%);
+}</pre>
+      </article>
+
+      <article class="card">
+        <header><h3>B · Filo</h3><span class="tag">La más arquitectónica</span></header>
+        <ul class="facts">
+          <li><b>Forma</b><span>Un arco sin relleno: solo el borde de un círculo enorme, en tinta del texto, con un rubor violeta muy tenue por dentro.</span></li>
+          <li><b>Carácter</b><span>Una bóveda dibujada, no iluminada. La que menos color mete y la que mejor aguanta un hilo largo encima.</span></li>
+        </ul>
+<pre>.axel-field::before {
+  left: -45%; right: -45%; bottom: -88%; height: 150%;
+  background-image:
+    radial-gradient(closest-side,
+      transparent 0 calc(100% - 1.1px),
+      color-mix(in srgb, var(--foreground) 24%, transparent)
+        calc(100% - 1.1px) 100%,
+      transparent 100%),
+    radial-gradient(closest-side, transparent 0 56%,
+      color-mix(in srgb, var(--axi-violet) 12%, transparent) 100%);
+}</pre>
+      </article>
+
+      <article class="card">
+        <header><h3>C · Horizonte</h3><span class="tag">La más serena</span></header>
+        <ul class="facts">
+          <li><b>Forma</b><span>La misma burbuja, pero mucho mayor que la pantalla: solo entra su casquete y cruza casi recta, como el horizonte de un planeta. Filo ámbar de 1,2 px.</span></li>
+          <li><b>Carácter</b><span>Editorial y cálida. El ámbar del filo es el único sitio donde entra el color de energía de la marca.</span></li>
+        </ul>
+<pre>.axel-field::before {
+  left: -90%; right: -90%; bottom: -150%; height: 210%;
+  background-image:
+    radial-gradient(closest-side,
+      transparent 0 calc(100% - 1.2px),
+      color-mix(in srgb, var(--axi-amber) 48%, transparent)
+        calc(100% - 1.2px) 100%,
+      transparent 100%),
+    radial-gradient(closest-side,
+      color-mix(in srgb, var(--axi-brand) 17%, transparent) 0%,
+      color-mix(in srgb, var(--axi-violet) 13%, transparent) 40%,
+      transparent 100%);
+}</pre>
+      </article>
+
+      <article class="card">
+        <header><h3>D · Eco</h3><span class="tag">La más distintiva</span></header>
+        <ul class="facts">
+          <li><b>Forma</b><span>Tres arcos concéntricos: el interior violeta y nítido, los dos de afuera desvaneciéndose. Como la onda que deja una piedra en el agua, congelada.</span></li>
+          <li><b>Carácter</b><span>Es la que más se recuerda. Da profundidad sin meter masa de color, así que el texto encima sigue limpio.</span></li>
+        </ul>
+<pre>.axel-field::before {
+  left: -60%; right: -60%; bottom: -110%; height: 180%;
+  background-image:
+    radial-gradient(closest-side, transparent 0 calc(100% - 1px),
+      color-mix(in srgb, var(--foreground) 8%, transparent)
+        calc(100% - 1px) 100%, transparent 100%),
+    radial-gradient(closest-side, transparent 0 calc(86% - 1px),
+      color-mix(in srgb, var(--foreground) 13%, transparent)
+        calc(86% - 1px) 86%, transparent 86%),
+    radial-gradient(closest-side, transparent 0 calc(72% - 1px),
+      color-mix(in srgb, var(--axi-violet) 34%, transparent)
+        calc(72% - 1px) 72%, transparent 72%),
+    radial-gradient(closest-side,
+      color-mix(in srgb, var(--axi-violet) 15%, transparent) 0%,
+      transparent 72%);
+}</pre>
+      </article>
+
+      <article class="card">
+        <header><h3>E · Aura</h3><span class="tag">La más silenciosa</span></header>
+        <ul class="facts">
+          <li><b>Forma</b><span>Sin borde: dos resplandores encajados, uno ancho y otro más estrecho y brillante, los dos anclados al centro del borde inferior.</span></li>
+          <li><b>Carácter</b><span>Luz sin contorno. No dibuja una burbuja, la insinúa. Es la más discreta de las seis y la que menos compite con el compositor.</span></li>
+        </ul>
+<pre>.axel-field::before {           /* el halo ancho */
+  left: -20%; right: -20%; bottom: -70%; height: 140%;
+  background-image: radial-gradient(closest-side,
+    color-mix(in srgb, var(--axi-violet) 22%, transparent) 0%,
+    color-mix(in srgb, var(--axi-violet) 11%, transparent) 38%,
+    color-mix(in srgb, var(--axi-violet) 3%, transparent) 70%,
+    transparent 100%);
+}
+.axel-field::after {            /* el núcleo */
+  left: 8%; right: 8%; bottom: -34%; height: 74%;
+  background-image: radial-gradient(closest-side,
+    color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%,
+    color-mix(in srgb, var(--axi-brand) 9%, transparent) 46%,
+    transparent 100%);
+}</pre>
+      </article>
+
+      <article class="card">
+        <header><h3>F · Malla</h3><span class="tag">La más rica</span></header>
+        <ul class="facts">
+          <li><b>Forma</b><span>La burbuja recortada con máscara y, por dentro, tres focos de color: coral abajo a la izquierda, violeta abajo a la derecha y un ámbar tenue en la cresta.</span></li>
+          <li><b>Carácter</b><span>Los tres colores de la marca en un solo objeto, contenidos por un borde limpio. La más cara de ver y la que más cuida el contraste del texto.</span></li>
+        </ul>
+<pre>.axel-field::before {
+  left: -34%; right: -34%; bottom: -62%; height: 124%;
+  background-image:
+    radial-gradient(closest-side, transparent 0 calc(100% - 1.4px),
+      color-mix(in srgb, var(--axi-violet) 34%, transparent)
+        calc(100% - 1.4px) 100%, transparent 100%),
+    radial-gradient(58% 64% at 24% 86%,
+      color-mix(in srgb, var(--axi-brand) 22%, transparent), transparent 72%),
+    radial-gradient(60% 66% at 78% 92%,
+      color-mix(in srgb, var(--axi-violet) 26%, transparent), transparent 72%),
+    radial-gradient(70% 52% at 50% 26%,
+      color-mix(in srgb, var(--axi-amber) 12%, transparent), transparent 76%);
+  mask-image: radial-gradient(closest-side, #000 0 99.4%, transparent 100%);
+}</pre>
+      </article>
+
+      <article class="card card--wide">
+        <header><h3>Si apruebas una</h3><span class="tag">Qué pasa después</span></header>
+        <ul class="facts">
+          <li><b>Paso 1</b><span>Sustituir el bloque «El campo del despacho» de <code>globals.css</code>, conservando sus decisiones escritas: por qué el color base va en el elemento y por qué el campo recorta.</span></li>
+          <li><b>Paso 2</b><span>Retirar <code>@keyframes axel-drift</code>, su excepción de movimiento reducido y el resplandor suelto del compositor.</span></li>
+          <li><b>Paso 3</b><span>Actualizar DESIGN-SYSTEM §6: la aurora de Axel deja de ser excepción de bucle.</span></li>
+          <li><b>Paso 4</b><span>Verja completa y recorrido en claro y oscuro, con hilo largo, en móvil y con el rail abierto.</span></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+</div>
+
+<script>
+  const root = document.documentElement;
+
+  /* ---- Avatar: la misma geometría del componente, en pose neutra ---- */
+  const EYE = { rx: 4.3, ry: 5.8, cy: 47 };
+  const eye = (side, u) => `
+    <g class="axel-rig-eye-${side}">
+      <g clip-path="url(#${u}-clip-e${side})">
+        <ellipse cx="50" cy="${EYE.cy}" rx="${EYE.rx}" ry="${EYE.ry}" fill="url(#${u}-ink)"/>
+        <ellipse data-layer="glint" cx="48.6" cy="${EYE.cy - 2.6}" rx="1.1" ry="1.4" opacity=".9"/>
+        <rect data-layer="lid" class="axel-rig-lid-top" x="43" y="${EYE.cy - EYE.ry - 3}" width="14" height="${EYE.ry * 2 + 3}"/>
+        <rect data-layer="lid" class="axel-rig-lid-bot" x="43" y="${EYE.cy - EYE.ry}" width="14" height="${EYE.ry * 2 + 3}"/>
+      </g>
+    </g>`;
+  let seq = 0;
+  function axel() {
+    const u = `ax${++seq}`;
+    return `<svg class="axel-avatar" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <g class="axel-rig-body">
+        <ellipse cx="50" cy="50" rx="37" ry="34.5" fill="url(#${u}-body)"/>
+        <g clip-path="url(#${u}-clip-body)">
+          <ellipse cx="58" cy="70" rx="46" ry="38" fill="url(#${u}-occ)"/>
+          <ellipse cx="38" cy="30" rx="24" ry="18" fill="url(#${u}-hot)" opacity=".5"/>
+        </g>
+      </g>
+      <g class="axel-rig-face">
+        ${eye("l", u)}${eye("r", u)}
+        <g class="axel-rig-mouth"><path data-layer="mouth" d="M43 60 Q50 67 57 60" stroke-width="2.6"/></g>
+      </g>
+      <defs>
+        <clipPath id="${u}-clip-body"><ellipse cx="50" cy="50" rx="37" ry="34.5"/></clipPath>
+        <clipPath id="${u}-clip-el"><ellipse cx="50" cy="${EYE.cy}" rx="${EYE.rx}" ry="${EYE.ry}"/></clipPath>
+        <clipPath id="${u}-clip-er"><ellipse cx="50" cy="${EYE.cy}" rx="${EYE.rx}" ry="${EYE.ry}"/></clipPath>
+        <radialGradient id="${u}-body" cx="0.42" cy="0.32" r="0.85"><stop data-stop="body-hi" offset="0"/><stop data-stop="body-mid" offset="0.66"/><stop data-stop="body-deep" offset="1"/></radialGradient>
+        <radialGradient id="${u}-occ" cx="0.5" cy="0.5" r="0.5"><stop data-stop="none" offset="0.62"/><stop data-stop="occ" offset="1" stop-opacity="0.32"/></radialGradient>
+        <radialGradient id="${u}-hot" cx="0.5" cy="0.5" r="0.5"><stop data-stop="hot" offset="0" stop-opacity="0.9"/><stop data-stop="none" offset="1"/></radialGradient>
+        <linearGradient id="${u}-ink" x1="0" y1="0" x2="0.3" y2="1"><stop data-stop="ink-hi" offset="0"/><stop data-stop="ink" offset="0.7"/></linearGradient>
+      </defs>
+    </svg>`;
+  }
+  document.querySelectorAll("[data-axel]").forEach((slot) => { slot.innerHTML = axel(); });
+
+  /* ---- Conmutadores ---- */
+  const frame = document.querySelector("#frame");
+  const pick = (attr, apply) => document.querySelectorAll("[" + attr + "]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[" + attr + "]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      apply(btn.getAttribute(attr));
+    });
+  });
+
+  pick("data-bg-pick", (v) => frame.setAttribute("data-bg", v));
+  pick("data-state-pick", (v) => frame.setAttribute("data-state", v));
+
+  const applyTheme = (t) => {
+    if (t === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t);
+    document.querySelectorAll("[data-theme-pick]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themePick === t)));
+    try { localStorage.setItem("axel-bg-theme", t); } catch {}
+  };
+  let stored = null;
+  try { stored = localStorage.getItem("axel-bg-theme"); } catch {}
+  applyTheme(stored || "system");
+  document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener("click", () => applyTheme(b.dataset.themePick)));
+
+  document.querySelector("#rm").addEventListener("change", (e) => root.classList.toggle("rm", e.target.checked));
+</script>
