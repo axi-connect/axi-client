@@ -76,7 +76,8 @@ def _icon_body(name: str) -> str:
     if m and "__iconNode" not in txt:
         return _icon_body(m.group(1))
     body = ""
-    for tag, attrs in re.findall(r'\["(\w+)",\s*\{([^}]*)\}\]', txt):
+    # lucide 0.539 formatea algunos nodos en varias líneas: `[\n "path",\n { d: … }\n ]`.
+    for tag, attrs in re.findall(r'\[\s*"(\w+)",\s*\{([^}]*)\}\s*\]', txt, flags=re.S):
         pairs = [(k, v) for k, v in re.findall(r'(\w+):\s*"([^"]*)"', attrs) if k != "key"]
         body += f"<{tag} " + " ".join(f'{k}="{v}"' for k, v in pairs) + "/>"
     return body
@@ -215,71 +216,100 @@ a{color:inherit}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
 .kv dt{color:var(--muted-foreground)} .kv dd{margin:0}
 
-/* ===================== el panel «Datos recopilados» ===================== */
-.data-card .card-head{margin-bottom:8px}
+/* ===================== el panel «Datos recopilados» — v2, una lista ===================== */
+.data-card{padding:22px 28px 18px}
+.data-card .card-head{margin-bottom:6px;align-items:center}
 .data-card h2 .ic{color:var(--axi-violet)}
-.sect{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600;margin:18px 0 6px;display:flex;align-items:center;gap:8px}
-.sect:first-of-type{margin-top:6px}
-.sect .count{font-weight:500;letter-spacing:0;text-transform:none;font-size:12px}
-.rows{display:flex;flex-direction:column}
-.row{display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(0,1.6fr) 130px 150px auto;gap:14px;align-items:center;padding:10px 0;border-top:1px solid var(--border-soft);min-width:0}
-.row:first-child{border-top:none}
-.row .lbl{display:flex;flex-direction:column;gap:2px;min-width:0}
-.row .lbl b{font-weight:500;font-size:13.5px;line-height:1.3}
-.row .lbl small{font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.row .val{min-width:0;font-size:13.5px}
-.row .val .v{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row .val .said{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--muted-foreground);margin-top:1px}
-.row .val .said .ic{color:var(--axi-violet)}
-.row .val.empty .v{color:var(--muted-foreground)}
-.row .val .invalid{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--axi-destructive);margin-top:1px}
-.row .val .proposal{display:inline-flex;gap:6px;align-items:center;margin-top:4px;padding:3px 8px 3px 6px;border-radius:999px;border:1px dashed color-mix(in srgb, var(--axi-violet) 45%, var(--border));font-size:12px;color:var(--foreground)}
-.row .val .proposal .ic{color:var(--axi-violet)}
-.src{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted-foreground);white-space:nowrap}
-.src .ic{color:var(--muted-foreground)} .src.ia .ic{color:var(--axi-violet)}
-.src small{font-size:11px;opacity:.85}
-.acts{display:flex;gap:2px;justify-content:flex-end}
-.acts .btn{color:var(--muted-foreground)}
-.acts .btn:hover{color:var(--foreground)}
-.acts .btn.danger:hover{color:var(--axi-destructive)}
-.row.hl{animation:hl 2.4s var(--ease) both}
+.summary{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--muted-foreground);margin:2px 0 6px}
+.summary .bar{flex:1;height:3px;border-radius:999px;background:var(--secondary);overflow:hidden;max-width:220px}
+.summary .bar i{display:block;height:100%;width:78%;border-radius:999px;background:var(--axi-brand)}
+.summary b{color:var(--foreground);font-weight:500}
+.summary .rev{display:inline-flex;gap:6px;align-items:center}
+.summary .rev::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--axi-warning)}
+.group{margin-top:18px}
+.group h3{font-family:var(--font-body);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--border-soft)}
+.list{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:180px minmax(0,1fr) auto;gap:4px 20px;align-items:start;padding:11px 0;border-bottom:1px solid var(--border-soft);position:relative}
+.item:last-child{border-bottom:none}
+.item .k{font-size:13px;color:var(--muted-foreground);padding-top:1px;line-height:1.4}
+.item .v{min-width:0}
+.item .v .t{font-size:14px;font-weight:500;line-height:1.4;display:flex;align-items:center;gap:6px;min-width:0}
+.item .v .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .v .t .ok{color:var(--axi-success);flex:none}
+.item.missing .v .t span{color:var(--muted-foreground);font-weight:400}
+.item .v .m{font-size:12px;color:var(--muted-foreground);line-height:1.45;margin-top:1px;display:flex;flex-wrap:wrap;gap:0 6px;align-items:center}
+.item .v .m .ic{color:var(--axi-violet);margin-right:-2px}
+.item .v .m.rev::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--axi-warning);margin-right:2px;flex:none}
+.item .v .m .lnk{color:var(--foreground);font-weight:500;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border)}
+.item .v .m .lnk:hover{text-decoration-color:var(--foreground)}
+.item .v .m .sep{opacity:.5}
+.item .a{display:flex;gap:2px;opacity:0;transition:opacity .15s;margin-top:-4px}
+.item:hover .a,.item:focus-within .a,.item.show .a{opacity:1}
+.item .a .btn{color:var(--muted-foreground)} .item .a .btn:hover{color:var(--foreground)}
+.item.hl{animation:hl 2.4s var(--ease) both;margin:0 -14px;padding-left:14px;padding-right:14px;border-radius:10px}
 @keyframes hl{0%{background:var(--accent)}100%{background:transparent}}
-.row.hl{margin:0 -12px;padding-left:12px;padding-right:12px;border-radius:10px}
-.lock{color:var(--muted-foreground)}
-.missing .row{grid-template-columns:minmax(150px,1.1fr) minmax(0,1.6fr) 130px 150px auto}
-.tries{display:inline-flex;gap:5px;align-items:center;font-size:12px;color:var(--axi-warning)}
-.tries.calm{color:var(--muted-foreground)}
-details.sys{margin-top:14px}
-details.sys summary{list-style:none;cursor:pointer;font-size:12.5px;color:var(--muted-foreground);display:inline-flex;gap:6px;align-items:center}
-details.sys summary::-webkit-details-marker{display:none}
-details.sys[open] summary .ic{transform:rotate(90deg)}
-details.sys .rows{margin-top:6px;opacity:.85}
-.foot-note{font-size:12px;color:var(--muted-foreground);margin-top:12px;display:flex;gap:6px;align-items:flex-start}
-.foot-note .ic{margin-top:2px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted-foreground)}
-
+.tech{margin-top:14px;font-size:12px;color:var(--muted-foreground)}
+.tech a{color:inherit;text-underline-offset:3px;text-decoration-color:var(--border)}
+/* menú ⋯ de la fila (dropdown propio, glass) */
+.rowmenu{position:absolute;right:0;top:38px;z-index:20;width:220px;padding:4px;border-radius:12px;border:1px solid var(--border);background:color-mix(in srgb, var(--background) 72%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-float);display:flex;flex-direction:column;animation:pop .18s var(--ease) both}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(-3px)}}
+.rowmenu button{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;font-size:13px;text-align:left}
+.rowmenu button:hover{background:var(--accent)}
+.rowmenu button .ic{color:var(--muted-foreground)}
+.rowmenu button.danger{color:var(--axi-destructive)} .rowmenu button.danger .ic{color:var(--axi-destructive)}
+.rowmenu .sep{height:1px;background:var(--border);margin:4px 6px}
 /* edición inline */
-.row.editing{background:var(--secondary);margin:0 -12px;padding:10px 12px;border-radius:12px;border-top-color:transparent}
-.field{display:flex;gap:8px;align-items:center;min-width:0}
-.select,.input{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;height:32px;padding:0 10px;border-radius:10px;border:1px solid var(--input);background:var(--background);color:var(--foreground);font-size:13px;min-width:0}
-.select{min-width:190px}
+.item.editing{background:var(--secondary);margin:0 -14px;padding:12px 14px;border-radius:12px;border-bottom-color:transparent}
+.item.editing .k{padding-top:7px}
+.edit{display:flex;flex-direction:column;gap:8px;min-width:0}
+.edit .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.select,.input{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--input);background:var(--background);color:var(--foreground);font-size:13.5px;min-width:0}
+.select{min-width:220px}
 .input{flex:1}
-.field .hint{font-size:11.5px;color:var(--muted-foreground);white-space:nowrap}
-.listbox{position:absolute;z-index:20;margin-top:4px;width:220px;padding:4px;border-radius:12px;border:1px solid var(--border);background:color-mix(in srgb, var(--background) 82%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-float);display:flex;flex-direction:column}
+.edit .ctl .btn{height:34px}
+.edit .hint{font-size:12px;color:var(--muted-foreground)}
+.rel{position:relative}
+.listbox{position:absolute;z-index:20;left:0;top:38px;width:220px;padding:4px;border-radius:12px;border:1px solid var(--border);background:color-mix(in srgb, var(--background) 82%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-float);display:flex;flex-direction:column}
 .listbox div{padding:7px 10px;border-radius:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
 .listbox div[aria-selected="true"]{background:var(--accent)}
 .listbox div .ic{color:var(--axi-brand)}
-.rel{position:relative}
-
-/* diálogo de rechazo (ui/dialog.tsx) */
-.overlay{position:absolute;inset:0;z-index:30;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:120px 16px 48px}
-.modal{position:relative;width:100%;max-width:460px;border-radius:var(--radius-xl);border:1px solid var(--border);background:color-mix(in srgb, var(--background) 82%, transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-overlay);padding:28px;display:flex;flex-direction:column;gap:14px;animation:rise .28s var(--ease) both}
+/* diálogo de rechazo */
+.overlay{position:absolute;inset:0;z-index:30;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:140px 16px 48px}
+.modal{position:relative;width:100%;max-width:440px;border-radius:var(--radius-xl);border:1px solid var(--border);background:color-mix(in srgb, var(--background) 82%, transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-overlay);padding:28px;display:flex;flex-direction:column;gap:12px;animation:rise .28s var(--ease) both}
 @keyframes rise{from{opacity:0;transform:translateY(8px) scale(.985)}}
-.modal h2{font-size:20px}
+.modal h2{font-size:19px}
 .modal p{color:var(--muted-foreground);font-size:13.5px}
-.modal .quote{padding:10px 12px;border-radius:10px;background:var(--secondary);font-size:13px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
-.modal .quote dt{color:var(--muted-foreground)} .modal .quote dd{margin:0}
-.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+/* rail (variante compacta): etiqueta encima del valor */
+.ritem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;padding:7px 0;border-bottom:1px solid var(--border-soft);position:relative}
+.ritem:last-child{border-bottom:none}
+.ritem .k,.ritem .t{grid-column:1}
+.ritem .k{font-size:11.5px;color:var(--muted-foreground);letter-spacing:.01em}
+.ritem .t{font-size:13.5px;font-weight:500;display:flex;gap:6px;align-items:center;min-width:0}
+.ritem .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ritem .t .ok{color:var(--axi-success);flex:none}
+.ritem.missing .t span{color:var(--muted-foreground);font-weight:400}
+.ritem .m{grid-column:1;font-size:11.5px;color:var(--muted-foreground);display:flex;gap:0 5px;align-items:center;flex-wrap:wrap}
+.ritem .m .ic{color:var(--axi-violet)}
+.ritem .m.rev::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--axi-warning);margin-right:2px}
+.ritem .m .lnk{color:var(--foreground);font-weight:500;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--border)}
+.ritem .a{grid-row:1 / span 3;align-self:center;display:flex;gap:0;opacity:0;transition:opacity .15s}
+.ritem:hover .a,.ritem.show .a{opacity:1}
+.ritem .a .btn{color:var(--muted-foreground)}
+.ritem.hl{animation:hl 2.4s var(--ease) both;margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:10px}
+.rsummary{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted-foreground)}
+.rsummary .bar{flex:1;height:3px;border-radius:999px;background:var(--secondary);overflow:hidden}
+.rsummary .bar i{display:block;height:100%;width:78%;border-radius:999px;background:var(--axi-brand)}
+.rsummary b{color:var(--foreground);font-weight:500}
+.rgroup{margin-top:14px}
+.rgroup h3{font-family:var(--font-body);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600;padding-bottom:4px;margin-bottom:2px;border-bottom:1px solid var(--border-soft)}
+.sess{display:flex;flex-direction:column}
+.sess a{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border-soft);text-decoration:none;font-size:13px}
+.sess a:last-child{border-bottom:none}
+.sess a .ic{color:var(--muted-foreground)}
+.sess b{font-weight:500}
+.sess small{color:var(--muted-foreground);font-size:11.5px;margin-left:6px}
+.sess .go{color:var(--muted-foreground)}
 
 /* ===================== inbox: rail de contexto ===================== */
 .inbox{display:grid;grid-template-columns:1fr 48px 340px;height:calc(100vh - 44px);min-height:640px;border-top:1px solid var(--border)}
@@ -311,25 +341,6 @@ details.sys .rows{margin-top:6px;opacity:.85}
 .panel .who .sub{justify-content:center}
 .fl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px}
 .fl dt{color:var(--muted-foreground)} .fl dd{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* variante rail del panel: filas apiladas */
-.rrows{display:flex;flex-direction:column}
-.rrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--border-soft);align-items:start}
-.rrow:first-child{border-top:none}
-.rrow .lbl{font-size:12px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center}
-.rrow .lbl .ic{color:var(--muted-foreground)} .rrow .lbl.ia .ic{color:var(--axi-violet)}
-.rrow .v{font-size:13.5px;grid-column:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rrow .v.empty{color:var(--muted-foreground)}
-.rrow .meta{grid-column:1;font-size:11.5px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.rrow .meta .ic{color:var(--axi-violet)}
-.rrow .side{grid-row:1 / span 3;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.rrow .acts{opacity:.9}
-.rrow.hl{animation:hl 2.4s var(--ease) both;margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:10px}
-.sess{display:flex;flex-direction:column;gap:6px}
-.sess a{display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid var(--border);text-decoration:none}
-.sess a:hover{background:var(--secondary)}
-.sess .sq{width:32px;height:32px;border-radius:9px;background:var(--secondary);display:grid;place-items:center;color:var(--foreground)}
-.sess b{display:block;font-weight:500;font-size:13px;line-height:1.25}
-.sess small{display:block;color:var(--muted-foreground);font-size:11.5px}
 .toast{position:absolute;right:360px;bottom:84px;z-index:35;width:300px;display:grid;grid-template-columns:20px 1fr;gap:10px;padding:12px 14px;border-radius:var(--radius-lg);border:1px solid var(--border);background:color-mix(in srgb, var(--background) 82%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow-overlay);animation:rise .28s var(--ease) both;font-size:13px}
 .toast .ic{color:var(--axi-violet);margin-top:1px}
 .toast b{display:block;font-weight:500}
@@ -348,22 +359,24 @@ tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--secondary)}
 td .who{gap:10px} td .who b{display:block;font-weight:500;line-height:1.25} td .who small{display:block;color:var(--muted-foreground);font-size:12px}
 .pager{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted-foreground)}
-.datacell{display:inline-flex;flex-direction:column;gap:2px}
-.datacell small{font-size:11.5px;color:var(--muted-foreground)}
+.datacell{display:inline-flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.datacell i{width:7px;height:7px;border-radius:50%;background:var(--axi-success)}
+.datacell.rev i{background:var(--axi-warning)} .datacell.none i{background:var(--muted-foreground);opacity:.4}
+.datacell small{color:var(--muted-foreground);font-size:12px}
 
 /* estado vacío */
-.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 16px}
-.empty .glyph{width:64px;height:64px;border-radius:20px;background:var(--secondary);display:grid;place-items:center;color:var(--axi-violet)}
+.empty{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:8px;padding:6px 0 2px}
+.empty .glyph{display:none}
 .empty h3{font-size:15px;font-family:var(--font-body);font-weight:600;letter-spacing:0}
 .empty p{color:var(--muted-foreground);font-size:13px;max-width:44ch}
 
 @media (max-width:900px){
-  .row,.missing .row{grid-template-columns:minmax(0,1fr) auto;grid-auto-rows:auto}
-  .row .val{grid-column:1 / -1} .row .src,.row .badge{grid-column:1} .row .acts{grid-column:2;grid-row:1}
+  .item{grid-template-columns:minmax(0,1fr) auto} .item .k{grid-column:1 / -1;padding-top:0} .item .a{opacity:1}
   .inbox{grid-template-columns:1fr;height:auto} .chat,.rail{display:none} .toast{right:16px}
 }
 @media (prefers-reduced-motion: reduce){
-  .modal,.toast,.row.hl,.rrow.hl{animation:none!important;opacity:1!important;transform:none!important}
+  .modal,.toast,.item.hl,.ritem.hl,.rowmenu{animation:none!important;opacity:1!important;transform:none!important}
+  .item .a,.ritem .a{opacity:1}
 }
 """
 
@@ -389,75 +402,49 @@ def crm_nav(active: str = "Contactos") -> str:
     ) + "</nav>"
 
 
-SRC_META = {
-    "ai_agent": ("Agente IA", "sparkles", "ia"),
-    "user": ("Operador", "user-round", ""),
-    "import": ("Importación", "upload", ""),
-    "public_form": ("Formulario web", "globe", ""),
-    "integration": ("Integración", "plug", ""),
-    "merge": ("Fusión", "git-merge", ""),
-}
+SRC_LABEL = {"ai_agent": "Agente IA", "user": "", "import": "Importación", "public_form": "Formulario web", "integration": "Integración", "merge": "Fusión"}
 
 
-def src(kind: str, when: str = "", who: str = "") -> str:
-    label, icon, cls = SRC_META[kind]
-    detail = who or when
-    return f'<span class="src {cls}">{ic(icon, size=14)}<span>{label}{f"<br><small>{detail}</small>" if detail else ""}</span></span>'
+def meta(kind: str, when: str, who: str = "", extra: str = "", rev: bool = False) -> str:
+    """Línea secundaria: quién · cuándo (· detalle). Una sola línea, texto atenuado."""
+    parts = []
+    if kind == "ai_agent":
+        parts.append(f'{ic("sparkles", size=11)} Agente IA')
+    elif kind == "user":
+        parts.append(who)
+    else:
+        parts.append(SRC_LABEL[kind])
+    parts.append(f'<span class="sep">·</span> {when}')
+    if extra:
+        parts.append(f'<span class="sep">·</span> {extra}')
+    return f'<div class="m {"rev" if rev else ""}">{" ".join(parts)}</div>'
 
 
-def state(kind: str) -> str:
-    return {
-        "captured": badge("Capturado", "off"),
-        "confirmed": badge("Confirmado", "ok"),
-        "corrected": badge("Corregido", "ok"),
-        "invalid": badge("Inválido", "warn"),
-        "missing": badge("Falta", "warn"),
-        "proposal": badge("Propuesta pendiente", "warn"),
-        "undefined": badge("Sin definir", "off"),
-    }[kind]
+def act_btn(icon: str, title: str) -> str:
+    return f'<button class="btn ghost icon xs" title="{title}" aria-label="{title}">{ic(icon, size=14)}</button>'
 
 
-def acts(*names: str) -> str:
-    meta = {
-        "confirm": ("check", "Confirmar", ""),
-        "edit": ("pencil", "Corregir", ""),
-        "reject": ("x", "Rechazar", "danger"),
-        "release": ("lock-open", "Liberar (permitir que el agente lo actualice)", ""),
-        "apply": ("sparkles", "Aplicar la propuesta del agente", ""),
-        "add": ("plus", "Añadir al formulario de captura", ""),
-    }
-    out = ""
-    for n in names:
-        icon, title, cls = meta[n]
-        out += f'<button class="btn ghost icon xs {cls}" title="{title}" aria-label="{title}">{ic(icon, size=14)}</button>'
-    return f'<div class="acts">{out}</div>'
+def actions(*kinds: str, menu: bool = False) -> str:
+    m = {"confirm": ("check", "Confirmar"), "edit": ("pencil", "Corregir"), "more": ("ellipsis", "Más")}
+    html = "".join(act_btn(*m[k]) for k in kinds)
+    if menu:
+        html += f"""<div class="rowmenu" role="menu">
+          <button role="menuitem">{ic("history", size=14)}Ver historial</button>
+          <button role="menuitem">{ic("lock-open", size=14)}Dejar que el agente lo actualice</button>
+          <div class="sep"></div>
+          <button role="menuitem" class="danger">{ic("trash-2", size=14)}Rechazar dato</button>
+        </div>"""
+    return f'<div class="a">{html}</div>'
 
 
-def lbl(label: str, code: str, flow: str = "", required: bool = False, protected: bool = False, undefined: bool = False) -> str:
-    bits = [f"<code>{code}</code>"]
-    if flow:
-        bits.append(f"· {flow}")
-    if required:
-        bits.append("· obligatorio")
-    if undefined:
-        bits.append("· sin formulario")
-    lock = f' {ic("lock", "lock", size=12)}' if protected else ""
-    return f'<div class="lbl"><b>{label}{lock}</b><small>{" ".join(bits)}</small></div>'
+def item(label: str, value: str, m: str, acts: str = "", verified: bool = False, cls: str = "") -> str:
+    ok = f'{ic("circle-check", "ok", size=14)}' if verified else ""
+    return f'<div class="item {cls}"><div class="k">{label}</div><div class="v"><div class="t"><span>{value}</span>{ok}</div>{m}</div>{acts}</div>'
 
 
-def val(v: str, said: str = "", invalid: str = "", proposal: str = "", empty: bool = False) -> str:
-    extra = ""
-    if said:
-        extra += f'<span class="said">{ic("sparkles", size=12)}dijo «{said}»</span>'
-    if invalid:
-        extra += f'<span class="invalid">{ic("circle-alert", size=12)}{invalid}</span>'
-    if proposal:
-        extra += f'<span class="proposal">{ic("sparkles", size=12)}El agente propone: <b>{proposal}</b></span>'
-    return f'<div class="val {"empty" if empty else ""}"><span class="v">{v}</span>{extra}</div>'
-
-
-def row(label_html: str, value_html: str, source_html: str, state_html: str, acts_html: str, cls: str = "") -> str:
-    return f'<div class="row {cls}">{label_html}{value_html}{source_html}{state_html}{acts_html}</div>'
+def ritem(label: str, value: str, m: str, acts: str = "", verified: bool = False, cls: str = "") -> str:
+    ok = f'{ic("circle-check", "ok", size=13)}' if verified else ""
+    return f'<div class="ritem {cls}"><div class="k">{label}</div><div class="t"><span>{value}</span>{ok}</div>{m}{acts}</div>'
 
 
 # ----------------------------------------------------------------------------- 360
@@ -507,76 +494,68 @@ def summary_grid() -> str:
     </div>"""
 
 
-def data_rows(editing: bool = False, live: bool = False) -> str:
-    rows = [
-        row(lbl("Empresa", "company_name", "Registro", required=True), val("Kodecol"), src("ai_agent", "hoy 10:12"), state("captured"), acts("confirm", "edit", "reject"), "hl" if live else ""),
-        (
-            row(
-                lbl("Sector", "sector", "Registro", required=True, protected=True),
-                f"""<div class="val rel"><div class="field"><span class="select" aria-expanded="true">Tecnología {ic("chevron-down", size=14)}</span><span class="hint">Enter guarda · Esc cancela</span></div>
-                    <div class="listbox" role="listbox"><div>Salud</div><div aria-selected="true">Tecnología {ic("check", size=14)}</div><div>Retail</div><div>Educación</div><div>Servicios</div></div></div>""",
-                src("user", "Isabel · ahora"),
-                state("corrected"),
-                f'<div class="acts">{btn("Guardar", "", "sm")}{btn("Cancelar", "", "ghost sm")}</div>',
-                "editing",
-            )
-            if editing
-            else row(lbl("Sector", "sector", "Registro", required=True, protected=True), val("Salud", said="salud tecnologia"), src("ai_agent", "hoy 10:12"), state("captured"), acts("confirm", "edit", "reject"))
-        ),
-        row(lbl("Ciudad", "city", "Registro"), val("Bogotá"), src("user", "Isabel · ayer"), state("confirmed"), acts("edit", "release")),
-        row(lbl("Correo", "email", "Registro", required=True), val("laura.gomez@kodecol.co"), src("user", "Andrés · 12 sep"), state("corrected"), acts("edit", "release")),
-        row(lbl("Dirección", "address", "Pedido"), val("Cra 7 # 45-10, of 302"), src("import", "12 sep · leads_sept.xlsx"), state("captured"), acts("confirm", "edit", "reject")),
-        row(lbl("Presupuesto mensual", "presupuesto", "Pedido"), val("$ 3.000.000"), src("public_form", "9 sep · contacto-web"), state("captured"), acts("confirm", "edit", "reject")),
-        row(lbl("Tamaño del equipo", "team_size", "Registro", protected=True), val("12 personas", proposal="20 personas"), src("user", "Isabel · 11 sep"), state("proposal"), acts("apply", "edit", "release")),
-        row(lbl("Teléfono alterno", "telefono_alterno", "Registro"), val("—", invalid="«+57 3 00» no es un número marcable", empty=True), src("ai_agent", "hoy 10:14"), state("invalid"), acts("edit")),
-        row(lbl("Instagram", "instagram_user", undefined=True), val("@lauragomez.co"), src("ai_agent", "13 sep"), state("undefined"), acts("add", "edit", "reject")),
-    ]
-    return "".join(rows)
-
-
-def missing_rows() -> str:
-    return "".join(
-        [
-            row(lbl("Fecha de decisión", "fecha_decision", "Pedido", required=True), val("Sin dato", empty=True), f'<span class="tries">{ic("repeat", size=13)}Pedido 3 veces</span>', state("missing"), acts("edit")),
-            row(lbl("NIT", "document_number", "Pedido", required=True), val("Sin dato", empty=True), f'<span class="tries calm">{ic("repeat", size=13)}Aún no pedido</span>', state("missing"), acts("edit")),
-        ]
+def registro_items(mode: str = "rest", live: bool = False) -> str:
+    """mode: rest | hover | edit | menu."""
+    hover_cls = "show" if mode == "hover" else ""
+    sector = item(
+        "Sector", "Salud",
+        meta("ai_agent", "hoy 10:12", extra="dijo «salud tecnologia»"),
+        actions("confirm", "edit", "more"), cls=hover_cls + (" hl" if live else ""),
     )
+    if mode == "edit":
+        sector = f"""<div class="item editing"><div class="k">Sector</div>
+          <div class="edit rel">
+            <div class="ctl"><span class="select" aria-expanded="true">Tecnología {ic("chevron-down", size=14)}</span>{btn("Guardar", "", "sm")}{btn("Cancelar", "", "ghost sm")}</div>
+            <div class="listbox" role="listbox"><div>Salud</div><div aria-selected="true">Tecnología {ic("check", size=14)}</div><div>Retail</div><div>Educación</div><div>Servicios</div></div>
+            <div class="hint" style="margin-top:130px">Al guardar queda verificado: el agente no lo cambiará, solo podrá proponer.</div>
+          </div></div>"""
+    if mode == "menu":
+        sector = item("Sector", "Salud", meta("ai_agent", "hoy 10:12", extra="dijo «salud tecnologia»"), actions("confirm", "edit", "more", menu=True), cls="show")
+    return "".join([
+        item("Empresa", "Kodecol", meta("ai_agent", "hoy 10:12"), actions("confirm", "edit", "more"), cls="hl" if live else ""),
+        sector,
+        item("Ciudad", "Bogotá", meta("user", "ayer", who="Isabel"), actions("edit", "more"), verified=True),
+        item("Correo", "laura.gomez@kodecol.co", meta("user", "12 sep", who="Andrés"), actions("edit", "more"), verified=True),
+        item("Tamaño del equipo", "12 personas",
+             meta("user", "11 sep", who="Isabel", extra=f'{ic("sparkles", size=11)} el agente propone «20 personas» <a class="lnk" href="#">Usar</a> <a class="lnk" href="#">Ignorar</a>', rev=True),
+             actions("edit", "more"), verified=True),
+        item("Teléfono alterno", "Sin dato", meta("ai_agent", "hoy 10:14", extra="recibió «+57 3 00», no es un número válido", rev=True), actions("edit"), cls="missing"),
+        item("Instagram", "@lauragomez.co", meta("ai_agent", "13 sep", extra='campo sin definir <a class="lnk" href="#">Añadir al formulario</a>'), actions("confirm", "edit", "more")),
+    ])
 
 
-def system_rows() -> str:
-    return f"""<details class="sys"><summary>{ic("chevron-right", size=14)}Técnicos (2) · claves de fusiones y del sistema</summary>
-      <div class="rows">
-        {row(lbl("_merged_phone", "_merged_phone"), val("+57 310 555 0199"), src("merge", "8 sep"), state("captured"), "")}
-        {row(lbl("_merged_into", "_merged_into"), val("01a0…c3f2"), src("merge", "8 sep"), state("captured"), "")}
-      </div></details>"""
+def pedido_items() -> str:
+    return "".join([
+        item("Dirección de entrega", "Cra 7 # 45-10, of 302", meta("import", "12 sep", extra="leads_sept.xlsx"), actions("confirm", "edit", "more")),
+        item("Presupuesto mensual", "$ 3.000.000", meta("public_form", "9 sep"), actions("confirm", "edit", "more")),
+        item("Fecha de decisión", "Sin dato", meta("ai_agent", "obligatorio", extra="lo pidió 3 veces sin respuesta", rev=True), actions("edit"), cls="missing"),
+        item("NIT", "Sin dato", '<div class="m">Obligatorio · aún no se ha pedido</div>', actions("edit"), cls="missing"),
+    ])
 
 
-def data_card(editing: bool = False, live: bool = False) -> str:
+def data_card(mode: str = "rest") -> str:
     return f"""
     <section class="card data-card" aria-labelledby="dc-title">
       <div class="card-head">
-        <div><h2 id="dc-title">{ic("clipboard-list", size=16)} Datos recopilados</h2><p class="lead">Lo que el agente, el equipo y los formularios saben de este contacto, con su origen. Lo que confirmes o corrijas queda protegido: el agente solo podrá proponer cambios.</p></div>
-        <div class="right">{btn("Formularios de captura", "settings-2", "outline sm")}</div>
+        <div><h2 id="dc-title">Datos del cliente</h2></div>
+        <div class="right">{btn("Formularios de captura", "", "ghost sm")}</div>
       </div>
-      <h3 class="sect">Recopilados <span class="count">· 9 campos</span></h3>
-      <div class="rows">{data_rows(editing, live)}</div>
-      <h3 class="sect">Faltan <span class="count">· 2 obligatorios</span></h3>
-      <div class="rows missing">{missing_rows()}</div>
-      {system_rows()}
-      <p class="foot-note">{ic("info", size=14)}<span>«Rechazar» borra el dato y deja que el agente lo vuelva a pedir. {ic("lock", size=11)} = protegido por el equipo. Las acciones aparecen al pasar el ratón; en táctil, siempre.</span></p>
+      <div class="summary"><span><b>9 de 11</b> datos</span><span class="bar"><i></i></span><span class="rev">2 por revisar</span></div>
+      <div class="group"><h3>Registro</h3><div class="list">{registro_items(mode)}</div></div>
+      <div class="group"><h3>Pedido</h3><div class="list">{pedido_items()}</div></div>
+      <p class="tech">Lo que verificas queda protegido: el agente solo podrá proponer cambios. <a href="#">2 claves técnicas</a></p>
     </section>"""
 
 
-def view_360(editing: bool = False, dialog: bool = False) -> str:
+def view_360(mode: str = "rest", dialog: bool = False) -> str:
     modal = ""
     if dialog:
         modal = f"""
         <div class="overlay">
           <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rj">
-            <h2 id="rj">¿Rechazar este dato?</h2>
-            <p>Se borra de la ficha y el agente podrá volver a pedirlo en la próxima conversación. Queda en el historial quién lo rechazó.</p>
-            <dl class="quote"><dt>Empresa</dt><dd>Kodecol</dd><dt>Origen</dt><dd>Agente IA · hoy 10:12</dd></dl>
-            <div class="modal-foot">{btn("Cancelar", "", "outline")}{btn("Rechazar dato", "x", "destructive")}</div>
+            <h2 id="rj">¿Rechazar «Kodecol»?</h2>
+            <p>Se borra de la ficha y el agente podrá volver a pedirlo. Queda registrado quién lo rechazó.</p>
+            <div class="modal-foot">{btn("Cancelar", "", "outline")}{btn("Rechazar", "", "destructive")}</div>
           </div>
         </div>"""
     return f"""
@@ -585,19 +564,13 @@ def view_360(editing: bool = False, dialog: bool = False) -> str:
       {crm_nav("Contactos")}
       {header_360()}
       {summary_grid()}
-      {data_card(editing=editing)}
-      <section class="card"><div class="card-head"><div><h2>Historial</h2><p class="lead">Actividades · Oportunidades · Pedidos · Conversaciones · Citas</p></div>{btn("Programar seguimiento", "sparkles", "outline sm")}</div><p class="muted" style="font-size:13px">hoy 10:12 · Conversación · «Datos capturados por el agente: empresa, sector» · ✦ IA</p></section>
+      {data_card(mode)}
+      <section class="card"><div class="card-head"><div><h2>Historial</h2><p class="lead">Actividades · Oportunidades · Pedidos · Conversaciones · Citas</p></div>{btn("Programar seguimiento", "sparkles", "outline sm")}</div><p class="muted" style="font-size:13px">hoy 10:12 · Conversación · el agente guardó empresa y sector · ✦ IA</p></section>
     </div>{modal}"""
 
 
 # ----------------------------------------------------------------------------- inbox
-def chat(live: bool = False) -> str:
-    live_bits = ""
-    if live:
-        live_bits = f"""
-        <div class="bubble in">Sí, trabajo en Kodecol, en el área de salud tecnología<time>10:12</time></div>
-        <div class="tool-note">{ic("sparkles", size=12)}El agente guardó: empresa, sector</div>
-        <div class="bubble out"><span class="who-ia">{ic("sparkles", size=11)}Agente</span>¡Perfecto, Laura! ¿Para cuándo necesitan tener la decisión tomada?<time>10:12</time></div>"""
+def chat() -> str:
     return f"""
     <div class="chat">
       <div class="chat-head">
@@ -609,7 +582,8 @@ def chat(live: bool = False) -> str:
         <span class="day">Hoy</span>
         <div class="bubble in">Hola, quiero cotizar el plan anual para dos sedes<time>10:09</time></div>
         <div class="bubble out"><span class="who-ia">{ic("sparkles", size=11)}Agente</span>¡Hola! Con gusto. Para armarte la propuesta, ¿me confirmas el nombre de tu empresa y el sector en el que trabajan?<time>10:10</time></div>
-        {live_bits or f'<div class="bubble in">Sí, trabajo en Kodecol, en el área de salud tecnología<time>10:12</time></div><div class="bubble out"><span class="who-ia">{ic("sparkles", size=11)}Agente</span>¡Perfecto, Laura! ¿Para cuándo necesitan tener la decisión tomada?<time>10:12</time></div>'}
+        <div class="bubble in">Sí, trabajo en Kodecol, en el área de salud tecnología<time>10:12</time></div>
+        <div class="bubble out"><span class="who-ia">{ic("sparkles", size=11)}Agente</span>¡Perfecto, Laura! ¿Para cuándo necesitan tener la decisión tomada?<time>10:12</time></div>
       </div>
       <div class="composer"><span class="input">Escribe un mensaje…</span>{btn("", "send", "icon", 'aria-label="Enviar"')}</div>
     </div>"""
@@ -625,41 +599,36 @@ def rail_icons() -> str:
     </aside>"""
 
 
-def rrow(label: str, kind: str, value: str, meta: str, st: str, actions: str, cls: str = "", icon: str = "") -> str:
-    lab, ico, c = SRC_META[kind] if kind in SRC_META else (label, icon, "")
-    return f"""<div class="rrow {cls}">
-      <div class="lbl {c}">{ic(ico, size=12)}{label}</div>
-      <div class="v {'empty' if value == 'Sin dato' else ''}">{value}</div>
-      <div class="meta">{meta}</div>
-      <div class="side">{st}{actions}</div>
-    </div>"""
+def rmeta(kind: str, when: str, who: str = "", extra: str = "", rev: bool = False) -> str:
+    return meta(kind, when, who, extra, rev)
 
 
 def contact_panel(live: bool = False) -> str:
-    new_row = rrow("Sector", "ai_agent", "Salud", f'{ic("sparkles", size=11)}dijo «salud tecnologia» · Agente IA · ahora', state("captured"), acts("confirm", "edit"), "hl" if live else "")
+    ra = lambda *k: f'<div class="a">{"".join(act_btn(*{"confirm": ("check", "Confirmar"), "edit": ("pencil", "Corregir")}[x]) for x in k)}</div>'
     return f"""
     <section class="panel" aria-label="Contacto">
       <div class="panel-head"><span>Contacto</span>{btn("", "x", "ghost icon sm", 'aria-label="Cerrar"')}</div>
       <div class="panel-body">
         <div class="who"><div class="av">LG</div><div><p style="font-weight:500">Laura Gómez</p><div class="sub">{badge("Lead", "lead")}<span class="tnum">Score 60</span></div></div></div>
-        <dl class="fl"><dt>Teléfono</dt><dd>+57 300 123 4567</dd><dt>Email</dt><dd>laura.gomez@kodecol.co</dd><dt>Ciudad</dt><dd>Bogotá</dd><dt>Origen</dt><dd>Conversación</dd></dl>
+        <dl class="fl"><dt>Teléfono</dt><dd>+57 300 123 4567</dd><dt>Email</dt><dd>laura.gomez@kodecol.co</dd><dt>Ciudad</dt><dd>Bogotá</dd></dl>
         <div>
-          <h3 class="sect" style="margin-top:0">{ic("clipboard-list", size=13)} Datos recopilados <span class="count">· 6</span></h3>
-          <div class="rrows">
-            {rrow("Empresa", "ai_agent", "Kodecol", "Agente IA · hoy 10:12", state("captured"), acts("confirm", "edit"), "hl" if live else "")}
-            {new_row}
-            {rrow("Tamaño del equipo", "user", "12 personas", f'{ic("sparkles", size=11)}Propuesta del agente: 20 personas', state("proposal"), acts("apply", "edit"))}
-            {rrow("Presupuesto mensual", "public_form", "$ 3.000.000", "Formulario web · 9 sep", state("captured"), acts("confirm", "edit"))}
+          <div class="rsummary"><span><b>9 de 11</b> datos</span><span class="bar"><i></i></span><span>2 por revisar</span></div>
+          <div class="rgroup"><h3>Registro</h3>
+            {ritem("Empresa", "Kodecol", rmeta("ai_agent", "ahora"), ra("confirm", "edit"), cls="hl" if live else "")}
+            {ritem("Sector", "Salud", rmeta("ai_agent", "ahora", extra="dijo «salud tecnologia»"), ra("confirm", "edit"), cls="hl" if live else "")}
+            {ritem("Tamaño del equipo", "12 personas", rmeta("user", "11 sep", who="Isabel", extra=f'{ic("sparkles", size=11)} propone «20» <a class="lnk" href="#">Usar</a>', rev=True), ra("edit"), verified=True)}
+            {ritem("Teléfono alterno", "Sin dato", rmeta("ai_agent", "hoy", extra="número no válido", rev=True), ra("edit"), cls="missing")}
           </div>
-          <h3 class="sect">Faltan <span class="count">· 2 obligatorios</span></h3>
-          <div class="rrows">
-            {rrow("Fecha de decisión", "ai_agent", "Sin dato", f'<span class="tries">{ic("repeat", size=12)}Pedido 3 veces</span>', state("missing"), acts("edit"))}
-            {rrow("NIT", "ai_agent", "Sin dato", '<span class="tries calm">Aún no pedido</span>', state("missing"), acts("edit"))}
+          <div class="rgroup"><h3>Pedido</h3>
+            {ritem("Presupuesto mensual", "$ 3.000.000", rmeta("public_form", "9 sep"), ra("confirm", "edit"))}
+            {ritem("Fecha de decisión", "Sin dato", rmeta("ai_agent", "obligatorio", extra="pedido 3 veces", rev=True), ra("edit"), cls="missing")}
+            {ritem("NIT", "Sin dato", '<div class="m">Obligatorio · aún no pedido</div>', ra("edit"), cls="missing")}
           </div>
-          <h3 class="sect">De esta conversación</h3>
-          <div class="sess">
-            <a href="#"><span class="sq">{ic("shopping-cart", size=15)}</span><span><b>Pedido en borrador</b><small>2 productos · $ 180.000</small></span>{ic("chevron-right", size=14)}</a>
-            <a href="#"><span class="sq">{ic("calendar", size=15)}</span><span><b>Cita propuesta</b><small>jue 18 sep · 10:00</small></span>{ic("chevron-right", size=14)}</a>
+          <div class="rgroup"><h3>En esta conversación</h3>
+            <div class="sess">
+              <a href="#">{ic("shopping-cart", size=15)}<span><b>Pedido en borrador</b><small>2 productos · $ 180.000</small></span>{ic("chevron-right", "go", size=14)}</a>
+              <a href="#">{ic("calendar", size=15)}<span><b>Cita propuesta</b><small>jue 18 sep · 10:00</small></span>{ic("chevron-right", "go", size=14)}</a>
+            </div>
           </div>
         </div>
       </div>
@@ -670,19 +639,19 @@ def contact_panel(live: bool = False) -> str:
 def view_inbox(live: bool = False) -> str:
     toast = ""
     if live:
-        toast = f'<div class="toast" role="status">{ic("sparkles", size=16)}<div><b>El agente guardó 2 datos</b><small>Empresa y sector · la ficha se actualizó</small></div></div>'
-    return f'<div class="inbox">{chat(live)}{rail_icons()}{contact_panel(live)}</div>{toast}'
+        toast = f'<div class="toast" role="status">{ic("sparkles", size=16)}<div><b>El agente guardó empresa y sector</b><small>La ficha se actualizó</small></div></div>'
+    return f'<div class="inbox">{chat()}{rail_icons()}{contact_panel(live)}</div>{toast}'
 
 
 # ----------------------------------------------------------------------------- tabla
 CONTACTS = [
-    ("LG", "Laura Gómez", "+57 300 123 4567", "Lead", "lead", "Bogotá", "Conversación", ("warn", "Faltan 2", "9 recopilados")),
-    ("AR", "Andrés Ruiz", "+57 315 880 2211", "Cliente", "customer", "Medellín", "Conversación", ("ok", "Completo", "5 recopilados")),
-    ("CT", "Camila Torres", "camila.t@correo.com", "Prospecto", "prospect", "Cali", "Formulario web", ("ok", "Completo", "3 recopilados")),
-    ("JP", "Julián Pardo", "+57 301 456 7890", "Lead", "lead", "Bogotá", "Importación", ("warn", "Faltan 4", "1 recopilado")),
-    ("VM", "Valentina Mora", "+57 320 998 1122", "Prospecto", "prospect", "Barranquilla", "Manual", ("warn", "Faltan 3", "2 recopilados")),
-    ("SV", "Santiago Vélez", "+57 310 224 6688", "Cliente", "customer", "Bucaramanga", "Integración", ("ok", "Completo", "4 recopilados")),
-    ("MC", "Mariana Castro", "mcastro@empresa.co", "Lead", "lead", "Pereira", "Captación", ("off", "Sin datos", "sin formulario activo")),
+    ("LG", "Laura Gómez", "+57 300 123 4567", "Lead", "lead", "Bogotá", "Conversación", ("rev", "9 / 11", "2 por revisar")),
+    ("AR", "Andrés Ruiz", "+57 315 880 2211", "Cliente", "customer", "Medellín", "Conversación", ("", "5 / 5", "")),
+    ("CT", "Camila Torres", "camila.t@correo.com", "Prospecto", "prospect", "Cali", "Formulario web", ("", "3 / 3", "")),
+    ("JP", "Julián Pardo", "+57 301 456 7890", "Lead", "lead", "Bogotá", "Importación", ("rev", "1 / 5", "")),
+    ("VM", "Valentina Mora", "+57 320 998 1122", "Prospecto", "prospect", "Barranquilla", "Manual", ("rev", "2 / 5", "")),
+    ("SV", "Santiago Vélez", "+57 310 224 6688", "Cliente", "customer", "Bucaramanga", "Integración", ("", "4 / 4", "")),
+    ("MC", "Mariana Castro", "mcastro@empresa.co", "Lead", "lead", "Pereira", "Captación", ("none", "—", "")),
 ]
 
 
@@ -693,7 +662,7 @@ def view_table() -> str:
           <td>{badge(stage, cls)}</td>
           <td>{city}</td>
           <td class="muted">{source}</td>
-          <td><span class="datacell">{badge(d[1], d[0])}<small>{d[2]}</small></span></td>
+          <td><span class="datacell {d[0]}"><i></i>{d[1]}{f'<small>{d[2]}</small>' if d[2] else ''}</span></td>
           <td class="muted tnum">14 sep</td>
           <td>{btn("", "ellipsis-vertical", "ghost icon sm", 'aria-label="Acciones"')}</td>
         </tr>"""
@@ -707,14 +676,14 @@ def view_table() -> str:
         <span class="input">{ic("search", size=15)} Buscar por nombre, teléfono o correo…</span>
         <span class="select">Etapa {ic("chevron-down", size=14)}</span>
         <span class="select">Origen {ic("chevron-down", size=14)}</span>
-        <span class="select on">{ic("clipboard-list", size=14)} Datos: incompletos {ic("x", size=14)}</span>
+        <span class="select on">Datos incompletos {ic("x", size=14)}</span>
         <span class="select">Más filtros {ic("chevron-down", size=14)}</span>
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>Contacto</th><th>Etapa</th><th>Ciudad</th><th>Origen</th><th>Datos</th><th>Creado</th><th></th></tr></thead>
         <tbody>{rows}</tbody>
       </table></div>
-      <div class="pager"><span>Mostrando 7 de 268 contactos · 3 con datos incompletos</span><span>1 · 2 · 3 … 11</span></div>
+      <div class="pager"><span>Mostrando 7 de 268 contactos</span><span>1 · 2 · 3 … 11</span></div>
     </div>"""
 
 
@@ -725,25 +694,25 @@ def view_empty() -> str:
       {crm_nav("Contactos")}
       <div class="header"><div class="who"><div class="av">MC</div><div><h1>Mariana Castro</h1><div class="sub">{badge("Lead", "lead")}<span>{ic("mail", size=13)} mcastro@empresa.co</span><span>{ic("map-pin", size=13)} Pereira</span></div></div></div></div>
       <section class="card data-card">
-        <div class="card-head"><div><h2>{ic("clipboard-list", size=16)} Datos recopilados</h2><p class="lead">Lo que el agente, el equipo y los formularios saben de este contacto, con su origen.</p></div></div>
+        <div class="card-head"><div><h2>Datos del cliente</h2></div></div>
         <div class="empty">
-          <div class="glyph">{ic("clipboard-list", size=28)}</div>
-          <h3>Tu agente todavía no pide datos</h3>
-          <p>Define en Formularios de captura qué debe conseguir el agente antes de cerrar un pedido o una cita. Lo que recoja aparecerá aquí, con su origen y estado.</p>
-          {btn("Configurar formularios de captura", "settings-2", "outline sm")}
+          <p>Tu agente aún no pide datos a los clientes. Define qué debe conseguir antes de cerrar un pedido o una cita y lo verás aquí, con su origen.</p>
+          {btn("Configurar formularios de captura", "", "outline sm")}
         </div>
       </section>
     </div>"""
 
 
 VIEWS = [
-    ("card", "1 · Card 360", view_360(), "La card «Datos recopilados» entra en el Contacto 360 entre el resumen y el historial. Cada fila: dato · valor · origen · estado · acciones. El candado marca lo protegido por el equipo; «dijo …» enseña lo que el cliente escribió cuando el agente lo interpretó."),
-    ("edit", "2 · Corregir", view_360(editing=True), "Corregir en línea: el control depende del tipo del campo (aquí un select con las opciones del formulario). Al guardar, el dato queda Corregido · Operador y protegido: el agente solo podrá proponer."),
-    ("reject", "3 · Rechazar", view_360(dialog=True), "Rechazar pide confirmación: borra el valor, NO protege el campo y el agente puede volver a pedirlo. Destructivo en rojo, nunca coral."),
-    ("rail", "4 · Rail del inbox", view_inbox(), "La misma información en el rail de contexto (variante compacta): recopilados, faltan (con cuántas veces lo pidió el agente) y «De esta conversación» con el pedido en borrador y la cita propuesta."),
-    ("live", "5 · En vivo", view_inbox(live=True), "El agente acaba de guardar dos datos en la conversación: las filas aparecen resaltadas sin recargar (llega `contact.updated` por WebSocket) y el aviso lo dice."),
-    ("table", "6 · Tabla", view_table(), "Columna «Datos» en /crm/contacts (Completo · Faltan N · Sin datos) con un filtro «Datos: incompletos». El conteo lo dan los formularios activos."),
-    ("empty", "7 · Vacío", view_empty(), "Tenant sin formularios de captura: la card explica qué hacer y lleva a configurarlos. Sin ámbar, sin tinte."),
+    ("card", "1 · Ficha", view_360("rest"), "«Datos del cliente» en el 360: una lista etiqueta → valor agrupada como los formularios (Registro · Pedido). Debajo de cada valor, una sola línea con quién lo dio y cuándo. La marca verde = verificado por el equipo; el punto ámbar = algo por revisar; lo que falta aparece en su sitio como «Sin dato». Arriba, un resumen de una línea."),
+    ("hover", "2 · Al pasar el ratón", view_360("hover"), "Las acciones solo aparecen al pasar el ratón por la fila (en táctil, siempre): confirmar, corregir y un menú con historial, liberar y rechazar."),
+    ("menu", "3 · Menú ⋯", view_360("menu"), "El menú de la fila: ver historial, dejar que el agente lo actualice (liberar) y rechazar en rojo."),
+    ("edit", "4 · Corregir", view_360("edit"), "Corregir en línea: el control depende del tipo del campo (aquí un select con las opciones del formulario). Al guardar queda verificado y protegido: el agente solo podrá proponer."),
+    ("reject", "5 · Rechazar", view_360("rest", dialog=True), "Rechazar pide confirmación breve: borra el dato y el agente puede volver a pedirlo. Destructivo en rojo, nunca coral."),
+    ("rail", "6 · Rail del inbox", view_inbox(), "La misma lista, compacta, en el rail de contexto: resumen, Registro, Pedido y «En esta conversación» (pedido en borrador, cita propuesta)."),
+    ("live", "7 · En vivo", view_inbox(live=True), "El agente acaba de guardar empresa y sector: las filas se resaltan sin recargar (llega contact.updated por WebSocket)."),
+    ("table", "8 · Tabla", view_table(), "Columna «Datos» en /crm/contacts: n / total con un punto (verde completo · ámbar por revisar) y filtro «Datos incompletos»."),
+    ("empty", "9 · Vacío", view_empty(), "Tenant sin formularios de captura: dos líneas y el botón para configurarlos."),
 ]
 
 JS = r"""
