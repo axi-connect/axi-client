@@ -10866,6 +10866,7 @@ export interface components {
                 deferred: number;
                 failed: number;
                 awaiting: number;
+                converted: number;
             };
         };
         TimelineDto: {
@@ -11638,6 +11639,9 @@ export interface components {
                 name: string;
                 /** @enum {string} */
                 trigger_type: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+                /** @enum {string} */
+                action_kind: "message" | "agent_task";
+                agent_objective: string | null;
                 delay_minutes: number;
                 priority: number;
                 conditions: {
@@ -11664,6 +11668,9 @@ export interface components {
             name: string;
             /** @enum {string} */
             trigger_type: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            /** @enum {string} */
+            action_kind?: "message" | "agent_task";
+            agent_objective?: string | null;
             delay_minutes: number;
             priority?: number;
             conditions?: {
@@ -11690,6 +11697,9 @@ export interface components {
             name: string;
             /** @enum {string} */
             trigger_type: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            /** @enum {string} */
+            action_kind: "message" | "agent_task";
+            agent_objective: string | null;
             delay_minutes: number;
             priority: number;
             conditions: {
@@ -11715,6 +11725,9 @@ export interface components {
             name?: string;
             /** @enum {string} */
             trigger_type?: "conversation_inactive" | "cart_abandoned" | "deal_stalled";
+            /** @enum {string} */
+            action_kind?: "message" | "agent_task";
+            agent_objective?: string | null;
             delay_minutes?: number;
             priority?: number;
             conditions?: {
@@ -11739,6 +11752,7 @@ export interface components {
             /** Format: uuid */
             automation_id: string;
             sent: number;
+            delegated: number;
             skipped: number;
             skipped_by_reason: {
                 [key: string]: number;
@@ -12494,6 +12508,12 @@ export interface components {
             rationale: string;
             /** @enum {string} */
             urgency: "low" | "medium" | "high";
+            proposal: {
+                /** @enum {string} */
+                task_channel: "message" | "call" | "call_then_message";
+                objective: string;
+                due_in_hours: number;
+            } | null;
             cached: boolean;
         };
         CopilotDraftDto: {

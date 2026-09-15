@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { MessageSquare, Sparkles } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+import { Input } from "@/shared/components/ui/input";
 import { PriceInput } from "@/shared/components/features/price-input";
 import {
   createCustomField,
@@ -79,10 +82,12 @@ export const automationFormSchema = z
     intent_type: z.enum(INTENT_TYPES).nullable(),
     // Estrategia y mensaje
     promotion_id: z.string(),
+    /** F5: `message` manda el texto; `agent_task` delega en el agente de IA. */
+    action_kind: z.enum(["message", "agent_task"]),
+    agent_objective: z.string().trim().max(500),
     message_template: z
       .string()
       .trim()
-      .min(MIN_MESSAGE_TEMPLATE_LENGTH, "El mensaje es demasiado corto")
       .max(MAX_MESSAGE_TEMPLATE_LENGTH, `Máximo ${MAX_MESSAGE_TEMPLATE_LENGTH} caracteres`),
     hsm_template_name: z.string().trim().max(120),
     hsm_template_language: z.string().trim().max(10),
@@ -100,6 +105,25 @@ export const automationFormSchema = z
         message: "El máximo no puede ser menor que el mínimo",
       });
     }
+    // F5: delegar exige objetivo. El mensaje deja de ser obligatorio cuando la
+    // regla delega —lo redacta el agente— pero el campo sigue en el formulario
+    // por si el operador vuelve a `message`, así que no se valida su longitud.
+    if (values.action_kind === "agent_task" && values.agent_objective.length < 10) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["agent_objective"],
+        message: "Escribe el objetivo que cumplirá el agente",
+      });
+    }
+    if (values.action_kind === "agent_task") return;
+
+    if (values.message_template.length < MIN_MESSAGE_TEMPLATE_LENGTH) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["message_template"],
+        message: "El mensaje es demasiado corto",
+      });
+    }
     // El backend responde 422 `invalid_template_variables`: se avisa antes de
     // que el usuario pierda lo escrito.
     const invalid = invalidTemplateVariables(values.message_template);
@@ -113,6 +137,30 @@ export const automationFormSchema = z
   });
 
 export type AutomationFormValues = z.infer<typeof automationFormSchema>;
+
+/** F5: qué hace la regla al dispararse. Dos tarjetas y no un desplegable
+ *  porque la diferencia no es un ajuste: una manda un texto y la otra pone a
+ *  un agente a conversar. */
+const ACTION_KINDS: ReadonlyArray<{
+  value: "message" | "agent_task";
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  {
+    value: "message",
+    label: "Mandar un mensaje",
+    description: "Un texto fijo con tus variables. Sale una vez y ahí acaba.",
+    icon: MessageSquare,
+  },
+  {
+    value: "agent_task",
+    label: "Que el agente lo trabaje",
+    description:
+      "Programa un seguimiento: el agente conversa, responde dudas y puede cerrar la venta.",
+    icon: Sparkles,
+  },
+];
 
 export function defaultAutomationFormValues(trigger: TriggerType): AutomationFormValues {
   return {
@@ -128,6 +176,8 @@ export function defaultAutomationFormValues(trigger: TriggerType): AutomationFor
     min_cart_total_cents: null,
     intent_type: null,
     promotion_id: NO_PROMOTION,
+    action_kind: "message",
+    agent_objective: "",
     message_template: "",
     hsm_template_name: "",
     hsm_template_language: "es",
@@ -150,6 +200,8 @@ export function automationToFormValues(automation: AutomationDTO): AutomationFor
     min_cart_total_cents: conditions.min_cart_total_cents ?? null,
     intent_type: conditions.intent_type ?? null,
     promotion_id: automation.promotion?.id ?? NO_PROMOTION,
+    action_kind: automation.action_kind,
+    agent_objective: automation.agent_objective ?? "",
     message_template: automation.message_template,
     hsm_template_name: automation.hsm_template_name ?? "",
     hsm_template_language: automation.hsm_template_language ?? "es",
@@ -176,7 +228,12 @@ function conditionsFromValues(values: AutomationFormValues) {
 }
 
 export function toCreateAutomationDTO(values: AutomationFormValues): CreateAutomationDTO {
-  const usesHsm = requiresHsm(values.trigger_type) && values.hsm_template_name.trim() !== "";
+  // Una regla que DELEGA no necesita HSM: la tarea de agente resuelve la
+  // apertura por su cuenta (plantilla de F1, o fold-in al responder).
+  const usesHsm =
+    values.action_kind === "message" &&
+    requiresHsm(values.trigger_type) &&
+    values.hsm_template_name.trim() !== "";
   return {
     name: values.name.trim(),
     trigger_type: values.trigger_type,
@@ -184,6 +241,10 @@ export function toCreateAutomationDTO(values: AutomationFormValues): CreateAutom
     priority: values.priority,
     conditions: conditionsFromValues(values),
     promotion_id: values.promotion_id === NO_PROMOTION ? null : values.promotion_id,
+    action_kind: values.action_kind,
+    agent_objective: values.action_kind === "agent_task" ? values.agent_objective.trim() : null,
+    // Con `agent_task` el agente redacta, pero el texto se conserva: volver a
+    // `message` no puede costarle al operador lo que ya había escrito.
     message_template: values.message_template.trim(),
     // La plantilla de Meta solo tiene sentido en el disparador que escribe
     // fuera de la ventana de 24 h; en los demás se manda null aunque el campo
@@ -504,7 +565,76 @@ export function buildAutomationFormFields(options: {
       { label: "Promoción", colSpan: { base: 1, md: 2 } },
     ),
 
-    // ④ Qué le dices
+    // ④ Qué hace: mandar el mensaje, o poner al agente a conversar
+    createCustomField<AutomationFormValues>(
+      "action_kind",
+      ({ value, setValue }) => (
+        <div
+          role="radiogroup"
+          aria-label="Qué hace la regla"
+          className="grid gap-2 sm:grid-cols-2"
+        >
+          {ACTION_KINDS.map((option) => {
+            const checked = value === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="radio"
+                aria-checked={checked}
+                onClick={() => setValue("action_kind", option.value)}
+                className={cn(
+                  "grid grid-cols-[auto_1fr] items-start gap-x-2.5 gap-y-1 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                  checked
+                    ? "border-brand bg-accent"
+                    : "border-border bg-background hover:bg-secondary/60",
+                )}
+              >
+                <option.icon
+                  aria-hidden
+                  className={cn(
+                    "row-span-2 mt-0.5 size-4",
+                    checked ? "text-accent-violet" : "text-muted-foreground",
+                  )}
+                />
+                <span className="text-sm font-medium">{option.label}</span>
+                <span className="text-xs leading-snug text-muted-foreground">
+                  {option.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+      { label: "Qué hace la regla", colSpan: { base: 1, md: 2 } },
+    ),
+
+    createCustomField<AutomationFormValues>(
+      "agent_objective",
+      ({ value, setValue, getError }) => (
+        <div className="space-y-1">
+          <Input
+            aria-label="Objetivo del agente"
+            placeholder="Retomar la conversación y entender qué le frenó la compra"
+            value={String(value ?? "")}
+            onChange={(e) => setValue("agent_objective", e.target.value)}
+            aria-invalid={Boolean(getError())}
+          />
+          {getError() !== undefined && <p className="text-xs text-destructive">{getError()}</p>}
+          <p className="text-xs text-muted-foreground">
+            Una meta en tus palabras, no un guion: el agente redacta con su tono y tu catálogo, y
+            respeta el horario silencioso, el cupo diario y la baja como cualquier seguimiento.
+          </p>
+        </div>
+      ),
+      {
+        label: "Objetivo del agente",
+        colSpan: { base: 1, md: 2 },
+        isVisible: (v) => v.action_kind === "agent_task",
+      },
+    ),
+
+    // ⑤ Qué le dices
     createCustomField<AutomationFormValues>(
       "message_template",
       ({ value, setValue, getError }) => (
@@ -517,10 +647,16 @@ export function buildAutomationFormFields(options: {
           error={getError()}
         />
       ),
-      { label: "Mensaje", colSpan: { base: 1, md: 2 } },
+      {
+        label: "Mensaje",
+        colSpan: { base: 1, md: 2 },
+        // Con `agent_task` lo redacta el agente; el campo se esconde pero su
+        // contenido se conserva por si el operador vuelve atrás.
+        isVisible: (v) => v.action_kind === "message",
+      },
     ),
 
-    // ⑤ Ajuste fino
+    // ⑥ Ajuste fino
     numberField("attribution_window_hours", "Ventana de atribución", {
       suffix: "horas",
       min: 1,
@@ -531,7 +667,8 @@ export function buildAutomationFormFields(options: {
       label: "Plantilla de Meta",
       placeholder: "recuperacion_deal",
       description: "Obligatoria para encender esta regla: escribe fuera de la ventana de 24 h.",
-      isVisible: (v) => requiresHsm(v.trigger_type),
+      // Delegar no la necesita: la tarea de agente abre por su cuenta.
+      isVisible: (v) => v.action_kind === "message" && requiresHsm(v.trigger_type),
     }),
   ];
 }

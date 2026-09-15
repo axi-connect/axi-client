@@ -131,6 +131,8 @@ describe("automationToFormValues", () => {
     attribution_window_hours: 168,
     enabled: true,
     created_at: "2026-08-01T00:00:00.000Z",
+    action_kind: 'message',
+    agent_objective: null,
     updated_at: "2026-08-01T00:00:00.000Z",
   } as AutomationDTO;
 
@@ -167,5 +169,63 @@ describe("automationToFormValues", () => {
     });
     expect(form.lifecycle_stage_in).toEqual([]);
     expect(automationFormSchema.safeParse(form).success).toBe(true);
+  });
+});
+
+describe("automation.config — delegar en el agente (F5)", () => {
+  function values(over: Record<string, unknown> = {}) {
+    return {
+      ...defaultAutomationFormValues("deal_stalled"),
+      name: "Rescatar oportunidades",
+      ...over,
+    };
+  }
+
+  it("por defecto la regla manda el mensaje: nada cambia para lo que ya existe", () => {
+    expect(defaultAutomationFormValues("deal_stalled").action_kind).toBe("message");
+  });
+
+  it("delegar exige objetivo y señala ESE campo", () => {
+    const result = automationFormSchema.safeParse(
+      values({ action_kind: "agent_task", agent_objective: "corto" }),
+    );
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.path[0])).toContain("agent_objective");
+  });
+
+  it("delegando, el MENSAJE deja de ser obligatorio — lo redacta el agente", () => {
+    const result = automationFormSchema.safeParse(
+      values({
+        action_kind: "agent_task",
+        agent_objective: "Retomar la conversación y entender qué le frenó la compra",
+        message_template: "",
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("mandando el mensaje, sigue siendo obligatorio", () => {
+    const result = automationFormSchema.safeParse(values({ message_template: "" }));
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.path[0])).toContain("message_template");
+  });
+
+  it("el DTO no manda objetivo cuando la regla no delega, ni HSM cuando sí", () => {
+    const sending = toCreateAutomationDTO(
+      values({ message_template: "Hola {{first_name}}", hsm_template_name: "recuperacion" }),
+    );
+    expect(sending.agent_objective).toBeNull();
+    expect(sending.hsm_template_name).toBe("recuperacion");
+
+    // Delegar no necesita HSM: la tarea de agente abre por su cuenta.
+    const delegating = toCreateAutomationDTO(
+      values({
+        action_kind: "agent_task",
+        agent_objective: "Retomar la conversación y entender qué le frenó la compra",
+        hsm_template_name: "recuperacion",
+      }),
+    );
+    expect(delegating.action_kind).toBe("agent_task");
+    expect(delegating.hsm_template_name).toBeNull();
   });
 });

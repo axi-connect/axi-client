@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Copy as CopyIcon, RotateCcw, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { isHttpError } from "@/core/api/problem";
@@ -149,6 +150,18 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
                 </Badge>
               </div>
               <p className="text-muted-foreground">{result.data.rationale}</p>
+              {/* F5: de consejo a acción en un clic. El botón PRE-RELLENA el
+                  formulario de seguimiento; no programa nada por su cuenta —
+                  una propuesta del modelo nunca abre sola una conversación con
+                  un cliente. `null` cuando lo que toca no es contactarle. */}
+              {result.data.proposal !== null && (
+                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                  <Link href={proposalHref(contactId, result.data.proposal)}>
+                    <Sparkles className="size-3.5" />
+                    Programar este seguimiento
+                  </Link>
+                </Button>
+              )}
             </>
           )}
 
@@ -197,4 +210,25 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
       )}
     </section>
   );
+}
+
+/**
+ * La propuesta viaja por la URL al flujo de «Programar seguimiento» de F2: es
+ * la misma pantalla que usa el operador a mano, con los campos ya escritos.
+ * Reutilizarla —en vez de un formulario propio del copiloto— es lo que hace
+ * que el aviso de ventana, el horario silencioso y la plantilla de apertura se
+ * apliquen igual a lo que propone la IA.
+ */
+function proposalHref(
+  contactId: string,
+  proposal: { task_channel: string; objective: string; due_in_hours: number },
+): string {
+  const params = new URLSearchParams({
+    executor: "agent",
+    contact_id: contactId,
+    objective: proposal.objective,
+    medium: proposal.task_channel,
+    due_in_hours: String(proposal.due_in_hours),
+  });
+  return `/crm/tasks/create?${params.toString()}`;
 }

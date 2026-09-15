@@ -18,7 +18,12 @@ import { loadMyCompanyOnce } from "@/modules/companies/public";
 import { isUsableAsOpening, listHsmTemplates, type HsmTemplateDTO } from "@/modules/marketing/public";
 import type { ActivityDTO } from "@/modules/crm/domain/activity";
 import type { AgentTaskSettings } from "@/modules/crm/domain/agent-task-settings";
-import { dateShortcuts, type ContactReachabilityDTO } from "@/modules/crm/domain/schedule-follow-up";
+import {
+  dateShortcuts,
+  isoToBusinessDateTime,
+  type ContactReachabilityDTO,
+  type FollowUpMedium,
+} from "@/modules/crm/domain/schedule-follow-up";
 import {
   createAgentTask,
   updateAgentTask,
@@ -65,12 +70,19 @@ export function ScheduleFollowUpForm({
   presetContact,
   dealId,
   task,
+  proposal,
   onSuccess,
 }: {
   presetContact?: { id: string; label: string };
   dealId?: string;
   /** Presente = edición (reprogramar reinicia los intentos). */
   task?: ActivityDTO;
+  /**
+   * F5: lo que propuso el copiloto. Pre-rellena objetivo, medio y fecha — el
+   * operador lo revisa y confirma. Una propuesta del modelo nunca se envía
+   * sola: eso convertiría un consejo en un mensaje a un cliente real.
+   */
+  proposal?: { task_channel: FollowUpMedium; objective: string; due_in_hours: number };
   onSuccess: () => void;
 }) {
   const { showAlert } = useAlert();
@@ -143,13 +155,28 @@ export function ScheduleFollowUpForm({
   const firstName = contact.first_name?.trim() || contact.full_name?.trim().split(/\s+/)[0] || "";
   const selectedTemplate = templates.find((template) => template.id === selectedTemplateId);
 
-  const defaultValues = useMemo(
-    () =>
-      task === undefined
-        ? defaultScheduleFollowUpValues({ contact: presetContact, shortcut: dateShortcuts(now, tz)[1] })
-        : editScheduleFollowUpValues(task, tz, presetContact),
-    [task, presetContact, tz, now],
-  );
+  const defaultValues = useMemo(() => {
+    if (task !== undefined) return editScheduleFollowUpValues(task, tz, presetContact);
+    const base = defaultScheduleFollowUpValues({
+      contact: presetContact,
+      shortcut: dateShortcuts(now, tz)[1],
+    });
+    if (proposal === undefined) return base;
+    // La hora que propone el copiloto se traduce a la pared del negocio, como
+    // cualquier otra: el aviso de ventana y el horario silencioso se evalúan
+    // sobre ella, así que tiene que pasar por el mismo camino.
+    const when = isoToBusinessDateTime(
+      new Date(now.getTime() + proposal.due_in_hours * 3_600_000).toISOString(),
+      tz,
+    );
+    return {
+      ...base,
+      medium: media.includes(proposal.task_channel) ? proposal.task_channel : base.medium,
+      objective: proposal.objective,
+      date: when.date,
+      time: when.time,
+    };
+  }, [task, presetContact, tz, now, proposal, media]);
 
   // El esquema conoce la alcanzabilidad y las plantillas: exige la plantilla
   // solo si, a la hora que el operador eligió, el contacto estará fuera de la
