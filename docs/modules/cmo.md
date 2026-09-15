@@ -25,17 +25,43 @@ revés (tablero con chat lateral) y se descartó: la tesis del módulo es que la
 disrupción está en la conversación, así que las propuestas se leen dentro del
 flujo, no en otra pantalla.
 
+**Rediseño minimalista (2026-09-15, `docs/plans/cmo_despacho_minimalista_plan.md`).**
+Menos texto (~38 cadenas visibles, ninguna de más de doce palabras), un solo
+Axel vivo que no se pierde al bajar, sesiones y acciones rápidas en píldoras.
+
 ```
 /cmo (full-bleed, FUERA de (content) — el chat ancla su composer abajo)
-├── briefing + propuestas destacadas   ← misma columna de 640px que el chat
-├── AxelChat                            ← flex-1, scroller propio
-└── CmoBoardRail (316px, xl+)           ← propuestas por decidir, cómo va el negocio
+├── CmoActions (esquina sup. der.)     ← Conversaciones (ThreadSwitcher) · Nueva · Ajustes
+├── AxelChat                            ← flex-1; con data-empty centra el conjunto
+│   ├── AxelDock (sticky)               ← LA única instancia viva de Axel (AxelHeroAvatar);
+│   │                                      al bajar, data-docked la acopla a 40px y la vuelve glass
+│   ├── BriefingHero                    ← saludo, titular del informe y ≤3 chips de cifras
+│   ├── ProposalCard ×≤2 + role=log     ← misma columna de 640px
+│   └── composer + StarterPills         ← centrado en el vacío, baja al primer mensaje (FLIP único)
+└── CmoBoardRail (316px, xl+)           ← SOLO «Por decidir» + contador
     └── bajo xl: botón flotante + panel superpuesto
 
 /cmo/@sheet/(.)proposals/[id]  → rail interceptado (back cierra)
 /cmo/proposals/[id]            → misma propuesta como página (enlace compartido)
-/cmo/settings                  → interruptor, topes y directrices
+/cmo/settings                  → interruptor, apariencia (diadema), topes y directrices
 ```
+
+Reglas que sostienen la distribución:
+
+- **Un solo Axel vivo.** `AxelHeroAvatar` se monta una vez, dentro de `AxelDock`.
+  Acoplar es un `transform` del contenedor (`useDockedHero`: IntersectionObserver
+  → `data-docked`, sin listeners de scroll ni estado de React). Nunca se monta un
+  segundo avatar vivo; `CmoBlockedState` lleva uno dormido y estático.
+- **El compositor es el mismo nodo en los dos estados.** `data-empty` cambia el
+  layout; `useComposerFlip` anima el viaje con un único `translateY`. Remontar el
+  `<form>` perdería el foco y reiniciaría el placeholder tecleado.
+- **Las conversaciones existen en la UI.** `threads` vive en el store; `newThread`
+  es LOCAL (el hilo nace en el servidor con el primer mensaje, así el conmutador
+  nunca lista hilos vacíos); `selectThread` resetea `live`/`settled`/`blocker` y
+  tiene guarda de carrera; `archiveThread` es optimista con vuelta atrás.
+- **Los dos mensajes contractuales siguen.** La cuota dice «Tus agentes siguen
+  atendiendo»; el tenant sin informe ve un chip «Primer informe mañana · 8:00»,
+  que es un estado normal, no un error.
 
 ## Los tres estados que no salían del mockup
 
@@ -43,10 +69,10 @@ El mockup era una demo guionada. Estos se decidieron al implementar:
 
 | Estado | Qué se muestra | Por qué así |
 |---|---|---|
-| **Sin briefing** (tenant recién activado) | «Axel todavía no ha revisado tu negocio. Su primer informe llega mañana a las 8» + invitación a preguntarle ya | Es un estado **normal**, no un vacío que disimular. Un "sin datos" dejaría al dueño pensando que algo se rompió |
-| **Cuota agotada** (`cmo/quota_exhausted`) | Pantalla propia + aviso explícito en verde de que **los agentes siguen atendiendo** | Es la promesa central del diseño de la cuota. Si la pantalla no la repite, el dueño asume lo contrario |
+| **Sin briefing** (tenant recién activado) | Chip «Primer informe mañana · 8:00» bajo «Soy Axel, tu director de mercadeo» | Es un estado **normal**, no un vacío que disimular. Un "sin datos" dejaría al dueño pensando que algo se rompió |
+| **Cuota agotada** (`cmo/quota_exhausted`) | Pantalla propia: «Axel agotó sus análisis» + «Vuelve el próximo ciclo. **Tus agentes siguen atendiendo.**» | Es la promesa central del diseño de la cuota. Si la pantalla no la repite, el dueño asume lo contrario |
 | **Axel trabajando** (turno en vivo) | Los **pasos reales** del turno con su duración (`cmo.turn_step`), y en cuanto empieza a escribir, el texto reemplazándolos (`cmo.turn_delta`) | Un turno tarda decenas de segundos. Las etiquetas las emite el servidor (`tool_labels.ts`): una sola fuente para las catorce herramientas |
-| **Axel trabajando sin socket** (respaldo) | Skeleton + **fase rotando** cada 6 s («Revisando tus números…», «Cruzando el calendario…») | Sin pasos que mostrar, un skeleton mudo se lee como "se colgó" y el usuario recarga, perdiendo el análisis ya pagado. Ninguna frase afirma un resultado. Es el respaldo, no el modo normal |
+| **Axel trabajando sin socket** (respaldo) | Skeleton + **fase rotando** cada 6 s (tres frases: «Revisando tus números…», «Armando la recomendación…», «Ya casi…») | Sin pasos que mostrar, un skeleton mudo se lee como "se colgó" y el usuario recarga, perdiendo el análisis ya pagado. Ninguna frase afirma un resultado. Es el respaldo, no el modo normal |
 
 ## Reglas del slice
 
@@ -150,11 +176,14 @@ día en vez de esconderlo semanas.
 - **Violeta = IA** en todo el panel, así que es la firma de Axel. Coral solo en
   la acción primaria (`Aprobar`). Los colores de estado (verde/ámbar/rojo) son
   semánticos y **no** cuentan como acento.
-- **Un solo momento hero**: el orbe, con el tricolor del isotipo en un anillo
-  cometa. No es un efecto nuevo — es `@property --comet-angle` con la receta de
-  `.channel-surface::after`, ya aprobada en el mockup de canales.
-- Utilidades del módulo en `globals.css`: `.axel-orb`, `.axel-orb-glow`,
-  `.axel-orb--busy`, `.axel-field`, `.axel-composer-glow`. Se declaran ahí y no
+- **Un solo momento hero**: Axel, la cara procedural (`AxelAvatar`, plan
+  `docs/plans/cmo_axel_avatar_plan.md`), de pie sobre su sombra (`AxelStage`). El
+  orbe con retrato raster y anillo cometa se eliminó el 2026-09-15: el anillo
+  giraba en reposo repintando un `conic-gradient` cada frame. El cometa solo queda
+  en la tarjeta de propuesta nueva, tres vueltas y se apaga.
+- Utilidades del módulo en `globals.css`: `.axel-avatar` (material y rig),
+  `.axel-stage`, `.axel-dock*`, `.axel-chat[data-empty|data-docked]`,
+  `.axel-field`, `.axel-composer-glow`. Se declaran ahí y no
   como valores arbitrarios de Tailwind por la misma razón que el cometa de
   canales: un `color-mix` anidado en `bg-[...]` es frágil de extraer.
 - **El campo es la única superficie del panel que se mueve, y son DOS

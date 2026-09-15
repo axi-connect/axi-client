@@ -262,6 +262,7 @@ retiró la `GridCard` que vino con la plantilla del mega-menú).
 | Sidebar (`AppSidebar`) | Formularios (`DynamicForm`) |
 | `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) — el chip de día `sticky` del hilo sí es glass: flota sobre las burbujas, no es superficie de contenido |
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |
+| La barra de Axel (`AxelDock`, módulo CMO) **cuando está acoplada**: sticky sobre el hilo, se vuelve cristal al bajar y transparente en reposo | Las burbujas del hilo de Axel |
 | `FloatingAlert`, tooltips | Cualquier superficie con texto denso |
 
 Regla de legibilidad: el glass solo se posa sobre fondos que controla la app; nunca texto largo sobre glass con contenido moviéndose detrás.
