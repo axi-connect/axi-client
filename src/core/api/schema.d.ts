@@ -276,6 +276,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MyFeaturesController_read_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/features/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["FeaturesController_set_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformFeaturesController_read_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/features/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformFeaturesController_set_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies/me": {
         parameters: {
             query?: never;
@@ -6535,6 +6599,27 @@ export interface components {
                 };
             }[];
         };
+        FeaturesDto: {
+            features: {
+                code: string;
+                label: string;
+                description: string;
+                enabled: boolean;
+                /** @enum {string} */
+                source: "platform" | "tenant" | "niche" | "default";
+                locked: boolean;
+                requires_capability: string;
+                readonly requires: string[];
+            }[];
+        };
+        SetTenantFeatureDto: {
+            enabled: boolean;
+        };
+        SetPlatformOverrideDto: {
+            /** @enum {string|null} */
+            forced: "on" | "off" | null;
+            reason?: string;
+        };
         CompanyDto: {
             /** Format: uuid */
             id: string;
@@ -6546,6 +6631,7 @@ export interface components {
             country_code: string;
             currency: string;
             industry: string | null;
+            niche_code: string | null;
             activity_description: string | null;
             timezone: string;
             /** @enum {string} */
@@ -6571,6 +6657,7 @@ export interface components {
             address?: string | null;
             city?: string | null;
             industry?: string | null;
+            niche_code?: string | null;
             activity_description?: string | null;
             timezone?: string;
         };
@@ -16172,6 +16259,97 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    MyFeaturesController_read_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturesDto"];
+                };
+            };
+        };
+    };
+    FeaturesController_set_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetTenantFeatureDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturesDto"];
+                };
+            };
+        };
+    };
+    PlatformFeaturesController_read_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturesDto"];
+                };
+            };
+        };
+    };
+    PlatformFeaturesController_set_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPlatformOverrideDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturesDto"];
+                };
             };
         };
     };
