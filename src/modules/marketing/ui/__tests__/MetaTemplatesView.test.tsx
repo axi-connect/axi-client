@@ -157,6 +157,33 @@ describe("lo que Meta contesta sobre una plantilla", () => {
     ).toBeInTheDocument();
   });
 
+  it("traduce el enum de Meta: «INVALID_FORMAT» no le dice nada a nadie", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h12",
+        name: "promo_rechazada",
+        approval_status: "rejected",
+        // Meta manda un ENUM, no una frase. Pintarlo crudo era un paso atrás
+        // respecto de la frase genérica que había antes.
+        rejected_reason: "INVALID_FORMAT",
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByText(/El formato no le vale a Meta/)).toBeInTheDocument();
+    expect(screen.queryByText("INVALID_FORMAT")).not.toBeInTheDocument();
+  });
+
+  it("y respeta la prosa cuando Meta sí la manda", async () => {
+    const prosa = "Your template has parameters placed next to each other without text between them.";
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "h13", approval_status: "rejected", rejected_reason: prosa }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByText(new RegExp(prosa.slice(0, 30)))).toBeInTheDocument();
+  });
+
   it("avisa de la calidad solo cuando ya no es verde", async () => {
     api.listHsmTemplates.mockResolvedValue([
       hsm({ id: "h10", name: "promo_verde", quality_score: "GREEN" }),

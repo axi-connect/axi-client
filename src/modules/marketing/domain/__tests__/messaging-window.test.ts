@@ -33,6 +33,21 @@ describe("messaging-window — en cuántos días cabe la campaña", () => {
     });
   });
 
+  it("cuenta el cupo YA gastado, que es el caso normal a media jornada", () => {
+    // 820 con 50 libres: hoy caben 50 y quedan 770 a 250/día → 1 + 4 = 5.
+    expect(messagingWindowNotice(820, window_({ used: 200, remaining: 50 }))).toMatchObject({
+      days: 5,
+    });
+  });
+
+  it("y por eso deja de CALLAR cuando queda poco cupo", () => {
+    // 250 destinatarios con 50 libres tardan dos días, no uno. Calculando con
+    // el cupo entero daba «1 día» y no se avisaba nada.
+    expect(messagingWindowNotice(250, window_({ used: 200, remaining: 50 }))).toMatchObject({
+      days: 2,
+    });
+  });
+
   it("sin cupo cargado todavía, no inventa", () => {
     expect(messagingWindowNotice(820, null)).toBeNull();
   });

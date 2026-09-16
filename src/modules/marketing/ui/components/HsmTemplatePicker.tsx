@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleDollarSign } from "lucide-react";
+import { CircleDollarSign, TriangleAlert } from "lucide-react";
 import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -12,7 +12,11 @@ import {
 } from "@/shared/components/ui/select";
 import { bulkOpeningCost, formatUsd } from "../../domain/template-cost";
 import { renderHsmPreview } from "../../domain/hsm-preview";
-import { countTemplateVariables, type HsmTemplateDTO } from "../../domain/template-catalog";
+import {
+  countTemplateVariables,
+  templateVariableIssue,
+  type HsmTemplateDTO,
+} from "../../domain/template-catalog";
 import {
   choiceOf,
   hsmPreviewValue,
@@ -58,7 +62,11 @@ export function HsmTemplatePicker({
   emptyLabel?: string;
 }) {
   const selected = templates.find((template) => template.id === value) ?? null;
+  // `null` = Meta no aceptaría ese cuerpo. Antes eso valía CERO y el selector
+  // no pintaba ni una fila: el operador no veía nada raro y el envío salía sin
+  // parámetros.
   const slots = selected === null ? 0 : countTemplateVariables(selected.body);
+  const unusable = selected !== null && slots === null;
   const cost = selected === null || recipients === null ? null : bulkOpeningCost(recipients, selected.category);
 
   function pick(next: string) {
@@ -71,7 +79,12 @@ export function HsmTemplatePicker({
     onChange(next);
     // Al cambiar de plantilla el mapeo se re-encaja: se conserva lo que el
     // operador ya decidió para los huecos que siguen existiendo.
-    onMappingChange(resizeHsmMapping(mapping, template === undefined ? 0 : countTemplateVariables(template.body)));
+    onMappingChange(
+      resizeHsmMapping(
+        mapping,
+        template === undefined ? 0 : (countTemplateVariables(template.body) ?? 0),
+      ),
+    );
   }
 
   function patchEntry(index: number, source: string) {
@@ -96,7 +109,16 @@ export function HsmTemplatePicker({
         </SelectContent>
       </Select>
 
-      {selected !== null && slots > 0 && (
+      {unusable && (
+        <Callout tone="danger" icon={TriangleAlert}>
+          {templateVariableIssue(selected.body) ??
+            "Meta no aceptaría esta plantilla tal como está."}{" "}
+          Corrígela en Meta y vuelve a sincronizar: si se envía así, Meta rechaza la campaña
+          entera.
+        </Callout>
+      )}
+
+      {selected !== null && slots !== null && slots > 0 && (
         <div className="overflow-clip rounded-lg border border-border">
           <p className="border-b border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
             Qué va en cada hueco

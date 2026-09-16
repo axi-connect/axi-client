@@ -124,7 +124,7 @@ export function buildScheduleFollowUpSchema(rules: {
       const template = rules.templates.find((item) => item.id === values.opening_template_id);
       if (
         template !== undefined &&
-        defaultOpeningParams(countTemplateVariables(template.body)).includes("topic") &&
+        defaultOpeningParams((countTemplateVariables(template.body) ?? 0)).includes("topic") &&
         values.topic.trim().length < 2
       ) {
         ctx.addIssue({ code: "custom", path: ["topic"], message: "Escribe el tema que rellena la plantilla" });
@@ -182,7 +182,7 @@ export function openingTemplateInput(
   template: HsmTemplateDTO | undefined,
 ): OpeningTemplateInput | null {
   if (values.opening_template_id === NO_TEMPLATE || template === undefined) return null;
-  const params = defaultOpeningParams(countTemplateVariables(template.body));
+  const params = defaultOpeningParams((countTemplateVariables(template.body) ?? 0));
   const topic = values.topic.trim();
   return {
     channel_template_id: template.id,

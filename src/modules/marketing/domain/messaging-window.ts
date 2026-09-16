@@ -25,7 +25,16 @@ export function messagingWindowNotice(
   window: MessagingWindowDTO | null,
 ): { days: number; limit: number; remaining: number } | null {
   if (window === null || window.limit === null) return null;
-  const days = daysToDeliver(recipients, window.limit);
-  if (days === null || days <= 1) return null;
-  return { days, limit: window.limit, remaining: window.remaining ?? window.limit };
+  const limit = window.limit;
+  const remaining = window.remaining ?? limit;
+
+  // Con el cupo YA gastado, no el entero. Calcularlo con `limit` decía 4 días
+  // donde eran 5, y —lo que más duele— CALLABA cuando quedaba poco cupo: 250
+  // destinatarios con 50 libres daban «1 día» y ningún aviso, cuando de verdad
+  // tardaba dos. Y el cupo medio gastado es el caso normal a media jornada.
+  const today = Math.min(recipients, Math.max(0, remaining));
+  const days = today === recipients ? 1 : 1 + Math.ceil((recipients - today) / limit);
+
+  if (recipients <= 0 || days <= 1) return null;
+  return { days, limit, remaining };
 }

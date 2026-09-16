@@ -13,6 +13,7 @@ import { listChannels, type ChannelDTO } from "@/modules/channels/public";
 import { HSM_CATEGORY_LABELS } from "@/modules/marketing/domain/enums";
 import {
   countTemplateVariables,
+  rejectionReasonLabel,
   formatTemplateCost,
   HSM_STATUS_MAP,
   isUsableAsOpening,
@@ -37,6 +38,14 @@ import {
  * El estado lo decide Meta y NO llega por WebSocket (el backend no publica ese
  * evento), así que el refresco es explícito: el botón «Sincronizar».
  */
+/**
+ * Techo del sondeo: 80 vueltas de 15 s son 20 minutos de pestaña visible. Meta
+ * suele decidir en minutos; si tarda más, la pantalla deja de preguntar y el
+ * botón «Sincronizar» sigue ahí. Un sondeo sin techo en una pestaña olvidada
+ * son miles de peticiones por nada.
+ */
+const MAX_PENDING_POLLS = 80;
+
 export function MetaTemplatesView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
@@ -84,12 +93,30 @@ export function MetaTemplatesView() {
   const hasPending = templates?.some((t) => t.approval_status === "pending") ?? false;
   useEffect(() => {
     if (!hasPending || channelId === null) return;
+    // Guardia por clave: sin ella, cambiar de canal con un sondeo en vuelo hace
+    // que la respuesta del canal ANTERIOR llegue después y pinte sus plantillas
+    // sobre las del nuevo.
+    let cancelled = false;
+    let polls = 0;
     const timer = setInterval(() => {
+      // Meta puede tardar 48 h y una pestaña olvidada son miles de peticiones:
+      // con la pestaña oculta no se sondea, y hay techo.
+      if (document.hidden) return;
+      if (polls >= MAX_PENDING_POLLS) {
+        clearInterval(timer);
+        return;
+      }
+      polls += 1;
       void listHsmTemplates({ channel_id: channelId })
-        .then(setTemplates)
+        .then((rows) => {
+          if (!cancelled) setTemplates(rows);
+        })
         .catch(() => undefined);
     }, 15_000);
-    return () => clearInterval(timer);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [hasPending, channelId]);
 
   async function handleSync() {
@@ -253,8 +280,11 @@ export function MetaTemplatesView() {
                       <div className="font-mono text-xs">{template.name}</div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
                         {HSM_CATEGORY_LABELS[template.category]} · {template.language} ·{" "}
-                        {countTemplateVariables(template.body)}{" "}
-                        {countTemplateVariables(template.body) === 1 ? "variable" : "variables"}
+                        {countTemplateVariables(template.body) === null
+                          ? "Meta no la aceptaría"
+                          : `${String(countTemplateVariables(template.body))} ${
+                              countTemplateVariables(template.body) === 1 ? "variable" : "variables"
+                            }`}
                       </div>
                     </td>
                     <td className="max-w-md px-4 py-2.5 align-top text-xs text-muted-foreground">
@@ -267,10 +297,11 @@ export function MetaTemplatesView() {
                         {template.approval_status === "pending"
                           ? "Meta suele decidir en minutos; puede tardar hasta 48 h."
                           : template.approval_status === "rejected"
-                            ? // El motivo REAL de Meta si lo mandó. La frase genérica
-                              // decía qué hacer pero no qué estaba mal, que es lo
-                              // único que sirve para corregirla.
-                              (template.rejected_reason ??
+                            ? // El motivo REAL de Meta si lo mandó, traducido cuando
+                              // viene como enum. La frase genérica decía qué hacer
+                              // pero no qué estaba mal, que es lo único que sirve
+                              // para corregirla.
+                              (rejectionReasonLabel(template.rejected_reason) ??
                               "Corrige el texto y envíala como plantilla nueva: el nombre queda bloqueado 30 días.")
                             : template.approval_status === "paused"
                               ? "Varios destinatarios la marcaron como no deseada. Se reactiva si mejora la calidad."
