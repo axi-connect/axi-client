@@ -206,6 +206,40 @@ describe("pasos 2 a 4", () => {
   });
 });
 
+describe("paso 2 · con más de un número de WhatsApp", () => {
+  it("deja elegir desde cuál sale, porque la plantilla es de uno solo", async () => {
+    channels.listChannels.mockResolvedValue({
+      data: [
+        { id: "ch1", name: "Ventas", kind: "whatsapp_cloud" },
+        { id: "ch2", name: "Soporte", kind: "whatsapp_cloud" },
+      ],
+    });
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    // Meta no conoce la plantilla en los demás números: elegir mal significa
+    // que el envío se omite con `hsm_channel_mismatch`.
+    const select = await screen.findByLabelText("Número desde el que sale");
+    fireEvent.change(select, { target: { value: "ch2" } });
+
+    await waitFor(() =>
+      expect(templatesApi.listHsmTemplates).toHaveBeenCalledWith({
+        channel_id: "ch2",
+        approval_status: "approved",
+      }),
+    );
+  });
+
+  it("con un solo número no enseña el selector, que sería ruido", async () => {
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    expect(screen.queryByLabelText("Número desde el que sale")).not.toBeInTheDocument();
+  });
+});
+
 describe("paso 2 · cuando no se puede alcanzar a los contactos fríos", () => {
   it("sin canal de WhatsApp Cloud lo dice, y dice qué pasa si sigues sin él", async () => {
     channels.listChannels.mockResolvedValue({ data: [] });

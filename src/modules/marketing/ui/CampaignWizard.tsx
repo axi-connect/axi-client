@@ -96,6 +96,7 @@ export function CampaignWizard() {
   const [templates, setTemplates] = useState<TemplateDTO[] | null>(null);
   /** `null` = todavía buscando; `[]` = no hay ninguna aprobada de marketing. */
   const [hsmTemplates, setHsmTemplates] = useState<HsmTemplateDTO[] | null>(null);
+  const [cloudChannels, setCloudChannels] = useState<{ id: string; name: string }[]>([]);
   const [cloudChannelId, setCloudChannelId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("tu empresa");
   const [busy, setBusy] = useState(false);
@@ -119,19 +120,27 @@ export function CampaignWizard() {
   // motivo — en un lote no hay UN contacto del que deducirlo.
   useEffect(() => {
     void listChannels()
-      .then(async (res) => {
-        const cloud = res.data.find((channel) => channel.kind === "whatsapp_cloud") ?? null;
-        if (cloud === null) {
-          setCloudChannelId(null);
-          setHsmTemplates([]);
-          return;
-        }
-        setCloudChannelId(cloud.id);
-        const rows = await listHsmTemplates({ channel_id: cloud.id, approval_status: "approved" });
-        setHsmTemplates(rows.filter(isUsableForMarketing));
+      .then((res) => {
+        const cloud = res.data.filter((channel) => channel.kind === "whatsapp_cloud");
+        setCloudChannels(cloud.map((channel) => ({ id: channel.id, name: channel.name })));
+        setCloudChannelId(cloud[0]?.id ?? null);
+        if (cloud.length === 0) setHsmTemplates([]);
       })
-      .catch(() => setHsmTemplates([]));
+      .catch(() => {
+        setCloudChannels([]);
+        setHsmTemplates([]);
+      });
   }, []);
+
+  // Las plantillas son del canal elegido: cambiar de número cambia la lista, y
+  // la que estuviera elegida deja de existir.
+  useEffect(() => {
+    if (cloudChannelId === null) return;
+    setHsmTemplates(null);
+    void listHsmTemplates({ channel_id: cloudChannelId, approval_status: "approved" })
+      .then((rows) => setHsmTemplates(rows.filter(isUsableForMarketing)))
+      .catch(() => setHsmTemplates([]));
+  }, [cloudChannelId]);
 
   const patch = useCallback(
     (next: Partial<CampaignDraft>) => setDraft((prev) => ({ ...prev, ...next })),
@@ -488,7 +497,37 @@ export function CampaignWizard() {
                       </Link>
                     </Callout>
                   ) : (
-                    <HsmTemplatePicker
+                    <>
+                      {/* Con un solo número no hay nada que elegir y el selector
+                          sería ruido. Con varios SÍ hay que decirlo: la
+                          plantilla pertenece a uno solo, y Meta no la conoce en
+                          los demás. */}
+                      {cloudChannels.length > 1 && (
+                        <div className="space-y-1.5">
+                          <label
+                            htmlFor="c-cloud-channel"
+                            className="text-xs font-medium text-muted-foreground"
+                          >
+                            Número desde el que sale
+                          </label>
+                          <select
+                            id="c-cloud-channel"
+                            value={cloudChannelId ?? ""}
+                            onChange={(e) => {
+                              setCloudChannelId(e.target.value);
+                              patch({ hsmChannelTemplateId: null, hsmParamMapping: [] });
+                            }}
+                            className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                          >
+                            {cloudChannels.map((channel) => (
+                              <option key={channel.id} value={channel.id}>
+                                {channel.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <HsmTemplatePicker
                       templates={hsmTemplates}
                       value={draft.hsmChannelTemplateId}
                       onChange={(id) => patch({ hsmChannelTemplateId: id })}
@@ -496,8 +535,9 @@ export function CampaignWizard() {
                       onMappingChange={(mapping) => patch({ hsmParamMapping: mapping })}
                       sample={previewSample}
                       recipients={estimate?.estimatedReach ?? null}
-                      emptyLabel="Sin plantilla · se omiten los que lleven más de 24 h"
-                    />
+                        emptyLabel="Sin plantilla · se omiten los que lleven más de 24 h"
+                      />
+                    </>
                   )}
                 </div>
               </section>
