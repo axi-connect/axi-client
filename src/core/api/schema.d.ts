@@ -3620,6 +3620,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["HsmTemplatesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["HsmTemplatesController_update_v1"];
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates/sync": {
         parameters: {
             query?: never;
@@ -11750,10 +11766,43 @@ export interface components {
                 approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
                 rejected_reason: string | null;
                 quality_score: string | null;
+                editable: boolean;
+                edit_blocked_reason: string | null;
+                /** Format: date-time */
+                edit_retry_at: string | null;
                 external_id: string | null;
                 /** Format: date-time */
                 updated_at: string;
             }[];
+        };
+        UpdateHsmTemplateDto: {
+            body: string;
+            examples?: string[];
+            /** @enum {string} */
+            category?: "marketing" | "utility" | "authentication";
+        };
+        HsmTemplateDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            channel_id: string;
+            name: string;
+            language: string;
+            /** @enum {string} */
+            category: "marketing" | "utility" | "authentication";
+            body: string;
+            components: unknown[];
+            /** @enum {string} */
+            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+            rejected_reason: string | null;
+            quality_score: string | null;
+            editable: boolean;
+            edit_blocked_reason: string | null;
+            /** Format: date-time */
+            edit_retry_at: string | null;
+            external_id: string | null;
+            /** Format: date-time */
+            updated_at: string;
         };
         SyncHsmTemplatesDto: {
             /** Format: uuid */
@@ -11771,25 +11820,6 @@ export interface components {
             category: "marketing" | "utility" | "authentication";
             body: string;
             examples?: string[];
-        };
-        HsmTemplateDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            channel_id: string;
-            name: string;
-            language: string;
-            /** @enum {string} */
-            category: "marketing" | "utility" | "authentication";
-            body: string;
-            components: unknown[];
-            /** @enum {string} */
-            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
-            rejected_reason: string | null;
-            quality_score: string | null;
-            external_id: string | null;
-            /** Format: date-time */
-            updated_at: string;
         };
         AutomationsListDto: {
             data: {
@@ -23052,6 +23082,50 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmTemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HsmTemplatesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHsmTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

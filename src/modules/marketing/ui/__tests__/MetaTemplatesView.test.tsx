@@ -9,12 +9,14 @@ jest.mock("@/shared/auth/auth.hooks", () => ({
 }));
 
 const showAlert = jest.fn();
+const showModal = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert, showModal: jest.fn(), closeModal: jest.fn() }),
+  useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
 }));
 
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
+  deleteHsmTemplate: jest.fn(),
   listHsmTemplates: jest.fn(),
   syncHsmTemplates: jest.fn(),
 }));
@@ -39,6 +41,9 @@ function hsm(over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO {
     approval_status: "approved",
     rejected_reason: null,
     quality_score: null,
+    editable: true,
+    edit_blocked_reason: null,
+    edit_retry_at: null,
     external_id: null,
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
@@ -194,5 +199,64 @@ describe("lo que Meta contesta sobre una plantilla", () => {
     // La calidad es el aviso PREVIO a que Meta pause la plantilla.
     expect(await screen.findByText(/Calidad yellow/)).toBeInTheDocument();
     expect(screen.queryByText(/Calidad green/)).not.toBeInTheDocument();
+  });
+});
+
+describe("editar y borrar una plantilla", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+  });
+
+  it("deja editar una rechazada, que es el callejón que esto desatasca", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "h20", name: "promo_rechazada", approval_status: "rejected", editable: true }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByRole("button", { name: /Editar/ })).toBeEnabled();
+  });
+
+  it("no deja editar la que Meta tiene en revisión, y dice por qué", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h21",
+        approval_status: "pending",
+        editable: false,
+        edit_blocked_reason: "Meta todavía la está revisando",
+        edit_retry_at: null,
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByRole("button", { name: /Editar/ })).toBeDisabled();
+    expect(screen.getByText(/Meta todavía la está revisando/)).toBeInTheDocument();
+  });
+
+  it("cuando el bloqueo tiene hora, la dice: un error se vuelve instrucción", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h22",
+        approval_status: "approved",
+        editable: false,
+        edit_blocked_reason: "Meta solo deja editar una plantilla aprobada una vez cada 24 h",
+        edit_retry_at: "2026-09-17T14:30:00.000Z",
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByText(/Podrás el/)).toBeInTheDocument();
+  });
+
+  it("borrar una APROBADA avisa de que Meta bloquea el nombre 30 días", async () => {
+    api.listHsmTemplates.mockResolvedValue([hsm({ id: "h23", approval_status: "approved" })]);
+    render(<MetaTemplatesView />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Borrar" }));
+    // Borrar no es deshacer, y quien borra tiene que saberlo ANTES.
+    expect(showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: expect.stringContaining("30 días") as unknown as string,
+      }),
+    );
   });
 });

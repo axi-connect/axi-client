@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CircleDollarSign, Hourglass, Info, Plus, RefreshCw, WandSparkles } from "lucide-react";
+import {
+  CircleDollarSign,
+  Hourglass,
+  Info,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  WandSparkles,
+} from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -23,6 +32,7 @@ import {
 } from "@/modules/marketing/domain/template-catalog";
 import { CreateHsmTemplateModal } from "@/modules/marketing/ui/components/CreateHsmTemplateModal";
 import {
+  deleteHsmTemplate,
   listHsmTemplates,
   syncHsmTemplates,
 } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
@@ -49,7 +59,7 @@ const MAX_PENDING_POLLS = 80;
 export function MetaTemplatesView() {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("marketing:manage");
-  const { showAlert } = useAlert();
+  const { showAlert, showModal, closeModal } = useAlert();
 
   const [channels, setChannels] = useState<ChannelDTO[] | null>(null);
   const [channelId, setChannelId] = useState<string | null>(null);
@@ -57,6 +67,7 @@ export function MetaTemplatesView() {
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<HsmTemplateDTO | null>(null);
 
   useEffect(() => {
     listChannels()
@@ -118,6 +129,43 @@ export function MetaTemplatesView() {
       clearInterval(timer);
     };
   }, [hasPending, channelId]);
+
+  /**
+   * Borrar no es deshacer: Meta **bloquea el nombre 30 días** si la plantilla
+   * estaba aprobada, así que quien borre tiene que saberlo ANTES.
+   */
+  async function confirmDelete(template: HsmTemplateDTO) {
+    showModal({
+      title: `¿Borrar «${template.name}»?`,
+      description:
+        template.approval_status === "approved"
+          ? "Estaba aprobada, así que Meta bloqueará ese nombre durante 30 días: no podrás crear otra que se llame igual. Las campañas y reglas que la usen dejarán de alcanzar a los contactos fríos."
+          : "Se borra en Meta y aquí. Las campañas y reglas que la usen dejarán de alcanzar a los contactos fríos.",
+      actions: [
+        { label: "Conservarla", variant: "outline", asClose: true },
+        {
+          label: "Borrar",
+          variant: "destructive",
+          onClick: () => {
+            closeModal();
+            void (async () => {
+              try {
+                await deleteHsmTemplate(template.id);
+                showAlert({ tone: "success", title: "Plantilla borrada", open: true });
+                if (channelId !== null) await load(channelId);
+              } catch (err) {
+                showAlert({
+                  tone: "error",
+                  title: errorMessage(err, "Meta no dejó borrarla"),
+                  open: true,
+                });
+              }
+            })();
+          },
+        },
+      ],
+    });
+  }
 
   async function handleSync() {
     if (!channelId) return;
@@ -224,10 +272,21 @@ export function MetaTemplatesView() {
 
       {channelId !== null && (
         <CreateHsmTemplateModal
-          open={creating}
+          // `key` distinta por plantilla: fuerza el remontaje y así los valores
+          // se cargan del estado inicial, sin un efecto que sincronice props.
+          key={editing?.id ?? "nueva"}
+          open={creating || editing !== null}
           channelId={channelId}
-          onOpenChange={setCreating}
-          onCreated={() => void load(channelId)}
+          editing={editing}
+          onOpenChange={(next) => {
+            if (next) return;
+            setCreating(false);
+            setEditing(null);
+          }}
+          onCreated={() => {
+            setEditing(null);
+            void load(channelId);
+          }}
         />
       )}
 
@@ -269,6 +328,9 @@ export function MetaTemplatesView() {
                 <Th>Contenido</Th>
                 <Th>Estado en Meta</Th>
                 <Th>Costo / msg (CO)</Th>
+                <Th>
+                  <span className="sr-only">Acciones</span>
+                </Th>
               </tr>
             </thead>
             <tbody>
@@ -322,6 +384,36 @@ export function MetaTemplatesView() {
                     <td className="px-4 py-2.5 align-top font-mono text-xs tabular-nums">
                       {formatTemplateCost(template.category)}
                     </td>
+                    <td className="px-4 py-2.5 align-top">
+                      <div className="flex items-center justify-end gap-1">
+                        {/* El servidor dice si Meta deja editar y por qué no:
+                            aquí no se repite ninguna regla suya. */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!template.editable}
+                          title={editHint(template)}
+                          onClick={() => setEditing(template)}
+                        >
+                          <Pencil aria-hidden className="size-3.5" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={template.approval_status === "disabled"}
+                          onClick={() => void confirmDelete(template)}
+                        >
+                          <Trash2 aria-hidden className="size-3.5" />
+                          <span className="sr-only">Borrar</span>
+                        </Button>
+                      </div>
+                      {!template.editable && template.edit_blocked_reason !== null && (
+                        <p className="mt-1 text-right text-xs text-muted-foreground">
+                          {editHint(template)}
+                        </p>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -368,4 +460,21 @@ function Th({ children }: { children: React.ReactNode }) {
       {children}
     </th>
   );
+}
+
+/**
+ * Por qué no se puede editar y —cuando lo hay— desde cuándo sí. La hora
+ * concreta es lo que convierte un error en una instrucción.
+ */
+function editHint(template: HsmTemplateDTO): string | undefined {
+  if (template.editable) return undefined;
+  const reason = template.edit_blocked_reason ?? "Meta no deja editarla ahora";
+  if (template.edit_retry_at === null) return reason;
+  const when = new Date(template.edit_retry_at).toLocaleString("es-CO", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${reason}. Podrás el ${when}.`;
 }

@@ -14,7 +14,10 @@ import {
   SUGGESTED_OPENING_TEMPLATES,
   TEMPLATE_VARIABLE_MESSAGES,
 } from "@/modules/marketing/domain/template-catalog";
-import { createHsmTemplate } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import {
+  createHsmTemplate,
+  updateHsmTemplate,
+} from "@/modules/marketing/infrastructure/services/templates-service.adapter";
 
 type Category = HsmTemplateDTO["category"];
 
@@ -58,19 +61,30 @@ const BODY_MAX = 1024;
 export function CreateHsmTemplateModal({
   open,
   channelId,
+  editing = null,
   onOpenChange,
   onCreated,
 }: {
   open: boolean;
   channelId: string;
+  /**
+   * La plantilla que se edita, o `null` para crear una nueva. El mismo modal
+   * porque es el mismo formulario: lo que cambia es que Meta no deja tocar el
+   * nombre ni el idioma, y la categoría solo si no está aprobada.
+   *
+   * El consumidor le pasa una `key` distinta para forzar el remontaje, que es
+   * lo que carga los valores sin un efecto que sincronice estado con props.
+   */
+  editing?: HsmTemplateDTO | null;
   onOpenChange: (open: boolean) => void;
   onCreated: (template: HsmTemplateDTO) => void;
 }) {
   const { showAlert } = useAlert();
-  const [name, setName] = useState("");
-  const [language, setLanguage] = useState("es_CO");
-  const [category, setCategory] = useState<Category>("utility");
-  const [body, setBody] = useState("");
+  const isEditing = editing !== null;
+  const [name, setName] = useState(editing?.name ?? "");
+  const [language, setLanguage] = useState(editing?.language ?? "es_CO");
+  const [category, setCategory] = useState<Category>(editing?.category ?? "utility");
+  const [body, setBody] = useState(editing?.body ?? "");
   const [examples, setExamples] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -114,18 +128,25 @@ export function CreateHsmTemplateModal({
     if (invalid) return;
     setSubmitting(true);
     try {
-      const created = await createHsmTemplate({
-        channel_id: channelId,
-        name,
-        language,
-        category,
+      const params = {
         body,
         ...(variableCount > 0 ? { examples: examples.slice(0, variableCount) } : {}),
-      });
+      };
+      const created = isEditing
+        ? await updateHsmTemplate(editing.id, {
+            ...params,
+            // La categoría solo viaja si de verdad cambió Y Meta lo permite:
+            // sobre una aprobada es un 409 nuestro antes de gastar la llamada.
+            ...(editing.approval_status !== "approved" && category !== editing.category
+              ? { category }
+              : {}),
+          })
+        : await createHsmTemplate({ channel_id: channelId, name, language, category, ...params });
       showAlert({
         tone: "success",
-        title: "Enviada a revisión de Meta",
-        description: "Suele decidir en minutos; puede tardar hasta 48 h. El estado se actualiza solo.",
+        title: isEditing ? "Enviada de nuevo a revisión" : "Enviada a revisión de Meta",
+        description:
+          "Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, la pantalla se refresca sola.",
         open: true,
       });
       onCreated(created);
@@ -144,14 +165,19 @@ export function CreateHsmTemplateModal({
       open={open}
       onOpenChange={onOpenChange}
       config={{
-        title: "Nueva plantilla de Meta",
-        description:
-          "Un texto fijo con huecos que se rellenan con datos del contacto. Meta la revisa antes de que puedas usarla.",
+        title: isEditing ? `Editar «${editing.name}»` : "Nueva plantilla de Meta",
+        description: isEditing
+          ? "Meta la revisa otra vez. El nombre y el idioma no se pueden cambiar: son suyos desde que la creaste."
+          : "Un texto fijo con huecos que se rellenan con datos del contacto. Meta la revisa antes de que puedas usarla.",
         className: "sm:max-w-2xl",
         actions: [
           { label: "Cancelar", variant: "outline", asClose: true },
           {
-            label: submitting ? "Enviando…" : "Enviar a revisión de Meta",
+            label: submitting
+              ? "Enviando…"
+              : isEditing
+                ? "Guardar y reenviar a revisión"
+                : "Enviar a revisión de Meta",
             variant: "default",
             asClose: false,
             onClick: () => void submit(),
@@ -160,7 +186,7 @@ export function CreateHsmTemplateModal({
       }}
     >
       <div className="space-y-5">
-        <section className="space-y-2">
+        <section className="space-y-2" hidden={isEditing}>
           <p className="text-xs font-medium">Empieza con una sugerida</p>
           <div className="grid gap-2 sm:grid-cols-3">
             {SUGGESTED_OPENING_TEMPLATES.map((suggestion) => (
@@ -188,12 +214,15 @@ export function CreateHsmTemplateModal({
             <Input
               id="hsm-name"
               value={name}
+              disabled={isEditing}
               onChange={(event) => setName(event.target.value.toLowerCase())}
               placeholder="seguimiento_v1"
               aria-invalid={touched && Boolean(errors.name)}
             />
             <p className="text-xs text-muted-foreground">
-              {touched && errors.name ? (
+              {isEditing ? (
+                "Meta no deja cambiarlo: para otro nombre, crea una plantilla nueva."
+              ) : touched && errors.name ? (
                 <span className="text-destructive">{errors.name}</span>
               ) : (
                 "Minúsculas, números y guion bajo. Meta bloquea 30 días un nombre rechazado."
@@ -207,6 +236,7 @@ export function CreateHsmTemplateModal({
             <select
               id="hsm-language"
               value={language}
+              disabled={isEditing}
               onChange={(event) => setLanguage(event.target.value)}
               className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
             >
