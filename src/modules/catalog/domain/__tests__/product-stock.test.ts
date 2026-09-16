@@ -10,6 +10,7 @@ function variant(overrides: Partial<Variant> = {}): Variant {
     name: null,
     attributes: {},
     price_cents: 1000,
+    service_date: null,
     is_default: true,
     is_active: true,
     position: 0,
@@ -18,7 +19,10 @@ function variant(overrides: Partial<Variant> = {}): Variant {
   };
 }
 
-function product(variants: Variant[], kind: ProductListItemDTO["kind"] = "product"): ProductListItemDTO {
+function product(
+  variants: Variant[],
+  kind: ProductListItemDTO["kind"] = "product",
+): ProductListItemDTO {
   return { kind, variants } as unknown as ProductListItemDTO;
 }
 
@@ -35,7 +39,11 @@ const tracked = (available: boolean, on_hand = available ? 5 : 0) => ({
  */
 describe("aggregateStock", () => {
   it("sin ninguna fila de inventario: «sin control de stock», nunca agotado", () => {
-    expect(aggregateStock(product([variant(), variant({ id: "var-2", sku: "SKU-2" })]))).toEqual({
+    expect(
+      aggregateStock(
+        product([variant(), variant({ id: "var-2", sku: "SKU-2" })]),
+      ),
+    ).toEqual({
       total: null,
       state: "untracked",
     });
@@ -50,7 +58,10 @@ describe("aggregateStock", () => {
   });
 
   it("una rastreada agotada y otra sin fila: stock bajo (la sin fila cuenta como disponible)", () => {
-    const item = product([variant({ stock: tracked(false) }), variant({ id: "var-2", sku: "SKU-2" })]);
+    const item = product([
+      variant({ stock: tracked(false) }),
+      variant({ id: "var-2", sku: "SKU-2" }),
+    ]);
     expect(aggregateStock(item)).toEqual({ total: 0, state: "low" });
   });
 
@@ -63,10 +74,16 @@ describe("aggregateStock", () => {
   });
 
   it("servicios no tienen stock", () => {
-    expect(aggregateStock(product([variant()], "service"))).toEqual({ total: null, state: "none" });
+    expect(aggregateStock(product([variant()], "service"))).toEqual({
+      total: null,
+      state: "none",
+    });
   });
 
   it("sin variantes activas: agotado", () => {
-    expect(aggregateStock(product([variant({ is_active: false })]))).toEqual({ total: 0, state: "out" });
+    expect(aggregateStock(product([variant({ is_active: false })]))).toEqual({
+      total: 0,
+      state: "out",
+    });
   });
 });

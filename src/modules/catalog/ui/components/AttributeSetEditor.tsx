@@ -10,6 +10,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import {
   ATTRIBUTE_SCOPE_LABELS,
   ATTRIBUTE_TYPE_LABELS,
+  SELECTABLE_ATTRIBUTE_TYPES,
   MAX_ATTRIBUTES_PER_TYPE,
   attributeOptions,
   type AttributeDefinitionDTO,
@@ -265,7 +266,7 @@ export function AttributeSetEditor({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.keys(ATTRIBUTE_TYPE_LABELS) as AttributeType[]).map((type) => (
+                        {SELECTABLE_ATTRIBUTE_TYPES.map((type) => (
                           <SelectItem key={type} value={type}>
                             {ATTRIBUTE_TYPE_LABELS[type]}
                           </SelectItem>

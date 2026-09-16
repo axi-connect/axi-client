@@ -12504,6 +12504,7 @@ export interface components {
                 source: "superfinanciera" | "manual" | "tenant_override";
                 /** Format: date */
                 valid_from: string;
+                stale: boolean;
             } | null;
         };
         FxRatesListDto: {
