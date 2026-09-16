@@ -11727,6 +11727,8 @@ export interface components {
                 components: unknown[];
                 /** @enum {string} */
                 approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+                rejected_reason: string | null;
+                quality_score: string | null;
                 external_id: string | null;
                 /** Format: date-time */
                 updated_at: string;
@@ -11762,6 +11764,8 @@ export interface components {
             components: unknown[];
             /** @enum {string} */
             approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+            rejected_reason: string | null;
+            quality_score: string | null;
             external_id: string | null;
             /** Format: date-time */
             updated_at: string;

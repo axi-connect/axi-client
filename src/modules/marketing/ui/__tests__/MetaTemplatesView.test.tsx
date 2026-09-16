@@ -37,10 +37,12 @@ function hsm(over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO {
     body: "Hola {{1}}, tenemos novedades",
     components: [],
     approval_status: "approved",
+    rejected_reason: null,
+    quality_score: null,
     external_id: null,
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
-  } as HsmTemplateDTO;
+  };
 }
 
 const CLOUD = {
@@ -129,5 +131,41 @@ describe("sin canal cloud", () => {
     ).toBeInTheDocument();
     // Sin canal no se pide nada al backend de marketing.
     expect(api.listHsmTemplates).not.toHaveBeenCalled();
+  });
+});
+
+describe("lo que Meta contesta sobre una plantilla", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+  });
+
+  it("enseña POR QUÉ la rechazó, no una frase genérica", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h9",
+        name: "promo_rechazada",
+        approval_status: "rejected",
+        rejected_reason: "El cuerpo promete un descuento que no aparece en el pie",
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    // Antes solo decía qué HACER, nunca qué estaba MAL, que es lo único que
+    // sirve para corregirla.
+    expect(
+      await screen.findByText("El cuerpo promete un descuento que no aparece en el pie"),
+    ).toBeInTheDocument();
+  });
+
+  it("avisa de la calidad solo cuando ya no es verde", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "h10", name: "promo_verde", quality_score: "GREEN" }),
+      hsm({ id: "h11", name: "promo_amarilla", quality_score: "YELLOW" }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    // La calidad es el aviso PREVIO a que Meta pause la plantilla.
+    expect(await screen.findByText(/Calidad yellow/)).toBeInTheDocument();
+    expect(screen.queryByText(/Calidad green/)).not.toBeInTheDocument();
   });
 });

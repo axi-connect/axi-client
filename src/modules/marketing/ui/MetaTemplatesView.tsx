@@ -75,6 +75,23 @@ export function MetaTemplatesView() {
     if (channelId) void load(channelId);
   }, [channelId, load]);
 
+  /**
+   * «El estado se actualiza solo» era falso: el webhook de Meta escribe en la
+   * base pero no avisa al navegador, y no hay cron de sync — el único
+   * disparador era el botón «Sincronizar». Mientras haya alguna en revisión se
+   * refresca sola; cuando no queda ninguna, se para y no cuesta nada.
+   */
+  const hasPending = templates?.some((t) => t.approval_status === "pending") ?? false;
+  useEffect(() => {
+    if (!hasPending || channelId === null) return;
+    const timer = setInterval(() => {
+      void listHsmTemplates({ channel_id: channelId })
+        .then(setTemplates)
+        .catch(() => undefined);
+    }, 15_000);
+    return () => clearInterval(timer);
+  }, [hasPending, channelId]);
+
   async function handleSync() {
     if (!channelId) return;
     setSyncing(true);
@@ -129,7 +146,7 @@ export function MetaTemplatesView() {
           <strong className="font-medium text-foreground">Crea</strong> el texto con variables ({"{{1}}"}, {"{{2}}"}) y un ejemplo por cada una.
         </Step>
         <Step icon={Hourglass} accent="text-info">
-          <strong className="font-medium text-foreground">Meta revisa.</strong> Suele decidir en minutos; puede tardar hasta 48 h. El estado se actualiza solo.
+          <strong className="font-medium text-foreground">Meta revisa.</strong> Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, esta pantalla se refresca sola.
         </Step>
         <Step icon={CircleDollarSign} accent="text-muted-foreground">
           <strong className="font-medium text-foreground">Cuesta por mensaje entregado.</strong> Colombia: utility {formatTemplateCost("utility")} · marketing {formatTemplateCost("marketing")}.
@@ -250,13 +267,26 @@ export function MetaTemplatesView() {
                         {template.approval_status === "pending"
                           ? "Meta suele decidir en minutos; puede tardar hasta 48 h."
                           : template.approval_status === "rejected"
-                            ? "Corrige el texto y envíala como plantilla nueva: el nombre queda bloqueado 30 días."
+                            ? // El motivo REAL de Meta si lo mandó. La frase genérica
+                              // decía qué hacer pero no qué estaba mal, que es lo
+                              // único que sirve para corregirla.
+                              (template.rejected_reason ??
+                              "Corrige el texto y envíala como plantilla nueva: el nombre queda bloqueado 30 días.")
                             : template.approval_status === "paused"
                               ? "Varios destinatarios la marcaron como no deseada. Se reactiva si mejora la calidad."
                               : template.approval_status === "disabled"
                                 ? "Meta la deshabilitó por reportes repetidos o una violación de política."
                                 : (reason ?? "Sirve para abrir seguimientos del agente.")}
                       </p>
+                      {/* La calidad es el aviso PREVIO a que Meta la pause: se
+                          enseña solo cuando ya no es verde, que es cuando importa. */}
+                      {typeof template.quality_score === "string" &&
+                        template.quality_score.toUpperCase() !== "GREEN" && (
+                          <p className="mt-1 text-xs text-warning">
+                            Calidad {template.quality_score.toLowerCase()}: si baja más, Meta la
+                            pausa.
+                          </p>
+                        )}
                     </td>
                     <td className="px-4 py-2.5 align-top font-mono text-xs tabular-nums">
                       {formatTemplateCost(template.category)}

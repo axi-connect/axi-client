@@ -17,6 +17,8 @@ function hsm(over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO {
     body: "Hola {{1}}",
     components: [],
     approval_status: "approved",
+    rejected_reason: null,
+    quality_score: null,
     external_id: null,
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
@@ -114,6 +116,8 @@ describe("template-catalog — apertura (F2)", () => {
     body: "Hola {{1}}, te escribo por {{2}}.",
     components: [],
     approval_status: "approved" as const,
+    rejected_reason: null,
+    quality_score: null,
     external_id: null,
     updated_at: "2026-09-14T00:00:00.000Z",
   };
