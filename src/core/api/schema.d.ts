@@ -6672,6 +6672,11 @@ export interface components {
                 /** @enum {string} */
                 source: "platform" | "tenant" | "niche" | "default";
                 locked: boolean;
+                blocked_by: {
+                    /** @enum {string} */
+                    kind: "capability" | "feature";
+                    code: string;
+                } | null;
                 requires_capability: string;
                 readonly requires: string[];
             }[];
