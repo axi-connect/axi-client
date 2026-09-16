@@ -3988,6 +3988,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fx/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_settings_v1"];
+        put: operations["FxController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fx/rates/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_latest_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformFxController_rates_v1"];
+        put?: never;
+        post: operations["PlatformFxController_setManual_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformFxController_refresh_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geo/search": {
         parameters: {
             query?: never;
@@ -8634,7 +8698,7 @@ export interface components {
                     code: string;
                     label: string;
                     /** @enum {string} */
-                    type: "text" | "number" | "boolean" | "select";
+                    type: "text" | "number" | "boolean" | "select" | "date";
                     /** @enum {string} */
                     scope: "product" | "variant";
                     is_required: boolean;
@@ -8659,7 +8723,7 @@ export interface components {
                 code: string;
                 label: string;
                 /** @enum {string} */
-                type: "text" | "number" | "boolean" | "select";
+                type: "text" | "number" | "boolean" | "select" | "date";
                 /** @enum {string} */
                 scope: "product" | "variant";
                 is_required: boolean;
@@ -8681,7 +8745,7 @@ export interface components {
                 code: string;
                 label: string;
                 /** @enum {string} */
-                type: "text" | "number" | "boolean" | "select";
+                type: "text" | "number" | "boolean" | "select" | "date";
                 /**
                  * @default product
                  * @enum {string}
@@ -8735,7 +8799,7 @@ export interface components {
                     code: string;
                     label: string;
                     /** @enum {string} */
-                    type: "text" | "number" | "boolean" | "select";
+                    type: "text" | "number" | "boolean" | "select" | "date";
                     value: (string | number | boolean) | null;
                 }[];
                 variants: {
@@ -8747,6 +8811,8 @@ export interface components {
                         [key: string]: unknown;
                     };
                     price_cents: number;
+                    /** Format: date */
+                    service_date: string | null;
                     is_default: boolean;
                     is_active: boolean;
                     position: number;
@@ -8856,7 +8922,7 @@ export interface components {
                 code: string;
                 label: string;
                 /** @enum {string} */
-                type: "text" | "number" | "boolean" | "select";
+                type: "text" | "number" | "boolean" | "select" | "date";
                 value: (string | number | boolean) | null;
             }[];
             variants: {
@@ -8868,6 +8934,8 @@ export interface components {
                     [key: string]: unknown;
                 };
                 price_cents: number;
+                /** Format: date */
+                service_date: string | null;
                 is_default: boolean;
                 is_active: boolean;
                 position: number;
@@ -9654,6 +9722,8 @@ export interface components {
                 shipping_state: "estimated" | "quoted" | null;
                 total_cents: number;
                 currency: string;
+                /** Format: date */
+                service_date: string | null;
                 external_total_cents: number | null;
                 /** Format: date-time */
                 totals_reconciled_at: string | null;
@@ -9816,6 +9886,8 @@ export interface components {
             shipping_state: "estimated" | "quoted" | null;
             total_cents: number;
             currency: string;
+            /** Format: date */
+            service_date: string | null;
             external_total_cents: number | null;
             /** Format: date-time */
             totals_reconciled_at: string | null;
@@ -9959,6 +10031,8 @@ export interface components {
             intake_data?: {
                 [key: string]: unknown;
             };
+            /** Format: date */
+            service_date?: string | null;
         };
         TransitionOptionsDto: {
             /** @default true */
@@ -12390,6 +12464,78 @@ export interface components {
         };
         EvaluateAcceptedDto: {
             enqueued: boolean;
+        };
+        FxSettingsDto: {
+            settlement_currency: string;
+            spread_bps: number;
+            manual_rate: {
+                rate: number;
+                /** Format: date */
+                valid_until: string;
+            } | null;
+            show_indicative_quotes: boolean;
+        };
+        LatestFxRateDto: {
+            official: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            } | null;
+            effective: {
+                base: string;
+                quote: string;
+                rate: number;
+                official_rate: number | null;
+                spread_bps: number;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual" | "tenant_override";
+                /** Format: date */
+                valid_from: string;
+            } | null;
+        };
+        FxRatesListDto: {
+            data: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            }[];
+        };
+        SetManualRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            note?: string;
+        };
+        FxRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            /** Format: date */
+            valid_to: string | null;
+            /** @enum {string} */
+            source: "superfinanciera" | "manual";
+            /** Format: date-time */
+            fetched_at: string;
         };
         GeoSearchResultsDto: {
             items: {
@@ -20257,6 +20403,8 @@ export interface operations {
                 created_by_type?: "user" | "ai_agent";
                 created_from?: string;
                 created_to?: string;
+                service_date_from?: string;
+                service_date_to?: string;
                 search?: string;
                 sort_by?: "created_at" | "updated_at" | "order_number" | "total_cents";
                 sort_dir?: "asc" | "desc";
@@ -23798,6 +23946,134 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EvaluateAcceptedDto"];
                 };
+            };
+        };
+    };
+    FxController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FxSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_latest_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatestFxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_rates_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRatesListDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_setManual_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetManualRateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_refresh_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
