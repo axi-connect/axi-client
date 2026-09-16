@@ -5,26 +5,15 @@ import type { FieldErrors } from "react-hook-form";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import {
-  attributeOptions,
-  type ProductTypeAttributeDTO,
-} from "@/modules/catalog/domain/product-type";
+import type { ProductTypeAttributeDTO } from "@/modules/catalog/domain/product-type";
 import type {
   ProductFormValues,
   VariantRowValues,
 } from "@/modules/catalog/ui/forms/config/product.config";
+import { AttributeValueInput } from "./AttributeValueInput";
 import { PriceInput } from "./PriceInput";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 
-const UNSET_OPTION = "__unset__";
-
-/** Input tipado para un eje de variante (text/number/boolean/select). */
+/** El eje de una variante usa el control exhaustivo por tipo (incluye `date`). */
 function AxisInput({
   axis,
   rowKey,
@@ -36,59 +25,13 @@ function AxisInput({
   value: string | number | boolean | undefined;
   onChange: (value: string | number | boolean | undefined) => void;
 }) {
-  const inputId = `variant-${rowKey}-${axis.code}`;
-  if (axis.type === "select") {
-    return (
-      <Select
-        value={value === undefined ? UNSET_OPTION : String(value)}
-        onValueChange={(v: string) => onChange(v === UNSET_OPTION ? undefined : v)}
-      >
-        <SelectTrigger id={inputId} className="w-full">
-          <SelectValue placeholder={axis.label} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={UNSET_OPTION}>Sin definir</SelectItem>
-          {attributeOptions(axis).map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  }
-  if (axis.type === "boolean") {
-    return (
-      <label className="flex h-9 items-center gap-2 text-sm">
-        <input
-          id={inputId}
-          type="checkbox"
-          className="h-4 w-4 accent-primary"
-          checked={value === true}
-          onChange={(e) => onChange(e.target.checked)}
-        />
-        Sí
-      </label>
-    );
-  }
-  if (axis.type === "number") {
-    return (
-      <Input
-        id={inputId}
-        type="number"
-        inputMode="decimal"
-        value={value === undefined ? "" : String(value)}
-        placeholder={axis.unit ?? undefined}
-        onChange={(e) => onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-      />
-    );
-  }
   return (
-    <Input
-      id={inputId}
-      value={value === undefined ? "" : String(value)}
-      maxLength={120}
-      onChange={(e) => onChange(e.target.value === "" ? undefined : e.target.value)}
+    <AttributeValueInput
+      attribute={axis}
+      id={`variant-${rowKey}-${axis.code}`}
+      value={value}
+      placeholder={axis.type === "number" ? (axis.unit ?? undefined) : axis.label}
+      onChange={onChange}
     />
   );
 }

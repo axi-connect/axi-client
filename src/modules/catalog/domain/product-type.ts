@@ -30,14 +30,22 @@ export const ATTRIBUTE_TYPE_LABELS: Record<AttributeType, string> = {
 };
 
 /**
- * Tipos que el editor de tipos de producto OFRECE al crear un atributo. `date`
- * existe en el contrato desde F2 del programa Cobros (fecha del servicio de una
- * salida), pero no se ofrece hasta que `ProductAttributesSection` lo pinte con
- * `<input type="date">` (mockup `catalog-service-date`, pendiente de aprobación):
- * ofrecerlo antes haría que el formulario de producto lo tratara como texto
- * libre sin avisar. Un atributo `date` ya existente sí se etiqueta bien.
+ * Tipos que el editor de tipos de producto OFRECE al crear un atributo.
+ *
+ * Existe porque `date` (F2 del programa Cobros: la fecha de salida de una
+ * expedición) llegó al contrato antes que su control, y ofrecerlo entonces
+ * habría hecho que los formularios lo pintaran como texto libre sin avisar.
+ * Ya no: `AttributeValueInput` cubre los cinco tipos con un mapeo exhaustivo,
+ * así que la lista es el catálogo completo. Se mantiene como la puerta por la
+ * que pasa un tipo nuevo del backend: primero su control, después la oferta.
  */
-export const SELECTABLE_ATTRIBUTE_TYPES: readonly AttributeType[] = ["text", "number", "boolean", "select"];
+export const SELECTABLE_ATTRIBUTE_TYPES: readonly AttributeType[] = [
+  "text",
+  "number",
+  "boolean",
+  "select",
+  "date",
+];
 
 export const ATTRIBUTE_SCOPE_LABELS: Record<AttributeScope, string> = {
   product: "Producto",

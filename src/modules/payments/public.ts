@@ -3,8 +3,8 @@
  * de pago del tenant (`/payment-methods`, capacidad `sales`).
  *
  * Consumidores: `orders` (el selector de «Registrar pago» lista los medios) y
- * `companies` (la pestaña «Medios de pago» de Mi empresa embebe la vista, que
- * es autosuficiente).
+ * el hub Pagos de Ventas (`/settings/payments`), que monta las pestañas —todas
+ * autosuficientes— y las filtra por función del tenant.
  */
 export {
   PAYMENT_KIND_LABELS,
@@ -14,3 +14,23 @@ export {
 } from "./domain/payment-method";
 export { listPaymentMethods } from "./infrastructure/services/payment-methods-service.adapter";
 export { PaymentMethodsTab } from "./ui/components/PaymentMethodsTab";
+export {
+  FX_SOURCE_LABELS,
+  MAX_SPREAD_BPS,
+  formatRate,
+  fxNotice,
+  manualRateActive,
+  percentToSpread,
+  spreadToPercent,
+  type EffectiveFxRateDTO,
+  type FxSettingsDTO,
+  type LatestFxRateDTO,
+} from "./domain/fx-settings";
+export { getLatestFxRate } from "./infrastructure/services/fx-service.adapter";
+export { FxSettingsTab } from "./ui/components/FxSettingsTab";
+export {
+  PAYMENTS_FX_PATH,
+  PAYMENTS_HUB_BASE,
+  PaymentsHubNav,
+  paymentsHubTabs,
+} from "./ui/components/PaymentsHubNav";

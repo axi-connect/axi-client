@@ -14,6 +14,7 @@ export const platformKeys = {
     plan: (id: string) => [...platformKeys.tenants.all, id, "plan"] as const,
     limits: (id: string) => [...platformKeys.tenants.all, id, "limits"] as const,
     database: (id: string) => [...platformKeys.tenants.all, id, "database"] as const,
+    features: (id: string) => [...platformKeys.tenants.all, id, "features"] as const,
     migrations: (id: string) => [...platformKeys.tenants.all, id, "migrations"] as const,
   },
 

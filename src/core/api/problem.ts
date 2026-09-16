@@ -41,6 +41,10 @@ export const API_ERROR_CODES = {
   /** El rol lo permite pero el PLAN no lo incluye; `details.upgrade_hint.path` lleva a ampliarlo. */
   capabilityNotGranted: "entitlements/capability_not_granted",
   usageLimitExceeded: "usage/limit_exceeded",
+  /** La función no está activa para este tenant; `details.settings_hint` lleva a encenderla. */
+  featureDisabled: "features/feature_disabled",
+  /** Axi fijó la función para este tenant: el interruptor del panel no puede cambiarla. */
+  featureLockedByPlatform: "features/locked_by_platform",
   outsideServiceWindow: "channels/outside_service_window",
   invalidTransition: "conversations/invalid_transition",
   handoffConflict: "conversations/handoff_conflict",
