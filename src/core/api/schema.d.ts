@@ -11780,6 +11780,37 @@ export interface components {
             examples?: string[];
             /** @enum {string} */
             category?: "marketing" | "utility" | "authentication";
+            header?: ({
+                /** @enum {string} */
+                format: "text";
+                text: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                format: "image" | "video" | "document";
+                handle: string;
+            }) | null;
+            footer?: string | null;
+            buttons?: ({
+                /** @enum {string} */
+                type: "quick_reply";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "url";
+                text: string;
+                url: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                type: "phone_number";
+                text: string;
+                phone_number: string;
+            } | {
+                /** @enum {string} */
+                type: "copy_code";
+                example: string;
+            })[] | null;
         };
         HsmTemplateDto: {
             /** Format: uuid */
@@ -11820,6 +11851,37 @@ export interface components {
             category: "marketing" | "utility" | "authentication";
             body: string;
             examples?: string[];
+            header?: {
+                /** @enum {string} */
+                format: "text";
+                text: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                format: "image" | "video" | "document";
+                handle: string;
+            };
+            footer?: string;
+            buttons?: ({
+                /** @enum {string} */
+                type: "quick_reply";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "url";
+                text: string;
+                url: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                type: "phone_number";
+                text: string;
+                phone_number: string;
+            } | {
+                /** @enum {string} */
+                type: "copy_code";
+                example: string;
+            })[];
         };
         AutomationsListDto: {
             data: {

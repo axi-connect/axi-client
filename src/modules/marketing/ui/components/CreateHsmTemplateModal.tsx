@@ -1,7 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BadgeCheck, CircleDollarSign, CircleX, Hourglass, MessageCircle, Sparkles, Zap } from "lucide-react";
+import {
+  BadgeCheck,
+  CircleDollarSign,
+  CircleX,
+  CornerUpLeft,
+  Hourglass,
+  MessageCircle,
+  MessageSquare,
+  Monitor,
+  Sparkles,
+  Type,
+  X,
+  Zap,
+} from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -18,6 +31,16 @@ import {
   createHsmTemplate,
   updateHsmTemplate,
 } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import {
+  breaksDesktop,
+  emptyButton,
+  FOOTER_MAX,
+  groupButtons,
+  HEADER_MAX,
+  readTemplatePieces,
+  type TemplateButton,
+} from "@/modules/marketing/domain/template-pieces";
+import { TemplateButtonsEditor } from "@/modules/marketing/ui/components/TemplateButtonsEditor";
 
 type Category = HsmTemplateDTO["category"];
 
@@ -48,6 +71,10 @@ const CATEGORIES: ReadonlyArray<{
     disabled: true,
   },
 ];
+
+/** El añadidor de piezas: mismo botón punteado en los tres sitios. */
+const ADDER =
+  "inline-flex h-8 items-center gap-1.5 rounded-full border border-dashed border-border px-3 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
 
 const NAME_REGEX = /^[a-z0-9_]{3,120}$/;
 const BODY_MAX = 1024;
@@ -86,6 +113,12 @@ export function CreateHsmTemplateModal({
   const [category, setCategory] = useState<Category>(editing?.category ?? "utility");
   const [body, setBody] = useState(editing?.body ?? "");
   const [examples, setExamples] = useState<string[]>([]);
+  // Se cargan del estado inicial, no de un efecto: el consumidor remonta el
+  // modal con una `key` distinta por plantilla.
+  const stored = readTemplatePieces(editing?.components);
+  const [header, setHeader] = useState<string | null>(stored.header);
+  const [footer, setFooter] = useState<string | null>(stored.footer);
+  const [buttons, setButtons] = useState<TemplateButton[]>(stored.buttons);
   const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
 
@@ -131,6 +164,11 @@ export function CreateHsmTemplateModal({
       const params = {
         body,
         ...(variableCount > 0 ? { examples: examples.slice(0, variableCount) } : {}),
+        // Las rápidas se agrupan al guardar: intercaladas, Meta rechaza la
+        // plantilla entera con «invalid combination».
+        ...(buttons.length === 0 ? {} : { buttons: groupButtons(buttons) }),
+        ...(header === null ? {} : { header: { format: "text" as const, text: header } }),
+        ...(footer === null ? {} : { footer }),
       };
       const created = isEditing
         ? await updateHsmTemplate(editing.id, {
@@ -205,6 +243,106 @@ export function CreateHsmTemplateModal({
             ))}
           </div>
         </section>
+
+        {header !== null && (
+          <section className="space-y-1">
+            <span className="flex items-center gap-2 text-xs font-medium">
+              Cabecera
+              <span className="ml-auto tabular-nums text-muted-foreground">
+                {header.length}/{HEADER_MAX}
+              </span>
+              <button
+                type="button"
+                aria-label="Quitar la cabecera"
+                onClick={() => setHeader(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X aria-hidden className="size-3.5" />
+              </button>
+            </span>
+            <Input
+              aria-label="Texto de la cabecera"
+              placeholder="Temporada nueva en Savage"
+              maxLength={HEADER_MAX}
+              value={header}
+              onChange={(event) => setHeader(event.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Va en negrita arriba. Admite un solo hueco, y no admite negritas ni cursivas.
+            </p>
+          </section>
+        )}
+
+        {footer !== null && (
+          <section className="space-y-1">
+            <span className="flex items-center gap-2 text-xs font-medium">
+              Pie
+              <span className="ml-auto tabular-nums text-muted-foreground">
+                {footer.length}/{FOOTER_MAX}
+              </span>
+              <button
+                type="button"
+                aria-label="Quitar el pie"
+                onClick={() => setFooter(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X aria-hidden className="size-3.5" />
+              </button>
+            </span>
+            <Input
+              aria-label="Texto del pie"
+              placeholder="Responde SALIR para no recibir más promociones"
+              maxLength={FOOTER_MAX}
+              value={footer}
+              onChange={(event) => setFooter(event.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Sin huecos: Meta no los admite en el pie. Es donde suele ir la salida del cliente.
+            </p>
+          </section>
+        )}
+
+        {buttons.length > 0 && (
+          <section className="space-y-1">
+            <span className="text-xs font-medium">Botones</span>
+            <TemplateButtonsEditor buttons={buttons} onChange={setButtons} />
+            {breaksDesktop(buttons) && (
+              <p className="flex gap-2 rounded-lg border border-warning/35 bg-warning/5 px-3 py-2 text-xs leading-relaxed">
+                <Monitor aria-hidden className="mt-0.5 size-3.5 shrink-0 text-warning" />
+                <span>
+                  Esta combinación <strong className="font-medium">no se ve en WhatsApp de
+                  escritorio</strong>: a quien la reciba ahí se le pedirá abrirla en el celular.
+                  {buttons.length > 3 && " Y con más de tres, WhatsApp enseña solo dos y esconde el resto."}
+                </span>
+              </p>
+            )}
+          </section>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {header === null && (
+            <button type="button" onClick={() => setHeader("")} className={ADDER}>
+              <Type aria-hidden className="size-3.5" />
+              Añadir cabecera
+            </button>
+          )}
+          {footer === null && (
+            <button type="button" onClick={() => setFooter("")} className={ADDER}>
+              <MessageSquare aria-hidden className="size-3.5" />
+              Añadir pie
+            </button>
+          )}
+          {buttons.length === 0 && (
+            <button
+              type="button"
+              onClick={() => setButtons([emptyButton("quick_reply")])}
+              className={ADDER}
+            >
+              <CornerUpLeft aria-hidden className="size-3.5" />
+              Añadir botones
+            </button>
+          )}
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
