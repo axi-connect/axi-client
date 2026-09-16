@@ -3588,6 +3588,22 @@ export interface paths {
         patch: operations["MarketingTemplatesController_update_v1"];
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/messaging-window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HsmTemplatesController_messagingWindow_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates": {
         parameters: {
             query?: never;
@@ -11712,6 +11728,11 @@ export interface components {
                 language: string;
             } | null;
             is_active?: boolean;
+        };
+        MessagingWindowDto: {
+            limit: number | null;
+            used: number;
+            remaining: number | null;
         };
         HsmTemplatesListDto: {
             data: {
@@ -22969,6 +22990,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_messagingWindow_v1: {
+        parameters: {
+            query: {
+                channel_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagingWindowDto"];
                 };
             };
         };

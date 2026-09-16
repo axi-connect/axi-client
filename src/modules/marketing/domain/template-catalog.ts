@@ -9,6 +9,7 @@ export type CreateTemplateDTO = Schemas["CreateTemplateDto"];
 export type UpdateTemplateDTO = Schemas["UpdateTemplateDto"];
 
 export type HsmTemplateDTO = Schemas["HsmTemplateDto"];
+export type MessagingWindowDTO = Schemas["MessagingWindowDto"];
 export type CreateHsmTemplateDTO = Schemas["CreateHsmTemplateDto"];
 
 /**

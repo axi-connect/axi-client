@@ -38,6 +38,7 @@ jest.mock("@/modules/marketing/infrastructure/services/campaigns-service.adapter
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   listTemplates: jest.fn(),
   listHsmTemplates: jest.fn(),
+  getMessagingWindow: jest.fn(),
 }));
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
 jest.mock("@/modules/companies/public", () => ({ loadMyCompanyOnce: jest.fn() }));
@@ -56,6 +57,7 @@ const api = require("@/modules/marketing/infrastructure/services/campaigns-servi
 const templatesApi = require("@/modules/marketing/infrastructure/services/templates-service.adapter") as {
   listTemplates: jest.Mock;
   listHsmTemplates: jest.Mock;
+  getMessagingWindow: jest.Mock;
 };
 const channels = require("@/modules/channels/public") as { listChannels: jest.Mock };
 const companies = require("@/modules/companies/public") as { loadMyCompanyOnce: jest.Mock };
@@ -77,6 +79,7 @@ beforeEach(() => {
     data: [{ id: "ch1", name: "Ventas", kind: "whatsapp_cloud" }],
   });
   companies.loadMyCompanyOnce.mockResolvedValue({ name: "Savage" });
+  templatesApi.getMessagingWindow.mockResolvedValue({ limit: 250, used: 0, remaining: 250 });
   templatesApi.listHsmTemplates.mockResolvedValue([
     {
       id: "h1",

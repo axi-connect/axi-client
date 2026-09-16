@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   CircleDollarSign,
   Clock,
+  Gauge,
   Info,
   MessageSquare,
   Users,
@@ -58,10 +59,16 @@ import {
   updateCampaign,
 } from "@/modules/marketing/infrastructure/services/campaigns-service.adapter";
 import {
+  getMessagingWindow,
   listHsmTemplates,
   listTemplates,
 } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
-import { isUsableForMarketing, type HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
+import { messagingWindowNotice } from "@/modules/marketing/domain/messaging-window";
+import {
+  isUsableForMarketing,
+  type HsmTemplateDTO,
+  type MessagingWindowDTO,
+} from "@/modules/marketing/domain/template-catalog";
 import { HsmTemplatePicker } from "@/modules/marketing/ui/components/HsmTemplatePicker";
 import { renderHsmPreview } from "@/modules/marketing/domain/hsm-preview";
 import { hsmPreviewValue } from "@/modules/marketing/domain/hsm-params";
@@ -99,6 +106,7 @@ export function CampaignWizard() {
   const [cloudChannels, setCloudChannels] = useState<{ id: string; name: string }[]>([]);
   const [cloudChannelId, setCloudChannelId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("tu empresa");
+  const [window_, setWindow] = useState<MessagingWindowDTO | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -140,6 +148,11 @@ export function CampaignWizard() {
     void listHsmTemplates({ channel_id: cloudChannelId, approval_status: "approved" })
       .then((rows) => setHsmTemplates(rows.filter(isUsableForMarketing)))
       .catch(() => setHsmTemplates([]));
+    // El cupo de Meta es del portafolio: hace falta para decir en cuántos días
+    // sale la campaña ANTES de lanzarla, no después.
+    void getMessagingWindow(cloudChannelId)
+      .then(setWindow)
+      .catch(() => setWindow(null));
   }, [cloudChannelId]);
 
   const patch = useCallback(
@@ -256,6 +269,10 @@ export function CampaignWizard() {
     selectedHsm === null || estimate === null
       ? null
       : bulkOpeningCost(estimate.estimatedReach, selectedHsm.category);
+  const windowNotice =
+    selectedHsm === null || estimate === null
+      ? null
+      : messagingWindowNotice(estimate.estimatedReach, window_);
 
   return (
     <div className="flex flex-col gap-5">
@@ -671,6 +688,21 @@ export function CampaignWizard() {
                     ))}
               </ReviewMessage>
             </div>
+
+            {windowNotice !== null && (
+              <Callout tone="warn" icon={Gauge}>
+                Meta te deja abrir{" "}
+                <strong className="font-medium text-foreground">
+                  {windowNotice.limit.toLocaleString("es-CO")} conversaciones nuevas cada 24 h
+                </strong>
+                , y ese cupo lo comparten todos tus números. Esta campaña{" "}
+                <strong className="font-medium text-foreground">
+                  saldrá repartida en {windowNotice.days} días
+                </strong>
+                : no tienes que hacer nada, se reparte sola. Mandarlo todo de golpe es lo que baja
+                el cupo, no lo que lo sube.
+              </Callout>
+            )}
 
             {hsmCost !== null && hsmCost.category === "marketing" && (
               <Callout tone="warn" icon={CircleDollarSign}>

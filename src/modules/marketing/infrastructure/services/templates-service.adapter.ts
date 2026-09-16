@@ -3,6 +3,7 @@ import type {
   CreateHsmTemplateDTO,
   CreateTemplateDTO,
   HsmTemplateDTO,
+  MessagingWindowDTO,
   TemplateDTO,
   UpdateTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
@@ -31,6 +32,16 @@ export function updateTemplate(id: string, dto: UpdateTemplateDTO): Promise<Temp
 
 export function deleteTemplate(id: string): Promise<void> {
   return http.delete<void>(`/marketing/templates/${id}`);
+}
+
+/**
+ * El cupo de conversaciones nuevas que Meta deja abrir en 24 h, del portafolio
+ * entero. `limit: null` = sin tope conocido; NO es cero.
+ */
+export function getMessagingWindow(channelId: string): Promise<MessagingWindowDTO> {
+  return http.get<MessagingWindowDTO>("/marketing/hsm-templates/messaging-window", {
+    channel_id: channelId,
+  });
 }
 
 export async function listHsmTemplates(params: {
