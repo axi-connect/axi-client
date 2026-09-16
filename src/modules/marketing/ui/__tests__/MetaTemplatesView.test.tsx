@@ -17,6 +17,8 @@ jest.mock("@/core/providers/alert-provider", () => ({
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   deleteHsmTemplate: jest.fn(),
+  updateHsmTemplate: jest.fn(),
+  createHsmTemplate: jest.fn(),
   listHsmTemplates: jest.fn(),
   syncHsmTemplates: jest.fn(),
 }));

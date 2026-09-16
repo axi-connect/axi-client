@@ -5,6 +5,8 @@ import { Input } from "@/shared/components/ui/input";
 import {
   BUTTON_LABEL_MAX,
   BUTTON_LABELS,
+  COPY_CODE_MAX,
+  PHONE_MAX,
   canAddButton,
   emptyButton,
   type ButtonKind,
@@ -66,7 +68,7 @@ export function TemplateButtonsEditor({
             className="h-8 min-w-28 flex-1 font-mono"
             aria-label="Código a copiar"
             placeholder="TEMP30"
-            maxLength={15}
+            maxLength={COPY_CODE_MAX}
             value={button.example}
             onChange={(event) => patch(index, { ...button, example: event.target.value })}
           />
@@ -94,7 +96,7 @@ export function TemplateButtonsEditor({
                 className="h-8 min-w-32 flex-1 font-mono"
                 aria-label={`Teléfono del botón ${String(index + 1)}`}
                 placeholder="573001112233"
-                maxLength={20}
+                maxLength={PHONE_MAX}
                 value={button.phone_number}
                 onChange={(event) => patch(index, { ...button, phone_number: event.target.value })}
               />

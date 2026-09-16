@@ -32,6 +32,7 @@ import {
   updateHsmTemplate,
 } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
 import {
+  BODY_MAX,
   breaksDesktop,
   emptyButton,
   FOOTER_MAX,
@@ -77,7 +78,7 @@ const ADDER =
   "inline-flex h-8 items-center gap-1.5 rounded-full border border-dashed border-border px-3 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
 
 const NAME_REGEX = /^[a-z0-9_]{3,120}$/;
-const BODY_MAX = 1024;
+
 
 /**
  * Alta guiada de una plantilla de Meta (F2 del seguimiento autónomo). Meta la
@@ -166,9 +167,22 @@ export function CreateHsmTemplateModal({
         ...(variableCount > 0 ? { examples: examples.slice(0, variableCount) } : {}),
         // Las rápidas se agrupan al guardar: intercaladas, Meta rechaza la
         // plantilla entera con «invalid combination».
-        ...(buttons.length === 0 ? {} : { buttons: groupButtons(buttons) }),
-        ...(header === null ? {} : { header: { format: "text" as const, text: header } }),
-        ...(footer === null ? {} : { footer }),
+        // Quitar una pieza NO es omitirla: editar reemplaza todos los
+        // componentes en Meta, así que omitir la conserva. Por eso al editar se
+        // manda `null` explícito cuando el operador la quitó — si no, el botón
+        // de quitar decía que guardaba y no quitaba nada.
+        //
+        // La excepción es la cabecera de MEDIA: el formulario no la sabe
+        // enseñar, así que ahí sí hay que omitir para no borrarla.
+        ...pieceUpdate("buttons", buttons.length === 0 ? null : groupButtons(buttons), isEditing),
+        ...(stored.headerIsMedia && header === null
+          ? {}
+          : pieceUpdate(
+              "header",
+              header === null ? null : { format: "text" as const, text: header },
+              isEditing,
+            )),
+        ...pieceUpdate("footer", footer, isEditing),
       };
       const created = isEditing
         ? await updateHsmTemplate(editing.id, {
@@ -537,4 +551,20 @@ function renderPreview(body: string, examples: readonly string[]): Array<{ text:
   }
   if (cursor < body.length) segments.push({ text: body.slice(cursor), variable: false });
   return segments;
+}
+
+/**
+ * Cómo viaja una pieza que el operador dejó vacía.
+ *
+ * Al CREAR se omite: no hay nada que borrar. Al EDITAR se manda `null`, que es
+ * lo que el servidor entiende como «quítala» — omitirla la conservaría, porque
+ * editar reemplaza todos los componentes en Meta.
+ */
+function pieceUpdate<T>(
+  key: string,
+  value: T | null,
+  isEditing: boolean,
+): Record<string, T | null> {
+  if (value !== null) return { [key]: value };
+  return isEditing ? { [key]: null } : {};
 }

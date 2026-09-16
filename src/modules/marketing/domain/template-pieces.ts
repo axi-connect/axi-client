@@ -37,6 +37,9 @@ export const BUTTONS_MAX = 10;
 export const HEADER_MAX = 60;
 export const FOOTER_MAX = 60;
 export const BUTTON_LABEL_MAX = 25;
+export const BODY_MAX = 1024;
+export const PHONE_MAX = 20;
+export const COPY_CODE_MAX = 15;
 
 export const BUTTON_LABELS: Record<ButtonKind, string> = {
   quick_reply: "Respuesta rápida",
@@ -120,13 +123,28 @@ export function breaksDesktop(buttons: readonly TemplateButton[]): boolean {
  */
 export function readTemplatePieces(components: unknown): {
   header: string | null;
+  /**
+   * `true` si la cabecera que hay es de MEDIA.
+   *
+   * Hace falta distinguirlo de «no hay cabecera», porque el formulario no sabe
+   * enseñarla y las dos cosas dejarían `header` en `null`. Al guardar, una se
+   * omite —para conservarla— y la otra se manda vacía —para quitarla—, y
+   * confundirlas es lo que hacía que el botón de quitar no quitara nada.
+   */
+  headerIsMedia: boolean;
   footer: string | null;
   buttons: TemplateButton[];
 } {
-  const empty = { header: null, footer: null, buttons: [] as TemplateButton[] };
+  const empty = {
+    header: null,
+    headerIsMedia: false,
+    footer: null,
+    buttons: [] as TemplateButton[],
+  };
   if (!Array.isArray(components)) return empty;
 
   let header: string | null = null;
+  let headerIsMedia = false;
   let footer: string | null = null;
   let buttons: TemplateButton[] = [];
 
@@ -135,9 +153,12 @@ export function readTemplatePieces(components: unknown): {
     const item = raw as Record<string, unknown>;
     const type = typeof item.type === "string" ? item.type.toUpperCase() : "";
     const text = typeof item.text === "string" ? item.text : "";
-    // Una cabecera de media no se puede editar todavía: se deja fuera del
-    // formulario para no prometer algo que no se puede guardar.
-    if (type === "HEADER" && String(item.format ?? "text").toLowerCase() === "text") header = text;
+    if (type === "HEADER") {
+      // Una cabecera de media no se puede editar todavía: se deja fuera del
+      // formulario, pero se RECUERDA para no borrarla al guardar.
+      if (String(item.format ?? "text").toLowerCase() === "text") header = text;
+      else headerIsMedia = true;
+    }
     if (type === "FOOTER") footer = text;
     if (type === "BUTTONS" && Array.isArray(item.buttons)) {
       buttons = item.buttons
@@ -145,7 +166,7 @@ export function readTemplatePieces(components: unknown): {
         .filter((button): button is TemplateButton => button !== null);
     }
   }
-  return { header, footer, buttons };
+  return { header, headerIsMedia, footer, buttons };
 }
 
 function readButton(raw: unknown): TemplateButton | null {
