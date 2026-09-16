@@ -195,6 +195,23 @@ export function countTemplateVariables(body: string): number | null {
 }
 
 /**
+ * Si esta plantilla se puede mandar **sin parámetros**.
+ *
+ * Las automatizaciones no tienen mapeo de variables: su despacho manda
+ * `{name, language}` y nada más. Una plantilla con `{{1}}` elegida aquí sale
+ * pelada, y Meta la rechaza con 132000 **al ejecutarse la regla** — semanas
+ * después de configurarla, sin que nadie esté mirando. El diseño siempre
+ * asumió HSM sin variables; lo que faltaba era que algo lo comprobara.
+ *
+ * Un cuerpo que no se entiende (`null`) también queda fuera: es la misma
+ * cautela que en el servidor, donde traducir «no lo entiendo» a «cero huecos»
+ * mandaba lotes enteros que Meta rechazaba.
+ */
+export function sendsWithoutParams(template: HsmTemplateDTO): boolean {
+  return countTemplateVariables(template.body) === 0;
+}
+
+/**
  * Tres plantillas de seguimiento para empezar: utility, con {{1}} nombre y
  * {{2}} tema, redactadas para pasar la revisión de Meta a la primera. El
  * cierre «respóndenos «no»» es la salida de opt-out que Meta valora.

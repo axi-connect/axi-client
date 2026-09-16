@@ -3,6 +3,7 @@ import {
   describeTemplateContent,
   HSM_STATUS_MAP,
   isUsableForMarketing,
+  sendsWithoutParams,
   whyUnusable,
 } from "../template-catalog";
 import { HSM_APPROVAL_LABELS } from "../enums";
@@ -155,5 +156,27 @@ describe("template-catalog — apertura (F2)", () => {
       expect(suggestion.examples).toHaveLength(2);
       expect(/^[a-z0-9_]+$/.test(suggestion.name)).toBe(true);
     }
+  });
+});
+
+/**
+ * Las automatizaciones mandan la plantilla PELADA —`{name, language}` y nada
+ * más—, así que una con `{{1}}` no falla al configurar la regla: falla semanas
+ * después, cuando la regla dispara, con un 132000 que nadie está mirando.
+ */
+describe("sendsWithoutParams · las que una automatización sí puede mandar", () => {
+  it("sin huecos, sí", () => {
+    expect(sendsWithoutParams(hsm({ body: "Seguimos por aquí cuando quieras." }))).toBe(true);
+  });
+
+  it("con huecos, no: saldría sin rellenar", () => {
+    expect(sendsWithoutParams(hsm({ body: "Hola {{1}}, ¿seguimos?" }))).toBe(false);
+  });
+
+  it("y un cuerpo que no se entiende tampoco", () => {
+    // «No lo entiendo» no es «no tiene huecos». Traducir lo primero a lo
+    // segundo es lo que mandaba a Meta lotes que rechazaba enteros.
+    expect(sendsWithoutParams(hsm({ body: "Hola {{1}} {{2}} ya" }))).toBe(false);
+    expect(sendsWithoutParams(hsm({ body: "{{1}}, hola" }))).toBe(false);
   });
 });

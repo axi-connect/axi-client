@@ -1,5 +1,8 @@
 import { z } from "zod";
-import type { HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
+import {
+  sendsWithoutParams,
+  type HsmTemplateDTO,
+} from "@/modules/marketing/domain/template-catalog";
 import { MessageSquare, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
@@ -680,6 +683,12 @@ export function buildAutomationFormFields(options: {
  * lo resuelve el despacho. Si la lista viene vacía —porque no hay canal cloud o
  * la llamada falló— se cae a un campo de texto: peor es dejar al operador sin
  * poder encender la regla.
+ *
+ * **Solo se ofrecen las que no llevan variables.** Este camino no tiene mapeo
+ * de parámetros: el despacho manda `{name, language}` y nada más, así que una
+ * plantilla con `{{1}}` saldría pelada y Meta la rechazaría al ejecutarse la
+ * regla. Se dice por qué faltan en vez de esconderlas sin más, que es lo que
+ * convierte «no encuentro mi plantilla» en un rato perdido.
  */
 function hsmTemplateField(
   templates: readonly HsmTemplateDTO[],
@@ -688,7 +697,9 @@ function hsmTemplateField(
     "hsm_template_name",
     ({ value, setValue, getError }) => {
       const current = typeof value === "string" ? value : "";
-      const known = templates.some((template) => template.name === current);
+      const usable = templates.filter(sendsWithoutParams);
+      const omitted = templates.length - usable.length;
+      const known = usable.some((template) => template.name === current);
       return (
         <div className="space-y-1">
           {templates.length === 0 ? (
@@ -709,7 +720,7 @@ function hsmTemplateField(
               className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
             >
               <option value="">Elige una plantilla aprobada…</option>
-              {templates.map((template) => (
+              {usable.map((template) => (
                 <option key={template.id} value={template.name}>
                   {template.name} · {template.language}
                 </option>
@@ -726,6 +737,8 @@ function hsmTemplateField(
           ) : (
             <p className="text-xs text-muted-foreground">
               Obligatoria para encender esta regla: escribe fuera de la ventana de 24 h.
+              {omitted > 0 &&
+                ` Se omiten ${String(omitted)} plantilla(s) con variables: esta regla no sabe rellenarlas.`}
             </p>
           )}
         </div>
