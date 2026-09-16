@@ -103,6 +103,7 @@ Light/dark, estados (cargando, vacío, error, 403 de capacidad/feature), móvil.
 | F1 | `company-settings-features.html` | «Tipo de negocio» en General; pestaña Funciones con origen y bloqueo por plataforma |
 | F1 | `platform-tenant-features.html` | Overrides por tenant |
 | F2/F4/F5 | `payments-hub.html` | Hub Pagos: Medios · Plan de pagos (+ recordatorios) · Moneda y TRM · Documentos; estados |
+| F2 | `catalog-service-date.html` | Atributo tipo `date` en el editor de producto/variante, badge de fecha en la tabla de variantes, «Fecha del servicio» en el rail del pedido y el 422 de fechas mixtas |
 | F3/F4/F8 | `order-rail-plan-documents.html` | Rail con Plan de pago, «Registrar abono», Documentos con enviar (WhatsApp/Email, ventana 24 h, enviando/fallido/omitido), total dual, «desactualizado» |
 | F3 | `orders-kanban-progress-chip.html` | Tarjetas con chip de progreso; sin columna nueva |
 | F4 | `receivables.html` | Cartera: tiles, filtro segmentado, tabla con mora y acciones, vacío, móvil en cards |
@@ -144,4 +145,6 @@ Light/dark, estados (cargando, vacío, error, 403 de capacidad/feature), móvil.
 | Fase | Estado |
 |---|---|
 | Paso 0 (este documento) | 2026-09-16 |
-| F1–F9 | Pendientes (cada una arranca con su mockup) |
+| Etapa A · mockups | Publicados 2026-09-16 como lienzo de diseño (17 artboards, light/dark/móvil/estados): https://claude.ai/artifact/3k7tchLhmyG1t5d632HeEp — `company-settings-features`, `platform-tenant-features`, `payments-hub` (Medios + Moneda y TRM), `catalog-service-date`. Copia en `docs/design/mockups/` (kit compartido `_axi_mockup_kit.py`; cada `*.build.py` genera su `.html` + `.lucide.json` y exporta artboards con `AXI_MOCKUP_ARTBOARDS_DIR`). **Pendiente de aprobación del dueño antes de tocar UI.** |
+| F1–F2 UI | Bloqueadas por la aprobación de los mockups |
+| F3–F9 | Pendientes (cada una arranca con su mockup) |
