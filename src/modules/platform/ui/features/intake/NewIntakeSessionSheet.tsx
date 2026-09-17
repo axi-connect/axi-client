@@ -19,6 +19,7 @@ import {
   useCreateIntakeSession,
   useIntakeBlueprintsQuery,
 } from "../../../infrastructure/api/hooks/use-intake";
+import { IntakeLadder } from "./IntakeLadder";
 
 /**
  * Emitir una entrevista.
@@ -148,6 +149,8 @@ export function NewIntakeSessionSheet({
               </p>
             </div>
 
+            <IntakeLadder companyId={companyId} onPick={setBlueprintId} />
+
             <div className="rounded-lg border border-accent-violet/25 bg-accent-violet/5 p-3">
               <Label htmlFor="intake-url" className="flex items-center gap-1.5">
                 <Globe className="size-3.5 text-accent-violet" aria-hidden="true" />
@@ -236,6 +239,14 @@ export function NewIntakeSessionSheet({
                     (result.prefill.derived > 0
                       ? ` (${String(result.prefill.derived)} deducidos de su web, se le confirman).`
                       : ".")}
+                {/* Lo propuesto se cuenta APARTE de lo sabido: no es un dato de
+                    este negocio, es de su sector. Sumarlos diría que arrancamos
+                    sabiendo cosas que en realidad estamos suponiendo. */}
+                {result.prefill.proposed > 0
+                  ? ` Además le dejamos ${String(result.prefill.proposed)} ${
+                      result.prefill.proposed === 1 ? "propuesta" : "propuestas"
+                    } por su tipo de negocio, para que corrija en vez de dictar.`
+                  : ""}
                 {result.prefill.website_failed
                   ? " No pudimos leer su página: puede estar caída o hecha toda en el navegador."
                   : ""}

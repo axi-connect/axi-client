@@ -449,6 +449,46 @@
     100% { background: transparent; box-shadow: none; }
   }
   .row.confirm { background: linear-gradient(90deg, var(--violet-tint), transparent 70%); }
+  /* Propuesto por el TIPO DE NEGOCIO: mismo peso visual que lo deducido —las dos
+     cosas piden un «así es»— pero otra procedencia, y la ficha lo dice. */
+  .row .src.prop { color: var(--coral); }
+  .row.propose { background: linear-gradient(90deg, rgb(255 90 60 / .07), transparent 70%); }
+  .get.prop { background: rgb(255 90 60 / .1); color: var(--coral); }
+  .get.prop:hover { background: rgb(255 90 60 / .16); }
+
+  /* ── La propuesta EDITABLE (F2 §5.3) ──────────────────────────────────────
+     Una lista propuesta no se edita en una caja de texto separada por comas:
+     eso obliga a releer la propuesta entera para quitar una etapa. Cada
+     elemento es una ficha con su nombre, su sitio y su «quitar». */
+  .row.open { display: block; padding: 10px 12px 12px 16px; background: var(--card-2); }
+  .row.open .k { margin-bottom: 8px; }
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--hair);
+    border-radius: 12px; padding: 7px 8px 7px 10px;
+  }
+  .chip .ord { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; width: 14px; flex: none; }
+  .chip input {
+    flex: 1; min-width: 0; border: 0; background: none; outline: none;
+    font: inherit; font-size: 14.5px; color: var(--ink); padding: 0;
+  }
+  .chip .mv, .chip .rm {
+    border: 0; background: none; cursor: pointer; color: var(--ink-3);
+    width: 26px; height: 26px; border-radius: 999px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .chip .mv:hover, .chip .rm:hover { background: var(--fill); color: var(--ink); }
+  .chip .mv[disabled] { opacity: .3; cursor: default; }
+  .chip .rm:hover { color: var(--coral); }
+  .chip-add {
+    margin-top: 8px; width: 100%; border: 1px dashed var(--hair-strong);
+    background: none; border-radius: 12px; padding: 8px; cursor: pointer;
+    font: inherit; font-size: 13.5px; color: var(--ink-2);
+  }
+  .chip-add:hover { border-color: var(--coral); color: var(--coral); }
+  .chip-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .chip-foot .why { flex: 1; margin: 0; font-size: 11.5px; color: var(--ink-3); line-height: 1.35; }
 
   /* Botón cápsula (App Store «OBTENER») */
   .get {
@@ -571,7 +611,7 @@
 
   <section class="notes">
     <h2>Por qué está hecho así</h2>
-    <p>Seis decisiones que salieron de mirar qué funciona y qué no en onboarding conversacional, no de qué se veía bonito.</p>
+    <p>Ocho decisiones que salieron de mirar qué funciona y qué no en onboarding conversacional, no de qué se veía bonito.</p>
 
     <div class="grid">
       <div class="note">
@@ -595,6 +635,16 @@
         <p>Insistir es lo que hace que alguien cierre la pestaña.</p>
       </div>
       <div class="note">
+        <h3>Proponer, no preguntar</h3>
+        <p>«¿Cómo organizas tu catálogo?» obliga a diseñar una taxonomía de memoria en un chat. <b>«Para un restaurante suelo ver entradas, platos fuertes, bebidas y postres, ¿te sirve?»</b> se contesta con un toque.</p>
+        <p>Lo del sector se propone y cuesta cero IA. Lo del negocio —tarifas, medios de pago, horarios— se pregunta: inventarlo sería inventarle cifras a una empresa real.</p>
+      </div>
+      <div class="note">
+        <h3>Una propuesta se corrige, no se rehace</h3>
+        <p>El embudo propuesto aterriza como <b>estructura editable</b>: cada paso con su nombre, su sitio y su «quitar». Una caja de texto con comas obliga a releer la propuesta entera para cambiar una etapa.</p>
+        <p>Y nada se aplica hasta el «Listo»: lo propuesto pide confirmación igual que lo deducido.</p>
+      </div>
+      <div class="note">
         <h3>Se propone, no se ejecuta</h3>
         <p>Lo recogido <b>nunca</b> se escribe solo en la cuenta. Plataforma ve el antes/después de cada campo y confirma.</p>
         <p>Una IA escribiendo sola en la configuración de una empresa es un incidente con fecha.</p>
@@ -610,7 +660,8 @@
       <ol>
         <li><b>El nombre.</b> Hoy es «Alba». No es Axel a propósito: mezclar los dos personajes ensucia los dos. Se cambia sin desplegar.</li>
         <li><b>Quién paga.</b> Hoy el gasto es de axi.</li>
-        <li><b>Qué más debe aplicarse solo.</b> Hoy: perfil, horario y playbook. Sedes, pagos y canales se recogen pero no se escriben.</li>
+        <li><b>Qué más debe aplicarse solo.</b> Ya se escriben también embudo, etiquetas, medios de pago, categorías del catálogo, sedes, zonas de envío, avisos de pedido, recordatorios de cita y los límites del seguimiento. Lo que no se aplica solo dice ahora <b>dónde lo pone una persona</b>.</li>
+        <li><b>Los presets por sector son una hipótesis.</b> Los embudos y etiquetas que se proponen no salieron de datos de uso: hay que revisarlos antes de sembrarlos. Las categorías sí — vienen del catálogo de nichos que ya está en producción.</li>
         <li><b>Repartir temas entre personas.</b> El modelo lo soporta; la pantalla es v2.</li>
       </ol>
     </div>
@@ -631,8 +682,20 @@
       micS: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>',
       stop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="3"/></svg>',
       chev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
-      clock: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+      clock: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      up: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+      down: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+      x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
     };
+
+    /**
+     * Qué lista se está editando ahora mismo en la ficha, si alguna.
+     *
+     * Solo una a la vez, y a propósito: dos listas abiertas en una columna
+     * estrecha convierten la ficha en un formulario, que es justo lo que esta
+     * pantalla existe para no ser.
+     */
+    var editing = null;
 
     var TOPICS = [
       { code: "negocio",  title: "Tu negocio en una frase", fields: [
@@ -655,6 +718,10 @@
       { code: "preguntas", title: "Lo que siempre les preguntan", fields: [
         { code: "faqs", label: "Preguntas frecuentes", req: true }
       ]},
+      { code: "embudo", title: "Los pasos de una venta", fields: [
+        { code: "etapas",    label: "Pasos de una venta", req: true, list: true },
+        { code: "etiquetas", label: "Cómo separas a tus clientes", list: true }
+      ]},
       { code: "venta", title: "Cómo cierran una venta", fields: [
         { code: "pagos",   label: "Medios de pago", req: true },
         { code: "envios",  label: "Cómo despachan" },
@@ -671,7 +738,14 @@
       ciudad:    { value: "Medellín",                              src: "known" },
       sector:    { value: "Moda deportiva",                        src: "derived" },
       cobertura: { value: "Toda Colombia",                         src: "derived" },
-      envios:    { value: "Coordinadora · gratis desde $150.000",  src: "derived" }
+      envios:    { value: "Coordinadora · gratis desde $150.000",  src: "derived" },
+      // PROPUESTO por el tipo de negocio (F2 §5): no sale de su web ni de
+      // nuestra base, sale del sector. Cuesta cero IA y convierte «diséñame tu
+      // embudo» en «corrígeme este».
+      etapas:    { value: "Consulta → Cotización → Pago confirmado → Despachado", src: "proposed",
+                   items: ["Consulta", "Cotización", "Pago confirmado", "Despachado"] },
+      etiquetas: { value: "Mayorista · Cliente frecuente · Cambio pendiente", src: "proposed",
+                   items: ["Mayorista", "Cliente frecuente", "Cambio pendiente"] }
     };
 
     var SCRIPT = [
@@ -773,22 +847,51 @@
     }
 
     function renderCard(node) {
-      var c = counts(), pend = [];
+      var c = counts(), pend = [], prop = [];
       for (var k in answers) if (answers[k].src === "derived") pend.push(k);
+      for (var k2 in answers) if (answers[k2].src === "proposed") prop.push(k2);
       var h = '<div class="card-head"><h3>Lo que ya sabemos</h3><p>' + c.filled + ' de ' + c.total + ' datos · toca cualquiera para corregirlo</p></div>';
       if (pend.length) h += '<div class="card-note">' + ICON.spark + '<span>' + (pend.length === 1 ? "Un dato lo saqué de su página web y falta que lo confirmes." : pend.length + " datos los saqué de su página web y falta que los confirmes.") + '</span></div>';
+      if (prop.length) h += '<div class="card-note" style="color:var(--coral)">' + ICON.spark + '<span>Te dejé ' + (prop.length === 1 ? 'una propuesta' : prop.length + ' propuestas') + ' por tu tipo de negocio. Tócala y córrígela: no se aplica nada hasta que digas que sí.</span></div>';
       h += '<div class="card-body">';
       TOPICS.forEach(function (t) {
         h += '<section class="grp"><h4 class="grp-h">' + esc(t.title) + (deferred[t.code] ? '<small>para después</small>' : '') + '</h4><ul class="rows">';
         t.fields.forEach(function (f) {
-          var a = answers[f.code], der = a && a.src === "derived";
-          h += '<li class="row' + (der ? " confirm" : "") + (flash[f.code] ? " filled" : "") + '">' +
+          var a = answers[f.code], der = a && a.src === "derived", pro = a && a.src === "proposed";
+
+          // ── La propuesta ABIERTA: cada elemento con su nombre, su sitio y su
+          // «quitar». Es la diferencia entre corregir una lista y rehacerla.
+          if (editing === f.code && a && a.items) {
+            h += '<li class="row open">' +
+              '<p class="k">' + esc(f.label) + '</p><ul class="chips">' +
+              a.items.map(function (item, i) {
+                return '<li class="chip">' +
+                  '<span class="ord">' + (i + 1) + '</span>' +
+                  '<input value="' + esc(item) + '" data-edit="' + f.code + '" data-i="' + i + '" aria-label="Paso ' + (i + 1) + '">' +
+                  '<button type="button" class="mv" data-up="' + f.code + '" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Subir">' + ICON.up + '</button>' +
+                  '<button type="button" class="mv" data-down="' + f.code + '" data-i="' + i + '"' + (i === a.items.length - 1 ? ' disabled' : '') + ' aria-label="Bajar">' + ICON.down + '</button>' +
+                  '<button type="button" class="rm" data-rm="' + f.code + '" data-i="' + i + '" aria-label="Quitar">' + ICON.x + '</button>' +
+                  '</li>';
+              }).join('') +
+              '</ul>' +
+              '<button type="button" class="chip-add" data-add="' + f.code + '">+ Añadir</button>' +
+              '<div class="chip-foot"><p class="why">Solo se AÑADE lo que falte. Nada de lo que ya tengas se reordena ni se borra.</p>' +
+              '<button type="button" class="get prop" data-ok="' + f.code + '">Listo</button></div>' +
+              '</li>';
+            return;
+          }
+
+          h += '<li class="row' + (der ? " confirm" : "") + (pro ? " propose" : "") + (flash[f.code] ? " filled" : "") + '" ' +
+            (a && a.items ? 'data-open="' + f.code + '"' : '') + '>' +
             '<div class="txt"><p class="k">' + esc(f.label) + (f.req && !a ? '<span class="need"></span>' : '') + '</p>' +
             '<p class="v' + (a ? '' : ' empty') + '">' + (a ? esc(a.value) : 'Sin contestar') + '</p>' +
             (a && a.src === "known" ? '<p class="src known">Ya lo teníamos</p>' : '') +
             (der ? '<p class="src">' + ICON.sparkS + ' Lo vi en su web</p>' : '') +
+            (pro ? '<p class="src prop">' + ICON.sparkS + ' Propuesto para tu tipo de negocio</p>' : '') +
             '</div>' +
-            (der ? '<button type="button" class="get" data-ok="' + f.code + '">Así es</button>' : '<span class="chev">' + ICON.chev + '</span>') +
+            (der ? '<button type="button" class="get" data-ok="' + f.code + '">Así es</button>'
+                 : pro ? '<button type="button" class="get prop" data-open="' + f.code + '">Revisar</button>'
+                 : '<span class="chev">' + ICON.chev + '</span>') +
             '</li>';
         });
         h += '</ul></section>';
@@ -820,6 +923,17 @@
         '<button type="button" class="rnd" id="mic" aria-label="Dictar">' + ICON.mic + '</button>' +
         '<button type="button" class="rnd send" id="send" aria-label="Enviar">' + ICON.arrow + '</button></div>';
     }
+
+    // Editar el nombre de un elemento de la propuesta, sin repintar en cada tecla.
+    document.addEventListener("change", function (ev) {
+      var input = ev.target.closest ? ev.target.closest("[data-edit]") : null;
+      if (!input) return;
+      var code = input.getAttribute("data-edit"), i = parseInt(input.getAttribute("data-i"), 10);
+      var items = answers[code].items;
+      items[i] = input.value.trim() || items[i];
+      answers[code].value = items.join(code === "etapas" ? " → " : " · ");
+      paint();
+    });
 
     function pushAssistant(entry, live) {
       var wrap = document.createElement("div"); wrap.className = "msg ai";
@@ -892,7 +1006,23 @@
       var t = ev.target;
       if (t.closest("[data-pick]") && !t.closest("[data-pick]").disabled) return advance();
       if (t.closest("#mic") || t.closest("#send")) return advance();
-      var ok = t.closest("[data-ok]"); if (ok) { answers[ok.getAttribute("data-ok")].src = "stated"; flash = {}; flash[ok.getAttribute("data-ok")] = true; return paint(); }
+      var ok = t.closest("[data-ok]"); if (ok) { var okc = ok.getAttribute("data-ok"); answers[okc].src = "stated"; editing = null; flash = {}; flash[okc] = true; return paint(); }
+
+      var open = t.closest("[data-open]");
+      if (open) { editing = open.getAttribute("data-open"); return paint(); }
+
+      var up = t.closest("[data-up]"), down = t.closest("[data-down]"), rm = t.closest("[data-rm]"), add = t.closest("[data-add]");
+      if (up || down || rm || add) {
+        var node = up || down || rm || add;
+        var code = node.getAttribute("data-up") || node.getAttribute("data-down") || node.getAttribute("data-rm") || node.getAttribute("data-add");
+        var items = answers[code].items, i = parseInt(node.getAttribute("data-i"), 10);
+        if (up)   { items.splice(i - 1, 0, items.splice(i, 1)[0]); }
+        if (down) { items.splice(i + 1, 0, items.splice(i, 1)[0]); }
+        if (rm)   { items.splice(i, 1); }
+        if (add)  { items.push("Nuevo paso"); }
+        answers[code].value = items.join(code === "etapas" ? " → " : " · ");
+        return paint();
+      }
       var def = t.closest("[data-defer]"); if (def) { deferred[def.getAttribute("data-defer")] = true; flash = {}; return paint(); }
       var res = t.closest("[data-resume]"); if (res) { delete deferred[res.getAttribute("data-resume")]; flash = {}; return paint(); }
       if (t.closest("#open-sheet")) return $("sheet").setAttribute("data-open", "true");

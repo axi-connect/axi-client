@@ -72,6 +72,29 @@ export function useIntakeApplyPlanQuery(id: string | null, enabled: boolean) {
   });
 }
 
+/**
+ * La ESCALERA de un tenant: qué tanda está hecha, cuál toca y qué la bloquea.
+ *
+ * Sustituye a un cron a propósito. Cuándo mandarle a un cliente la tanda de
+ * «cómo vende» —cuando ya tiene conversaciones reales que meter en un embudo— o
+ * la de «cómo opera» —cuando va a vender de verdad— es una decisión de negocio,
+ * no de tiempo. La toma una persona mirando esto.
+ */
+export function useIntakeLadderQuery(companyId: string) {
+  return useQuery({
+    queryKey: platformKeys.intake.ladder(companyId),
+    enabled: companyId !== "",
+    queryFn: async () => {
+      const { data } = await platformClient.GET(
+        "/api/v1/platform/intake/sessions/ladder/{company_id}",
+        { params: { path: { company_id: companyId } } },
+      );
+      return data!;
+    },
+    staleTime: 0,
+  });
+}
+
 export function useCreateIntakeSession() {
   const queryClient = useQueryClient();
   return useMutation({

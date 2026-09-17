@@ -1,9 +1,12 @@
 import {
   countCaptured,
+  handoffNote,
   isEditableInline,
+  isStructuredList,
   pendingConfirmations,
   progressLabel,
   sourceLabel,
+  toListItems,
   type IntakeProgress,
   type IntakeTopicView,
 } from "../intake";
@@ -132,5 +135,31 @@ describe("isEditableInline", () => {
     expect(isEditableInline("choice")).toBe(true);
     expect(isEditableInline("weekly_hours")).toBe(false);
     expect(isEditableInline("faq_list")).toBe(false);
+  });
+});
+
+describe("isStructuredList / toListItems / handoffNote", () => {
+  it("solo las listas se corrigen elemento a elemento", () => {
+    expect(isStructuredList("list")).toBe(true);
+    expect(isStructuredList("multi_choice")).toBe(true);
+    expect(isStructuredList("long_text")).toBe(false);
+    expect(isStructuredList("choice")).toBe(false);
+  });
+
+  it("lee una lista de textos y descarta lo que no lo es", () => {
+    expect(toListItems(["Consulta", " Pago ", "", 7, null])).toEqual([
+      "Consulta",
+      "Pago",
+      "7",
+    ]);
+    expect(toListItems("Consulta, Pago")).toEqual([]);
+    expect(toListItems(null)).toEqual([]);
+  });
+
+  it("el `help` del guion gana sobre la regla por defecto", () => {
+    expect(handoffNote("list", "Tu propio aviso")).toBe("Tu propio aviso");
+    expect(handoffNote("list", null)).toContain("Solo se añade lo que falte");
+    expect(handoffNote("list", "   ")).toContain("Solo se añade lo que falte");
+    expect(handoffNote("long_text", null)).toBe("");
   });
 });

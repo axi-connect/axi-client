@@ -7,10 +7,14 @@ import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
+  handoffNote,
   isEditableInline,
+  isStructuredList,
   sourceLabel,
+  toListItems,
   type IntakeField,
 } from "@/modules/intake/domain/intake";
+import { SetupListEditor } from "./SetupListEditor";
 
 /**
  * Una fila de la ficha, con la forma de una fila de Contactos: la etiqueta
@@ -55,6 +59,10 @@ export function SetupFieldRow({
 
   const editable = isEditableInline(field.kind);
   const badge = sourceLabel(field.source);
+  const proposed = field.source === "proposed";
+  // Una lista con contenido se corrige elemento a elemento; una caja de texto
+  // con comas obligaría a releer y reescribir la propuesta entera.
+  const structured = isStructuredList(field.kind) && toListItems(field.value).length > 0;
 
   function start(): void {
     if (!editable) {
@@ -77,11 +85,42 @@ export function SetupFieldRow({
     else setError("No se pudo guardar. Inténtalo de nuevo.");
   }
 
+  // La propuesta abierta ocupa la fila entera: es una lista que se reordena, no
+  // un valor que se teclea, y meterla en la fila normal la dejaría sin sitio.
+  if (editing && structured) {
+    return (
+      <SetupListEditor
+        label={field.label}
+        items={toListItems(field.value)}
+        saving={saving}
+        note={handoffNote(field.kind, field.help)}
+        onCancel={() => {
+          setEditing(false);
+        }}
+        onDone={(items) => {
+          // Sin cambios sobre la propuesta basta confirmarla: así no se
+          // reescribe en el tenant algo que ya vale lo mismo.
+          if (items === null) {
+            onConfirm();
+            setEditing(false);
+            return;
+          }
+          void onSave(items).then((ok) => {
+            if (ok) setEditing(false);
+          });
+        }}
+      />
+    );
+  }
+
   return (
     <li
       className={cn(
         "intake-row group",
-        field.needs_confirmation && "bg-gradient-to-r from-accent-violet/8 to-transparent to-70%",
+        field.needs_confirmation &&
+          (proposed
+            ? "bg-gradient-to-r from-brand/7 to-transparent to-70%"
+            : "bg-gradient-to-r from-accent-violet/8 to-transparent to-70%"),
       )}
     >
       {editing ? (
@@ -152,7 +191,11 @@ export function SetupFieldRow({
                 <span
                   className={cn(
                     "mt-[3px] inline-flex items-center gap-1 text-[11.5px]",
-                    field.needs_confirmation ? "text-accent-violet" : "text-muted-foreground/60",
+                    !field.needs_confirmation
+                      ? "text-muted-foreground/60"
+                      : proposed
+                        ? "text-brand"
+                        : "text-accent-violet",
                   )}
                 >
                   {field.needs_confirmation ? (
@@ -171,13 +214,28 @@ export function SetupFieldRow({
           </button>
 
           {field.needs_confirmation ? (
+            // «Revisar» y no «Así es» cuando lo propuesto es una lista: cuatro
+            // etapas de embudo no se aprueban de un vistazo como se aprueba una
+            // ciudad, y un toque que las aplique todas sin verlas es la clase de
+            // atajo que acaba en un tablero de trabajo que nadie pidió.
             <button
               type="button"
-              onClick={onConfirm}
+              onClick={
+                proposed && structured
+                  ? () => {
+                      setEditing(true);
+                    }
+                  : onConfirm
+              }
               disabled={saving}
-              className="flex-none rounded-full bg-accent-violet/10 px-[13px] py-1.5 text-[12.5px] font-semibold text-accent-violet transition-[background-color,transform] hover:bg-accent-violet/16 active:scale-[.95] disabled:opacity-50"
+              className={cn(
+                "flex-none rounded-full px-[13px] py-1.5 text-[12.5px] font-semibold transition-[background-color,transform] active:scale-[.95] disabled:opacity-50",
+                proposed
+                  ? "bg-brand/10 text-brand hover:bg-brand/16"
+                  : "bg-accent-violet/10 text-accent-violet hover:bg-accent-violet/16",
+              )}
             >
-              Así es
+              {proposed && structured ? "Revisar" : "Así es"}
             </button>
           ) : null}
         </div>

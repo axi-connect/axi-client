@@ -6468,6 +6468,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/intake/sessions/ladder/{company_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_ladderFor_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -15811,7 +15827,7 @@ export interface components {
                     value: unknown;
                     display: string | null;
                     /** @enum {string|null} */
-                    source: "known" | "derived" | "stated" | null;
+                    source: "known" | "derived" | "stated" | "proposed" | null;
                     needs_confirmation: boolean;
                 }[];
             }[];
@@ -16165,6 +16181,7 @@ export interface components {
             prefill: {
                 known: number;
                 derived: number;
+                proposed: number;
                 website_failed: boolean;
             };
         };
@@ -16185,6 +16202,11 @@ export interface components {
                 label: string;
                 reason: string;
             }[];
+            pending: {
+                label: string;
+                value: string;
+                where: string;
+            }[];
             hash: string;
         };
         ApplySessionDto: {
@@ -16202,6 +16224,29 @@ export interface components {
                 label: string;
                 reason: string;
             }[];
+            pending: {
+                label: string;
+                value: string;
+                where: string;
+            }[];
+        };
+        IntakeLadderDto: {
+            /** Format: uuid */
+            company_id: string;
+            niche_code: string | null;
+            stages: {
+                stage: number;
+                /** Format: uuid */
+                blueprint_id: string | null;
+                blueprint_name: string | null;
+                /** @enum {string|null} */
+                status: "pending" | "in_progress" | "completed" | "applied" | "cancelled" | null;
+                /** Format: uuid */
+                session_id: string | null;
+                can_emit: boolean;
+                blocked_reason: string | null;
+            }[];
+            next_stage: number | null;
         };
     };
     responses: never;
@@ -28440,6 +28485,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplyOutcomeDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_ladderFor_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeLadderDto"];
                 };
             };
         };

@@ -33,6 +33,7 @@ export const platformKeys = {
       [...platformKeys.intake.all, "sessions", filters] as const,
     session: (id: string) => [...platformKeys.intake.all, "sessions", id] as const,
     applyPlan: (id: string) => [...platformKeys.intake.all, "sessions", id, "apply"] as const,
+    ladder: (companyId: string) => [...platformKeys.intake.all, "ladder", companyId] as const,
   },
 
   pricing: {

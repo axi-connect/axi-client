@@ -231,6 +231,12 @@ function SessionActions({ sessionId, status }: { sessionId: string; status: stri
  * Lo saltado se enseña con su motivo y a la misma altura que lo aplicado. Un
  * «deducido de su web y sin confirmar» escondido sería justo el dato que nadie
  * revisa y que después nadie entiende por qué no se escribió.
+ *
+ * Y hay una tercera lista, «lo pones tú» (F2): lo que la entrevista recogió y
+ * ningún destino automático sabe escribir —el tono de un saludo, lo que el
+ * asistente no debe hacer, la política de cambios— con el sitio del panel donde
+ * va. Antes eso se recogía y desaparecía: se le preguntaba a un dueño y no
+ * volvía a aparecer en ningún sitio.
  */
 function ApplyPanel({ sessionId, applied }: { sessionId: string; applied: boolean }) {
   const plan = useIntakeApplyPlanQuery(sessionId, !applied);
@@ -252,6 +258,7 @@ function ApplyPanel({ sessionId, applied }: { sessionId: string; applied: boolea
 
   const changes = apply.data?.applied ?? plan.data.changes;
   const skipped = apply.data?.skipped ?? plan.data.skipped;
+  const pending = apply.data?.pending ?? plan.data.pending;
   const done = apply.isSuccess;
 
   return (
@@ -296,6 +303,26 @@ function ApplyPanel({ sessionId, applied }: { sessionId: string; applied: boolea
               <li key={item.target} className="flex justify-between gap-3 text-[12px]">
                 <span className="text-muted-foreground">{item.label}</span>
                 <span className="flex-none text-muted-foreground/70">{item.reason}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {pending.length === 0 ? null : (
+        // Va después de lo que se escribe pero ANTES del botón a propósito: es
+        // trabajo que alguien tiene que hacer, y esconderlo detrás de un
+        // «aplicado» verde es cómo se pierde la mitad de lo que el cliente contó.
+        <section>
+          <h4 className="mb-1.5 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+            Lo pones tú ({pending.length})
+          </h4>
+          <ul className="divide-y divide-border-soft rounded-md border border-warning/30 bg-warning/6">
+            {pending.map((item) => (
+              <li key={item.label} className="px-3 py-2">
+                <p className="text-[12px] font-medium">{item.label}</p>
+                <p className="mt-0.5 text-[12px] wrap-anywhere">{item.value}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{item.where}</p>
               </li>
             ))}
           </ul>

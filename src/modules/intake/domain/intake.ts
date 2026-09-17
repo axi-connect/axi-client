@@ -216,3 +216,46 @@ const EDITABLE_KINDS: ReadonlySet<IntakeFieldKind> = new Set<IntakeFieldKind>([
 export function isEditableInline(kind: IntakeFieldKind): boolean {
   return EDITABLE_KINDS.has(kind);
 }
+
+/**
+ * Los tipos que se corrigen elemento a elemento en vez de en una caja de texto.
+ *
+ * La diferencia importa cuando el valor llega PROPUESTO: una propuesta trae
+ * cuatro o cinco elementos ya escritos, y lo que alguien va a hacer con ella es
+ * quitar uno y renombrar otro. En una caja de texto separada por comas eso
+ * obliga a releerla entera y a reescribirla sin equivocarse con las comas, y
+ * entonces corregir cuesta lo mismo que dictar de cero — o sea, proponer no
+ * sirvió de nada.
+ */
+const STRUCTURED_LIST_KINDS: ReadonlySet<IntakeFieldKind> = new Set<IntakeFieldKind>([
+  "list",
+  "multi_choice",
+]);
+
+export function isStructuredList(kind: IntakeFieldKind): boolean {
+  return STRUCTURED_LIST_KINDS.has(kind);
+}
+
+/** El valor crudo como lista de textos. Lo que no lo sea sale vacío. */
+export function toListItems(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string | number => typeof item === "string" || typeof item === "number")
+    .map((item) => String(item).trim())
+    .filter((item) => item !== "");
+}
+
+/**
+ * La línea que acompaña al editor: qué se va a hacer con la lista.
+ *
+ * Es literal la regla del agregado del servidor —solo se AÑADE lo que falte y
+ * nada de lo que ya existe se reordena ni se borra— y se dice aquí porque es la
+ * duda real de quien está a punto de tocar el embudo de su CRM. El `help` del
+ * guion gana cuando lo hay: lo escribió quien montó ese campo.
+ */
+export function handoffNote(kind: IntakeFieldKind, help: string | null): string {
+  if (help !== null && help.trim() !== "") return help;
+  return isStructuredList(kind)
+    ? "Solo se añade lo que falte. Nada de lo que ya tengas se reordena ni se borra."
+    : "";
+}
