@@ -61,6 +61,10 @@ const nextConfig: NextConfig = {
       // tiene que ir antes que `:id` o se trataría como un id de canal.
       // F1 apuntaba `create` al listado porque el wizard no existía; F3 lo
       // repunta a su destino real.
+      // «Medios de pago» dejó de ser pestaña de Mi empresa y pasó al hub Pagos
+      // de Ventas (F2 del programa Cobros). La URL vieja está compartida en
+      // conversaciones y correos: redirige, no 404.
+      { source: "/settings/company/pagos", destination: "/settings/payments", permanent: true },
       { source: "/workspace/channels/create", destination: "/settings/channels/connect", permanent: true },
       { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
     ];

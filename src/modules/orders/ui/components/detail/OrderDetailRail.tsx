@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AudioLines,
+  CalendarDays,
   CircleCheck,
   ExternalLink,
   MessageSquareText,
@@ -16,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/shared/auth/auth.hooks";
+import { formatShortDate } from "@/core/lib/format";
 import { relativeTime } from "@/core/lib/relative-time";
 import { cn } from "@/core/lib/utils";
 import { Avatar } from "@/shared/components/ui/avatar";
@@ -347,6 +349,20 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                 <FieldList
                   className="pt-1"
                   items={[
+                    {
+                      // F2 Cobros: el pedido hereda la fecha del servicio de su
+                      // variante (una salida = una fecha). Sin ella la fila no
+                      // se pinta: FieldList oculta los valores null.
+                      label: (
+                        <span className="flex items-center gap-1">
+                          <CalendarDays className="size-3.5" /> Fecha del servicio
+                        </span>
+                      ),
+                      value:
+                        order.service_date !== null ? (
+                          <span className="tabular-nums">{formatShortDate(order.service_date)}</span>
+                        ) : null,
+                    },
                     {
                       label: "Origen",
                       value: <OrderOriginBadge origin={order.created_by_type} />,

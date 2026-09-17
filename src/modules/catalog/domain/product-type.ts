@@ -26,7 +26,26 @@ export const ATTRIBUTE_TYPE_LABELS: Record<AttributeType, string> = {
   number: "Número",
   boolean: "Sí / No",
   select: "Selección",
+  date: "Fecha",
 };
+
+/**
+ * Tipos que el editor de tipos de producto OFRECE al crear un atributo.
+ *
+ * Existe porque `date` (F2 del programa Cobros: la fecha de salida de una
+ * expedición) llegó al contrato antes que su control, y ofrecerlo entonces
+ * habría hecho que los formularios lo pintaran como texto libre sin avisar.
+ * Ya no: `AttributeValueInput` cubre los cinco tipos con un mapeo exhaustivo,
+ * así que la lista es el catálogo completo. Se mantiene como la puerta por la
+ * que pasa un tipo nuevo del backend: primero su control, después la oferta.
+ */
+export const SELECTABLE_ATTRIBUTE_TYPES: readonly AttributeType[] = [
+  "text",
+  "number",
+  "boolean",
+  "select",
+  "date",
+];
 
 export const ATTRIBUTE_SCOPE_LABELS: Record<AttributeScope, string> = {
   product: "Producto",

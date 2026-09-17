@@ -69,10 +69,11 @@ export const NAV_PATH_ALIASES: Record<string, string> = {
   "/catalog": "/catalog/products",
   // El ítem `contacts` del backend vive dentro del módulo CRM del cliente.
   "/contacts": "/crm/contacts",
-  // «Métodos de pago» (grupo Ventas) es una pestaña de Mi empresa: dos ítems
-  // del sidebar llegan a la misma pantalla y el rastro activo lo gana el más
-  // específico (ese ítem) mientras se está en la pestaña.
-  "/settings/sales": "/settings/company/pagos",
+  // El ítem «Pagos» del grupo Ventas: el seed del backend lo nombra
+  // `/settings/sales` y el hub vive en `/settings/payments` (F2 del programa
+  // Cobros). El alias se queda hasta que el seed se re-aplique en todos los
+  // entornos; con el path nuevo sembrado es identidad y no estorba.
+  "/settings/sales": "/settings/payments",
 };
 
 /**

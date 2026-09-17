@@ -6,25 +6,14 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
 import { errorMessage } from "@/core/lib/error-messages";
-import {
-  attributeOptions,
-  type ProductTypeAttributeDTO,
-} from "@/modules/catalog/domain/product-type";
+import type { ProductTypeAttributeDTO } from "@/modules/catalog/domain/product-type";
 import type { ProductVariantDTO, UpsertVariantDTO } from "@/modules/catalog/domain/product";
 import {
   createVariant,
   updateVariant,
 } from "@/modules/catalog/infrastructure/services/product-service.adapter";
+import { AttributeValueInput } from "@/modules/catalog/ui/components/AttributeValueInput";
 import { PriceInput } from "@/modules/catalog/ui/components/PriceInput";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
-
-const UNSET_OPTION = "__unset__";
 
 type VariantAttributeMap = Record<string, string | number | boolean>;
 
@@ -192,52 +181,12 @@ export function VariantForm({
                 {axis.label}
                 {axis.unit ? <span className="text-muted-foreground"> ({axis.unit})</span> : null}
               </Label>
-              {axis.type === "select" ? (
-                <Select
-                  value={value === undefined ? UNSET_OPTION : String(value)}
-                  onValueChange={(v: string) => setAttribute(axis.code, v === UNSET_OPTION ? undefined : v)}
-                >
-                  <SelectTrigger id={inputId} className="w-full">
-                    <SelectValue placeholder="Sin definir" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UNSET_OPTION}>Sin definir</SelectItem>
-                    {attributeOptions(axis).map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : axis.type === "boolean" ? (
-                <label className="flex h-9 items-center gap-2 text-sm">
-                  <input
-                    id={inputId}
-                    type="checkbox"
-                    className="h-4 w-4 accent-primary"
-                    checked={value === true}
-                    onChange={(e) => setAttribute(axis.code, e.target.checked)}
-                  />
-                  Sí
-                </label>
-              ) : (
-                <Input
-                  id={inputId}
-                  type={axis.type === "number" ? "number" : "text"}
-                  inputMode={axis.type === "number" ? "decimal" : undefined}
-                  value={value === undefined ? "" : String(value)}
-                  onChange={(e) =>
-                    setAttribute(
-                      axis.code,
-                      e.target.value === ""
-                        ? undefined
-                        : axis.type === "number"
-                          ? Number(e.target.value)
-                          : e.target.value,
-                    )
-                  }
-                />
-              )}
+              <AttributeValueInput
+                attribute={axis}
+                id={inputId}
+                value={value}
+                onChange={(next) => setAttribute(axis.code, next)}
+              />
             </div>
           );
         })}

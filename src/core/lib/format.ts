@@ -46,6 +46,28 @@ export function formatMoney(cents: number, currency = "COP"): string {
 }
 
 /**
+ * Equivalente APROXIMADO de un importe en otra moneda, para cotizar antes de
+ * confirmar: «US$ 3.500 ≈ $ 11.068.610». El `≈` no es decorativo — hasta que
+ * el pedido se confirma la tasa no está congelada y el total puede cambiar,
+ * así que la cifra se presenta como indicativa y nunca sustituye al importe
+ * real (F2 del programa Cobros).
+ *
+ * `cents` está en la moneda `from`; `rate` son unidades de `to` por unidad de
+ * `from` (la tasa EFECTIVA del tenant, con su ajuste ya aplicado). Sin tasa no
+ * se inventa nada: devuelve `null` y el llamador calla.
+ */
+export function formatMoneyApprox(
+  cents: number,
+  from: string,
+  to: { currency: string; rate: number | null | undefined },
+): string | null {
+  if (!Number.isFinite(cents) || to.rate === null || to.rate === undefined) return null;
+  if (!Number.isFinite(to.rate) || to.rate <= 0) return null;
+  if (from === to.currency) return formatMoney(cents, from);
+  return `≈ ${formatMoney(Math.round(cents * to.rate), to.currency)}`;
+}
+
+/**
  * Entrada de usuario es-CO (`45.000` o `45.000,50`) → centavos (int) o null si
  * no es un número válido. Acepta `.` como separador de miles y `,` decimal.
  */

@@ -59,11 +59,19 @@ describe("mapNavigation", () => {
     expect(tree[0].children).toEqual([]);
   });
 
-  it("«Métodos de pago» (/settings/sales) resuelve a la pestaña de pagos de Mi empresa", () => {
-    const tree = mapNavigation([
+  it("«Pagos» resuelve al hub, venga sembrado con el path viejo o con el nuevo", () => {
+    // El seed pasó de `/settings/sales` a `/settings/payments` (F2 del programa
+    // Cobros). El alias se queda mientras haya entornos con el seed anterior;
+    // con el nuevo es identidad y no estorba.
+    const legacy = mapNavigation([
       dto("sales", null, 10, [dto("sales_settings", "/settings/sales", 10)]),
     ]);
-    expect(tree[0].children[0].url).toBe("/settings/company/pagos");
+    expect(legacy[0].children[0].url).toBe("/settings/payments");
+
+    const seeded = mapNavigation([
+      dto("sales", null, 10, [dto("sales_settings", "/settings/payments", 10)]),
+    ]);
+    expect(seeded[0].children[0].url).toBe("/settings/payments");
   });
 
   it("la poda es recursiva: subgrupos vacíos arrastran al grupo padre", () => {

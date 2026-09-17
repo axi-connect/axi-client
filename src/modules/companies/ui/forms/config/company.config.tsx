@@ -1,7 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { z } from "zod"
 import type { CompanyDTO, UpdateCompanyDTO } from "@/modules/companies/domain/company"
+import { NICHES } from "@/modules/onboarding/public"
 import type { FieldConfig } from "@/shared/components/features/dynamic-form"
 import { createCustomField, createInputField } from "@/shared/components/features/dynamic-form"
 import { Label } from "@/shared/components/ui/label"
@@ -29,6 +31,7 @@ export const companyFormSchema = z.object({
   address: z.string().trim().optional().or(z.literal("")),
   city: z.string().trim().optional().or(z.literal("")),
   industry: z.string().trim().optional().or(z.literal("")),
+  niche_code: z.string().trim().optional().or(z.literal("")),
   activity_description: z.string().trim().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
   timezone: z.string().trim().min(1, "Zona horaria requerida"),
 })
@@ -42,6 +45,7 @@ export function companyToFormValues(company: CompanyDTO): CompanyFormValues {
     address: company.address ?? "",
     city: company.city ?? "",
     industry: company.industry ?? "",
+    niche_code: company.niche_code ?? "",
     activity_description: company.activity_description ?? "",
     timezone: company.timezone,
   }
@@ -50,7 +54,41 @@ export function companyToFormValues(company: CompanyDTO): CompanyFormValues {
 export function buildCompanyFormFields(): ReadonlyArray<FieldConfig<CompanyFormValues>> {
   return [
     createInputField<CompanyFormValues>("name", { label: "Nombre", placeholder: "Mi empresa S.A.S." }),
-    createInputField<CompanyFormValues>("industry", { label: "Industria", placeholder: "Retail, salud, educación…" }),
+    createCustomField<CompanyFormValues>("niche_code", ({ value, setValue, getError }) => {
+      const current = typeof value === "string" ? value : ""
+      const error = getError()
+      return (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="company-niche">Tipo de negocio</Label>
+          <Select value={current} onValueChange={(next) => setValue("niche_code", next)}>
+            <SelectTrigger id="company-niche" className="w-full" aria-label="Tipo de negocio">
+              <SelectValue placeholder="Elige tu tipo de negocio" />
+            </SelectTrigger>
+            <SelectContent>
+              {NICHES.map((niche) => (
+                <SelectItem key={niche.code} value={niche.code}>
+                  {niche.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">
+            Define qué funciones tienen sentido para tu negocio: planes de pago, cobranza, moneda y documentos.
+            Ajusta cuáles usas en{" "}
+            <Link href="/settings/company/funciones" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Funciones
+            </Link>
+            .
+          </p>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        </div>
+      )
+    }),
+    createInputField<CompanyFormValues>("industry", {
+      label: "Industria",
+      placeholder: "Retail, salud, educación…",
+      description: "Texto libre: así se describe tu empresa en el prompt del agente.",
+    }),
     createInputField<CompanyFormValues>("city", { label: "Ciudad", placeholder: "Bogotá" }),
     createInputField<CompanyFormValues>("address", {
       label: "Dirección",
@@ -98,6 +136,8 @@ export function toUpdateCompanyDTO(values: CompanyFormValues): UpdateCompanyDTO 
     address: values.address || null,
     city: values.city || null,
     industry: values.industry || null,
+    // Cadena vacía = «sin elegir»: se manda null, no "".
+    niche_code: values.niche_code || null,
     activity_description: values.activity_description || null,
     timezone: values.timezone,
   }
