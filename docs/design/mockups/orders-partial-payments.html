@@ -262,9 +262,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .headline .of b{color:var(--foreground);font-weight:500}
 
 /* Medidor: un segmento por pago verificado; lo pendiente queda hueco. */
-.meter{display:flex;gap:3px;margin-top:14px}
-.meter i{height:6px;border-radius:999px;background:var(--axi-brand);display:block}
-.meter i.empty{background:color-mix(in srgb, var(--foreground) 10%, transparent)}
+.meter{height:6px;border-radius:999px;margin-top:14px;overflow:hidden}
 
 /* ── Vencimiento: lo que hace urgente el saldo ───────────────────────── */
 .due{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:var(--secondary)}
@@ -278,7 +276,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 16px;position:relative}
 .row + .row::before{content:"";position:absolute;left:56px;right:0;top:0;height:1px;background:var(--border-soft)}
 .row .dot{width:8px;height:8px;border-radius:50%;justify-self:center}
-.row .dot.ok{background:var(--axi-success)} .row .dot.wait{background:var(--axi-warning)} .row .dot.off{background:color-mix(in srgb, var(--foreground) 20%, transparent)}
+.row .dot.ok{background:var(--axi-success)} .row .dot.wait{background:var(--axi-warning)} .row .dot.off{background:var(--border)}
 .row .t{font-size:14px;font-weight:500}
 .row .m{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
 .row .v{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
@@ -391,7 +389,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <p class="lede">Falta por cobrar</p>
       <p class="amount">$ 15.192.205</p>
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"><i style="flex:30" class=""></i><i style="flex:70" class="empty"></i></div>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
     </div>
         <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div><p class="t">Sale en 179 días</p><p class="m">sábado 14 de marzo de 2027</p></div></div>
         <div class="group">
@@ -436,7 +434,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <p class="lede">Falta por cobrar</p>
       <p class="amount">$ 15.192.205</p>
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"><i style="flex:30" class=""></i><i style="flex:70" class="empty"></i></div>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
     </div>
         <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div><p class="t">Sale en 179 días</p><p class="m">sábado 14 de marzo de 2027</p></div></div>
         <div class="group">
@@ -504,7 +502,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <p class="lede">Falta por cobrar</p>
       <p class="amount">$ 15.192.205</p>
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"><i style="flex:30" class=""></i><i style="flex:70" class="empty"></i></div>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
     </div>
         <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div><p class="t">Sale en 179 días</p><p class="m">sábado 14 de marzo de 2027</p></div></div>
         <div class="group">
@@ -567,7 +565,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <p class="lede">Falta por cobrar</p>
       <p class="amount">$ 15.192.205</p>
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"><i style="flex:30" class=""></i><i style="flex:70" class="empty"></i></div>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
     </div>
         <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div><p class="t">Sale en 179 días</p><p class="m">sábado 14 de marzo de 2027</p></div></div>
         <div class="group">
@@ -621,13 +619,13 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><span class="id">JX-0042</span><span class="badge warn"><span class="dot"></span>Abonado</span></div>
       <p class="who">Laura Gómez</p>
       <p class="tot">$ 21.703.150</p>
-      <div class="meter" role="img" aria-label="Progreso del cobro"><i style="flex:30" class=""></i><i style="flex:70" class="empty"></i></div><p class="left">Falta <b>$ 15.192.205</b></p>
+      <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div><p class="left">Falta <b>$ 15.192.205</b></p>
       <div class="foot"><span>hace 2 h</span></div>
     </article><article class="tile">
       <div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><span class="id">JX-0047</span><span class="badge warn"><span class="dot"></span>Abonado</span></div>
       <p class="who">Marta Díaz</p>
       <p class="tot">$ 8.400.000</p>
-      <div class="meter" role="img" aria-label="Progreso del cobro"><i style="flex:50" class=""></i><i style="flex:50" class="empty"></i></div><p class="left">Falta <b>$ 4.200.000</b></p>
+      <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 50.00%, var(--background) 50.00% 50.50%, var(--secondary) 50.50% 100.00%)"></div><p class="left">Falta <b>$ 4.200.000</b></p>
       <div class="foot"><span>ayer</span></div>
     </article></div><div class="col"><h3>Pago reportado<span>1</span></h3><article class="tile">
       <div style="display:flex;justify-content:space-between;align-items:start;gap:8px"><span class="id">JX-0049</span><span class="badge warn"><span class="dot"></span>Por verificar</span></div>
@@ -668,7 +666,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="lede">Cobrado por completo</p>
           <p class="amount settled">$ 21.703.150</p>
           <p class="of">Dos abonos · último el 17 de septiembre</p>
-          <div class="meter" role="img" aria-label="Cobrado por completo en dos abonos"><i style="flex:30" class=""></i><i style="flex:70" class=""></i></div>
+          <div class="meter" role="img" aria-label="Cobrado por completo en dos abonos" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--axi-brand) 30.50% 100.00%)"></div>
         </div>
         <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div><p class="t">Sale el 14 de marzo</p><p class="m">Todo cobrado antes de la salida</p></div></div>
         <div class="group">

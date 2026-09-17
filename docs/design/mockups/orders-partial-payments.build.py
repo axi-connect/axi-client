@@ -36,9 +36,7 @@ EXTRA_CSS = """
 .headline .of b{color:var(--foreground);font-weight:500}
 
 /* Medidor: un segmento por pago verificado; lo pendiente queda hueco. */
-.meter{display:flex;gap:3px;margin-top:14px}
-.meter i{height:6px;border-radius:999px;background:var(--axi-brand);display:block}
-.meter i.empty{background:color-mix(in srgb, var(--foreground) 10%, transparent)}
+.meter{height:6px;border-radius:999px;margin-top:14px;overflow:hidden}
 
 /* ── Vencimiento: lo que hace urgente el saldo ───────────────────────── */
 .due{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:var(--secondary)}
@@ -52,7 +50,7 @@ EXTRA_CSS = """
 .row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 16px;position:relative}
 .row + .row::before{content:"";position:absolute;left:56px;right:0;top:0;height:1px;background:var(--border-soft)}
 .row .dot{width:8px;height:8px;border-radius:50%;justify-self:center}
-.row .dot.ok{background:var(--axi-success)} .row .dot.wait{background:var(--axi-warning)} .row .dot.off{background:color-mix(in srgb, var(--foreground) 20%, transparent)}
+.row .dot.ok{background:var(--axi-success)} .row .dot.wait{background:var(--axi-warning)} .row .dot.off{background:var(--border)}
 .row .t{font-size:14px;font-weight:500}
 .row .m{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
 .row .v{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
@@ -137,11 +135,28 @@ SALDO = "$ 15.192.205"
 
 
 def meter(segments, label):
-    """Un segmento por PAGO, de ancho proporcional a su importe; lo que falta va hueco."""
-    seg = "".join(
-        f'<i style="flex:{weight}" class="{"" if paid else "empty"}"></i>' for weight, paid in segments
+    """Un segmento por PAGO, de ancho proporcional a su importe; lo que falta, hueco.
+
+    Se dibuja como UN elemento con degradado de tramos duros, sin hijos vacíos: un
+    contenedor con elementos sin contenido queda a merced de cómo cada entorno
+    pinte una caja vacía, y en el lienzo aparecía como un bloque gris enorme.
+    """
+    total = sum(weight for weight, _ in segments) or 1
+    stops, at = [], 0.0
+    for index, (weight, paid) in enumerate(segments):
+        start = at
+        at += weight / total * 100
+        color = "var(--axi-brand)" if paid else "var(--secondary)"
+        # Una holgura de medio punto entre tramos los separa sin usar `gap`.
+        gap = 0.5 if index > 0 else 0
+        stops.append(f"{color} {start + gap:.2f}% {at:.2f}%")
+        if gap:
+            stops.insert(len(stops) - 1, f"var(--background) {start:.2f}% {start + gap:.2f}%")
+    gradient = ", ".join(stops)
+    return (
+        f'<div class="meter" role="img" aria-label="{label}" '
+        f'style="background:linear-gradient(90deg, {gradient})"></div>'
     )
-    return f'<div class="meter" role="img" aria-label="{label}">{seg}</div>'
 
 
 def headline(state: str) -> str:
