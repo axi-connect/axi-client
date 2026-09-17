@@ -29,6 +29,10 @@ export function useOrdersSocket() {
     store.getState().onOrderPaymentReported(payload);
   });
 
+  useSocketEvent(socket, "order.payment_verified", (payload) => {
+    store.getState().onOrderPaymentVerified(payload);
+  });
+
   useSocketEvent(socket, "order.updated", (payload) => {
     store.getState().onOrderUpdated(payload);
   });

@@ -2724,6 +2724,70 @@ export interface paths {
         patch: operations["ShippingController_updateRate_v1"];
         trace?: never;
     };
+    "/api/v1/fx/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_settings_v1"];
+        put: operations["FxController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fx/rates/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_latest_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformFxController_rates_v1"];
+        put?: never;
+        post: operations["PlatformFxController_setManual_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformFxController_refresh_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payment-methods": {
         parameters: {
             query?: never;
@@ -3982,70 +4046,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["AnalyticsController_evaluateNow_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/fx/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FxController_settings_v1"];
-        put: operations["FxController_update_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/fx/rates/latest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FxController_latest_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/fx/rates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformFxController_rates_v1"];
-        put?: never;
-        post: operations["PlatformFxController_setManual_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/fx/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformFxController_refresh_v1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9660,6 +9660,10 @@ export interface components {
                     enabled: boolean;
                     body: string;
                 };
+                payment_received: {
+                    enabled: boolean;
+                    body: string;
+                };
                 checkout_link: {
                     enabled: boolean;
                     body: string;
@@ -9689,6 +9693,10 @@ export interface components {
                     body: string;
                 };
                 payment_rejected: {
+                    enabled: boolean;
+                    body: string;
+                };
+                payment_received: {
                     enabled: boolean;
                     body: string;
                 };
@@ -9727,6 +9735,22 @@ export interface components {
                 shipping_state: "estimated" | "quoted" | null;
                 total_cents: number;
                 currency: string;
+                paid_cents: number;
+                balance_cents: number;
+                /** @enum {string} */
+                payment_state: "unpaid" | "partially_paid" | "paid";
+                base: {
+                    currency: string;
+                    subtotal_cents: number;
+                    total_cents: number;
+                    fx_rate: number;
+                    fx_source: string | null;
+                    /** Format: date-time */
+                    fx_at: string | null;
+                    fx_spread_bps: number | null;
+                    /** Format: date-time */
+                    frozen_at: string;
+                } | null;
                 /** Format: date */
                 service_date: string | null;
                 external_total_cents: number | null;
@@ -9790,6 +9814,9 @@ export interface components {
                     /** Format: uuid */
                     payment_method_id: string | null;
                     amount_cents: number | null;
+                    amount_assumed: boolean;
+                    base_amount_cents: number | null;
+                    fx_rate: number | null;
                     currency: string;
                     reference: string | null;
                     attachment_id: string | null;
@@ -9836,6 +9863,12 @@ export interface components {
                 fulfilled: number;
                 cancelled: number;
             };
+            counts_by_payment_state: {
+                unpaid: number;
+                partially_paid: number;
+                paid: number;
+            };
+            receivable_cents: number;
             kpis: {
                 /** @enum {string} */
                 period: "today" | "7d" | "30d";
@@ -9891,6 +9924,22 @@ export interface components {
             shipping_state: "estimated" | "quoted" | null;
             total_cents: number;
             currency: string;
+            paid_cents: number;
+            balance_cents: number;
+            /** @enum {string} */
+            payment_state: "unpaid" | "partially_paid" | "paid";
+            base: {
+                currency: string;
+                subtotal_cents: number;
+                total_cents: number;
+                fx_rate: number;
+                fx_source: string | null;
+                /** Format: date-time */
+                fx_at: string | null;
+                fx_spread_bps: number | null;
+                /** Format: date-time */
+                frozen_at: string;
+            } | null;
             /** Format: date */
             service_date: string | null;
             external_total_cents: number | null;
@@ -9954,6 +10003,9 @@ export interface components {
                 /** Format: uuid */
                 payment_method_id: string | null;
                 amount_cents: number | null;
+                amount_assumed: boolean;
+                base_amount_cents: number | null;
+                fx_rate: number | null;
                 currency: string;
                 reference: string | null;
                 attachment_id: string | null;
@@ -9989,7 +10041,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped" | "customer_notification_failed";
+                type: "created" | "status_changed" | "payment_reported" | "payment_verified" | "payment_rejected" | "updated" | "customer_notified" | "customer_notification_skipped" | "customer_notification_failed" | "payment_state_changed" | "currency_frozen";
                 /** @enum {string} */
                 actor_type: "user" | "ai_agent" | "system";
                 /** Format: uuid */
@@ -10061,6 +10113,8 @@ export interface components {
             notes?: string;
             /** @default true */
             notify_customer: boolean;
+            amount_cents?: number;
+            accept_overpayment?: boolean;
         };
         OauthAuthorizeDto: {
             authorize_url: string;
@@ -10440,6 +10494,79 @@ export interface components {
             max_order_cents?: number | null;
             position?: number;
             is_active?: boolean;
+        };
+        FxSettingsDto: {
+            settlement_currency: string;
+            spread_bps: number;
+            manual_rate: {
+                rate: number;
+                /** Format: date */
+                valid_until: string;
+            } | null;
+            show_indicative_quotes: boolean;
+        };
+        LatestFxRateDto: {
+            official: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            } | null;
+            effective: {
+                base: string;
+                quote: string;
+                rate: number;
+                official_rate: number | null;
+                spread_bps: number;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual" | "tenant_override";
+                /** Format: date */
+                valid_from: string;
+                stale: boolean;
+            } | null;
+        };
+        FxRatesListDto: {
+            data: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            }[];
+        };
+        SetManualRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            note?: string;
+        };
+        FxRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            /** Format: date */
+            valid_to: string | null;
+            /** @enum {string} */
+            source: "superfinanciera" | "manual";
+            /** Format: date-time */
+            fetched_at: string;
         };
         PaymentMethodsListDto: {
             data: {
@@ -12469,79 +12596,6 @@ export interface components {
         };
         EvaluateAcceptedDto: {
             enqueued: boolean;
-        };
-        FxSettingsDto: {
-            settlement_currency: string;
-            spread_bps: number;
-            manual_rate: {
-                rate: number;
-                /** Format: date */
-                valid_until: string;
-            } | null;
-            show_indicative_quotes: boolean;
-        };
-        LatestFxRateDto: {
-            official: {
-                base: string;
-                quote: string;
-                rate: number;
-                /** Format: date */
-                valid_from: string;
-                /** Format: date */
-                valid_to: string | null;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual";
-                /** Format: date-time */
-                fetched_at: string;
-            } | null;
-            effective: {
-                base: string;
-                quote: string;
-                rate: number;
-                official_rate: number | null;
-                spread_bps: number;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual" | "tenant_override";
-                /** Format: date */
-                valid_from: string;
-                stale: boolean;
-            } | null;
-        };
-        FxRatesListDto: {
-            data: {
-                base: string;
-                quote: string;
-                rate: number;
-                /** Format: date */
-                valid_from: string;
-                /** Format: date */
-                valid_to: string | null;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual";
-                /** Format: date-time */
-                fetched_at: string;
-            }[];
-        };
-        SetManualRateDto: {
-            base: string;
-            quote: string;
-            rate: number;
-            /** Format: date */
-            valid_from: string;
-            note?: string;
-        };
-        FxRateDto: {
-            base: string;
-            quote: string;
-            rate: number;
-            /** Format: date */
-            valid_from: string;
-            /** Format: date */
-            valid_to: string | null;
-            /** @enum {string} */
-            source: "superfinanciera" | "manual";
-            /** Format: date-time */
-            fetched_at: string;
         };
         GeoSearchResultsDto: {
             items: {
@@ -20407,6 +20461,7 @@ export interface operations {
                 contact_id?: string;
                 conversation_id?: string;
                 created_by_type?: "user" | "ai_agent";
+                payment_state?: "unpaid" | "partially_paid" | "paid";
                 created_from?: string;
                 created_to?: string;
                 service_date_from?: string;
@@ -21311,6 +21366,134 @@ export interface operations {
         };
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FxController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FxSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_latest_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatestFxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_rates_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRatesListDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_setManual_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetManualRateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_refresh_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23952,134 +24135,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EvaluateAcceptedDto"];
                 };
-            };
-        };
-    };
-    FxController_settings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxSettingsDto"];
-                };
-            };
-        };
-    };
-    FxController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FxSettingsDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxSettingsDto"];
-                };
-            };
-        };
-    };
-    FxController_latest_v1: {
-        parameters: {
-            query?: {
-                base?: string;
-                quote?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LatestFxRateDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_rates_v1: {
-        parameters: {
-            query?: {
-                base?: string;
-                quote?: string;
-                from?: string;
-                to?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxRatesListDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_setManual_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetManualRateDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxRateDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_refresh_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

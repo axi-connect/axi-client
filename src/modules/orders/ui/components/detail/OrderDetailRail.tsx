@@ -26,6 +26,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
+import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
   describeDelivery,
   describeShippingLine,
@@ -189,6 +190,9 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
             <p className="text-sm text-muted-foreground">El pedido ya no existe.</p>
           ) : (
             <>
+              {/* F3 Cobros: lo primero es cuánto falta por cobrar */}
+              <OrderBalanceBlock order={order} />
+
               {/* Artículos */}
               <section className="rounded-2xl border border-border bg-background p-4">
                 <SectionTitle>Artículos</SectionTitle>
@@ -513,6 +517,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
         ) : null}
         <PaymentReviewDialog
           orderId={orderId}
+          order={order}
           review={review}
           onOpenChange={(open) => {
             if (!open) setReview(null);

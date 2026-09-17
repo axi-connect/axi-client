@@ -45,6 +45,10 @@ export const API_ERROR_CODES = {
   featureDisabled: "features/feature_disabled",
   /** Axi fijó la función para este tenant: el interruptor del panel no puede cambiarla. */
   featureLockedByPlatform: "features/locked_by_platform",
+  /** F3 Cobros: verificar sin monto cuando el tenant cobra por partes. */
+  paymentAmountRequired: "orders/payment_amount_required",
+  /** F3 Cobros: el pago verificado supera el saldo del pedido. */
+  paymentExceedsBalance: "orders/payment_exceeds_balance",
   outsideServiceWindow: "channels/outside_service_window",
   invalidTransition: "conversations/invalid_transition",
   handoffConflict: "conversations/handoff_conflict",

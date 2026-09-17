@@ -4,6 +4,8 @@ import {
   CircleCheck,
   CircleX,
   FilePen,
+  HandCoins,
+  Lock,
   PackagePlus,
   Receipt,
   RefreshCw,
@@ -51,6 +53,23 @@ function visualFor(event: OrderEventDTO): EventVisual {
     }
     case "payment_reported":
       return { icon: Receipt, label: `Pago reportado por ${actorName(event)}`, tone: "warning" };
+    case "payment_state_changed": {
+      // F3 Cobros: el dinero se movió sin que el pedido cambiara de estado.
+      const to = typeof payload.to === "string" ? payload.to : null;
+      return {
+        icon: HandCoins,
+        label:
+          to === "paid"
+            ? "El pedido quedó cobrado"
+            : to === "partially_paid"
+              ? "El pedido pasó a abonado"
+              : "Cambió el estado de cobro",
+        tone: to === "paid" ? "success" : undefined,
+      };
+    }
+    case "currency_frozen":
+      // F3 Cobros: a partir de aquí la tasa del día ya no mueve el total.
+      return { icon: Lock, label: "Total fijado en la moneda de cobro" };
     case "payment_verified":
       return { icon: CircleCheck, label: `Pago verificado por ${actorName(event)}`, tone: "success" };
     case "payment_rejected":

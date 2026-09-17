@@ -38,6 +38,10 @@ function makeRow(overrides: Partial<OrderRow> = {}): OrderRow {
     has_payment_proof: false,
     pending_payment: false,
     items_count: 2,
+    paid_cents: 0,
+    balance_cents: 32000000,
+    payment_state: "unpaid",
+    service_date: null,
     created_at: "2026-07-11T00:00:00Z",
     ...overrides,
   };

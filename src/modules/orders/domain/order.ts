@@ -19,6 +19,52 @@ export type ConversationUsageDTO = Schemas["ConversationUsageDto"];
 export type OrderActorType = "user" | "ai_agent";
 export type PaymentStatus = OrderPaymentDTO["status"];
 
+/**
+ * F3 Cobros: cuánto del pedido está cobrado. NO sustituye al estado del
+ * pedido, lo acompaña: «reservado con abono» es `confirmed` + `partially_paid`,
+ * y por eso el tablero no gana una columna.
+ */
+export type PaymentState = OrderDTO["payment_state"];
+
+export const PAYMENT_STATE_LABELS: Record<PaymentState, string> = {
+  unpaid: "Sin pagos",
+  partially_paid: "Abonado",
+  paid: "Pagado",
+};
+
+/** Snapshot de la congelación: lo que costaba antes de fijar la moneda. */
+export type OrderBaseMoney = NonNullable<OrderDTO["base"]>;
+
+/**
+ * Progreso del cobro para el medidor: un tramo por PAGO verificado, del ancho
+ * de su importe, y el resto hueco. El porcentaje se calcula sobre el total,
+ * nunca sobre la suma de los tramos: un sobrepago no dibuja más del 100 %.
+ */
+export function paymentProgress(order: {
+  total_cents: number;
+  paid_cents: number;
+  payments?: readonly { status: PaymentStatus; amount_cents: number | null }[];
+}): { percent: number; segments: number[] } {
+  const total = order.total_cents;
+  if (total <= 0) return { percent: order.paid_cents > 0 ? 100 : 0, segments: [] };
+  const percent = Math.min(100, Math.round((order.paid_cents / total) * 100));
+  const verified = (order.payments ?? []).filter(
+    (payment) => payment.status === "verified" && payment.amount_cents !== null,
+  );
+  const segments = verified.map((payment) =>
+    Math.min(100, ((payment.amount_cents ?? 0) / total) * 100),
+  );
+  return { percent, segments: segments.length > 0 ? segments : percent > 0 ? [percent] : [] };
+}
+
+/** Días que faltan para la fecha del servicio; null si el pedido no tiene. */
+export function daysUntilService(serviceDate: string | null, today = new Date()): number | null {
+  if (serviceDate === null) return null;
+  const target = new Date(`${serviceDate}T00:00:00.000Z`).getTime();
+  const from = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  return Math.round((target - from) / 86_400_000);
+}
+
 export type ListOrdersParams = {
   status?: OrderStatus;
   contact_id?: string;
@@ -58,6 +104,12 @@ export type OrderRow = {
   /** Algún pago en `reported` pendiente de verificación humana */
   pending_payment: boolean;
   items_count: number;
+  /** F3 Cobros: cuánto lleva cobrado y cuánto falta. */
+  paid_cents: number;
+  balance_cents: number;
+  payment_state: PaymentState;
+  /** F2 Cobros: `YYYY-MM-DD` o null. */
+  service_date: string | null;
   created_at: string;
   /** Row hidratada solo desde un evento WS: se completa con re-fetch */
   partial?: boolean;
@@ -77,6 +129,10 @@ export function mapOrderToRow(dto: OrderDTO): OrderRow {
     has_payment_proof: dto.payments.some((payment) => payment.attachment_id !== null),
     pending_payment: dto.payments.some((payment) => payment.status === "reported"),
     items_count: dto.items.length,
+    paid_cents: dto.paid_cents,
+    balance_cents: dto.balance_cents,
+    payment_state: dto.payment_state,
+    service_date: dto.service_date,
     created_at: dto.created_at,
   };
 }
@@ -96,6 +152,12 @@ export function mapSummaryToRow(summary: OrderRealtimeSummary): OrderRow {
     has_payment_proof: false,
     pending_payment: false,
     items_count: 0,
+    // El resumen del evento no trae el cobro: la fila se completa con el
+    // re-fetch, y hasta entonces no se inventa un saldo.
+    paid_cents: 0,
+    balance_cents: summary.total_cents,
+    payment_state: "unpaid",
+    service_date: null,
     created_at: new Date().toISOString(),
     partial: true,
   };

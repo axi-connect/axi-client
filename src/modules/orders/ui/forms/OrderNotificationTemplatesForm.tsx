@@ -19,13 +19,23 @@ type TemplateKey = keyof OrderNotificationSettingsDTO["templates"];
 
 const TEMPLATE_META: Array<{ key: TemplateKey; title: string; hint: string }> = [
   { key: "confirmed", title: "Pedido confirmado", hint: "Al confirmar el pedido (descuenta inventario)." },
-  { key: "paid", title: "Pago verificado", hint: "Cuando verificas el pago y el pedido queda pagado." },
+  { key: "paid", title: "Pedido cobrado", hint: "Solo cuando el saldo llega a cero. Antes salía con el primer pago, aunque quedara casi todo por cobrar." },
+  { key: "payment_received", title: "Abono recibido", hint: "Cada vez que verificas un abono: el cliente que paga por partes lo recibe varias veces." },
   { key: "fulfilled", title: "Pedido entregado", hint: "Al marcar el pedido como entregado." },
   { key: "cancelled", title: "Pedido cancelado", hint: "Al cancelar el pedido." },
   { key: "payment_rejected", title: "Pago rechazado", hint: "Al rechazar un comprobante (el pedido vuelve a su estado anterior)." },
 ];
 
 const VARIABLES = ["{{contact_name}}", "{{order_number}}", "{{total}}", "{{status}}"];
+
+/**
+ * Variables propias de una plantilla. El importe y el saldo solo se resuelven
+ * en el aviso del abono; en otra plantilla quedarían literales, que es la señal
+ * de que la variable está en el sitio equivocado.
+ */
+const EXTRA_VARIABLES: Partial<Record<TemplateKey, string[]>> = {
+  payment_received: ["{{amount}}", "{{balance}}"],
+};
 
 /**
  * Plantillas del aviso WhatsApp al cliente por transición de pedido (F11).
@@ -127,6 +137,20 @@ export function OrderNotificationTemplatesForm() {
                 disabled={!template.enabled}
                 onChange={(e) => patch(key, { body: e.target.value })}
               />
+              {EXTRA_VARIABLES[key] !== undefined ? (
+                <p className="text-xs text-muted-foreground">
+                  Solo aquí se resuelven{" "}
+                  {EXTRA_VARIABLES[key]?.map((variable) => (
+                    <code
+                      key={variable}
+                      className="mx-0.5 rounded bg-secondary px-1 py-0.5 font-mono text-xs"
+                    >
+                      {variable}
+                    </code>
+                  ))}
+                  : el importe del abono y el saldo que queda.
+                </p>
+              ) : null}
             </section>
           );
         })}

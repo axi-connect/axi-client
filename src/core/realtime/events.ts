@@ -301,6 +301,20 @@ export type OrderStatusChangedEvent = OrderRealtimeSummary & {
 /** Comprobante/reporte de pago (IA o manual). */
 export type OrderPaymentReportedEvent = OrderRealtimeSummary & { payment_id: string };
 
+/**
+ * F3 Cobros: un pago quedó verificado y el pedido tiene saldo nuevo. Va aparte
+ * de `order.status_changed` porque un abono mueve el dinero sin mover el estado
+ * del pedido. Trae las cifras ya resueltas: nadie las recalcula.
+ */
+export type OrderPaymentVerifiedEvent = OrderRealtimeSummary & {
+  payment_id: string;
+  amount_cents: number;
+  paid_cents: number;
+  balance_cents: number;
+  payment_state: "unpaid" | "partially_paid" | "paid";
+  service_date: string | null;
+};
+
 /** Edición de items/notas/descuento en draft|pending. */
 export type OrderUpdatedEvent = OrderRealtimeSummary;
 
@@ -847,6 +861,7 @@ export type InboxServerEvents = {
   "order.created": (payload: OrderCreatedEvent) => void;
   "order.status_changed": (payload: OrderStatusChangedEvent) => void;
   "order.payment_reported": (payload: OrderPaymentReportedEvent) => void;
+  "order.payment_verified": (payload: OrderPaymentVerifiedEvent) => void;
   "order.updated": (payload: OrderUpdatedEvent) => void;
   "crm.deal_created": (payload: CrmDealCreatedEvent) => void;
   "crm.deal_updated": (payload: CrmDealUpdatedEvent) => void;
