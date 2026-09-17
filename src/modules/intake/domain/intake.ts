@@ -117,6 +117,11 @@ export interface IntakeTurnResult {
   finished: boolean;
   closing: string | null;
   turns_left: number;
+  /**
+   * Lo capturado con su valor normalizado y su texto legible: la ficha se
+   * pinta desde aquí, sin volver a pedir la sesión entera tras cada turno.
+   */
+  captured_values: { code: string; value: unknown; display: string | null }[];
 }
 
 export interface PatchAnswersResult {

@@ -18,11 +18,7 @@ export function useIntakeBlueprintsQuery(includeInactive = false) {
     queryKey: [...platformKeys.intake.blueprints(), includeInactive],
     queryFn: async () => {
       const { data } = await platformClient.GET("/api/v1/platform/intake/blueprints", {
-        // Viaja siempre, como cadena: el spec lo declara obligatorio porque el
-        // controlador lo recibe con `@Query(...)` suelto. Mandar "false" es
-        // inofensivo —el backend solo reacciona a "true"— y evita el `undefined`
-        // que el tipo generado no admite. Deuda menor: darle un DTO de query.
-        params: { query: { include_inactive: includeInactive ? "true" : "false" } },
+        params: { query: includeInactive ? { include_inactive: "true" } : {} },
       });
       return data!;
     },
@@ -133,13 +129,19 @@ export function useCancelIntakeSession() {
   });
 }
 
+/**
+ * Aplicar. Lleva la huella del plan que se aprobó en el preview: si entre
+ * medias la persona siguió contestando o corrigió la ficha, el servidor
+ * responde 409 `intake/plan_changed` y la consola recarga el antes/después.
+ * Lo que se aprueba tiene que ser exactamente lo que se escribe.
+ */
 export function useApplyIntakeSession() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, plan_hash }: { id: string; plan_hash: string }) => {
       const { data } = await platformClient.POST(
         "/api/v1/platform/intake/sessions/{id}/apply",
-        { params: { path: { id } } },
+        { params: { path: { id } }, body: { plan_hash } },
       );
       return data!;
     },

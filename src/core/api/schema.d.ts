@@ -15874,6 +15874,11 @@ export interface components {
             finished: boolean;
             closing: string | null;
             turns_left: number;
+            captured_values: {
+                code: string;
+                value: unknown;
+                display: string | null;
+            }[];
         };
         PatchIntakeAnswersDto: {
             answers?: {
@@ -16180,6 +16185,10 @@ export interface components {
                 label: string;
                 reason: string;
             }[];
+            hash: string;
+        };
+        ApplySessionDto: {
+            plan_hash?: string;
         };
         ApplyOutcomeDto: {
             applied: {
@@ -28175,8 +28184,8 @@ export interface operations {
     };
     PlatformIntakeBlueprintsController_list_v1: {
         parameters: {
-            query: {
-                include_inactive: string;
+            query?: {
+                include_inactive?: "0" | "1" | "true" | "yes" | "false" | "no";
             };
             header?: never;
             path?: never;
@@ -28419,7 +28428,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplySessionDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

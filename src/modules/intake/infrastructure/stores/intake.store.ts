@@ -8,6 +8,7 @@ import type {
   IntakeMessage,
   IntakeSessionView,
   IntakeTopicView,
+  IntakeTurnResult,
 } from "@/modules/intake/domain/intake";
 import { intakeService } from "../services/intake-service.adapter";
 
@@ -150,25 +151,13 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
                 turns_left: result.turns_left,
                 status: result.finished ? ("completed" as const) : state.session.status,
                 closing: result.closing ?? state.session.closing,
-                // La ficha se refresca desde el servidor al terminar el turno:
-                // los valores de `captured` los normalizó el backend y pintar
-                // aquí lo que creemos que guardó sería adivinar.
+                // La ficha se pinta desde el turno: el servidor ya devolvió cada
+                // valor normalizado con su texto. Antes se volvía a pedir la
+                // sesión ENTERA —hilo, ficha, progreso— para quedarse con
+                // `topics`, en cada turno productivo, sobre datos móviles.
+                topics: applyCaptured(state.session.topics, result.captured_values),
               },
       }));
-
-      // Refresco silencioso de la ficha. No bloquea ni pinta spinner: el chat ya
-      // respondió, y lo único que falta es que la columna de al lado se entere.
-      if (result.captured.length > 0) {
-        void intakeService
-          .open(token)
-          .then((fresh) => {
-            set((state) => (state.session === null ? state : { session: { ...state.session, topics: fresh.topics } }));
-          })
-          .catch(() => {
-            // Un refresco fallido no rompe nada: la ficha se pondrá al día en
-            // el siguiente turno o al recargar.
-          });
-      }
     } catch (error) {
       const code = isHttpError(error) ? error.code : "";
       if (BLOCKING_CODES.has(code)) {
@@ -263,6 +252,33 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
     });
   },
 }));
+
+/**
+ * Refleja en la ficha lo que el turno capturó, con el `display` que calculó el
+ * servidor: las dos mitades de la pantalla enseñan exactamente el mismo texto.
+ */
+function applyCaptured(
+  topics: IntakeTopicView[],
+  captured: IntakeTurnResult["captured_values"],
+): IntakeTopicView[] {
+  if (captured.length === 0) return topics;
+  const byCode = new Map(captured.map((entry) => [entry.code, entry]));
+  return topics.map((topic) => ({
+    ...topic,
+    fields: topic.fields.map((field) => {
+      const hit = byCode.get(field.code);
+      if (hit === undefined) return field;
+      return {
+        ...field,
+        value: hit.value,
+        display: hit.display,
+        // Lo dijo la persona en este turno: deja de ser deducción por confirmar.
+        source: "stated" as const,
+        needs_confirmation: false,
+      };
+    }),
+  }));
+}
 
 /**
  * Refleja en la ficha un dato que se acaba de guardar.

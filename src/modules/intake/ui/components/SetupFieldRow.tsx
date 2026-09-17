@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Pencil, Sparkles, X } from "lucide-react";
+import { Check, ChevronRight, Sparkles, X } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
@@ -14,21 +13,21 @@ import {
 } from "@/modules/intake/domain/intake";
 
 /**
- * Una fila de la ficha: etiqueta → valor, editable en el sitio.
+ * Una fila de la ficha, con la forma de una fila de Contactos: la etiqueta
+ * pequeña y muda arriba, el valor en el tamaño de lectura debajo, y a la
+ * derecha o un chevron (se puede tocar para corregir) o el botón cápsula de
+ * confirmar.
  *
  * **Esta fila es la mitad del diseño que la investigación exigía.** Un formato
  * de una pregunta a la vez tiene cuatro defectos documentados —no hay panorama,
  * no se puede editar lo anterior, no se puede saltar, y hay gente que rebota
  * ante los chats— y los cuatro se arreglan con lo mismo: que la conversación
  * sea un método de entrada para un documento, no un sustituto del documento.
- * Quien prefiera teclear la ficha y no hablar con nadie, puede.
- *
- * Es una LISTA, no una tabla: etiqueta, valor, una línea secundaria y un solo
- * indicador. Cinco columnas por dato serían desorden.
  *
  * El matiz de procedencia solo aparece cuando aporta: lo que la persona dijo no
- * lleva sello —es lo normal— y lo que la IA dedujo de su web sí, porque ahí sí
- * cambia lo que hay que hacer con el dato.
+ * lleva sello —es lo normal— y lo que la IA dedujo de su web va en violeta con
+ * la chispa, porque ahí sí cambia lo que hay que hacer con el dato. Y ese dato
+ * trae el botón «Así es»: la cápsula tintada del App Store, un toque y listo.
  */
 export function SetupFieldRow({
   field,
@@ -74,34 +73,21 @@ export function SetupFieldRow({
       return;
     }
     const ok = await onSave(value);
-    if (ok) {
-      setEditing(false);
-    } else {
-      setError("No se pudo guardar. Inténtalo de nuevo.");
-    }
+    if (ok) setEditing(false);
+    else setError("No se pudo guardar. Inténtalo de nuevo.");
   }
 
   return (
     <li
       className={cn(
-        "group border-b border-border-soft py-2.5 last:border-b-0",
-        field.needs_confirmation && "bg-accent-violet/4",
+        "intake-row group",
+        field.needs_confirmation && "bg-gradient-to-r from-accent-violet/8 to-transparent to-70%",
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground">
-            {field.label}
-            {field.required && field.value === null ? (
-              <span
-                className="size-1 rounded-full bg-accent-amber"
-                aria-label="Hace falta"
-                title="Hace falta"
-              />
-            ) : null}
-          </p>
-
-          {editing ? (
+      {editing ? (
+        <div className="flex items-start gap-3 py-2.5 pr-3 pl-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] text-muted-foreground">{field.label}</p>
             <FieldEditor
               field={field}
               draft={draft}
@@ -109,91 +95,93 @@ export function SetupFieldRow({
               inputRef={inputRef}
               onCommit={() => void commit()}
             />
-          ) : (
-            <p
-              className={cn(
-                "mt-0.5 text-[13px] leading-snug wrap-anywhere",
-                field.display === null ? "text-muted-foreground/50 italic" : "text-foreground",
-              )}
+            {error === null ? null : <p className="mt-1.5 text-[12px] text-destructive">{error}</p>}
+          </div>
+          <div className="flex flex-none items-center gap-1 pt-4">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => {
+                setEditing(false);
+                setError(null);
+              }}
+              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--intake-fill)]"
+              aria-label="Cancelar"
             >
-              {field.display ?? "Sin contestar"}
-            </p>
-          )}
-
-          {badge !== null && !editing ? (
-            <p className="mt-1 inline-flex items-center gap-1 text-[10.5px] text-muted-foreground/70">
-              {field.needs_confirmation ? (
-                <Sparkles className="size-2.5 text-accent-violet" aria-hidden="true" />
-              ) : null}
-              {badge}
-            </p>
-          ) : null}
-
-          {error === null ? null : (
-            <p className="mt-1 text-[11px] text-destructive">{error}</p>
-          )}
+              <X className="size-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void commit()}
+              className="intake-send flex size-8 items-center justify-center rounded-full transition-transform active:scale-[.92] disabled:opacity-50"
+              aria-label="Guardar"
+            >
+              <Check className="size-4 [stroke-width:2.6]" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-
-        <div className="flex flex-none items-center gap-1">
-          {editing ? (
-            <>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="size-7"
-                disabled={saving}
-                onClick={() => {
-                  setEditing(false);
-                  setError(null);
-                }}
-                aria-label="Cancelar"
+      ) : (
+        // Dos botones HERMANOS, no uno dentro del otro: un botón no puede
+        // contener contenido interactivo, y «Así es» tiene que ser pulsable por
+        // sí solo (y con su propio foco de teclado).
+        <div className="flex items-center gap-3 pr-3.5 md:hover:bg-[var(--intake-card-2)]">
+          <button
+            type="button"
+            onClick={start}
+            disabled={saving}
+            className="flex min-w-0 flex-1 items-center gap-3 py-[11px] pl-4 text-left transition-colors active:bg-[var(--intake-fill)]"
+            aria-label={`Corregir ${field.label}`}
+          >
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                {field.label}
+                {field.required && field.value === null ? (
+                  <span className="size-[5px] rounded-full bg-accent-amber" title="Hace falta" />
+                ) : null}
+              </span>
+              <span
+                className={cn(
+                  "mt-0.5 block text-[15px] leading-[1.4] tracking-[-0.005em] wrap-anywhere",
+                  field.display === null ? "text-muted-foreground/50" : "text-foreground",
+                )}
               >
-                <X className="size-3.5" aria-hidden="true" />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                className="size-7 rounded-full"
-                disabled={saving}
-                onClick={() => void commit()}
-                aria-label="Guardar"
-              >
-                <Check className="size-3.5" aria-hidden="true" />
-              </Button>
-            </>
-          ) : (
-            <>
-              {field.needs_confirmation ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-7 gap-1 border-accent-violet/30 px-2 text-[11px] text-accent-violet hover:bg-accent-violet/10"
-                  disabled={saving}
-                  onClick={onConfirm}
+                {field.display ?? "Sin contestar"}
+              </span>
+              {badge !== null ? (
+                <span
+                  className={cn(
+                    "mt-[3px] inline-flex items-center gap-1 text-[11.5px]",
+                    field.needs_confirmation ? "text-accent-violet" : "text-muted-foreground/60",
+                  )}
                 >
-                  <Check className="size-3" aria-hidden="true" />
-                  Así es
-                </Button>
+                  {field.needs_confirmation ? (
+                    <Sparkles className="size-[11px] fill-current" aria-hidden="true" />
+                  ) : null}
+                  {badge}
+                </span>
               ) : null}
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                // Visible siempre en táctil (donde no hay hover) y al pasar el
-                // ratón en escritorio: un control que solo existe con hover es
-                // un control que en un móvil no existe.
-                className="size-7 text-muted-foreground opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
-                onClick={start}
-                aria-label={`Corregir ${field.label}`}
-              >
-                <Pencil className="size-3.5" aria-hidden="true" />
-              </Button>
-            </>
-          )}
+            </span>
+            {field.needs_confirmation ? null : (
+              <ChevronRight
+                className="size-4 flex-none text-muted-foreground/50 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+
+          {field.needs_confirmation ? (
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={saving}
+              className="flex-none rounded-full bg-accent-violet/10 px-[13px] py-1.5 text-[12.5px] font-semibold text-accent-violet transition-[background-color,transform] hover:bg-accent-violet/16 active:scale-[.95] disabled:opacity-50"
+            >
+              Así es
+            </button>
+          ) : null}
         </div>
-      </div>
+      )}
     </li>
   );
 }
@@ -213,7 +201,7 @@ function FieldEditor({
 }) {
   if (field.kind === "choice" && field.options !== null) {
     return (
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
+      <div className="mt-2 flex flex-wrap gap-1.5">
         {field.options.map((option) => (
           <button
             key={option}
@@ -222,10 +210,10 @@ function FieldEditor({
               setDraft(option);
             }}
             className={cn(
-              "rounded-full border px-2.5 py-1 text-[11.5px] transition-colors",
+              "rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-[background-color,color,transform] active:scale-[.96]",
               draft === option
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background hover:bg-secondary",
+                ? "intake-send"
+                : "bg-[var(--intake-fill)] text-foreground hover:bg-[var(--intake-hair-strong)]",
             )}
           >
             {option}
@@ -244,10 +232,8 @@ function FieldEditor({
           setDraft(event.target.value);
         }}
         rows={3}
-        className="mt-1.5 text-[13px]"
-        placeholder={
-          field.kind === "long_text" ? "Cuéntalo con tus palabras" : "Sepáralos con comas"
-        }
+        className="mt-2 rounded-xl border-[var(--intake-hair-strong)] bg-[var(--intake-card-2)] text-[15px]"
+        placeholder={field.kind === "long_text" ? "Cuéntalo con tus palabras" : "Sepáralos con comas"}
       />
     );
   }
@@ -265,7 +251,7 @@ function FieldEditor({
           onCommit();
         }
       }}
-      className="mt-1.5 h-8 text-[13px]"
+      className="mt-2 h-9 rounded-xl border-[var(--intake-hair-strong)] bg-[var(--intake-card-2)] text-[15px]"
     />
   );
 }

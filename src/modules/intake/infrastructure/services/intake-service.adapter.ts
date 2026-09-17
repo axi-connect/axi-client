@@ -63,9 +63,10 @@ export const intakeService = {
    */
   transcribe(token: string, audio: Blob): Promise<{ text: string }> {
     const form = new FormData();
-    // El nombre importa poco, la extensión sí: el proveedor decide el
-    // decodificador por el content-type, y `webm` es lo que graba el navegador.
-    form.append("file", audio, "nota.webm");
+    // El servidor decide por el content-type, pero el nombre no debe mentir:
+    // Chrome y Android graban webm; Safari e iOS graban mp4.
+    const ext = audio.type.includes("mp4") ? "m4a" : audio.type.includes("ogg") ? "ogg" : "webm";
+    form.append("file", audio, `nota.${ext}`);
     return http.post<{ text: string }>(`${base(token)}/voice`, form, {
       authenticate: false,
     });

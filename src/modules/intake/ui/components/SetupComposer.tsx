@@ -4,24 +4,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Square } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
-import { Button } from "@/shared/components/ui/button";
 import { useVoiceRecorder } from "@/modules/intake/infrastructure/hooks/use-voice-recorder";
 
 /** Alto máximo del compositor antes de hacer scroll interno. */
-const MAX_PX = 140;
+const MAX_PX = 120;
 
 /**
- * El compositor: escribir o dictar.
+ * El compositor: una cápsula flotante, como la de Messages.
+ *
+ * Flota sobre el hilo con material translúcido en vez de ocupar una franja
+ * fija: el hilo se lee por debajo y la pantalla del móvil no pierde altura.
+ * El micrófono va DENTRO de la cápsula y el envío es el círculo coral —el
+ * color de acción— con la flecha hacia arriba.
  *
  * **El botón de dictar es probablemente la decisión de producto más importante
  * de toda la pantalla.** WhatsApp mueve miles de millones de notas de voz al
  * día, dictar es unas tres veces más rápido que teclear en un móvil, y en
  * Latinoamérica la preferencia por la voz es estructural. Quien va a contestar
- * esto es un dueño de PyME colombiano que vive en WhatsApp: pedirle que teclee
- * la descripción de su negocio es pedirle justo lo que menos hace. Y de un
- * audio de veinte segundos el asistente saca cuatro datos de golpe.
+ * esto es un dueño de PyME colombiano que vive en WhatsApp.
  *
- * La transcripción **no se envía sola**: se pinta en el compositor para que su
+ * La transcripción **no se envía sola**: se pinta en la cápsula para que su
  * autor la lea. Whisper se equivoca, y mandar sin revisar convierte un error de
  * transcripción en un dato mal guardado del que nadie sabe el origen.
  */
@@ -44,7 +46,6 @@ export function SetupComposer({
   focusToken: number;
 }) {
   const [draft, setDraft] = useState("");
-  /** true cuando lo que hay en el compositor viene de un dictado. */
   const [fromVoice, setFromVoice] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -94,120 +95,125 @@ export function SetupComposer({
   }
 
   const recording = recorder.state === "recording";
-  const canRecord =
-    voiceEnabled && !disabled && !busy && (recorder.state === "idle" || recording);
+  const canRecord = voiceEnabled && !disabled && !busy && (recorder.state === "idle" || recording);
 
   return (
-    <div className="flex-none px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div
-        className={cn(
-          "rounded-xl border bg-background shadow-float transition-colors",
-          recording ? "border-destructive/50" : "border-border focus-within:border-primary/40",
-        )}
-      >
-        {recording ? (
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <span className="flex size-2.5 flex-none animate-pulse rounded-full bg-destructive" />
-            <p className="flex-1 text-[13px] text-foreground">
-              Te escucho… <span className="tabular-nums text-muted-foreground">{fmt(recorder.seconds)}</span>
-            </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-8 px-2 text-[12px] text-muted-foreground"
-              onClick={recorder.cancel}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              className="size-9 flex-none rounded-full"
-              onClick={() => void finishRecording()}
-              aria-label="Terminar de dictar"
-            >
-              <Square className="size-3.5 fill-current" aria-hidden="true" />
-            </Button>
-          </div>
-        ) : (
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              submit();
-            }}
-            className="px-4 py-3"
-          >
-            <textarea
-              ref={areaRef}
-              value={draft}
-              onChange={(event) => {
-                setDraft(event.target.value);
-                if (event.target.value === "") setFromVoice(false);
-              }}
-              onKeyDown={(event) => {
-                // Enter envía, Shift+Enter salta de línea. En móvil el teclado
-                // trae su propio salto de línea y el botón está a la vista.
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  submit();
-                }
-              }}
-              rows={1}
-              disabled={disabled}
-              placeholder={transcribing ? "Pasando tu audio a texto…" : placeholder}
-              aria-label="Tu respuesta"
-              style={{ maxHeight: MAX_PX }}
-              className="w-full resize-none bg-transparent text-[14px] leading-relaxed outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
-            />
-
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <p className="text-[10.5px] text-muted-foreground/60">
-                {fromVoice ? "Lo dicté yo · revísalo antes de enviar" : ""}
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-[var(--intake-ground)] from-55% to-transparent px-4 pt-3 pb-[max(1.125rem,env(safe-area-inset-bottom))]">
+      <div className="pointer-events-auto mx-auto max-w-[640px]">
+        <div
+          className={cn(
+            "intake-glass intake-glass--strong flex items-end gap-1.5 rounded-[26px] border py-1.5 pr-1.5 pl-[18px] shadow-float",
+            "transition-[border-color] duration-200",
+            recording
+              ? "border-brand/50"
+              : "border-[var(--intake-hair-strong)] focus-within:border-brand/50",
+          )}
+        >
+          {recording ? (
+            <div className="flex w-full items-center gap-3 py-1 pl-0.5">
+              <span className="size-2.5 flex-none animate-pulse rounded-full bg-brand" />
+              <p className="flex-1 text-[15px] text-foreground">
+                Te escucho…{" "}
+                <span className="text-muted-foreground tabular-nums">{fmt(recorder.seconds)}</span>
               </p>
-
-              <div className="flex items-center gap-1.5">
-                {canRecord ? (
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="size-9 rounded-full text-muted-foreground hover:text-foreground"
-                    onClick={recorder.start}
-                    disabled={transcribing}
-                    aria-label="Dictar en vez de escribir"
-                  >
-                    {transcribing ? (
-                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Mic className="size-4" aria-hidden="true" />
-                    )}
-                  </Button>
-                ) : null}
-
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={draft.trim() === "" || disabled || busy}
-                  className="bg-brand-gradient size-9 rounded-full text-primary-foreground"
-                  aria-label="Enviar"
-                >
-                  <ArrowUp className="size-4" aria-hidden="true" />
-                </Button>
-              </div>
+              <span className="intake-wave" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <button
+                type="button"
+                onClick={recorder.cancel}
+                className="px-2 text-[13px] font-medium text-muted-foreground transition-opacity active:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void finishRecording()}
+                className="intake-send flex size-[38px] flex-none items-center justify-center rounded-full transition-transform active:scale-[.92]"
+                aria-label="Terminar de dictar"
+              >
+                <Square className="size-3.5 fill-current" aria-hidden="true" />
+              </button>
             </div>
-          </form>
-        )}
-      </div>
+          ) : (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                submit();
+              }}
+              className="flex w-full items-end gap-1.5"
+            >
+              <textarea
+                ref={areaRef}
+                value={draft}
+                onChange={(event) => {
+                  setDraft(event.target.value);
+                  if (event.target.value === "") setFromVoice(false);
+                }}
+                onKeyDown={(event) => {
+                  // Enter envía, Shift+Enter salta de línea. En móvil el teclado
+                  // trae su propio salto y el botón está a la vista.
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    submit();
+                  }
+                }}
+                rows={1}
+                disabled={disabled}
+                placeholder={transcribing ? "Pasando tu audio a texto…" : placeholder}
+                aria-label="Tu respuesta"
+                style={{ maxHeight: MAX_PX }}
+                className="min-w-0 flex-1 resize-none bg-transparent py-2 text-[15px] leading-[1.45] outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
+              />
 
-      {voiceError === null ? null : (
-        <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">{voiceError}</p>
-      )}
-      {recorder.state === "denied" ? (
-        <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">
-          No pudimos usar el micrófono. Escríbelo y seguimos igual.
-        </p>
-      ) : null}
+              {canRecord ? (
+                <button
+                  type="button"
+                  onClick={recorder.start}
+                  disabled={transcribing}
+                  className="flex size-[38px] flex-none items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-[var(--intake-fill)] hover:text-foreground active:scale-[.92]"
+                  aria-label="Dictar en vez de escribir"
+                >
+                  {transcribing ? (
+                    <Loader2 className="size-[18px] animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Mic className="size-[18px]" aria-hidden="true" />
+                  )}
+                </button>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={draft.trim() === "" || disabled || busy}
+                className="intake-send flex size-[38px] flex-none items-center justify-center rounded-full transition-[transform,opacity] active:scale-[.92] disabled:opacity-40 disabled:shadow-none"
+                aria-label="Enviar"
+              >
+                <ArrowUp className="size-[17px] [stroke-width:2.6]" aria-hidden="true" />
+              </button>
+            </form>
+          )}
+        </div>
+
+        {fromVoice && !recording ? (
+          <p className="mt-1.5 px-6 text-[11.5px] text-muted-foreground/70">
+            Lo dicté yo · revísalo antes de enviar
+          </p>
+        ) : null}
+        {voiceError === null ? null : (
+          <p className="mt-1.5 px-6 text-[11.5px] text-muted-foreground">{voiceError}</p>
+        )}
+        {recorder.state === "denied" ? (
+          <p className="mt-1.5 px-6 text-[11.5px] text-muted-foreground">
+            No pudimos usar el micrófono. Escríbelo y seguimos igual.
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

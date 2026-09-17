@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Ban, Check, Copy, Mic, RefreshCw, Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
+import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -302,7 +303,21 @@ function ApplyPanel({ sessionId, applied }: { sessionId: string; applied: boolea
       )}
 
       {apply.isError ? (
-        <p className="text-sm text-destructive">{errorMessage(apply.error)}</p>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-destructive">
+          <span>{errorMessage(apply.error)}</span>
+          {isHttpError(apply.error) && apply.error.code === "intake/plan_changed" ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                apply.reset();
+                void plan.refetch();
+              }}
+            >
+              Volver a revisar
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       {done ? (
@@ -315,7 +330,7 @@ function ApplyPanel({ sessionId, applied }: { sessionId: string; applied: boolea
           className="w-full"
           disabled={changes.length === 0 || apply.isPending}
           onClick={() => {
-            apply.mutate(sessionId);
+            apply.mutate({ id: sessionId, plan_hash: plan.data.hash });
           }}
         >
           {apply.isPending
