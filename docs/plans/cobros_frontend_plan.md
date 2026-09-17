@@ -134,7 +134,9 @@ Light/dark, estados (cargando, vacío, error, 403 de capacidad/feature), móvil.
 
 ## 7. Decisiones tomadas (revisables)
 
-- `useFeatures` fail-open (coherente con entitlements).
+- **`useFeatures` fail-open (coherente con entitlements), y por qué aguanta.** La garantía «Savage no ve planes» NO la sostiene el cliente: `navigation.query.ts` filtra el sidebar por `feature_code` antes de mandarlo, así que un tenant sin la función no tiene ni el ítem. El fail-open solo decide PESTAÑAS dentro de una página a la que ya puede entrar (`/settings/payments` es alcanzable porque «Medios» no depende de ninguna función). El peor caso de un fallo de carga es una pestaña de más que responde 403 y lo explica; el fail-closed, en cambio, escondería una función que el tenant paga cada vez que Redis tosa. Lo que lo hace tolerable es que `paymentsHubTabs(has, ready)` devuelve solo «Medios» mientras `!ready`: nunca se pinta y se quita.
+- **La pestaña existe cuando existe su pantalla** (`PLAN_TAB_READY`, `DOCUMENTS_TAB_READY` en `PaymentsHubNav`, y `SELECTABLE_ATTRIBUTE_TYPES` en catalog). Misma disciplina en los dos sitios: ofrecer algo cuyo destino aún no funciona es el «paso 2 sin el 3» que bloqueó F2. Se quitan al entrar F4 y F7.
+- **Una función bloqueada se explica, no desaparece.** `detail()` devuelve `source` y `blocked_by`, y de ahí sale el texto. Al llegar F4, la pestaña de Cobranza con `blocked_by: {kind:'feature', code:'payment_plans'}` debe decir de qué depende en vez de esfumarse: desaparecer sin motivo es lo que deja al dueño sin saber por qué no tiene cobros.
 - Vista previa de documento **server-side** (el layout HTML/CSS de impresión es del servidor; espejar solo la whitelist evita divergencias). Sin «Descargar PDF de prueba» en v1.
 - Cartera en `/orders/receivables`, no de primer nivel.
 - Sin librería de drag-and-drop para las cláusulas (subir/bajar).
