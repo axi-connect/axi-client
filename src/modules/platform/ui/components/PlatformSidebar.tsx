@@ -24,6 +24,7 @@ import {
   Receipt,
   ScrollText,
   type LucideIcon,
+  MessageCircleHeart,
 } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Badge } from "@/shared/components/ui/badge";
@@ -74,6 +75,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "flask-conical": FlaskConical,
   phone: Phone,
   plug: Plug,
+  "message-circle-heart": MessageCircleHeart,
 };
 
 /** Indicador de navegación pendiente (mismo patrón que el sidebar de tenant). */

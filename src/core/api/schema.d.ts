@@ -6292,6 +6292,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/intake/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicIntakeController_open_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicIntakeController_message_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PublicIntakeController_answers_v1"];
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/voice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicIntakeController_voice_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/blueprints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeBlueprintsController_list_v1"];
+        put?: never;
+        post: operations["PlatformIntakeBlueprintsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/blueprints/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeBlueprintsController_get_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["PlatformIntakeBlueprintsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["PlatformIntakeBlueprintsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_list_v1"];
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_reissue_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_preview_v1"];
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_execute_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -15590,6 +15766,433 @@ export interface components {
             create_categories?: boolean;
             /** @enum {string} */
             on_duplicate?: "skip" | "update";
+        };
+        IntakeSessionViewDto: {
+            /** @enum {string} */
+            status: "in_progress" | "completed" | "applied";
+            assistant_name: string;
+            company_name: string;
+            invite_name: string | null;
+            estimated_minutes: number;
+            turns_left: number;
+            voice_enabled: boolean;
+            messages: {
+                id: string;
+                /** @enum {string} */
+                role: "assistant" | "client";
+                body: string;
+                question: {
+                    question: string;
+                    options: {
+                        label: string;
+                        hint: string | null;
+                    }[];
+                    allow_free_text: boolean;
+                } | null;
+                captured: {
+                    code: string;
+                    label: string;
+                }[];
+                voice: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            topics: {
+                code: string;
+                title: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    help: string | null;
+                    options: string[] | null;
+                    value: unknown;
+                    display: string | null;
+                    /** @enum {string|null} */
+                    source: "known" | "derived" | "stated" | null;
+                    needs_confirmation: boolean;
+                }[];
+            }[];
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            closing: string | null;
+        };
+        SendIntakeMessageDto: {
+            message: string;
+            voice?: boolean;
+        };
+        IntakeTurnResultDto: {
+            reply: string;
+            question: {
+                question: string;
+                options: {
+                    label: string;
+                    hint: string | null;
+                }[];
+                allow_free_text: boolean;
+            } | null;
+            captured: {
+                code: string;
+                label: string;
+            }[];
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            finished: boolean;
+            closing: string | null;
+            turns_left: number;
+        };
+        PatchIntakeAnswersDto: {
+            answers?: {
+                field_code: string;
+                value: unknown;
+            }[];
+            defer?: string[];
+            resume?: string[];
+        };
+        PatchIntakeAnswersResultDto: {
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            applied: string[];
+            rejected: {
+                field_code: string;
+                reason: string;
+            }[];
+        };
+        IntakeTranscriptionDto: {
+            text: string;
+        };
+        BlueprintListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+                description: string | null;
+                objective: string;
+                tone: string;
+                assistant_name: string;
+                greeting: string;
+                closing: string;
+                estimated_minutes: number;
+                topics: {
+                    code: string;
+                    title: string;
+                    purpose: string;
+                    fields: {
+                        code: string;
+                        label: string;
+                        question: string;
+                        /** @enum {string} */
+                        kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                        required: boolean;
+                        options?: string[];
+                        help?: string;
+                        example?: string;
+                        /** @enum {string} */
+                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                    }[];
+                }[];
+                is_active: boolean;
+                version: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                sessions: number;
+            }[];
+        };
+        BlueprintDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            objective: string;
+            tone: string;
+            assistant_name: string;
+            greeting: string;
+            closing: string;
+            estimated_minutes: number;
+            topics: {
+                code: string;
+                title: string;
+                purpose: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    question: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    options?: string[];
+                    help?: string;
+                    example?: string;
+                    /** @enum {string} */
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                }[];
+            }[];
+            is_active: boolean;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateBlueprintDto: {
+            code?: string;
+            name: string;
+            description?: string | null;
+            objective: string;
+            tone?: string;
+            assistant_name?: string;
+            greeting?: string;
+            closing?: string;
+            estimated_minutes?: number;
+            topics: {
+                code: string;
+                title: string;
+                purpose: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    question: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    options?: string[];
+                    help?: string;
+                    example?: string;
+                    /** @enum {string} */
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                }[];
+            }[];
+        };
+        UpdateBlueprintDto: {
+            name?: string;
+            description?: string | null;
+            objective?: string;
+            tone?: string;
+            assistant_name?: string;
+            greeting?: string;
+            closing?: string;
+            estimated_minutes?: number;
+            topics?: {
+                code: string;
+                title: string;
+                purpose: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    question: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    options?: string[];
+                    help?: string;
+                    example?: string;
+                    /** @enum {string} */
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                }[];
+            }[];
+            is_active?: boolean;
+        };
+        SessionListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string | null;
+                blueprint_name: string;
+                /** @enum {string} */
+                status: "pending" | "in_progress" | "completed" | "applied" | "cancelled";
+                invite_name: string | null;
+                percent: number;
+                last_topic: string | null;
+                turn_count: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                last_activity_at: string | null;
+                /** Format: date-time */
+                expires_at: string;
+            }[];
+        };
+        SessionDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string | null;
+            blueprint_name: string;
+            /** @enum {string} */
+            status: "pending" | "in_progress" | "completed" | "applied" | "cancelled";
+            invite_name: string | null;
+            percent: number;
+            last_topic: string | null;
+            turn_count: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_activity_at: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uuid */
+            blueprint_id: string;
+            blueprint_version: number;
+            invite_email: string | null;
+            invite_phone: string | null;
+            source_url: string | null;
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            topics: {
+                code: string;
+                title: string;
+                deferred: boolean;
+                fields: {
+                    code: string;
+                    label: string;
+                    target: string | null;
+                    required: boolean;
+                    display: string | null;
+                    /** @enum {string|null} */
+                    source: "known" | "derived" | "stated" | null;
+                }[];
+            }[];
+            transcript: {
+                /** @enum {string} */
+                role: "assistant" | "client";
+                body: string;
+                voice: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            apply_result: unknown;
+            /** Format: date-time */
+            applied_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+        };
+        CreateSessionDto: {
+            /** Format: uuid */
+            blueprint_id: string;
+            /** Format: uuid */
+            company_id: string;
+            invite_name?: string | null;
+            /** Format: email */
+            invite_email?: string | null;
+            invite_phone?: string | null;
+            /** Format: uri */
+            source_url?: string | null;
+        };
+        CreatedSessionDto: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
+            prefill: {
+                known: number;
+                derived: number;
+                website_failed: boolean;
+            };
+        };
+        ReissuedLinkDto: {
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        ApplyPlanDto: {
+            changes: {
+                target: string;
+                label: string;
+                before: string | null;
+                after: string;
+            }[];
+            skipped: {
+                target: string;
+                label: string;
+                reason: string;
+            }[];
+        };
+        ApplyOutcomeDto: {
+            applied: {
+                target: string;
+                label: string;
+                before: string | null;
+                after: string;
+            }[];
+            skipped: {
+                target: string;
+                label: string;
+                reason: string;
+            }[];
         };
     };
     responses: never;
@@ -27467,6 +28070,363 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogImportDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_open_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeSessionViewDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_message_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendIntakeMessageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeTurnResultDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_answers_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchIntakeAnswersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatchIntakeAnswersResultDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_voice_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeTranscriptionDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_list_v1: {
+        parameters: {
+            query: {
+                include_inactive: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintListDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBlueprintDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBlueprintDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "pending" | "in_progress" | "completed" | "applied" | "cancelled";
+                company_id?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionListDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedSessionDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetailDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_reissue_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReissuedLinkDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformIntakeSessionsController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyPlanDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_execute_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyOutcomeDto"];
                 };
             };
         };

@@ -14,6 +14,9 @@ export type PlatformNavItem = {
 export const PLATFORM_NAV: PlatformNavItem[] = [
   { label: "Dashboard", path: "/platform", icon: "layout-dashboard" },
   { label: "Tenants", path: "/platform/tenants", icon: "building-2" },
+  // Puesta en marcha conversacional: va justo tras Tenants porque es lo
+  // primero que se hace con uno recién creado — emitirle la entrevista.
+  { label: "Puesta en marcha", path: "/platform/intake", icon: "message-circle-heart" },
   { label: "Planes", path: "/platform/plans", icon: "layers" },
   { label: "Pricing IA", path: "/platform/pricing", icon: "circle-dollar-sign" },
   // Curaduría del catálogo de voces (§10.5). Junto a «Pricing IA» porque son

@@ -27,6 +27,11 @@ export const PUBLIC_PATHS = [
   // lo compone el backend): llega gente sin sesión o desde otro dispositivo.
   "/verificar-correo",
   "/auth",
+  // Puesta en marcha conversacional (conversational_intake_plan.md): la
+  // entrevista vive FUERA del panel porque ese es el punto — el enlace se pega
+  // en un WhatsApp y se abre en el móvil sin cuenta ni contraseña. Lo autoriza
+  // el token de la ruta, no una sesión. El prefijo cubre `/configurar/:token`.
+  "/configurar",
   // Pago sin sesión (billing_frontend_plan.md F4/F5): el retorno del checkout y
   // el enlace de una factura. A los dos llega gente sin sesión —incluido un
   // tenant SUSPENDIDO por mora, que es justo el caso de uso— así que el guard no

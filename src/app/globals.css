@@ -2024,3 +2024,96 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     transition: none;
   }
 }
+
+/* ============================================================================
+   PUESTA EN MARCHA CONVERSACIONAL (/configurar/:token)
+   ----------------------------------------------------------------------------
+   Pantalla PÚBLICA, sin sesión, que casi siempre se abre desde un WhatsApp en
+   un móvil. Todo lo de aquí está pensado para ese caso: nada de trucos caros,
+   nada que repinte, y `100dvh` en vez de `100vh` porque la barra del navegador
+   móvil se mueve y `vh` deja la última línea del compositor debajo del teclado.
+   ============================================================================ */
+
+/* El fondo: un aura tenue de marca, sin peso. Dos radiales fijos y nada más —
+   ni blur (caro en móviles de gama baja) ni animación (no aporta y consume). */
+.intake-shell {
+  position: relative;
+  isolation: isolate;
+  background: var(--background);
+}
+.intake-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      52rem 32rem at 12% -8%,
+      color-mix(in srgb, var(--axi-brand) 9%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      44rem 28rem at 92% 8%,
+      color-mix(in srgb, var(--axi-violet) 8%, transparent),
+      transparent 60%
+    );
+}
+
+/* La marca del asistente. El pulso SOLO con `busy` (hay un turno en curso):
+   un latido permanente en una pantalla donde se está leyendo es ruido. */
+.intake-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.intake-mark--busy svg {
+  animation: intake-mark-spin 2.4s linear infinite;
+}
+@keyframes intake-mark-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* «Está pensando…». Tres puntos, opacidad — sin layout y sin repintado. */
+.intake-dots {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 3px;
+  vertical-align: baseline;
+}
+.intake-dots > span {
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: intake-dot 1.2s ease-in-out infinite;
+}
+.intake-dots > span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.intake-dots > span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes intake-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intake-mark--busy svg,
+  .intake-dots > span {
+    animation: none;
+  }
+  .intake-dots > span {
+    opacity: 0.6;
+  }
+}
