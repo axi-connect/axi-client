@@ -1,11 +1,14 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockList = jest.fn<Promise<unknown>, [unknown]>();
 const mockStats = jest.fn<Promise<unknown>, []>();
-jest.mock("@/modules/collections/infrastructure/services/collections-service.adapter", () => ({
-  listReceivables: (params: unknown) => mockList(params),
-  getReceivablesStats: () => mockStats(),
-}));
+jest.mock(
+  "@/modules/collections/infrastructure/services/collections-service.adapter",
+  () => ({
+    listReceivables: (params: unknown) => mockList(params),
+    getReceivablesStats: () => mockStats(),
+  }),
+);
 
 const mockShowAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
@@ -34,6 +37,7 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   installments_paid: 1,
   active_promise_at: null,
   assigned_user_id: null,
+  paused: false,
   ...overrides,
 });
 
@@ -52,7 +56,10 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("lo primero es cuánto te deben, y la frase nombra los importes", async () => {
-    mockList.mockResolvedValue({ data: [row()], meta: { total: 1, page: 1, page_size: 100 } });
+    mockList.mockResolvedValue({
+      data: [row()],
+      meta: { total: 1, page: 1, page_size: 100 },
+    });
     mockStats.mockResolvedValue(stats());
 
     render(<ReceivablesView />);
@@ -66,8 +73,21 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
   it("agrupa por urgencia y encabeza con quien ya viajó y debe", async () => {
     mockList.mockResolvedValue({
       data: [
-        row({ plan_id: "a", order_id: "a", contact_name: "Camilo Ortiz", travelled: true, days_overdue: 47, next_due_at: "2026-08-01" }),
-        row({ plan_id: "b", order_id: "b", contact_name: "Diana Salazar", days_overdue: 6, next_due_at: "2026-09-11" }),
+        row({
+          plan_id: "a",
+          order_id: "a",
+          contact_name: "Camilo Ortiz",
+          travelled: true,
+          days_overdue: 47,
+          next_due_at: "2026-08-01",
+        }),
+        row({
+          plan_id: "b",
+          order_id: "b",
+          contact_name: "Diana Salazar",
+          days_overdue: 6,
+          next_due_at: "2026-09-11",
+        }),
       ],
       meta: { total: 2, page: 1, page_size: 100 },
     });
@@ -80,6 +100,20 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
     expect(headings[1]).toHaveTextContent("En mora");
     // La mora se dice en días, no en un color.
     expect(screen.getByText("Venció hace 47 días")).toBeInTheDocument();
+  });
+
+  it("un plan en pausa sigue en la lista, y lo dice", async () => {
+    // Pausar no es cancelar: la deuda sigue contando. Esconderla de la lista
+    // haría creer que se resolvió.
+    mockList.mockResolvedValue({
+      data: [row({ paused: true })],
+      meta: { total: 1, page: 1, page_size: 100 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+
+    expect(await screen.findByText("en pausa")).toBeInTheDocument();
   });
 
   it("sin la función lo dice: no hay cartera, no es una lista vacía", async () => {
@@ -97,8 +131,78 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
     expect(await screen.findByText("Aquí no hay cartera")).toBeInTheDocument();
   });
 
+  it("no se calla a las 100 filas: dice cuántas hay y deja traer el resto", async () => {
+    // Perder la cola en silencio es el peor fallo posible en una pantalla cuyo
+    // propósito entero es «a quién le escribo».
+    mockList.mockResolvedValueOnce({
+      data: [row({ plan_id: "a", order_id: "a", contact_name: "Primera" })],
+      meta: { total: 2, page: 1, page_size: 50 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+
+    expect(await screen.findByText("Mostrando 1 de 2")).toBeInTheDocument();
+
+    mockList.mockResolvedValueOnce({
+      data: [row({ plan_id: "b", order_id: "b", contact_name: "Segunda" })],
+      meta: { total: 2, page: 2, page_size: 50 },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ver más" }));
+
+    expect(await screen.findByText("Segunda")).toBeInTheDocument();
+    // Y la primera sigue ahí: la tanda nueva se añade, no reemplaza.
+    expect(screen.getByText("Primera")).toBeInTheDocument();
+  });
+
+  it("un fallo de red NO se disfraza de «no te debe nadie»", async () => {
+    // Es el mismo principio del 403, una rama más allá: una lista vacía haría
+    // creer que la cartera está limpia.
+    mockList.mockRejectedValue(
+      new HttpError({
+        status: 500,
+        code: "internal/error",
+        message: "Se cayó",
+      }),
+    );
+    mockStats.mockRejectedValue(
+      new HttpError({
+        status: 500,
+        code: "internal/error",
+        message: "Se cayó",
+      }),
+    );
+
+    render(<ReceivablesView />);
+
+    expect(
+      await screen.findByText("No se pudo cargar la cartera"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No te debe nadie")).toBeNull();
+  });
+
+  it("el titular sigue al filtro en vez de describir otra cosa", async () => {
+    mockList.mockResolvedValue({
+      data: [row()],
+      meta: { total: 1, page: 1, page_size: 50 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+    await screen.findByText("Te deben");
+
+    fireEvent.click(screen.getByRole("button", { name: /En mora/ }));
+
+    // La cabecera es lo primero que se lee: dejarla en las cifras globales
+    // mientras la lista está filtrada las hace contar cosas distintas.
+    expect(await screen.findByText("Vencido")).toBeInTheDocument();
+  });
+
   it("cada fila lleva a su pedido, con una sola diana", async () => {
-    mockList.mockResolvedValue({ data: [row()], meta: { total: 1, page: 1, page_size: 100 } });
+    mockList.mockResolvedValue({
+      data: [row()],
+      meta: { total: 1, page: 1, page_size: 100 },
+    });
     mockStats.mockResolvedValue(stats());
 
     render(<ReceivablesView />);

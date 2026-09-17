@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarClock, Handshake, Plane } from "lucide-react";
+import { CalendarClock, Handshake, TriangleAlert } from "lucide-react";
 
+import { isHttpError } from "@/core/api/problem";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
@@ -42,10 +43,18 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
       .then((result) => {
         if (alive) setPlan(result);
       })
-      .catch(() => {
-        // 404 sin plan y 403 sin la función son el mismo silencio: esta
-        // sección simplemente no existe para este pedido.
-        if (alive) setPlan(null);
+      .catch((error: unknown) => {
+        if (!alive) return;
+        setPlan(null);
+        // 404 «sin plan» y 403 «sin la función» son el mismo silencio para el
+        // operador: esta sección no existe para este pedido, y explicárselo
+        // sería ruido. Cualquier OTRA cosa —un 500, la red caída— también deja
+        // la sección en blanco, pero al menos deja rastro: si no, el fallo es
+        // invisible para él y para nosotros.
+        const status = isHttpError(error) ? error.status : 0;
+        if (status !== 404 && status !== 403) {
+          console.error("No se pudo cargar el plan de pagos del pedido", error);
+        }
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -59,14 +68,18 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
   if (plan === null) return null;
 
   const next = plan.installments.find(
-    (installment) => installment.status !== "paid" && installment.status !== "waived",
+    (installment) =>
+      installment.status !== "paid" && installment.status !== "waived",
   );
 
   return (
     <section aria-label="Plan de pagos" className="flex flex-col gap-4">
       {plan.active_promise_at !== null ? (
         <div className="flex items-start gap-3 rounded-[15px] bg-secondary px-4 py-3.5 text-[13px] leading-relaxed">
-          <Handshake aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
+          <Handshake
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0 text-info"
+          />
           <p>
             <b className="font-medium">
               Prometió pagar el {formatShortDate(plan.active_promise_at)}.
@@ -79,7 +92,9 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
       ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-border bg-background">
-        <p className="px-4 pb-0.5 pt-3.5 text-[12.5px] text-muted-foreground">Plan de pagos</p>
+        <p className="px-4 pb-0.5 pt-3.5 text-[12.5px] text-muted-foreground">
+          Plan de pagos
+        </p>
         {plan.installments.map((installment) => (
           <InstallmentRow
             key={installment.id}
@@ -91,15 +106,21 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
       </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        El plan se creó al confirmar el pedido, con la política del negocio. Las cuotas dicen{" "}
-        <b className="font-medium text-foreground">cuándo</b> tocaba cada parte; lo cobrado sale del
-        pedido.
+        El plan se creó al confirmar el pedido, con la política del negocio. Las
+        cuotas dicen <b className="font-medium text-foreground">cuándo</b>{" "}
+        tocaba cada parte; lo cobrado sale del pedido.
       </p>
     </section>
   );
 }
 
-function NextDue({ installment, currency }: { installment: InstallmentDTO; currency: string }) {
+function NextDue({
+  installment,
+  currency,
+}: {
+  installment: InstallmentDTO;
+  currency: string;
+}) {
   const days = daysUntil(installment.due_at);
   const late = installment.status === "overdue";
   return (
@@ -107,14 +128,23 @@ function NextDue({ installment, currency }: { installment: InstallmentDTO; curre
       className={`flex items-center gap-3.5 rounded-[15px] px-4 py-3.5 ${late ? "bg-destructive/[0.07]" : "bg-secondary"}`}
     >
       {late ? (
-        <Plane aria-hidden="true" className="size-[18px] shrink-0 text-destructive" />
+        // Una alerta, no un avión: en la cartera el avión significa «ya viajó»,
+        // que es el OTRO eje. El mismo icono con dos significados a dos
+        // pantallas de distancia es una trampa para quien las lee seguidas.
+        <TriangleAlert
+          aria-hidden="true"
+          className="size-[18px] shrink-0 text-destructive"
+        />
       ) : (
-        <CalendarClock aria-hidden="true" className="size-[18px] shrink-0 text-muted-foreground" />
+        <CalendarClock
+          aria-hidden="true"
+          className="size-[18px] shrink-0 text-muted-foreground"
+        />
       )}
       <div>
         <p className="text-sm font-medium">
           {late
-            ? `Vencida hace ${String(Math.abs(days ?? 0))} días`
+            ? overdueLabel(Math.abs(days ?? 0))
             : days === null
               ? "Próxima cuota"
               : days <= 0
@@ -122,8 +152,11 @@ function NextDue({ installment, currency }: { installment: InstallmentDTO; curre
                 : `Próxima cuota en ${String(days)} días`}
         </p>
         <p className="mt-0.5 text-[12.5px] text-muted-foreground tabular-nums">
-          {formatMoney(installment.amount_cents - installment.paid_cents, currency)} ·{" "}
-          {formatShortDate(installment.due_at)}
+          {formatMoney(
+            installment.amount_cents - installment.paid_cents,
+            currency,
+          )}{" "}
+          · {formatShortDate(installment.due_at)}
         </p>
       </div>
     </div>
@@ -147,7 +180,9 @@ function InstallmentRow({
         className={`size-[7px] justify-self-center rounded-full ${DOT_TONE[installment.status] ?? "bg-border"}`}
       />
       <div className="min-w-0">
-        <p className="text-sm font-medium">{installmentLabel(installment, total)}</p>
+        <p className="text-sm font-medium">
+          {installmentLabel(installment, total)}
+        </p>
         <p className="mt-0.5 text-[12.5px] text-muted-foreground">
           {paid && installment.paid_at !== null
             ? `Pagada el ${formatShortDate(installment.paid_at)}`
@@ -164,4 +199,10 @@ function InstallmentRow({
       </p>
     </div>
   );
+}
+
+/** «Venció ayer» y no «hace 1 días»: la misma gramática que usa la cartera. */
+function overdueLabel(days: number): string {
+  if (days <= 0) return "Vencida hoy";
+  return days === 1 ? "Venció ayer" : `Venció hace ${String(days)} días`;
 }

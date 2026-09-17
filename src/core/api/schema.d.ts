@@ -12753,6 +12753,7 @@ export interface components {
                 active_promise_at: string | null;
                 /** Format: uuid */
                 assigned_user_id: string | null;
+                paused: boolean;
             }[];
             meta: {
                 total: number;

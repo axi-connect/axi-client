@@ -39,7 +39,12 @@ const SECTION_ORDER: readonly {
   icon: ReceivableSection["icon"];
   tone: ReceivableSection["tone"];
 }[] = [
-  { key: "travelled", title: "Ya viajaron y deben", icon: "plane", tone: "destructive" },
+  {
+    key: "travelled",
+    title: "Ya viajaron y deben",
+    icon: "plane",
+    tone: "destructive",
+  },
   { key: "overdue", title: "En mora", icon: "circle-alert", tone: "warning" },
   { key: "soon", title: "Por vencer", icon: "calendar-clock", tone: "info" },
   { key: "current", title: "Al día", icon: "check", tone: "success" },
@@ -53,12 +58,15 @@ const SECTION_ORDER: readonly {
 export function sectionOf(row: ReceivableDTO): ReceivableSectionKey {
   if (row.travelled) return "travelled";
   if (row.days_overdue > 0) return "overdue";
-  return daysUntil(row.next_due_at) !== null && daysUntil(row.next_due_at)! <= DUE_SOON_DAYS
+  return daysUntil(row.next_due_at) !== null &&
+    daysUntil(row.next_due_at)! <= DUE_SOON_DAYS
     ? "soon"
     : "current";
 }
 
-export function groupReceivables(rows: readonly ReceivableDTO[]): ReceivableSection[] {
+export function groupReceivables(
+  rows: readonly ReceivableDTO[],
+): ReceivableSection[] {
   return SECTION_ORDER.map((section) => ({
     ...section,
     rows: rows.filter((row) => sectionOf(row) === section.key),
@@ -70,7 +78,10 @@ export function groupReceivables(rows: readonly ReceivableDTO[]): ReceivableSect
  * En UTC, a partir de las 19:00 de Bogotá la cuenta salía un día corta — el
  * mismo fallo que costó una ronda en el cliente de F3.
  */
-export function daysUntil(day: string | null, today = new Date()): number | null {
+export function daysUntil(
+  day: string | null,
+  today = new Date(),
+): number | null {
   if (day === null) return null;
   const target = new Date(`${day}T00:00:00`);
   if (Number.isNaN(target.getTime())) return null;
@@ -79,7 +90,10 @@ export function daysUntil(day: string | null, today = new Date()): number | null
 }
 
 /** «Venció hace 47 días» · «Vence en 3 días» · «Vence el 14 de enero». */
-export function dueLabel(row: Pick<ReceivableDTO, "next_due_at" | "days_overdue">, today = new Date()): string {
+export function dueLabel(
+  row: Pick<ReceivableDTO, "next_due_at" | "days_overdue">,
+  today = new Date(),
+): string {
   if (row.next_due_at === null) return "Sin cuota pendiente";
   if (row.days_overdue > 0) {
     return row.days_overdue === 1

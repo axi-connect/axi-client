@@ -41,7 +41,9 @@ describe("sectionOf (F4: la estructura lleva los dos ejes)", () => {
   it("quien ya viajó y debe encabeza, aunque además esté en mora", () => {
     // Es el caso que la decisión del dueño hizo posible, y el que más urge: el
     // servicio se prestó y no queda nada que retener.
-    expect(sectionOf(row({ travelled: true, days_overdue: 47 }))).toBe("travelled");
+    expect(sectionOf(row({ travelled: true, days_overdue: 47 }))).toBe(
+      "travelled",
+    );
   });
 
   it("las secciones son excluyentes: una deuda aparece UNA vez", () => {
@@ -59,12 +61,16 @@ describe("sectionOf (F4: la estructura lleva los dos ejes)", () => {
       "soon",
       "current",
     ]);
-    const ids = sections.flatMap((section) => section.rows.map((one) => one.plan_id));
+    const ids = sections.flatMap((section) =>
+      section.rows.map((one) => one.plan_id),
+    );
     expect(ids).toHaveLength(new Set(ids).size);
   });
 
   it("una sección sin filas no se pinta", () => {
-    expect(groupReceivables([row({ days_overdue: 3 })]).map((s) => s.key)).toEqual(["overdue"]);
+    expect(
+      groupReceivables([row({ days_overdue: 3 })]).map((s) => s.key),
+    ).toEqual(["overdue"]);
   });
 
   it("lo que vence dentro de la semana es «por vencer»; más allá, al día", () => {
@@ -77,15 +83,21 @@ describe("dueLabel", () => {
   const today = new Date("2026-09-17T15:00:00.000Z");
 
   it("la mora se cuenta en días, y un día es «ayer»", () => {
-    expect(dueLabel(row({ next_due_at: "2026-09-16", days_overdue: 1 }), today)).toBe("Venció ayer");
-    expect(dueLabel(row({ next_due_at: "2026-08-01", days_overdue: 47 }), today)).toBe(
-      "Venció hace 47 días",
-    );
+    expect(
+      dueLabel(row({ next_due_at: "2026-09-16", days_overdue: 1 }), today),
+    ).toBe("Venció ayer");
+    expect(
+      dueLabel(row({ next_due_at: "2026-08-01", days_overdue: 47 }), today),
+    ).toBe("Venció hace 47 días");
   });
 
   it("lo próximo se dice en días y lo lejano se deja a la fecha", () => {
-    expect(dueLabel(row({ next_due_at: "2026-09-17" }), today)).toBe("Vence hoy");
-    expect(dueLabel(row({ next_due_at: "2026-09-20" }), today)).toBe("Vence en 3 días");
+    expect(dueLabel(row({ next_due_at: "2026-09-17" }), today)).toBe(
+      "Vence hoy",
+    );
+    expect(dueLabel(row({ next_due_at: "2026-09-20" }), today)).toBe(
+      "Vence en 3 días",
+    );
     expect(dueLabel(row({ next_due_at: "2027-01-13" }), today)).toBe("");
   });
 

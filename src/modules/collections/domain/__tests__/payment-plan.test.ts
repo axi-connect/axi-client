@@ -39,17 +39,27 @@ describe("El plan de pagos en el pedido (F4 Cobros)", () => {
   });
 
   it("un plan cubierto del todo no tiene próxima cuota", () => {
-    expect(nextInstallment({ installments: [installment({ status: "paid" })] })).toBeNull();
+    expect(
+      nextInstallment({ installments: [installment({ status: "paid" })] }),
+    ).toBeNull();
   });
 
   it("el anticipo y el saldo se nombran por lo que son; las de en medio, por su número", () => {
     expect(installmentLabel({ kind: "deposit", seq: 1 }, 4)).toBe("Anticipo");
-    expect(installmentLabel({ kind: "balance", seq: 4 }, 4)).toBe("Saldo final");
-    expect(installmentLabel({ kind: "installment", seq: 2 }, 4)).toBe("Cuota 2 de 4");
+    expect(installmentLabel({ kind: "balance", seq: 4 }, 4)).toBe(
+      "Saldo final",
+    );
+    expect(installmentLabel({ kind: "installment", seq: 2 }, 4)).toBe(
+      "Cuota 2 de 4",
+    );
   });
 
   it("lo pendiente de una cuota nunca es negativo", () => {
-    expect(installmentPending({ amount_cents: 1_000, paid_cents: 400 })).toBe(600);
-    expect(installmentPending({ amount_cents: 1_000, paid_cents: 1_200 })).toBe(0);
+    expect(installmentPending({ amount_cents: 1_000, paid_cents: 400 })).toBe(
+      600,
+    );
+    expect(installmentPending({ amount_cents: 1_000, paid_cents: 1_200 })).toBe(
+      0,
+    );
   });
 });

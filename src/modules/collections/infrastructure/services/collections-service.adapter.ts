@@ -26,9 +26,12 @@ export function listReceivables(params: {
   if (params.bucket !== undefined) query.set("bucket", params.bucket);
   if (params.q !== undefined && params.q !== "") query.set("q", params.q);
   if (params.page !== undefined) query.set("page", String(params.page));
-  if (params.page_size !== undefined) query.set("page_size", String(params.page_size));
+  if (params.page_size !== undefined)
+    query.set("page_size", String(params.page_size));
   const suffix = query.toString();
-  return http.get<ReceivablesListDTO>(`/collections/receivables${suffix === "" ? "" : `?${suffix}`}`);
+  return http.get<ReceivablesListDTO>(
+    `/collections/receivables${suffix === "" ? "" : `?${suffix}`}`,
+  );
 }
 
 export function getReceivablesStats(): Promise<ReceivablesStatsDTO> {
@@ -44,7 +47,9 @@ export function getCollectionsPolicy(): Promise<CollectionsPolicyDTO> {
   return http.get<CollectionsPolicyDTO>("/collections/settings");
 }
 
-export function saveCollectionsPolicy(policy: CollectionsPolicyDTO): Promise<CollectionsPolicyDTO> {
+export function saveCollectionsPolicy(
+  policy: CollectionsPolicyDTO,
+): Promise<CollectionsPolicyDTO> {
   return http.put<CollectionsPolicyDTO>("/collections/settings", policy);
 }
 
@@ -61,12 +66,18 @@ export function reschedulePlan(
   planId: string,
   installments: { due_at: string; amount_cents: number }[],
 ): Promise<{ plan_id: string }> {
-  return http.put<{ plan_id: string }>(`/collections/plans/${planId}/schedule`, { installments });
+  return http.put<{ plan_id: string }>(
+    `/collections/plans/${planId}/schedule`,
+    { installments },
+  );
 }
 
 export function recordPromise(
   planId: string,
   promise: { promised_at: string; amount_cents?: number; note?: string },
 ): Promise<{ plan_id: string }> {
-  return http.post<{ plan_id: string }>(`/collections/plans/${planId}/promises`, promise);
+  return http.post<{ plan_id: string }>(
+    `/collections/plans/${planId}/promises`,
+    promise,
+  );
 }

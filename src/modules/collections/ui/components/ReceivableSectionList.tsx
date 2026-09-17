@@ -1,6 +1,13 @@
 "use client";
 
-import { Calendar, CalendarClock, Check, CircleAlert, ChevronRight, Plane } from "lucide-react";
+import {
+  Calendar,
+  CalendarClock,
+  Check,
+  CircleAlert,
+  ChevronRight,
+  Plane,
+} from "lucide-react";
 import Link from "next/link";
 
 import { formatMoney, formatShortDate } from "@/core/lib/format";
@@ -46,7 +53,9 @@ function Row({ row }: { row: ReceivableDTO }) {
         </span>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted-foreground">
           <span className="font-mono text-[11.5px]">
-            {row.order_number === null ? "Borrador" : `#${String(row.order_number).padStart(4, "0")}`}
+            {row.order_number === null
+              ? "Borrador"
+              : `#${String(row.order_number).padStart(4, "0")}`}
           </span>
           {row.service_date !== null ? (
             <>
@@ -55,6 +64,14 @@ function Row({ row }: { row: ReceivableDTO }) {
                 {row.travelled ? "viajó el " : "sale el "}
                 {formatShortDate(row.service_date)}
               </span>
+            </>
+          ) : null}
+          {row.paused ? (
+            <>
+              <span aria-hidden="true">·</span>
+              {/* Pausado sigue siendo deuda y sigue contando: lo que se detuvo
+                  es la persecución, y por eso se dice en vez de esconderse. */}
+              <span className="text-foreground">en pausa</span>
             </>
           ) : null}
           {row.active_promise_at !== null ? (
@@ -76,15 +93,23 @@ function Row({ row }: { row: ReceivableDTO }) {
         >
           {due === "" ? (
             <>
-              <Calendar aria-hidden="true" className="mr-1 inline size-3 align-[-2px]" />
-              {row.next_due_at === null ? "Sin cuota" : formatShortDate(row.next_due_at)}
+              <Calendar
+                aria-hidden="true"
+                className="mr-1 inline size-3 align-[-2px]"
+              />
+              {row.next_due_at === null
+                ? "Sin cuota"
+                : formatShortDate(row.next_due_at)}
             </>
           ) : (
             due
           )}
         </span>
       </span>
-      <ChevronRight aria-hidden="true" className="size-[18px] text-muted-foreground/50" />
+      <ChevronRight
+        aria-hidden="true"
+        className="size-[18px] text-muted-foreground/50"
+      />
     </Link>
   );
 }
@@ -96,7 +121,11 @@ function Row({ row }: { row: ReceivableDTO }) {
  * lleva la SECCIÓN y no la fila: el operador lee el titular y baja, en vez de
  * descodificar un color y un icono en cada renglón.
  */
-export function ReceivableSectionList({ sections }: { sections: ReceivableSection[] }) {
+export function ReceivableSectionList({
+  sections,
+}: {
+  sections: ReceivableSection[];
+}) {
   return (
     <div>
       {sections.map((section) => {
@@ -104,9 +133,16 @@ export function ReceivableSectionList({ sections }: { sections: ReceivableSectio
         return (
           <section key={section.key} className="[&+&]:mt-7">
             <h2 className="flex items-center gap-2.5 px-1 pb-2.5 text-[13px] text-muted-foreground">
-              <Icon aria-hidden="true" className={`size-[15px] ${SECTION_TONES[section.tone]}`} />
-              <span className="font-medium text-foreground">{section.title}</span>
-              <span className="ml-auto tabular-nums">{section.rows.length}</span>
+              <Icon
+                aria-hidden="true"
+                className={`size-[15px] ${SECTION_TONES[section.tone]}`}
+              />
+              <span className="font-medium text-foreground">
+                {section.title}
+              </span>
+              <span className="ml-auto tabular-nums">
+                {section.rows.length}
+              </span>
             </h2>
             <div className="overflow-hidden rounded-[18px] border border-border bg-background">
               {section.rows.map((row) => (

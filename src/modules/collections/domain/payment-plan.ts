@@ -56,16 +56,21 @@ export function installmentLabel(
  * las cuotas: son la misma cifra por construcción, pero si algún día dejan de
  * serlo, la que manda es la del pedido.
  */
-export function planProgress(plan: Pick<PlanDetailDTO, "total_cents" | "paid_cents">): number {
+export function planProgress(
+  plan: Pick<PlanDetailDTO, "total_cents" | "paid_cents">,
+): number {
   if (plan.total_cents <= 0) return plan.paid_cents > 0 ? 100 : 0;
   return Math.min(100, Math.round((plan.paid_cents / plan.total_cents) * 100));
 }
 
 /** La primera cuota sin cubrir: la que el operador va a nombrar al cobrar. */
-export function nextInstallment(plan: Pick<PlanDetailDTO, "installments">): InstallmentDTO | null {
+export function nextInstallment(
+  plan: Pick<PlanDetailDTO, "installments">,
+): InstallmentDTO | null {
   return (
     plan.installments.find(
-      (installment) => installment.status !== "paid" && installment.status !== "waived",
+      (installment) =>
+        installment.status !== "paid" && installment.status !== "waived",
     ) ?? null
   );
 }
@@ -75,6 +80,8 @@ export function nextInstallment(plan: Pick<PlanDetailDTO, "installments">): Inst
  * registrar un abono, que es la diferencia entre teclear una cifra y confirmar
  * la que toca.
  */
-export function installmentPending(installment: Pick<InstallmentDTO, "amount_cents" | "paid_cents">): number {
+export function installmentPending(
+  installment: Pick<InstallmentDTO, "amount_cents" | "paid_cents">,
+): number {
   return Math.max(0, installment.amount_cents - installment.paid_cents);
 }

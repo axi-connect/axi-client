@@ -9,6 +9,13 @@ import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 import {
   INSTALLMENT_KIND_LABELS,
@@ -57,13 +64,18 @@ export function PaymentPolicyTab() {
 
   useEffect(() => {
     if (policy === null) return;
-    void previewPlan({ total_cents: SAMPLE_CENTS, service_date: sampleServiceDate() })
+    void previewPlan({
+      total_cents: SAMPLE_CENTS,
+      service_date: sampleServiceDate(),
+    })
       .then(setPreview)
       .catch(() => setPreview(null));
   }, [policy]);
 
   const patch = useCallback((changes: Partial<CollectionsPolicyDTO>) => {
-    setPolicy((current) => (current === null ? current : { ...current, ...changes }));
+    setPolicy((current) =>
+      current === null ? current : { ...current, ...changes },
+    );
   }, []);
 
   async function save() {
@@ -72,7 +84,12 @@ export function PaymentPolicyTab() {
     try {
       const saved = await saveCollectionsPolicy(policy);
       setPolicy(saved);
-      showAlert({ tone: "success", title: "Política guardada", open: true, autoCloseMs: 3000 });
+      showAlert({
+        tone: "success",
+        title: "Política guardada",
+        open: true,
+        autoCloseMs: 3000,
+      });
     } catch (err) {
       showAlert({
         tone: "error",
@@ -88,7 +105,8 @@ export function PaymentPolicyTab() {
   if (blocked) {
     return (
       <p className="text-sm text-muted-foreground">
-        Este negocio no tiene planes de pago. Se activan en Mi empresa › Funciones.
+        Este negocio no tiene planes de pago. Se activan en Mi empresa ›
+        Funciones.
       </p>
     );
   }
@@ -108,16 +126,53 @@ export function PaymentPolicyTab() {
               value={policy.deposit_pct}
               onChange={(deposit_pct) => patch({ deposit_pct })}
             />
-            <NumberRow
-              label="Cuotas además del anticipo"
-              value={policy.installments_count}
-              onChange={(installments_count) => patch({ installments_count })}
-            />
+            <div className="relative grid min-h-[56px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border/60">
+              <label className="text-sm" htmlFor="policy-strategy">
+                Cómo se reparte el resto
+              </label>
+              <Select
+                value={policy.installments_strategy}
+                onValueChange={(value) =>
+                  patch({
+                    installments_strategy:
+                      value as CollectionsPolicyDTO["installments_strategy"],
+                  })
+                }
+              >
+                <SelectTrigger id="policy-strategy" className="h-8 w-[190px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="equal_monthly">
+                    Cuotas mensuales
+                  </SelectItem>
+                  <SelectItem value="single_balance">
+                    Un solo saldo final
+                  </SelectItem>
+                  <SelectItem value="custom_count">
+                    Un número fijo de cuotas
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* El número solo se ofrece cuando MANDA. Con cuotas mensuales las
+                decide el calendario, así que un campo editable que no cambia
+                nada es peor que no tenerlo: el operador prueba, guarda y no
+                pasa nada. */}
+            {policy.installments_strategy === "custom_count" ? (
+              <NumberRow
+                label="Cuotas además del anticipo"
+                value={policy.installments_count}
+                onChange={(installments_count) => patch({ installments_count })}
+              />
+            ) : null}
             <NumberRow
               label="El saldo se paga antes de salir"
               suffix="días"
               value={policy.final_due_days_before_service}
-              onChange={(final_due_days_before_service) => patch({ final_due_days_before_service })}
+              onChange={(final_due_days_before_service) =>
+                patch({ final_due_days_before_service })
+              }
             />
             <NumberRow
               label="Si no hay fecha de salida"
@@ -127,8 +182,9 @@ export function PaymentPolicyTab() {
             />
           </div>
           <p className="max-w-[62ch] px-1 pt-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
-            Se aplica a cada pedido al confirmarlo; lo que ya tiene plan no cambia. Un abono menor
-            al anticipo igual reserva: eso lo decide quien verifica.
+            Se aplica a cada pedido al confirmarlo; lo que ya tiene plan no
+            cambia. Un abono menor al anticipo igual reserva: eso lo decide
+            quien verifica.
           </p>
         </section>
 
@@ -149,14 +205,19 @@ export function PaymentPolicyTab() {
                 checked={policy.reminder_channels.whatsapp}
                 aria-label="Avisar por WhatsApp y correo"
                 onCheckedChange={(whatsapp) =>
-                  patch({ reminder_channels: { ...policy.reminder_channels, whatsapp } })
+                  patch({
+                    reminder_channels: {
+                      ...policy.reminder_channels,
+                      whatsapp,
+                    },
+                  })
                 }
               />
             </div>
           </div>
           <p className="max-w-[62ch] px-1 pt-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
-            Los recordatorios automáticos llegan en la fase siguiente. Lo que se guarda aquí es la
-            cadencia con la que saldrán.
+            Los recordatorios automáticos llegan en la fase siguiente. Lo que se
+            guarda aquí es la cadencia con la que saldrán.
           </p>
         </section>
 
@@ -168,7 +229,9 @@ export function PaymentPolicyTab() {
       </div>
 
       <aside className="rounded-[20px] border border-border bg-background p-6">
-        <p className="text-[12.5px] text-muted-foreground">Con esta política, una expedición de</p>
+        <p className="text-[12.5px] text-muted-foreground">
+          Con esta política, una expedición de
+        </p>
         <p className="mt-0.5 text-[15.5px] font-semibold tracking-[-0.01em]">
           {formatMoney(SAMPLE_CENTS)} que sale en seis meses
         </p>
@@ -209,8 +272,8 @@ export function PaymentPolicyTab() {
           </ol>
         )}
         <p className="pt-3.5 text-[12.5px] leading-relaxed text-muted-foreground">
-          Este calendario no es un ejemplo escrito a mano: sale de los números de la izquierda.
-          Cambia el anticipo y se mueve contigo.
+          Este calendario no es un ejemplo escrito a mano: sale de los números
+          de la izquierda. Cambia el anticipo y se mueve contigo.
         </p>
       </aside>
     </div>
@@ -238,7 +301,9 @@ function NumberRow({
           id={`policy-${label}`}
           inputMode="numeric"
           value={String(value)}
-          onChange={(event) => onChange(Number(event.target.value.replace(/\D/g, "")) || 0)}
+          onChange={(event) =>
+            onChange(Number(event.target.value.replace(/\D/g, "")) || 0)
+          }
           className="h-8 w-20 text-right tabular-nums"
         />
         {suffix === undefined ? null : suffix}
