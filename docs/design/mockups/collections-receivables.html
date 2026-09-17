@@ -243,176 +243,188 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 @media (prefers-reduced-motion: reduce){ .sk,.toast,.modal{animation:none!important} }
 
 
-/* ── Cabecera de la cartera: la respuesta antes que la tabla ───────────── */
-.wrap{max-width:1180px;margin:0 auto;padding:26px 30px 48px;display:flex;flex-direction:column;gap:22px}
-.head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.h1{font-size:25px;font-weight:600;letter-spacing:-.02em;font-family:var(--font-body)}
-.h1-sub{font-size:13.5px;color:var(--muted-foreground);margin-top:3px}
+/* ── Página ──────────────────────────────────────────────────────────────
+   Más estrecha y con más aire que una tabla: es una lista de trabajo, y una
+   lista se lee en columna, no a lo ancho de la pantalla. */
+.wrap{max-width:1040px;margin:0 auto;padding:40px 40px 80px;display:flex;flex-direction:column;gap:30px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.topbar .ttl{font-size:19px;font-weight:600;letter-spacing:-.015em}
+.topbar .acts{display:flex;gap:8px;align-items:center}
 
-.answer{display:flex;flex-wrap:wrap;align-items:flex-end;gap:32px 44px}
-.answer .big .lede{font-size:13px;color:var(--muted-foreground)}
-.answer .big .amount{font-family:var(--font-heading);font-size:44px;line-height:1.02;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin-top:4px}
-.answer .side{display:flex;gap:36px;flex-wrap:wrap;padding-bottom:5px}
-.answer .side .k{font-size:12.5px;color:var(--muted-foreground);display:flex;align-items:center;gap:6px}
-.answer .side .v{font-size:19px;font-weight:600;letter-spacing:-.015em;font-variant-numeric:tabular-nums;margin-top:3px}
-.answer .side .n{font-size:12px;color:var(--muted-foreground);margin-top:2px}
-.answer .side .late .v{color:var(--axi-destructive)}
+/* ── El titular: una cifra, una barra fina y una frase ───────────────────
+   Sin tira de estadísticas y sin leyenda. La frase nombra los importes, así
+   que la barra solo tiene que dar la proporción de un vistazo. */
+.hero .lede{font-size:13px;color:var(--muted-foreground);letter-spacing:.01em}
+.hero .amount{font-family:var(--font-heading);font-size:56px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:6px}
+.hero .bar{height:4px;border-radius:999px;margin-top:18px;max-width:560px}
+.hero .say{font-size:13.5px;color:var(--muted-foreground);margin-top:12px;max-width:62ch;line-height:1.55}
+.hero .say b{color:var(--foreground);font-weight:500;font-variant-numeric:tabular-nums}
 
-/* La franja de antigüedad: una sola barra, no cinco tarjetas. */
-.aging{display:flex;flex-direction:column;gap:8px}
-.aging .bar{height:8px;border-radius:999px;overflow:hidden}
-.aging .legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:12px;color:var(--muted-foreground)}
-.aging .legend span{display:inline-flex;align-items:center;gap:7px}
-.aging .legend i{width:8px;height:8px;border-radius:50%;font-style:normal}
-.aging .legend b{color:var(--foreground);font-weight:500;font-variant-numeric:tabular-nums}
+/* ── Controles: callados, y uno menos que antes ─────────────────────────── */
+.controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;background:var(--secondary);color:var(--muted-foreground);font-size:13px;min-width:230px}
+.seg.inline .cnt{background:transparent;padding:0 0 0 2px}
 
-/* ── Barra de trabajo ─────────────────────────────────────────────────── */
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
-.search{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid var(--input);border-radius:999px;color:var(--muted-foreground);font-size:13px;min-width:220px}
+/* ── Secciones: aquí viven los dos ejes ──────────────────────────────────
+   El icono dice qué pasó con el servicio y de qué color corre la prisa. Una
+   sola marca para las dos dimensiones, fuera del grupo y no dentro de cada
+   fila, que es lo que deja la fila en paz. */
+.sec{display:flex;align-items:center;gap:9px;padding:0 4px 10px;font-size:13px;color:var(--muted-foreground)}
+.sec .t{font-weight:500;color:var(--foreground)}
+.sec .n{margin-left:auto;font-variant-numeric:tabular-nums}
+.sec.gone .ic{color:var(--axi-destructive)}
+.sec.late .ic{color:var(--axi-warning)}
+.sec.soon .ic{color:var(--axi-info)}
+.sec.fine .ic{color:var(--axi-success)}
+.block{display:flex;flex-direction:column}
+.block + .block{margin-top:26px}
 
-/* ── Lista de deudores ───────────────────────────────────────────────────
-   Tabla, porque se escanea de arriba abajo comparando importes; pero con
-   celdas compuestas: nueve columnas sueltas eran un muro. */
-.list{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--background)}
-.list table{width:100%;border-collapse:collapse}
-.list th{font-size:11.5px;font-weight:500;color:var(--muted-foreground);letter-spacing:.04em;text-transform:uppercase;padding:11px 18px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border-soft)}
-.list th.r,.list td.r{text-align:right}
-.list td{padding:15px 18px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
-.list tbody tr:last-child td{border-bottom:none}
-.list tbody tr.urgent td{background:color-mix(in srgb, var(--axi-destructive) 4%, transparent)}
+/* ── Lista agrupada: el idioma de F3, una superficie y separadores dentro ── */
+.glist{border:1px solid var(--border);border-radius:18px;background:var(--background);overflow:hidden}
+.grow{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:16px;align-items:center;
+      padding:16px 20px;min-height:72px;position:relative;text-align:left;width:100%}
+.grow + .grow::before{content:"";position:absolute;left:20px;right:0;top:0;height:1px;background:var(--border-soft)}
+.grow:hover{background:color-mix(in srgb, var(--foreground) 3%, transparent)}
+.grow .nm{font-size:15.5px;font-weight:500;letter-spacing:-.005em}
+.grow .sub{font-size:13px;color:var(--muted-foreground);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.grow .sub .id{font-family:var(--font-mono);font-size:11.5px}
+.grow .right{text-align:right}
+.grow .amt{font-size:16.5px;font-weight:600;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.grow .due{font-size:12.5px;color:var(--muted-foreground);margin-top:3px;font-variant-numeric:tabular-nums}
+.grow .due.late{color:var(--axi-destructive)}
+.grow .chev{color:var(--muted-foreground);opacity:.5}
+.foot-note{font-size:12.5px;color:var(--muted-foreground);padding:12px 4px 0;max-width:72ch;line-height:1.55}
+.foot-note b{color:var(--foreground);font-weight:500}
 
-.who{display:flex;align-items:center;gap:12px;min-width:0}
-.av{width:34px;height:34px;border-radius:50%;background:var(--secondary);display:grid;place-items:center;font-size:12.5px;font-weight:600;color:var(--muted-foreground);flex:none}
-.who .n{font-size:14px;font-weight:500;letter-spacing:-.005em}
-.who .m{font-size:12.5px;color:var(--muted-foreground);margin-top:1px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.who .m .id{font-family:var(--font-mono);font-size:11.5px}
-
-/* El eje del SERVICIO: un icono, nunca un color de gravedad. */
-.trip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted-foreground)}
-.trip.gone{color:var(--foreground);font-weight:500}
-.trip .ic{color:var(--muted-foreground)}
-.trip.gone .ic{color:var(--foreground)}
-
-.owe{font-size:15.5px;font-weight:600;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
-.owe small{display:block;font-size:11.5px;font-weight:400;color:var(--muted-foreground);margin-top:2px}
-.mini{height:4px;border-radius:999px;width:96px;margin-top:7px;margin-left:auto}
-
-/* El eje del DINERO: aquí sí manda el color. */
-.when{font-size:13.5px;font-variant-numeric:tabular-nums}
-.when .t{font-weight:500}
-.when .m{font-size:12px;color:var(--muted-foreground);margin-top:1px}
-.when.late .t{color:var(--axi-destructive)}
-.rowacts{display:flex;gap:6px;justify-content:flex-end}
-.rowacts .btn{color:var(--muted-foreground)}
-
-/* ── Rail del pedido: el plan de pagos ───────────────────────────────── */
+/* ── Rail del pedido (idioma de F3, sin cambios de vocabulario) ─────────── */
 .split{display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:100%}
-.content{padding:26px 30px 40px;display:flex;flex-direction:column;gap:22px}
+.content{padding:40px 40px 48px;display:flex;flex-direction:column;gap:28px}
 .sheet{width:400px;border-left:1px solid var(--border);background:var(--background);display:flex;flex-direction:column;min-height:100%}
-.sheet-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 24px 0}
+.sheet-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 26px 0}
 .sheet-top .id{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)}
 .sheet-top .who2{font-size:16px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
 .sheet-top .where{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
-.sheet-body{padding:0 24px 24px;display:flex;flex-direction:column;gap:22px}
-.headline{padding-top:18px}
+.sheet-body{padding:0 26px 26px;display:flex;flex-direction:column;gap:24px}
+.headline{padding-top:20px}
 .headline .lede{font-size:13px;color:var(--muted-foreground)}
 .headline .amount{font-family:var(--font-heading);font-size:40px;line-height:1.05;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin-top:4px}
-.headline .of{font-size:13px;color:var(--muted-foreground);margin-top:6px;font-variant-numeric:tabular-nums}
+.headline .of{font-size:13px;color:var(--muted-foreground);margin-top:7px;font-variant-numeric:tabular-nums}
 .headline .of b{color:var(--foreground);font-weight:500}
-.meter{height:6px;border-radius:999px;margin-top:14px;overflow:hidden}
-.due{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:var(--secondary)}
-.due.alarm{background:color-mix(in srgb, var(--axi-destructive) 8%, var(--background));border:1px solid color-mix(in srgb, var(--axi-destructive) 22%, transparent)}
-.due .ic{color:var(--muted-foreground)} .due.alarm .ic{color:var(--axi-destructive)}
-.due .t{font-size:14px;font-weight:500}
-.due .m{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
+.meter{height:6px;border-radius:999px;margin-top:16px;overflow:hidden}
+.due-card{display:flex;align-items:center;gap:13px;padding:15px 17px;border-radius:15px;background:var(--secondary)}
+.due-card.alarm{background:color-mix(in srgb, var(--axi-destructive) 7%, var(--background))}
+.due-card .ic{color:var(--muted-foreground)} .due-card.alarm .ic{color:var(--axi-destructive)}
+.due-card .t{font-size:14px;font-weight:500}
+.due-card .m{font-size:12.5px;color:var(--muted-foreground);margin-top:2px}
 
-/* Lista agrupada de cuotas (idioma iOS del mockup de F3). */
 .group{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--background)}
-.group .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;color:var(--muted-foreground);padding:12px 16px 0}
+.group .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12.5px;color:var(--muted-foreground);padding:13px 17px 1px}
 .group .head a{font-weight:500;color:var(--foreground);text-decoration:none}
-.row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 16px;position:relative}
-.row + .row::before{content:"";position:absolute;left:54px;right:0;top:0;height:1px;background:var(--border-soft)}
-.row .dot{width:8px;height:8px;border-radius:50%;justify-self:center}
+.row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 17px;position:relative}
+.row + .row::before{content:"";position:absolute;left:53px;right:0;top:0;height:1px;background:var(--border-soft)}
+.row .dot{width:7px;height:7px;border-radius:50%;justify-self:center}
 .row .dot.ok{background:var(--axi-success)}
 .row .dot.next{background:var(--axi-brand)}
 .row .dot.late{background:var(--axi-destructive)}
 .row .dot.off{background:var(--border)}
 .row .t{font-size:14px;font-weight:500}
-.row .m{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
+.row .m{font-size:12.5px;color:var(--muted-foreground);margin-top:2px}
 .row .v{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
-.row .v small{display:block;font-size:11.5px;font-weight:400;color:var(--muted-foreground);margin-top:1px}
+.row .v small{display:block;font-size:11.5px;font-weight:400;color:var(--muted-foreground);margin-top:2px}
 .row .v small.late{color:var(--axi-destructive)}
-.actions{display:flex;flex-direction:column;gap:8px}
-.btn.block{width:100%;height:44px;border-radius:14px;font-size:14.5px}
-.origin{font-size:12px;color:var(--muted-foreground);line-height:1.5}
+.actions{display:flex;flex-direction:column;gap:9px}
+.btn.block{width:100%;height:46px;border-radius:15px;font-size:14.5px}
+.origin{font-size:12px;color:var(--muted-foreground);line-height:1.55}
 .origin b{color:var(--foreground);font-weight:500;font-variant-numeric:tabular-nums}
-.promise{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb, var(--axi-info) 8%, var(--background));border:1px solid color-mix(in srgb, var(--axi-info) 20%, transparent);font-size:13px}
-.promise .ic{color:var(--axi-info)}
+.promise{display:flex;align-items:flex-start;gap:11px;padding:14px 16px;border-radius:15px;background:var(--secondary);font-size:13px;line-height:1.5}
+.promise .ic{color:var(--axi-info);margin-top:1px}
 .promise b{font-weight:500}
 
-/* ── Diálogos ────────────────────────────────────────────────────────── */
-.modal.wide{max-width:520px;padding:24px;gap:18px}
+/* ── Diálogos ────────────────────────────────────────────────────────────
+   Más aire y el radio de las hojas de iOS; el importe es el elemento grande
+   del diálogo, como el saldo lo es del pedido. */
+.modal.wide{max-width:520px;padding:26px;gap:20px;border-radius:24px}
 .modal.wide h2{font-size:20px;letter-spacing:-.015em;font-family:var(--font-body);font-weight:600}
-.modal .sub{font-size:13px;color:var(--muted-foreground);margin-top:2px}
-.amount-field{display:flex;flex-direction:column;gap:8px}
+.modal .sub{font-size:13px;color:var(--muted-foreground);margin-top:3px}
+.amount-field{display:flex;flex-direction:column;gap:10px}
 .amount-field label{font-size:13px;font-weight:500}
-.amount-input{display:flex;align-items:baseline;gap:8px;border:1px solid var(--input);border-radius:14px;padding:14px 16px;background:var(--background)}
+.amount-input{display:flex;align-items:baseline;gap:9px;border:1px solid var(--input);border-radius:15px;padding:15px 17px;background:var(--background)}
 .amount-input .cur{font-size:16px;color:var(--muted-foreground)}
-.amount-input input{border:0;background:transparent;outline:none;width:100%;font-family:inherit;color:inherit;font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.amount-input input{border:0;background:transparent;outline:none;width:100%;font-family:inherit;color:inherit;font-size:28px;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
 .amount-input.err{border-color:var(--axi-destructive)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-size:12.5px;background:var(--background)}
+.chip{border:1px solid var(--border);border-radius:999px;padding:6px 13px;font-size:12.5px;background:var(--background)}
 .chip.on{background:var(--accent);border-color:transparent;font-weight:500}
-.after{border-radius:14px;background:var(--secondary);padding:14px 16px}
+.after{border-radius:15px;background:var(--secondary);padding:15px 17px}
 .after .cap{font-size:12.5px;color:var(--muted-foreground)}
-.after .line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:8px;font-size:14px}
+.after .line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:9px;font-size:14px}
 .after .line .v{font-weight:600;font-variant-numeric:tabular-nums}
 .after .line.muted .v{font-weight:500;color:var(--muted-foreground)}
-.after .state{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);font-size:13px}
+.after .state{display:flex;align-items:flex-start;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-soft);font-size:13px;line-height:1.5}
+.after .state .ic{margin-top:1px;color:var(--muted-foreground)}
 
-/* Editor de cuotas: la suma tiene que cuadrar y se ve mientras se edita. */
-.sched{display:flex;flex-direction:column;gap:2px}
-.sline{display:grid;grid-template-columns:20px minmax(0,1fr) 128px 32px;gap:10px;align-items:center;padding:9px 0;position:relative}
+/* Editor de cuotas: la suma cuadra mientras se escribe. */
+.sched{display:flex;flex-direction:column}
+.sline{display:grid;grid-template-columns:18px minmax(0,1fr) 130px 28px;gap:12px;align-items:center;padding:11px 0;position:relative}
 .sline + .sline::before{content:"";position:absolute;left:30px;right:0;top:0;height:1px;background:var(--border-soft)}
 .sline .seq{font-size:12px;color:var(--muted-foreground);text-align:center;font-variant-numeric:tabular-nums}
-.sline .din{display:flex;align-items:center;gap:8px;font-size:13.5px}
-.sline .din .d{border:1px solid var(--input);border-radius:9px;padding:5px 10px;font-variant-numeric:tabular-nums}
+.sline .din{display:flex;align-items:center;gap:9px;font-size:13.5px;min-width:0}
+.sline .din .d{border:1px solid var(--input);border-radius:10px;padding:6px 11px;font-variant-numeric:tabular-nums}
 .sline .din .kind{font-size:12px;color:var(--muted-foreground)}
-.sline .amt{border:1px solid var(--input);border-radius:9px;padding:5px 10px;font-size:13.5px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.sline .amt2{border:1px solid var(--input);border-radius:10px;padding:6px 11px;font-size:13.5px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
 .sline .x{color:var(--muted-foreground);display:grid;place-items:center}
-.balance-check{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--secondary);font-size:13.5px}
-.balance-check.bad{background:color-mix(in srgb, var(--axi-destructive) 8%, var(--background));border:1px solid color-mix(in srgb, var(--axi-destructive) 22%, transparent)}
-.balance-check .v{font-weight:600;font-variant-numeric:tabular-nums}
-.balance-check.bad .v{color:var(--axi-destructive)}
+.check{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;background:var(--secondary);font-size:13.5px}
+.check.bad{background:color-mix(in srgb, var(--axi-destructive) 7%, var(--background))}
+.check .v{font-weight:600;font-variant-numeric:tabular-nums}
+.check.bad .v{color:var(--axi-destructive)}
 
-/* ── Política: el calendario que produce, no solo los números ────────── */
-.policy-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:start}
-.preview{border:1px solid var(--border);border-radius:18px;padding:18px 20px;background:var(--background)}
+/* ── Política: filas de ajustes, no rejilla de formulario ────────────────
+   Etiqueta a la izquierda, valor a la derecha, y la explicación DEBAJO del
+   grupo — el idioma de los ajustes de iOS. Una rejilla de dos columnas con
+   sus «hint» se lee como panel de administración. */
+.policy{display:grid;grid-template-columns:minmax(0,1fr) 352px;gap:36px;align-items:start}
+.set-title{font-size:13px;color:var(--muted-foreground);padding:0 4px 9px;font-weight:500}
+.set{border:1px solid var(--border);border-radius:16px;background:var(--background);overflow:hidden}
+.set-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 17px;position:relative;min-height:56px}
+.set-row + .set-row::before{content:"";position:absolute;left:17px;right:0;top:0;height:1px;background:var(--border-soft)}
+.set-row .k{font-size:14px}
+.set-row .v{font-size:14px;color:var(--muted-foreground);display:flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
+.set-row .v b{color:var(--foreground);font-weight:500}
+.set-note{font-size:12.5px;color:var(--muted-foreground);padding:10px 4px 0;line-height:1.55;max-width:62ch}
+.set-block + .set-block{margin-top:28px}
+
+.preview{border:1px solid var(--border);border-radius:20px;padding:22px 24px;background:var(--background)}
 .preview .cap{font-size:12.5px;color:var(--muted-foreground)}
-.preview .ttl{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
-.tl{display:flex;flex-direction:column;margin-top:14px}
-.tl .i{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:12px;align-items:start;padding:10px 0;position:relative}
-.tl .i::after{content:"";position:absolute;left:6px;top:24px;bottom:-10px;width:1px;background:var(--border)}
+.preview .ttl{font-size:15.5px;font-weight:600;letter-spacing:-.01em;margin-top:3px}
+.tl{display:flex;flex-direction:column;margin-top:18px}
+.tl .i{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:14px;align-items:start;padding:11px 0;position:relative}
+.tl .i::after{content:"";position:absolute;left:5px;top:26px;bottom:-11px;width:1px;background:var(--border)}
 .tl .i:last-child::after{display:none}
 .tl .b{width:9px;height:9px;border-radius:50%;background:var(--border);margin-top:5px;justify-self:center;z-index:1}
 .tl .i.first .b{background:var(--axi-brand)}
 .tl .i.last .b{background:var(--foreground)}
 .tl .t{font-size:13.5px;font-weight:500}
-.tl .m{font-size:12px;color:var(--muted-foreground);margin-top:1px}
+.tl .m{font-size:12px;color:var(--muted-foreground);margin-top:2px}
 .tl .v{font-size:13.5px;font-weight:500;font-variant-numeric:tabular-nums}
-.stack-24{display:flex;flex-direction:column;gap:24px}
-.section-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
-.section-sub{font-size:13px;color:var(--muted-foreground);margin-top:2px;max-width:62ch}
 
 /* ── Panel del inbox ─────────────────────────────────────────────────── */
-.inbox{display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:100%}
-.chat{padding:26px 30px;display:flex;flex-direction:column;gap:12px;background:color-mix(in srgb, var(--foreground) 3%, var(--background))}
-.msg{max-width:72%;padding:11px 14px;border-radius:16px;font-size:13.5px;line-height:1.5;box-shadow:var(--shadow-float)}
-.msg.in{align-self:flex-start;background:var(--background);border-radius:16px 16px 16px 4px}
-.msg.out{align-self:flex-end;background:var(--accent);border-radius:16px 16px 4px 16px}
+.inbox{display:grid;grid-template-columns:minmax(0,1fr) 372px;min-height:100%}
+.chat{padding:34px 36px;display:flex;flex-direction:column;gap:12px;background:color-mix(in srgb, var(--foreground) 3%, var(--background))}
+.msg{max-width:70%;padding:12px 15px;border-radius:18px;font-size:13.5px;line-height:1.5}
+.msg.in{align-self:flex-start;background:var(--background);border-radius:18px 18px 18px 5px;box-shadow:var(--shadow-float)}
+.msg.out{align-self:flex-end;background:var(--accent);border-radius:18px 18px 5px 18px}
 .msg time{display:block;font-size:10.5px;color:var(--muted-foreground);margin-top:6px}
-.panel{border-left:1px solid var(--border);background:var(--background);padding:18px 20px;display:flex;flex-direction:column;gap:16px}
-.panel h3{font-family:var(--font-body);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600}
+.panel{border-left:1px solid var(--border);background:var(--background);padding:22px 24px;display:flex;flex-direction:column;gap:22px}
+.panel h3{font-family:var(--font-body);font-size:13px;color:var(--muted-foreground);font-weight:500;letter-spacing:0;padding:0 2px 9px}
+
+/* ── Vacío ───────────────────────────────────────────────────────────── */
+.void{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:64px 20px}
+.void .vic{width:52px;height:52px;border-radius:16px;background:var(--secondary);display:grid;place-items:center;color:var(--muted-foreground);margin-bottom:6px}
+.void h3{font-size:17px;font-family:var(--font-body);font-weight:600;letter-spacing:-.01em}
+.void p{color:var(--muted-foreground);font-size:13.5px;max-width:44ch;line-height:1.6}
+.stack-28{display:flex;flex-direction:column;gap:28px}
+.section-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.section-sub{font-size:13px;color:var(--muted-foreground);margin-top:3px;max-width:62ch}
 
 </style>
 </head>
@@ -423,320 +435,175 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
   <div class="mk-views" role="group" aria-label="Vistas del mockup"><button class="mk-view" data-view="cartera" aria-pressed="false">1 · Cartera</button><button class="mk-view" data-view="viajaron" aria-pressed="false">2 · Ya viajaron</button><button class="mk-view" data-view="plan" aria-pressed="false">3 · Plan de pagos</button><button class="mk-view" data-view="abono" aria-pressed="false">4 · Registrar abono</button><button class="mk-view" data-view="reprogramar" aria-pressed="false">5 · Reprogramar</button><button class="mk-view" data-view="descuadre" aria-pressed="false">6 · No cuadra</button><button class="mk-view" data-view="promesa" aria-pressed="false">7 · Promesa de pago</button><button class="mk-view" data-view="entregado" aria-pressed="false">8 · Entregado y debiendo</button><button class="mk-view" data-view="politica" aria-pressed="false">9 · La política</button><button class="mk-view" data-view="conversacion" aria-pressed="false">10 · En la conversación</button><button class="mk-view" data-view="sin-funcion" aria-pressed="false">11 · Sin la función</button><button class="mk-theme" id="theme">Tema</button></div>
   <span class="mk-note" id="mk-note"></span>
 </div>
-<section class="view" data-view="cartera" data-note="Abre con la respuesta, no con la tabla: cuánto te deben, cuánto está en mora y cuánto ya viajó. Dos ejes separados a propósito — el COLOR dice cuánto corre prisa el dinero, el ICONO dice qué pasó con el servicio. Mezclarlos en una sola escala de gravedad es lo que vuelve ilegible una cartera." hidden><div class="wrap">
-      <div class="head-row">
-        <div><h1 class="h1">Cartera</h1><p class="h1-sub">Quién te debe, cuánto y desde cuándo. Ordenada por a quién escribir primero.</p></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn outline sm" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Exportar</button>
+<section class="view" data-view="cartera" data-note="La lista se parte en secciones ordenadas por urgencia, y la primera es «ya viajaron y deben». Los dos ejes —cuánta prisa corre el dinero, qué pasó con el servicio— los lleva la ESTRUCTURA, así que la fila queda en paz: nombre, pedido, importe y fecha. Una cifra arriba, una barra fina y una frase; ni tira de estadísticas ni leyenda de colores, porque la frase ya dice los importes." hidden><div class="wrap">
+      <div class="topbar">
+        <p class="ttl">Cartera</p>
+        <div class="acts">
+          <button class="btn ghost sm" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Exportar</button>
           <button class="btn sm" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Enviar recordatorios</button>
         </div>
       </div>
-      <div class="answer">
-      <div class="big">
-        <p class="lede">Te deben</p>
-        <p class="amount">$ 46.927.205</p>
-      </div>
-      <div class="side">
-        <div class="late">
-          <p class="k"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>En mora</p>
-          <p class="v">$ 15.780.000</p>
-          <p class="n">3 clientes</p>
-        </div>
-        <div>
-          <p class="k"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Ya viajaron y deben</p>
-          <p class="v">$ 12.300.000</p>
-          <p class="n">2 clientes · sin palanca</p>
-        </div>
-        <div>
-          <p class="k"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Prometido</p>
-          <p class="v">$ 3.480.000</p>
-          <p class="n">1 cliente · esta semana</p>
-        </div>
-      </div>
+      <div class="hero">
+      <p class="lede">Te deben</p>
+      <p class="amount">$ 46.927.205</p>
+      <div class="bar" role="img" aria-label="Un tercio de la cartera está vencida"
+           style="background:linear-gradient(90deg,
+             var(--axi-success) 0% 66.4%,
+             var(--axi-warning) 66.4% 82.8%,
+             var(--axi-destructive) 82.8% 100%)"></div>
+      <p class="say">De seis clientes. <b>$ 15.780.000</b> están vencidos, y <b>$ 12.300.000</b>
+        de eso es de gente que ya viajó.</p>
     </div>
-      <div class="aging">
-      <div class="bar" role="img" aria-label="Antigüedad de la cartera"
-           style="background:linear-gradient(90deg,var(--axi-success) 0.0% 66.4%, var(--axi-warning) 66.4% 82.8%, var(--axi-destructive) 82.8% 100.0%)"></div>
-      <div class="legend"><span><i style="background:var(--axi-success)"></i>Al día <b>$ 31.147.205</b></span><span><i style="background:var(--axi-warning)"></i>1–30 días <b>$ 7.680.000</b></span><span><i style="background:var(--axi-destructive)"></i>31–60 días <b>$ 8.100.000</b></span></div>
-    </div>
-      <div class="toolbar">
-        <nav class="seg inline sm" aria-label="Filtro de cartera"><button aria-checked="true">Todo<span class="cnt">6</span></button><button aria-checked="false">En mora<span class="cnt">3</span></button><button aria-checked="false">Ya viajaron<span class="cnt">2</span></button><button aria-checked="false">Vence pronto<span class="cnt">1</span></button></nav>
-        <div style="display:flex;gap:8px;align-items:center">
-          <div class="search"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>Buscar cliente o pedido</div>
-          <div class="select " id="" role="combobox" aria-expanded="false"><span class="val"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>Todas las salidas</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-        </div>
+      <div class="controls">
+        <nav class="seg inline sm" aria-label="Filtro de cartera"><button aria-checked="true">Todo<span class="cnt">6</span></button><button aria-checked="false">Ya viajaron<span class="cnt">2</span></button><button aria-checked="false">En mora<span class="cnt">3</span></button></nav>
+        <div class="search"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>Buscar cliente o pedido</div>
       </div>
-      
-      <div class="list">
-        <table>
-          <thead><tr>
-            <th>Cliente</th><th>Servicio</th><th class="r">Saldo</th><th>Cobro</th><th class="r"><span class="sr">Acciones</span></th>
-          </tr></thead>
-          <tbody><tr class="urgent">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">CO</span>
-          <div>
-            <p class="n">Camilo Ortiz</p>
-            <p class="m"><span class="id">JX-0033</span> · Sierra Nevada · 2 cupos</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip gone"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Viajó el 1 ago</span></td>
-      <td class="r">
-        <p class="owe">$ 8.100.000<small>de $ 27.000.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 70 por ciento" style="background:linear-gradient(90deg,var(--axi-destructive) 0% 70%,var(--secondary) 70% 100%)"></div>
-      </td>
-      <td>
-        <div class="when late"><p class="t">Venció hace 47 días</p><p class="m">Cuota 3 de 3 · 1 ago</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Camilo Ortiz"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr><tr class="urgent">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">AM</span>
-          <div>
-            <p class="n">Andrés Mejía</p>
-            <p class="m"><span class="id">JX-0038</span> · Nevado del Ruiz · 1 cupo</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip gone"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Viajó el 2 sep</span></td>
-      <td class="r">
-        <p class="owe">$ 4.200.000<small>de $ 10.850.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 61 por ciento" style="background:linear-gradient(90deg,var(--axi-destructive) 0% 61%,var(--secondary) 61% 100%)"></div>
-      </td>
-      <td>
-        <div class="when late"><p class="t">Venció hace 15 días</p><p class="m">Saldo final · 2 sep</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Andrés Mejía"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr><tr class="">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">DS</span>
-          <div>
-            <p class="n">Diana Salazar</p>
-            <p class="m"><span class="id">JX-0047</span> · Cocuy · 1 cupo</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Sale el 14 mar</span><span class="trip"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Promesa 22 sep</span></td>
-      <td class="r">
-        <p class="owe">$ 3.480.000<small>de $ 10.850.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 68 por ciento" style="background:linear-gradient(90deg,var(--axi-destructive) 0% 68%,var(--secondary) 68% 100%)"></div>
-      </td>
-      <td>
-        <div class="when late"><p class="t">Venció hace 6 días</p><p class="m">Prometió pagar el 22 sep</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Diana Salazar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr><tr class="">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">MR</span>
-          <div>
-            <p class="n">Marcela Ruiz</p>
-            <p class="m"><span class="id">JX-0051</span> · Sierra Nevada · 1 cupo</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Sale el 8 dic</span></td>
-      <td class="r">
-        <p class="owe">$ 9.640.000<small>de $ 13.500.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 29 por ciento" style="background:linear-gradient(90deg,var(--axi-brand) 0% 29%,var(--secondary) 29% 100%)"></div>
-      </td>
-      <td>
-        <div class="when"><p class="t">Vence en 3 días</p><p class="m">Cuota 1 de 3 · 20 sep</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Marcela Ruiz"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr><tr class="">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">LG</span>
-          <div>
-            <p class="n">Laura Gómez</p>
-            <p class="m"><span class="id">JX-0042</span> · Cocuy · 2 cupos</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Sale el 14 mar</span></td>
-      <td class="r">
-        <p class="owe">$ 15.192.205<small>de $ 21.703.150</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 30 por ciento" style="background:linear-gradient(90deg,var(--axi-brand) 0% 30%,var(--secondary) 30% 100%)"></div>
-      </td>
-      <td>
-        <div class="when"><p class="t">Vence el 14 ene</p><p class="m">Cuota 1 de 3</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Laura Gómez"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr><tr class="">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">TV</span>
-          <div>
-            <p class="n">Tomás Villa</p>
-            <p class="m"><span class="id">JX-0055</span> · Cocuy · 1 cupo</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>Sale el 14 mar</span></td>
-      <td class="r">
-        <p class="owe">$ 6.315.000<small>de $ 10.850.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 42 por ciento" style="background:linear-gradient(90deg,var(--axi-brand) 0% 42%,var(--secondary) 42% 100%)"></div>
-      </td>
-      <td>
-        <div class="when"><p class="t">Vence el 3 oct</p><p class="m">Cuota 2 de 3</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Tomás Villa"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr></tbody>
-        </table>
-      </div>
-      <p class="small muted">El saldo sale del pedido, no de una copia: es <b>total − cobrado</b>, fila a fila. Si mañana cambia el total del pedido, la cartera ya lo sabe.</p>
-    </div></section><section class="view" data-view="viajaron" data-note="El caso que abre la decisión de entregar con saldo: el servicio ya se prestó y no queda nada que retener. Es la deuda que más rápido envejece, y por eso tiene su propio filtro y encabeza la lista." hidden><div class="wrap">
-      <div class="head-row">
-        <div><h1 class="h1">Cartera</h1><p class="h1-sub">Quién te debe, cuánto y desde cuándo. Ordenada por a quién escribir primero.</p></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn outline sm" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Exportar</button>
+      <div><div class="block">
+      <div class="sec gone"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg><span class="t">Ya viajaron y deben</span>
+        <span class="n">2</span></div>
+      <div class="glist"><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Camilo Ortiz</span>
+        <span class="sub">JX-0033 · Sierra Nevada · viajó el 1 de agosto</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 8.100.000</span>
+        <span class="due late" style="display:block">Venció hace 47 días</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Andrés Mejía</span>
+        <span class="sub">JX-0038 · Nevado del Ruiz · viajó el 2 de septiembre</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 4.200.000</span>
+        <span class="due late" style="display:block">Venció hace 15 días</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button></div>
+    </div><div class="block">
+      <div class="sec late"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span class="t">En mora</span>
+        <span class="n">1</span></div>
+      <div class="glist"><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Diana Salazar</span>
+        <span class="sub">JX-0047 · Cocuy · sale el 14 de marzo</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 3.480.000</span>
+        <span class="due" style="display:block">Prometió pagar el 22</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button></div>
+    </div><div class="block">
+      <div class="sec soon"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><span class="t">Por vencer</span>
+        <span class="n">1</span></div>
+      <div class="glist"><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Marcela Ruiz</span>
+        <span class="sub">JX-0051 · Sierra Nevada · cuota 1 de 3</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 9.640.000</span>
+        <span class="due" style="display:block">Vence en 3 días</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button></div>
+    </div><div class="block">
+      <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Al día</span>
+        <span class="n">2</span></div>
+      <div class="glist"><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Laura Gómez</span>
+        <span class="sub">JX-0042 · Cocuy · cuota 2 de 3</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 15.192.205</span>
+        <span class="due" style="display:block">Vence el 14 de enero</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Tomás Villa</span>
+        <span class="sub">JX-0055 · Cocuy · cuota 2 de 3</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 6.315.000</span>
+        <span class="due" style="display:block">Vence el 3 de octubre</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button></div>
+    </div></div>
+      <p class="foot-note">El orden no es alfabético ni por importe: es <b>a quién escribir
+        primero</b>. Y el saldo sale del pedido, no de una copia — si mañana cambia su total, la
+        cartera ya lo sabe.</p>
+    </div></section><section class="view" data-view="viajaron" data-note="El filtro cambia el titular, no solo la lista: cuando miras solo a los que ya viajaron, la cifra grande es la suya y la frase dice por qué esa deuda es distinta. El servicio ya se prestó, así que no queda nada que retener." hidden><div class="wrap">
+      <div class="topbar">
+        <p class="ttl">Cartera</p>
+        <div class="acts">
+          <button class="btn ghost sm" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Exportar</button>
           <button class="btn sm" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Enviar recordatorios</button>
         </div>
       </div>
-      <div class="answer">
-      <div class="big">
-        <p class="lede">Te deben</p>
-        <p class="amount">$ 46.927.205</p>
+      <div class="hero">
+          <p class="lede">Ya viajaron y deben</p>
+          <p class="amount">$ 12.300.000</p>
+          <div class="bar" role="img" aria-label="Todo vencido"
+               style="background:var(--axi-destructive)"></div>
+          <p class="say">Dos clientes. El servicio ya se prestó, así que no queda nada que
+            retener: es la deuda que envejece más rápido y la única que no se puede recuperar
+            cancelando.</p>
+        </div>
+      <div class="controls">
+        <nav class="seg inline sm" aria-label="Filtro de cartera"><button aria-checked="false">Todo<span class="cnt">6</span></button><button aria-checked="true">Ya viajaron<span class="cnt">2</span></button><button aria-checked="false">En mora<span class="cnt">3</span></button></nav>
+        <div class="search"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>Buscar cliente o pedido</div>
       </div>
-      <div class="side">
-        <div class="late">
-          <p class="k"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>En mora</p>
-          <p class="v">$ 15.780.000</p>
-          <p class="n">3 clientes</p>
-        </div>
-        <div>
-          <p class="k"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Ya viajaron y deben</p>
-          <p class="v">$ 12.300.000</p>
-          <p class="n">2 clientes · sin palanca</p>
-        </div>
-        <div>
-          <p class="k"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Prometido</p>
-          <p class="v">$ 3.480.000</p>
-          <p class="n">1 cliente · esta semana</p>
-        </div>
-      </div>
-    </div>
-      <div class="aging">
-      <div class="bar" role="img" aria-label="Antigüedad de la cartera"
-           style="background:linear-gradient(90deg,var(--axi-success) 0.0% 66.4%, var(--axi-warning) 66.4% 82.8%, var(--axi-destructive) 82.8% 100.0%)"></div>
-      <div class="legend"><span><i style="background:var(--axi-success)"></i>Al día <b>$ 31.147.205</b></span><span><i style="background:var(--axi-warning)"></i>1–30 días <b>$ 7.680.000</b></span><span><i style="background:var(--axi-destructive)"></i>31–60 días <b>$ 8.100.000</b></span></div>
-    </div>
-      <div class="toolbar">
-        <nav class="seg inline sm" aria-label="Filtro de cartera"><button aria-checked="false">Todo<span class="cnt">6</span></button><button aria-checked="false">En mora<span class="cnt">3</span></button><button aria-checked="true">Ya viajaron<span class="cnt">2</span></button><button aria-checked="false">Vence pronto<span class="cnt">1</span></button></nav>
-        <div style="display:flex;gap:8px;align-items:center">
-          <div class="search"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>Buscar cliente o pedido</div>
-          <div class="select " id="" role="combobox" aria-expanded="false"><span class="val"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>Todas las salidas</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
-        </div>
-      </div>
-      <div class="notice warn "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><b>Ya viajaron y todavía deben.</b> El servicio se prestó, así que no queda nada que retener: es la deuda que más rápido envejece y la primera que conviene trabajar.</div></div>
-      <div class="list">
-        <table>
-          <thead><tr>
-            <th>Cliente</th><th>Servicio</th><th class="r">Saldo</th><th>Cobro</th><th class="r"><span class="sr">Acciones</span></th>
-          </tr></thead>
-          <tbody><tr class="">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">CO</span>
-          <div>
-            <p class="n">Camilo Ortiz</p>
-            <p class="m"><span class="id">JX-0033</span> · Sierra Nevada · 2 cupos</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip gone"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Viajó el 1 ago</span></td>
-      <td class="r">
-        <p class="owe">$ 8.100.000<small>de $ 27.000.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 70 por ciento" style="background:linear-gradient(90deg,var(--axi-destructive) 0% 70%,var(--secondary) 70% 100%)"></div>
-      </td>
-      <td>
-        <div class="when late"><p class="t">Venció hace 47 días</p><p class="m">Cuota 3 de 3 · 1 ago</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Camilo Ortiz"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr><tr class="">
-      <td>
-        <div class="who">
-          <span class="av" aria-hidden="true">AM</span>
-          <div>
-            <p class="n">Andrés Mejía</p>
-            <p class="m"><span class="id">JX-0038</span> · Nevado del Ruiz · 1 cupo</p>
-          </div>
-        </div>
-      </td>
-      <td><span class="trip gone"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Viajó el 2 sep</span></td>
-      <td class="r">
-        <p class="owe">$ 4.200.000<small>de $ 10.850.000</small></p>
-        <div class="mini" role="img" aria-label="Cobrado el 61 por ciento" style="background:linear-gradient(90deg,var(--axi-destructive) 0% 61%,var(--secondary) 61% 100%)"></div>
-      </td>
-      <td>
-        <div class="when late"><p class="t">Venció hace 15 días</p><p class="m">Saldo final · 2 sep</p></div>
-      </td>
-      <td class="r">
-        <div class="rowacts">
-          <button class="btn ghost icon sm" aria-label="Escribir a Andrés Mejía"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Registrar abono"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></button>
-          <button class="btn ghost icon sm" aria-label="Abrir el pedido"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </td>
-    </tr></tbody>
-        </table>
-      </div>
-      <p class="small muted">El saldo sale del pedido, no de una copia: es <b>total − cobrado</b>, fila a fila. Si mañana cambia el total del pedido, la cartera ya lo sabe.</p>
-    </div></section><section class="view" data-view="plan" data-note="En el pedido, el plan es una lista agrupada con un punto por cuota: pagada, la siguiente, y las que aún no tocan. El pie dice de dónde salió el calendario, que es la pregunta que sigue a «¿por qué tres cuotas?»." hidden><div class="split">
+      <div><div class="block">
+      <div class="sec gone"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg><span class="t">Ya viajaron y deben</span>
+        <span class="n">2</span></div>
+      <div class="glist"><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Camilo Ortiz</span>
+        <span class="sub">JX-0033 · Sierra Nevada · viajó el 1 de agosto</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 8.100.000</span>
+        <span class="due late" style="display:block">Venció hace 47 días</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button><button type="button" class="grow">
+      <span>
+        <span class="nm" style="display:block">Andrés Mejía</span>
+        <span class="sub">JX-0038 · Nevado del Ruiz · viajó el 2 de septiembre</span>
+      </span>
+      <span class="right">
+        <span class="amt" style="display:block">$ 4.200.000</span>
+        <span class="due late" style="display:block">Venció hace 15 días</span>
+      </span>
+      <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button></div>
+    </div></div>
+      <p class="foot-note">El orden no es alfabético ni por importe: es <b>a quién escribir
+        primero</b>. Y el saldo sale del pedido, no de una copia — si mañana cambia su total, la
+        cartera ya lo sabe.</p>
+    </div></section><section class="view" data-view="plan" data-note="En el pedido, el plan es la misma lista agrupada de F3, con un punto por cuota: pagada, la siguiente, y las que aún no tocan. El pie responde a la pregunta que sigue, que es «¿y por qué tres cuotas?»." hidden><div class="split">
       <div class="content">
-        <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Expediciones con cobro en curso.</p></div>
-        <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El plan de pagos vive en el pedido y la Cartera lo lee. No hay dos verdades: lo cobrado sale del pedido y las cuotas solo dicen <b>cuándo</b> tocaba cada parte.</div></div>
-        <div class="group">
-          <p class="head">Movimientos del plan</p>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Abono aplicado a la cuota 1</p><p class="m">16 sep · $ 6.510.945 · verificado por Isabel</p></div><p class="v">Cuota 1</p></div>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Plan creado</p><p class="m">16 sep · 30 % de anticipo y 3 cuotas</p></div><p class="v">$ 21.703.150</p></div>
+        <p class="ttl" style="font-size:19px;font-weight:600;letter-spacing:-.015em">Pedidos</p>
+        <div class="block">
+          <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Movimientos del plan</span></div>
+          <div class="glist">
+            <div class="grow"><span><span class="nm" style="display:block">Abono aplicado a la cuota 1</span>
+              <span class="sub">16 de septiembre · verificado por Isabel</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 6.510.945</span>
+              <span class="due" style="display:block">Cuota 1 de 3</span></span><span></span></div>
+            <div class="grow"><span><span class="nm" style="display:block">Plan de pagos creado</span>
+              <span class="sub">16 de septiembre · 30 % de anticipo y 3 cuotas</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 21.703.150</span>
+              <span class="due" style="display:block">Total del pedido</span></span><span></span></div>
+          </div>
+          <p class="foot-note">Las cuotas dicen <b>cuándo</b> tocaba cada parte. Lo cobrado sale
+            del pedido, que es la única fuente: no hay dos verdades que reconciliar.</p>
         </div>
       </div>
       <aside class="sheet" aria-label="Pedido JX-0042">
@@ -751,38 +618,48 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
           <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
         </div>
-        <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div>
+        <div class="due-card"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
             <p class="t">Próxima cuota en 119 días</p>
             <p class="m">$ 7.596.102 · 14 de enero</p></div></div>
         
         <div class="group">
           <p class="head">Plan de pagos <a href="#">Reprogramar</a></p>
           <div class="row"><span class="dot ok"></span>
-        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 sep</p></div>
+        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 de septiembre</p></div>
         <p class="v">$ 6.510.945</p></div>
       <div class="row"><span class="dot next"></span>
-        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 ene</p></div>
+        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 de enero</p></div>
         <p class="v">$ 7.596.102<small>en 119 días</small></p></div>
       <div class="row"><span class="dot off"></span>
-        <div><p class="t">Saldo final</p><p class="m">Vence el 13 ene, 60 días antes de la salida</p></div>
+        <div><p class="t">Saldo final</p><p class="m">60 días antes de la salida</p></div>
         <p class="v">$ 7.596.103</p></div>
         </div>
         <div class="actions">
           <button class="btn block" >Registrar abono</button>
           <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Anotar promesa de pago</button>
-          <p class="origin">Plan creado al confirmar con la política del tenant: <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de la salida.</p>
+          <p class="origin">El plan se creó al confirmar, con la política del negocio:
+            <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de salir.</p>
         </div>
       </div>
     </aside>
       
-    </div></section><section class="view" data-view="abono" data-note="El monto es obligatorio y viene propuesto con la cuota que toca. Debajo se ve a qué cuota se aplicará y qué queda después, porque el reparto es en orden y eso no se adivina." hidden><div class="split">
+    </div></section><section class="view" data-view="abono" data-note="El importe es el elemento grande del diálogo, como el saldo lo es del pedido. Medio de pago y referencia bajan a filas de ajustes para no competir con él, y debajo se ve a qué cuota irá y qué queda después." hidden><div class="split">
       <div class="content">
-        <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Expediciones con cobro en curso.</p></div>
-        <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El plan de pagos vive en el pedido y la Cartera lo lee. No hay dos verdades: lo cobrado sale del pedido y las cuotas solo dicen <b>cuándo</b> tocaba cada parte.</div></div>
-        <div class="group">
-          <p class="head">Movimientos del plan</p>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Abono aplicado a la cuota 1</p><p class="m">16 sep · $ 6.510.945 · verificado por Isabel</p></div><p class="v">Cuota 1</p></div>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Plan creado</p><p class="m">16 sep · 30 % de anticipo y 3 cuotas</p></div><p class="v">$ 21.703.150</p></div>
+        <p class="ttl" style="font-size:19px;font-weight:600;letter-spacing:-.015em">Pedidos</p>
+        <div class="block">
+          <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Movimientos del plan</span></div>
+          <div class="glist">
+            <div class="grow"><span><span class="nm" style="display:block">Abono aplicado a la cuota 1</span>
+              <span class="sub">16 de septiembre · verificado por Isabel</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 6.510.945</span>
+              <span class="due" style="display:block">Cuota 1 de 3</span></span><span></span></div>
+            <div class="grow"><span><span class="nm" style="display:block">Plan de pagos creado</span>
+              <span class="sub">16 de septiembre · 30 % de anticipo y 3 cuotas</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 21.703.150</span>
+              <span class="due" style="display:block">Total del pedido</span></span><span></span></div>
+          </div>
+          <p class="foot-note">Las cuotas dicen <b>cuándo</b> tocaba cada parte. Lo cobrado sale
+            del pedido, que es la única fuente: no hay dos verdades que reconciliar.</p>
         </div>
       </div>
       <aside class="sheet" aria-label="Pedido JX-0042">
@@ -797,26 +674,27 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
           <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
         </div>
-        <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div>
+        <div class="due-card"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
             <p class="t">Próxima cuota en 119 días</p>
             <p class="m">$ 7.596.102 · 14 de enero</p></div></div>
         
         <div class="group">
           <p class="head">Plan de pagos <a href="#">Reprogramar</a></p>
           <div class="row"><span class="dot ok"></span>
-        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 sep</p></div>
+        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 de septiembre</p></div>
         <p class="v">$ 6.510.945</p></div>
       <div class="row"><span class="dot next"></span>
-        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 ene</p></div>
+        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 de enero</p></div>
         <p class="v">$ 7.596.102<small>en 119 días</small></p></div>
       <div class="row"><span class="dot off"></span>
-        <div><p class="t">Saldo final</p><p class="m">Vence el 13 ene, 60 días antes de la salida</p></div>
+        <div><p class="t">Saldo final</p><p class="m">60 días antes de la salida</p></div>
         <p class="v">$ 7.596.103</p></div>
         </div>
         <div class="actions">
           <button class="btn block" >Registrar abono</button>
           <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Anotar promesa de pago</button>
-          <p class="origin">Plan creado al confirmar con la política del tenant: <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de la salida.</p>
+          <p class="origin">El plan se creó al confirmar, con la política del negocio:
+            <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de salir.</p>
         </div>
       </div>
     </aside>
@@ -830,28 +708,40 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <span class="chip">Saldo completo · $ 15.192.205</span>
         </div>
       </div>
-      <div class="form" style="grid-template-columns:1fr 1fr">
-        <div class="field "><label for="medio">Medio de pago</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/></svg>Bancolombia</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
-        <div class="field "><label for="ref">Referencia</label><div class="input  " id="" role="textbox" aria-readonly="true"><span>TRF-99231</span></div></div>
+      <div class="set">
+        <div class="set-row"><span class="k">Medio de pago</span>
+          <span class="v"><b>Bancolombia</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+        <div class="set-row"><span class="k">Referencia</span>
+          <span class="v"><b>TRF-99231</b></span></div>
       </div>
       <div class="after">
         <p class="cap">Después de registrarlo</p>
         <div class="line"><span>Se aplica a</span><span class="v">Cuota 2 de 3</span></div>
         <div class="line muted"><span>Queda por cobrar</span><span class="v">$ 7.596.103</span></div>
         <div class="line muted"><span>Próxima cuota</span><span class="v">Saldo final · 13 ene</span></div>
-        <p class="state"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Las cuotas se cubren <b>en orden</b>: lo que entra paga primero la más antigua sin pagar.</span></p>
+        <p class="state"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Las cuotas se cubren <b>en orden</b>: lo que
+          entra paga primero la más antigua sin pagar. Y el abono queda <b>reportado</b>: el saldo
+          del cliente no se mueve hasta que alguien confirme que el dinero llegó.</span></p>
       </div>
-      <div class="notice warn "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div>Este abono queda <b>reportado</b>, no verificado. El saldo del cliente no se mueve hasta que alguien confirme que el dinero llegó.</div></div>
-      <div class="modal-foot"><button class="btn outline" >Volver</button><button class="btn " >Registrar $ 7.596.102</button></div>
+      <div class="modal-foot"><button class="btn ghost" >Volver</button><button class="btn " >Registrar $ 7.596.102</button></div>
     </div></div>
-    </div></section><section class="view" data-view="reprogramar" data-note="Solo se editan las cuotas pendientes. La suma tiene que cuadrar con el saldo y se comprueba mientras se escribe, no al guardar." hidden><div class="split">
+    </div></section><section class="view" data-view="reprogramar" data-note="Solo se editan las cuotas pendientes, y la suma se comprueba mientras se escribe." hidden><div class="split">
       <div class="content">
-        <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Expediciones con cobro en curso.</p></div>
-        <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El plan de pagos vive en el pedido y la Cartera lo lee. No hay dos verdades: lo cobrado sale del pedido y las cuotas solo dicen <b>cuándo</b> tocaba cada parte.</div></div>
-        <div class="group">
-          <p class="head">Movimientos del plan</p>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Abono aplicado a la cuota 1</p><p class="m">16 sep · $ 6.510.945 · verificado por Isabel</p></div><p class="v">Cuota 1</p></div>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Plan creado</p><p class="m">16 sep · 30 % de anticipo y 3 cuotas</p></div><p class="v">$ 21.703.150</p></div>
+        <p class="ttl" style="font-size:19px;font-weight:600;letter-spacing:-.015em">Pedidos</p>
+        <div class="block">
+          <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Movimientos del plan</span></div>
+          <div class="glist">
+            <div class="grow"><span><span class="nm" style="display:block">Abono aplicado a la cuota 1</span>
+              <span class="sub">16 de septiembre · verificado por Isabel</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 6.510.945</span>
+              <span class="due" style="display:block">Cuota 1 de 3</span></span><span></span></div>
+            <div class="grow"><span><span class="nm" style="display:block">Plan de pagos creado</span>
+              <span class="sub">16 de septiembre · 30 % de anticipo y 3 cuotas</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 21.703.150</span>
+              <span class="due" style="display:block">Total del pedido</span></span><span></span></div>
+          </div>
+          <p class="foot-note">Las cuotas dicen <b>cuándo</b> tocaba cada parte. Lo cobrado sale
+            del pedido, que es la única fuente: no hay dos verdades que reconciliar.</p>
         </div>
       </div>
       <aside class="sheet" aria-label="Pedido JX-0042">
@@ -866,54 +756,66 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
           <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
         </div>
-        <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div>
+        <div class="due-card"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
             <p class="t">Próxima cuota en 119 días</p>
             <p class="m">$ 7.596.102 · 14 de enero</p></div></div>
         
         <div class="group">
           <p class="head">Plan de pagos <a href="#">Reprogramar</a></p>
           <div class="row"><span class="dot ok"></span>
-        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 sep</p></div>
+        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 de septiembre</p></div>
         <p class="v">$ 6.510.945</p></div>
       <div class="row"><span class="dot next"></span>
-        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 ene</p></div>
+        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 de enero</p></div>
         <p class="v">$ 7.596.102<small>en 119 días</small></p></div>
       <div class="row"><span class="dot off"></span>
-        <div><p class="t">Saldo final</p><p class="m">Vence el 13 ene, 60 días antes de la salida</p></div>
+        <div><p class="t">Saldo final</p><p class="m">60 días antes de la salida</p></div>
         <p class="v">$ 7.596.103</p></div>
         </div>
         <div class="actions">
           <button class="btn block" >Registrar abono</button>
           <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Anotar promesa de pago</button>
-          <p class="origin">Plan creado al confirmar con la política del tenant: <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de la salida.</p>
+          <p class="origin">El plan se creó al confirmar, con la política del negocio:
+            <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de salir.</p>
         </div>
       </div>
     </aside>
       <div class="overlay"><div class="modal wide" style="max-width:560px">
-      <div><h2>Reprogramar cuotas</h2><p class="sub">Solo lo que está por cobrar. Lo ya pagado no se toca.</p></div>
-      <div class="group" style="border:none">
-        <p class="head">Pendientes <a href="#">Añadir cuota</a></p>
-        <div class="sched" style="padding:0 16px 8px"><div class="sline"><span class="seq">2</span>
+      <div><h2>Reprogramar cuotas</h2><p class="sub">Solo lo pendiente. Lo ya pagado no se toca.</p></div>
+      <div>
+        <div class="sec soon"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><span class="t">Pendientes</span>
+          <span class="n"><a href="#" style="text-decoration:none;font-weight:500;color:var(--foreground)">Añadir</a></span></div>
+        <div class="sched"><div class="sline"><span class="seq">2</span>
           <span class="din"><span class="d">14 ene 2027</span><span class="kind">Cuota</span></span>
-          <span class="amt">$ 7.596.102</span>
+          <span class="amt2">$ 7.596.102</span>
           <span class="x"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div><div class="sline"><span class="seq">3</span>
           <span class="din"><span class="d">13 ene 2027</span><span class="kind">Saldo final</span></span>
-          <span class="amt">$ 7.596.103</span>
+          <span class="amt2">$ 7.596.103</span>
           <span class="x"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div></div>
       </div>
-      <div class="balance-check"><span>Las cuotas pendientes cuadran con el saldo</span>
+      <div class="check"><span>Las cuotas pendientes cuadran con el saldo</span>
           <span class="v">$ 15.192.205</span></div>
-      <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El saldo final se mueve con la salida: si la expedición cambia de fecha, esta cuota se recalcula sola a <b>60 días antes</b>.</div></div>
-      <div class="modal-foot"><button class="btn outline" >Volver</button><button class="btn " >Guardar cuotas</button></div>
+      <p class="set-note">El saldo final se mueve con la salida: si la expedición
+          cambia de fecha, esta cuota se recalcula sola a 60 días antes.</p>
+      <div class="modal-foot"><button class="btn ghost" >Volver</button><button class="btn " >Guardar cuotas</button></div>
     </div></div>
-    </div></section><section class="view" data-view="descuadre" data-note="La misma regla del servidor, dicha aquí antes de perder el trabajo: si las cuotas no suman el saldo, se dice cuánto falta y el botón no se puede pulsar." hidden><div class="split">
+    </div></section><section class="view" data-view="descuadre" data-note="La misma regla del servidor, dicha antes de perder el trabajo: si las cuotas no suman el saldo, se dice cuánto falta y el botón no se puede pulsar." hidden><div class="split">
       <div class="content">
-        <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Expediciones con cobro en curso.</p></div>
-        <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El plan de pagos vive en el pedido y la Cartera lo lee. No hay dos verdades: lo cobrado sale del pedido y las cuotas solo dicen <b>cuándo</b> tocaba cada parte.</div></div>
-        <div class="group">
-          <p class="head">Movimientos del plan</p>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Abono aplicado a la cuota 1</p><p class="m">16 sep · $ 6.510.945 · verificado por Isabel</p></div><p class="v">Cuota 1</p></div>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Plan creado</p><p class="m">16 sep · 30 % de anticipo y 3 cuotas</p></div><p class="v">$ 21.703.150</p></div>
+        <p class="ttl" style="font-size:19px;font-weight:600;letter-spacing:-.015em">Pedidos</p>
+        <div class="block">
+          <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Movimientos del plan</span></div>
+          <div class="glist">
+            <div class="grow"><span><span class="nm" style="display:block">Abono aplicado a la cuota 1</span>
+              <span class="sub">16 de septiembre · verificado por Isabel</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 6.510.945</span>
+              <span class="due" style="display:block">Cuota 1 de 3</span></span><span></span></div>
+            <div class="grow"><span><span class="nm" style="display:block">Plan de pagos creado</span>
+              <span class="sub">16 de septiembre · 30 % de anticipo y 3 cuotas</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 21.703.150</span>
+              <span class="due" style="display:block">Total del pedido</span></span><span></span></div>
+          </div>
+          <p class="foot-note">Las cuotas dicen <b>cuándo</b> tocaba cada parte. Lo cobrado sale
+            del pedido, que es la única fuente: no hay dos verdades que reconciliar.</p>
         </div>
       </div>
       <aside class="sheet" aria-label="Pedido JX-0042">
@@ -928,54 +830,66 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
           <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
         </div>
-        <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div>
+        <div class="due-card"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
             <p class="t">Próxima cuota en 119 días</p>
             <p class="m">$ 7.596.102 · 14 de enero</p></div></div>
         
         <div class="group">
           <p class="head">Plan de pagos <a href="#">Reprogramar</a></p>
           <div class="row"><span class="dot ok"></span>
-        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 sep</p></div>
+        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 de septiembre</p></div>
         <p class="v">$ 6.510.945</p></div>
       <div class="row"><span class="dot next"></span>
-        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 ene</p></div>
+        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 de enero</p></div>
         <p class="v">$ 7.596.102<small>en 119 días</small></p></div>
       <div class="row"><span class="dot off"></span>
-        <div><p class="t">Saldo final</p><p class="m">Vence el 13 ene, 60 días antes de la salida</p></div>
+        <div><p class="t">Saldo final</p><p class="m">60 días antes de la salida</p></div>
         <p class="v">$ 7.596.103</p></div>
         </div>
         <div class="actions">
           <button class="btn block" >Registrar abono</button>
           <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Anotar promesa de pago</button>
-          <p class="origin">Plan creado al confirmar con la política del tenant: <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de la salida.</p>
+          <p class="origin">El plan se creó al confirmar, con la política del negocio:
+            <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de salir.</p>
         </div>
       </div>
     </aside>
       <div class="overlay"><div class="modal wide" style="max-width:560px">
-      <div><h2>Reprogramar cuotas</h2><p class="sub">Solo lo que está por cobrar. Lo ya pagado no se toca.</p></div>
-      <div class="group" style="border:none">
-        <p class="head">Pendientes <a href="#">Añadir cuota</a></p>
-        <div class="sched" style="padding:0 16px 8px"><div class="sline"><span class="seq">2</span>
+      <div><h2>Reprogramar cuotas</h2><p class="sub">Solo lo pendiente. Lo ya pagado no se toca.</p></div>
+      <div>
+        <div class="sec soon"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><span class="t">Pendientes</span>
+          <span class="n"><a href="#" style="text-decoration:none;font-weight:500;color:var(--foreground)">Añadir</a></span></div>
+        <div class="sched"><div class="sline"><span class="seq">2</span>
           <span class="din"><span class="d">14 ene 2027</span><span class="kind">Cuota</span></span>
-          <span class="amt">$ 7.596.102</span>
+          <span class="amt2">$ 7.596.102</span>
           <span class="x"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div><div class="sline"><span class="seq">3</span>
           <span class="din"><span class="d">13 ene 2027</span><span class="kind">Saldo final</span></span>
-          <span class="amt">$ 5.000.000</span>
+          <span class="amt2">$ 5.000.000</span>
           <span class="x"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></div></div>
       </div>
-      <div class="balance-check bad"><span>Las cuotas suman $ 12.596.102 y el saldo es $ 15.192.205</span>
+      <div class="check bad"><span>Suman $ 12.596.102 y el saldo es $ 15.192.205</span>
           <span class="v">Faltan $ 2.596.103</span></div>
-      <div class="notice err "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><div>No se puede guardar hasta que las cuotas sumen el saldo. Es la misma regla del servidor, dicha aquí antes de perder el trabajo.</div></div>
-      <div class="modal-foot"><button class="btn outline" >Volver</button><button class="btn " aria-disabled="true">Guardar cuotas</button></div>
+      <p class="set-note">No se puede guardar hasta que cuadren. Es la misma regla del
+          servidor, dicha aquí antes de perder el trabajo.</p>
+      <div class="modal-foot"><button class="btn ghost" >Volver</button><button class="btn " aria-disabled="true">Guardar cuotas</button></div>
     </div></div>
-    </div></section><section class="view" data-view="promesa" data-note="Una promesa pausa los recordatorios hasta su fecha, y el diálogo lo dice antes de anotarla. Si el día llega sin pago, la promesa se rompe sola y los avisos vuelven." hidden><div class="split">
+    </div></section><section class="view" data-view="promesa" data-note="Una promesa pausa los recordatorios hasta su fecha, y el diálogo lo dice antes de anotarla. Si el día llega sin pago, la promesa se rompe sola." hidden><div class="split">
       <div class="content">
-        <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Expediciones con cobro en curso.</p></div>
-        <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El plan de pagos vive en el pedido y la Cartera lo lee. No hay dos verdades: lo cobrado sale del pedido y las cuotas solo dicen <b>cuándo</b> tocaba cada parte.</div></div>
-        <div class="group">
-          <p class="head">Movimientos del plan</p>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Abono aplicado a la cuota 1</p><p class="m">16 sep · $ 6.510.945 · verificado por Isabel</p></div><p class="v">Cuota 1</p></div>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Plan creado</p><p class="m">16 sep · 30 % de anticipo y 3 cuotas</p></div><p class="v">$ 21.703.150</p></div>
+        <p class="ttl" style="font-size:19px;font-weight:600;letter-spacing:-.015em">Pedidos</p>
+        <div class="block">
+          <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Movimientos del plan</span></div>
+          <div class="glist">
+            <div class="grow"><span><span class="nm" style="display:block">Abono aplicado a la cuota 1</span>
+              <span class="sub">16 de septiembre · verificado por Isabel</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 6.510.945</span>
+              <span class="due" style="display:block">Cuota 1 de 3</span></span><span></span></div>
+            <div class="grow"><span><span class="nm" style="display:block">Plan de pagos creado</span>
+              <span class="sub">16 de septiembre · 30 % de anticipo y 3 cuotas</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 21.703.150</span>
+              <span class="due" style="display:block">Total del pedido</span></span><span></span></div>
+          </div>
+          <p class="foot-note">Las cuotas dicen <b>cuándo</b> tocaba cada parte. Lo cobrado sale
+            del pedido, que es la única fuente: no hay dos verdades que reconciliar.</p>
         </div>
       </div>
       <aside class="sheet" aria-label="Pedido JX-0042">
@@ -990,58 +904,73 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
           <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 30.00%, var(--background) 30.00% 30.50%, var(--secondary) 30.50% 100.00%)"></div>
         </div>
-        <div class="due"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><div>
+        <div class="due-card"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
             <p class="t">Próxima cuota en 119 días</p>
             <p class="m">$ 7.596.102 · 14 de enero</p></div></div>
         
         <div class="group">
           <p class="head">Plan de pagos <a href="#">Reprogramar</a></p>
           <div class="row"><span class="dot ok"></span>
-        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 sep</p></div>
+        <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 16 de septiembre</p></div>
         <p class="v">$ 6.510.945</p></div>
       <div class="row"><span class="dot next"></span>
-        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 ene</p></div>
+        <div><p class="t">Cuota 2 de 3</p><p class="m">Vence el 14 de enero</p></div>
         <p class="v">$ 7.596.102<small>en 119 días</small></p></div>
       <div class="row"><span class="dot off"></span>
-        <div><p class="t">Saldo final</p><p class="m">Vence el 13 ene, 60 días antes de la salida</p></div>
+        <div><p class="t">Saldo final</p><p class="m">60 días antes de la salida</p></div>
         <p class="v">$ 7.596.103</p></div>
         </div>
         <div class="actions">
           <button class="btn block" >Registrar abono</button>
           <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>Anotar promesa de pago</button>
-          <p class="origin">Plan creado al confirmar con la política del tenant: <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de la salida.</p>
+          <p class="origin">El plan se creó al confirmar, con la política del negocio:
+            <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de salir.</p>
         </div>
       </div>
     </aside>
       <div class="overlay"><div class="modal wide">
-      <div><h2>Anotar promesa de pago</h2><p class="sub">Diana Salazar · JX-0047 · debe $ 3.480.000 desde hace 6 días</p></div>
-      <div class="form" style="grid-template-columns:1fr 1fr">
-        <div class="field "><label for="fecha">Prometió pagar el</label><div class="input  " id="" role="textbox" aria-readonly="true"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span>22 de septiembre</span></div></div>
-        <div class="field "><label for="monto">Monto prometido</label><div class="input  " id="" role="textbox" aria-readonly="true"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg><span>3.480.000</span></div><p class="hint">Puede ser parcial.</p></div>
-        <div class="field full"><label for="nota">Nota</label><div class="input  " id="" role="textbox" aria-readonly="true"><span>Dijo que cobra el 20 y paga ese mismo día.</span></div></div>
+      <div><h2>Anotar promesa de pago</h2>
+        <p class="sub">Diana Salazar · debe $ 3.480.000 desde hace 6 días</p></div>
+      <div class="set">
+        <div class="set-row"><span class="k">Prometió pagar el</span>
+          <span class="v"><b>22 de septiembre</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+        <div class="set-row"><span class="k">Monto</span>
+          <span class="v"><b>$ 3.480.000</b></span></div>
+        <div class="set-row"><span class="k">Nota</span>
+          <span class="v"><b>Cobra el 20 y paga ese día</b></span></div>
       </div>
       <div class="after">
         <p class="cap">Mientras la promesa esté viva</p>
         <div class="line"><span>Recordatorios automáticos</span><span class="v">En pausa hasta el 22</span></div>
-        <div class="line muted"><span>En la Cartera</span><span class="v">Aparece como prometido</span></div>
-        <p class="state"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Si el 22 no llega el pago, la promesa se marca <b>rota</b> y los recordatorios vuelven solos.</span></p>
+        <div class="line muted"><span>En la cartera</span><span class="v">Aparece como prometido</span></div>
+        <p class="state"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Si el 22 no llega el pago, la
+          promesa se marca <b>rota</b> y los recordatorios vuelven solos.</span></p>
       </div>
-      <div class="modal-foot"><button class="btn outline" >Volver</button><button class="btn " >Anotar promesa</button></div>
+      <div class="modal-foot"><button class="btn ghost" >Volver</button><button class="btn " >Anotar promesa</button></div>
     </div></div>
-    </div></section><section class="view" data-view="entregado" data-note="El pedido que la decisión del dueño hizo posible: entregado, y aún debiendo. El estado del servicio y el del cobro se cuentan por separado, y la alarma no es el color del badge sino la frase: viajó el 2 de septiembre y debe desde entonces." hidden><div class="split">
+    </div></section><section class="view" data-view="entregado" data-note="El pedido que la decisión del dueño hizo posible. El estado del servicio y el del cobro se cuentan por separado, y la alarma no es un badge de color: es la frase «viajó el 2 de septiembre y debe desde entonces»." hidden><div class="split">
       <div class="content">
-        <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Expediciones con cobro en curso.</p></div>
-        <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>El plan de pagos vive en el pedido y la Cartera lo lee. No hay dos verdades: lo cobrado sale del pedido y las cuotas solo dicen <b>cuándo</b> tocaba cada parte.</div></div>
-        <div class="group">
-          <p class="head">Movimientos del plan</p>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Abono aplicado a la cuota 1</p><p class="m">16 sep · $ 6.510.945 · verificado por Isabel</p></div><p class="v">Cuota 1</p></div>
-          <div class="row"><span class="dot ok"></span><div><p class="t">Plan creado</p><p class="m">16 sep · 30 % de anticipo y 3 cuotas</p></div><p class="v">$ 21.703.150</p></div>
+        <p class="ttl" style="font-size:19px;font-weight:600;letter-spacing:-.015em">Pedidos</p>
+        <div class="block">
+          <div class="sec fine"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="t">Movimientos del plan</span></div>
+          <div class="glist">
+            <div class="grow"><span><span class="nm" style="display:block">Abono aplicado a la cuota 1</span>
+              <span class="sub">16 de septiembre · verificado por Isabel</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 6.510.945</span>
+              <span class="due" style="display:block">Cuota 1 de 3</span></span><span></span></div>
+            <div class="grow"><span><span class="nm" style="display:block">Plan de pagos creado</span>
+              <span class="sub">16 de septiembre · 30 % de anticipo y 3 cuotas</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 21.703.150</span>
+              <span class="due" style="display:block">Total del pedido</span></span><span></span></div>
+          </div>
+          <p class="foot-note">Las cuotas dicen <b>cuándo</b> tocaba cada parte. Lo cobrado sale
+            del pedido, que es la única fuente: no hay dos verdades que reconciliar.</p>
         </div>
       </div>
       <aside class="sheet" aria-label="Pedido JX-0038">
       <div class="sheet-top">
         <div><p class="id">JX-0038</p><p class="who2">Andrés Mejía</p><p class="where">Nevado del Ruiz · 1 cupo</p></div>
-        <span class="badge warn"><span class="dot"></span>Entregado · debe</span>
+        <span class="badge off"><span class="dot"></span>Entregado</span>
       </div>
       <div class="sheet-body">
         <div class="headline">
@@ -1050,59 +979,71 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="of">de $ 10.850.000 · <b>61 %</b> cobrado</p>
           <div class="meter" role="img" aria-label="Progreso del cobro" style="background:linear-gradient(90deg, var(--axi-brand) 0.00% 61.00%, var(--background) 61.00% 61.50%, var(--secondary) 61.50% 100.00%)"></div>
         </div>
-        <div class="due alarm"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div>
+        <div class="due-card alarm"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg><div>
             <p class="t">Viajó el 2 de septiembre y debe desde entonces</p>
             <p class="m">15 días de mora · el servicio ya se prestó</p></div></div>
         
         <div class="group">
           <p class="head">Plan de pagos <a href="#">Reprogramar</a></p>
           <div class="row"><span class="dot ok"></span>
-            <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 2 jun</p></div>
+            <div><p class="t">Anticipo · 30 %</p><p class="m">Pagado el 2 de junio</p></div>
             <p class="v">$ 3.255.000</p></div>
           <div class="row"><span class="dot ok"></span>
-            <div><p class="t">Cuota 2 de 3</p><p class="m">Pagada el 2 jul</p></div>
+            <div><p class="t">Cuota 2 de 3</p><p class="m">Pagada el 2 de julio</p></div>
             <p class="v">$ 3.395.000</p></div>
           <div class="row"><span class="dot late"></span>
-            <div><p class="t">Saldo final</p><p class="m">Vencía el 2 sep, tres días antes de la salida</p></div>
+            <div><p class="t">Saldo final</p><p class="m">Vencía el 2 de septiembre</p></div>
             <p class="v">$ 4.200.000<small class="late">15 días de mora</small></p></div>
         </div>
         <div class="actions">
           <button class="btn block" >Registrar abono</button>
           <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>Enviar recordatorio</button>
-          <p class="origin">Plan creado al confirmar con la política del tenant: <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de la salida.</p>
+          <p class="origin">El plan se creó al confirmar, con la política del negocio:
+            <b>30 %</b> de anticipo, <b>3</b> cuotas y el saldo <b>60 días</b> antes de salir.</p>
         </div>
       </div>
     </aside>
       
-    </div></section><section class="view" data-view="politica" data-note="Los porcentajes son abstractos, así que al lado va el calendario que producen para una expedición real. Cambiar el anticipo mueve la línea de tiempo: se decide viendo el resultado, no imaginándolo." hidden><div class="wrap">
-      <div><h1 class="h1">Pagos</h1><p class="h1-sub">Cómo cobra tu negocio.</p></div>
+    </div></section><section class="view" data-view="politica" data-note="Filas de ajustes —etiqueta a la izquierda, valor a la derecha, la explicación debajo del grupo— en vez de una rejilla de formulario, que se lee como panel de administración. Al lado, el calendario que esos números producen para una expedición real: se decide viendo el resultado." hidden><div class="wrap">
+      <div class="topbar"><p class="ttl">Pagos</p></div>
       <nav class="seg " aria-label="Ajustes de pagos"><ul style="display:contents;margin:0;padding:0;list-style:none"><a href="#" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>Medios</a><a href="#" aria-current=page><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg>Plan de pagos</a><a href="#" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>Moneda y TRM</a><a href="#" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Documentos</a></ul></nav>
-      <div class="policy-grid">
-        <div class="stack-24">
-          <section>
-            <p class="section-title">Cómo se reparte el pago</p>
-            <p class="section-sub">Se aplica a cada pedido al confirmarlo. Lo que ya tiene plan no cambia.</p>
-            <div class="form" style="margin-top:14px">
-              <div class="field "><label for="ant">Anticipo para reservar</label><div class="input  " id="" role="textbox" aria-readonly="true"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg><span>30</span></div><p class="hint">Un abono menor igual reserva: lo decide quien verifica.</p></div>
-              <div class="field "><label for="cuotas">Número de cuotas</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">3 cuotas mensuales</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>
-              <div class="field "><label for="saldo">El saldo se paga</label><div class="input  " id="" role="textbox" aria-readonly="true"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><span>60</span></div><p class="hint">Días antes de la salida.</p></div>
-              <div class="field "><label for="fallback">Sin fecha de salida</label><div class="select " id="" role="combobox" aria-expanded="false"><span class="val">30 días desde la confirmación</span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><p class="hint">Para pedidos que no son expediciones.</p></div>
+      <div class="policy">
+        <div>
+          <div class="set-block">
+            <p class="set-title">Cómo se reparte el pago</p>
+            <div class="set">
+              <div class="set-row"><span class="k">Anticipo para reservar</span>
+                <span class="v"><b>30 %</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+              <div class="set-row"><span class="k">Cuotas</span>
+                <span class="v"><b>3 mensuales</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+              <div class="set-row"><span class="k">El saldo se paga</span>
+                <span class="v"><b>60 días antes de salir</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+              <div class="set-row"><span class="k">Si no hay fecha de salida</span>
+                <span class="v"><b>30 días desde la confirmación</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
             </div>
-          </section>
-          <section>
-            <p class="section-title">Cuándo avisar</p>
-            <p class="section-sub">Antes de cada cuota y después, si no llega.</p>
-            <div class="form" style="margin-top:14px">
-              <div class="field "><label for="antes">Antes de vencer</label><div class="input  " id="" role="textbox" aria-readonly="true"><span>7, 3 y 0 días</span></div></div>
-              <div class="field "><label for="despues">Después de vencer</label><div class="input  " id="" role="textbox" aria-readonly="true"><span>1, 3 y 7 días</span></div></div>
+            <p class="set-note">Se aplica a cada pedido al confirmarlo; lo que ya tiene plan no
+              cambia. Un abono menor al anticipo igual reserva: eso lo decide quien verifica.</p>
+          </div>
+          <div class="set-block">
+            <p class="set-title">Cuándo avisar</p>
+            <div class="set">
+              <div class="set-row"><span class="k">Antes de vencer</span>
+                <span class="v"><b>7, 3 y 0 días</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+              <div class="set-row"><span class="k">Después de vencer</span>
+                <span class="v"><b>1, 3 y 7 días</b><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span></div>
+              <div class="set-row"><span class="k">Por WhatsApp y correo</span>
+                <span class="v"><button type="button" role="switch" class="sw" aria-checked="true" aria-disabled="false" aria-label="Avisar por WhatsApp y correo"></button></span></div>
             </div>
-          </section>
+            <p class="set-note">Fuera de la ventana de 24 horas de WhatsApp el aviso sale como
+              plantilla aprobada, si la hay.</p>
+          </div>
         </div>
         <div class="preview">
           <p class="cap">Con esta política, una expedición de</p>
           <p class="ttl">US$ 3.500 que sale el 14 de marzo</p>
           <div class="tl"><div class="i first"><span class="b"></span><div><p class="t">Anticipo · 30 %</p><p class="m">Al confirmar, hoy</p></div><span class="v">$ 3.255.000</span></div><div class="i "><span class="b"></span><div><p class="t">Cuota 2</p><p class="m">16 de octubre</p></div><span class="v">$ 3.797.500</span></div><div class="i "><span class="b"></span><div><p class="t">Cuota 3</p><p class="m">16 de noviembre</p></div><span class="v">$ 3.797.500</span></div><div class="i last"><span class="b"></span><div><p class="t">Saldo final</p><p class="m">13 de enero · 60 días antes de salir</p></div><span class="v">$ 0</span></div></div>
-          <p class="small muted" style="margin-top:12px">Los números salen de la política, no de un ejemplo escrito a mano: cambia el anticipo y este calendario cambia contigo.</p>
+          <p class="set-note" style="padding:14px 0 0">Este calendario no es un ejemplo escrito a
+            mano: sale de los números de la izquierda. Cambia el anticipo y se mueve contigo.</p>
         </div>
       </div>
     </div></section><section class="view" data-view="conversacion" data-note="Donde de verdad ocurre el cobro. El cliente dice «ya pagué» y el operador tiene el saldo, la cuota y el botón de verificar sin salir del chat." hidden><div class="inbox">
@@ -1114,34 +1055,40 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <aside class="panel" aria-label="Pedidos y cobros">
         <div>
           <h3>Pedidos y cobros</h3>
-          <div class="group" style="margin-top:8px">
-            <div class="row"><span class="dot next"></span>
-              <div><p class="t">JX-0051 · Sierra Nevada</p><p class="m">Abonado · sale el 8 dic</p></div>
-              <p class="v">$ 9.640.000<small>por cobrar</small></p></div>
+          <div class="glist">
+            <div class="grow" style="min-height:64px">
+              <span><span class="nm" style="display:block">Sierra Nevada</span>
+                <span class="sub"><span class="id">JX-0051</span> · sale el 8 de diciembre</span></span>
+              <span class="right"><span class="amt" style="display:block">$ 9.640.000</span>
+                <span class="due" style="display:block">por cobrar</span></span>
+              <svg class="ic chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
           </div>
         </div>
-        <div>
-          <h3>Próxima cuota</h3>
-          <div class="due" style="margin-top:8px"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
-            <p class="t">Vence en 3 días</p><p class="m">Cuota 1 de 3 · $ 3.213.333 · 20 sep</p></div></div>
-        </div>
+        <div class="due-card"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg><div>
+          <p class="t">Cuota 1 de 3 vence en 3 días</p>
+          <p class="m">$ 3.213.333 · 20 de septiembre</p></div></div>
         <div class="actions">
           <button class="btn block" >Verificar el pago reportado</button>
-          <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver el pedido</button>
+          <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Abrir el pedido</button>
         </div>
-        <p class="origin">El agente ya registró el comprobante: el saldo no se mueve hasta que alguien confirme que el dinero llegó.</p>
+        <p class="origin">El agente ya registró el comprobante. El saldo no se mueve hasta que
+          alguien confirme que el dinero llegó.</p>
       </aside>
-    </div></section><section class="view" data-view="sin-funcion" data-note="Savage Wear cobra de una: no ve Cartera en el menú, la pantalla no existe y el servidor responde 403. La cartera es una capacidad que se enciende, no una sección que se esconde." hidden><div class="wrap">
-      <div><h1 class="h1">Pedidos</h1><p class="h1-sub">Savage Wear · tienda de ropa</p></div>
-      <div class="list" style="padding:0">
-        <div class="empty">
-          <span class="eic"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>
+    </div></section><section class="view" data-view="sin-funcion" data-note="Savage Wear cobra de una: no ve Cartera en el menú, la pantalla no existe y el servidor responde 403." hidden><div class="wrap">
+      <div class="topbar"><p class="ttl">Pedidos</p>
+        <span class="small muted">Savage Wear · tienda de ropa</span></div>
+      <div class="glist">
+        <div class="void">
+          <span class="vic"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>
           <h3>Aquí no hay cartera</h3>
-          <p>Este negocio cobra de una, así que no tiene planes de pago ni cuotas que perseguir. La sección no aparece en el menú y la pantalla no existe.</p>
+          <p>Este negocio cobra de una, así que no tiene cuotas que perseguir. La sección no
+            aparece en el menú, la pantalla no existe y el servidor responde 403 a quien la pida.</p>
         </div>
       </div>
-      <div class="notice info "><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div>Lo mismo del lado del servidor: pedir la cartera sin la función responde <b>403</b>. No es una pantalla escondida, es una capacidad que este negocio no tiene.</div></div>
-      <p class="small muted">Se activa en <b>Mi empresa › Funciones</b>. Las agencias de viaje la traen encendida de fábrica; una tienda de ropa, no.</p>
+      <p class="foot-note">La cartera es una <b>capacidad que se enciende</b>, no una sección
+        escondida. Se activa en Mi empresa › Funciones; las agencias de viaje la traen encendida
+        de fábrica y una tienda de ropa, no.</p>
     </div></section>
 <script>
 (function () {
