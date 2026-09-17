@@ -13,6 +13,8 @@ export {
 export {
   isUsableAsOpening,
   whyUnusableAsOpening,
+  isUsableForMarketing,
+  whyUnusable,
   countTemplateVariables,
   TEMPLATE_COST_CO_USD,
   formatTemplateCost,
@@ -20,3 +22,9 @@ export {
   type HsmTemplateDTO,
 } from "./domain/template-catalog";
 export { HSM_CATEGORY_LABELS } from "./domain/enums";
+export { renderHsmPreview, type PreviewSegment } from "./domain/hsm-preview";
+export {
+  bulkOpeningCost,
+  formatUsd,
+  type BulkOpeningCost,
+} from "./domain/template-cost";

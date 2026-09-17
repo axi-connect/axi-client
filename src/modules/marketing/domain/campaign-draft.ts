@@ -1,4 +1,5 @@
 import type { SegmentFilters } from "@/modules/crm/public";
+import { unresolvedHsmSlots, type HsmParamEntry } from "./hsm-params";
 import type { AudiencePreviewDTO, CreateCampaignDTO, UpdateCampaignDTO } from "./campaign";
 
 /**
@@ -20,6 +21,8 @@ export type CampaignDraft = {
   /** `null` = plantilla del tenant sin elegir todavía. */
   templateId: string | null;
   hsmChannelTemplateId: string | null;
+  /** Qué va en cada `{{n}}` de la HSM. Vacío si la plantilla no tiene huecos. */
+  hsmParamMapping: HsmParamEntry[];
   /** `""` = sale en cuanto se lance. */
   scheduledDate: string;
   scheduledTime: string;
@@ -33,6 +36,7 @@ export const EMPTY_DRAFT: CampaignDraft = {
   filters: {},
   templateId: null,
   hsmChannelTemplateId: null,
+  hsmParamMapping: [],
   scheduledDate: "",
   scheduledTime: "",
 };
@@ -62,11 +66,20 @@ export function blockerForStep(step: WizardStep, draft: CampaignDraft): string |
         return "Elige el segmento al que le vas a escribir";
       }
       return null;
-    case "contenido":
+    case "contenido": {
       if (draft.templateId === null && draft.hsmChannelTemplateId === null) {
         return "Elige la plantilla que se enviará";
       }
+      // Un hueco sin decidir no es un detalle estético: Meta rechaza el envío
+      // ENTERO si sobra o falta un parámetro, así que no puede pasar de aquí.
+      if (draft.hsmChannelTemplateId !== null) {
+        const pending = unresolvedHsmSlots(draft.hsmParamMapping);
+        if (pending.length > 0) {
+          return `Falta decir qué va en ${pending.join(" y ")}`;
+        }
+      }
       return null;
+    }
     case "programacion":
       if (draft.scheduledDate !== "" && draft.scheduledTime === "") {
         return "Indica la hora a la que sale";
@@ -145,6 +158,12 @@ export function toUpdateCampaignDTO(draft: CampaignDraft): UpdateCampaignDTO {
     ...audiencePayload(draft),
     template_id: draft.templateId,
     hsm_channel_template_id: draft.hsmChannelTemplateId,
+    // Sin plantilla de Meta el mapeo viaja como `null`: un mapeo huérfano es
+    // un 422 en el servidor, y con razón.
+    hsm_param_mapping:
+      draft.hsmChannelTemplateId === null || draft.hsmParamMapping.length === 0
+        ? null
+        : draft.hsmParamMapping,
     scheduled_at: scheduledAtISO(draft),
   };
 }

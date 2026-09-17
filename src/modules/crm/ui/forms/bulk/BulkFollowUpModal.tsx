@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
+import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
 import { Modal } from "@/shared/components/ui/modal";
 import {
@@ -24,7 +25,13 @@ import {
 import { getTenantAgents, type AssignableAgent } from "@/modules/agents/public";
 import { loadMyCompanyOnce } from "@/modules/companies/public";
 import { listChannels } from "@/modules/channels/public";
-import { isUsableAsOpening, listHsmTemplates, type HsmTemplateDTO } from "@/modules/marketing/public";
+import {
+  bulkOpeningCost,
+  formatUsd,
+  isUsableAsOpening,
+  listHsmTemplates,
+  type HsmTemplateDTO,
+} from "@/modules/marketing/public";
 import {
   DEFAULT_AGENT_TASK_SETTINGS,
   type AgentTaskSettings,
@@ -34,10 +41,8 @@ import {
   BULK_SKIP_HINTS,
   BULK_SKIP_LABELS,
   bulkFinishesAt,
-  bulkOpeningCost,
   bulkPromise,
   exceedsDailyCap,
-  formatUsd,
   type BulkDTO,
   type BulkPreviewDTO,
 } from "@/modules/crm/domain/bulk-follow-up";
@@ -255,11 +260,11 @@ export function BulkFollowUpModal({
       <div className="grid max-h-[65vh] gap-4 overflow-y-auto pr-1">
         {previewError !== null && <p className="text-sm text-destructive">{previewError}</p>}
         {preview !== null && !preview.within_limit && (
-          <Notice tone="warn" icon={TriangleAlert}>
+          <Callout tone="warn" icon={TriangleAlert}>
             Esa audiencia tiene <strong>{preview.total}</strong> contactos y el tope de un lote son{" "}
             <strong>{preview.max}</strong>. Divídela en segmentos más pequeños: un lote que tarda
             semanas en salir es una secuencia, y eso se configura aparte.
-          </Notice>
+          </Callout>
         )}
 
         <ExclusionsPanel preview={preview} />
@@ -345,17 +350,17 @@ export function BulkFollowUpModal({
             </p>
           )}
           {cap.exceeds && (
-            <Notice tone="warn" icon={TriangleAlert}>
+            <Callout tone="warn" icon={TriangleAlert}>
               Tu cupo diario son <strong>{settings.daily_cap}</strong> tareas, así que el lote cruza a{" "}
               <strong>{cap.days} días</strong>. El agente no se lo salta: lo que sobra sale al día
               siguiente, no se pierde.
-            </Notice>
+            </Callout>
           )}
           {quiet !== null && quiet.quiet && (
-            <Notice tone="info" icon={Info}>
+            <Callout tone="info" icon={Info}>
               A esa hora el agente no escribe (horario silencioso {quiet.window}). Las primeras
               saldrán a las <strong>{quiet.resumes_at.time}</strong>.
-            </Notice>
+            </Callout>
           )}
         </Field>
 
@@ -383,7 +388,7 @@ export function BulkFollowUpModal({
               />
             )}
             {selectedTemplate !== undefined && (
-              <Notice tone={openingCost?.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>
+              <Callout tone={openingCost?.category === "marketing" ? "warn" : "info"} icon={CircleDollarSign}>
                 Solo se cobra a quien la reciba de verdad: los que hayan escrito en las últimas 24 h
                 siguen por mensaje normal. Como mucho, {eligible} ×{" "}
                 {formatUsd(openingCost?.unit_usd ?? 0, 4)} ≈{" "}
@@ -396,7 +401,7 @@ export function BulkFollowUpModal({
                   </>
                 )}
                 .
-              </Notice>
+              </Callout>
             )}
           </Field>
         )}
@@ -449,32 +454,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-xs font-medium">{label}</span>
       {children}
     </div>
-  );
-}
-
-function Notice({
-  tone,
-  icon: Icon,
-  children,
-}: {
-  tone: "info" | "warn";
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-}) {
-  return (
-    <p
-      className={
-        tone === "warn"
-          ? "flex items-start gap-2 rounded-lg border border-warning/35 bg-warning/5 px-3 py-2 text-xs leading-relaxed"
-          : "flex items-start gap-2 rounded-lg border border-border px-3 py-2 text-xs leading-relaxed text-muted-foreground"
-      }
-    >
-      <Icon
-        aria-hidden
-        className={tone === "warn" ? "mt-0.5 size-3.5 shrink-0 text-warning" : "mt-0.5 size-3.5 shrink-0 text-info"}
-      />
-      <span>{children}</span>
-    </p>
   );
 }
 

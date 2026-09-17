@@ -37,7 +37,11 @@ jest.mock("@/modules/marketing/infrastructure/services/campaigns-service.adapter
 }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
   listTemplates: jest.fn(),
+  listHsmTemplates: jest.fn(),
+  getMessagingWindow: jest.fn(),
 }));
+jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
+jest.mock("@/modules/companies/public", () => ({ loadMyCompanyOnce: jest.fn() }));
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 const crm = require("@/modules/crm/public") as {
@@ -52,7 +56,11 @@ const api = require("@/modules/marketing/infrastructure/services/campaigns-servi
 };
 const templatesApi = require("@/modules/marketing/infrastructure/services/templates-service.adapter") as {
   listTemplates: jest.Mock;
+  listHsmTemplates: jest.Mock;
+  getMessagingWindow: jest.Mock;
 };
+const channels = require("@/modules/channels/public") as { listChannels: jest.Mock };
+const companies = require("@/modules/companies/public") as { loadMyCompanyOnce: jest.Mock };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 beforeEach(() => {
@@ -67,6 +75,25 @@ beforeEach(() => {
   api.updateCampaign.mockResolvedValue({ id: "c1", name: "Black Friday", status: "draft" });
   api.previewAudience.mockResolvedValue({ total: 1200, sample_size: 1000, sample_opted_out: 167 });
   api.launchCampaign.mockResolvedValue({ status: "running" });
+  channels.listChannels.mockResolvedValue({
+    data: [{ id: "ch1", name: "Ventas", kind: "whatsapp_cloud" }],
+  });
+  companies.loadMyCompanyOnce.mockResolvedValue({ name: "Savage" });
+  templatesApi.getMessagingWindow.mockResolvedValue({ limit: 250, used: 0, remaining: 250 });
+  templatesApi.listHsmTemplates.mockResolvedValue([
+    {
+      id: "h1",
+      channel_id: "ch1",
+      name: "promo_septiembre",
+      language: "es",
+      category: "marketing",
+      body: "Hola {{1}}, {{2}} de descuento hoy.",
+      components: [],
+      approval_status: "approved",
+      external_id: "ext",
+      updated_at: "2026-09-15T00:00:00Z",
+    },
+  ]);
 });
 
 afterEach(cleanup);
@@ -127,7 +154,7 @@ describe("pasos 2 a 4", () => {
   });
 
   it("solo ofrece plantillas activas y previsualiza con las variables de campaña", async () => {
-    const select = screen.getByLabelText("Plantilla");
+    const select = screen.getByLabelText("Plantilla del tenant");
     expect(screen.getByRole("option", { name: "Promo julio" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Inactiva" })).not.toBeInTheDocument();
 
@@ -135,12 +162,23 @@ describe("pasos 2 a 4", () => {
     expect(await screen.findByText(/Hola Ana/)).toBeInTheDocument();
   });
 
-  it("avisa de que fuera de las 24 h hace falta una plantilla de Meta", () => {
-    expect(screen.getByText(/plantilla de Meta/)).toBeInTheDocument();
+  it("separa los dos públicos: dentro y fuera de la ventana de 24 h", () => {
+    expect(screen.getByText("A quien te escribió hace poco")).toBeInTheDocument();
+    expect(screen.getByText("A quien lleva más de 24 h")).toBeInTheDocument();
+  });
+
+  it("ofrece elegir la plantilla de Meta AHÍ MISMO, sin salir del asistente", async () => {
+    // Antes este bloque era una franja ámbar que solo avisaba y enlazaba a otra
+    // pantalla, en mitad de una campaña a medio hacer.
+    expect(await screen.findByLabelText("Plantilla de Meta aprobada")).toBeInTheDocument();
+    expect(templatesApi.listHsmTemplates).toHaveBeenCalledWith({
+      channel_id: "ch1",
+      approval_status: "approved",
+    });
   });
 
   it("exige día y hora juntos en la programación", async () => {
-    fireEvent.change(screen.getByLabelText("Plantilla"), { target: { value: "t1" } });
+    fireEvent.change(screen.getByLabelText("Plantilla del tenant"), { target: { value: "t1" } });
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await screen.findByText("¿Cuándo sale?");
 
@@ -152,7 +190,7 @@ describe("pasos 2 a 4", () => {
   });
 
   it("lanzar pide confirmación que dice a cuántas personas y que no se deshace", async () => {
-    fireEvent.change(screen.getByLabelText("Plantilla"), { target: { value: "t1" } });
+    fireEvent.change(screen.getByLabelText("Plantilla del tenant"), { target: { value: "t1" } });
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     await screen.findByText("¿Cuándo sale?");
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
@@ -168,5 +206,84 @@ describe("pasos 2 a 4", () => {
     );
     // Confirmar es obligatorio: el clic por sí solo no lanza nada.
     expect(api.launchCampaign).not.toHaveBeenCalled();
+  });
+});
+
+describe("paso 2 · con más de un número de WhatsApp", () => {
+  it("deja elegir desde cuál sale, porque la plantilla es de uno solo", async () => {
+    channels.listChannels.mockResolvedValue({
+      data: [
+        { id: "ch1", name: "Ventas", kind: "whatsapp_cloud" },
+        { id: "ch2", name: "Soporte", kind: "whatsapp_cloud" },
+      ],
+    });
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    // Meta no conoce la plantilla en los demás números: elegir mal significa
+    // que el envío se omite con `hsm_channel_mismatch`.
+    const select = await screen.findByLabelText("Número desde el que sale");
+    fireEvent.change(select, { target: { value: "ch2" } });
+
+    await waitFor(() =>
+      expect(templatesApi.listHsmTemplates).toHaveBeenCalledWith({
+        channel_id: "ch2",
+        approval_status: "approved",
+      }),
+    );
+  });
+
+  it("con un solo número no enseña el selector, que sería ruido", async () => {
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    expect(screen.queryByLabelText("Número desde el que sale")).not.toBeInTheDocument();
+  });
+});
+
+describe("paso 2 · cuando no se puede alcanzar a los contactos fríos", () => {
+  it("sin canal de WhatsApp Cloud lo dice, y dice qué pasa si sigues sin él", async () => {
+    channels.listChannels.mockResolvedValue({ data: [] });
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    expect(await screen.findByText(/WhatsApp Cloud/)).toBeInTheDocument();
+    expect(screen.getByText(/solo llegará a quien esté dentro de la ventana/)).toBeInTheDocument();
+  });
+
+  it("sin ninguna plantilla aprobada ofrece crearla", async () => {
+    templatesApi.listHsmTemplates.mockResolvedValue([]);
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    expect(await screen.findByRole("link", { name: "Crear una plantilla" })).toBeInTheDocument();
+  });
+
+  it("descarta las que no sirven para una campaña: utility y no aprobadas", async () => {
+    templatesApi.listHsmTemplates.mockResolvedValue([
+      {
+        id: "h2",
+        channel_id: "ch1",
+        name: "recordatorio",
+        language: "es",
+        category: "utility",
+        body: "Tu pedido va en camino.",
+        components: [],
+        approval_status: "approved",
+        external_id: "ext",
+        updated_at: "2026-09-15T00:00:00Z",
+      },
+    ]);
+    render(<CampaignWizard />);
+    await fillAudienceAndAdvance();
+    await screen.findByText("¿Qué les dices?");
+
+    // Meta solo entrega MARKETING fuera de ventana para una campaña: ofrecer
+    // una utility sería ofrecer algo que se rechaza al lanzar.
+    expect(await screen.findByRole("link", { name: "Crear una plantilla" })).toBeInTheDocument();
   });
 });

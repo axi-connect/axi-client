@@ -1,7 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BadgeCheck, CircleDollarSign, CircleX, Hourglass, MessageCircle, Sparkles, Zap } from "lucide-react";
+import {
+  BadgeCheck,
+  CircleDollarSign,
+  CircleX,
+  CornerUpLeft,
+  Hourglass,
+  MessageCircle,
+  MessageSquare,
+  Monitor,
+  Sparkles,
+  Type,
+  X,
+  Zap,
+} from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -14,7 +27,21 @@ import {
   SUGGESTED_OPENING_TEMPLATES,
   TEMPLATE_VARIABLE_MESSAGES,
 } from "@/modules/marketing/domain/template-catalog";
-import { createHsmTemplate } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import {
+  createHsmTemplate,
+  updateHsmTemplate,
+} from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import {
+  BODY_MAX,
+  breaksDesktop,
+  emptyButton,
+  FOOTER_MAX,
+  groupButtons,
+  HEADER_MAX,
+  readTemplatePieces,
+  type TemplateButton,
+} from "@/modules/marketing/domain/template-pieces";
+import { TemplateButtonsEditor } from "@/modules/marketing/ui/components/TemplateButtonsEditor";
 
 type Category = HsmTemplateDTO["category"];
 
@@ -46,8 +73,12 @@ const CATEGORIES: ReadonlyArray<{
   },
 ];
 
+/** El añadidor de piezas: mismo botón punteado en los tres sitios. */
+const ADDER =
+  "inline-flex h-8 items-center gap-1.5 rounded-full border border-dashed border-border px-3 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+
 const NAME_REGEX = /^[a-z0-9_]{3,120}$/;
-const BODY_MAX = 1024;
+
 
 /**
  * Alta guiada de una plantilla de Meta (F2 del seguimiento autónomo). Meta la
@@ -58,20 +89,37 @@ const BODY_MAX = 1024;
 export function CreateHsmTemplateModal({
   open,
   channelId,
+  editing = null,
   onOpenChange,
   onCreated,
 }: {
   open: boolean;
   channelId: string;
+  /**
+   * La plantilla que se edita, o `null` para crear una nueva. El mismo modal
+   * porque es el mismo formulario: lo que cambia es que Meta no deja tocar el
+   * nombre ni el idioma, y la categoría solo si no está aprobada.
+   *
+   * El consumidor le pasa una `key` distinta para forzar el remontaje, que es
+   * lo que carga los valores sin un efecto que sincronice estado con props.
+   */
+  editing?: HsmTemplateDTO | null;
   onOpenChange: (open: boolean) => void;
   onCreated: (template: HsmTemplateDTO) => void;
 }) {
   const { showAlert } = useAlert();
-  const [name, setName] = useState("");
-  const [language, setLanguage] = useState("es_CO");
-  const [category, setCategory] = useState<Category>("utility");
-  const [body, setBody] = useState("");
+  const isEditing = editing !== null;
+  const [name, setName] = useState(editing?.name ?? "");
+  const [language, setLanguage] = useState(editing?.language ?? "es_CO");
+  const [category, setCategory] = useState<Category>(editing?.category ?? "utility");
+  const [body, setBody] = useState(editing?.body ?? "");
   const [examples, setExamples] = useState<string[]>([]);
+  // Se cargan del estado inicial, no de un efecto: el consumidor remonta el
+  // modal con una `key` distinta por plantilla.
+  const stored = readTemplatePieces(editing?.components);
+  const [header, setHeader] = useState<string | null>(stored.header);
+  const [footer, setFooter] = useState<string | null>(stored.footer);
+  const [buttons, setButtons] = useState<TemplateButton[]>(stored.buttons);
   const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
 
@@ -114,18 +162,43 @@ export function CreateHsmTemplateModal({
     if (invalid) return;
     setSubmitting(true);
     try {
-      const created = await createHsmTemplate({
-        channel_id: channelId,
-        name,
-        language,
-        category,
+      const params = {
         body,
         ...(variableCount > 0 ? { examples: examples.slice(0, variableCount) } : {}),
-      });
+        // Las rápidas se agrupan al guardar: intercaladas, Meta rechaza la
+        // plantilla entera con «invalid combination».
+        // Quitar una pieza NO es omitirla: editar reemplaza todos los
+        // componentes en Meta, así que omitir la conserva. Por eso al editar se
+        // manda `null` explícito cuando el operador la quitó — si no, el botón
+        // de quitar decía que guardaba y no quitaba nada.
+        //
+        // La excepción es la cabecera de MEDIA: el formulario no la sabe
+        // enseñar, así que ahí sí hay que omitir para no borrarla.
+        ...pieceUpdate("buttons", buttons.length === 0 ? null : groupButtons(buttons), isEditing),
+        ...(stored.headerIsMedia && header === null
+          ? {}
+          : pieceUpdate(
+              "header",
+              header === null ? null : { format: "text" as const, text: header },
+              isEditing,
+            )),
+        ...pieceUpdate("footer", footer, isEditing),
+      };
+      const created = isEditing
+        ? await updateHsmTemplate(editing.id, {
+            ...params,
+            // La categoría solo viaja si de verdad cambió Y Meta lo permite:
+            // sobre una aprobada es un 409 nuestro antes de gastar la llamada.
+            ...(editing.approval_status !== "approved" && category !== editing.category
+              ? { category }
+              : {}),
+          })
+        : await createHsmTemplate({ channel_id: channelId, name, language, category, ...params });
       showAlert({
         tone: "success",
-        title: "Enviada a revisión de Meta",
-        description: "Suele decidir en minutos; puede tardar hasta 48 h. El estado se actualiza solo.",
+        title: isEditing ? "Enviada de nuevo a revisión" : "Enviada a revisión de Meta",
+        description:
+          "Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, la pantalla se refresca sola.",
         open: true,
       });
       onCreated(created);
@@ -144,14 +217,19 @@ export function CreateHsmTemplateModal({
       open={open}
       onOpenChange={onOpenChange}
       config={{
-        title: "Nueva plantilla de Meta",
-        description:
-          "Un texto fijo con huecos que se rellenan con datos del contacto. Meta la revisa antes de que puedas usarla.",
+        title: isEditing ? `Editar «${editing.name}»` : "Nueva plantilla de Meta",
+        description: isEditing
+          ? "Meta la revisa otra vez. El nombre y el idioma no se pueden cambiar: son suyos desde que la creaste."
+          : "Un texto fijo con huecos que se rellenan con datos del contacto. Meta la revisa antes de que puedas usarla.",
         className: "sm:max-w-2xl",
         actions: [
           { label: "Cancelar", variant: "outline", asClose: true },
           {
-            label: submitting ? "Enviando…" : "Enviar a revisión de Meta",
+            label: submitting
+              ? "Enviando…"
+              : isEditing
+                ? "Guardar y reenviar a revisión"
+                : "Enviar a revisión de Meta",
             variant: "default",
             asClose: false,
             onClick: () => void submit(),
@@ -160,7 +238,7 @@ export function CreateHsmTemplateModal({
       }}
     >
       <div className="space-y-5">
-        <section className="space-y-2">
+        <section className="space-y-2" hidden={isEditing}>
           <p className="text-xs font-medium">Empieza con una sugerida</p>
           <div className="grid gap-2 sm:grid-cols-3">
             {SUGGESTED_OPENING_TEMPLATES.map((suggestion) => (
@@ -180,6 +258,106 @@ export function CreateHsmTemplateModal({
           </div>
         </section>
 
+        {header !== null && (
+          <section className="space-y-1">
+            <span className="flex items-center gap-2 text-xs font-medium">
+              Cabecera
+              <span className="ml-auto tabular-nums text-muted-foreground">
+                {header.length}/{HEADER_MAX}
+              </span>
+              <button
+                type="button"
+                aria-label="Quitar la cabecera"
+                onClick={() => setHeader(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X aria-hidden className="size-3.5" />
+              </button>
+            </span>
+            <Input
+              aria-label="Texto de la cabecera"
+              placeholder="Temporada nueva en Savage"
+              maxLength={HEADER_MAX}
+              value={header}
+              onChange={(event) => setHeader(event.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Va en negrita arriba. Admite un solo hueco, y no admite negritas ni cursivas.
+            </p>
+          </section>
+        )}
+
+        {footer !== null && (
+          <section className="space-y-1">
+            <span className="flex items-center gap-2 text-xs font-medium">
+              Pie
+              <span className="ml-auto tabular-nums text-muted-foreground">
+                {footer.length}/{FOOTER_MAX}
+              </span>
+              <button
+                type="button"
+                aria-label="Quitar el pie"
+                onClick={() => setFooter(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X aria-hidden className="size-3.5" />
+              </button>
+            </span>
+            <Input
+              aria-label="Texto del pie"
+              placeholder="Responde SALIR para no recibir más promociones"
+              maxLength={FOOTER_MAX}
+              value={footer}
+              onChange={(event) => setFooter(event.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Sin huecos: Meta no los admite en el pie. Es donde suele ir la salida del cliente.
+            </p>
+          </section>
+        )}
+
+        {buttons.length > 0 && (
+          <section className="space-y-1">
+            <span className="text-xs font-medium">Botones</span>
+            <TemplateButtonsEditor buttons={buttons} onChange={setButtons} />
+            {breaksDesktop(buttons) && (
+              <p className="flex gap-2 rounded-lg border border-warning/35 bg-warning/5 px-3 py-2 text-xs leading-relaxed">
+                <Monitor aria-hidden className="mt-0.5 size-3.5 shrink-0 text-warning" />
+                <span>
+                  Esta combinación <strong className="font-medium">no se ve en WhatsApp de
+                  escritorio</strong>: a quien la reciba ahí se le pedirá abrirla en el celular.
+                  {buttons.length > 3 && " Y con más de tres, WhatsApp enseña solo dos y esconde el resto."}
+                </span>
+              </p>
+            )}
+          </section>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {header === null && (
+            <button type="button" onClick={() => setHeader("")} className={ADDER}>
+              <Type aria-hidden className="size-3.5" />
+              Añadir cabecera
+            </button>
+          )}
+          {footer === null && (
+            <button type="button" onClick={() => setFooter("")} className={ADDER}>
+              <MessageSquare aria-hidden className="size-3.5" />
+              Añadir pie
+            </button>
+          )}
+          {buttons.length === 0 && (
+            <button
+              type="button"
+              onClick={() => setButtons([emptyButton("quick_reply")])}
+              className={ADDER}
+            >
+              <CornerUpLeft aria-hidden className="size-3.5" />
+              Añadir botones
+            </button>
+          )}
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <label htmlFor="hsm-name" className="text-xs font-medium">
@@ -188,12 +366,15 @@ export function CreateHsmTemplateModal({
             <Input
               id="hsm-name"
               value={name}
+              disabled={isEditing}
               onChange={(event) => setName(event.target.value.toLowerCase())}
               placeholder="seguimiento_v1"
               aria-invalid={touched && Boolean(errors.name)}
             />
             <p className="text-xs text-muted-foreground">
-              {touched && errors.name ? (
+              {isEditing ? (
+                "Meta no deja cambiarlo: para otro nombre, crea una plantilla nueva."
+              ) : touched && errors.name ? (
                 <span className="text-destructive">{errors.name}</span>
               ) : (
                 "Minúsculas, números y guion bajo. Meta bloquea 30 días un nombre rechazado."
@@ -207,6 +388,7 @@ export function CreateHsmTemplateModal({
             <select
               id="hsm-language"
               value={language}
+              disabled={isEditing}
               onChange={(event) => setLanguage(event.target.value)}
               className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
             >
@@ -369,4 +551,20 @@ function renderPreview(body: string, examples: readonly string[]): Array<{ text:
   }
   if (cursor < body.length) segments.push({ text: body.slice(cursor), variable: false });
   return segments;
+}
+
+/**
+ * Cómo viaja una pieza que el operador dejó vacía.
+ *
+ * Al CREAR se omite: no hay nada que borrar. Al EDITAR se manda `null`, que es
+ * lo que el servidor entiende como «quítala» — omitirla la conservaría, porque
+ * editar reemplaza todos los componentes en Meta.
+ */
+function pieceUpdate<T>(
+  key: string,
+  value: T | null,
+  isEditing: boolean,
+): Record<string, T | null> {
+  if (value !== null) return { [key]: value };
+  return isEditing ? { [key]: null } : {};
 }

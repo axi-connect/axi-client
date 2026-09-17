@@ -3652,6 +3652,22 @@ export interface paths {
         patch: operations["MarketingTemplatesController_update_v1"];
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/messaging-window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HsmTemplatesController_messagingWindow_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates": {
         parameters: {
             query?: never;
@@ -3666,6 +3682,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/hsm-templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["HsmTemplatesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["HsmTemplatesController_update_v1"];
         trace?: never;
     };
     "/api/v1/marketing/hsm-templates/sync": {
@@ -11879,6 +11911,11 @@ export interface components {
             } | null;
             is_active?: boolean;
         };
+        MessagingWindowDto: {
+            limit: number | null;
+            used: number;
+            remaining: number | null;
+        };
         HsmTemplatesListDto: {
             data: {
                 /** Format: uuid */
@@ -11893,10 +11930,76 @@ export interface components {
                 components: unknown[];
                 /** @enum {string} */
                 approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+                rejected_reason: string | null;
+                quality_score: string | null;
+                editable: boolean;
+                edit_blocked_reason: string | null;
+                /** Format: date-time */
+                edit_retry_at: string | null;
                 external_id: string | null;
                 /** Format: date-time */
                 updated_at: string;
             }[];
+        };
+        UpdateHsmTemplateDto: {
+            body: string;
+            examples?: string[];
+            /** @enum {string} */
+            category?: "marketing" | "utility" | "authentication";
+            header?: ({
+                /** @enum {string} */
+                format: "text";
+                text: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                format: "image" | "video" | "document";
+                handle: string;
+            }) | null;
+            footer?: string | null;
+            buttons?: ({
+                /** @enum {string} */
+                type: "quick_reply";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "url";
+                text: string;
+                url: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                type: "phone_number";
+                text: string;
+                phone_number: string;
+            } | {
+                /** @enum {string} */
+                type: "copy_code";
+                example: string;
+            })[] | null;
+        };
+        HsmTemplateDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            channel_id: string;
+            name: string;
+            language: string;
+            /** @enum {string} */
+            category: "marketing" | "utility" | "authentication";
+            body: string;
+            components: unknown[];
+            /** @enum {string} */
+            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+            rejected_reason: string | null;
+            quality_score: string | null;
+            editable: boolean;
+            edit_blocked_reason: string | null;
+            /** Format: date-time */
+            edit_retry_at: string | null;
+            external_id: string | null;
+            /** Format: date-time */
+            updated_at: string;
         };
         SyncHsmTemplatesDto: {
             /** Format: uuid */
@@ -11914,23 +12017,37 @@ export interface components {
             category: "marketing" | "utility" | "authentication";
             body: string;
             examples?: string[];
-        };
-        HsmTemplateDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            channel_id: string;
-            name: string;
-            language: string;
-            /** @enum {string} */
-            category: "marketing" | "utility" | "authentication";
-            body: string;
-            components: unknown[];
-            /** @enum {string} */
-            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
-            external_id: string | null;
-            /** Format: date-time */
-            updated_at: string;
+            header?: {
+                /** @enum {string} */
+                format: "text";
+                text: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                format: "image" | "video" | "document";
+                handle: string;
+            };
+            footer?: string;
+            buttons?: ({
+                /** @enum {string} */
+                type: "quick_reply";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "url";
+                text: string;
+                url: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                type: "phone_number";
+                text: string;
+                phone_number: string;
+            } | {
+                /** @enum {string} */
+                type: "copy_code";
+                example: string;
+            })[];
         };
         AutomationsListDto: {
             data: {
@@ -23301,6 +23418,27 @@ export interface operations {
             };
         };
     };
+    HsmTemplatesController_messagingWindow_v1: {
+        parameters: {
+            query: {
+                channel_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagingWindowDto"];
+                };
+            };
+        };
+    };
     HsmTemplatesController_list_v1: {
         parameters: {
             query: {
@@ -23338,6 +23476,50 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmTemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HsmTemplatesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHsmTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

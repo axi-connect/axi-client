@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
 import type { AutomationDTO } from "@/modules/marketing/domain/automation";
 import type { TriggerType } from "@/modules/marketing/domain/enums";
 import type { PromotionDTO } from "@/modules/marketing/domain/promotion";
+import type { HsmTemplateDTO } from "@/modules/marketing/domain/template-catalog";
+import { listHsmTemplates } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import { listChannels } from "@/modules/channels/public";
 import {
   createAutomation,
   updateAutomation,
@@ -44,6 +47,21 @@ export function AutomationForm({
 }) {
   const { showAlert } = useAlert();
 
+  // Las plantillas de Meta viven en la WABA del canal cloud; la regla las
+  // referencia por nombre, así que basta con traer las aprobadas para poder
+  // elegirlas en vez de teclearlas.
+  const [hsmTemplates, setHsmTemplates] = useState<HsmTemplateDTO[]>([]);
+  useEffect(() => {
+    void listChannels()
+      .then(async (res) => {
+        const cloud = res.data.find((channel) => channel.kind === "whatsapp_cloud");
+        if (cloud === undefined) return [];
+        return listHsmTemplates({ channel_id: cloud.id, approval_status: "approved" });
+      })
+      .then(setHsmTemplates)
+      .catch(() => setHsmTemplates([]));
+  }, []);
+
   const defaultValues = useMemo<AutomationFormValues>(
     () =>
       automation ? automationToFormValues(automation) : defaultAutomationFormValues(trigger),
@@ -51,8 +69,8 @@ export function AutomationForm({
   );
 
   const fields = useMemo(
-    () => buildAutomationFormFields({ promotions, editing: automation !== null }),
-    [promotions, automation],
+    () => buildAutomationFormFields({ promotions, editing: automation !== null, hsmTemplates }),
+    [promotions, automation, hsmTemplates],
   );
 
   return (
