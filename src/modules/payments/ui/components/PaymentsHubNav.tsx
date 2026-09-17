@@ -37,7 +37,7 @@ export function paymentsHubTabs(has: (code: string) => boolean, ready: boolean):
 }
 
 /** Interruptores de entrega: la pestaña existe cuando existe su pantalla (F4 / F7). */
-const PLAN_TAB_READY = false;
+const PLAN_TAB_READY = true;
 const DOCUMENTS_TAB_READY = false;
 
 export function PaymentsHubNav() {

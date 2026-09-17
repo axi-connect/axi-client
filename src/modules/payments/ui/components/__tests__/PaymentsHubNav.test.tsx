@@ -38,10 +38,25 @@ describe("PaymentsHubNav", () => {
     expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 
-  it("las pestañas de F4 y F7 no se ofrecen hasta que exista su pantalla", () => {
+  it("«Plan de pagos» se ofrece desde F4, que es cuando existe su pantalla", () => {
     const hrefs = paymentsHubTabs(() => true, true).map((tab) => tab.href);
-    expect(hrefs).toEqual(["/settings/payments", "/settings/payments/moneda"]);
+    expect(hrefs).toEqual([
+      "/settings/payments",
+      "/settings/payments/plan",
+      "/settings/payments/moneda",
+    ]);
+  });
+
+  it("«Documentos» sigue sin ofrecerse: su pantalla llega en F7", () => {
+    // El interruptor de entrega existe para esto — una pestaña que lleva a una
+    // ruta que no existe es peor que no tenerla.
+    expect(paymentsHubTabs(() => true, true).map((tab) => tab.href)).not.toContain(
+      "/settings/payments/documentos",
+    );
+  });
+
+  it("sin la función de planes no aparece la pestaña, aunque la pantalla exista", () => {
+    const hrefs = paymentsHubTabs((code) => code !== "payment_plans", true).map((tab) => tab.href);
     expect(hrefs).not.toContain("/settings/payments/plan");
-    expect(hrefs).not.toContain("/settings/payments/documentos");
   });
 });

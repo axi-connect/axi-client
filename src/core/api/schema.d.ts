@@ -4052,6 +4052,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/collections/receivables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/receivables/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_receivablesStats_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/by-order/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_byOrder_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["CollectionsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/collections/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_settings_v1"];
+        put: operations["CollectionsController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CollectionsController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CollectionsController_changeSchedule_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/plans/{id}/promises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CollectionsController_promise_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geo/search": {
         parameters: {
             query?: never;
@@ -12596,6 +12724,156 @@ export interface components {
         };
         EvaluateAcceptedDto: {
             enqueued: boolean;
+        };
+        ReceivablesListDto: {
+            data: {
+                /** Format: uuid */
+                plan_id: string;
+                /** Format: uuid */
+                order_id: string;
+                order_number: number | null;
+                /** Format: uuid */
+                contact_id: string;
+                contact_name: string;
+                /** Format: date */
+                service_date: string | null;
+                travelled: boolean;
+                currency: string;
+                total_cents: number;
+                paid_cents: number;
+                balance_cents: number;
+                /** Format: date */
+                next_due_at: string | null;
+                days_overdue: number;
+                /** @enum {string} */
+                bucket: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus";
+                installments_total: number;
+                installments_paid: number;
+                /** Format: date */
+                active_promise_at: string | null;
+                /** Format: uuid */
+                assigned_user_id: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        ReceivablesStatsDto: {
+            outstanding_cents: number;
+            overdue_cents: number;
+            travelled_cents: number;
+            promised_cents: number;
+            plans_active: number;
+            plans_overdue: number;
+            contacts_overdue: number;
+        };
+        PlanDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            order_id: string;
+            order_number: number | null;
+            /** Format: uuid */
+            contact_id: string;
+            /** @enum {string} */
+            status: "active" | "settled" | "cancelled" | "on_hold";
+            currency: string;
+            total_cents: number;
+            paid_cents: number;
+            balance_cents: number;
+            deposit_cents: number;
+            /** Format: date */
+            service_date: string | null;
+            /** Format: date */
+            final_due_at: string | null;
+            /** @enum {string} */
+            final_due_source: "service_date" | "fallback" | "manual";
+            /** Format: date */
+            next_due_at: string | null;
+            /** Format: date */
+            active_promise_at: string | null;
+            /** Format: uuid */
+            assigned_user_id: string | null;
+            installments: {
+                /** Format: uuid */
+                id: string;
+                seq: number;
+                /** @enum {string} */
+                kind: "deposit" | "installment" | "balance";
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+                paid_cents: number;
+                /** @enum {string} */
+                status: "pending" | "partially_paid" | "paid" | "overdue" | "waived";
+                /** Format: date-time */
+                paid_at: string | null;
+            }[];
+        };
+        CollectionsPolicyDto: {
+            deposit_pct: number;
+            /** @enum {string} */
+            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
+            installments_count: number;
+            final_due_days_before_service: number;
+            min_days_between_installments: number;
+            fallback_term_days: number;
+            min_plan_total_cents: number;
+            grace_days: number;
+            reminder_days_before: number[];
+            overdue_reminder_days: number[];
+            reminder_channels: {
+                whatsapp: boolean;
+                email: boolean;
+            };
+            pause_on_promise: boolean;
+        };
+        PlanPreviewRequestDto: {
+            total_cents: number;
+            /** Format: date */
+            service_date?: string | null;
+        };
+        PlanPreviewDto: {
+            installments: {
+                seq: number;
+                /** @enum {string} */
+                kind: "deposit" | "installment" | "balance";
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+            }[];
+            deposit_cents: number;
+            /** Format: date */
+            final_due_at: string;
+            /** @enum {string} */
+            final_due_source: "service_date" | "fallback";
+            collapsed: boolean;
+        };
+        RescheduleRequestDto: {
+            installments: {
+                /** Format: date */
+                due_at: string;
+                amount_cents: number;
+            }[];
+        };
+        PlanActionResultDto: {
+            /** Format: uuid */
+            plan_id: string;
+        };
+        PromiseRequestDto: {
+            /** Format: date */
+            promised_at: string;
+            amount_cents?: number;
+            note?: string;
+        };
+        UpdatePlanRequestDto: {
+            /** Format: uuid */
+            assigned_user_id?: string | null;
+            /** @enum {string} */
+            status?: "active" | "on_hold";
+            note?: string;
         };
         GeoSearchResultsDto: {
             items: {
@@ -24134,6 +24412,233 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EvaluateAcceptedDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_list_v1: {
+        parameters: {
+            query?: {
+                bucket?: "current" | "d1_30" | "d31_60" | "d61_90" | "d90_plus" | "overdue";
+                travelled?: boolean;
+                assigned_user_id?: string;
+                q?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivablesListDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_receivablesStats_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivablesStatsDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_byOrder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetailDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDetailDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlanRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionsPolicyDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionsPolicyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionsPolicyDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanPreviewRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanPreviewDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_changeSchedule_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_promise_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromiseRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanActionResultDto"];
                 };
             };
         };

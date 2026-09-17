@@ -26,6 +26,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
+import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
   describeDelivery,
@@ -192,6 +193,10 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
             <>
               {/* F3 Cobros: lo primero es cuánto falta por cobrar */}
               <OrderBalanceBlock order={order} />
+
+              {/* F4 Cobros: y cuándo tocaba cada parte. Se pinta solo si el
+                  pedido tiene plan — sin la función, esta sección no existe. */}
+              <PaymentPlanBlock orderId={order.id} />
 
               {/* Artículos */}
               <section className="rounded-2xl border border-border bg-background p-4">
