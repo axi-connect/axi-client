@@ -74,6 +74,17 @@ describe("daysUntilService (la salida es lo que urge el saldo)", () => {
   it("sin fecha de servicio no hay cuenta atrás", () => {
     expect(daysUntilService(null, hoy)).toBeNull();
   });
+
+  it("cuenta en el día del NEGOCIO: a las 20:30 de Bogotá todavía es hoy", () => {
+    // 01:30 UTC del 18 son las 20:30 del 17 en Bogotá. Midiendo en UTC, la
+    // cuenta atrás restaba un día entero las últimas cinco horas de CADA
+    // jornada: «sale mañana» cuando faltaban dos. La suite fija la zona en
+    // `jest.env.ts` para que este caso mida lo mismo aquí y en CI.
+    const nocheDeBogota = new Date("2026-09-18T01:30:00.000Z");
+    expect(daysUntilService("2026-09-20", nocheDeBogota)).toBe(3);
+    expect(daysUntilService("2026-09-18", nocheDeBogota)).toBe(1);
+    expect(daysUntilService("2026-09-17", nocheDeBogota)).toBe(0);
+  });
 });
 
 describe("PAYMENT_STATE_LABELS", () => {

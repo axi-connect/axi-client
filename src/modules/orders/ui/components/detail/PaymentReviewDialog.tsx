@@ -66,12 +66,20 @@ export function PaymentReviewDialog({
 
   // El pago suele traer su monto (lo dijo quien lo reportó); si no, se propone
   // el saldo, que es el caso común de quien cobra de una.
+  //
+  // El efecto se ancla al PAGO, no al saldo: el saldo se repinta en vivo cuando
+  // otro operador verifica un pago del mismo pedido, y tenerlo en las
+  // dependencias le borraba a este lo que estaba escribiendo y le bajaba el
+  // interruptor del sobrepago a media revisión. El saldo sigue actualizándose
+  // en el texto de apoyo; lo que no puede es reiniciar el formulario.
+  const paymentId = payment?.id ?? null;
   useEffect(() => {
-    if (payment === null) return;
-    setAmountCents(payment.amount_cents ?? balance);
+    if (paymentId === null) return;
+    setAmountCents(payment?.amount_cents ?? balance);
     setAcceptOverpayment(false);
     setTouched(false);
-  }, [payment, balance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- el saldo se lee al abrir, no re-suscribe
+  }, [paymentId]);
 
   if (review === null || payment === null) return null;
 
@@ -205,7 +213,7 @@ export function PaymentReviewDialog({
                 <div className="mt-2 flex items-baseline justify-between gap-3 text-sm">
                   <span>Cobrado</span>
                   <span className="font-semibold tabular-nums">
-                    {formatMoney(Math.min((order?.paid_cents ?? 0) + amount, (order?.total_cents ?? 0) + excess), currency)}
+                    {formatMoney((order?.paid_cents ?? 0) + amount, currency)}
                   </span>
                 </div>
                 <div className="mt-1 flex items-baseline justify-between gap-3 text-sm text-muted-foreground">

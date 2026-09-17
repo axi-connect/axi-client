@@ -22,9 +22,20 @@ export function formatDuration(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** ISO date-time → fecha corta es-CO (`10 jul 2026`). */
+/** `2026-09-20` (fecha sin hora: vence el, sale el, vigente desde). */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * ISO date-time → fecha corta es-CO (`10 jul 2026`).
+ *
+ * Una fecha SIN hora se ancla a la medianoche local, no a la de UTC: `new
+ * Date("2026-09-20")` es medianoche UTC, que en Bogotá son las 19:00 del 19 y
+ * se pintaba un día antes. Ese corrimiento afectaba a todo lo que es un día del
+ * calendario y no un instante — la salida de la expedición, la vigencia de una
+ * tasa, el inicio de un precio.
+ */
 export function formatShortDate(iso: string): string {
-  const date = new Date(iso);
+  const date = new Date(DATE_ONLY.test(iso) ? `${iso}T00:00:00` : iso);
   if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 }

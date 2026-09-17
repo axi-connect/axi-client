@@ -57,12 +57,21 @@ export function paymentProgress(order: {
   return { percent, segments: segments.length > 0 ? segments : percent > 0 ? [percent] : [] };
 }
 
-/** Días que faltan para la fecha del servicio; null si el pedido no tiene. */
+/**
+ * Días que faltan para la fecha del servicio; null si el pedido no tiene.
+ *
+ * Los dos extremos se miden en el día LOCAL de quien mira, nunca en el de UTC:
+ * en Bogotá, a partir de las 19:00 UTC ya va por el día siguiente y la cuenta
+ * atrás restaba uno de más («sale mañana» cuando faltaban dos), las últimas
+ * cinco horas de cada jornada. Mismo criterio que `formatShortDate`, que pinta
+ * la fecha justo debajo.
+ */
 export function daysUntilService(serviceDate: string | null, today = new Date()): number | null {
   if (serviceDate === null) return null;
-  const target = new Date(`${serviceDate}T00:00:00.000Z`).getTime();
-  const from = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-  return Math.round((target - from) / 86_400_000);
+  const target = new Date(`${serviceDate}T00:00:00`);
+  if (Number.isNaN(target.getTime())) return null;
+  const from = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((target.getTime() - from.getTime()) / 86_400_000);
 }
 
 export type ListOrdersParams = {
