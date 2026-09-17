@@ -1,0 +1,1263 @@
+<title>Puesta en marcha conversacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground: #fbfaf9;
+    --surface: #ffffff;
+    --surface-2: #f5f2f0;
+    --ink: #1a1614;
+    --muted: #857a73;
+    --line: #e7e1dd;
+    --line-soft: #f0ebe8;
+    --coral: #e65759;
+    --coral-deep: #e02f2f;
+    --violet: #7c3aed;
+    --amber: #f0a431;
+    --success: #16a34a;
+    --shadow: 0 1px 2px rgb(26 22 20 / .05), 0 4px 14px rgb(26 22 20 / .06);
+    --shadow-lift: 0 1px 2px rgb(26 22 20 / .06), 0 14px 40px rgb(26 22 20 / .14);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d0b0b;
+      --surface: #161313;
+      --surface-2: #1f1b1a;
+      --ink: #efe9e6;
+      --muted: #a2968f;
+      --line: #2b2523;
+      --line-soft: #211c1b;
+      --coral: #fb7185;
+      --coral-deep: #df4f4f;
+      --violet: #a78bfa;
+      --amber: #fbbf24;
+      --success: #4ade80;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 4px 14px rgb(0 0 0 / .3);
+      --shadow-lift: 0 1px 2px rgb(0 0 0 / .5), 0 14px 40px rgb(0 0 0 / .5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0d0b0b;
+    --surface: #161313;
+    --surface-2: #1f1b1a;
+    --ink: #efe9e6;
+    --muted: #a2968f;
+    --line: #2b2523;
+    --line-soft: #211c1b;
+    --coral: #fb7185;
+    --coral-deep: #df4f4f;
+    --violet: #a78bfa;
+    --amber: #fbbf24;
+    --success: #4ade80;
+    --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 4px 14px rgb(0 0 0 / .3);
+    --shadow-lift: 0 1px 2px rgb(0 0 0 / .5), 0 14px 40px rgb(0 0 0 / .5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Poppins", system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 40px 72px;
+  }
+
+  /* ── Encabezado ─────────────────────────────────────────────── */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(26px, 4.6vw, 38px);
+    font-weight: 600;
+    letter-spacing: -.022em;
+    line-height: 1.12;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0;
+    font-weight: 300;
+  }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  /* ── Barra de control del prototipo ─────────────────────────── */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 28px 0 18px;
+  }
+  .seg {
+    display: inline-flex;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .18s, color .18s;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  .ghost {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color .18s, border-color .18s;
+  }
+  .ghost:hover { color: var(--ink); border-color: var(--muted); }
+
+  /* ── El aparato ─────────────────────────────────────────────── */
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-lift);
+    overflow: hidden;
+    position: relative;
+    isolation: isolate;
+    transition: max-width .45s cubic-bezier(.22,.61,.36,1);
+    margin-inline: auto;
+    width: 100%;
+  }
+  .stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(38rem 22rem at 10% -10%, color-mix(in srgb, var(--coral) 9%, transparent), transparent 62%),
+      radial-gradient(32rem 20rem at 95% 4%, color-mix(in srgb, var(--violet) 8%, transparent), transparent 60%);
+  }
+  .stage[data-view="phone"] { max-width: 392px; }
+  .stage[data-view="desk"]  { max-width: 1140px; }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 660px;
+  }
+
+  /* Cabecera de la app */
+  .bar {
+    flex: none;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: blur(14px);
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .who { min-width: 0; flex: 1; }
+  .who b {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+  }
+  .who b span { font-weight: 300; color: var(--muted); }
+  .who small {
+    display: block;
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* La marca del asistente */
+  .mark { flex: none; display: inline-flex; }
+  .mark svg { display: block; }
+  .mark[data-busy="true"] svg { animation: spin 2.4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Progreso */
+  .prog { display: flex; flex-direction: column; gap: 6px; }
+  .prog-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .prog-top b { font-size: 12px; font-weight: 600; }
+  .prog-top span { font-size: 11px; color: var(--muted); font-weight: 300; }
+  .segs { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .segs li {
+    height: 5px;
+    flex: 1;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .segs i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--coral), var(--coral-deep));
+    transition: width .6s cubic-bezier(.22,.61,.36,1), background .3s;
+  }
+  .segs li[data-s="half"] i { width: 50%; background: color-mix(in srgb, var(--violet) 70%, transparent); }
+  .segs li[data-s="full"] i { width: 100%; }
+  .segs li[data-s="skip"] i { width: 100%; background: var(--line); }
+
+  .prog-wide { display: none; width: 268px; flex: none; }
+  .prog-narrow { padding: 0 16px 11px; }
+  .stage[data-view="desk"] .prog-wide { display: flex; }
+  .stage[data-view="desk"] .prog-narrow { display: none; }
+
+  .sheet-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 6px 11px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .stage[data-view="desk"] .sheet-btn { display: none; }
+
+  /* Cuerpo */
+  .body { flex: 1; min-height: 0; display: flex; }
+  .chat-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .thread {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 22px 16px 8px;
+    scroll-behavior: smooth;
+  }
+  .thread-inner {
+    max-width: 620px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .msg { display: flex; gap: 10px; animation: rise .38s cubic-bezier(.22,.61,.36,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  .msg .mark { margin-top: 1px; }
+  .msg-body { min-width: 0; flex: 1; }
+  .msg-name {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 0 0 4px;
+  }
+  .msg p.said {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.62;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-weight: 300;
+  }
+
+  .msg.me { justify-content: flex-end; }
+  .msg.me .bubble {
+    max-width: 85%;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 14px 14px 4px 14px;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    box-shadow: var(--shadow);
+    overflow-wrap: anywhere;
+    font-weight: 400;
+  }
+
+  /* Pastillas de lo capturado */
+  .caught { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+  .caught li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--success) 26%, transparent);
+    border-radius: 999px;
+    padding: 3px 9px;
+    animation: pop .34s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes pop { from { opacity: 0; transform: scale(.86); } }
+
+  /* Pregunta con opciones */
+  .ask { margin-top: 12px; border-top: 1px solid var(--line-soft); padding-top: 13px; }
+  .ask-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--violet);
+    margin: 0 0 9px;
+  }
+  .ask h4 { margin: 0 0 11px; font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .opts button {
+    font: inherit;
+    text-align: left;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border: 1px solid color-mix(in srgb, var(--violet) 25%, transparent);
+    background: color-mix(in srgb, var(--violet) 5%, transparent);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: transform .16s, border-color .16s, background .16s, box-shadow .16s;
+    color: inherit;
+  }
+  .opts button:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--violet) 52%, transparent);
+    background: color-mix(in srgb, var(--violet) 10%, transparent);
+    box-shadow: var(--shadow);
+  }
+  .opts button:active { transform: none; }
+  .opts b { font-size: 13.5px; font-weight: 500; }
+  .opts small { font-size: 11.5px; color: var(--muted); line-height: 1.4; font-weight: 300; }
+  .write-instead {
+    margin-top: 9px;
+    font: inherit;
+    font-size: 11.5px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    text-underline-offset: 2px;
+  }
+  .write-instead:hover { color: var(--ink); text-decoration: underline; }
+
+  .thinking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; font-weight: 300; }
+  .dots { display: inline-flex; gap: 2px; margin-left: 2px; }
+  .dots i { width: 3px; height: 3px; border-radius: 999px; background: currentColor; animation: blink 1.2s ease-in-out infinite; }
+  .dots i:nth-child(2) { animation-delay: .15s; }
+  .dots i:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%,60%,100% { opacity: .25; } 30% { opacity: 1; } }
+
+  /* Compositor */
+  .composer { flex: none; padding: 10px 16px 18px; }
+  .composer-inner {
+    max-width: 620px;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 11px 14px 9px;
+  }
+  .composer textarea {
+    width: 100%;
+    border: 0;
+    resize: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    outline: none;
+    font-weight: 300;
+  }
+  .composer textarea::placeholder { color: color-mix(in srgb, var(--muted) 72%, transparent); }
+  .composer-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+  .composer-note { font-size: 10.5px; color: var(--muted); font-weight: 300; }
+  .composer-actions { display: flex; align-items: center; gap: 6px; }
+  .icon-btn {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px;
+    border: 0;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    transition: color .16s, background .16s;
+  }
+  .icon-btn:hover { color: var(--ink); background: var(--surface-2); }
+  .icon-btn.send {
+    background: linear-gradient(90deg, var(--coral), var(--coral-deep));
+    color: #fff;
+  }
+  .icon-btn.send:hover { filter: brightness(1.05); background: linear-gradient(90deg, var(--coral), var(--coral-deep)); }
+  .icon-btn.rec { background: var(--coral); color: #fff; }
+
+  /* Grabando */
+  .recording { display: flex; align-items: center; gap: 11px; }
+  .recording .pulse { width: 9px; height: 9px; border-radius: 999px; background: var(--coral); animation: throb 1.1s ease-in-out infinite; }
+  @keyframes throb { 50% { opacity: .35; } }
+  .recording p { margin: 0; flex: 1; font-size: 13.5px; font-weight: 300; }
+  .recording time { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ── La ficha viva ──────────────────────────────────────────── */
+  .card-col {
+    width: 366px;
+    flex: none;
+    border-left: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 55%, transparent);
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .stage[data-view="desk"] .card-col { display: flex; }
+
+  .card-head { flex: none; border-bottom: 1px solid var(--line); padding: 15px 20px; }
+  .card-head h3 { margin: 0; font-size: 13px; font-weight: 600; }
+  .card-head p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); font-weight: 300; }
+
+  .card-note {
+    flex: none;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--violet) 6%, transparent);
+    padding: 10px 20px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    display: flex;
+    gap: 7px;
+    font-weight: 300;
+  }
+
+  .card-body { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 20px 22px; }
+  .topic { margin-bottom: 20px; }
+  .topic > h4 {
+    margin: 0 0 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .fields { list-style: none; margin: 0; padding: 0; }
+  .fields li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .fields li:last-child { border-bottom: 0; }
+  .fields .k { font-size: 11.5px; color: var(--muted); font-weight: 400; margin: 0; display: flex; align-items: center; gap: 5px; }
+  .fields .need { width: 4px; height: 4px; border-radius: 999px; background: var(--amber); }
+  .fields .v { margin: 2px 0 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; font-weight: 300; }
+  .fields .v.empty { color: color-mix(in srgb, var(--muted) 62%, transparent); font-style: italic; }
+  .fields .src { margin: 3px 0 0; font-size: 10.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; font-weight: 300; }
+  .fields .pencil { opacity: 0; transition: opacity .16s; color: var(--muted); }
+  .fields li:hover .pencil { opacity: 1; }
+  .fields li.filled .v { animation: flash 1.1s ease-out both; }
+  @keyframes flash {
+    0% { background: color-mix(in srgb, var(--success) 20%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 20%, transparent); border-radius: 3px; }
+    100% { background: transparent; box-shadow: none; }
+  }
+  li.confirm { background: color-mix(in srgb, var(--violet) 4%, transparent); }
+  .ok-btn {
+    font: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid color-mix(in srgb, var(--violet) 30%, transparent);
+    background: transparent;
+    color: var(--violet);
+    border-radius: 7px;
+    padding: 3px 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ok-btn:hover { background: color-mix(in srgb, var(--violet) 10%, transparent); }
+
+  .topics-list { list-style: none; margin: 0; padding: 0; }
+  .topics-list li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--line-soft);
+    font-size: 12.5px;
+  }
+  .topics-list li:last-child { border-bottom: 0; }
+  .tick {
+    width: 19px; height: 19px; flex: none;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface-2); color: var(--muted);
+  }
+  .tick.done { background: color-mix(in srgb, var(--success) 12%, transparent); color: var(--success); }
+  .tick.now  { background: color-mix(in srgb, var(--violet) 12%, transparent); color: var(--violet); }
+  .topics-list span { flex: 1; min-width: 0; font-weight: 300; }
+  .later {
+    font: inherit; font-size: 11px; border: 0; background: none;
+    color: var(--muted); cursor: pointer; padding: 0; text-underline-offset: 2px;
+  }
+  .later:hover { color: var(--ink); text-decoration: underline; }
+
+  /* Hoja en móvil */
+  .sheet { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+  .sheet[data-open="true"] { pointer-events: auto; }
+  .scrim {
+    position: absolute; inset: 0;
+    background: color-mix(in srgb, var(--ink) 22%, transparent);
+    opacity: 0; transition: opacity .24s;
+    border: 0; padding: 0; cursor: pointer;
+  }
+  .sheet[data-open="true"] .scrim { opacity: 1; }
+  .sheet-panel {
+    position: absolute; inset-inline: 0; bottom: 0;
+    max-height: 86%;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--shadow-lift);
+    transform: translateY(101%);
+    transition: transform .32s cubic-bezier(.22,.61,.36,1);
+  }
+  .sheet[data-open="true"] .sheet-panel { transform: none; }
+  .grab { flex: none; display: flex; justify-content: center; padding: 9px 0 3px; }
+  .grab i { width: 38px; height: 4px; border-radius: 999px; background: var(--line); }
+
+  /* ── Notas de diseño ────────────────────────────────────────── */
+  .notes { margin-top: 56px; }
+  .notes h2 {
+    font-size: 19px; font-weight: 600; letter-spacing: -.015em;
+    margin: 0 0 6px;
+  }
+  .notes > p { margin: 0 0 22px; font-size: 14px; color: var(--muted); max-width: 62ch; line-height: 1.6; font-weight: 300; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(248px, 1fr)); }
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 17px;
+  }
+  .note h3 { margin: 0 0 7px; font-size: 13.5px; font-weight: 600; letter-spacing: -.008em; }
+  .note p { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--muted); font-weight: 300; }
+  .note p + p { margin-top: 8px; }
+  .note b { color: var(--ink); font-weight: 500; }
+  .stat {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--violet);
+    letter-spacing: -.01em;
+  }
+
+  .open-q {
+    margin-top: 40px;
+    border: 1px solid color-mix(in srgb, var(--amber) 34%, transparent);
+    background: color-mix(in srgb, var(--amber) 6%, transparent);
+    border-radius: 12px;
+    padding: 17px 19px;
+  }
+  .open-q h3 { margin: 0 0 9px; font-size: 13.5px; font-weight: 600; }
+  .open-q ol { margin: 0; padding-left: 19px; font-size: 12.5px; line-height: 1.75; color: var(--muted); font-weight: 300; }
+  .open-q ol b { color: var(--ink); font-weight: 500; }
+
+  @media (max-width: 720px) {
+    .app { height: 600px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">axi · mockup de revisión</p>
+  <h1>Pon a punto tu cuenta hablando</h1>
+  <p class="lede">
+    El cliente abre un enlace desde un WhatsApp y cuenta su negocio. Sin cuenta, sin contraseña, sin pestañas.
+    Toca las opciones de abajo para recorrerlo: <strong>la ficha de la derecha se llena sola</strong>, que es
+    la mitad del diseño que hace que esto no se rompa con cuarenta datos.
+  </p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Tamaño de pantalla">
+      <button type="button" id="v-phone" aria-pressed="false">Móvil</button>
+      <button type="button" id="v-desk" aria-pressed="true">Escritorio</button>
+    </div>
+    <button type="button" class="ghost" id="restart">Volver a empezar</button>
+    <button type="button" class="ghost" id="theme">Cambiar tema</button>
+  </div>
+
+  <div class="stage" data-view="desk" id="stage">
+    <div class="app">
+      <header class="bar">
+        <div class="bar-row">
+          <span class="mark" id="head-mark" data-busy="false" aria-hidden="true"></span>
+          <div class="who">
+            <b>Alba <span>de axi</span></b>
+            <small>Poniendo a punto Savage</small>
+          </div>
+          <div class="prog prog-wide" id="prog-wide"></div>
+          <button type="button" class="sheet-btn" id="open-sheet">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3h8M9 3v3h6V3M6 6h12v15H6z"/></svg>
+            <span id="chip-count">0/18</span>
+          </button>
+        </div>
+        <div class="prog prog-narrow" id="prog-narrow"></div>
+      </header>
+
+      <div class="body">
+        <section class="chat-col">
+          <div class="thread" id="thread">
+            <div class="thread-inner" id="thread-inner"></div>
+          </div>
+
+          <div class="composer">
+            <div class="composer-inner" id="composer"></div>
+          </div>
+        </section>
+
+        <aside class="card-col" id="card-desk"></aside>
+      </div>
+
+      <div class="sheet" data-open="false" id="sheet">
+        <button type="button" class="scrim" id="scrim" aria-label="Cerrar"></button>
+        <div class="sheet-panel">
+          <div class="grab"><i></i></div>
+          <div class="card-col" id="card-mobile" style="display:flex;width:auto;border-left:0;flex:1;min-height:0;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="notes">
+    <h2>Por qué está hecho así</h2>
+    <p>
+      Seis decisiones que salieron de mirar qué funciona y qué no en onboarding conversacional,
+      no de qué se veía bonito.
+    </p>
+
+    <div class="grid">
+      <div class="note">
+        <h3>No preguntar lo que ya se sabe</h3>
+        <p>
+          Antes de la primera pregunta se lee el perfil del tenant y, si se dio la URL, su
+          página web. Lo deducido llega marcado como <b>«lo vi en su web»</b> y hay que confirmarlo
+          de un toque.
+        </p>
+        <p>Cuarenta preguntas se vuelven ocho confirmaciones.</p>
+      </div>
+
+      <div class="note">
+        <h3>Chat <em>y</em> ficha, no chat solo</h3>
+        <p>
+          Una pregunta a la vez dobla la finalización frente a un formulario de página única
+          <span class="stat">47,3 % vs. 21,5 %</span>. Pero por encima de unas catorce preguntas
+          se siente <b>más</b> largo: no hay panorama, no se puede editar lo anterior ni saltar.
+        </p>
+        <p>Configurar un tenant son 30–40 datos. La ficha es lo que lo sostiene.</p>
+      </div>
+
+      <div class="note">
+        <h3>Dictar, no teclear</h3>
+        <p>
+          WhatsApp mueve <span class="stat">~7.000 M</span> de notas de voz al día y dictar es unas
+          tres veces más rápido que teclear en un móvil. En Latinoamérica la preferencia por la voz
+          es cultural, no una moda.
+        </p>
+        <p>De un audio de veinte segundos salen cuatro datos de golpe.</p>
+      </div>
+
+      <div class="note">
+        <h3>Nada bloquea</h3>
+        <p>
+          Cualquier tema se aplaza con un toque y <b>sale del avance</b>. En onboarding B2B, del
+          40 % al 60 % del tiempo se pierde en pasos poco claros y respuestas que nunca llegan,
+          no en complejidad real.
+        </p>
+        <p>Insistir es lo que hace que alguien cierre la pestaña.</p>
+      </div>
+
+      <div class="note">
+        <h3>Se propone, no se ejecuta</h3>
+        <p>
+          Lo recogido <b>nunca</b> se escribe solo en la cuenta. Plataforma ve el antes/después
+          de cada campo y confirma.
+        </p>
+        <p>Una IA escribiendo sola en la configuración de una empresa es un incidente con fecha.</p>
+      </div>
+
+      <div class="note">
+        <h3>Se ve dónde se cae la gente</h3>
+        <p>
+          La consola guarda el tema en el que se quedó cada persona. Es lo que convierte esto en
+          aprendizaje de producto en vez de registros de chat que nadie lee.
+        </p>
+      </div>
+    </div>
+
+    <div class="open-q">
+      <h3>Lo que falta decidir</h3>
+      <ol>
+        <li><b>El nombre.</b> Hoy es «Alba». No es Axel a propósito: Axel es el director de mercadeo del tenant y mezclar los dos personajes ensucia los dos. Se cambia sin desplegar.</li>
+        <li><b>Quién paga.</b> Hoy el gasto es de axi. Cuando esto sea un gancho probado, quizá lo pague el tenant.</li>
+        <li><b>Qué más debe aplicarse solo.</b> Hoy: perfil, horario y playbook. Sedes, medios de pago y canales se recogen pero no se escriben.</li>
+        <li><b>Repartir temas entre personas.</b> El horario lo sabe una, el tono otra. El modelo lo soporta; la pantalla es v2.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    /* ── Iconografía mínima, en línea ───────────────────────────── */
+    function markSvg(size) {
+      return '<svg viewBox="0 0 32 32" width="' + size + '" height="' + size + '" fill="none" aria-hidden="true">' +
+        '<defs><linearGradient id="g' + size + '" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0%" stop-color="var(--coral)"/><stop offset="100%" stop-color="var(--violet)"/>' +
+        '</linearGradient></defs>' +
+        '<circle cx="16" cy="16" r="13" stroke="url(#g' + size + ')" stroke-width="2" stroke-linecap="round" stroke-dasharray="68 14" transform="rotate(115 16 16)"/>' +
+        '<circle cx="16" cy="16" r="4.5" fill="url(#g' + size + ')"/></svg>';
+    }
+    var ICON = {
+      check: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+      spark: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>',
+      arrow: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+      mic: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>',
+      stop: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+      pencil: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+      corner: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>',
+      clock: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+    };
+
+    /* ── El guion: los datos reales que axi necesita ────────────── */
+    var TOPICS = [
+      { code: "negocio",  title: "Tu negocio en una frase", fields: [
+        { code: "que_venden", label: "Qué venden", req: true },
+        { code: "sector",     label: "Sector" },
+        { code: "promesa",    label: "Por qué les compran a ustedes", req: true },
+        { code: "publico",    label: "A quién le venden" }
+      ]},
+      { code: "atencion", title: "Cuándo y dónde atienden", fields: [
+        { code: "horario",   label: "Horario de atención", req: true },
+        { code: "direccion", label: "Dirección" },
+        { code: "ciudad",    label: "Ciudad" },
+        { code: "cobertura", label: "A dónde llegan" }
+      ]},
+      { code: "voz", title: "Cómo le hablan a un cliente", fields: [
+        { code: "tono",     label: "Tono", req: true },
+        { code: "saludo",   label: "Cómo saludan" },
+        { code: "reglas",   label: "Reglas de trato" }
+      ]},
+      { code: "preguntas", title: "Lo que siempre les preguntan", fields: [
+        { code: "faqs", label: "Preguntas frecuentes", req: true }
+      ]},
+      { code: "venta", title: "Cómo cierran una venta", fields: [
+        { code: "pagos",     label: "Medios de pago", req: true },
+        { code: "envios",    label: "Cómo despachan" },
+        { code: "entrega",   label: "Tiempo de entrega" },
+        { code: "cambios",   label: "Cambios y devoluciones" }
+      ]},
+      { code: "limites", title: "Lo que el asistente NO debe hacer", fields: [
+        { code: "no_hacer", label: "Lo que no debe hacer" },
+        { code: "escalar",  label: "Cuándo llamar a una persona" }
+      ]}
+    ];
+
+    /* Lo que llega YA SABIDO, que es la palanca principal. */
+    var PREFILL = {
+      ciudad:    { value: "Medellín",                                  src: "known" },
+      sector:    { value: "Moda deportiva",                            src: "derived", conf: .9 },
+      cobertura: { value: "Toda Colombia",                             src: "derived", conf: .7 },
+      envios:    { value: "Coordinadora · gratis desde $150.000",      src: "derived", conf: .6 }
+    };
+
+    /* El recorrido guionizado. Cada paso es un turno real del motor. */
+    var SCRIPT = [
+      {
+        say: "Hola Daniela 👋 Soy Alba, del equipo de axi.\n\nVengo a dejar listo el asistente de Savage sin que tengas que pelearte con ningún formulario: te hago unas preguntas y yo me encargo del resto.\n\nSon 6 temas, unos 7 minutos. Puedes contestarme escribiendo o mandándome un audio, saltarte lo que quieras y volver después — esto se guarda solo.\n\nYa le di una mirada a su página, así que empiezo confirmando.",
+        ask: {
+          q: "Veo que venden ropa deportiva para mujer y que llegan a todo el país. ¿Voy bien?",
+          opts: [
+            { l: "Sí, exacto", h: "Licras, tops y conjuntos" },
+            { l: "Casi, pero corrijo algo", h: null }
+          ]
+        }
+      },
+      {
+        pick: 0,
+        voice: true,
+        me: "Sí, exacto. Somos licras, tops y conjuntos, sobre todo para mujeres que entrenan. Abrimos de lunes a sábado de 9 a 7 y estamos en el Poblado.",
+        catch: ["que_venden", "horario", "direccion"],
+        set: {
+          que_venden: { value: "Ropa deportiva para mujer: licras, tops y conjuntos", src: "stated" },
+          horario:    { value: "lun–sáb 09:00–19:00", src: "stated" },
+          direccion:  { value: "El Poblado, Medellín", src: "stated" },
+          publico:    { value: "Mujeres que entrenan", src: "stated" },
+          sector:     { value: "Moda deportiva", src: "stated" },
+          cobertura:  { value: "Toda Colombia", src: "stated" }
+        },
+        say: "Perfecto, anoté todo eso de una.",
+        ask: {
+          q: "¿Por qué crees que te eligen a ti y no a la tienda de al lado? Esto es lo que va a decir el asistente cuando alguien dude.",
+          opts: [
+            { l: "Por la calidad de la tela", h: "Dura más que la de la competencia" },
+            { l: "Por las tallas", h: "Llegamos hasta XXL con la misma tela" },
+            { l: "Por la atención", h: "Acompañamos la compra" }
+          ]
+        }
+      },
+      {
+        pick: 1,
+        me: "Por las tallas",
+        catch: ["promesa"],
+        set: { promesa: { value: "Somos los únicos con tallas hasta XXL en la misma tela", src: "stated" } },
+        say: "Esa es buena, y casi nadie la dice. La voy a usar.",
+        ask: {
+          q: "¿Cómo prefieres que el asistente le hable a una clienta?",
+          opts: [
+            { l: "Cercano y relajado, de tú", h: "Como le hablarías a una amiga" },
+            { l: "Amable pero formal, de usted", h: null },
+            { l: "Directo y breve, sin rodeos", h: null }
+          ]
+        }
+      },
+      {
+        pick: 0,
+        me: "Cercano y relajado, de tú",
+        catch: ["tono"],
+        set: { tono: { value: "Cercano y relajado, de tú", src: "stated" } },
+        say: "Listo. Nos queda lo más útil de todo: las preguntas que te hacen todo el tiempo. Cada una que me des es una conversación que tu equipo ya no atiende.",
+        ask: {
+          q: "¿Cuál es lo primero que escribe una clienta?",
+          opts: [
+            { l: "«¿Hacen envíos?»", h: "Y cuánto cuesta" },
+            { l: "«¿Tienen mi talla?»", h: null },
+            { l: "«¿Cuánto vale?»", h: null },
+            { l: "Mejor te lo cuento yo", h: "Prefiero escribirlo" }
+          ]
+        }
+      },
+      {
+        pick: 0,
+        me: "«¿Hacen envíos?»",
+        catch: ["faqs", "entrega"],
+        set: {
+          faqs:    { value: "3 preguntas", src: "stated" },
+          entrega: { value: "2 a 4 días hábiles", src: "stated" }
+        },
+        say: "Anotada, con la respuesta y dos más que salieron de ahí.\n\nNos falta poco: cómo te pagan, y qué prefieres que el asistente no haga por su cuenta.",
+        ask: {
+          q: "¿Cómo te pueden pagar?",
+          opts: [
+            { l: "Contraentrega y Nequi", h: "Lo más común" },
+            { l: "Transferencia y tarjeta", h: null },
+            { l: "Todas las anteriores", h: null }
+          ]
+        }
+      },
+      {
+        pick: 2,
+        me: "Todas las anteriores",
+        catch: ["pagos"],
+        set: { pagos: { value: "Contraentrega · Nequi · Transferencia · Tarjeta", src: "stated" } },
+        done: true,
+        say: "¡Listo, Daniela! Con esto ya tengo lo que necesitaba de Savage.\n\nEl equipo de axi lo revisa y lo deja aplicado en tu cuenta. Si algo no quedó como querías, ábreme este mismo enlace y lo corriges cuando quieras."
+      }
+    ];
+
+    /* ── Estado ──────────────────────────────────────────────────── */
+    var state, step, answers, deferred, busy;
+
+    function reset() {
+      step = 0;
+      busy = false;
+      deferred = {};
+      answers = {};
+      for (var k in PREFILL) if (Object.prototype.hasOwnProperty.call(PREFILL, k)) {
+        answers[k] = { value: PREFILL[k].value, src: PREFILL[k].src };
+      }
+      state = { flash: {} };
+    }
+
+    /* ── Helpers ─────────────────────────────────────────────────── */
+    var $ = function (id) { return document.getElementById(id); };
+    function el(tag, cls, html) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (html !== undefined) n.innerHTML = html;
+      return n;
+    }
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+
+    function topicState(t) {
+      if (deferred[t.code]) return "skip";
+      var req = t.fields.filter(function (f) { return f.req; });
+      var got = req.filter(function (f) { return answers[f.code] && answers[f.code].src === "stated"; });
+      var any = t.fields.filter(function (f) { return answers[f.code]; });
+      if (req.length === 0) return any.length ? "full" : "empty";
+      if (got.length === req.length) return "full";
+      return any.length ? "half" : "empty";
+    }
+
+    function counts() {
+      var total = 0, filled = 0;
+      TOPICS.forEach(function (t) {
+        t.fields.forEach(function (f) {
+          total += 1;
+          if (answers[f.code]) filled += 1;
+        });
+      });
+      return { total: total, filled: filled };
+    }
+
+    function label() {
+      var counted = TOPICS.filter(function (t) { return !deferred[t.code]; });
+      var pend = counted.filter(function (t) { return topicState(t) !== "full"; }).length;
+      if (pend === 0) return "Ya está todo";
+      if (pend === counted.length) return "Empezamos";
+      if (pend === 1) return "Queda uno";
+      if (pend <= counted.length / 2) return "Ya casi";
+      return "Quedan " + pend;
+    }
+
+    /* ── Render: progreso ───────────────────────────────────────── */
+    function renderProgress(node) {
+      var counted = TOPICS.filter(function (t) { return !deferred[t.code]; });
+      var done = counted.filter(function (t) { return topicState(t) === "full"; }).length;
+      node.innerHTML =
+        '<div class="prog-top"><b>' + label() + '</b><span>' + done + ' de ' + counted.length + ' temas</span></div>' +
+        '<ol class="segs">' + TOPICS.map(function (t) {
+          return '<li data-s="' + topicState(t) + '" title="' + esc(t.title) + '"><i></i></li>';
+        }).join("") + '</ol>';
+    }
+
+    /* ── Render: ficha viva ─────────────────────────────────────── */
+    function renderCard(node) {
+      var c = counts();
+      var pend = [];
+      for (var k in answers) if (answers[k].src === "derived") pend.push(k);
+
+      var html = '';
+      html += '<div class="card-head"><h3>Lo que ya sabemos de ti</h3>' +
+              '<p>' + c.filled + ' de ' + c.total + ' datos · puedes corregir cualquiera</p></div>';
+
+      if (pend.length) {
+        html += '<div class="card-note">' + ICON.spark + '<span>' +
+          (pend.length === 1
+            ? "Hay un dato que saqué de su página web y me falta que lo confirmes."
+            : "Hay " + pend.length + " datos que saqué de su página web y me falta que los confirmes.") +
+          '</span></div>';
+      }
+
+      html += '<div class="card-body">';
+      TOPICS.forEach(function (t) {
+        html += '<section class="topic"><h4>' + esc(t.title) + (deferred[t.code] ? " · para después" : "") + '</h4><ul class="fields">';
+        t.fields.forEach(function (f) {
+          var a = answers[f.code];
+          var isDerived = a && a.src === "derived";
+          var flashed = state.flash[f.code] ? " filled" : "";
+          html += '<li class="' + (isDerived ? "confirm" : "") + flashed + '">' +
+            '<div style="min-width:0;flex:1">' +
+              '<p class="k">' + esc(f.label) + (f.req && !a ? '<span class="need"></span>' : '') + '</p>' +
+              '<p class="v' + (a ? "" : " empty") + '">' + (a ? esc(a.value) : "Sin contestar") + '</p>' +
+              (a && a.src === "known" ? '<p class="src">Ya lo teníamos</p>' : '') +
+              (isDerived ? '<p class="src">' + ICON.spark + ' Lo vi en su web</p>' : '') +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:6px;flex:none">' +
+              (isDerived ? '<button type="button" class="ok-btn" data-ok="' + f.code + '">' + ICON.check + ' Así es</button>' : '') +
+              '<span class="pencil">' + ICON.pencil + '</span>' +
+            '</div>' +
+          '</li>';
+        });
+        html += '</ul></section>';
+      });
+
+      html += '<section style="margin-top:22px;border-top:1px solid var(--line);padding-top:12px">' +
+        '<h4 style="margin:0 0 4px;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Temas</h4>' +
+        '<ul class="topics-list">';
+      TOPICS.forEach(function (t) {
+        var s = topicState(t);
+        var tick = s === "full" ? '<span class="tick done">' + ICON.check + '</span>'
+                 : s === "skip" ? '<span class="tick">' + ICON.clock + '</span>'
+                 : s === "half" ? '<span class="tick now"><span style="width:5px;height:5px;border-radius:999px;background:currentColor;display:block"></span></span>'
+                 : '<span class="tick"><span style="width:5px;height:5px;border-radius:999px;background:currentColor;display:block;opacity:.6"></span></span>';
+        var act = s === "full" ? ''
+          : s === "skip" ? '<button type="button" class="later" data-resume="' + t.code + '">Retomar</button>'
+          : '<button type="button" class="later" data-defer="' + t.code + '">Luego</button>';
+        html += '<li>' + tick + '<span style="' + (s === "skip" ? "color:var(--muted)" : "") + '">' + esc(t.title) + '</span>' + act + '</li>';
+      });
+      html += '</ul></section></div>';
+
+      node.innerHTML = html;
+    }
+
+    /* ── Render: compositor ─────────────────────────────────────── */
+    function renderComposer(mode) {
+      var node = $("composer");
+      if (mode === "rec") {
+        node.innerHTML =
+          '<div class="recording"><span class="pulse"></span>' +
+          '<p>Te escucho… <time id="rec-time">0:04</time></p>' +
+          '<button type="button" class="icon-btn rec" aria-label="Terminar de dictar">' + ICON.stop + '</button></div>';
+        return;
+      }
+      if (mode === "done") {
+        node.innerHTML =
+          '<p style="margin:2px 0;text-align:center;font-size:12.5px;color:var(--muted);font-weight:300">' +
+          'Este enlace sigue funcionando por si quieres corregir algo.</p>';
+        return;
+      }
+      node.innerHTML =
+        '<textarea id="draft" rows="1" placeholder="Escribe o toca el micrófono…" aria-label="Tu respuesta"></textarea>' +
+        '<div class="composer-row"><span class="composer-note" id="cnote"></span>' +
+        '<div class="composer-actions">' +
+        '<button type="button" class="icon-btn" id="mic" aria-label="Dictar en vez de escribir">' + ICON.mic + '</button>' +
+        '<button type="button" class="icon-btn send" aria-label="Enviar">' + ICON.arrow + '</button>' +
+        '</div></div>';
+    }
+
+    /* ── Render: hilo ───────────────────────────────────────────── */
+    function pushAssistant(entry, live) {
+      var inner = $("thread-inner");
+      var wrap = el("div", "msg");
+      wrap.innerHTML =
+        '<span class="mark">' + markSvg(26) + '</span>' +
+        '<div class="msg-body">' +
+          '<p class="msg-name">Alba</p>' +
+          (entry.say ? '<p class="said">' + esc(entry.say) + '</p>' : '') +
+          (entry.catch && entry.catch.length
+            ? '<ul class="caught">' + entry.catch.map(function (code) {
+                return '<li>' + ICON.check + ' ' + esc(labelOf(code)) + '</li>';
+              }).join("") + '</ul>'
+            : '') +
+          (entry.ask
+            ? '<div class="ask">' +
+                '<p class="ask-eyebrow">' + ICON.corner + ' Toca una</p>' +
+                '<h4>' + esc(entry.ask.q) + '</h4>' +
+                '<ul class="opts">' + entry.ask.opts.map(function (o, i) {
+                  return '<li><button type="button" data-pick="' + i + '"' + (live ? '' : ' disabled') + '>' +
+                    '<b>' + esc(o.l) + '</b>' + (o.h ? '<small>' + esc(o.h) + '</small>' : '') + '</button></li>';
+                }).join("") + '</ul>' +
+                '<button type="button" class="write-instead">' + ICON.pencil + ' Prefiero contarlo yo</button>' +
+              '</div>'
+            : '') +
+        '</div>';
+      inner.appendChild(wrap);
+      scroll();
+    }
+
+    function pushMe(text, voice) {
+      var inner = $("thread-inner");
+      var wrap = el("div", "msg me");
+      wrap.innerHTML = '<div><div class="bubble">' + esc(text) + '</div>' +
+        (voice ? '<p style="margin:5px 0 0;text-align:right;font-size:10px;color:var(--muted);display:flex;gap:4px;justify-content:flex-end;align-items:center">' + ICON.mic + ' Dictado</p>' : '') +
+        '</div>';
+      inner.appendChild(wrap);
+      scroll();
+    }
+
+    function pushThinking() {
+      var inner = $("thread-inner");
+      var wrap = el("div", "msg thinking-row");
+      wrap.innerHTML = '<span class="mark" data-busy="true">' + markSvg(26) + '</span>' +
+        '<p class="thinking" style="margin:0">Alba está pensando<span class="dots"><i></i><i></i><i></i></span></p>';
+      inner.appendChild(wrap);
+      scroll();
+      return wrap;
+    }
+
+    function labelOf(code) {
+      for (var i = 0; i < TOPICS.length; i++) {
+        for (var j = 0; j < TOPICS[i].fields.length; j++) {
+          if (TOPICS[i].fields[j].code === code) return TOPICS[i].fields[j].label;
+        }
+      }
+      return code;
+    }
+
+    function scroll() {
+      var t = $("thread");
+      requestAnimationFrame(function () { t.scrollTop = t.scrollHeight; });
+    }
+
+    /* ── Avance del guion ───────────────────────────────────────── */
+    function advance() {
+      if (busy) return;
+      var next = SCRIPT[step + 1];
+      if (!next) return;
+      busy = true;
+
+      // Desactiva las opciones vivas: solo la última pregunta se puede tocar.
+      Array.prototype.forEach.call(document.querySelectorAll(".opts button"), function (b) { b.disabled = true; });
+
+      if (next.voice) {
+        renderComposer("rec");
+        window.setTimeout(function () {
+          renderComposer("idle");
+          var d = $("draft");
+          if (d) {
+            d.value = next.me;
+            d.style.height = "auto";
+            d.style.height = Math.min(d.scrollHeight, 120) + "px";
+          }
+          var n = $("cnote");
+          if (n) n.textContent = "Lo dicté yo · revísalo antes de enviar";
+          window.setTimeout(function () { send(next); }, 1150);
+        }, 1500);
+        return;
+      }
+      send(next);
+    }
+
+    function send(next) {
+      if (next.me) pushMe(next.me, !!next.voice);
+      renderComposer(next.done ? "done" : "idle");
+
+      var head = $("head-mark");
+      head.setAttribute("data-busy", "true");
+      var row = pushThinking();
+
+      window.setTimeout(function () {
+        row.remove();
+        head.setAttribute("data-busy", "false");
+
+        state.flash = {};
+        if (next.set) {
+          for (var k in next.set) if (Object.prototype.hasOwnProperty.call(next.set, k)) {
+            answers[k] = next.set[k];
+            state.flash[k] = true;
+          }
+        }
+        step += 1;
+        pushAssistant(next, true);
+        paint();
+        busy = false;
+        if (next.done) renderComposer("done");
+      }, 1400);
+    }
+
+    /* ── Pintado global ─────────────────────────────────────────── */
+    function paint() {
+      renderProgress($("prog-wide"));
+      renderProgress($("prog-narrow"));
+      renderCard($("card-desk"));
+      renderCard($("card-mobile"));
+      var c = counts();
+      $("chip-count").textContent = c.filled + "/" + c.total;
+    }
+
+    function boot() {
+      reset();
+      $("head-mark").innerHTML = markSvg(30);
+      $("thread-inner").innerHTML = "";
+      renderComposer("idle");
+      pushAssistant(SCRIPT[0], true);
+      paint();
+      $("thread").scrollTop = 0;
+    }
+
+    /* ── Eventos ────────────────────────────────────────────────── */
+    document.addEventListener("click", function (ev) {
+      var pick = ev.target.closest("[data-pick]");
+      if (pick && !pick.disabled) { advance(); return; }
+
+      var mic = ev.target.closest("#mic");
+      if (mic) { advance(); return; }
+
+      var send = ev.target.closest(".icon-btn.send");
+      if (send) { advance(); return; }
+
+      var ok = ev.target.closest("[data-ok]");
+      if (ok) {
+        var code = ok.getAttribute("data-ok");
+        answers[code].src = "stated";
+        state.flash = {}; state.flash[code] = true;
+        paint();
+        return;
+      }
+
+      var def = ev.target.closest("[data-defer]");
+      if (def) { deferred[def.getAttribute("data-defer")] = true; state.flash = {}; paint(); return; }
+
+      var res = ev.target.closest("[data-resume]");
+      if (res) { delete deferred[res.getAttribute("data-resume")]; state.flash = {}; paint(); return; }
+
+      if (ev.target.closest("#open-sheet")) { $("sheet").setAttribute("data-open", "true"); return; }
+      if (ev.target.closest("#scrim")) { $("sheet").setAttribute("data-open", "false"); return; }
+    });
+
+    $("v-phone").addEventListener("click", function () {
+      $("stage").setAttribute("data-view", "phone");
+      $("v-phone").setAttribute("aria-pressed", "true");
+      $("v-desk").setAttribute("aria-pressed", "false");
+    });
+    $("v-desk").addEventListener("click", function () {
+      $("stage").setAttribute("data-view", "desk");
+      $("v-desk").setAttribute("aria-pressed", "true");
+      $("v-phone").setAttribute("aria-pressed", "false");
+      $("sheet").setAttribute("data-open", "false");
+    });
+    $("restart").addEventListener("click", boot);
+    $("theme").addEventListener("click", function () {
+      var root = document.documentElement;
+      var now = root.getAttribute("data-theme");
+      var dark = now === "dark" || (!now && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      root.setAttribute("data-theme", dark ? "light" : "dark");
+    });
+
+    boot();
+  })();
+</script>
