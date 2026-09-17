@@ -27,7 +27,12 @@ export type IntakeFieldKind =
   | "faq_list"
   | "list";
 
-export type IntakeAnswerSource = "known" | "derived" | "stated";
+/**
+ * `proposed` (F2): lo propuso el catálogo de nichos. Como `derived`, necesita un
+ * «así es» antes de aplicarse — pero su procedencia no es una web sino el tipo
+ * de negocio, y la ficha lo dice así.
+ */
+export type IntakeAnswerSource = "known" | "derived" | "stated" | "proposed";
 
 export interface IntakeQuestionOption {
   label: string;
@@ -177,6 +182,8 @@ export function sourceLabel(source: IntakeAnswerSource | null): string | null {
       return "Ya lo teníamos";
     case "derived":
       return "Lo vi en su web";
+    case "proposed":
+      return "Propuesto para tu tipo de negocio";
     case "stated":
       return null;
     default:

@@ -117,6 +117,7 @@ describe("sourceLabel", () => {
     expect(sourceLabel(null)).toBeNull();
     expect(sourceLabel("known")).toBe("Ya lo teníamos");
     expect(sourceLabel("derived")).toBe("Lo vi en su web");
+    expect(sourceLabel("proposed")).toBe("Propuesto para tu tipo de negocio");
   });
 });
 
