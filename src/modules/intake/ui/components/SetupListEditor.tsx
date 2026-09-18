@@ -60,7 +60,7 @@ export function SetupListEditor({
   }
 
   return (
-    <li className="bg-[var(--grouped-list-2)] px-4 py-3">
+    <li className="bg-foreground/[0.04] px-4 py-3">
       <p className="mb-2 text-[12px] text-muted-foreground">{label}</p>
 
       <ul className="flex flex-col gap-1.5">
@@ -70,7 +70,7 @@ export function SetupListEditor({
           // mientras se teclea, así que el texto no sirve de identidad.
           <li
             key={index}
-            className="flex items-center gap-2 rounded-xl border border-foreground/[0.09] bg-[var(--grouped-list)] py-[7px] pr-2 pl-2.5"
+            className="flex items-center gap-2 rounded-xl border border-foreground/[0.09] bg-background py-[7px] pr-2 pl-2.5"
           >
             <span className="w-3.5 flex-none text-[11px] text-muted-foreground/60 tabular-nums">
               {index + 1}

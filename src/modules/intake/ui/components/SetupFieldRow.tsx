@@ -165,7 +165,7 @@ export function SetupFieldRow({
         // Dos botones HERMANOS, no uno dentro del otro: un botón no puede
         // contener contenido interactivo, y «Así es» tiene que ser pulsable por
         // sí solo (y con su propio foco de teclado).
-        <div className="flex items-center gap-3 pr-3.5 md:hover:bg-[var(--grouped-list-2)]">
+        <div className="flex items-center gap-3 pr-3.5 md:hover:bg-foreground/[0.04]">
           <button
             type="button"
             onClick={start}
@@ -289,7 +289,7 @@ function FieldEditor({
           setDraft(event.target.value);
         }}
         rows={3}
-        className="mt-2 rounded-xl border-foreground/[0.14] bg-[var(--grouped-list-2)] text-[15px]"
+        className="mt-2 rounded-xl border-foreground/[0.14] bg-foreground/[0.04] text-[15px]"
         placeholder={field.kind === "long_text" ? "Cuéntalo con tus palabras" : "Sepáralos con comas"}
       />
     );
@@ -308,7 +308,7 @@ function FieldEditor({
           onCommit();
         }
       }}
-      className="mt-2 h-9 rounded-xl border-foreground/[0.14] bg-[var(--grouped-list-2)] text-[15px]"
+      className="mt-2 h-9 rounded-xl border-foreground/[0.14] bg-foreground/[0.04] text-[15px]"
     />
   );
 }
