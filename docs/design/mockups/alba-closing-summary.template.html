@@ -1,0 +1,219 @@
+<title>Cierre de Alba</title>
+{{GOOGLE}}
+<style>
+{{FONTS}}
+
+{{TOKENS_CSS}}
+
+/* ======================================================================
+   Del kit (tal cual): el aura, el escenario y la cara de Alba
+   ====================================================================== */
+{{FIELD_CSS}}
+{{STAGE_CSS}}
+
+/* ======================================================================
+   Marco del mockup (no producto)
+   ====================================================================== */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 20px; background: color-mix(in srgb, var(--color-background) 88%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--color-border); }
+.topbar h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.topbar .tag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--axi-violet); background: color-mix(in srgb, var(--axi-violet) 12%, transparent); padding: 3px 8px; border-radius: 999px; }
+.topbar .sp { flex: 1; }
+.theme { display: inline-flex; border: 1px solid var(--color-border); border-radius: 999px; overflow: hidden; }
+.theme button { padding: 5px 12px; font-size: 12.5px; font-weight: 500; color: var(--color-muted-foreground); }
+.theme button[aria-pressed="true"] { background: var(--color-foreground); color: var(--color-background); }
+.intro { max-width: 760px; margin: 22px auto 0; padding: 0 20px; color: var(--color-muted-foreground); font-size: 13.5px; }
+.intro b { color: var(--color-foreground); font-weight: 600; }
+.frames { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 28px; padding: 24px 20px 0; }
+.frame { height: auto; max-height: none; border-radius: 24px; overflow: hidden; background: var(--color-background); box-shadow: var(--shadow-overlay), 0 0 0 1px var(--color-border); }
+.frame.phone { width: min(400px, 100%); }
+.frame.desk { width: min(760px, 100%); }
+.frame .cap { padding: 10px 16px; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--color-muted-foreground); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; }
+.frame .cap span:last-child { text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+/* ======================================================================
+   SetupDone (existe) + el bloque nuevo
+   ====================================================================== */
+.done { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px 22px 28px; }
+.done > * { position: relative; z-index: 1; }
+.done h2 { margin: 18px 0 0; font-size: 26px; line-height: 1.1; letter-spacing: -.02em; font-weight: 700; text-wrap: balance; }
+.done .closing { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: var(--color-muted-foreground); white-space: pre-wrap; max-width: 440px; }
+.done .review { margin-top: 26px; border-radius: 999px; padding: 10px 20px; font-size: 14px; font-weight: 600; color: var(--axi-brand); background: color-mix(in srgb, var(--axi-brand) 10%, transparent); }
+.done .foot { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; font-size: 12px; color: color-mix(in srgb, var(--color-muted-foreground) 70%, transparent); }
+.done .foot .ic { width: 12px; height: 12px; }
+
+/* El bloque: tres grupos, cada uno una lista agrupada del kit. Sin chevrones:
+   la persona no tiene sesión en el panel; el «dónde» es orientación. */
+.summary { width: 100%; max-width: 480px; margin-top: 26px; text-align: left; display: flex; flex-direction: column; gap: 18px; }
+.group .eyebrow { display: flex; align-items: center; gap: 6px; margin: 0 0 8px 16px; font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--color-muted-foreground); }
+.group .eyebrow .ic { width: 12px; height: 12px; }
+.group .eyebrow.ok { color: var(--axi-success); }
+.group .eyebrow.act { color: var(--axi-amber); }
+.grouped-list { list-style: none; margin: 0; padding: 0; background: var(--color-background); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-float); }
+.grouped-row { position: relative; }
+.grouped-row + .grouped-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: color-mix(in srgb, var(--foreground) 9%, transparent); }
+.row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 11px 16px; }
+.row .txt { flex: 1; min-width: 0; }
+.row .lbl { display: block; font-size: 12px; color: var(--color-muted-foreground); }
+.row .val { display: block; margin-top: 2px; font-size: 15px; line-height: 1.4; letter-spacing: -.005em; overflow-wrap: anywhere; }
+.row .where { display: block; margin-top: 3px; font-size: 11.5px; color: var(--color-muted-foreground); }
+.row .where b { font-weight: 600; color: color-mix(in srgb, var(--foreground) 62%, transparent); }
+.row .ind { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.row .ind .ic { width: 14px; height: 14px; }
+.row .ind.ok { background: color-mix(in srgb, var(--axi-success) 14%, transparent); color: var(--axi-success); }
+.row .ind.you { background: color-mix(in srgb, var(--axi-violet) 12%, transparent); color: var(--axi-violet); }
+.row .ind.act { background: color-mix(in srgb, var(--axi-amber) 16%, transparent); color: var(--axi-amber); }
+.row .go { flex: none; font-size: 12.5px; font-weight: 600; color: var(--color-muted-foreground); display: inline-flex; align-items: center; gap: 3px; }
+.row .go .ic { width: 13px; height: 13px; }
+.row .val.one { font-size: 15px; }
+
+/* Escritorio: el cierre a la izquierda, la ficha (existente) sigue a la derecha */
+.desk .split { display: grid; grid-template-columns: 1fr 300px; min-height: 620px; }
+.desk .side { border-left: 1px solid color-mix(in srgb, var(--foreground) 9%, transparent); background: color-mix(in srgb, var(--color-secondary) 40%, transparent); padding: 20px 18px; }
+.desk .side h3 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+.desk .side p { margin: 4px 0 0; font-size: 12.5px; color: var(--color-muted-foreground); }
+.desk .side .sec { margin: 18px 0 8px 14px; font-size: 12px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; color: var(--color-muted-foreground); }
+.desk .side .row { min-height: 46px; }
+.desk .side .row .val { font-size: 14px; }
+@media (max-width: 720px) { .desk .split { grid-template-columns: 1fr; } .desk .side { display: none; } }
+
+.legend { max-width: 760px; margin: 26px auto 0; padding: 0 20px; font-size: 13px; color: var(--color-muted-foreground); }
+.legend ul { margin: 6px 0 0; padding-left: 18px; }
+.legend li { margin: 4px 0; }
+</style>
+
+<header class="topbar">
+  <h1>Cierre de Alba · qué quedó y qué falta</h1>
+  <span class="tag">Mockup · no es producto</span>
+  <span class="sp"></span>
+  <div class="theme" role="group" aria-label="Tema">
+    <button type="button" data-theme="light" aria-pressed="true">Claro</button>
+    <button type="button" data-theme="dark" aria-pressed="false">Oscuro</button>
+  </div>
+</header>
+
+<p class="intro"><b>Lo único nuevo es el bloque bajo el cierre.</b> Tres grupos, cada uno la misma lista agrupada de la ficha (etiqueta → valor, una línea secundaria, un solo indicador). Sin botones en las filas: la persona no tiene sesión en el panel y el «dónde» es orientación. El copy viene del servidor, en la misma respuesta que ya trae el cierre.</p>
+
+<div class="frames">
+
+  <!-- Móvil · terminada, antes de que plataforma aplique -->
+  <section class="frame phone" aria-label="Móvil, entrevista terminada">
+    <div class="cap"><span>Móvil · terminada</span><span>plataforma aún no aplicó</span></div>
+    <div class="assistant-field done">
+      <span data-avatar="proud" data-acc="headset" data-busy></span>
+      <h2>Listo, Savage ya tiene lo suyo</h2>
+      <p class="closing">¡Listo, Isabel! Con esto ya tengo lo que necesitaba para dejar andando a Savage.
+
+El equipo de axi lo revisa y lo deja aplicado en tu cuenta. Debajo te dejo qué queda listo y qué te toca a ti.</p>
+
+      <div class="summary">
+        <div class="group">
+          <p class="eyebrow ok">{{ic:check:12}} Lo deja aplicado axi</p>
+          <ul class="grouped-list">
+            <li class="grouped-row"><div class="row"><span class="ind ok">{{ic:check:14}}</span><span class="txt"><span class="val one">14 datos de tu negocio</span><span class="where">Horario, tono, preguntas frecuentes, medios de pago… El equipo los revisa y los aplica.</span></span></div></li>
+          </ul>
+        </div>
+
+        <div class="group">
+          <p class="eyebrow">{{ic:hand:12}} Lo pones tú</p>
+          <ul class="grouped-list">
+            <li class="grouped-row"><div class="row"><span class="ind you">{{ic:pen-line:14}}</span><span class="txt"><span class="lbl">Cómo saludan</span><span class="val">¡Hola! Bienvenida a Savage, ¿en qué te ayudo?</span><span class="where">Ponlo en <b>Ajustes › Agente › Guion de ventas</b></span></span></div></li>
+            <li class="grouped-row"><div class="row"><span class="ind you">{{ic:pen-line:14}}</span><span class="txt"><span class="lbl">Cuándo insistir</span><span class="val">Solo si preguntó precio y no compró</span><span class="where">Ponlo en <b>CRM › Tareas › Política de seguimiento</b></span></span></div></li>
+          </ul>
+        </div>
+
+        <div class="group">
+          <p class="eyebrow act">{{ic:zap:12}} Para que atienda de verdad</p>
+          <ul class="grouped-list">
+            <li class="grouped-row"><div class="row"><span class="ind act">{{ic:message-circle:14}}</span><span class="txt"><span class="val one">Conectar tu WhatsApp</span></span><span class="go">Canales {{ic:chevron-right:13}}</span></div></li>
+            <li class="grouped-row"><div class="row"><span class="ind act">{{ic:package:14}}</span><span class="txt"><span class="val one">Subir tus productos</span></span><span class="go">Catálogo {{ic:chevron-right:13}}</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <button class="review" type="button">Revisar lo que anoté</button>
+      <span class="foot">{{ic:clock-3:12}} Puedes volver a este enlace para repasar lo que anotamos.</span>
+    </div>
+  </section>
+
+  <!-- Escritorio · ya aplicada -->
+  <section class="frame desk" aria-label="Escritorio, entrevista aplicada">
+    <div class="cap"><span>Escritorio · aplicada por plataforma</span><span>el asistente ya existe; el nicho ya estaba</span></div>
+    <div class="split">
+      <div class="assistant-field done">
+        <span data-avatar="proud" data-acc="headset" data-busy></span>
+        <h2>Listo, Savage ya tiene lo suyo</h2>
+        <p class="closing">¡Listo, Isabel! Con esto ya tengo lo que necesitaba para dejar andando a Savage.
+
+El equipo de axi lo revisa y lo deja aplicado en tu cuenta. Debajo te dejo qué queda listo y qué te toca a ti.</p>
+
+        <div class="summary">
+          <div class="group">
+            <p class="eyebrow ok">{{ic:check:12}} Ya está en tu cuenta</p>
+            <ul class="grouped-list">
+              <li class="grouped-row"><div class="row"><span class="ind ok">{{ic:check:14}}</span><span class="txt"><span class="val one">12 datos aplicados</span><span class="where">Los revisó el equipo de axi y ya están en tu configuración.</span></span></div></li>
+            </ul>
+          </div>
+          <div class="group">
+            <p class="eyebrow">{{ic:hand:12}} Lo pones tú</p>
+            <ul class="grouped-list">
+              <li class="grouped-row"><div class="row"><span class="ind you">{{ic:pen-line:14}}</span><span class="txt"><span class="lbl">Cómo saludan</span><span class="val">¡Hola! Bienvenida a Savage, ¿en qué te ayudo?</span><span class="where">Ponlo en <b>Ajustes › Agente › Guion de ventas</b></span></span></div></li>
+            </ul>
+          </div>
+          <div class="group">
+            <p class="eyebrow act">{{ic:zap:12}} Para que atienda de verdad</p>
+            <ul class="grouped-list">
+              <li class="grouped-row"><div class="row"><span class="ind act">{{ic:message-circle:14}}</span><span class="txt"><span class="val one">Conectar tu WhatsApp</span></span><span class="go">Canales {{ic:chevron-right:13}}</span></div></li>
+              <li class="grouped-row"><div class="row"><span class="ind act">{{ic:package:14}}</span><span class="txt"><span class="val one">Subir tus productos</span></span><span class="go">Catálogo {{ic:chevron-right:13}}</span></div></li>
+            </ul>
+          </div>
+        </div>
+
+        <button class="review" type="button">Revisar lo que anoté</button>
+        <span class="foot">{{ic:clock-3:12}} Puedes volver a este enlace para repasar lo que anotamos.</span>
+      </div>
+
+      <aside class="side" aria-label="La ficha, solo lectura">
+        <h3>Lo que ya sabemos</h3>
+        <p>19 de 21 datos · la conversación ya terminó</p>
+        <p class="sec">Tu negocio en una frase</p>
+        <ul class="grouped-list">
+          <li class="grouped-row"><div class="row"><span class="txt"><span class="lbl">Qué venden</span><span class="val">Ropa deportiva para mujer: licras, tops y conjuntos.</span></span></div></li>
+          <li class="grouped-row"><div class="row"><span class="txt"><span class="lbl">Por qué les compran</span><span class="val">Tallas hasta la XXL con la misma tela.</span></span></div></li>
+          <li class="grouped-row"><div class="row"><span class="txt"><span class="lbl">A quién le venden</span><span class="val">Mujeres de 25 a 40 que entrenan.</span></span></div></li>
+        </ul>
+        <p class="sec">Tu asistente</p>
+        <ul class="grouped-list">
+          <li class="grouped-row"><div class="row"><span class="txt"><span class="lbl">Crear tu asistente</span><span class="val">sí</span></span></div></li>
+          <li class="grouped-row"><div class="row"><span class="txt"><span class="lbl">Datos para tomar un pedido</span><span class="val">Nombre, Teléfono, Dirección, Barrio</span></span></div></li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+</div>
+
+<div class="legend">
+  <b style="color:var(--color-foreground)">Reglas que sigue</b>
+  <ul>
+    <li>Tres grupos, en este orden: lo que hace axi (verde), lo que pone la persona (violeta, con dónde), lo que falta para atender (ámbar, con dónde). Un grupo vacío no se pinta.</li>
+    <li>Antes de aplicar, «Lo deja aplicado axi» cuenta solo lo confirmado con destino; después, lo que cambió de verdad según el recibo.</li>
+    <li>Si la persona dijo que sí a crear el asistente, «Crear tu asistente» no aparece como pendiente aunque plataforma no haya aplicado todavía.</li>
+    <li>Sin interacción en las filas: el «dónde» orienta, no navega (la persona no tiene sesión en el panel).</li>
+  </ul>
+</div>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const stored = (() => { try { return localStorage.getItem('acs.theme'); } catch (e) { return null; } })();
+  const apply = (t) => {
+    if (t === 'dark' || t === 'light') root.dataset.theme = t; else delete root.dataset.theme;
+    document.querySelectorAll('.theme button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.theme) === (root.dataset.theme || 'light'))));
+    try { localStorage.setItem('acs.theme', t); } catch (e) {}
+  };
+  document.querySelectorAll('.theme button').forEach(b => b.addEventListener('click', () => apply(b.dataset.theme)));
+  if (stored) apply(stored);
+
+{{RIG_JS}}
+})();
+</script>
