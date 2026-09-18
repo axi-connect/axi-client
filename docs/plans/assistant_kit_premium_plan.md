@@ -5,6 +5,23 @@
 > `intake` y `campaign-hsm` sin push. Mockup F0: `docs/design/mockups/assistant-kit-premium.html`
 > (se genera con `assistant-kit-premium.build.py` a partir de `assistant-kit-premium.template.html`).
 
+## 0. Estado (2026-09-18)
+
+- **F0** entregada y aprobada por el dueño (mockup `assistant-kit-premium.html`, Artifact publicado).
+- **F1 + F2 implementadas** en esta rama: el kit vive en `src/shared/components/features/assistant/`
+  (avatar, escenario, dock, hero, burbujas, nota, pregunta, pensando, markdown, compositor con voz
+  opcional, píldoras, shell, hooks); `AxelChat`/`AxelHeroAvatar` y `SetupView`/`SetupThread`/
+  `AlbaHeroAvatar` son wrappers; `AlbaMark`, `SetupChat`, `SetupComposer`, `SetupQuestion` y el bloque
+  `.intake-*` de `globals.css` se borraron; `useTypewriterPlaceholder` y `useVoiceRecorder` viven en
+  `core/hooks`; el reloj de humor/gestos es `useAssistantMood` (kit) y cada slice solo traduce su store.
+- **F3**: DESIGN-SYSTEM (§2.3, §5.2, §6, §9) y architecture (§4.1, §12) actualizados; notas de
+  reubicación en los planes del CMO.
+- **Verja acotada verde**: jest 31 suites / 274 pruebas (`features/assistant|modules/cmo|modules/intake|core/hooks`),
+  `tsc` acotado a kit + cmo + intake + core sin errores, eslint limpio en lo tocado.
+- **Pendiente del dueño**: las verjas completas (`npm run lint`, `npx tsc --noEmit`, `npm test -- --maxWorkers=2`,
+  `npm run build`, una a la vez) y la verificación visual en `/cmo` y `/configurar/{token}` (móvil y
+  escritorio, dictado incluido). Los tests de `AxelChat`/`AxelHeroAvatar` no cambiaron sus aserciones.
+
 ## 1. Contexto
 
 La puesta en marcha conversacional (`modules/intake`, `/configurar/{token}`, asistente «Alba») se

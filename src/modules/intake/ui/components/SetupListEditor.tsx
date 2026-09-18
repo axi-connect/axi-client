@@ -60,7 +60,7 @@ export function SetupListEditor({
   }
 
   return (
-    <li className="bg-[var(--intake-card-2)] px-4 py-3">
+    <li className="bg-[var(--grouped-list-2)] px-4 py-3">
       <p className="mb-2 text-[12px] text-muted-foreground">{label}</p>
 
       <ul className="flex flex-col gap-1.5">
@@ -70,7 +70,7 @@ export function SetupListEditor({
           // mientras se teclea, así que el texto no sirve de identidad.
           <li
             key={index}
-            className="flex items-center gap-2 rounded-xl border border-[var(--intake-hair)] bg-[var(--intake-card)] py-[7px] pr-2 pl-2.5"
+            className="flex items-center gap-2 rounded-xl border border-foreground/[0.09] bg-[var(--grouped-list)] py-[7px] pr-2 pl-2.5"
           >
             <span className="w-3.5 flex-none text-[11px] text-muted-foreground/60 tabular-nums">
               {index + 1}
@@ -125,7 +125,7 @@ export function SetupListEditor({
           onClick={() => {
             setDraft([...draft, ""]);
           }}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--intake-hair-strong)] py-2 text-[13.5px] text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-foreground/[0.14] py-2 text-[13.5px] text-muted-foreground transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
         >
           <Plus className="size-3.5" aria-hidden="true" />
           Añadir
@@ -140,7 +140,7 @@ export function SetupListEditor({
           type="button"
           disabled={saving}
           onClick={onCancel}
-          className="flex-none rounded-full px-3 py-1.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-[var(--intake-fill)] disabled:opacity-50"
+          className="flex-none rounded-full px-3 py-1.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.08] disabled:opacity-50"
         >
           Cancelar
         </button>
@@ -180,7 +180,7 @@ function IconButton({
       onClick={onClick}
       className={cn(
         "flex size-[26px] flex-none items-center justify-center rounded-full text-muted-foreground transition-colors",
-        "hover:bg-[var(--intake-fill)] hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent",
+        "hover:bg-foreground/[0.08] hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent",
         danger === true && "hover:text-destructive",
       )}
     >

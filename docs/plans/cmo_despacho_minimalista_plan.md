@@ -1,5 +1,7 @@
 # Plan — El despacho de Axel, minimalista: menos texto, scroll con el avatar presente, sesiones y acciones rápidas compactas
 
+> **Reubicación (2026-09-18).** La barra (`AxelDock` → `AssistantDock`), el FLIP del compositor, el acople por `IntersectionObserver` y el compositor viven ahora en el kit compartido `src/shared/components/features/assistant/` (`AssistantChatShell`, `AssistantComposer`), con clases `.assistant-*`. `AxelChat` pasó a ser un wrapper que compone el kit con el informe, las propuestas y el copy del CMO. Ver `docs/plans/assistant_kit_premium_plan.md`.
+
 > Plan hermano del avatar (`docs/plans/cmo_axel_avatar_plan.md`, ya implementado en el worktree `cmo-axel-avatar`). Misma disciplina: mockup HTML como Artifact antes de codificar (F0), fases con gate explícito del dueño, todo lo técnico en inglés y la documentación en español. Se versiona en `axi-client/docs/plans/cmo_despacho_minimalista_plan.md` en F0. No se construye nada hasta que el dueño apruebe el mockup.
 
 

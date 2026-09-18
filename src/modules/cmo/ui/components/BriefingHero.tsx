@@ -28,7 +28,7 @@ const MAX_HIGHLIGHTS = 3;
 /**
  * El texto del hero, debajo de la barra de Axel: saludo, titular y chips.
  *
- * Es solo copy: el avatar y la fecha viven en `AxelDock`, que es sticky y se
+ * Es solo copy: el avatar y la fecha viven en la barra del kit (`AssistantDock`), que es sticky y se
  * acopla al bajar. Aquí no queda nada que explique al personaje: «Miro tus
  * números y te dejo propuestas» aparece solo en el primer contacto, y la
  * promesa de confianza vive una vez, bajo el compositor.

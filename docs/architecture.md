@@ -132,7 +132,7 @@ axi-client/
 │   │   ├── config/                   # env.ts (vars públicas), routes.ts (rutas públicas)
 │   │   ├── services/                 # http.ts (HttpClient), api.ts (ApiResponse, parseHttpError)
 │   │   ├── providers/                # theme-provider, auth-provider, alert-provider
-│   │   ├── hooks/                    # use-mobile, use-auto-scroll
+│   │   ├── hooks/                    # use-mobile, use-auto-scroll, use-typewriter-placeholder, use-voice-recorder
 │   │   ├── lib/                      # utils (cn), icons
 │   │   ├── websocket/                # websocket.service, websocket-event-bus
 │   │   ├── types/                    # declaraciones globales (.d.ts)
@@ -255,7 +255,7 @@ Estas reglas son la política del proyecto; el objetivo es hacerlas cumplir con 
 - **`realtime/`** — `events.ts` (mapas tipados de eventos/comandos WS por namespace), `socket-manager.ts` (singleton por namespace, rotación de token, backoff) y `use-socket.ts` (hooks base). Ver §10.
 - **`providers/`** — `ThemeProvider` (next-themes), `AuthProvider` (sesión + `hasPermission(code)` con wildcard `resource:*`; expone `useAuth`/`useSession`), `AlertProvider` (`showAlert`/`showModal`/`closeModal`, expone `useAlert`), `SplashProvider` (splash post-login; expone `useSplash`/`useSplashOptional` + `AppReadySignal`).
 - **`styles/motion.ts`** — presets de animación de marca (`spring`, `fade`, `press`, `splash`); nunca curvas/duraciones ad-hoc en componentes (DESIGN-SYSTEM §6).
-- **`hooks/`** — `useIsMobile()` (breakpoint 1024) y `useAutoScroll()` (auto-scroll de chat con anclaje al fondo).
+- **`hooks/`** — `useIsMobile()` (breakpoint 1024), `useAutoScroll()` (auto-scroll de chat con anclaje al fondo), `useTypewriterPlaceholder()` (placeholder que se teclea solo, por ref y sin re-renders) y `useVoiceRecorder()` (nota de voz con `MediaRecorder`; permiso al pulsar, tope de 120 s, cierra las pistas al desmontar).
 - **`lib/utils.ts`** — `cn()` con `clsx` + `tailwind-merge`. **`lib/error-messages.ts`** — `errorMessage(err)` (mensajes ES por `code`) y `applyServerValidation(err, form)` (mapea `errors[]` de `validation/failed` a RHF). **`lib/icons.ts`** — `iconFromString()` (diccionario lucide del sidebar con fallback).
 
 ### 4.2 `src/shared/` (design system + utilidades reutilizables)
@@ -475,9 +475,10 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 - **`TreeView<T>`** (`tree-view/`) — árbol genérico: `data`, `mapToNode`, expansión controlada, selección, renderers (`renderLabel/renderActions/getIcon`), `search`, CRUD async y lazy-load (`loadChildren`).
 - **`MultiSelect`** (`multi-select.tsx`) — selección múltiple sobre Popover + Command + Badge: grupos, búsqueda, select-all, animaciones configurables.
 - **`Timeline`** (`timeline/`) — timeline vertical genérico (línea conectora + nodo tonal con icono + hasta 3 líneas). `TimelineItem` = `{ id, icon, tone, title, description?, meta?, badge? }`; `tone` ∈ `neutral|info|success|warning|destructive|violet`. Presentacional puro: los datos, la paginación y los labels los aporta el slice. Incluye `TimelineSkeleton` y `AiBadge` (✦IA violeta). **Única implementación del patrón**: la consumen el historial 360 del contacto, la actividad del pedido y el rail de contexto del inbox.
+- **`assistant/`** — el **kit de asistente conversacional** (2026-09-18): `AssistantChatShell` (raíz con `data-empty`/`data-docked`, scroller, barra sticky, FLIP del compositor, auto-scroll), `AssistantDock`, `AssistantHeroAvatar` + `AssistantAvatar`/`AssistantStage` (el rig SVG de la cara, familia Lumo; `avatar-rig.ts` y `avatar-mood.ts` son TypeScript puro), `AssistantBubble`/`UserBubble`/`SystemNote`, `AssistantQuestion` (lista agrupada iOS, solo la última viva), `AssistantThinking` (pasos, frases o puntos), `AssistantMarkdown`, `AssistantComposer` (autosize, Enter, `voice` opcional) y `StarterPills`. **Presentacional puro**: no importa de `modules/`; cada slice aporta su store, su copy y su personaje por props (`cmo` → Axel con `AxelHeroAvatar`/`useAxelMood`; `intake` → Alba con `AlbaHeroAvatar`/`useAlbaMood`, diadema fija). Sus tipos son estructurales (`AssistantQuestionData` coincide con los DTO de ambos slices). El campo de fondo es `.assistant-field` en el `<main>` de cada vista. Plan: `docs/plans/assistant_kit_premium_plan.md`.
 - **`FieldList`** (`field-list/`) — `<dl>` etiqueta→valor para rails y cards de detalle. `FieldItem` = `{ label, value, copyable?, block?, hideWhenEmpty? }`; **oculta los campos vacíos por defecto** (los DTO traen casi todo nullable) y no trata `0`/`false` como vacío. `layout` `rows` (rail estrecho) o `grid` (card ancha).
 
-**Regla:** un nuevo listado usa `DataTable` + `usePaginatedList`; un nuevo formulario usa `DynamicForm` + un `*.config.tsx` con Zod; un nuevo panel de detalle usa `DetailSheet` con `fetchDetail`; un nuevo feed de actividad usa `Timeline`; un nuevo bloque de datos de entidad usa `FieldList`.
+**Regla:** un nuevo listado usa `DataTable` + `usePaginatedList`; un nuevo formulario usa `DynamicForm` + un `*.config.tsx` con Zod; un nuevo panel de detalle usa `DetailSheet` con `fetchDetail`; un nuevo feed de actividad usa `Timeline`; un nuevo bloque de datos de entidad usa `FieldList`; una nueva conversación con un asistente de IA usa el kit `assistant/`.
 
 ---
 

@@ -1,7 +1,5 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-
 import { cn } from "@/core/lib/utils";
 import {
   countCaptured,
@@ -10,8 +8,9 @@ import {
   type IntakeProgress,
   type IntakeTopicView,
 } from "@/modules/intake/domain/intake";
+import { AssistantMark } from "@/shared/components/features/assistant";
 import { SetupFieldRow } from "./SetupFieldRow";
-import { SetupTopicList } from "./SetupProgress";
+import { SetupProgress, SetupTopicList } from "./SetupProgress";
 
 /**
  * La ficha viva, con la forma de Contactos: título grande, secciones con
@@ -55,17 +54,18 @@ export function SetupSummary({
   return (
     <aside className={cn("flex min-h-0 flex-col", className)}>
       <header className="flex-none px-[22px] pt-5 pb-3">
-        <h2 className="text-[22px] leading-[1.15] font-semibold tracking-[-0.025em] text-foreground">
+        <h2 className="text-[22px] leading-[1.15] font-heading font-bold tracking-[-0.02em] text-foreground">
           Lo que ya sabemos
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
           {filled} de {total} datos · toca cualquiera para corregirlo
         </p>
+        <SetupProgress progress={progress} className="mt-3.5" />
       </header>
 
       {pending.length > 0 ? (
         <div className="mx-5 mt-1.5 mb-1 flex flex-none items-start gap-2.5 rounded-[14px] bg-accent-violet/9 px-3.5 py-3">
-          <Sparkles className="mt-0.5 size-[13px] flex-none fill-current text-accent-violet" aria-hidden="true" />
+          <AssistantMark size="sm" className="mt-0.5" />
           <p className="text-[13px] leading-[1.45] text-foreground">
             {pending.length === 1
               ? "Un dato lo saqué de su página web y falta que lo confirmes."
@@ -85,7 +85,7 @@ export function SetupSummary({
                 </span>
               ) : null}
             </h3>
-            <ul className="intake-card overflow-hidden">
+            <ul className="grouped-list shadow-float">
               {topic.fields.map((field) => (
                 <SetupFieldRow
                   key={field.code}

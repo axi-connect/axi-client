@@ -269,7 +269,7 @@ describe("la pantalla de inicio", () => {
     const pill = screen.getByRole("button", { name: "¿Cómo vamos este mes?" });
     expect(form).not.toBeNull();
     expect(form!.compareDocumentPosition(pill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(container.querySelector(".axel-chat")?.hasAttribute("data-empty")).toBe(true);
+    expect(container.querySelector(".assistant-chat")?.hasAttribute("data-empty")).toBe(true);
   });
 
   it("cada píldora anuncia la frase completa que envía, sin pista aparte", () => {
@@ -309,7 +309,7 @@ describe("la pantalla de inicio", () => {
     const { container } = view({ messages: [message({})] });
 
     expect(screen.queryByRole("button", { name: /Ármame una campaña/ })).toBeNull();
-    expect(container.querySelector(".axel-chat")?.hasAttribute("data-empty")).toBe(false);
+    expect(container.querySelector(".assistant-chat")?.hasAttribute("data-empty")).toBe(false);
   });
 });
 

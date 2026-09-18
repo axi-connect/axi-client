@@ -21,7 +21,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Switch } from "@/shared/components/ui/switch";
-import { AxelAvatar } from "./components/AxelAvatar";
+import { AssistantAvatar } from "@/shared/components/features/assistant/avatar/AssistantAvatar";
 
 /** Espejo del mínimo del backend (createDirectiveSchema.min(8)): con menos, el
  * botón se deshabilita y el placeholder ya sugiere una frase completa. */
@@ -191,7 +191,7 @@ export function CmoSettingsView() {
           en tu pantalla no cambia nada de lo que hace. */}
       <section className="rounded-lg border border-border bg-background p-5">
         <div className="flex items-center gap-4">
-          <AxelAvatar
+          <AssistantAvatar
             expression="neutral"
             accessory={accessory}
             transitionMs={0}

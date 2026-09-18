@@ -27,7 +27,7 @@ import { intakeService } from "../services/intake-service.adapter";
  * pantalla quieta, y vuelve a escribirlo.
  */
 
-type UiMessage = IntakeMessage & { pending?: boolean; failed?: boolean };
+export type UiMessage = IntakeMessage & { pending?: boolean; failed?: boolean };
 
 interface IntakeState {
   token: string | null;

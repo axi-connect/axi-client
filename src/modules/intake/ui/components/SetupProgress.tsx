@@ -47,12 +47,12 @@ export function SetupProgress({
         {progress.topics.map((topic) => (
           <li
             key={topic.code}
-            className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--intake-fill)]"
+            className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/[0.06]"
             title={`${topic.title}${topic.deferred ? " · lo dejaron para después" : ""}`}
           >
             <span
               className={cn(
-                "block h-full rounded-full transition-[width,background-color] duration-700 [transition-timing-function:var(--intake-ease)]",
+                "block h-full rounded-full transition-[width,background-color] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
                 topic.status === "done" && "w-full bg-brand-gradient",
                 topic.status === "in_progress" && "w-1/2 bg-accent-violet/80",
                 topic.status === "deferred" && "w-full bg-muted-foreground/30",
@@ -87,16 +87,16 @@ export function SetupTopicList({
   className?: string;
 }) {
   return (
-    <ul className={cn("intake-card overflow-hidden", className)}>
+    <ul className={cn("grouped-list shadow-float", className)}>
       {progress.topics.map((topic) => (
-        <li key={topic.code} className="intake-row flex items-center gap-3 py-2.5 pr-3.5 pl-4">
+        <li key={topic.code} className="grouped-row flex items-center gap-3 py-2.5 pr-3.5 pl-4">
           <span
             className={cn(
               "flex size-[22px] flex-none items-center justify-center rounded-full",
               topic.status === "done" && "bg-success text-white",
-              topic.status === "deferred" && "bg-[var(--intake-fill)] text-muted-foreground/60",
+              topic.status === "deferred" && "bg-foreground/[0.06] text-muted-foreground/60",
               topic.status === "in_progress" && "bg-accent-violet/12 text-accent-violet",
-              topic.status === "pending" && "bg-[var(--intake-fill)] text-muted-foreground/50",
+              topic.status === "pending" && "bg-foreground/[0.06] text-muted-foreground/50",
             )}
           >
             {topic.status === "done" ? (
