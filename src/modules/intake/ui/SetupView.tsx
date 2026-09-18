@@ -1,18 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClipboardList, X } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { countCaptured, type IntakeField } from "@/modules/intake/domain/intake";
 import { intakeService } from "@/modules/intake/infrastructure/services/intake-service.adapter";
 import { useIntakeStore } from "@/modules/intake/infrastructure/stores/intake.store";
-import { AlbaMark } from "./components/AlbaMark";
-import { SetupChat } from "./components/SetupChat";
-import { SetupComposer } from "./components/SetupComposer";
-import { SetupProgress } from "./components/SetupProgress";
+import {
+  AssistantChatShell,
+  AssistantComposer,
+  AssistantDock,
+  AssistantMark,
+  type AssistantComposerVoice,
+} from "@/shared/components/features/assistant";
+import { AlbaHeroAvatar } from "./components/AlbaHeroAvatar";
 import { SetupBlocked, SetupDone, SetupSkeleton } from "./components/SetupStates";
 import { SetupSummary } from "./components/SetupSummary";
+import { SetupThread } from "./components/SetupThread";
+
+/** Texto de reposo del compositor: constante, es la invariante del typewriter. */
+const PLACEHOLDER = "Escribe o dicta…";
 
 /**
  * La entrevista de puesta en marcha, tal como la ve el cliente.
@@ -32,31 +40,33 @@ import { SetupSummary } from "./components/SetupSummary";
  * siempre a la vista en escritorio y a un toque en móvil, y todo en ella se
  * puede corregir sin hablar con nadie —sin consumir turno ni gastar IA.
  *
- * El lenguaje es el de iOS con la marca de axi: suelo agrupado con tarjetas
- * encima, barra y compositor translúcidos, el coral como color de acción y el
- * violeta como acento de IA. En móvil la ficha vive en una hoja que sube — en
- * una pantalla de teléfono dos columnas son cero columnas.
+ * El chat es el mismo kit que el despacho de Axel (`shared/components/features/
+ * assistant`): el aura, la barra con Alba, las burbujas, la pregunta agrupada
+ * y la cápsula del compositor. Lo que aquí se decide es solo lo del intake: el
+ * store, la ficha, la voz y el copy.
  */
 export function SetupView({ token }: { token: string }) {
-  const {
-    session,
-    messages,
-    loading,
-    thinking,
-    blocked,
-    turnError,
-    savingField,
-    load,
-    send,
-    retry,
-    saveField,
-    deferTopic,
-    resumeTopic,
-    reset,
-  } = useIntakeStore();
+  // Selectores individuales: la ficha guarda un dato y no debe repintar el hilo entero.
+  const session = useIntakeStore((state) => state.session);
+  const messages = useIntakeStore((state) => state.messages);
+  const loading = useIntakeStore((state) => state.loading);
+  const thinking = useIntakeStore((state) => state.thinking);
+  const blocked = useIntakeStore((state) => state.blocked);
+  const turnError = useIntakeStore((state) => state.turnError);
+  const savingField = useIntakeStore((state) => state.savingField);
+  const load = useIntakeStore((state) => state.load);
+  const send = useIntakeStore((state) => state.send);
+  const retry = useIntakeStore((state) => state.retry);
+  const saveField = useIntakeStore((state) => state.saveField);
+  const deferTopic = useIntakeStore((state) => state.deferTopic);
+  const resumeTopic = useIntakeStore((state) => state.resumeTopic);
+  const reset = useIntakeStore((state) => state.reset);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [focusToken, setFocusToken] = useState(0);
+  /* Alba «escucha» cuando la persona le está escribiendo: foco en el
+     compositor o borrador sin enviar. Estado local de UI, no del store. */
+  const [clientTyping, setClientTyping] = useState(false);
 
   useEffect(() => {
     void load(token);
@@ -68,15 +78,13 @@ export function SetupView({ token }: { token: string }) {
     setFocusToken((current) => current + 1);
   }, []);
 
-  const transcribe = useCallback(
-    async (audio: Blob): Promise<string | null> => {
-      try {
-        const { text } = await intakeService.transcribe(token, audio);
-        return text;
-      } catch {
-        return null;
-      }
-    },
+  /* Dictado: el audio vuelve como texto al compositor y la persona lo revisa
+     antes de enviar. El objeto es estable para que el compositor no re-arme
+     la grabadora en cada render. */
+  const voice = useMemo<AssistantComposerVoice>(
+    () => ({
+      transcribe: async (audio) => (await intakeService.transcribe(token, audio)).text,
+    }),
     [token],
   );
 
@@ -110,6 +118,7 @@ export function SetupView({ token }: { token: string }) {
   if (loading || session === null) return <SetupSkeleton />;
 
   const finished = session.status !== "in_progress";
+  const noTurns = session.turns_left <= 0;
   const { filled, total } = countCaptured(session.topics);
 
   const summary = (className: string) => (
@@ -131,54 +140,67 @@ export function SetupView({ token }: { token: string }) {
   );
 
   return (
-    <main className="intake-shell flex h-[100dvh] flex-col overflow-hidden">
-      {/* Barra translúcida: quién habla y cuánto falta. */}
-      <header className="intake-glass relative z-10 flex-none border-b border-[var(--intake-hair)]">
-        <div className="mx-auto flex w-full max-w-[1200px] items-center gap-3 px-[18px] pt-[max(0.875rem,env(safe-area-inset-top))] pb-3.5">
-          <AlbaMark size={34} busy={thinking} className="flex-none" />
-
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] leading-tight font-semibold tracking-[-0.012em] text-foreground">
-              {session.assistant_name}
-              <span className="ml-1.5 font-normal text-muted-foreground">· axi</span>
-            </p>
-            <p className="mt-px truncate text-[12.5px] text-muted-foreground">
-              Poniendo a punto {session.company_name}
-            </p>
-          </div>
-
-          <SetupProgress progress={session.progress} className="hidden w-[280px] flex-none md:flex" />
-
-          <button
-            type="button"
-            onClick={() => {
-              setSheetOpen(true);
-            }}
-            className="flex flex-none items-center gap-1.5 rounded-full bg-[var(--intake-fill)] px-3 py-[7px] text-[13px] font-medium text-foreground tabular-nums transition-transform active:scale-[.96] lg:hidden"
-          >
-            <ClipboardList className="size-3.5" aria-hidden="true" />
-            {filled}/{total}
-          </button>
-        </div>
-
-        <div className="px-[18px] pb-[13px] md:hidden">
-          <SetupProgress progress={session.progress} />
-        </div>
-      </header>
-
+    <main className="assistant-field flex h-[100dvh] flex-col overflow-hidden">
       <div className="relative z-10 flex min-h-0 flex-1">
         <section className="relative flex min-h-0 flex-1 flex-col">
           {finished ? (
             <SetupDone
               closing={session.closing}
               companyName={session.company_name}
+              assistantName={session.assistant_name}
               onReview={() => {
                 setSheetOpen(true);
               }}
             />
           ) : (
-            <>
-              <SetupChat
+            <AssistantChatShell
+              // El saludo es guionizado: la conversación nunca está vacía.
+              empty={false}
+              dock={
+                <AssistantDock
+                  title={session.assistant_name}
+                  hero={<AlbaHeroAvatar name={session.assistant_name} clientTyping={clientTyping} />}
+                  meta={`Poniendo a punto ${session.company_name}`}
+                />
+              }
+              actions={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSheetOpen(true);
+                  }}
+                  className="flex h-[34px] items-center gap-1.5 rounded-[10px] bg-foreground/[0.06] px-3 text-[12.5px] font-semibold text-foreground tabular-nums transition-transform active:scale-[.96] lg:hidden"
+                  aria-label={`Abrir la ficha: ${String(filled)} de ${String(total)} datos`}
+                >
+                  <ClipboardList className="size-[15px] text-accent-violet" aria-hidden="true" />
+                  {filled}/{total}
+                </button>
+              }
+              composer={
+                <AssistantComposer
+                  onSend={(body, meta) => {
+                    void send(body, meta.voice);
+                  }}
+                  disabled={noTurns}
+                  busy={thinking}
+                  placeholder={PLACEHOLDER}
+                  ariaLabel="Tu respuesta"
+                  voice={session.voice_enabled ? voice : undefined}
+                  focusToken={focusToken}
+                  onTypingChange={setClientTyping}
+                  footer={
+                    <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground/80">
+                      <AssistantMark size="sm" />
+                      {noTurns
+                        ? "Se acabaron los turnos de esta conversación. Puedes corregir desde la ficha."
+                        : "Nada se aplica sin que alguien de tu equipo lo revise."}
+                    </p>
+                  }
+                />
+              }
+              autoScrollDeps={[messages.length, thinking]}
+            >
+              <SetupThread
                 messages={messages}
                 assistantName={session.assistant_name}
                 thinking={thinking}
@@ -191,24 +213,12 @@ export function SetupView({ token }: { token: string }) {
                   void retry();
                 }}
               />
-
-              <SetupComposer
-                disabled={session.turns_left <= 0}
-                busy={thinking}
-                voiceEnabled={session.voice_enabled}
-                placeholder="Escribe o toca el micrófono…"
-                onSend={(text, voice) => {
-                  void send(text, voice);
-                }}
-                onTranscribe={transcribe}
-                focusToken={focusToken}
-              />
-            </>
+            </AssistantChatShell>
           )}
         </section>
 
         {/* Escritorio: la ficha SIEMPRE a la vista. Es la mitad del diseño. */}
-        {summary("hidden w-[380px] flex-none border-l border-[var(--intake-hair)] lg:flex")}
+        {summary("hidden w-[380px] flex-none border-l border-foreground/[0.09] bg-secondary/40 lg:flex")}
       </div>
 
       {/* Móvil: la misma ficha, en una hoja con su asa. */}
@@ -230,19 +240,19 @@ export function SetupView({ token }: { token: string }) {
         />
         <div
           className={cn(
-            "absolute inset-x-0 bottom-0 flex max-h-[90dvh] flex-col rounded-t-[24px] bg-[var(--intake-ground)] shadow-overlay",
-            "transition-transform duration-[420ms] [transition-timing-function:var(--intake-ease)]",
+            "absolute inset-x-0 bottom-0 flex max-h-[90dvh] flex-col rounded-t-[28px] bg-background shadow-overlay",
+            "transition-transform duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
             sheetOpen ? "translate-y-0" : "translate-y-[102%]",
           )}
         >
           <div className="relative flex flex-none justify-center pt-2.5">
-            <span className="h-[5px] w-9 rounded-full bg-[var(--intake-hair-strong)]" aria-hidden="true" />
+            <span className="h-[5px] w-9 rounded-full bg-foreground/[0.18]" aria-hidden="true" />
             <button
               type="button"
               onClick={() => {
                 setSheetOpen(false);
               }}
-              className="absolute top-2 right-4 flex size-8 items-center justify-center rounded-full bg-[var(--intake-fill)] text-muted-foreground"
+              className="absolute top-2 right-4 flex size-8 items-center justify-center rounded-full bg-foreground/[0.06] text-muted-foreground"
               aria-label="Cerrar"
             >
               <X className="size-4" aria-hidden="true" />

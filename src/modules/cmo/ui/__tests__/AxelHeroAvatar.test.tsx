@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { Ref } from "react";
 
-import { GESTURE_MS, PROUD_MS } from "@/modules/cmo/domain/axel-mood";
+import { GESTURE_MS, PROUD_MS } from "@/shared/components/features/assistant/avatar/avatar-mood";
 import { useCmoStore, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
 import { AxelHeroAvatar } from "../components/AxelHeroAvatar";
 
@@ -31,8 +31,8 @@ jest.mock("framer-motion", () => ({ useReducedMotion: () => reduced }));
 // que sí entrega el `ref` (React 19 lo pasa como prop): sin él, los hooks de
 // vida y mirada verían `null` y no programarían nada — un falso verde.
 const faceRenders = jest.fn();
-jest.mock("../components/AxelAvatar", () => ({
-  AxelAvatar: (props: {
+jest.mock("@/shared/components/features/assistant/avatar/AssistantAvatar", () => ({
+  AssistantAvatar: (props: {
     expression: string;
     gesture: string | null;
     accessory: string;

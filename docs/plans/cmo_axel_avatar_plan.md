@@ -1,5 +1,7 @@
 # Plan — Axel con cara: avatar procedural SVG, reactivo e interactivo en el despacho del CMO
 
+> **Reubicación (2026-09-18).** El rig (`AxelAvatar` → `AssistantAvatar`, `axel-avatar.ts` → `avatar-rig.ts`, `axel-mood.ts` → `avatar-mood.ts`, `AxelStage`, `useAxelGaze`/`useAxelLife` → `useAvatarGaze`/`useAvatarLife`) vive ahora en el kit compartido `src/shared/components/features/assistant/`, con clases `.assistant-*` y variables `--av-*`; Alba (`/configurar`) usa la misma cara con diadema. En `cmo` quedan `AxelHeroAvatar` (la costura con el store) y `useAxelMood`. Ver `docs/plans/assistant_kit_premium_plan.md`.
+
 > Plan para `axi-client` (módulo `cmo`) con una pieza de autoría en `axi-video`. Flujo por fases con gate explícito del dueño, mockup HTML antes de codificar y spike antes que fundaciones. Todo lo técnico en inglés; documentación en español. Se versiona en `axi-client/docs/plans/cmo_axel_avatar_plan.md` en F0 (decisión del dueño: recrear `docs/plans/` y `docs/design/mockups/`, archivados el 2026-09-14).
 
 

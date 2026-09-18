@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronRight, Sparkles, X } from "lucide-react";
+import { Check, ChevronRight, X } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
+import { AssistantMark } from "@/shared/components/features/assistant";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import {
@@ -116,7 +117,7 @@ export function SetupFieldRow({
   return (
     <li
       className={cn(
-        "intake-row group",
+        "grouped-row group",
         field.needs_confirmation &&
           (proposed
             ? "bg-gradient-to-r from-brand/7 to-transparent to-70%"
@@ -144,7 +145,7 @@ export function SetupFieldRow({
                 setEditing(false);
                 setError(null);
               }}
-              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--intake-fill)]"
+              className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.08]"
               aria-label="Cancelar"
             >
               <X className="size-4" aria-hidden="true" />
@@ -153,7 +154,7 @@ export function SetupFieldRow({
               type="button"
               disabled={saving}
               onClick={() => void commit()}
-              className="intake-send flex size-8 items-center justify-center rounded-full transition-transform active:scale-[.92] disabled:opacity-50"
+              className="assistant-send flex size-8 items-center justify-center rounded-full transition-transform active:scale-[.92] disabled:opacity-50"
               aria-label="Guardar"
             >
               <Check className="size-4 [stroke-width:2.6]" aria-hidden="true" />
@@ -164,12 +165,12 @@ export function SetupFieldRow({
         // Dos botones HERMANOS, no uno dentro del otro: un botón no puede
         // contener contenido interactivo, y «Así es» tiene que ser pulsable por
         // sí solo (y con su propio foco de teclado).
-        <div className="flex items-center gap-3 pr-3.5 md:hover:bg-[var(--intake-card-2)]">
+        <div className="flex items-center gap-3 pr-3.5 md:hover:bg-[var(--grouped-list-2)]">
           <button
             type="button"
             onClick={start}
             disabled={saving}
-            className="flex min-w-0 flex-1 items-center gap-3 py-[11px] pl-4 text-left transition-colors active:bg-[var(--intake-fill)]"
+            className="flex min-w-0 flex-1 items-center gap-3 py-[11px] pl-4 text-left transition-colors active:bg-foreground/[0.08]"
             aria-label={`Corregir ${field.label}`}
           >
             <span className="min-w-0 flex-1">
@@ -198,9 +199,7 @@ export function SetupFieldRow({
                         : "text-accent-violet",
                   )}
                 >
-                  {field.needs_confirmation ? (
-                    <Sparkles className="size-[11px] fill-current" aria-hidden="true" />
-                  ) : null}
+                  {field.needs_confirmation ? <AssistantMark size="sm" /> : null}
                   {badge}
                 </span>
               ) : null}
@@ -270,8 +269,8 @@ function FieldEditor({
             className={cn(
               "rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-[background-color,color,transform] active:scale-[.96]",
               draft === option
-                ? "intake-send"
-                : "bg-[var(--intake-fill)] text-foreground hover:bg-[var(--intake-hair-strong)]",
+                ? "assistant-send"
+                : "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.12]",
             )}
           >
             {option}
@@ -290,7 +289,7 @@ function FieldEditor({
           setDraft(event.target.value);
         }}
         rows={3}
-        className="mt-2 rounded-xl border-[var(--intake-hair-strong)] bg-[var(--intake-card-2)] text-[15px]"
+        className="mt-2 rounded-xl border-foreground/[0.14] bg-[var(--grouped-list-2)] text-[15px]"
         placeholder={field.kind === "long_text" ? "Cuéntalo con tus palabras" : "Sepáralos con comas"}
       />
     );
@@ -309,7 +308,7 @@ function FieldEditor({
           onCommit();
         }
       }}
-      className="mt-2 h-9 rounded-xl border-[var(--intake-hair-strong)] bg-[var(--intake-card-2)] text-[15px]"
+      className="mt-2 h-9 rounded-xl border-foreground/[0.14] bg-[var(--grouped-list-2)] text-[15px]"
     />
   );
 }

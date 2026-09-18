@@ -1,0 +1,1039 @@
+<title>Axel y Alba</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{GOOGLE}}
+<style>
+{{FONTS}}
+
+/* ======================================================================
+   CAPA 1 — tokens literales de axi-client/src/app/globals.css
+   ====================================================================== */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-on-color: #ffffff;
+  --accent-mix: 14%;
+  --veil: 0.8;
+  --stage-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
+  /* material del avatar (familia Lumo) */
+  --av-body-hi: #ffffff; --av-body-mid: #f7f5f0; --av-body-deep: #e1ddd4;
+  --av-occ: #b9b3a8; --av-hot: #ffffff; --av-ink: #2b2b30; --av-ink-hi: #55555c;
+  --av-glint: #ffffff; --av-lid: #f7f5f0;
+  /* entorno del mockup (no producto) */
+  --mk-ground: #ecebe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0a0a0a; --foreground: #ededed;
+    --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24;
+    --axi-muted: #18181b; --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171;
+    --axi-on-color: #0a0a0a; --accent-mix: 42%; --veil: 1;
+    --stage-shadow: color-mix(in srgb, #000000 55%, transparent);
+    --av-body-hi: #fbfaf7; --av-body-mid: #f1eee7; --av-body-deep: #d2cdc3; --av-occ: #9a948a;
+    --av-ink: #1d1d21; --av-ink-hi: #4a4a52; --av-lid: #f1eee7;
+    --mk-ground: #141416;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0a0a0a; --foreground: #ededed;
+  --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24;
+  --axi-muted: #18181b; --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171;
+  --axi-on-color: #0a0a0a; --accent-mix: 42%; --veil: 1;
+  --stage-shadow: color-mix(in srgb, #000000 55%, transparent);
+  --av-body-hi: #fbfaf7; --av-body-mid: #f1eee7; --av-body-deep: #d2cdc3; --av-occ: #9a948a;
+  --av-ink: #1d1d21; --av-ink-hi: #4a4a52; --av-lid: #f1eee7;
+  --mk-ground: #141416;
+}
+
+/* CAPA 2 — semánticos derivados (mismas fórmulas que @theme inline) */
+:root {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --color-muted: var(--axi-muted);
+  --color-muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --color-accent: color-mix(in srgb, var(--axi-brand) var(--accent-mix), var(--background));
+  --color-accent-violet: var(--axi-violet);
+  --color-brand: var(--axi-brand);
+  --color-success: var(--axi-success);
+  --color-warning: var(--axi-warning);
+  --color-destructive: var(--axi-destructive);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Nexa", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --ease-spring: linear(0, 0.0263, 0.0905, 0.1755, 0.2694, 0.3643, 0.4553, 0.5393, 0.6148, 0.6813, 0.7388, 0.7879, 0.8292, 0.8636, 0.892, 0.9151, 0.9339, 0.949, 0.961, 0.9705, 0.9779, 0.9837, 0.9881, 0.9915, 0.994, 0.9959, 0.9973, 0.9983, 1);
+  --ease-snappy: linear(0, 0.0353, 0.122, 0.2363, 0.3611, 0.4846, 0.599, 0.7, 0.7855, 0.8554, 0.9105, 0.9523, 0.9826, 1.0035, 1.0169, 1.0245, 1.0279, 1.0282, 1.0266, 1.0238, 1.0204, 1.0168, 1.0134, 1.0103, 1.0075, 1.0053, 1.0035, 1.0021, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--mk-ground);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  padding-block: 0 40px;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, .font-heading { font-family: var(--font-heading); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+.ic { flex: none; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ======================================================================
+   Barra del mockup
+   ====================================================================== */
+.mk-bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 10px 16px; margin: 0 0 18px;
+  background: color-mix(in srgb, var(--color-background) 82%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
+  border-bottom: 1px solid var(--color-border);
+}
+.mk-bar .tag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--color-muted-foreground); margin-right: 10px; }
+.mk-bar .tab {
+  padding: 6px 12px; border-radius: 9999px; font-size: 13px; font-weight: 500;
+  color: var(--color-muted-foreground); border: 1px solid transparent;
+}
+.mk-bar .tab[aria-pressed="true"] { background: var(--color-foreground); color: var(--color-background); }
+.mk-bar .tab:not([aria-pressed="true"]):hover { border-color: var(--color-border); color: var(--color-foreground); }
+.mk-bar .spacer { flex: 1; }
+.mk-bar .ib { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--color-muted-foreground); }
+.mk-bar .ib:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--color-foreground); }
+.mk-note { max-width: 1180px; margin: 0 auto 14px; padding: 0 16px; font-size: 13px; color: var(--color-muted-foreground); }
+.mk-note b { color: var(--color-foreground); font-weight: 600; }
+.stage { padding: 0 16px; }
+.view { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+
+/* Marcos de dispositivo */
+.desk {
+  width: 100%; max-width: 1180px; height: 740px; min-width: 0;
+  border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+  background: var(--color-background); box-shadow: var(--shadow-overlay), 0 0 0 1px var(--color-border);
+}
+.desk-top { height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--color-border); font-size: 12px; color: var(--color-muted-foreground); }
+.desk-top .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-border); }
+.desk-top .url { margin-left: 10px; padding: 4px 12px; border-radius: 9999px; background: var(--color-secondary); font-size: 12px; }
+.desk-body { display: flex; flex: 1; min-height: 0; }
+.app-rail { width: 56px; flex: none; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 14px; color: var(--color-muted-foreground); }
+.app-rail .mark { width: 28px; height: 28px; border-radius: 9px; background: linear-gradient(135deg, var(--axi-brand), var(--axi-brand-2)); margin-bottom: 8px; }
+.app-rail .n { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; }
+.app-rail .n.on { background: var(--color-accent); color: var(--axi-brand); }
+.phone {
+  width: 400px; max-width: 100%; height: 760px; border-radius: 48px; border: 8px solid #1b1b1f;
+  overflow: hidden; background: var(--color-background); box-shadow: var(--shadow-overlay); position: relative;
+  display: flex; flex-direction: column;
+}
+.phone .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; border-radius: 9999px; background: #1b1b1f; z-index: 5; }
+.phone .status { height: 50px; flex: none; }
+.grid-states { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; width: 100%; max-width: 1180px; }
+.mini { height: 520px; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; background: var(--color-background); box-shadow: var(--shadow-float), 0 0 0 1px var(--color-border); min-width: 0; }
+.mini .cap { flex: none; padding: 10px 14px; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--color-muted-foreground); border-bottom: 1px solid var(--color-border); }
+
+/* ======================================================================
+   KIT DE ASISTENTE — lo que irá a globals.css como bloque único
+   ====================================================================== */
+
+/* El campo: aura violeta anclada abajo + grano. Pinta una vez. */
+.assistant-field {
+  position: relative; isolation: isolate; overflow: clip;
+  background-color: color-mix(in srgb, var(--foreground) 3%, var(--background));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+.assistant-field::before {
+  content: ""; position: absolute; left: -20%; right: -20%; bottom: -70%; height: 140%; z-index: -2; pointer-events: none; opacity: var(--veil);
+  background-image: radial-gradient(closest-side, color-mix(in srgb, var(--axi-violet) 22%, transparent) 0%, color-mix(in srgb, var(--axi-violet) 11%, transparent) 38%, color-mix(in srgb, var(--axi-violet) 3%, transparent) 70%, transparent 100%);
+}
+.assistant-field::after {
+  content: ""; position: absolute; left: 8%; right: 8%; bottom: -34%; height: 74%; z-index: -1; pointer-events: none; opacity: var(--veil);
+  background-image: radial-gradient(closest-side, color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%, color-mix(in srgb, var(--axi-brand) 9%, transparent) 46%, transparent 100%);
+}
+
+/* El chat: raíz con data-empty / data-docked */
+.assistant-chat { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.assistant-chat[data-empty] { justify-content: center; }
+.assistant-scroller { min-height: 0; flex: 1; overflow-y: auto; padding: 0 24px 8px; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--foreground) 18%, transparent) transparent; }
+.assistant-chat[data-empty] > .assistant-scroller { flex: 0 1 auto; }
+.assistant-col { margin: 0 auto; width: 100%; max-width: 640px; display: flex; flex-direction: column; }
+.assistant-actions { position: absolute; top: 10px; right: 12px; z-index: 30; display: flex; gap: 2px; }
+.icon-btn { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--color-muted-foreground); transition: background 150ms, color 150ms; }
+.icon-btn:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--color-foreground); }
+.icon-btn:disabled { opacity: .4; pointer-events: none; }
+
+/* El dock */
+.assistant-dock { position: sticky; top: 8px; z-index: 20; --dock-h: 56px; --dock-scale: 0.2857; }
+.assistant-dock__bar { position: relative; display: flex; align-items: center; height: var(--dock-h); padding-right: 14px; border-radius: 16px; container-type: inline-size; }
+.assistant-dock__bar::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0;
+  background-color: color-mix(in srgb, var(--color-background) 68%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  box-shadow: var(--shadow-float); transition: opacity 240ms var(--ease-smooth);
+}
+.assistant-chat[data-docked] .assistant-dock__bar::before { opacity: 1; }
+.assistant-dock__hero { position: absolute; top: 8px; left: 8px; width: 136px; height: 140px; transform-origin: 0 0; transform: translate(calc(50cqw - 68px - 8px), 0) scale(1); transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+.assistant-chat[data-docked] .assistant-dock__hero { transform: translate(0, 0) scale(var(--dock-scale)); }
+.assistant-dock__title, .assistant-dock__meta { opacity: 0; transition: opacity 200ms ease; white-space: nowrap; }
+.assistant-dock__title { margin-left: 52px; font-size: 13.5px; font-weight: 700; font-family: var(--font-heading); }
+.assistant-dock__meta { margin-left: 8px; font-size: 11px; color: var(--color-muted-foreground); overflow: hidden; text-overflow: ellipsis; }
+.assistant-chat[data-docked] .assistant-dock__title, .assistant-chat[data-docked] .assistant-dock__meta { opacity: 1; }
+.assistant-hero-spacer { height: 132px; }
+.assistant-chat[data-empty] .assistant-hero-spacer { height: 116px; }
+.dock-sentinel { height: 1px; }
+
+/* El escenario: personaje sobre sombra de contacto */
+.assistant-stage { position: relative; display: block; width: 136px; height: 140px; flex: none; }
+.assistant-stage-figure { position: absolute; inset: 0 0 8px; display: block; transform-origin: 50% 90%; }
+.assistant-stage-figure > .assistant-avatar { width: 100%; height: 100%; }
+.assistant-ground { position: absolute; left: 50%; bottom: 0; width: 96px; height: 18px; transform: translateX(-50%); border-radius: 9999px; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, var(--stage-shadow) 0%, color-mix(in srgb, var(--stage-shadow) 45%, transparent) 45%, transparent 72%); }
+.assistant-stage--busy .assistant-stage-figure { animation: av-breathe 1.6s ease-in-out infinite; }
+.assistant-stage--busy .assistant-ground { animation: av-ground-breathe 1.6s ease-in-out infinite; }
+@keyframes av-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035) translateY(-1.5px); } }
+@keyframes av-ground-breathe { 0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 1; } 50% { transform: translateX(-50%) scaleX(.92); opacity: .8; } }
+.hero-btn { display: block; padding: 0; border-radius: 24px; }
+.hero-btn:hover .assistant-stage-figure { transform: translateY(-1px); }
+
+/* La cara: geometría en el SVG, material aquí */
+.assistant-avatar { display: block; overflow: visible;
+  --av-yaw: 0; --av-pitch: 0; --av-roll: 0; --av-depth: 1; --av-face-sx: 1; --av-gap: 12; --av-gx: 0; --av-gy: 0;
+  --av-mouth: .9; --av-mouth-w: 1; --av-open: 0; --av-dur: 480ms; --av-ease: var(--ease-spring);
+  --yaw: calc(var(--av-yaw) + var(--gaze-x, 0) * 6); --pitch: calc(var(--av-pitch) + var(--gaze-y, 0) * 4); }
+.assistant-avatar [data-stop="body-hi"] { stop-color: var(--av-body-hi); }
+.assistant-avatar [data-stop="body-mid"] { stop-color: var(--av-body-mid); }
+.assistant-avatar [data-stop="body-deep"] { stop-color: var(--av-body-deep); }
+.assistant-avatar [data-stop="occ"] { stop-color: var(--av-occ); }
+.assistant-avatar [data-stop="hot"] { stop-color: var(--av-hot); }
+.assistant-avatar [data-stop="ink"] { stop-color: var(--av-ink); }
+.assistant-avatar [data-stop="ink-hi"] { stop-color: var(--av-ink-hi); }
+.assistant-avatar [data-stop="none"] { stop-color: transparent; }
+.assistant-avatar [data-layer="glint"] { fill: var(--av-glint); }
+.assistant-avatar [data-layer="lid"] { fill: var(--av-lid); }
+.assistant-avatar [data-layer="mouth"] { stroke: var(--av-ink); fill: none; stroke-linecap: round; }
+.assistant-avatar [data-layer="mouth-open"] { fill: var(--av-ink); }
+.assistant-avatar [data-layer="acc"] { fill: var(--av-ink); }
+.assistant-avatar [data-layer="acc-line"] { stroke: var(--av-ink); fill: none; stroke-linecap: round; }
+.assistant-avatar [data-layer="acc-hi"] { fill: var(--av-ink-hi); }
+.assistant-avatar [data-acc-part] { display: none; }
+.assistant-avatar[data-acc="headset"] [data-acc-part="headset"] { display: inline; }
+.assistant-avatar :where([class^="assistant-rig-"]) { transform-box: view-box; transform-origin: 50px 50px; transition: transform var(--av-dur) var(--av-ease); }
+.assistant-rig-body { transform: translate(calc(var(--yaw) * .25px * var(--av-depth)), calc(var(--pitch) * .2px * var(--av-depth))) rotate(calc(var(--av-roll) * 1deg)); }
+.assistant-rig-hot { transform: translate(calc(var(--yaw) * -.45px), calc(var(--pitch) * -.4px)); }
+.assistant-rig-band { transform: translate(calc(var(--yaw) * .4px), calc(var(--pitch) * .3px)) rotate(calc(var(--av-roll) * 1deg)); }
+.assistant-rig-face { transform: translate(calc(var(--yaw) * .9px * var(--av-depth)), calc(var(--pitch) * .7px * var(--av-depth))) rotate(calc(var(--av-roll) * 1deg)) scaleX(var(--av-face-sx)); }
+.assistant-rig-eye-l { transform: translate(calc(var(--av-gap) * -1px), 0) scaleX(var(--av-l-sx)) scale(var(--av-l-scale)); transform-origin: 50px 47px; }
+.assistant-rig-eye-r { transform: translate(calc(var(--av-gap) * 1px), 0) scaleX(var(--av-r-sx)) scale(var(--av-r-scale)); transform-origin: 50px 47px; }
+.assistant-rig-pupil { transform: translate(calc((var(--av-gx) + var(--gaze-x, 0)) * 1.6px), calc((var(--av-gy) + var(--gaze-y, 0)) * 1.4px)); }
+.assistant-rig-lips { transform: translate(calc((var(--av-gx) + var(--gaze-x, 0)) * .6px), calc(var(--av-gy) * .5px)); }
+.assistant-rig-mouth { transform: scaleY(var(--av-mouth)) scaleX(var(--av-mouth-w)); transform-origin: 50px 60px; }
+.assistant-rig-open { transform: scaleY(var(--av-open)); transform-origin: 50px 60.2px; }
+.assistant-rig-lid-top { transform-box: fill-box; transform-origin: 50% 0%; }
+.assistant-rig-lid-bot { transform-box: fill-box; transform-origin: 50% 100%; }
+.assistant-rig-eye-l .assistant-rig-lid-top { transform: rotate(calc(var(--av-l-tilt) * 1deg)) scaleY(var(--av-l-top)); }
+.assistant-rig-eye-l .assistant-rig-lid-bot { transform: scaleY(var(--av-l-bot)); }
+.assistant-rig-eye-r .assistant-rig-lid-top { transform: rotate(calc(var(--av-r-tilt) * -1deg)) scaleY(var(--av-r-top)); }
+.assistant-rig-eye-r .assistant-rig-lid-bot { transform: scaleY(var(--av-r-bot)); }
+.assistant-rig-blink { transform-box: fill-box; transform-origin: 50% 50%; transition: none; }
+.assistant-avatar[data-expression="speaking"] .assistant-rig-gesture { animation: av-talk 1.7s ease-in-out infinite; }
+.assistant-avatar[data-expression="speaking"] .assistant-rig-open { animation: av-open 640ms ease-in-out infinite alternate; }
+@keyframes av-talk { 50% { transform: translateY(1.2px); } }
+@keyframes av-open { from { transform: scaleY(.12); } to { transform: scaleY(1); } }
+
+/* Hilo */
+.thread { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+.assistant-rise { animation: assistant-rise 320ms var(--ease-spring) both; }
+@keyframes assistant-rise { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+/* Tarjeta del asistente: sólida, sin borde, radio 20 con la esquina del lado del personaje a 6 */
+.a-card { align-self: stretch; overflow: hidden; background: var(--color-background); border-radius: var(--radius-xl); border-bottom-left-radius: 6px; box-shadow: var(--shadow-float); }
+.a-card__head { display: flex; align-items: center; gap: 8px; padding: 12px 16px 0; }
+.a-mark { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; }
+.a-mark .ic { color: var(--axi-violet); }
+.a-card__chip { margin-left: auto; font-size: 10.5px; color: var(--color-muted-foreground); border: 1px solid var(--color-border); border-radius: 9999px; padding: 2px 8px; }
+.a-card__body { padding: 8px 16px 14px; font-size: 15px; line-height: 1.55; font-weight: 300; }
+.a-card__body p { margin: 0; }
+.a-card__body p + p { margin-top: 8px; }
+.a-card__body strong { font-weight: 600; }
+.a-card__body ul, .a-card__body ol { margin: 8px 0 0; padding-left: 22px; }
+.a-card__body li { margin: 3px 0; }
+.a-card__body li::marker { color: var(--axi-violet); }
+.a-card__body ol li::marker { font-weight: 600; }
+.a-card__noted { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 0 16px 10px; font-size: 12px; color: var(--axi-success); font-weight: 500; }
+.a-card__noted .ic { color: var(--axi-success); }
+.a-card__noted span + span::before { content: "·"; margin-right: 6px; color: var(--color-muted-foreground); }
+.caret { display: inline-block; width: 2px; height: 1em; vertical-align: -.15em; margin-left: 2px; background: var(--axi-violet); animation: caret 1s steps(2) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+
+/* Burbuja del humano: coral degradado, como el azul de Messages */
+.u-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.u-bubble { max-width: 82%; padding: 10px 15px; border-radius: var(--radius-xl); border-bottom-right-radius: 6px; font-size: 15px; line-height: 1.5; white-space: pre-wrap;
+  color: var(--axi-on-color);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--axi-brand) 78%, white) 0%, var(--axi-brand) 45%, var(--axi-brand-2) 100%);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--axi-brand) 28%, transparent); }
+.u-bubble[data-pending] { opacity: .6; }
+.u-bubble[data-failed] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--axi-destructive) 40%, transparent); }
+.u-foot { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--color-muted-foreground); padding-right: 4px; }
+.u-foot .ic { width: 12px; height: 12px; }
+.u-retry { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--axi-destructive); padding-right: 4px; }
+.u-retry .ic { width: 12px; height: 12px; }
+
+.sys-note { align-self: center; border-radius: 9999px; background: var(--color-secondary); padding: 4px 12px; font-size: 11px; color: var(--color-muted-foreground); }
+
+/* Lista agrupada iOS (pregunta y ficha) */
+.grouped-list { list-style: none; margin: 0; padding: 0; background: var(--color-background); border-radius: var(--radius-lg); overflow: hidden; }
+.grouped-row { position: relative; }
+.grouped-row + .grouped-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: color-mix(in srgb, var(--foreground) 9%, transparent); }
+.grouped-row > button, .grouped-row > .row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 11px 14px 11px 16px; text-align: left; font-size: 14.5px; }
+.grouped-row > button:not(:disabled):hover { background: color-mix(in srgb, var(--foreground) 4%, transparent); }
+.grouped-row > button:not(:disabled):active { background: color-mix(in srgb, var(--foreground) 8%, transparent); }
+.grouped-row > button:disabled { color: var(--color-muted-foreground); cursor: default; }
+.grouped-row .lbl { flex: 1; min-width: 0; }
+.grouped-row .hint { display: block; font-size: 12px; color: var(--color-muted-foreground); margin-top: 1px; }
+.grouped-row .chev { color: color-mix(in srgb, var(--foreground) 35%, transparent); }
+
+/* Pregunta dentro de la tarjeta */
+.q { border-top: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent); padding: 12px 16px 14px; background: color-mix(in srgb, var(--foreground) 2%, var(--background)); }
+.q__eyebrow { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--axi-violet); }
+.q__eyebrow[data-inert] { color: var(--color-muted-foreground); }
+.q__eyebrow .ic { width: 12px; height: 12px; }
+.q__text { margin: 6px 0 10px; font-size: 15px; font-weight: 600; line-height: 1.35; }
+.q .grouped-list { box-shadow: 0 0 0 1px color-mix(in srgb, var(--foreground) 7%, transparent); }
+.q__write { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--axi-brand); }
+
+/* Pensando */
+.thinking { align-self: stretch; background: var(--color-background); border-radius: var(--radius-xl); border-bottom-left-radius: 6px; box-shadow: var(--shadow-float); padding: 14px 16px; }
+.thinking ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; font-size: 13px; }
+.thinking li { display: flex; align-items: center; gap: 9px; }
+.thinking li .ms { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--color-muted-foreground); }
+.thinking .ok { color: var(--axi-success); display: inline-flex; }
+.thinking .spin { color: var(--axi-violet); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.thinking__foot { margin-top: 10px; font-size: 11.5px; color: var(--color-muted-foreground); }
+.dots { align-self: flex-start; display: inline-flex; gap: 5px; padding: 15px 18px; background: var(--color-background); border-radius: var(--radius-xl); border-bottom-left-radius: 6px; box-shadow: var(--shadow-float); }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--foreground) 35%, transparent); animation: dot 1.2s ease-in-out infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes dot { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+/* Compositor: cápsula .glass */
+.composer-wrap { flex: none; padding: 12px 24px 18px; }
+.composer { position: relative;
+  background-color: color-mix(in srgb, var(--color-background) 65%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent); box-shadow: var(--shadow-float);
+  border-radius: 26px; padding: 8px 8px 8px 18px; display: flex; align-items: flex-end; gap: 6px;
+  transition: box-shadow 200ms, border-color 200ms; }
+.composer:focus-within { border-color: color-mix(in srgb, var(--axi-violet) 30%, transparent); box-shadow: var(--shadow-float), 0 0 0 4px color-mix(in srgb, var(--axi-violet) 8%, transparent); }
+.composer textarea { flex: 1; min-width: 0; resize: none; border: 0; background: transparent; padding: 9px 0; font: inherit; font-size: 15px; line-height: 1.45; color: var(--color-foreground); max-height: 120px; outline: none; }
+.composer textarea::placeholder { color: color-mix(in srgb, var(--foreground) 45%, transparent); }
+.rnd { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9999px; color: var(--color-muted-foreground); flex: none; transition: background 150ms, transform 100ms; }
+.rnd:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--color-foreground); }
+.rnd:active { transform: scale(.97); }
+.send { color: var(--axi-on-color); background: linear-gradient(160deg, color-mix(in srgb, var(--axi-brand) 78%, white) 0%, var(--axi-brand) 45%, var(--axi-brand-2) 100%); box-shadow: 0 4px 12px color-mix(in srgb, var(--axi-brand) 30%, transparent); }
+.send:hover { filter: brightness(1.06); background: linear-gradient(160deg, color-mix(in srgb, var(--axi-brand) 78%, white) 0%, var(--axi-brand) 45%, var(--axi-brand-2) 100%); color: var(--axi-on-color); }
+.send:disabled { opacity: .45; box-shadow: none; }
+.composer-foot { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 9px; font-size: 11.5px; color: var(--color-muted-foreground); }
+.composer-foot .ic { width: 12px; height: 12px; color: var(--axi-violet); }
+.recording { display: flex; align-items: center; gap: 12px; flex: 1; padding: 6px 0 6px 2px; }
+.rec-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--axi-brand); animation: rec 1.1s ease-in-out infinite; }
+@keyframes rec { 50% { opacity: .35; } }
+.rec-time { font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; }
+.wave { display: inline-flex; align-items: center; gap: 3px; height: 22px; }
+.wave i { width: 3px; height: 8px; border-radius: 2px; background: var(--axi-brand); animation: wave .9s ease-in-out infinite; }
+.wave i:nth-child(2) { animation-delay: .1s; } .wave i:nth-child(3) { animation-delay: .2s; } .wave i:nth-child(4) { animation-delay: .3s; } .wave i:nth-child(5) { animation-delay: .4s; } .wave i:nth-child(6) { animation-delay: .5s; } .wave i:nth-child(7) { animation-delay: .6s; }
+@keyframes wave { 50% { height: 20px; } }
+.rec-cancel { font-size: 13px; color: var(--color-muted-foreground); padding: 0 8px; }
+
+/* Píldoras de arranque */
+.pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 9999px; font-size: 13px; font-weight: 500;
+  background: color-mix(in srgb, var(--color-background) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent); box-shadow: 0 1px 2px rgb(0 0 0 / .04); transition: transform 100ms, border-color 150ms; }
+.pill .ic { color: var(--axi-violet); width: 14px; height: 14px; }
+.pill:hover { border-color: color-mix(in srgb, var(--axi-violet) 35%, transparent); transform: translateY(-1px); }
+
+/* Briefing hero de Axel (se queda en cmo) */
+.briefing { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.briefing .hi { font-size: 13px; color: var(--color-muted-foreground); margin: 0; }
+.briefing h1 { margin: 6px 0 0; font-size: 26px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; max-width: 30ch; }
+.briefing .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 9999px; font-size: 12px; font-weight: 500; border: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-background) 70%, transparent); }
+.chip.violet { border-color: color-mix(in srgb, var(--axi-violet) 35%, transparent); color: var(--axi-violet); }
+.chip.amber { border-color: color-mix(in srgb, var(--axi-amber) 45%, transparent); color: color-mix(in srgb, var(--axi-amber) 70%, var(--foreground)); }
+.chip .dotc { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Propuesta (cmo) */
+.proposal { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: var(--radius-lg); border: 1px solid color-mix(in srgb, var(--axi-violet) 30%, transparent); background: color-mix(in srgb, var(--axi-violet) 5%, var(--color-background)); overflow: hidden; }
+.proposal .kind { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; border: 1px solid color-mix(in srgb, var(--axi-violet) 35%, transparent); background: var(--color-background); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--axi-violet); }
+.proposal .kind .ic { width: 12px; height: 12px; }
+.proposal .exp { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: var(--axi-warning); }
+.proposal .exp .ic { width: 12px; height: 12px; }
+.proposal h3 { margin: 0; font-size: 16px; line-height: 1.3; }
+.proposal .headline { margin: 3px 0 0; font-family: var(--font-heading); font-size: 14px; font-weight: 700; color: var(--axi-violet); font-variant-numeric: tabular-nums; }
+.proposal .why { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--color-muted-foreground); }
+.proposal .cta { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; background: var(--axi-violet); color: var(--axi-on-color); font-size: 12px; font-weight: 600; }
+.proposal .cta .ic { width: 13px; height: 13px; }
+.proposal .drafts { font-size: 10.5px; color: var(--color-muted-foreground); border: 1px solid var(--color-border); border-radius: 9999px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.row-actions { display: flex; align-items: center; gap: 10px; }
+
+/* Rail derecho (Axel · Por decidir) */
+.rail { width: 316px; flex: none; border-left: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-secondary) 40%, transparent); display: flex; flex-direction: column; min-height: 0; }
+.rail-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 10px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--color-muted-foreground); }
+.rail-head .count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border-radius: 9999px; background: var(--axi-violet); color: var(--axi-on-color); font-size: 11px; font-weight: 700; padding: 0 6px; }
+.rail-body { min-height: 0; flex: 1; overflow-y: auto; padding: 0 12px 12px; }
+.rail-body > * + * { margin-top: 8px; }
+.pcompact { display: block; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--color-background); box-shadow: var(--shadow-float); text-decoration: none; color: inherit; }
+.pcompact .k { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--axi-violet); }
+.pcompact .t { margin: 4px 0 2px; font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.pcompact .e { font-size: 11px; color: var(--color-muted-foreground); }
+
+/* Ficha de Alba */
+.ficha { width: 380px; flex: none; border-left: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-secondary) 40%, transparent); display: flex; flex-direction: column; min-height: 0; }
+.ficha-head { padding: 18px 18px 12px; }
+.ficha-head h2 { margin: 0; font-size: 17px; }
+.ficha-head p { margin: 4px 0 0; font-size: 12.5px; color: var(--color-muted-foreground); }
+.segs { display: flex; gap: 4px; margin-top: 12px; list-style: none; padding: 0; }
+.segs li { flex: 1; height: 4px; border-radius: 9999px; background: color-mix(in srgb, var(--foreground) 10%, transparent); overflow: hidden; }
+.segs li::before { content: ""; display: block; height: 100%; width: 0; border-radius: inherit; transition: width 600ms var(--ease-smooth); }
+.segs li[data-s="full"]::before { width: 100%; background: linear-gradient(90deg, var(--axi-brand), var(--axi-brand-2)); }
+.segs li[data-s="half"]::before { width: 50%; background: color-mix(in srgb, var(--axi-violet) 80%, transparent); }
+.segs li[data-s="skip"]::before { width: 100%; background: color-mix(in srgb, var(--foreground) 30%, transparent); }
+.ficha-body { min-height: 0; flex: 1; overflow-y: auto; padding: 0 14px 16px; }
+.grp { margin-top: 14px; }
+.grp h3 { margin: 0 0 6px 16px; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--color-muted-foreground); }
+.grp .grouped-list { box-shadow: var(--shadow-float); }
+.fld { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 10px 12px 10px 16px; text-align: left; }
+.fld .k { flex: none; width: 96px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.fld .v { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fld .v.empty { color: var(--color-muted-foreground); font-weight: 400; }
+.fld .sub { display: block; font-size: 11.5px; color: var(--color-muted-foreground); font-weight: 400; margin-top: 1px; }
+.fld .sub .ic { width: 11px; height: 11px; vertical-align: -1px; color: var(--axi-violet); }
+.fld .req { width: 6px; height: 6px; border-radius: 50%; background: var(--axi-amber); flex: none; }
+.fld .okk { color: var(--axi-success); width: 14px; height: 14px; }
+.get { flex: none; padding: 5px 11px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: color-mix(in srgb, var(--axi-brand) 10%, transparent); color: var(--axi-brand); }
+.get.prop { background: color-mix(in srgb, var(--axi-violet) 10%, transparent); color: var(--axi-violet); }
+.grouped-row.review { background: linear-gradient(90deg, color-mix(in srgb, var(--axi-violet) 8%, transparent), transparent 60%); }
+.grouped-row.review.prop { background: linear-gradient(90deg, color-mix(in srgb, var(--axi-brand) 7%, transparent), transparent 60%); }
+.later { flex: none; font-size: 12px; font-weight: 600; color: var(--axi-brand); }
+.tstat { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.tstat.done { background: color-mix(in srgb, var(--axi-success) 14%, transparent); color: var(--axi-success); }
+.tstat.wait { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--color-muted-foreground); }
+.tstat.cur { border: 2px solid var(--axi-violet); }
+.tstat .ic { width: 12px; height: 12px; }
+/* editor de lista (propuesta editable) */
+.list-edit { padding: 10px 12px 12px 16px; background: color-mix(in srgb, var(--foreground) 2%, var(--background)); }
+.list-edit .lbl { font-size: 12.5px; color: var(--color-muted-foreground); }
+.list-edit ol { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: n; }
+.list-edit li { display: flex; align-items: center; gap: 8px; counter-increment: n; }
+.list-edit li::before { content: counter(n); width: 18px; font-size: 11px; color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.list-edit input { flex: 1; min-width: 0; height: 32px; border-radius: 9px; border: 1px solid var(--color-border); background: var(--color-background); padding: 0 10px; font: inherit; font-size: 13.5px; color: inherit; }
+.list-edit .mini-b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; color: var(--color-muted-foreground); }
+.list-edit .mini-b:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.list-edit .mini-b .ic { width: 13px; height: 13px; }
+.list-edit .add { margin-top: 8px; width: 100%; height: 32px; border: 1px dashed var(--color-border); border-radius: 9px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.list-edit .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 12px; }
+.list-edit .note { color: var(--color-muted-foreground); }
+.list-edit .done-b { padding: 6px 12px; border-radius: 9999px; background: color-mix(in srgb, var(--axi-brand) 10%, transparent); color: var(--axi-brand); font-weight: 600; }
+.list-edit .cancel-b { color: var(--color-muted-foreground); margin-right: 8px; }
+
+/* Móvil: hoja de la ficha */
+.sheet { position: absolute; inset: 0; z-index: 40; }
+.sheet .scrim { position: absolute; inset: 0; background: rgb(0 0 0 / .28); opacity: 0; transition: opacity 240ms; }
+.sheet .panel { position: absolute; left: 0; right: 0; bottom: 0; height: 84%; border-radius: 40px 40px 0 0; background: var(--color-background); box-shadow: var(--shadow-overlay); transform: translateY(102%); transition: transform 380ms cubic-bezier(0.32, 0.72, 0, 1); display: flex; flex-direction: column; }
+.sheet[data-open] .scrim { opacity: 1; }
+.sheet[data-open] .panel { transform: none; }
+.sheet:not([data-open]) { pointer-events: none; }
+.grab { width: 36px; height: 5px; border-radius: 9999px; background: color-mix(in srgb, var(--foreground) 18%, transparent); margin: 10px auto 0; }
+.sheet .ficha { width: auto; border: 0; background: transparent; flex: 1; min-height: 0; }
+.sheet .close { position: absolute; top: 14px; right: 14px; }
+.ficha-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+.ficha-chip .ic { width: 15px; height: 15px; color: var(--axi-violet); }
+
+/* Estados de pantalla completa (Alba) */
+.full { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+.full h2 { margin: 18px 0 0; font-size: 22px; line-height: 1.2; }
+.full p { margin: 8px 0 0; max-width: 34ch; font-size: 14px; color: var(--color-muted-foreground); }
+.full .lnk { margin-top: 16px; padding: 9px 16px; border-radius: 9999px; font-size: 13px; font-weight: 600; background: color-mix(in srgb, var(--axi-brand) 10%, transparent); color: var(--axi-brand); }
+.full .foot { margin-top: 18px; display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--color-muted-foreground); }
+.full .foot .ic { width: 12px; height: 12px; }
+
+/* Notas */
+.notes { width: 100%; max-width: 1180px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 8px; }
+.notes article { padding: 14px 16px; border-radius: var(--radius-lg); background: var(--color-background); box-shadow: 0 0 0 1px var(--color-border); }
+.notes h3 { margin: 0 0 4px; font-size: 14px; }
+.notes p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--color-muted-foreground); }
+
+@media (max-width: 1100px) { .ficha { width: 320px; } .rail { display: none; } }
+@media (max-width: 860px) { .ficha { display: none; } .desk { height: 680px; } .app-rail { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="mk-bar" role="toolbar" aria-label="Vistas del mockup">
+  <span class="tag">Mockup F0 · no es producto</span>
+  <button class="tab" data-view="cmo-empty" aria-pressed="true">Axel · vacío</button>
+  <button class="tab" data-view="cmo-chat" aria-pressed="false">Axel · conversando</button>
+  <button class="tab" data-view="alba-desk" aria-pressed="false">Alba · escritorio</button>
+  <button class="tab" data-view="alba-phone" aria-pressed="false">Alba · móvil</button>
+  <button class="tab" data-view="states" aria-pressed="false">Estados</button>
+  <span class="spacer"></span>
+  <button class="ib" id="theme" aria-label="Cambiar tema" title="Tema">{{ic:sun:17}}</button>
+</div>
+<p class="mk-note" id="note"></p>
+
+<main class="stage">
+
+<!-- ================================================================ VISTA 1 · /cmo vacío -->
+<section class="view" id="v-cmo-empty">
+  <div class="desk">
+    <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/cmo</span></div>
+    <div class="desk-body">
+      <nav class="app-rail" aria-hidden="true"><span class="mark"></span><span class="n">{{ic:house:17}}</span><span class="n">{{ic:inbox:17}}</span><span class="n">{{ic:users:17}}</span><span class="n on">{{ic:sparkles:17}}</span><span class="n">{{ic:megaphone:17}}</span></nav>
+      <div class="assistant-field" style="flex:1;display:flex;min-width:0">
+        <div class="assistant-chat" data-empty data-dock>
+          <div class="assistant-actions">
+            <button class="icon-btn" aria-label="Conversaciones">{{ic:messages-square:17}}</button>
+            <button class="icon-btn" aria-label="Nueva conversación" disabled>{{ic:plus:17}}</button>
+            <button class="icon-btn" aria-label="Ajustes de Axel">{{ic:settings-2:17}}</button>
+          </div>
+          <div class="assistant-scroller">
+            <div class="assistant-col">
+              <header class="assistant-dock"><div class="assistant-dock__bar">
+                <div class="assistant-dock__hero"><button class="hero-btn" aria-label="Saludar a Axel"><span class="assistant-stage" data-avatar="neutral" data-acc="none"></span></button></div>
+                <span class="assistant-dock__title" aria-hidden="true">Axel</span><span class="assistant-dock__meta" aria-hidden="true">jue 18 sep</span>
+              </div></header>
+              <div class="assistant-hero-spacer"></div><div class="dock-sentinel"></div>
+              <div class="briefing">
+                <p class="hi">Hola, Isabel</p>
+                <h1>Septiembre va 12 % arriba. Tres clientas calientes sin seguimiento.</h1>
+                <div class="chips"><span class="chip violet"><span class="dotc"></span>2 por decidir</span><span class="chip">Recompra · 14 clientas</span><span class="chip amber">Sin stock · Top Aura</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="composer-wrap"><div class="assistant-col">
+            <form class="composer" data-demo="axel"><textarea rows="1" placeholder="¿Quiénes están por recomprar?" aria-label="Pregúntale a Axel"></textarea><button class="rnd send" type="submit" aria-label="Enviar">{{ic:arrow-up:18}}</button></form>
+            <div class="pills">
+              <button class="pill" aria-label="¿Cómo vamos este mes?">{{ic:chart-column:14}}¿Cómo vamos?</button>
+              <button class="pill" aria-label="¿Quiénes son mis clientes más calientes y por qué?">{{ic:flame:14}}Clientes calientes</button>
+              <button class="pill" aria-label="Ármame una campaña para lo que veas más urgente.">{{ic:megaphone:14}}Ármame una campaña</button>
+            </div>
+            <p class="composer-foot">{{ic:sparkles:12}}Nada sale sin tu aprobación.</p>
+          </div></div>
+        </div>
+      </div>
+      <aside class="rail" aria-label="Tablero de Axel">
+        <div class="rail-head"><span>Por decidir</span><span class="count">2</span></div>
+        <div class="rail-body">
+          <a class="pcompact" href="#"><div class="k">Recompra</div><div class="t">Recordar a 14 clientas que ya toca renovar leggings</div><div class="e">Vence en 2 días</div></a>
+          <a class="pcompact" href="#"><div class="k">Cómo vende tu agente</div><div class="t">Ofrecer el Top Aura solo cuando haya talla</div><div class="e">Vence en 5 días</div></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ VISTA 2 · /cmo conversando -->
+<section class="view" id="v-cmo-chat" hidden>
+  <div class="desk">
+    <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/cmo</span></div>
+    <div class="desk-body">
+      <nav class="app-rail" aria-hidden="true"><span class="mark"></span><span class="n">{{ic:house:17}}</span><span class="n">{{ic:inbox:17}}</span><span class="n">{{ic:users:17}}</span><span class="n on">{{ic:sparkles:17}}</span><span class="n">{{ic:megaphone:17}}</span></nav>
+      <div class="assistant-field" style="flex:1;display:flex;min-width:0">
+        <div class="assistant-chat" data-dock data-scroll-end>
+          <div class="assistant-actions">
+            <button class="icon-btn" aria-label="Conversaciones">{{ic:messages-square:17}}</button>
+            <button class="icon-btn" aria-label="Nueva conversación">{{ic:plus:17}}</button>
+            <button class="icon-btn" aria-label="Ajustes de Axel">{{ic:settings-2:17}}</button>
+          </div>
+          <div class="assistant-scroller">
+            <div class="assistant-col">
+              <header class="assistant-dock"><div class="assistant-dock__bar">
+                <div class="assistant-dock__hero"><button class="hero-btn" aria-label="Saludar a Axel"><span class="assistant-stage" data-avatar="curious" data-acc="none"></span></button></div>
+                <span class="assistant-dock__title" aria-hidden="true">Axel</span><span class="assistant-dock__meta" aria-hidden="true">jue 18 sep</span>
+              </div></header>
+              <div class="assistant-hero-spacer"></div><div class="dock-sentinel"></div>
+              <div class="briefing">
+                <p class="hi">Hola, Isabel</p>
+                <h1>Septiembre va 12 % arriba. Tres clientas calientes sin seguimiento.</h1>
+                <div class="chips"><span class="chip violet"><span class="dotc"></span>2 por decidir</span><span class="chip">Recompra · 14 clientas</span><span class="chip amber">Sin stock · Top Aura</span></div>
+              </div>
+              <div class="thread" role="log" aria-label="Conversación con Axel" id="axel-thread">
+                <div class="u-wrap"><div class="u-bubble">¿Quiénes están por recomprar?</div></div>
+                <article class="a-card">
+                  <div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Axel</span><span class="a-card__chip">3 fuentes</span></div>
+                  <div class="a-card__body">
+                    <p>Catorce clientas compraron leggings hace <strong>80–95 días</strong>, justo el ciclo medio de recompra en Savage. Nueve abrieron tu último mensaje y ninguna ha vuelto a escribir.</p>
+                    <ul><li><strong>Valentina R.</strong> · 3 pedidos · última hace 88 días</li><li><strong>Camila O.</strong> · 2 pedidos · preguntó por tallas en agosto</li><li>12 más con el mismo patrón</li></ul>
+                    <p>Puedo dejarte lista una campaña por WhatsApp para las catorce.</p>
+                  </div>
+                </article>
+                <article class="proposal" aria-label="Recordar a 14 clientas que ya toca renovar leggings">
+                  <div class="row-actions"><span class="kind">{{ic:refresh-cw:12}}Recompra</span><span class="exp">{{ic:clock:12}}Vence en 2 días</span></div>
+                  <div><h3>Recordar a 14 clientas que ya toca renovar leggings</h3><p class="headline">$2,4 M en recompra probable</p></div>
+                  <p class="why">Ciclo de 90 días cumplido, sin contacto desde agosto y con stock en las tres tallas más pedidas. Un solo mensaje, sin descuento.</p>
+                  <div class="row-actions"><a class="cta" href="#">Revisar {{ic:arrow-right:13}}</a><span class="drafts">2 borradores · apagados</span></div>
+                </article>
+                <article class="a-card">
+                  <div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Axel</span></div>
+                  <div class="a-card__body"><p>Antes de redactar, una cosa.</p></div>
+                  <div class="q">
+                    <p class="q__eyebrow">{{ic:corner-down-right:12}}Elige una</p>
+                    <p class="q__text">¿Con qué tono les escribo?</p>
+                    <ul class="grouped-list" data-question>
+                      <li class="grouped-row"><button type="button" data-pick="Cercano y directo"><span class="lbl">Cercano y directo<span class="hint">Como les hablas tú</span></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button type="button" data-pick="Profesional"><span class="lbl">Profesional</span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button type="button" data-pick="Con una oferta pequeña"><span class="lbl">Con una oferta pequeña<span class="hint">Te la muestro antes de enviar</span></span>{{ic:chevron-right:16}}</button></li>
+                    </ul>
+                    <button class="q__write" type="button" data-write>Otra cosa…</button>
+                  </div>
+                </article>
+              </div>
+              <div style="height:8px"></div>
+            </div>
+          </div>
+          <div class="composer-wrap"><div class="assistant-col">
+            <form class="composer" data-demo="axel"><textarea rows="1" placeholder="Pregúntale a Axel…" aria-label="Pregúntale a Axel"></textarea><button class="rnd send" type="submit" aria-label="Enviar">{{ic:arrow-up:18}}</button></form>
+            <p class="composer-foot">{{ic:sparkles:12}}Nada sale sin tu aprobación.</p>
+          </div></div>
+        </div>
+      </div>
+      <aside class="rail" aria-label="Tablero de Axel">
+        <div class="rail-head"><span>Por decidir</span><span class="count">1</span></div>
+        <div class="rail-body">
+          <a class="pcompact" href="#"><div class="k">Cómo vende tu agente</div><div class="t">Ofrecer el Top Aura solo cuando haya talla</div><div class="e">Vence en 5 días</div></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ VISTA 3 · /configurar escritorio -->
+<section class="view" id="v-alba-desk" hidden>
+  <div class="desk">
+    <div class="desk-top"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">axi-connect.co/configurar/7f3a…c9</span></div>
+    <div class="desk-body">
+      <div class="assistant-field" style="flex:1;display:flex;min-width:0">
+        <div class="assistant-chat" data-dock data-scroll-end>
+          <div class="assistant-scroller">
+            <div class="assistant-col">
+              <header class="assistant-dock"><div class="assistant-dock__bar">
+                <div class="assistant-dock__hero"><button class="hero-btn" aria-label="Saludar a Alba"><span class="assistant-stage" data-avatar="curious" data-acc="headset"></span></button></div>
+                <span class="assistant-dock__title" aria-hidden="true">Alba</span><span class="assistant-dock__meta" aria-hidden="true">Poniendo a punto Savage</span>
+              </div></header>
+              <div class="assistant-hero-spacer"></div><div class="dock-sentinel"></div>
+              <div class="briefing"><p class="hi">Hola, Isabel</p><h1>Dejemos Savage a punto en unos 12 minutos.</h1></div>
+              <div class="thread" role="log" aria-label="Conversación con Alba" id="alba-thread">
+                <article class="a-card">
+                  <div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Alba</span></div>
+                  <div class="a-card__body"><p>Soy Alba. Ya sé algunas cosas de Savage por tu cuenta y tu web; te voy a pedir confirmar y completar lo que falta. Puedes escribir o dictar, y corregir cualquier dato en la ficha de la derecha.</p><p>Vi que vendes <strong>ropa deportiva para mujer</strong> con envíos a toda Colombia. ¿Es así?</p></div>
+                  <div class="q">
+                    <p class="q__eyebrow" data-inert>{{ic:corner-down-right:12}}Ya respondida</p>
+                    <p class="q__text">¿Es así?</p>
+                    <ul class="grouped-list"><li class="grouped-row"><button type="button" disabled><span class="lbl">Sí, así es</span></button></li><li class="grouped-row"><button type="button" disabled><span class="lbl">Casi, te lo corrijo</span></button></li></ul>
+                  </div>
+                </article>
+                <div class="u-wrap"><div class="u-bubble">Sí. Vendemos ropa deportiva para mujer, abrimos de lunes a sábado de 9 a 7 y estamos en Medellín.</div><span class="u-foot">{{ic:mic:12}}Dictado</span></div>
+                <article class="a-card">
+                  <div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Alba</span></div>
+                  <div class="a-card__noted">{{ic:check:13}}<span>Anotado</span><span>Qué vendes</span><span>Horario</span><span>Ciudad</span></div>
+                  <div class="a-card__body"><p>Perfecto, el horario ya quedó por días. Ahora, la voz de tu agente.</p></div>
+                  <div class="q">
+                    <p class="q__eyebrow">{{ic:corner-down-right:12}}Elige una</p>
+                    <p class="q__text">¿Cómo quieres que le hable a tus clientas?</p>
+                    <ul class="grouped-list" data-question>
+                      <li class="grouped-row"><button type="button" data-pick="Cercano, de tú"><span class="lbl">Cercano, de tú<span class="hint">Como en tus historias</span></span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button type="button" data-pick="Profesional, de usted"><span class="lbl">Profesional, de usted</span>{{ic:chevron-right:16}}</button></li>
+                      <li class="grouped-row"><button type="button" data-pick="Como yo les hablo"><span class="lbl">Como yo les hablo<span class="hint">Lo aprendo de tus últimos chats</span></span>{{ic:chevron-right:16}}</button></li>
+                    </ul>
+                    <button class="q__write" type="button" data-write>Prefiero contarlo yo</button>
+                  </div>
+                </article>
+              </div>
+              <div style="height:8px"></div>
+            </div>
+          </div>
+          <div class="composer-wrap"><div class="assistant-col">
+            <form class="composer" data-demo="alba"><textarea rows="1" placeholder="Escribe o dicta…" aria-label="Escribe o dicta"></textarea><button class="rnd" type="button" aria-label="Dictar">{{ic:mic:18}}</button><button class="rnd send" type="submit" aria-label="Enviar">{{ic:arrow-up:18}}</button></form>
+            <p class="composer-foot">{{ic:sparkles:12}}Nada se aplica sin que lo revises.</p>
+          </div></div>
+        </div>
+      </div>
+      <aside class="ficha" aria-label="Lo que ya sabemos">
+        <div class="ficha-head">
+          <h2>Lo que ya sabemos</h2><p>7 de 18 datos · 2 por revisar · toca cualquiera para corregirlo</p>
+          <ol class="segs" aria-label="Temas"><li data-s="full"></li><li data-s="half"></li><li data-s=""></li><li data-s=""></li><li data-s="half"></li><li data-s=""></li><li data-s="skip"></li></ol>
+        </div>
+        <div class="ficha-body" id="ficha-desk"></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ VISTA 4 · /configurar móvil -->
+<section class="view" id="v-alba-phone" hidden>
+  <div class="phone">
+    <span class="notch"></span><div class="status"></div>
+    <div class="assistant-field" style="flex:1;display:flex;min-height:0;position:relative">
+      <div class="assistant-chat" data-dock data-scroll-end style="min-width:0">
+        <div class="assistant-actions"><button class="ficha-chip" id="open-sheet" aria-label="Abrir la ficha">{{ic:clipboard-list:15}}7/18</button></div>
+        <div class="assistant-scroller" style="padding:0 14px 8px">
+          <div class="assistant-col">
+            <header class="assistant-dock"><div class="assistant-dock__bar">
+              <div class="assistant-dock__hero"><button class="hero-btn" aria-label="Saludar a Alba"><span class="assistant-stage" data-avatar="listening" data-acc="headset"></span></button></div>
+              <span class="assistant-dock__title" aria-hidden="true">Alba</span><span class="assistant-dock__meta" aria-hidden="true">Savage</span>
+            </div></header>
+            <div class="assistant-hero-spacer"></div><div class="dock-sentinel"></div>
+            <div class="briefing"><p class="hi">Hola, Isabel</p><h1 style="font-size:22px">Dejemos Savage a punto en unos 12 minutos.</h1></div>
+            <div class="thread" role="log" aria-label="Conversación con Alba">
+              <article class="a-card">
+                <div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Alba</span></div>
+                <div class="a-card__body"><p>Vi que vendes <strong>ropa deportiva para mujer</strong> con envíos a toda Colombia. ¿Es así?</p></div>
+              </article>
+              <div class="u-wrap"><div class="u-bubble">Sí. Abrimos de lunes a sábado de 9 a 7 y estamos en Medellín.</div><span class="u-foot">{{ic:mic:12}}Dictado</span></div>
+              <article class="a-card">
+                <div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Alba</span></div>
+                <div class="a-card__noted">{{ic:check:13}}<span>Anotado</span><span>Horario</span><span>Ciudad</span></div>
+                <div class="a-card__body"><p>Ahora, la voz de tu agente.</p></div>
+                <div class="q">
+                  <p class="q__eyebrow">{{ic:corner-down-right:12}}Elige una</p>
+                  <p class="q__text">¿Cómo quieres que le hable a tus clientas?</p>
+                  <ul class="grouped-list" data-question>
+                    <li class="grouped-row"><button type="button" data-pick="Cercano, de tú"><span class="lbl">Cercano, de tú<span class="hint">Como en tus historias</span></span>{{ic:chevron-right:16}}</button></li>
+                    <li class="grouped-row"><button type="button" data-pick="Profesional, de usted"><span class="lbl">Profesional, de usted</span>{{ic:chevron-right:16}}</button></li>
+                    <li class="grouped-row"><button type="button" data-pick="Como yo les hablo"><span class="lbl">Como yo les hablo</span>{{ic:chevron-right:16}}</button></li>
+                  </ul>
+                  <button class="q__write" type="button" data-write>Prefiero contarlo yo</button>
+                </div>
+              </article>
+            </div>
+            <div style="height:8px"></div>
+          </div>
+        </div>
+        <div class="composer-wrap" style="padding:10px 14px 22px"><div class="assistant-col">
+          <form class="composer" data-demo="alba"><textarea rows="1" placeholder="Escribe o dicta…" aria-label="Escribe o dicta"></textarea><button class="rnd" type="button" aria-label="Dictar">{{ic:mic:18}}</button><button class="rnd send" type="submit" aria-label="Enviar">{{ic:arrow-up:18}}</button></form>
+        </div></div>
+      </div>
+      <div class="sheet" id="sheet" role="dialog" aria-label="Lo que ya sabemos">
+        <div class="scrim" data-close></div>
+        <div class="panel">
+          <div class="grab"></div>
+          <button class="icon-btn close" data-close aria-label="Cerrar">{{ic:x:17}}</button>
+          <aside class="ficha">
+            <div class="ficha-head"><h2>Lo que ya sabemos</h2><p>7 de 18 datos · 2 por revisar</p>
+              <ol class="segs" aria-label="Temas"><li data-s="full"></li><li data-s="half"></li><li data-s=""></li><li data-s=""></li><li data-s="half"></li><li data-s=""></li><li data-s="skip"></li></ol></div>
+            <div class="ficha-body" id="ficha-phone"></div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ VISTA 5 · estados -->
+<section class="view" id="v-states" hidden>
+  <div class="grid-states">
+
+    <div class="mini"><div class="cap">Alba · dictando</div>
+      <div class="assistant-field" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px">
+          <div class="thread"><article class="a-card"><div class="a-card__head"><span class="a-mark">{{ic:sparkles:14}}Alba</span></div><div class="a-card__body"><p>¿Qué preguntas te hacen siempre tus clientas? Dímelas de corrido, yo las ordeno.</p></div></article></div>
+        </div>
+        <div class="composer-wrap" style="padding:12px 16px 16px"><div class="composer"><div class="recording"><span class="rec-dot"></span><span class="rec-time">0:14</span><span class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span style="flex:1"></span><button class="rec-cancel" type="button">Cancelar</button></div><button class="rnd send" type="button" aria-label="Detener">{{ic:square:16}}</button></div>
+          <p class="composer-foot">Te escucho · hasta 2 minutos</p></div>
+      </div></div>
+
+    <div class="mini"><div class="cap">Axel · pensando con pasos</div>
+      <div class="assistant-field" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px 16px">
+          <div class="thread">
+            <div class="u-wrap"><div class="u-bubble">Cercano y directo</div></div>
+            <div class="thinking" aria-live="polite" aria-busy="true"><ol>
+              <li><span class="ok">{{ic:check:14}}</span><span>Leí las 14 clientas</span><span class="ms">820 ms</span></li>
+              <li><span class="ok">{{ic:check:14}}</span><span>Revisé stock por talla</span><span class="ms">1,2 s</span></li>
+              <li><span class="spin">{{ic:loader-circle:14}}</span><span>Redacto el mensaje</span></li>
+            </ol><p class="thinking__foot">Trabajando · 2 lecturas</p></div>
+          </div>
+        </div>
+      </div></div>
+
+    <div class="mini"><div class="cap">Alba · pensando sin pasos · mensaje fallido</div>
+      <div class="assistant-field" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px 16px">
+          <div class="thread">
+            <div class="u-wrap"><div class="u-bubble" data-failed>Aceptamos Nequi, Bancolombia y contraentrega en Medellín.</div><button class="u-retry" type="button">{{ic:rotate-ccw:12}}No salió. Reintentar</button></div>
+            <div class="u-wrap"><div class="u-bubble" data-pending>Y también tarjeta por Wompi.</div></div>
+            <div class="dots" role="status" aria-label="Está pensando"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div></div>
+
+    <div class="mini"><div class="cap">Alba · Listo</div>
+      <div class="assistant-field full">
+        <span class="assistant-stage" data-avatar="proud" data-acc="headset" data-busy></span>
+        <h2>Listo, Savage ya tiene lo suyo.</h2>
+        <p>Anoté 16 datos. Isabel revisará los 2 que quedaron marcados y encenderá al agente.</p>
+        <button class="lnk" type="button">Revisar lo que anoté</button>
+        <span class="foot">{{ic:clock:12}}Este enlace deja de servir en 14 días</span>
+      </div></div>
+
+    <div class="mini"><div class="cap">Alba · enlace caducado</div>
+      <div class="assistant-field full">
+        <span class="assistant-stage" data-avatar="asleep" data-acc="headset"></span>
+        <h2>Este enlace ya no sirve.</h2>
+        <p>Caducó el 15 de septiembre. Pídele a quien te lo envió uno nuevo desde axi.</p>
+      </div></div>
+
+    <div class="mini"><div class="cap">Axel · bloqueado por cuota</div>
+      <div class="assistant-field full">
+        <span class="assistant-stage" data-avatar="asleep" data-acc="none"></span>
+        <h2>Axel descansa hasta el 1 de octubre.</h2>
+        <p>Se agotó la cuota de este mes. Tus agentes siguen atendiendo.</p>
+        <button class="lnk" type="button">Ver el plan</button>
+      </div></div>
+
+    <div class="mini" style="height:auto"><div class="cap">Alba · ficha · propuesta editable</div>
+      <div style="padding:14px" id="ficha-edit"></div></div>
+
+    <div class="mini" style="height:auto"><div class="cap">Las ocho expresiones · Alba y Axel</div>
+      <div id="faces" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px"></div></div>
+  </div>
+
+  <div class="notes">
+    <article><h3>Un kit, dos personajes</h3><p>Avatar, escenario, dock, tarjetas, pregunta, pensando, compositor y aura son las mismas piezas en /cmo y en /configurar. Cada slice aporta su store, su copy y su personaje: Alba lleva la diadema; Axel, la que el dueño elija.</p></article>
+    <article><h3>Sólido donde se lee, cristal donde flota</h3><p>Las tarjetas del hilo son sólidas con sombra flotante y sin borde. El cristal queda para lo que flota: el dock al acoplarse, la cápsula del compositor y las píldoras (DESIGN-SYSTEM §5.2).</p></article>
+    <article><h3>El coral es la voz del humano</h3><p>La burbuja del dueño o del cliente va en coral degradado, como el azul de Messages. El violeta sigue siendo la señal de IA: la marca ✦, el eyebrow de la pregunta y los pasos del pensamiento.</p></article>
+    <article><h3>Nada se mueve solo</h3><p>La cara respira solo con un turno vivo; el aura pinta una vez; el dock y el compositor solo animan transform y opacidad. Con reduced‑motion todo salta sin viaje.</p></article>
+    <article><h3>La pregunta es una lista iOS</h3><p>Opciones en filas agrupadas con hairline y chevron, botones reales, solo la última pregunta viva. «Prefiero contarlo yo» enfoca el compositor y no envía.</p></article>
+    <article><h3>La ficha sigue el patrón etiqueta → valor</h3><p>Un solo indicador por fila, la línea secundaria dice de dónde salió el dato, y lo propuesto por el sector se confirma o se corrige sin rehacerlo.</p></article>
+  </div>
+</section>
+</main>
+
+<script>
+(() => {
+  /* ---------- tema ---------- */
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme');
+  const SUN = themeBtn.innerHTML;
+  const MOON = '<svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+  const isDark = () => root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  const paintTheme = () => { themeBtn.innerHTML = isDark() ? SUN : MOON; };
+  themeBtn.addEventListener('click', () => { root.dataset.theme = isDark() ? 'light' : 'dark'; paintTheme(); });
+  paintTheme();
+
+  /* ---------- vistas ---------- */
+  const NOTES = {
+    'cmo-empty': '<b>/cmo sin conversación.</b> El compositor baja al centro con Axel; las píldoras van debajo; el aura viene de abajo. El rail «Por decidir» no cambia.',
+    'cmo-chat': '<b>/cmo conversando.</b> Haz scroll en el hilo: Axel se acopla a 40 px en la barra de cristal. Toca una opción de la pregunta para ver el turno completo (burbuja coral → pensando → respuesta).',
+    'alba-desk': '<b>/configurar en escritorio.</b> Mismo dock, misma cápsula, misma pregunta. Alba lleva diadema. La ficha a la derecha es una lista etiqueta → valor con «Así es / Revisar».',
+    'alba-phone': '<b>/configurar en el móvil.</b> El chip 7/18 abre la ficha como hoja iOS. Compositor con micrófono. Todo cabe en 400 px sin scroll horizontal.',
+    'states': '<b>Estados.</b> Dictando, pensando con y sin pasos, fallo con reintento, «Listo», enlace caducado, cuota agotada, la propuesta editable y las ocho expresiones con y sin diadema.'
+  };
+  const note = document.getElementById('note');
+  const show = (key) => {
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-pressed', String(t.dataset.view === key)));
+    document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'v-' + key; });
+    note.innerHTML = NOTES[key];
+    requestAnimationFrame(settleScroll);
+    try { localStorage.setItem('akp.view', key); } catch (e) {}
+  };
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
+
+  /* ---------- avatar: rig y poses (puerto 1:1 de domain/axel-avatar.ts) ---------- */
+  const EYE = { top: .02, bot: 0, tilt: 0, sx: 1, scale: 1 };
+  const eye = o => ({ ...EYE, ...o });
+  const ex = o => ({ yaw: 0, pitch: 0, roll: 0, depth: 1, gap: 12, gx: 0, gy: 0, mouth: .9, mouthW: 1, open: 0, l: EYE, r: EYE, ...o });
+  const POSES = {
+    neutral: ex({}),
+    listening: ex({ pitch: 3, roll: -3, gap: 12.4, mouth: 1.05, mouthW: 1.05, l: eye({ top: 0, scale: 1.06 }), r: eye({ top: 0, scale: 1.06 }) }),
+    thinking: ex({ yaw: 9, pitch: -5, gx: .9, gy: -1, mouth: .25, mouthW: .8, l: eye({ top: .16, tilt: -6 }), r: eye({ top: .26, tilt: -4 }) }),
+    speaking: ex({ pitch: -1, mouth: .75, open: 1, l: eye({ top: 0, scale: 1.03 }), r: eye({ top: 0, scale: 1.03 }) }),
+    proud: ex({ pitch: -6, gap: 12.4, mouth: 1.35, mouthW: 1.18, l: eye({ top: .08, bot: .38, tilt: 4 }), r: eye({ top: .08, bot: .38, tilt: 4 }) }),
+    curious: ex({ roll: 7, yaw: -6, gx: -.4, mouth: .5, mouthW: .75, l: eye({ top: 0, scale: 1.16 }), r: eye({ top: .22, scale: .88 }) }),
+    sorry: ex({ pitch: 7, gy: .7, mouth: -.55, mouthW: .85, l: eye({ top: .28, tilt: 16, bot: .06 }), r: eye({ top: .28, tilt: 16, bot: .06 }) }),
+    asleep: ex({ pitch: 9, roll: 2, gy: .4, mouth: .35, mouthW: .7, l: eye({ top: .92, bot: .06 }), r: eye({ top: .92, bot: .06 }) }),
+  };
+  const r3 = (v, d = 3) => String(Math.round(v * 10 ** d) / 10 ** d);
+  function poseVars(name) {
+    const p = POSES[name]; const cos = Math.cos(p.yaw * Math.PI / 180 * 2.2); const far = p.yaw > 0 ? 'l' : 'r';
+    const s = { '--av-yaw': r3(p.yaw), '--av-pitch': r3(p.pitch), '--av-roll': r3(p.roll), '--av-depth': r3(p.depth), '--av-face-sx': r3(.94 + .06 * cos), '--av-gap': r3(p.gap * (.86 + .14 * cos), 2), '--av-gx': r3(p.gx), '--av-gy': r3(p.gy), '--av-mouth': r3(p.mouth), '--av-mouth-w': r3(p.mouthW), '--av-open': r3(p.open) };
+    for (const side of ['l', 'r']) { const e = p[side]; const sq = side === far ? 1 - Math.abs(p.yaw) * .012 : 1;
+      s[`--av-${side}-top`] = r3(e.top); s[`--av-${side}-bot`] = r3(e.bot); s[`--av-${side}-tilt`] = r3(e.tilt); s[`--av-${side}-sx`] = r3(e.sx * sq); s[`--av-${side}-scale`] = r3(e.scale); }
+    return s;
+  }
+  let uidN = 0;
+  function eyeSvg(side, id) {
+    const rx = 4.3, ry = 5.8, cy = 47, lidH = ry * 2 + 3;
+    return `<g class="assistant-rig-eye-${side}"><g class="assistant-rig-blink"><g clip-path="url(#${id}-clip-e${side})"><ellipse cx="50" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${id}-ink)"/><g class="assistant-rig-pupil"><ellipse data-layer="glint" cx="48.6" cy="${cy - 2.6}" rx="1.1" ry="1.4" opacity=".9"/></g><rect data-layer="lid" class="assistant-rig-lid-top" x="43" y="${cy - ry - 3}" width="14" height="${lidH}"/><rect data-layer="lid" class="assistant-rig-lid-bot" x="43" y="${cy - ry}" width="14" height="${lidH}"/></g></g></g>`;
+  }
+  function avatarSvg(expression, acc) {
+    const id = 'av' + (++uidN);
+    const vars = Object.entries(poseVars(expression)).map(([k, v]) => `${k}:${v}`).join(';');
+    return `<svg viewBox="0 0 100 100" class="assistant-avatar" aria-hidden="true" focusable="false" data-expression="${expression}" data-acc="${acc}" style="${vars}">
+<g class="assistant-rig-gesture"><g class="assistant-rig-body"><ellipse cx="50" cy="50" rx="37" ry="34.5" fill="url(#${id}-body)"/><g clip-path="url(#${id}-clip-body)"><ellipse cx="58" cy="70" rx="46" ry="38" fill="url(#${id}-occ)"/><g class="assistant-rig-hot"><ellipse cx="38" cy="30" rx="24" ry="18" fill="url(#${id}-hot)" opacity=".5"/></g></g></g>
+<g class="assistant-rig-face">${eyeSvg('l', id)}${eyeSvg('r', id)}<g class="assistant-rig-lips"><g class="assistant-rig-open"><ellipse data-layer="mouth-open" cx="50" cy="62.3" rx="3.2" ry="2.1"/></g><g class="assistant-rig-mouth"><path data-layer="mouth" d="M43 60 Q50 67 57 60" stroke-width="2.6"/></g></g></g>
+<g class="assistant-rig-band" data-acc-part="headset"><path data-layer="acc-line" d="M16 50 C16 26 30 15.5 50 15.5 C70 15.5 84 26 84 50" stroke-width="4.2"/><rect data-layer="acc" x="9.5" y="40.5" width="9" height="19" rx="4.5"/><rect data-layer="acc" x="81.5" y="40.5" width="9" height="19" rx="4.5"/><rect data-layer="acc-hi" x="11" y="43.5" width="2.8" height="13" rx="1.4"/><path data-layer="acc-line" d="M86 58 C86 68 76 71.5 66 70" stroke-width="2.4"/><ellipse data-layer="acc" cx="63.5" cy="70" rx="4.4" ry="2.9"/></g></g>
+<defs><clipPath id="${id}-clip-body"><ellipse cx="50" cy="50" rx="37" ry="34.5"/></clipPath><clipPath id="${id}-clip-el"><ellipse cx="50" cy="47" rx="4.3" ry="5.8"/></clipPath><clipPath id="${id}-clip-er"><ellipse cx="50" cy="47" rx="4.3" ry="5.8"/></clipPath>
+<radialGradient id="${id}-body" cx=".42" cy=".32" r=".85"><stop data-stop="body-hi" offset="0"/><stop data-stop="body-mid" offset=".66"/><stop data-stop="body-deep" offset="1"/></radialGradient>
+<radialGradient id="${id}-occ" cx=".5" cy=".5" r=".5"><stop data-stop="none" offset=".62"/><stop data-stop="occ" offset="1" stop-opacity=".32"/></radialGradient>
+<radialGradient id="${id}-hot" cx=".5" cy=".5" r=".5"><stop data-stop="hot" offset="0" stop-opacity=".9"/><stop data-stop="none" offset="1"/></radialGradient>
+<linearGradient id="${id}-ink" x1="0" y1="0" x2=".3" y2="1"><stop data-stop="ink-hi" offset="0"/><stop data-stop="ink" offset=".7"/></linearGradient></defs></svg>`;
+  }
+  function mountStage(el) {
+    el.classList.add('assistant-stage'); if (el.hasAttribute('data-busy')) el.classList.add('assistant-stage--busy');
+    el.innerHTML = `<span class="assistant-ground"></span><span class="assistant-stage-figure">${avatarSvg(el.dataset.avatar || 'neutral', el.dataset.acc || 'none')}</span>`;
+  }
+  document.querySelectorAll('[data-avatar]').forEach(mountStage);
+  const setExpression = (stage, name) => { const svg = stage.querySelector('.assistant-avatar'); if (!svg) return; svg.dataset.expression = name; Object.entries(poseVars(name)).forEach(([k, v]) => svg.style.setProperty(k, v)); };
+
+  /* la mirada sigue al puntero (como useAvatarGaze: un rAF por movimiento, nada en reposo) */
+  document.querySelectorAll('.hero-btn').forEach(btn => {
+    let raf = 0;
+    btn.closest('.assistant-chat')?.addEventListener('pointermove', (ev) => {
+      if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const svg = btn.querySelector('.assistant-avatar'); const b = svg.getBoundingClientRect();
+        const dx = (ev.clientX - (b.left + b.width / 2)) / 280, dy = (ev.clientY - (b.top + b.height / 2)) / 280;
+        svg.style.setProperty('--gaze-x', Math.max(-1, Math.min(1, dx)).toFixed(3)); svg.style.setProperty('--gaze-y', Math.max(-1, Math.min(1, dy)).toFixed(3)); });
+    });
+    btn.closest('.assistant-chat')?.addEventListener('pointerleave', () => { const svg = btn.querySelector('.assistant-avatar'); svg.style.setProperty('--gaze-x', 0); svg.style.setProperty('--gaze-y', 0); });
+  });
+
+  /* ---------- las ocho expresiones ---------- */
+  const faces = document.getElementById('faces');
+  Object.keys(POSES).forEach(name => {
+    const cell = document.createElement('div'); cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--color-muted-foreground)';
+    cell.innerHTML = `<div style="display:flex;gap:2px;transform:scale(.62);transform-origin:top center;height:92px"><span data-avatar="${name}" data-acc="headset"></span><span data-avatar="${name}" data-acc="none"></span></div>${name}`;
+    faces.appendChild(cell); cell.querySelectorAll('[data-avatar]').forEach(mountStage);
+  });
+
+  /* ---------- dock por IntersectionObserver (como useDockedHero) ---------- */
+  document.querySelectorAll('.assistant-chat[data-dock]').forEach(chat => {
+    const scroller = chat.querySelector('.assistant-scroller'), sentinel = chat.querySelector('.dock-sentinel');
+    if (!('IntersectionObserver' in window) || !sentinel) return;
+    new IntersectionObserver(([e]) => { const docked = !e.isIntersecting && e.boundingClientRect.top < (e.rootBounds?.top ?? 0); if (docked) chat.dataset.docked = ''; else delete chat.dataset.docked; }, { root: scroller, rootMargin: '-56px 0px 0px 0px', threshold: 0 }).observe(sentinel);
+  });
+  function settleScroll() { document.querySelectorAll('.view:not([hidden]) .assistant-chat[data-scroll-end] .assistant-scroller').forEach(s => { s.scrollTop = s.scrollHeight; }); }
+
+  /* ---------- compositor: autosize + Enter ---------- */
+  document.querySelectorAll('.composer textarea').forEach(ta => {
+    const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; };
+    ta.addEventListener('input', grow);
+    ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ta.form?.requestSubmit(); } });
+  });
+  const IC = { sparkles: document.querySelector('.a-mark .ic')?.outerHTML || '', check: document.querySelector('.a-card__noted .ic')?.outerHTML || '' };
+  const REPLY = {
+    axel: (pick) => `<div class="a-card__head"><span class="a-mark">${IC.sparkles}Axel</span></div><div class="a-card__body"><p>${pick ? `<strong>${pick}</strong>, entonces.` : 'Entendido.'} Dejo el mensaje como borrador dentro de la propuesta; lo lees y decides si sale.</p></div>`,
+    alba: (pick) => `<div class="a-card__head"><span class="a-mark">${IC.sparkles}Alba</span></div><div class="a-card__noted">${IC.check}<span>Anotado</span><span>Tono del agente</span></div><div class="a-card__body"><p>${pick ? `<strong>${pick}</strong>.` : 'Anotado.'} Ahora, ¿qué preguntas te hacen siempre tus clientas? Dímelas de corrido y yo las ordeno.</p></div>`,
+  };
+  function demoTurn(chat, text, who) {
+    const thread = chat.querySelector('.thread'); if (!thread) return;
+    const stage = chat.querySelector('.assistant-dock .assistant-stage');
+    chat.querySelectorAll('[data-question] button').forEach(b => { b.disabled = true; b.querySelector('.chev, .ic')?.remove(); });
+    chat.querySelectorAll('.q__eyebrow').forEach(e => { e.dataset.inert = ''; e.lastChild.textContent = who === 'axel' ? 'Pregunta anterior' : 'Ya respondida'; });
+    chat.querySelectorAll('[data-write]').forEach(b => b.remove());
+    const u = document.createElement('div'); u.className = 'u-wrap assistant-rise'; u.innerHTML = `<div class="u-bubble" data-pending>${text.replace(/</g, '&lt;')}</div>`; thread.appendChild(u);
+    const dots = document.createElement('div'); dots.className = 'dots assistant-rise'; dots.setAttribute('role', 'status'); dots.innerHTML = '<i></i><i></i><i></i>'; thread.appendChild(dots);
+    stage?.classList.add('assistant-stage--busy'); if (stage) setExpression(stage, 'thinking');
+    const scroller = chat.querySelector('.assistant-scroller'); scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+    setTimeout(() => { u.querySelector('.u-bubble').removeAttribute('data-pending'); }, 500);
+    setTimeout(() => {
+      dots.remove(); const a = document.createElement('article'); a.className = 'a-card assistant-rise'; a.innerHTML = REPLY[who](text); thread.appendChild(a);
+      stage?.classList.remove('assistant-stage--busy'); if (stage) setExpression(stage, who === 'axel' ? 'proud' : 'listening');
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+      setTimeout(() => { if (stage) setExpression(stage, 'neutral'); }, 2500);
+    }, 1900);
+  }
+  document.querySelectorAll('.composer[data-demo]').forEach(form => form.addEventListener('submit', (e) => {
+    e.preventDefault(); const ta = form.querySelector('textarea'); const v = ta.value.trim(); if (!v) return; ta.value = ''; ta.style.height = 'auto';
+    demoTurn(form.closest('.assistant-chat'), v, form.dataset.demo);
+  }));
+  document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => { const chat = b.closest('.assistant-chat'); demoTurn(chat, b.dataset.pick, chat.querySelector('.composer').dataset.demo); }));
+  document.querySelectorAll('[data-write]').forEach(b => b.addEventListener('click', () => b.closest('.assistant-chat').querySelector('.composer textarea')?.focus()));
+
+  /* ---------- la hoja del móvil ---------- */
+  const sheet = document.getElementById('sheet');
+  document.getElementById('open-sheet')?.addEventListener('click', () => { sheet.dataset.open = ''; });
+  sheet?.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => { delete sheet.dataset.open; }));
+
+  /* ---------- la ficha (lista etiqueta → valor) ---------- */
+  const SRC = { known: 'Ya lo tenía axi', derived: 'Lo leí en savage.co', stated: 'Lo dijiste tú', proposed: 'Propuesto para tu sector' };
+  const FICHA = [
+    ['Negocio', [
+      { k: 'Qué vendes', v: 'Ropa deportiva para mujer', s: 'stated', ok: true },
+      { k: 'Ciudad', v: 'Medellín', s: 'known' },
+      { k: 'Sitio web', v: 'savage.co', s: 'known' },
+      { k: 'Envíos', v: 'A toda Colombia', s: 'derived', review: true },
+    ]],
+    ['Atención', [
+      { k: 'Horario', v: 'Lun–Sáb · 9:00–19:00', s: 'stated', ok: true },
+      { k: 'Silencio', v: null, req: true },
+      { k: 'Tono', v: null, req: true },
+    ]],
+    ['Embudo', [
+      { k: 'Etapas', v: 'Nuevo · Interesada · Talla confirmada · Pagó · Entregado', s: 'proposed', review: true },
+      { k: 'Etiquetas', v: 'Mayorista · Recompra · Cambio de talla', s: 'proposed', review: true },
+    ]],
+  ];
+  const TOPICS = [['Negocio', 'done'], ['Atención', 'cur'], ['Voz del agente', 'wait'], ['Preguntas frecuentes', 'wait'], ['Embudo', 'cur'], ['Venta y pagos', 'wait'], ['Límites', 'later']];
+  const chev = document.querySelector('[data-question] .ic')?.outerHTML || '';
+  const checkIc = IC.check.replace('class="ic', 'class="ic okk');
+  const sparkIc = IC.sparkles;
+  function fichaHtml() {
+    let h = '';
+    for (const [title, rows] of FICHA) {
+      h += `<section class="grp"><h3>${title}</h3><ul class="grouped-list">`;
+      for (const f of rows) {
+        const cls = 'grouped-row' + (f.review ? (f.s === 'proposed' ? ' review prop' : ' review') : '');
+        const sub = f.s && f.s !== 'stated' ? `<span class="sub">${f.s === 'proposed' || f.s === 'derived' ? sparkIc + ' ' : ''}${SRC[f.s]}</span>` : '';
+        const val = f.v === null ? '<span class="v empty">Sin dato</span>' : `<span class="v">${f.v}${sub}</span>`;
+        const end = f.review ? `<button class="get${f.s === 'proposed' ? ' prop' : ''}" type="button">${f.s === 'proposed' ? 'Revisar' : 'Así es'}</button>` : f.ok ? checkIc : f.req ? '<span class="req" title="Hace falta"></span>' : chev;
+        h += `<li class="${cls}"><div class="row fld"><span class="k">${f.k}</span>${val}${end}</div></li>`;
+      }
+      h += '</ul></section>';
+    }
+    h += '<section class="grp"><h3>Temas</h3><ul class="grouped-list">';
+    for (const [t, st] of TOPICS) {
+      const badge = st === 'done' ? `<span class="tstat done">${IC.check}</span>` : st === 'cur' ? '<span class="tstat cur"></span>' : st === 'later' ? `<span class="tstat wait"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6h4"/><circle cx="12" cy="12" r="10"/></svg></span>` : '<span class="tstat wait"></span>';
+      const act = st === 'done' ? '' : st === 'later' ? '<button class="later" type="button">Retomar</button>' : '<button class="later" type="button">Luego</button>';
+      h += `<li class="grouped-row"><div class="row fld" style="min-height:44px">${badge}<span class="v" style="font-weight:500">${t}</span>${act}</div></li>`;
+    }
+    return h + '</ul></section>';
+  }
+  document.getElementById('ficha-desk').innerHTML = fichaHtml();
+  document.getElementById('ficha-phone').innerHTML = fichaHtml();
+  document.getElementById('ficha-edit').innerHTML = `<section class="grp" style="margin-top:0"><h3>Embudo</h3><ul class="grouped-list">
+    <li class="grouped-row"><div class="list-edit"><span class="lbl">Etapas · propuesto para tu sector, corrígelo a tu manera</span><ol>
+      <li><input value="Nuevo"><button class="mini-b" aria-label="Subir" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button><button class="mini-b" aria-label="Bajar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><button class="mini-b" aria-label="Quitar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>
+      <li><input value="Interesada"><button class="mini-b" aria-label="Subir"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button><button class="mini-b" aria-label="Bajar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><button class="mini-b" aria-label="Quitar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>
+      <li><input value="Talla confirmada"><button class="mini-b" aria-label="Subir"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button><button class="mini-b" aria-label="Bajar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><button class="mini-b" aria-label="Quitar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>
+      <li><input value="Pagó"><button class="mini-b" aria-label="Subir"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button><button class="mini-b" aria-label="Bajar" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><button class="mini-b" aria-label="Quitar"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>
+    </ol><button class="add" type="button">+ Añadir etapa</button>
+    <div class="foot"><span class="note">Se propone; nada se escribe hasta que lo apruebe Isabel.</span><span><button class="cancel-b" type="button">Cancelar</button><button class="done-b" type="button">Listo</button></span></div></div></li>
+    <li class="grouped-row review prop"><div class="row fld"><span class="k">Etiquetas</span><span class="v">Mayorista · Recompra · Cambio de talla<span class="sub">${sparkIc} Propuesto para tu sector</span></span><button class="get prop" type="button">Revisar</button></div></li>
+  </ul></section>`;
+
+  /* arranque */
+  let start = 'cmo-empty'; try { start = localStorage.getItem('akp.view') || start; } catch (e) {}
+  const hash = location.hash.slice(1); if (NOTES[hash]) start = hash; if (!NOTES[start]) start = 'cmo-empty';
+  show(start);
+  window.addEventListener('load', settleScroll);
+})();
+</script>
