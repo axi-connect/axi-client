@@ -6548,6 +6548,22 @@ export interface paths {
         patch: operations["PlatformIntakeBlueprintsController_update_v1"];
         trace?: never;
     };
+    "/api/v1/platform/intake/sessions/ladder/{company_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_ladderFor_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/intake/sessions": {
         parameters: {
             query?: never;
@@ -6622,22 +6638,6 @@ export interface paths {
         get: operations["PlatformIntakeSessionsController_preview_v1"];
         put?: never;
         post: operations["PlatformIntakeSessionsController_execute_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/intake/sessions/ladder/{company_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformIntakeSessionsController_ladderFor_v1"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -16206,6 +16206,21 @@ export interface components {
                 has_pending_confirmation: boolean;
             };
             closing: string | null;
+            summary: {
+                axi_applies: number;
+                applied: boolean;
+                you_do: {
+                    label: string;
+                    value: string;
+                    where: string;
+                }[];
+                to_activate: {
+                    /** @enum {string} */
+                    step: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp" | "channel_agent";
+                    label: string;
+                    where: string;
+                }[];
+            } | null;
         };
         SendIntakeMessageDto: {
             message: string;
@@ -16245,6 +16260,21 @@ export interface components {
             };
             finished: boolean;
             closing: string | null;
+            summary: {
+                axi_applies: number;
+                applied: boolean;
+                you_do: {
+                    label: string;
+                    value: string;
+                    where: string;
+                }[];
+                to_activate: {
+                    /** @enum {string} */
+                    step: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp" | "channel_agent";
+                    label: string;
+                    where: string;
+                }[];
+            } | null;
             turns_left: number;
             captured_values: {
                 code: string;
@@ -16316,11 +16346,15 @@ export interface components {
                         help?: string;
                         example?: string;
                         /** @enum {string} */
-                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                        handoff?: string;
                     }[];
                 }[];
                 is_active: boolean;
                 version: number;
+                stage: number;
+                niche_codes: string[];
+                requires_stage: number | null;
                 /** Format: date-time */
                 created_at: string;
                 /** Format: date-time */
@@ -16355,11 +16389,15 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                    handoff?: string;
                 }[];
             }[];
             is_active: boolean;
             version: number;
+            stage: number;
+            niche_codes: string[];
+            requires_stage: number | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -16390,9 +16428,13 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                    handoff?: string;
                 }[];
             }[];
+            stage?: number;
+            niche_codes?: string[];
+            requires_stage?: number | null;
         };
         UpdateBlueprintDto: {
             name?: string;
@@ -16418,10 +16460,32 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                    handoff?: string;
                 }[];
             }[];
+            stage?: number;
+            niche_codes?: string[];
+            requires_stage?: number | null;
             is_active?: boolean;
+        };
+        IntakeLadderDto: {
+            /** Format: uuid */
+            company_id: string;
+            niche_code: string | null;
+            stages: {
+                stage: number;
+                /** Format: uuid */
+                blueprint_id: string | null;
+                blueprint_name: string | null;
+                /** @enum {string|null} */
+                status: "pending" | "in_progress" | "completed" | "applied" | "cancelled" | null;
+                /** Format: uuid */
+                session_id: string | null;
+                can_emit: boolean;
+                blocked_reason: string | null;
+            }[];
+            next_stage: number | null;
         };
         SessionListDto: {
             data: {
@@ -16585,24 +16649,6 @@ export interface components {
                 value: string;
                 where: string;
             }[];
-        };
-        IntakeLadderDto: {
-            /** Format: uuid */
-            company_id: string;
-            niche_code: string | null;
-            stages: {
-                stage: number;
-                /** Format: uuid */
-                blueprint_id: string | null;
-                blueprint_name: string | null;
-                /** @enum {string|null} */
-                status: "pending" | "in_progress" | "completed" | "applied" | "cancelled" | null;
-                /** Format: uuid */
-                session_id: string | null;
-                can_emit: boolean;
-                blocked_reason: string | null;
-            }[];
-            next_stage: number | null;
         };
     };
     responses: never;
@@ -28978,6 +29024,27 @@ export interface operations {
             };
         };
     };
+    PlatformIntakeSessionsController_ladderFor_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeLadderDto"];
+                };
+            };
+        };
+    };
     PlatformIntakeSessionsController_list_v1: {
         parameters: {
             query?: {
@@ -29127,27 +29194,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApplyOutcomeDto"];
-                };
-            };
-        };
-    };
-    PlatformIntakeSessionsController_ladderFor_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                company_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IntakeLadderDto"];
                 };
             };
         };
