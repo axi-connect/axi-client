@@ -3,26 +3,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Grabar una nota de voz con el micrófono del navegador.
- *
- * **Por qué esto existe.** WhatsApp mueve del orden de siete mil millones de
- * notas de voz al día y dictar es unas tres veces más rápido que teclear en un
- * móvil; en Latinoamérica la preferencia por la voz es estructural, no una
- * moda. Quien va a contestar esta entrevista es un dueño de negocio colombiano
- * que vive en WhatsApp: pedirle que teclee la descripción de su negocio es
- * pedirle justo lo que menos hace.
+ * Grabar una nota de voz con el micrófono del navegador (`MediaRecorder`) y
+ * devolverla como `Blob` para que quien la pida haga con ella lo que necesite
+ * (hoy: transcribirla y dejar el texto en el compositor del kit de asistente).
  *
  * Tres decisiones del hook:
  *
  * 1. **El permiso se pide al PULSAR, no al montar.** Un diálogo de micrófono
- *    nada más abrir un enlace desconocido es la forma más rápida de que alguien
- *    cierre la pestaña.
+ *    nada más abrir una pantalla es la forma más rápida de que alguien la cierre.
  * 2. **Las pistas se cierran siempre** (`stop()` en cada una), incluso si el
  *    componente se desmonta a media grabación. Sin eso el indicador de
  *    micrófono activo se queda encendido y la gente lo nota — y con razón.
  * 3. **`unsupported` es un estado, no un error.** Si el navegador no graba, el
- *    botón no se pinta y el compositor de texto sigue funcionando igual. El
+ *    botón no se pinta y la entrada de texto sigue funcionando igual. El
  *    dictado es un acelerador, nunca la única puerta.
+ *
+ * Hay un segundo grabador en `modules/inbox/infrastructure/hooks/use-voice-recorder.ts`
+ * (nota de voz que se ENVÍA como audio: añade `preview`, `object_url`,
+ * `mime_type` y `duration_ms`). Siguen separados a propósito: este devuelve el
+ * audio para transcribirlo y aquel gestiona una escucha previa; unificarlos es
+ * una tanda propia que toca el inbox. El argumento de producto sobre la voz en
+ * LATAM vive en `docs/plans/conversational_intake_plan.md` del servidor.
  */
 
 export type RecorderState = "idle" | "requesting" | "recording" | "unsupported" | "denied";

@@ -24,6 +24,15 @@
 - **Pendiente del dueño**: verificación visual en `/cmo` y `/configurar/{token}` (móvil y escritorio,
   dictado incluido) y el push junto con el intake. Los tests de `AxelChat`/`AxelHeroAvatar` no cambiaron
   sus aserciones.
+- **Riesgos anotados por la auditoría (axi-08, 2026-09-18):** (a) el renombrado de `globals.css`
+  (`.axel-*`→`.assistant-*`, `--axel-*`→`--av-*`) son ~575 líneas: los worktrees vivos
+  `feat/storage-quota`, `fix/voice-frontend-polish`, `feat/agent-tasks-platform-frontend` y
+  `worktree-cmo-axel-avatar` chocarán al fusionar si tocan esas clases; (b) la frontera
+  «`shared/` nunca importa de `modules/`» se sostiene a mano (no hay lint de boundaries en el cliente):
+  `grep -rn "@/modules" src/shared/components/features/assistant` debe seguir vacío; (c) las dos
+  regresiones que la verja no vio (variables `--grouped-list*` inexistentes y `axel-field` en el
+  skeleton de `/cmo`) eran CSS puro: ninguna de las seis puertas mira el CSS. Corregidas en el
+  commit `fix(assistant-kit)` posterior a la fusión.
 
 ## 1. Contexto
 

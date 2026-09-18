@@ -1,7 +1,6 @@
 "use client";
 
-import { useStoredAccessory } from "@/shared/components/features/assistant/hooks/use-stored-accessory";
-import type { AssistantAccessory } from "@/shared/components/features/assistant/avatar/avatar-rig";
+import { useStoredAccessory, type AssistantAccessory } from "@/shared/components/features/assistant";
 
 const STORAGE = {
   storageKey: "axi.cmo.axel.accessory",

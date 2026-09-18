@@ -2,9 +2,7 @@
 
 import { Clock3 } from "lucide-react";
 
-import { AssistantAvatar } from "@/shared/components/features/assistant/avatar/AssistantAvatar";
-import { AssistantStage } from "@/shared/components/features/assistant/avatar/AssistantStage";
-import type { AssistantExpressionName } from "@/shared/components/features/assistant/avatar/avatar-rig";
+import { AssistantAvatar, AssistantStage, type AssistantExpressionName } from "@/shared/components/features/assistant";
 import { ALBA_ACCESSORY } from "./AlbaHeroAvatar";
 
 /** Alba quieta, con una expresión fija: sin botón, sin mirada, sin vida. */

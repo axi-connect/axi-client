@@ -4,11 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
-import { PROUD_MS } from "@/shared/components/features/assistant/avatar/avatar-mood";
-import {
-  useAssistantMood,
-  type AssistantMoodState,
-} from "@/shared/components/features/assistant/hooks/use-assistant-mood";
+import { PROUD_MS, useAssistantMood, type AssistantMoodState } from "@/shared/components/features/assistant";
 
 type CmoStoreState = ReturnType<typeof useCmoStore.getState>;
 

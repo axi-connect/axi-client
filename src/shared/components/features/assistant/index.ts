@@ -22,9 +22,20 @@ export { AssistantDock, useTodayLabel } from "./avatar/AssistantDock";
 export {
   ASSISTANT_ACCESSORIES,
   ASSISTANT_EXPRESSION_NAMES,
+  ASSISTANT_EXPRESSIONS,
+  AVATAR_BLINK,
+  AVATAR_SACCADE,
   isAssistantAccessory,
+  nextBlinkDelayMs,
+  nextSaccade,
+  resolvePoseStyle,
   type AssistantAccessory,
   type AssistantExpressionName,
+  type AvatarEase,
+  type AvatarExpression,
+  type AvatarEyeState,
+  type AvatarPoseOptions,
+  type AvatarPoseStyle,
 } from "./avatar/avatar-rig";
 export {
   canGreet,
@@ -54,5 +65,10 @@ export { StarterPills } from "./chat/StarterPills";
 
 export { AssistantChatShell } from "./shell/AssistantChatShell";
 
-export { useStoredAccessory } from "./hooks/use-stored-accessory";
-export { DOCK_HEIGHT_PX } from "./hooks/use-docked-hero";
+export { useAssistantMood, type AssistantMoodState } from "./hooks/use-assistant-mood";
+export { useAvatarGaze } from "./hooks/use-avatar-gaze";
+export { useAvatarLife } from "./hooks/use-avatar-life";
+export { useDockedHero, DOCK_HEIGHT_PX } from "./hooks/use-docked-hero";
+export { useStoredAccessory, type StoredAccessoryOptions } from "./hooks/use-stored-accessory";
+export { useComposerFlip } from "./shell/use-composer-flip";
+export { parseAssistantText, parseInline, type Block, type ListItem, type Span } from "./chat/markdown";

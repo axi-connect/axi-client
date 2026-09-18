@@ -3,8 +3,7 @@
 import { memo } from "react";
 
 import { useAlbaMood } from "@/modules/intake/infrastructure/hooks/use-alba-mood";
-import { AssistantHeroAvatar } from "@/shared/components/features/assistant/avatar/AssistantHeroAvatar";
-import type { AssistantAccessory } from "@/shared/components/features/assistant/avatar/avatar-rig";
+import { AssistantHeroAvatar, type AssistantAccessory } from "@/shared/components/features/assistant";
 
 /**
  * Alba lleva la diadema SIEMPRE: es lo que la distingue de Axel a primera

@@ -3,10 +3,7 @@
 import { useShallow } from "zustand/react/shallow";
 
 import { useIntakeStore } from "@/modules/intake/infrastructure/stores/intake.store";
-import {
-  useAssistantMood,
-  type AssistantMoodState,
-} from "@/shared/components/features/assistant/hooks/use-assistant-mood";
+import { useAssistantMood, type AssistantMoodState } from "@/shared/components/features/assistant";
 
 type IntakeStoreState = ReturnType<typeof useIntakeStore.getState>;
 

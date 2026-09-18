@@ -9,6 +9,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
  * `denied` si el usuario negó el micrófono. El backend transcodifica a
  * ogg/opus, así que el mime local (webm en Chrome/Firefox, mp4 en Safari)
  * solo importa para el preview.
+ *
+ * Existe otro `useVoiceRecorder` en `core/hooks/use-voice-recorder.ts`, el del
+ * kit de asistente: devuelve el `Blob` para TRANSCRIBIRLO, sin preview ni URL.
+ * Son homónimos a propósito y siguen separados: unificarlos es una tanda que
+ * toca el inbox y su reproductor.
  */
 export type VoiceRecorderStatus =
   | "idle"

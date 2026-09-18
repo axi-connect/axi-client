@@ -1378,7 +1378,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
       la única superficie del panel que existe para sentirse habitada. Queda
       declarada en DESIGN-SYSTEM §2.3 como `.assistant-field`.
 
-   El núcleo hace además el trabajo que antes hacía `.axel-composer-glow`: cae
+   El núcleo hace además el trabajo que antes hacía una clase de bloom propia del compositor: cae
    justo detrás del compositor y es lo que hace que el input se lea como la
    fuente de luz de la pantalla en vez de una caja pegada abajo. Por eso esa
    clase ya no existe.

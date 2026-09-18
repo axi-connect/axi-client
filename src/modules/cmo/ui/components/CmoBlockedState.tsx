@@ -6,9 +6,8 @@ import { Power } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
 import type { CmoBlocker } from "@/modules/cmo/infrastructure/stores/cmo.store";
-import { AssistantAvatar } from "@/shared/components/features/assistant/avatar/AssistantAvatar";
 import { AXEL_LABEL } from "./AxelHeroAvatar";
-import { AssistantStage } from "@/shared/components/features/assistant/avatar/AssistantStage";
+import { AssistantAvatar, AssistantStage } from "@/shared/components/features/assistant";
 
 interface CmoBlockedStateProps {
   blocker: NonNullable<CmoBlocker>;

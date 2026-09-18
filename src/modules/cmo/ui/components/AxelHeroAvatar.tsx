@@ -4,7 +4,7 @@ import { memo } from "react";
 
 import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
 import { useAxelMood } from "@/modules/cmo/infrastructure/hooks/use-axel-mood";
-import { AssistantHeroAvatar } from "@/shared/components/features/assistant/avatar/AssistantHeroAvatar";
+import { AssistantHeroAvatar } from "@/shared/components/features/assistant";
 
 export const AXEL_LABEL = "Axel, tu director de mercadeo";
 export const AXEL_GREET_LABEL = "Saludar a Axel";
