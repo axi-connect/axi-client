@@ -100,10 +100,17 @@ export function IntakeSessionSheet({
                                   Sin contestar
                                 </span>
                               )}
-                              {field.source === "derived" ? (
-                                <span className="ml-2 inline-flex items-center gap-1 text-[10.5px] text-accent-violet">
+                              {field.source === "derived" || field.source === "proposed" ? (
+                                // N6: lo propuesto por el nicho también espera un «así es»;
+                                // sin el sello, la consola lo enseñaba como un dato dicho.
+                                <span
+                                  className={cn(
+                                    "ml-2 inline-flex items-center gap-1 text-[10.5px]",
+                                    field.source === "proposed" ? "text-brand" : "text-accent-violet",
+                                  )}
+                                >
                                   <Sparkles className="size-2.5" aria-hidden="true" />
-                                  sin confirmar
+                                  {field.source === "proposed" ? "propuesto, sin confirmar" : "sin confirmar"}
                                 </span>
                               ) : null}
                             </dd>

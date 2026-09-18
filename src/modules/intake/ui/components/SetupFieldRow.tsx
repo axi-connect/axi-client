@@ -40,6 +40,7 @@ export function SetupFieldRow({
   onSave,
   onConfirm,
   onAskAbout,
+  readOnly = false,
 }: {
   field: IntakeField;
   saving: boolean;
@@ -48,6 +49,8 @@ export function SetupFieldRow({
   onConfirm: () => void;
   /** Llevar la duda al chat cuando el dato no se puede teclear en una fila. */
   onAskAbout: (field: IntakeField) => void;
+  /** Sesión terminada: la fila se lee, sin chevron, sin «Así es», sin edición. */
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -61,6 +64,9 @@ export function SetupFieldRow({
   const editable = isEditableInline(field.kind);
   const badge = sourceLabel(field.source);
   const proposed = field.source === "proposed";
+  // Terminada la conversación, una deducción sin confirmar ya no se puede
+  // confirmar: se pinta como un dato más, sin el sello ni la cápsula.
+  const confirmable = field.needs_confirmation && !readOnly;
   // Una lista con contenido se corrige elemento a elemento; una caja de texto
   // con comas obligaría a releer y reescribir la propuesta entera.
   const structured = isStructuredList(field.kind) && toListItems(field.value).length > 0;
@@ -118,7 +124,7 @@ export function SetupFieldRow({
     <li
       className={cn(
         "grouped-row group",
-        field.needs_confirmation &&
+        confirmable &&
           (proposed
             ? "bg-gradient-to-r from-brand/7 to-transparent to-70%"
             : "bg-gradient-to-r from-accent-violet/8 to-transparent to-70%"),
@@ -165,13 +171,12 @@ export function SetupFieldRow({
         // Dos botones HERMANOS, no uno dentro del otro: un botón no puede
         // contener contenido interactivo, y «Así es» tiene que ser pulsable por
         // sí solo (y con su propio foco de teclado).
-        <div className="flex items-center gap-3 pr-3.5 md:hover:bg-foreground/[0.04]">
-          <button
-            type="button"
+        <div className={cn("flex items-center gap-3 pr-3.5", readOnly ? undefined : "md:hover:bg-foreground/[0.04]")}>
+          <RowSurface
+            readOnly={readOnly}
+            saving={saving}
             onClick={start}
-            disabled={saving}
-            className="flex min-w-0 flex-1 items-center gap-3 py-[11px] pl-4 text-left transition-colors active:bg-foreground/[0.08]"
-            aria-label={`Corregir ${field.label}`}
+            label={`Corregir ${field.label}`}
           >
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
@@ -192,27 +197,23 @@ export function SetupFieldRow({
                 <span
                   className={cn(
                     "mt-[3px] inline-flex items-center gap-1 text-[11.5px]",
-                    !field.needs_confirmation
-                      ? "text-muted-foreground/60"
-                      : proposed
-                        ? "text-brand"
-                        : "text-accent-violet",
+                    !confirmable ? "text-muted-foreground/60" : proposed ? "text-brand" : "text-accent-violet",
                   )}
                 >
-                  {field.needs_confirmation ? <AssistantMark size="sm" /> : null}
+                  {confirmable ? <AssistantMark size="sm" /> : null}
                   {badge}
                 </span>
               ) : null}
             </span>
-            {field.needs_confirmation ? null : (
+            {confirmable || readOnly ? null : (
               <ChevronRight
                 className="size-4 flex-none text-muted-foreground/50 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                 aria-hidden="true"
               />
             )}
-          </button>
+          </RowSurface>
 
-          {field.needs_confirmation ? (
+          {confirmable ? (
             // «Revisar» y no «Así es» cuando lo propuesto es una lista: cuatro
             // etapas de embudo no se aprueban de un vistazo como se aprueba una
             // ciudad, y un toque que las aplique todas sin verlas es la clase de
@@ -240,6 +241,41 @@ export function SetupFieldRow({
         </div>
       )}
     </li>
+  );
+}
+
+/**
+ * El cuerpo de la fila: un botón mientras se puede corregir, un bloque inerte
+ * cuando la conversación terminó. Un `<button disabled>` no vale para lo
+ * segundo: se atenúa y anuncia «deshabilitado» a quien lee con lector, cuando
+ * lo que hay es un dato que simplemente se lee.
+ */
+function RowSurface({
+  readOnly,
+  saving,
+  onClick,
+  label,
+  children,
+}: {
+  readOnly: boolean;
+  saving: boolean;
+  onClick: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  if (readOnly) {
+    return <div className="flex min-w-0 flex-1 items-center gap-3 py-[11px] pl-4 text-left">{children}</div>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={saving}
+      className="flex min-w-0 flex-1 items-center gap-3 py-[11px] pl-4 text-left transition-colors active:bg-foreground/[0.08]"
+      aria-label={label}
+    >
+      {children}
+    </button>
   );
 }
 

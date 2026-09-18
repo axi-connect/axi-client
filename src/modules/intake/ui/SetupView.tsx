@@ -135,6 +135,9 @@ export function SetupView({ token }: { token: string }) {
       onResume={(code) => {
         void resumeTopic(code);
       }}
+      // Terminada, la ficha se relee: el servidor no acepta escribir en una
+      // sesión cerrada y el cierre ya no promete corregir desde aquí.
+      readOnly={finished}
       className={className}
     />
   );

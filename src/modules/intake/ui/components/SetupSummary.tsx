@@ -35,6 +35,7 @@ export function SetupSummary({
   onAskAbout,
   onDefer,
   onResume,
+  readOnly = false,
   className,
 }: {
   topics: IntakeTopicView[];
@@ -45,10 +46,21 @@ export function SetupSummary({
   onAskAbout: (field: IntakeField) => void;
   onDefer: (code: string) => void;
   onResume: (code: string) => void;
+  /**
+   * La conversación terminó: la ficha se relee, no se corrige. El servidor
+   * rechaza toda escritura sobre una sesión cerrada, así que ofrecer «Así es» o
+   * la edición aquí solo produciría un «No se pudo guardar».
+   */
+  readOnly?: boolean;
   className?: string;
 }) {
   const { filled, total } = countCaptured(topics);
-  const pending = pendingConfirmations(topics);
+  const pending = readOnly ? [] : pendingConfirmations(topics);
+  // N6: lo deducido de la web y lo propuesto por el tipo de negocio no salen
+  // del mismo sitio, y el aviso no puede decir «de su página web» de algo que
+  // salió del preset del nicho.
+  const derived = pending.filter((field) => field.source === "derived").length;
+  const proposed = pending.length - derived;
   const deferred = new Set(progress.topics.filter((topic) => topic.deferred).map((topic) => topic.code));
 
   return (
@@ -58,7 +70,7 @@ export function SetupSummary({
           Lo que ya sabemos
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          {filled} de {total} datos · toca cualquiera para corregirlo
+          {filled} de {total} datos · {readOnly ? "la conversación ya terminó" : "toca cualquiera para corregirlo"}
         </p>
         <SetupProgress progress={progress} className="mt-3.5" />
       </header>
@@ -66,11 +78,7 @@ export function SetupSummary({
       {pending.length > 0 ? (
         <div className="mx-5 mt-1.5 mb-1 flex flex-none items-start gap-2.5 rounded-[14px] bg-accent-violet/9 px-3.5 py-3">
           <AssistantMark size="sm" className="mt-0.5" />
-          <p className="text-[13px] leading-[1.45] text-foreground">
-            {pending.length === 1
-              ? "Un dato lo saqué de su página web y falta que lo confirmes."
-              : `${String(pending.length)} datos los saqué de su página web y falta que los confirmes.`}
-          </p>
+          <p className="text-[13px] leading-[1.45] text-foreground">{pendingNotice(derived, proposed)}</p>
         </div>
       ) : null}
 
@@ -91,6 +99,7 @@ export function SetupSummary({
                   key={field.code}
                   field={field}
                   saving={savingField === field.code}
+                  readOnly={readOnly}
                   onSave={(value) => onSave(field, value)}
                   onConfirm={() => {
                     onConfirm(field);
@@ -106,9 +115,32 @@ export function SetupSummary({
           <h3 className="mb-2 px-4 text-[12.5px] font-medium tracking-[0.03em] text-muted-foreground uppercase">
             Temas
           </h3>
-          <SetupTopicList progress={progress} onDefer={onDefer} onResume={onResume} />
+          <SetupTopicList progress={progress} onDefer={onDefer} onResume={onResume} readOnly={readOnly} />
         </section>
       </div>
     </aside>
   );
+}
+
+/**
+ * El aviso de lo pendiente, sin mentir sobre el origen: lo de la web «lo
+ * saqué», lo del nicho «lo propuse». Si hay de los dos, dos frases.
+ */
+export function pendingNotice(derived: number, proposed: number): string {
+  const parts: string[] = [];
+  if (derived > 0) {
+    parts.push(
+      derived === 1
+        ? "Un dato lo saqué de su página web y falta que lo confirmes."
+        : `${String(derived)} datos los saqué de su página web y falta que los confirmes.`,
+    );
+  }
+  if (proposed > 0) {
+    parts.push(
+      proposed === 1
+        ? "Un dato lo propuse por tu tipo de negocio y falta que lo revises."
+        : `${String(proposed)} datos los propuse por tu tipo de negocio y falta que los revises.`,
+    );
+  }
+  return parts.join(" ");
 }

@@ -49,11 +49,31 @@ interface IntakeState {
   saveField: (field: IntakeField, value: unknown) => Promise<boolean>;
   deferTopic: (code: string) => Promise<void>;
   resumeTopic: (code: string) => Promise<void>;
+  patchTopics: (body: { defer?: string[]; resume?: string[] }) => Promise<void>;
   reset: () => void;
+}
+
+/** La sesión, ya cerrada en el servidor, tal como debe verse aquí. */
+function closedLocally(session: IntakeSessionView | null): IntakeSessionView | null {
+  if (session === null || session.status !== "in_progress") return session;
+  return { ...session, status: "completed" };
 }
 
 /** Enlace inválido o caducado: la pantalla entera cambia, no es un aviso. */
 const BLOCKING_CODES = new Set(["intake/link_invalid", "intake/link_expired"]);
+
+/**
+ * La sesión se cerró en otra pestaña (o el servidor la cerró) y esta pantalla
+ * aún la tenía abierta. No es un fallo de red: es que ya no hay nada que
+ * escribir, y la pantalla tiene que pasar a «terminada» en vez de enseñar
+ * «No se pudo guardar».
+ */
+const SESSION_CLOSED = "intake/session_closed";
+export const SESSION_CLOSED_NOTICE = "Esta conversación ya terminó; lo que anotamos queda como está.";
+
+function errorCode(error: unknown): string {
+  return isHttpError(error) ? error.code : "";
+}
 
 function blockedFrom(code: string, detail: string): IntakeState["blocked"] {
   if (code === "intake/link_expired") {
@@ -159,12 +179,22 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
               },
       }));
     } catch (error) {
-      const code = isHttpError(error) ? error.code : "";
+      const code = errorCode(error);
       if (BLOCKING_CODES.has(code)) {
         set({
           thinking: false,
           blocked: blockedFrom(code, isHttpError(error) ? error.message : ""),
         });
+        return;
+      }
+      if (code === SESSION_CLOSED) {
+        set((state) => ({
+          thinking: false,
+          // El mensaje optimista no se envió: no se deja como si sí.
+          messages: state.messages.filter((entry) => entry.id !== optimistic.id),
+          turnError: SESSION_CLOSED_NOTICE,
+          session: closedLocally(state.session),
+        }));
         return;
       }
       set((state) => ({
@@ -215,28 +245,41 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
         };
       });
       return true;
-    } catch {
-      set({ savingField: null });
+    } catch (error) {
+      set((state) => ({
+        savingField: null,
+        ...(errorCode(error) === SESSION_CLOSED ? { session: closedLocally(state.session) } : {}),
+      }));
       return false;
     }
   },
 
   async deferTopic(code) {
-    const { token } = get();
-    if (token === null) return;
-    const result = await intakeService.patchAnswers(token, { defer: [code] });
-    set((state) =>
-      state.session === null ? state : { session: { ...state.session, progress: result.progress } },
-    );
+    await get().patchTopics({ defer: [code] });
   },
 
   async resumeTopic(code) {
+    await get().patchTopics({ resume: [code] });
+  },
+
+  /**
+   * Aplazar o retomar un tema desde la ficha. No lanza: quien lo llama es un
+   * botón que no tiene dónde enseñar un error, y una sesión que se cerró entre
+   * medias solo tiene que hacer que la pantalla pase a «terminada».
+   */
+  async patchTopics(body) {
     const { token } = get();
     if (token === null) return;
-    const result = await intakeService.patchAnswers(token, { resume: [code] });
-    set((state) =>
-      state.session === null ? state : { session: { ...state.session, progress: result.progress } },
-    );
+    try {
+      const result = await intakeService.patchAnswers(token, body);
+      set((state) =>
+        state.session === null ? state : { session: { ...state.session, progress: result.progress } },
+      );
+    } catch (error) {
+      if (errorCode(error) === SESSION_CLOSED) {
+        set((state) => ({ session: closedLocally(state.session) }));
+      }
+    }
   },
 
   reset() {

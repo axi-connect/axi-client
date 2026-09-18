@@ -79,7 +79,7 @@ export function SetupDone({
 
         <p className="mt-5 flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground/70">
           <Clock3 className="size-3" aria-hidden="true" />
-          Este enlace sigue funcionando por si quieres corregir algo.
+          Puedes volver a este enlace para repasar lo que anotamos.
         </p>
       </div>
     </div>

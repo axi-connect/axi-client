@@ -79,11 +79,14 @@ export function SetupTopicList({
   progress,
   onDefer,
   onResume,
+  readOnly = false,
   className,
 }: {
   progress: IntakeProgress;
   onDefer: (code: string) => void;
   onResume: (code: string) => void;
+  /** Sesión terminada: ya no hay nada que aplazar ni retomar. */
+  readOnly?: boolean;
   className?: string;
 }) {
   return (
@@ -117,7 +120,7 @@ export function SetupTopicList({
             {topic.title}
           </span>
 
-          {topic.status === "deferred" ? (
+          {readOnly ? null : topic.status === "deferred" ? (
             <button
               type="button"
               onClick={() => {

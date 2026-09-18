@@ -16499,7 +16499,7 @@ export interface components {
                     required: boolean;
                     display: string | null;
                     /** @enum {string|null} */
-                    source: "known" | "derived" | "stated" | null;
+                    source: "known" | "derived" | "stated" | "proposed" | null;
                 }[];
             }[];
             transcript: {
