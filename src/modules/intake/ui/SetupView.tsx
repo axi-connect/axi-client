@@ -149,6 +149,7 @@ export function SetupView({ token }: { token: string }) {
           {finished ? (
             <SetupDone
               closing={session.closing}
+              summary={session.summary}
               companyName={session.company_name}
               assistantName={session.assistant_name}
               onReview={() => {

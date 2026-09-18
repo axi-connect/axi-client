@@ -100,6 +100,29 @@ export interface IntakeProgress {
   has_pending_confirmation: boolean;
 }
 
+/** Los pasos de activación que Alba no resuelve y se le dicen a la persona. */
+export type ActivationStep =
+  | "niche"
+  | "business_hours"
+  | "catalog"
+  | "agents"
+  | "whatsapp"
+  | "channel_agent";
+
+/**
+ * Qué queda listo, qué pone la persona y qué le falta para que el asistente
+ * atienda de verdad. Lo calcula el servidor y viaja con el cierre; solo llega
+ * cuando la conversación terminó. El copy es del servidor: aquí solo se pinta.
+ */
+export interface IntakeSummary {
+  /** Cuántos datos con destino automático se aplican (o ya se aplicaron). */
+  axi_applies: number;
+  /** true = plataforma ya aplicó. */
+  applied: boolean;
+  you_do: { label: string; value: string; where: string }[];
+  to_activate: { step: ActivationStep; label: string; where: string }[];
+}
+
 export interface IntakeSessionView {
   status: "in_progress" | "completed" | "applied";
   assistant_name: string;
@@ -112,6 +135,7 @@ export interface IntakeSessionView {
   topics: IntakeTopicView[];
   progress: IntakeProgress;
   closing: string | null;
+  summary: IntakeSummary | null;
 }
 
 export interface IntakeTurnResult {
@@ -121,6 +145,8 @@ export interface IntakeTurnResult {
   progress: IntakeProgress;
   finished: boolean;
   closing: string | null;
+  /** Solo al terminar: el resumen que se pinta bajo el cierre. */
+  summary: IntakeSummary | null;
   turns_left: number;
   /**
    * Lo capturado con su valor normalizado y su texto legible: la ficha se

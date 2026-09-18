@@ -2,8 +2,10 @@
 
 import { Clock3 } from "lucide-react";
 
+import type { IntakeSummary } from "@/modules/intake/domain/intake";
 import { AssistantAvatar, AssistantStage, type AssistantExpressionName } from "@/shared/components/features/assistant";
 import { ALBA_ACCESSORY } from "./AlbaHeroAvatar";
+import { SetupNextSteps } from "./SetupNextSteps";
 
 /** Alba quieta, con una expresión fija: sin botón, sin mirada, sin vida. */
 function AlbaStill({ expression, busy = false, label }: { expression: AssistantExpressionName; busy?: boolean; label: string }) {
@@ -47,27 +49,33 @@ export function SetupBlocked({ title, detail }: { title: string; detail: string 
  */
 export function SetupDone({
   closing,
+  summary,
   companyName,
   assistantName,
   onReview,
 }: {
   closing: string | null;
+  /** Qué queda listo, qué pone la persona y qué falta. Lo calcula el servidor. */
+  summary: IntakeSummary | null;
   companyName: string;
   assistantName: string;
   onReview: () => void;
 }) {
   return (
-    <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-6 py-10">
-      <div className="flex w-full max-w-[440px] flex-col items-center text-center">
+    // La pantalla crece con el resumen: se desplaza en vez de recortarse.
+    <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-6 py-10">
+      <div className="my-auto flex w-full max-w-[480px] flex-col items-center text-center">
         <AlbaStill expression="proud" label={`${assistantName}, orgullosa`} />
 
         <h2 className="font-heading mt-5 text-[26px] leading-[1.1] font-bold tracking-[-0.02em] text-foreground text-balance">
           Listo, {companyName} ya tiene lo suyo
         </h2>
 
-        <p className="mt-3.5 text-[15px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
+        <p className="mt-3.5 max-w-[440px] text-[15px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
           {closing ?? "El equipo de axi revisa lo que me contaste y lo deja aplicado en tu cuenta."}
         </p>
+
+        {summary === null ? null : <SetupNextSteps summary={summary} className="mt-[26px]" />}
 
         <button
           type="button"

@@ -59,6 +59,7 @@ function session(): IntakeSessionView {
       has_pending_confirmation: false,
     },
     closing: null,
+    summary: null,
   };
 }
 
@@ -106,5 +107,32 @@ describe("intake.store — la sesión se cerró debajo de la pantalla", () => {
     const ok = await useIntakeStore.getState().saveField(FIELD, "Medellín");
     expect(ok).toBe(false);
     expect(useIntakeStore.getState().session?.status).toBe("in_progress");
+  });
+});
+
+describe("intake.store — el turno que termina trae el resumen del cierre", () => {
+  it("guarda summary junto con closing y el estado completed", async () => {
+    const summary = {
+      axi_applies: 3,
+      applied: false,
+      you_do: [],
+      to_activate: [{ step: "whatsapp" as const, label: "Conectar tu WhatsApp", where: "Canales" }],
+    };
+    message.mockResolvedValueOnce({
+      reply: "¡Listo!",
+      question: null,
+      captured: [],
+      progress: session().progress,
+      finished: true,
+      closing: "Listo, Isabel.",
+      summary,
+      turns_left: 39,
+      captured_values: [],
+    });
+    await useIntakeStore.getState().send("Eso es todo");
+    const state = useIntakeStore.getState().session;
+    expect(state?.status).toBe("completed");
+    expect(state?.closing).toBe("Listo, Isabel.");
+    expect(state?.summary).toEqual(summary);
   });
 });

@@ -171,6 +171,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
                 turns_left: result.turns_left,
                 status: result.finished ? ("completed" as const) : state.session.status,
                 closing: result.closing ?? state.session.closing,
+                summary: result.summary ?? state.session.summary,
                 // La ficha se pinta desde el turno: el servidor ya devolvió cada
                 // valor normalizado con su texto. Antes se volvía a pedir la
                 // sesión ENTERA —hilo, ficha, progreso— para quedarse con
