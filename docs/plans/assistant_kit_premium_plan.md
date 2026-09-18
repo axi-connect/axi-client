@@ -16,11 +16,14 @@
   `core/hooks`; el reloj de humor/gestos es `useAssistantMood` (kit) y cada slice solo traduce su store.
 - **F3**: DESIGN-SYSTEM (§2.3, §5.2, §6, §9) y architecture (§4.1, §12) actualizados; notas de
   reubicación en los planes del CMO.
-- **Verja acotada verde**: jest 31 suites / 274 pruebas (`features/assistant|modules/cmo|modules/intake|core/hooks`),
-  `tsc` acotado a kit + cmo + intake + core sin errores, eslint limpio en lo tocado.
-- **Pendiente del dueño**: las verjas completas (`npm run lint`, `npx tsc --noEmit`, `npm test -- --maxWorkers=2`,
-  `npm run build`, una a la vez) y la verificación visual en `/cmo` y `/configurar/{token}` (móvil y
-  escritorio, dictado incluido). Los tests de `AxelChat`/`AxelHeroAvatar` no cambiaron sus aserciones.
+- **Verjas completas verdes (2026-09-18, sobre `aa7529b`, con los servidores de desarrollo parados
+  para no colgar la máquina)**: `next lint` (solo avisos preexistentes) · `tsc --noEmit` (un único error
+  preexistente ajeno en `inbox/ui/components/__tests__/ConversationPanel.test.tsx`, del commit `2f955eb`)
+  · jest 339 suites / 2.803 pruebas (`core/styles/motion.test.ts` pasó a leer `--av-ease-*`) · `next build`
+  (138 páginas). **Fusionado en el main local**; sin push.
+- **Pendiente del dueño**: verificación visual en `/cmo` y `/configurar/{token}` (móvil y escritorio,
+  dictado incluido) y el push junto con el intake. Los tests de `AxelChat`/`AxelHeroAvatar` no cambiaron
+  sus aserciones.
 
 ## 1. Contexto
 
