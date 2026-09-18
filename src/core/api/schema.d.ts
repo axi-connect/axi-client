@@ -4116,6 +4116,22 @@ export interface paths {
         patch: operations["CollectionsController_update_v1"];
         trace?: never;
     };
+    "/api/v1/collections/plans/{id}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectionsController_reminderHistory_v1"];
+        put?: never;
+        post: operations["CollectionsController_sendReminder_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/collections/plans/{id}/schedule": {
         parameters: {
             query?: never;
@@ -4174,22 +4190,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["CollectionsSettingsController_preview_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/geo/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GeoController_search_v1"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4428,6 +4428,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["ContactReachabilityController_reachabilityOf_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/geo/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GeoController_search_v1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -12754,6 +12770,15 @@ export interface components {
                 /** Format: uuid */
                 assigned_user_id: string | null;
                 paused: boolean;
+                last_reminder: {
+                    /** Format: date-time */
+                    at: string;
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    skip_reason: string | null;
+                } | null;
             }[];
             meta: {
                 total: number;
@@ -12813,6 +12838,26 @@ export interface components {
                 paid_at: string | null;
             }[];
         };
+        PlanRemindersDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                installment_id: string | null;
+                reminder_key: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                attempt: number;
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                resolved_at: string | null;
+            }[];
+        };
         RescheduleRequestDto: {
             installments: {
                 /** Format: date */
@@ -12837,6 +12882,19 @@ export interface components {
             status?: "active" | "on_hold";
             note?: string;
         };
+        ManualReminderDto: {
+            /** Format: uuid */
+            installment_id?: string;
+            /** @enum {string} */
+            channel: "whatsapp" | "email";
+            body?: string;
+        };
+        ReminderResultDto: {
+            /** Format: uuid */
+            plan_id: string;
+            /** @enum {string} */
+            outcome: "queued" | "skipped";
+        };
         CollectionsPolicyDto: {
             deposit_pct: number;
             /** @enum {string} */
@@ -12854,6 +12912,35 @@ export interface components {
                 email: boolean;
             };
             pause_on_promise: boolean;
+            templates: {
+                due_soon: {
+                    enabled: boolean;
+                    body: string;
+                };
+                due_today: {
+                    enabled: boolean;
+                    body: string;
+                };
+                overdue: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            /** @default {} */
+            hsm_templates: {
+                due_soon?: {
+                    name: string;
+                    language: string;
+                };
+                due_today?: {
+                    name: string;
+                    language: string;
+                };
+                overdue?: {
+                    name: string;
+                    language: string;
+                };
+            };
         };
         PlanPreviewRequestDto: {
             total_cents: number;
@@ -12875,17 +12962,6 @@ export interface components {
             /** @enum {string} */
             final_due_source: "service_date" | "fallback";
             collapsed: boolean;
-        };
-        GeoSearchResultsDto: {
-            items: {
-                id: string;
-                name: string;
-                detail: string;
-                locality: string | null;
-                lat: number;
-                lng: number;
-                kind: string;
-            }[];
         };
         ConversationsListDto: {
             data: {
@@ -13203,6 +13279,17 @@ export interface components {
             last_inbound_at: string | null;
             window_hours: number | null;
             supports_templates: boolean;
+        };
+        GeoSearchResultsDto: {
+            items: {
+                id: string;
+                name: string;
+                detail: string;
+                locality: string | null;
+                lat: number;
+                lng: number;
+                kind: string;
+            }[];
         };
         CopilotSummaryDto: {
             summary: string;
@@ -24529,6 +24616,52 @@ export interface operations {
             };
         };
     };
+    CollectionsController_reminderHistory_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanRemindersDto"];
+                };
+            };
+        };
+    };
+    CollectionsController_sendReminder_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualReminderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderResultDto"];
+                };
+            };
+        };
+    };
     CollectionsController_changeSchedule_v1: {
         parameters: {
             query?: never;
@@ -24640,28 +24773,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanPreviewDto"];
-                };
-            };
-        };
-    };
-    GeoController_search_v1: {
-        parameters: {
-            query: {
-                q: string;
-                country?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoSearchResultsDto"];
                 };
             };
         };
@@ -25040,6 +25151,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactReachabilityDto"];
+                };
+            };
+        };
+    };
+    GeoController_search_v1: {
+        parameters: {
+            query: {
+                q: string;
+                country?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoSearchResultsDto"];
                 };
             };
         };

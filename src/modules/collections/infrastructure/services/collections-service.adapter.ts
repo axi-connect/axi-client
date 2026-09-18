@@ -8,6 +8,7 @@ import type { ReceivablesStatsDTO } from "@/modules/collections/domain/receivabl
 import type { Schemas } from "@/core/api/types";
 
 export type ReceivablesListDTO = Schemas["ReceivablesListDto"];
+export type PlanRemindersDTO = Schemas["PlanRemindersDto"];
 
 /**
  * Adapter del slice `collections` (`/collections/*`, capacidad `sales` +
@@ -79,5 +80,31 @@ export function recordPromise(
   return http.post<{ plan_id: string }>(
     `/collections/plans/${planId}/promises`,
     promise,
+  );
+}
+
+/** El historial de avisos del plan, los OMITIDOS incluidos (F5). */
+export function getPlanReminders(planId: string): Promise<PlanRemindersDTO> {
+  return http.get<PlanRemindersDTO>(`/collections/plans/${planId}/reminders`);
+}
+
+/**
+ * Escribirle a alguien AHORA, saltándose la cadencia.
+ *
+ * Devuelve `skipped` cuando el servidor decide no mandarlo (no hay cuota que
+ * cobrar, el correo no está configurado…): no es un error de red y la pantalla
+ * tiene que poder decir cuál de las dos cosas pasó.
+ */
+export function sendReminder(
+  planId: string,
+  input: {
+    installment_id?: string;
+    channel: "whatsapp" | "email";
+    body?: string;
+  },
+): Promise<{ plan_id: string; outcome: "queued" | "skipped" }> {
+  return http.post<{ plan_id: string; outcome: "queued" | "skipped" }>(
+    `/collections/plans/${planId}/reminders`,
+    input,
   );
 }

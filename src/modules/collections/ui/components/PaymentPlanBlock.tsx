@@ -14,6 +14,7 @@ import {
 } from "@/modules/collections/domain/payment-plan";
 import { daysUntil } from "@/modules/collections/domain/receivable";
 import { getPlanByOrder } from "@/modules/collections/infrastructure/services/collections-service.adapter";
+import { ReminderHistory } from "./ReminderHistory";
 
 const DOT_TONE: Record<string, string> = {
   paid: "bg-success",
@@ -110,6 +111,13 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
         cuotas dicen <b className="font-medium text-foreground">cuándo</b>{" "}
         tocaba cada parte; lo cobrado sale del pedido.
       </p>
+
+      <div>
+        <p className="px-1 pb-1 text-[12.5px] text-muted-foreground">
+          Historial de avisos
+        </p>
+        <ReminderHistory planId={plan.id} />
+      </div>
     </section>
   );
 }

@@ -3,10 +3,18 @@ import { render, screen } from "@testing-library/react";
 const mockPathname = jest.fn<string, []>();
 jest.mock("next/navigation", () => ({ usePathname: () => mockPathname() }));
 
-const mockFeatures = jest.fn<{ loaded: boolean; hasFeature: (code: string) => boolean }, []>();
-jest.mock("@/shared/auth/features.hooks", () => ({ useFeatures: () => mockFeatures() }));
+const mockFeatures = jest.fn<
+  { loaded: boolean; hasFeature: (code: string) => boolean },
+  []
+>();
+jest.mock("@/shared/auth/features.hooks", () => ({
+  useFeatures: () => mockFeatures(),
+}));
 
-import { PaymentsHubNav, paymentsHubTabs } from "@/modules/payments/ui/components/PaymentsHubNav";
+import {
+  PaymentsHubNav,
+  paymentsHubTabs,
+} from "@/modules/payments/ui/components/PaymentsHubNav";
 
 describe("PaymentsHubNav", () => {
   beforeEach(() => {
@@ -17,12 +25,18 @@ describe("PaymentsHubNav", () => {
     mockFeatures.mockReturnValue({ loaded: true, hasFeature: () => false });
     render(<PaymentsHubNav />);
 
-    expect(screen.getByRole("link", { name: /Medios/ })).toHaveAttribute("href", "/settings/payments");
+    expect(screen.getByRole("link", { name: /Medios/ })).toHaveAttribute(
+      "href",
+      "/settings/payments",
+    );
     expect(screen.queryByRole("link", { name: /Moneda y TRM/ })).toBeNull();
   });
 
   it("«Moneda y TRM» aparece solo con la función fx_quotes", () => {
-    mockFeatures.mockReturnValue({ loaded: true, hasFeature: (code) => code === "fx_quotes" });
+    mockFeatures.mockReturnValue({
+      loaded: true,
+      hasFeature: (code) => code === "fx_quotes",
+    });
     render(<PaymentsHubNav />);
 
     expect(screen.getByRole("link", { name: /Moneda y TRM/ })).toHaveAttribute(
@@ -38,11 +52,12 @@ describe("PaymentsHubNav", () => {
     expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 
-  it("«Plan de pagos» se ofrece desde F4, que es cuando existe su pantalla", () => {
+  it("«Plan de pagos» y «Recordatorios» se ofrecen desde F4 y F5", () => {
     const hrefs = paymentsHubTabs(() => true, true).map((tab) => tab.href);
     expect(hrefs).toEqual([
       "/settings/payments",
       "/settings/payments/plan",
+      "/settings/payments/recordatorios",
       "/settings/payments/moneda",
     ]);
   });
@@ -50,13 +65,37 @@ describe("PaymentsHubNav", () => {
   it("«Documentos» sigue sin ofrecerse: su pantalla llega en F7", () => {
     // El interruptor de entrega existe para esto — una pestaña que lleva a una
     // ruta que no existe es peor que no tenerla.
-    expect(paymentsHubTabs(() => true, true).map((tab) => tab.href)).not.toContain(
-      "/settings/payments/documentos",
-    );
+    expect(
+      paymentsHubTabs(() => true, true).map((tab) => tab.href),
+    ).not.toContain("/settings/payments/documentos");
   });
 
   it("sin la función de planes no aparece la pestaña, aunque la pantalla exista", () => {
-    const hrefs = paymentsHubTabs((code) => code !== "payment_plans", true).map((tab) => tab.href);
+    const hrefs = paymentsHubTabs((code) => code !== "payment_plans", true).map(
+      (tab) => tab.href,
+    );
     expect(hrefs).not.toContain("/settings/payments/plan");
+  });
+
+  it("«Recordatorios» es pestaña propia y cuelga de `collections`", () => {
+    // Aparte de «Plan de pagos» a propósito: esa pestaña es el TRATO, que cada
+    // pedido congela al confirmarlo, y esta la OPERACIÓN, que se lee viva.
+    const conCobranza = paymentsHubTabs(
+      (code) => code === "payment_plans" || code === "collections",
+      true,
+    );
+    expect(conCobranza.map((tab) => tab.label)).toEqual([
+      "Medios",
+      "Plan de pagos",
+      "Recordatorios",
+    ]);
+
+    // Un negocio con plan de pagos pero sin cobranza no persigue a nadie: no
+    // tiene por qué ver una pantalla de recordatorios que no va a usar.
+    expect(
+      paymentsHubTabs((code) => code === "payment_plans", true).map(
+        (tab) => tab.label,
+      ),
+    ).toEqual(["Medios", "Plan de pagos"]);
   });
 });

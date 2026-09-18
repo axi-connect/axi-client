@@ -2,11 +2,15 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockList = jest.fn<Promise<unknown>, [unknown]>();
 const mockStats = jest.fn<Promise<unknown>, []>();
+const mockPlan = jest.fn<Promise<unknown>, [string]>();
 jest.mock(
   "@/modules/collections/infrastructure/services/collections-service.adapter",
   () => ({
     listReceivables: (params: unknown) => mockList(params),
     getReceivablesStats: () => mockStats(),
+    // La cartera abre el diálogo de escribir, que busca el plan del pedido.
+    getPlanByOrder: (orderId: string) => mockPlan(orderId),
+    sendReminder: () => Promise.resolve({ plan_id: "p1", outcome: "queued" }),
   }),
 );
 
@@ -26,6 +30,7 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   contact_name: "Laura Gómez",
   service_date: null,
   travelled: false,
+  last_reminder: null,
   currency: "COP",
   total_cents: 1_000_000,
   paid_cents: 300_000,
@@ -213,5 +218,54 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
         "/orders/o1",
       );
     });
+  });
+
+  it("dice cuándo se avisó por última vez, y que NO salió", async () => {
+    // Es lo que hay que saber ANTES de escribirle a mano: un aviso que no
+    // salió cambia lo que el operador hace, y por eso no puede leerse igual
+    // que uno entregado.
+    const ayer = new Date();
+    ayer.setDate(ayer.getDate() - 1);
+    mockList.mockResolvedValue({
+      data: [
+        row({
+          plan_id: "p-mudo",
+          contact_name: "Marcela Ruiz",
+          last_reminder: {
+            at: ayer.toISOString(),
+            status: "skipped",
+            channel: "whatsapp",
+            skip_reason: "outside_service_window_no_hsm",
+          },
+        }),
+        row({ plan_id: "p-nuevo", contact_name: "Julián Torres" }),
+      ],
+      meta: { total: 2, page: 1, page_size: 25 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+
+    expect(await screen.findByText(/No salió ayer/)).toBeInTheDocument();
+    expect(screen.getByText(/sin plantilla aprobada/i)).toBeInTheDocument();
+    // Y quien no ha recibido nada lo dice, en vez de callar.
+    expect(screen.getByText("Sin avisos todavía")).toBeInTheDocument();
+  });
+
+  it("cada deudor tiene su botón de escribir, y abre el suyo", async () => {
+    mockList.mockResolvedValue({
+      data: [row({ plan_id: "p1", contact_name: "Laura Gómez" })],
+      meta: { total: 1, page: 1, page_size: 25 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+
+    mockPlan.mockRejectedValue(new Error("sin plan"));
+    fireEvent.click(await screen.findByRole("button", { name: /Escribir/i }));
+
+    expect(
+      await screen.findByText(/Escribir a Laura Gómez/i),
+    ).toBeInTheDocument();
   });
 });

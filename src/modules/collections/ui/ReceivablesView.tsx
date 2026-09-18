@@ -27,6 +27,7 @@ import {
   listReceivables,
 } from "@/modules/collections/infrastructure/services/collections-service.adapter";
 import { ReceivableSectionList } from "@/modules/collections/ui/components/ReceivableSectionList";
+import { SendReminderDialog } from "@/modules/collections/ui/components/SendReminderDialog";
 
 type Filter = "todo" | "viajaron" | "mora";
 
@@ -57,6 +58,8 @@ export function ReceivablesView() {
   const [stats, setStats] = useState<ReceivablesStatsDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  /** A quién se le está escribiendo a mano; `null` = el diálogo está cerrado. */
+  const [writing, setWriting] = useState<ReceivableDTO | null>(null);
   const [error, setError] = useState<{
     blocked: boolean;
     message: string;
@@ -222,7 +225,7 @@ export function ReceivablesView() {
         />
       ) : (
         <>
-          <ReceivableSectionList sections={sections} />
+          <ReceivableSectionList sections={sections} onWrite={setWriting} />
           {rows.length < total ? (
             <div className="mt-6 flex flex-col items-center gap-2">
               <p className="text-[12.5px] text-muted-foreground tabular-nums">
@@ -246,6 +249,21 @@ export function ReceivablesView() {
         Y el saldo sale del pedido, no de una copia — si mañana cambia su total,
         la cartera ya lo sabe.
       </p>
+
+      {writing === null ? null : (
+        <SendReminderDialog
+          open
+          orderId={writing.order_id}
+          contactName={writing.contact_name}
+          onOpenChange={(open) => {
+            if (!open) setWriting(null);
+          }}
+          // Tras escribir, la fila tiene que decir «avisado hoy»: recargar es
+          // la diferencia entre una pantalla que informa y una que miente
+          // hasta que alguien pulse F5.
+          onSent={() => void load()}
+        />
+      )}
     </div>
   );
 }

@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Switch } from "@/shared/components/ui/switch";
 import {
   INSTALLMENT_KIND_LABELS,
   type CollectionsPolicyDTO,
@@ -190,7 +189,7 @@ export function PaymentPolicyTab() {
 
         <section className="mt-7">
           <p className="px-1 pb-2.5 text-[13px] font-medium text-muted-foreground">
-            Cuándo avisar
+            Cuándo se da por vencida
           </p>
           <div className="overflow-hidden rounded-2xl border border-border bg-background">
             <NumberRow
@@ -199,25 +198,13 @@ export function PaymentPolicyTab() {
               value={policy.grace_days}
               onChange={(grace_days) => patch({ grace_days })}
             />
-            <div className="relative grid min-h-[56px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3.5 before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-border/60">
-              <span className="text-sm">Avisar por WhatsApp y correo</span>
-              <Switch
-                checked={policy.reminder_channels.whatsapp}
-                aria-label="Avisar por WhatsApp y correo"
-                onCheckedChange={(whatsapp) =>
-                  patch({
-                    reminder_channels: {
-                      ...policy.reminder_channels,
-                      whatsapp,
-                    },
-                  })
-                }
-              />
-            </div>
           </div>
           <p className="max-w-[62ch] px-1 pt-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
-            Los recordatorios automáticos llegan en la fase siguiente. Lo que se
-            guarda aquí es la cadencia con la que saldrán.
+            La gracia es parte del trato y viaja congelada con cada plan, como
+            las fechas. Cuándo y cómo se avisa —que no se pactó con nadie— se
+            decide en{" "}
+            <b className="font-medium text-foreground">Recordatorios</b> y
+            alcanza también a los pedidos que ya están en marcha.
           </p>
         </section>
 

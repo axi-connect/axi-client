@@ -5,12 +5,14 @@ import {
   CalendarClock,
   Check,
   CircleAlert,
-  ChevronRight,
   Plane,
+  Send,
 } from "lucide-react";
 import Link from "next/link";
 
 import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { Button } from "@/shared/components/ui/button";
+import { lastReminderLine } from "@/modules/collections/domain/reminder";
 import {
   dueLabel,
   type ReceivableDTO,
@@ -34,23 +36,35 @@ const SECTION_TONES: Record<ReceivableSection["tone"], string> = {
 /**
  * Una fila de la cartera.
  *
- * Un solo destino por fila y una sola diana: el nombre, el pedido, el importe y
- * la fecha. Las acciones viven en el pedido, que es donde se decide — tres
- * botones de icono por fila eran dieciocho dianas compitiendo en la columna que
- * se escanea.
+ * La fila deja de ser UN enlace porque ahora tiene una acción propia, y un
+ * botón dentro de un enlace no es HTML válido: el nombre estira su área hasta
+ * cubrir la fila —patrón de tarjeta enlazada— y «Escribir» queda por encima.
+ * Sigue habiendo una sola acción por fila, que es lo que F4 dejó dicho.
+ *
+ * El «último aviso» baja al subtítulo y no vuelve como columna: F4 quitó la
+ * tabla a propósito. Es contexto para decidir, no una cifra que comparar — y
+ * «no salió» tiene que leerse tan claro como «entregado», porque es justo lo
+ * que cambia lo que el operador hace a continuación.
  */
-function Row({ row }: { row: ReceivableDTO }) {
+function Row({
+  row,
+  onWrite,
+}: {
+  row: ReceivableDTO;
+  onWrite: (row: ReceivableDTO) => void;
+}) {
   const late = row.days_overdue > 0;
   const due = dueLabel(row);
+  const reminder = lastReminderLine(row.last_reminder);
   return (
-    <Link
-      href={`/orders/${row.order_id}`}
-      className="relative grid min-h-[72px] w-full grid-cols-[minmax(0,1fr)_auto_18px] items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-foreground/[0.03] focus-visible:bg-foreground/[0.03] [&+&]:before:absolute [&+&]:before:inset-x-0 [&+&]:before:left-5 [&+&]:before:top-0 [&+&]:before:h-px [&+&]:before:bg-border/60"
-    >
+    <div className="relative grid min-h-[76px] w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-foreground/[0.03] focus-within:bg-foreground/[0.03] [&+&]:before:absolute [&+&]:before:inset-x-0 [&+&]:before:left-5 [&+&]:before:top-0 [&+&]:before:h-px [&+&]:before:bg-border/60">
       <span className="min-w-0">
-        <span className="block truncate text-[15.5px] font-medium tracking-[-0.005em]">
+        <Link
+          href={`/orders/${row.order_id}`}
+          className="block truncate text-[15.5px] font-medium tracking-[-0.005em] after:absolute after:inset-0 after:content-['']"
+        >
           {row.contact_name}
-        </span>
+        </Link>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted-foreground">
           <span className="font-mono text-[11.5px]">
             {row.order_number === null
@@ -83,6 +97,16 @@ function Row({ row }: { row: ReceivableDTO }) {
             </>
           ) : null}
         </span>
+        <span
+          className={`mt-1 flex items-center gap-1.5 text-[12.5px] ${
+            reminder.tone === "warning"
+              ? "text-warning"
+              : "text-muted-foreground"
+          }`}
+        >
+          <Send aria-hidden="true" className="size-3 shrink-0" />
+          {reminder.text}
+        </span>
       </span>
       <span className="text-right">
         <span className="block text-[16.5px] font-semibold tracking-[-0.015em] tabular-nums">
@@ -106,11 +130,16 @@ function Row({ row }: { row: ReceivableDTO }) {
           )}
         </span>
       </span>
-      <ChevronRight
-        aria-hidden="true"
-        className="size-[18px] text-muted-foreground/50"
-      />
-    </Link>
+      <Button
+        variant="outline"
+        size="sm"
+        className="relative z-[1]"
+        onClick={() => onWrite(row)}
+      >
+        <Send aria-hidden="true" className="size-3.5" />
+        Escribir
+      </Button>
+    </div>
   );
 }
 
@@ -123,8 +152,10 @@ function Row({ row }: { row: ReceivableDTO }) {
  */
 export function ReceivableSectionList({
   sections,
+  onWrite,
 }: {
   sections: ReceivableSection[];
+  onWrite: (row: ReceivableDTO) => void;
 }) {
   return (
     <div>
@@ -146,7 +177,7 @@ export function ReceivableSectionList({
             </h2>
             <div className="overflow-hidden rounded-[18px] border border-border bg-background">
               {section.rows.map((row) => (
-                <Row key={row.plan_id} row={row} />
+                <Row key={row.plan_id} row={row} onWrite={onWrite} />
               ))}
             </div>
           </section>
