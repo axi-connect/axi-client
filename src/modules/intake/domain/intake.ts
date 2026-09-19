@@ -184,7 +184,7 @@ export interface IntakeTurnResult {
     source: IntakeAnswerSource | null;
   }[];
   /** Lo saltado en este turno, con su motivo: la ficha lo pinta desde aquí. */
-  skipped_now: { code: string; label: string; reason: IntakeSkipReason }[];
+  skipped_now: { code: string; label: string; reason: IntakeSkipReason; source: IntakeSkipSource }[];
   /** Códigos cuyo valor desapareció en este turno (una propuesta rechazada). */
   removed: string[];
   /** Saltos del tipo de negocio anterior que volvieron a estar por preguntar. */

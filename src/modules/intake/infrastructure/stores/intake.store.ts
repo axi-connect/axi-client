@@ -418,7 +418,7 @@ function applyTurn(topics: IntakeTopicView[], result: IntakeTurnResult): IntakeT
           display: null,
           source: null,
           needs_confirmation: false,
-          skipped: { reason: skip.reason, source: "chat" as const, note: null },
+          skipped: { reason: skip.reason, source: skip.source, note: null },
         };
       }
       if (removed.has(field.code)) {

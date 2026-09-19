@@ -16303,6 +16303,8 @@ export interface components {
                 label: string;
                 /** @enum {string} */
                 reason: "no_aplica" | "no_sabe" | "luego";
+                /** @enum {string} */
+                source: "chat" | "ficha" | "niche";
             }[];
             removed: string[];
             reopened: string[];
