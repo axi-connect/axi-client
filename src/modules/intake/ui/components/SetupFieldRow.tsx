@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronRight, X } from "lucide-react";
+import { Check, ChevronRight, RotateCcw, X } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { AssistantMark } from "@/shared/components/features/assistant";
@@ -11,6 +11,7 @@ import {
   handoffNote,
   isEditableInline,
   isStructuredList,
+  skipLabel,
   sourceLabel,
   toListItems,
   type IntakeField,
@@ -40,6 +41,8 @@ export function SetupFieldRow({
   onSave,
   onConfirm,
   onAskAbout,
+  onSkip,
+  onUnskip,
   readOnly = false,
 }: {
   field: IntakeField;
@@ -49,6 +52,10 @@ export function SetupFieldRow({
   onConfirm: () => void;
   /** Llevar la duda al chat cuando el dato no se puede teclear en una fila. */
   onAskAbout: (field: IntakeField) => void;
+  /** «No aplica» desde la ficha: el dato queda saltado con motivo, sin turno. */
+  onSkip: (field: IntakeField) => void;
+  /** «Sí aplica»: reabre un dato saltado (por la persona o por su tipo de negocio). */
+  onUnskip: (field: IntakeField) => void;
   /** Sesión terminada: la fila se lee, sin chevron, sin «Así es», sin edición. */
   readOnly?: boolean;
 }) {
@@ -70,6 +77,10 @@ export function SetupFieldRow({
   // Una lista con contenido se corrige elemento a elemento; una caja de texto
   // con comas obligaría a releer y reescribir la propuesta entera.
   const structured = isStructuredList(field.kind) && toListItems(field.value).length > 0;
+  // Saltado con motivo: no hay valor, y la fila dice por qué y ofrece revertirlo.
+  const skipped = field.value === null ? field.skipped : null;
+  // Sin valor y sin saltar: la pregunta sigue abierta y se puede descartar desde aquí.
+  const open = field.value === null && skipped === null && !readOnly;
 
   function start(): void {
     if (!editable) {
@@ -189,10 +200,16 @@ export function SetupFieldRow({
                 className={cn(
                   "mt-0.5 block text-[15px] leading-[1.4] tracking-[-0.005em] wrap-anywhere",
                   field.display === null ? "text-muted-foreground/50" : "text-foreground",
+                  skipped !== null && "italic",
                 )}
               >
-                {field.display ?? "Sin contestar"}
+                {field.display ?? (skipped === null ? "Sin contestar" : skipLabel(skipped))}
               </span>
+              {skipped?.note != null && skipped.note !== "" ? (
+                <span className="mt-[3px] block text-[11.5px] text-muted-foreground/60">
+                  «{skipped.note}»
+                </span>
+              ) : null}
               {badge !== null ? (
                 <span
                   className={cn(
@@ -205,13 +222,46 @@ export function SetupFieldRow({
                 </span>
               ) : null}
             </span>
-            {confirmable || readOnly ? null : (
+            {confirmable || readOnly || skipped !== null ? null : (
               <ChevronRight
                 className="size-4 flex-none text-muted-foreground/50 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                 aria-hidden="true"
               />
             )}
           </RowSurface>
+
+          {skipped !== null && !readOnly ? (
+            // Reabrir un salto: el del tipo de negocio dice «sí aplica»; el de
+            // la persona, «contestar». Los dos vuelven a poner la pregunta en
+            // «por preguntar» y abren el editor si la fila sabe editarlo.
+            <button
+              type="button"
+              onClick={() => {
+                onUnskip(field);
+                if (editable) start();
+              }}
+              disabled={saving}
+              className="flex flex-none items-center gap-1 rounded-full bg-foreground/[0.06] px-[11px] py-1.5 text-[12.5px] font-semibold text-foreground transition-[background-color,transform] hover:bg-foreground/[0.1] active:scale-[.95] disabled:opacity-50"
+            >
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              {skipped.source === "niche" ? "Sí aplica" : "Contestar"}
+            </button>
+          ) : null}
+
+          {open ? (
+            // «No aplica» desde la ficha, al pasar el ratón: saltar cuesta una
+            // palabra también aquí, y queda anotado igual que en el chat.
+            <button
+              type="button"
+              onClick={() => {
+                onSkip(field);
+              }}
+              disabled={saving}
+              className="flex-none rounded-full px-[11px] py-1.5 text-[12.5px] font-medium text-muted-foreground transition-[background-color,opacity,transform] hover:bg-foreground/[0.06] hover:text-foreground active:scale-[.95] disabled:opacity-50 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+            >
+              No aplica
+            </button>
+          ) : null}
 
           {confirmable ? (
             // «Revisar» y no «Así es» cuando lo propuesto es una lista: cuatro

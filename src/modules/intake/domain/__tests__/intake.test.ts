@@ -23,6 +23,7 @@ function field(overrides: Partial<IntakeTopicView["fields"][number]> = {}) {
     display: null,
     source: null,
     needs_confirmation: false,
+    skipped: null,
     ...overrides,
   };
 }
@@ -39,12 +40,16 @@ function progress(
       resolved: topic.status === "done" ? 1 : 0,
       pending_confirmation: 0,
       captured: 0,
+      answered: 0,
+      skipped: 0,
+      open: 0,
       total: 1,
       deferred: topic.deferred ?? false,
       status: topic.status,
     })),
     percent,
     next_topic: null,
+    next_field: null,
     has_pending_required: false,
     has_pending_confirmation: false,
   };
@@ -60,7 +65,7 @@ describe("countCaptured", () => {
       },
       { code: "t2", title: "T2", fields: [field({ code: "c", value: 3 })] },
     ];
-    expect(countCaptured(topics)).toEqual({ filled: 2, total: 3 });
+    expect(countCaptured(topics)).toEqual({ filled: 2, skipped: 0, total: 3 });
   });
 });
 

@@ -38,6 +38,7 @@ const FIELD: IntakeField = {
   display: "Bogotá",
   source: "stated",
   needs_confirmation: false,
+  skipped: null,
 };
 
 function session(): IntakeSessionView {
@@ -55,6 +56,7 @@ function session(): IntakeSessionView {
       topics: [],
       percent: 0,
       next_topic: null,
+      next_field: null,
       has_pending_required: false,
       has_pending_confirmation: false,
     },
@@ -128,6 +130,8 @@ describe("intake.store — el turno que termina trae el resumen del cierre", () 
       summary,
       turns_left: 39,
       captured_values: [],
+      skipped_now: [],
+      removed: [],
     });
     await useIntakeStore.getState().send("Eso es todo");
     const state = useIntakeStore.getState().session;

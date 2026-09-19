@@ -58,6 +58,8 @@ export function SetupView({ token }: { token: string }) {
   const send = useIntakeStore((state) => state.send);
   const retry = useIntakeStore((state) => state.retry);
   const saveField = useIntakeStore((state) => state.saveField);
+  const skipField = useIntakeStore((state) => state.skipField);
+  const unskipField = useIntakeStore((state) => state.unskipField);
   const deferTopic = useIntakeStore((state) => state.deferTopic);
   const resumeTopic = useIntakeStore((state) => state.resumeTopic);
   const reset = useIntakeStore((state) => state.reset);
@@ -129,6 +131,12 @@ export function SetupView({ token }: { token: string }) {
       onSave={saveField}
       onConfirm={confirm}
       onAskAbout={askAbout}
+      onSkip={(field) => {
+        void skipField(field, "no_aplica");
+      }}
+      onUnskip={(field) => {
+        void unskipField(field);
+      }}
       onDefer={(code) => {
         void deferTopic(code);
       }}

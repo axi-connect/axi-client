@@ -16185,6 +16185,13 @@ export interface components {
                     /** @enum {string|null} */
                     source: "known" | "derived" | "stated" | "proposed" | null;
                     needs_confirmation: boolean;
+                    skipped: {
+                        /** @enum {string} */
+                        reason: "no_aplica" | "no_sabe" | "luego";
+                        /** @enum {string} */
+                        source: "chat" | "ficha" | "niche";
+                        note: string | null;
+                    } | null;
                 }[];
             }[];
             progress: {
@@ -16195,6 +16202,9 @@ export interface components {
                     resolved: number;
                     pending_confirmation: number;
                     captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
                     total: number;
                     deferred: boolean;
                     /** @enum {string} */
@@ -16202,6 +16212,7 @@ export interface components {
                 }[];
                 percent: number;
                 next_topic: string | null;
+                next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
             };
@@ -16248,6 +16259,9 @@ export interface components {
                     resolved: number;
                     pending_confirmation: number;
                     captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
                     total: number;
                     deferred: boolean;
                     /** @enum {string} */
@@ -16255,6 +16269,7 @@ export interface components {
                 }[];
                 percent: number;
                 next_topic: string | null;
+                next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
             };
@@ -16281,6 +16296,13 @@ export interface components {
                 value: unknown;
                 display: string | null;
             }[];
+            skipped_now: {
+                code: string;
+                label: string;
+                /** @enum {string} */
+                reason: "no_aplica" | "no_sabe" | "luego";
+            }[];
+            removed: string[];
         };
         PatchIntakeAnswersDto: {
             answers?: {
@@ -16289,6 +16311,13 @@ export interface components {
             }[];
             defer?: string[];
             resume?: string[];
+            skip?: {
+                field_code: string;
+                /** @enum {string} */
+                reason: "no_aplica" | "no_sabe" | "luego";
+                note?: string | null;
+            }[];
+            unskip?: string[];
         };
         PatchIntakeAnswersResultDto: {
             progress: {
@@ -16299,6 +16328,9 @@ export interface components {
                     resolved: number;
                     pending_confirmation: number;
                     captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
                     total: number;
                     deferred: boolean;
                     /** @enum {string} */
@@ -16306,6 +16338,7 @@ export interface components {
                 }[];
                 percent: number;
                 next_topic: string | null;
+                next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
             };
@@ -16314,6 +16347,8 @@ export interface components {
                 field_code: string;
                 reason: string;
             }[];
+            skipped: string[];
+            unskipped: string[];
         };
         IntakeTranscriptionDto: {
             text: string;
@@ -16542,6 +16577,9 @@ export interface components {
                     resolved: number;
                     pending_confirmation: number;
                     captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
                     total: number;
                     deferred: boolean;
                     /** @enum {string} */
@@ -16549,6 +16587,7 @@ export interface components {
                 }[];
                 percent: number;
                 next_topic: string | null;
+                next_field: string | null;
                 has_pending_required: boolean;
                 has_pending_confirmation: boolean;
             };
@@ -16564,6 +16603,12 @@ export interface components {
                     display: string | null;
                     /** @enum {string|null} */
                     source: "known" | "derived" | "stated" | "proposed" | null;
+                    skipped: {
+                        /** @enum {string} */
+                        reason: "no_aplica" | "no_sabe" | "luego";
+                        /** @enum {string} */
+                        source: "chat" | "ficha" | "niche";
+                    } | null;
                 }[];
             }[];
             transcript: {
@@ -16602,6 +16647,7 @@ export interface components {
                 known: number;
                 derived: number;
                 proposed: number;
+                niche_skipped: number;
                 website_failed: boolean;
             };
         };

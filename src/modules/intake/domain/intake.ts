@@ -34,6 +34,22 @@ export type IntakeFieldKind =
  */
 export type IntakeAnswerSource = "known" | "derived" | "stated" | "proposed";
 
+/**
+ * Un dato SALTADO con motivo (hotfix de cobertura tras la prueba real de
+ * EasyPosWeb): desde entonces cada pregunta del guion se hace una vez, y la
+ * forma de no contestarla es saltarla — con una palabra y anotado. `niche` es
+ * lo que el tipo de negocio descartó antes de preguntar (a un SaaS no se le
+ * pregunta por zonas de envío); es reversible con un toque.
+ */
+export type IntakeSkipReason = "no_aplica" | "no_sabe" | "luego";
+export type IntakeSkipSource = "chat" | "ficha" | "niche";
+
+export interface IntakeFieldSkip {
+  reason: IntakeSkipReason;
+  source: IntakeSkipSource;
+  note: string | null;
+}
+
 export interface IntakeQuestionOption {
   label: string;
   hint: string | null;
@@ -70,6 +86,8 @@ export interface IntakeField {
   source: IntakeAnswerSource | null;
   /** Lo dedujo la IA de su web y falta un sí o un no. */
   needs_confirmation: boolean;
+  /** Saltado con motivo; `null` si no. Un dato saltado no tiene valor. */
+  skipped: IntakeFieldSkip | null;
 }
 
 export interface IntakeTopicView {
@@ -87,6 +105,10 @@ export interface TopicProgress {
   resolved: number;
   pending_confirmation: number;
   captured: number;
+  /** Cobertura por campo: contestados, saltados con motivo, y sin preguntar. */
+  answered: number;
+  skipped: number;
+  open: number;
   total: number;
   deferred: boolean;
   status: TopicStatus;
@@ -96,6 +118,8 @@ export interface IntakeProgress {
   topics: TopicProgress[];
   percent: number;
   next_topic: string | null;
+  /** El siguiente dato por preguntar, en el orden del guion. */
+  next_field: string | null;
   has_pending_required: boolean;
   has_pending_confirmation: boolean;
 }
@@ -153,12 +177,18 @@ export interface IntakeTurnResult {
    * pinta desde aquí, sin volver a pedir la sesión entera tras cada turno.
    */
   captured_values: { code: string; value: unknown; display: string | null }[];
+  /** Lo saltado en este turno, con su motivo: la ficha lo pinta desde aquí. */
+  skipped_now: { code: string; label: string; reason: IntakeSkipReason }[];
+  /** Códigos cuyo valor desapareció en este turno (una propuesta rechazada). */
+  removed: string[];
 }
 
 export interface PatchAnswersResult {
   progress: IntakeProgress;
   applied: string[];
   rejected: { field_code: string; reason: string }[];
+  skipped: string[];
+  unskipped: string[];
 }
 
 /**
@@ -170,9 +200,36 @@ export interface PatchAnswersResult {
  * mientras que esto mide lo que hay EN LA FICHA, donde la unidad natural es el
  * dato. Son dos preguntas distintas con dos respuestas distintas.
  */
-export function countCaptured(topics: IntakeTopicView[]): { filled: number; total: number } {
+export function countCaptured(topics: IntakeTopicView[]): {
+  filled: number;
+  skipped: number;
+  total: number;
+} {
   const all = topics.flatMap((topic) => topic.fields);
-  return { filled: all.filter((field) => field.value !== null).length, total: all.length };
+  return {
+    filled: all.filter((field) => field.value !== null).length,
+    skipped: all.filter((field) => field.value === null && field.skipped !== null).length,
+    total: all.length,
+  };
+}
+
+/**
+ * Lo que la fila dice de un dato saltado. Es copy del producto: quien lo lee
+ * es la persona, no plataforma, y tiene que entender en media línea por qué no
+ * hay nada ahí y que puede revertirlo.
+ */
+export function skipLabel(skip: IntakeFieldSkip): string {
+  if (skip.source === "niche") return "No aplica a tu tipo de negocio";
+  switch (skip.reason) {
+    case "no_aplica":
+      return "No aplica";
+    case "no_sabe":
+      return "No lo sabías";
+    case "luego":
+      return "Lo dejaste para después";
+    default:
+      return "Saltado";
+  }
 }
 
 /** Los datos deducidos de la web que siguen esperando un sí o un no. */

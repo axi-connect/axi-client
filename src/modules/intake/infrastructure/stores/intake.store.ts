@@ -7,6 +7,7 @@ import type {
   IntakeField,
   IntakeMessage,
   IntakeSessionView,
+  IntakeSkipReason,
   IntakeTopicView,
   IntakeTurnResult,
 } from "@/modules/intake/domain/intake";
@@ -47,6 +48,10 @@ interface IntakeState {
   send: (message: string, voice?: boolean) => Promise<void>;
   retry: () => Promise<void>;
   saveField: (field: IntakeField, value: unknown) => Promise<boolean>;
+  /** Saltar un dato desde la ficha, con motivo. Sin turno, sin IA. */
+  skipField: (field: IntakeField, reason: IntakeSkipReason) => Promise<boolean>;
+  /** Reabrir un dato saltado («sí aplica»): vuelve a estar por preguntar. */
+  unskipField: (field: IntakeField) => Promise<boolean>;
   deferTopic: (code: string) => Promise<void>;
   resumeTopic: (code: string) => Promise<void>;
   patchTopics: (body: { defer?: string[]; resume?: string[] }) => Promise<void>;
@@ -176,7 +181,7 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
                 // valor normalizado con su texto. Antes se volvía a pedir la
                 // sesión ENTERA —hilo, ficha, progreso— para quedarse con
                 // `topics`, en cada turno productivo, sobre datos móviles.
-                topics: applyCaptured(state.session.topics, result.captured_values),
+                topics: applyTurn(state.session.topics, result),
               },
       }));
     } catch (error) {
@@ -241,7 +246,78 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
           session: {
             ...state.session,
             progress: result.progress,
-            topics: patchTopics(state.session.topics, field.code, value),
+            topics: patchField(state.session.topics, field.code, {
+              value,
+              display: displayOf(value),
+              // Lo acaba de escribir la persona: deja de ser deducción por
+              // confirmar, y deja de estar saltado (un código está en una
+              // cosa o en la otra).
+              source: "stated",
+              needs_confirmation: false,
+              skipped: null,
+            }),
+          },
+        };
+      });
+      return true;
+    } catch (error) {
+      set((state) => ({
+        savingField: null,
+        ...(errorCode(error) === SESSION_CLOSED ? { session: closedLocally(state.session) } : {}),
+      }));
+      return false;
+    }
+  },
+
+  async skipField(field, reason) {
+    const { token } = get();
+    if (token === null) return false;
+    set({ savingField: field.code });
+    try {
+      const result = await intakeService.patchAnswers(token, {
+        skip: [{ field_code: field.code, reason }],
+      });
+      set((state) => {
+        if (state.session === null) return { savingField: null };
+        return {
+          savingField: null,
+          session: {
+            ...state.session,
+            progress: result.progress,
+            topics: patchField(state.session.topics, field.code, {
+              value: null,
+              display: null,
+              source: null,
+              needs_confirmation: false,
+              skipped: { reason, source: "ficha", note: null },
+            }),
+          },
+        };
+      });
+      return true;
+    } catch (error) {
+      set((state) => ({
+        savingField: null,
+        ...(errorCode(error) === SESSION_CLOSED ? { session: closedLocally(state.session) } : {}),
+      }));
+      return false;
+    }
+  },
+
+  async unskipField(field) {
+    const { token } = get();
+    if (token === null) return false;
+    set({ savingField: field.code });
+    try {
+      const result = await intakeService.patchAnswers(token, { unskip: [field.code] });
+      set((state) => {
+        if (state.session === null) return { savingField: null };
+        return {
+          savingField: null,
+          session: {
+            ...state.session,
+            progress: result.progress,
+            topics: patchField(state.session.topics, field.code, { skipped: null }),
           },
         };
       });
@@ -298,55 +374,65 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
 }));
 
 /**
- * Refleja en la ficha lo que el turno capturó, con el `display` que calculó el
- * servidor: las dos mitades de la pantalla enseñan exactamente el mismo texto.
+ * Refleja en la ficha lo que el turno hizo: lo capturado con el `display` que
+ * calculó el servidor (las dos mitades de la pantalla enseñan el mismo texto),
+ * lo saltado con su motivo, y lo que dejó de tener valor (una propuesta que la
+ * persona rechazó).
  */
-function applyCaptured(
-  topics: IntakeTopicView[],
-  captured: IntakeTurnResult["captured_values"],
-): IntakeTopicView[] {
-  if (captured.length === 0) return topics;
-  const byCode = new Map(captured.map((entry) => [entry.code, entry]));
+function applyTurn(topics: IntakeTopicView[], result: IntakeTurnResult): IntakeTopicView[] {
+  if (result.captured_values.length === 0 && result.skipped_now.length === 0 && result.removed.length === 0) {
+    return topics;
+  }
+  const captured = new Map(result.captured_values.map((entry) => [entry.code, entry]));
+  const skipped = new Map(result.skipped_now.map((entry) => [entry.code, entry]));
+  const removed = new Set(result.removed);
   return topics.map((topic) => ({
     ...topic,
     fields: topic.fields.map((field) => {
-      const hit = byCode.get(field.code);
-      if (hit === undefined) return field;
-      return {
-        ...field,
-        value: hit.value,
-        display: hit.display,
-        // Lo dijo la persona en este turno: deja de ser deducción por confirmar.
-        source: "stated" as const,
-        needs_confirmation: false,
-      };
+      const hit = captured.get(field.code);
+      if (hit !== undefined) {
+        return {
+          ...field,
+          value: hit.value,
+          display: hit.display,
+          // Lo dijo la persona en este turno: deja de ser deducción por confirmar.
+          source: "stated" as const,
+          needs_confirmation: false,
+          skipped: null,
+        };
+      }
+      const skip = skipped.get(field.code);
+      if (skip !== undefined) {
+        return {
+          ...field,
+          value: null,
+          display: null,
+          source: null,
+          needs_confirmation: false,
+          skipped: { reason: skip.reason, source: "chat" as const, note: null },
+        };
+      }
+      if (removed.has(field.code)) {
+        return { ...field, value: null, display: null, source: null, needs_confirmation: false };
+      }
+      return field;
     }),
   }));
 }
 
 /**
- * Refleja en la ficha un dato que se acaba de guardar.
- *
- * Se marca como `stated` y sin confirmación pendiente porque lo acaba de
- * escribir la persona: eso es precisamente lo que significa confirmar una
- * deducción. El `display` se calcula aquí de forma aproximada —el canónico lo
- * produce el backend— y se corrige solo en el siguiente refresco; enseñar el
- * valor viejo mientras tanto sería peor.
+ * Refleja en la ficha un cambio hecho desde ella. El `display` se calcula aquí
+ * de forma aproximada —el canónico lo produce el backend— y se corrige solo en
+ * el siguiente refresco; enseñar el valor viejo mientras tanto sería peor.
  */
-function patchTopics(topics: IntakeTopicView[], code: string, value: unknown): IntakeTopicView[] {
+function patchField(
+  topics: IntakeTopicView[],
+  code: string,
+  patch: Partial<IntakeField>,
+): IntakeTopicView[] {
   return topics.map((topic) => ({
     ...topic,
-    fields: topic.fields.map((field) =>
-      field.code === code
-        ? {
-            ...field,
-            value,
-            display: displayOf(value),
-            source: "stated" as const,
-            needs_confirmation: false,
-          }
-        : field,
-    ),
+    fields: topic.fields.map((field) => (field.code === code ? { ...field, ...patch } : field)),
   }));
 }
 

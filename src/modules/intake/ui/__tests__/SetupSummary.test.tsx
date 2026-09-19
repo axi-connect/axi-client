@@ -26,6 +26,7 @@ const TOPICS: IntakeTopicView[] = [
         display: "Bogotá",
         source: "stated",
         needs_confirmation: false,
+        skipped: null,
       },
       {
         code: "sector",
@@ -38,6 +39,7 @@ const TOPICS: IntakeTopicView[] = [
         display: "Ropa deportiva",
         source: "derived",
         needs_confirmation: true,
+        skipped: null,
       },
     ],
   },
@@ -52,6 +54,9 @@ const PROGRESS: IntakeProgress = {
       resolved: 1,
       pending_confirmation: 1,
       captured: 2,
+      answered: 0,
+      skipped: 0,
+      open: 0,
       total: 2,
       deferred: false,
       status: "in_progress",
@@ -59,6 +64,7 @@ const PROGRESS: IntakeProgress = {
   ],
   percent: 50,
   next_topic: "negocio",
+  next_field: null,
   has_pending_required: false,
   has_pending_confirmation: true,
 };
@@ -76,6 +82,8 @@ function view(readOnly: boolean) {
       onSave={onSave}
       onConfirm={onConfirm}
       onAskAbout={onAskAbout}
+      onSkip={jest.fn()}
+      onUnskip={jest.fn()}
       onDefer={onDefer}
       onResume={jest.fn()}
       readOnly={readOnly}

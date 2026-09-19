@@ -33,6 +33,8 @@ export function SetupSummary({
   onSave,
   onConfirm,
   onAskAbout,
+  onSkip,
+  onUnskip,
   onDefer,
   onResume,
   readOnly = false,
@@ -44,6 +46,8 @@ export function SetupSummary({
   onSave: (field: IntakeField, value: unknown) => Promise<boolean>;
   onConfirm: (field: IntakeField) => void;
   onAskAbout: (field: IntakeField) => void;
+  onSkip: (field: IntakeField) => void;
+  onUnskip: (field: IntakeField) => void;
   onDefer: (code: string) => void;
   onResume: (code: string) => void;
   /**
@@ -54,7 +58,7 @@ export function SetupSummary({
   readOnly?: boolean;
   className?: string;
 }) {
-  const { filled, total } = countCaptured(topics);
+  const { filled, skipped, total } = countCaptured(topics);
   const pending = readOnly ? [] : pendingConfirmations(topics);
   // N6: lo deducido de la web y lo propuesto por el tipo de negocio no salen
   // del mismo sitio, y el aviso no puede decir «de su página web» de algo que
@@ -70,7 +74,10 @@ export function SetupSummary({
           Lo que ya sabemos
         </h2>
         <p className="mt-1 text-[13px] text-muted-foreground">
-          {filled} de {total} datos · {readOnly ? "la conversación ya terminó" : "toca cualquiera para corregirlo"}
+          {filled} de {total} datos
+          {skipped > 0 ? ` · ${String(skipped)} no ${skipped === 1 ? "aplica" : "aplican"}` : ""}
+          {" · "}
+          {readOnly ? "la conversación ya terminó" : "toca cualquiera para corregirlo"}
         </p>
         <SetupProgress progress={progress} className="mt-3.5" />
       </header>
@@ -105,6 +112,8 @@ export function SetupSummary({
                     onConfirm(field);
                   }}
                   onAskAbout={onAskAbout}
+                  onSkip={onSkip}
+                  onUnskip={onUnskip}
                 />
               ))}
             </ul>

@@ -1,6 +1,7 @@
 import { http } from "@/core/services/http";
 import type {
   IntakeSessionView,
+  IntakeSkipReason,
   IntakeTurnResult,
   PatchAnswersResult,
 } from "@/modules/intake/domain/intake";
@@ -47,6 +48,9 @@ export const intakeService = {
       answers?: { field_code: string; value: unknown }[];
       defer?: string[];
       resume?: string[];
+      /** Saltar un dato con motivo, o reabrir uno saltado («sí aplica»). */
+      skip?: { field_code: string; reason: IntakeSkipReason; note?: string | null }[];
+      unskip?: string[];
     },
   ): Promise<PatchAnswersResult> {
     return http.patch<PatchAnswersResult>(`${base(token)}/answers`, body, {
