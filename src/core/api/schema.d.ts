@@ -16295,6 +16295,8 @@ export interface components {
                 code: string;
                 value: unknown;
                 display: string | null;
+                /** @enum {string|null} */
+                source: "known" | "derived" | "stated" | "proposed" | null;
             }[];
             skipped_now: {
                 code: string;
@@ -16303,6 +16305,7 @@ export interface components {
                 reason: "no_aplica" | "no_sabe" | "luego";
             }[];
             removed: string[];
+            reopened: string[];
         };
         PatchIntakeAnswersDto: {
             answers?: {
@@ -16381,7 +16384,7 @@ export interface components {
                         help?: string;
                         example?: string;
                         /** @enum {string} */
-                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                         handoff?: string;
                     }[];
                 }[];
@@ -16424,7 +16427,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                     handoff?: string;
                 }[];
             }[];
@@ -16463,7 +16466,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                     handoff?: string;
                 }[];
             }[];
@@ -16495,7 +16498,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                     handoff?: string;
                 }[];
             }[];

@@ -176,11 +176,19 @@ export interface IntakeTurnResult {
    * Lo capturado con su valor normalizado y su texto legible: la ficha se
    * pinta desde aquí, sin volver a pedir la sesión entera tras cada turno.
    */
-  captured_values: { code: string; value: unknown; display: string | null }[];
+  captured_values: {
+    code: string;
+    value: unknown;
+    display: string | null;
+    /** `stated` si lo dijo la persona; `proposed` si lo acaba de proponer su tipo de negocio. */
+    source: IntakeAnswerSource | null;
+  }[];
   /** Lo saltado en este turno, con su motivo: la ficha lo pinta desde aquí. */
   skipped_now: { code: string; label: string; reason: IntakeSkipReason }[];
   /** Códigos cuyo valor desapareció en este turno (una propuesta rechazada). */
   removed: string[];
+  /** Saltos del tipo de negocio anterior que volvieron a estar por preguntar. */
+  reopened: string[];
 }
 
 export interface PatchAnswersResult {

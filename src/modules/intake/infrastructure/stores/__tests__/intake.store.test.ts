@@ -132,6 +132,7 @@ describe("intake.store — el turno que termina trae el resumen del cierre", () 
       captured_values: [],
       skipped_now: [],
       removed: [],
+      reopened: [],
     });
     await useIntakeStore.getState().send("Eso es todo");
     const state = useIntakeStore.getState().session;

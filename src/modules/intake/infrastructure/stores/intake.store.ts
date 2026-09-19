@@ -380,27 +380,36 @@ export const useIntakeStore = create<IntakeState>((set, get) => ({
  * persona rechazó).
  */
 function applyTurn(topics: IntakeTopicView[], result: IntakeTurnResult): IntakeTopicView[] {
-  if (result.captured_values.length === 0 && result.skipped_now.length === 0 && result.removed.length === 0) {
+  if (
+    result.captured_values.length === 0 &&
+    result.skipped_now.length === 0 &&
+    result.removed.length === 0 &&
+    result.reopened.length === 0
+  ) {
     return topics;
   }
   const captured = new Map(result.captured_values.map((entry) => [entry.code, entry]));
   const skipped = new Map(result.skipped_now.map((entry) => [entry.code, entry]));
   const removed = new Set(result.removed);
+  const reopened = new Set(result.reopened);
   return topics.map((topic) => ({
     ...topic,
     fields: topic.fields.map((field) => {
       const hit = captured.get(field.code);
       if (hit !== undefined) {
+        // Lo dijo la persona ⇒ `stated`, cerrado. Lo que el tipo de negocio
+        // acaba de PROPONER llega como `proposed` y sigue pidiendo revisión.
+        const source = hit.source ?? "stated";
         return {
           ...field,
           value: hit.value,
           display: hit.display,
-          // Lo dijo la persona en este turno: deja de ser deducción por confirmar.
-          source: "stated" as const,
-          needs_confirmation: false,
+          source,
+          needs_confirmation: source === "derived" || source === "proposed",
           skipped: null,
         };
       }
+      if (reopened.has(field.code)) return { ...field, skipped: null };
       const skip = skipped.get(field.code);
       if (skip !== undefined) {
         return {
