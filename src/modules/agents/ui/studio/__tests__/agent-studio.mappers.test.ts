@@ -1,5 +1,5 @@
 import type { AiAgentDTO } from "@/modules/agents/domain/agent";
-import { agentToStudioValues, defaultModelFor, defaultStudioValues, toAgentDto, toIntentionsDto } from "../agent-studio.mappers";
+import { agentToStudioValues, defaultModelFor, defaultStudioValues, roleFromIntentions, toAgentDto, toIntentionsDto } from "../agent-studio.mappers";
 
 const MODELS = [
   { provider: "anthropic" as const, model: "claude-haiku-4-5-20251001", display_name: "Haiku", is_default: false, temperature_max: 1 },
@@ -87,9 +87,21 @@ describe("agent-studio.mappers", () => {
     expect(created.model_params).toEqual({});
   });
 
-  it("un agente sin brief (anterior al estudio) abre con el brief vacío de ventas y un provider mock cae a openai", () => {
-    const values = agentToStudioValues({ ...AGENT, brief: null, provider: "mock" });
-    expect(values.brief).toEqual({ role: "ventas", tone: "cercano", goal: "", always: [], never: [], handoff_when: [], business_facts: [] });
+  it("un agente sin brief (anterior al estudio) abre con el brief vacío y el ROL derivado de sus intenciones; un provider mock cae a openai", () => {
+    const support = { intention_id: "i2", requirements: null, code: "support_request", type: "support" as const, is_system: true };
+    const values = agentToStudioValues({ ...AGENT, brief: null, provider: "mock", intentions: [support] });
+    // C-H1: abrir un agente de soporte para cambiarle el color y guardar NO lo convierte en vendedor
+    expect(values.brief).toEqual({ role: "soporte", tone: "cercano", goal: "", always: [], never: [], handoff_when: [], business_facts: [] });
     expect(values.provider).toBe("openai_compatible");
+  });
+
+  it("roleFromIntentions: la misma heurística que la migración del servidor", () => {
+    const of = (...types: string[]) => roleFromIntentions(types.map((type) => ({ type })));
+    expect(of("sales", "support")).toBe("ventas");
+    expect(of("onboarding", "support")).toBe("captacion");
+    expect(of("support")).toBe("soporte");
+    expect(of("technical", "follow_up")).toBe("soporte");
+    expect(of("follow_up")).toBe("ventas");
+    expect(of()).toBe("ventas");
   });
 });

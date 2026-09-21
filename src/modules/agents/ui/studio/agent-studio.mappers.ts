@@ -2,6 +2,7 @@ import {
   agentVoicePolicy,
   DEFAULT_APPEARANCE,
   emptyBrief,
+  type AgentBriefRole,
   type AiAgentDTO,
   type AiModelDTO,
   type CreateAiAgentDTO,
@@ -39,11 +40,27 @@ export function defaultStudioValues(models: readonly AiModelDTO[] | null): Agent
   };
 }
 
+/**
+ * Un agente anterior al estudio no tiene brief. Su rol se DERIVA de las
+ * intenciones que ya atiende —la misma heurística que la migración del
+ * servidor: venta manda; si no, captación; si no, soporte/técnico; si no,
+ * ventas—. Sin esto, abrir un agente de soporte para cambiarle el color y
+ * guardar lo convertía en «quien vende y toma los pedidos» sin avisar
+ * (auditoría C-H1).
+ */
+export function roleFromIntentions(intentions: readonly { type: string }[]): AgentBriefRole {
+  const types = new Set(intentions.map((link) => link.type));
+  if (types.has("sales")) return "ventas";
+  if (types.has("onboarding")) return "captacion";
+  if (types.has("support") || types.has("technical")) return "soporte";
+  return "ventas";
+}
+
 export function agentToStudioValues(agent: AiAgentDTO): AgentStudioValues {
   const handoff = agent.handoff_policy as { keywords?: string[]; max_failures?: number };
   const params = agent.model_params as { temperature?: number; max_tokens?: number };
   const policy = agentVoicePolicy(agent.voice_policy);
-  const brief = agent.brief ?? emptyBrief("ventas");
+  const brief = agent.brief ?? emptyBrief(roleFromIntentions(agent.intentions));
   return {
     name: agent.name,
     status: agent.status,
@@ -120,8 +137,10 @@ export function toAgentDto(values: AgentStudioValues, existing: AiAgentDTO | nul
   };
 }
 
+/** El de update es el parcial del de creación: la misma forma encaja sin cast (si divergen, `tsc` lo dice aquí). */
 export function toUpdateDto(values: AgentStudioValues, existing: AiAgentDTO): UpdateAiAgentDTO {
-  return toAgentDto(values, existing) as UpdateAiAgentDTO;
+  const dto: UpdateAiAgentDTO = toAgentDto(values, existing);
+  return dto;
 }
 
 /** PUT del set completo, conservando los `requirements` que ya tenía cada intención. */
