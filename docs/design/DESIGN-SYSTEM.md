@@ -279,6 +279,8 @@ El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —
 
 ## 6. Movimiento
 
+> **Un solo avatar vivo por pantalla** (estudio de agentes, 2026-09-21): en una vista con varios personajes (rejilla de agentes, selector de personaje, vista previa del onboarding) solo el del escenario lleva vida (`useAvatarLife`/`useAvatarGaze`); el resto son `AssistantAvatar` estáticos con `transitionMs={0}`. Cinco caras parpadeando a la vez son cinco loops en reposo, que es justo lo que esta sección prohíbe.
+
 Presets centralizados en **`src/core/styles/motion.ts`** — nunca duraciones/curvas ad-hoc:
 
 | Preset | Valor | Uso |
