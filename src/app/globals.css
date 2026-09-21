@@ -1119,6 +1119,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --av-ink-hi: #55555c;
   --av-glint: #ffffff;
   --av-lid: #f7f5f0;
+  /* Contorno bajo el cuerpo (solo con data-color): en oscuro la silueta ya se lee. */
+  --av-outline: color-mix(in srgb, var(--foreground) 16%, transparent);
 
   /* Curvas: las mismas que `cssEase` en core/styles/motion.ts (hay un test que lo comprueba). */
   --av-ease-spring: linear(0, 0.0263, 0.0905, 0.1755, 0.2694, 0.3643, 0.4553, 0.5393, 0.6148, 0.6813, 0.7388, 0.7879, 0.8292, 0.8636, 0.892, 0.9151, 0.9339, 0.949, 0.961, 0.9705, 0.9779, 0.9837, 0.9881, 0.9915, 0.994, 0.9959, 0.9973, 0.9983, 1);
@@ -1154,6 +1156,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --av-ink: #1d1d21;
   --av-ink-hi: #4a4a52;
   --av-lid: #f1eee7;
+  --av-outline: transparent;
 }
 
 /* Paleta del cuerpo por `data-color` (estudio de agentes, plan agent_studio §6 C1).
@@ -1180,11 +1183,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 /* Con cuerpo de color el especular baja: un blanco al 50 % sobre pastel parece un gorro. */
 .assistant-avatar[data-color]:not([data-color="white"]) { --av-hot: var(--av-body-hi); }
 .assistant-avatar[data-color]:not([data-color="white"]) [data-layer="hot"] { opacity: 0.22; }
-/* Contorno: la copia bajo el cuerpo, un 3 % más grande. Solo con data-color y solo en claro
-   (sobre el fondo casi negro la silueta ya se lee). */
-.assistant-avatar [data-layer="outline"] { fill: transparent; transform: scale(1.03); transform-box: view-box; transform-origin: 50px 50px; }
-.assistant-avatar[data-color] [data-layer="outline"] { fill: color-mix(in srgb, var(--foreground) 16%, transparent); }
-.dark .assistant-avatar[data-color] [data-layer="outline"] { fill: transparent; }
+/* Contorno: la copia bajo el cuerpo, un 3 % más grande. Solo con data-color; en oscuro
+   `--av-outline` es transparente. La transparencia va en el GRUPO (opacity), no en cada
+   pieza: con fill translúcido las piezas de la nube se solapaban en los valles y el alfa
+   se sumaba (muescas oscuras en el contorno). */
+.assistant-avatar [data-layer="outline"] { fill: var(--av-outline); opacity: 0; transform: scale(1.03); transform-box: view-box; transform-origin: 50px 50px; }
+.assistant-avatar[data-color] [data-layer="outline"] { opacity: 1; }
 
 @supports not (transition-timing-function: linear(0, 1)) {
   .assistant-avatar {

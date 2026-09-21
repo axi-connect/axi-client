@@ -52,8 +52,20 @@ export type BodyShape =
   | { kind: "circle"; cx: number; cy: number; r: number }
   | { kind: "path"; d: string };
 
+/**
+ * La luz del cuerpo. `bbox` es el gradiente relativo a la caja de la pieza
+ * (`objectBoundingBox`: el círculo unitario se estira con la caja — es el de
+ * Lumo, y es lo que hace que su barriga se oscurezca como siempre); `user` es
+ * en espacio de usuario, para cuerpos de varias piezas (la nube) que tienen
+ * que compartir una sola luz y leerse como uno.
+ */
+export type BodyGradient =
+  | { kind: "bbox"; cx: number; cy: number; r: number }
+  | { kind: "user"; cx: number; cy: number; r: number };
+
 export interface CharacterGeometry {
   body: readonly BodyShape[];
+  bodyGradient: BodyGradient;
   eye: {
     rx: number;
     ry: number;
@@ -83,6 +95,7 @@ export const CHARACTER_GEOMETRY: Readonly<Record<AssistantCharacter, CharacterGe
   // Arcilla blanca mate, familia de Lumo. Cifras de `AssistantAvatar.tsx` del 2026-09-15.
   lumo: {
     body: [{ kind: "ellipse", cx: 50, cy: 50, rx: 37, ry: 34.5 }],
+    bodyGradient: { kind: "bbox", cx: 0.42, cy: 0.32, r: 0.85 },
     eye: { rx: 4.3, ry: 5.8, cant: 0, glintDx: -1.4, glintDy: -2.6 },
     mouth: { halfW: 7, depth: 7, openRx: 3.2, openRy: 2.1 },
     headset: true,
@@ -95,6 +108,7 @@ export const CHARACTER_GEOMETRY: Readonly<Record<AssistantCharacter, CharacterGe
       { kind: "circle", cx: 53, cy: 38, r: 19 },
       { kind: "circle", cx: 72, cy: 46, r: 14 },
     ],
+    bodyGradient: { kind: "user", cx: 44, cy: 37, r: 62 },
     eye: { rx: 3.4, ry: 6.6, cant: 0, glintDx: -1.1, glintDy: -3 },
     mouth: { halfW: 4.6, depth: 4.4, openRx: 2.4, openRy: 1.6 },
     headset: false,
@@ -102,6 +116,7 @@ export const CHARACTER_GEOMETRY: Readonly<Record<AssistantCharacter, CharacterGe
   // Huevo: más estrecho arriba, ojos altos y ligeramente inclinados hacia dentro.
   nova: {
     body: [{ kind: "path", d: "M50 11 C68 11 84 32 84 56 C84 77 69 90 50 90 C31 90 16 77 16 56 C16 32 32 11 50 11 Z" }],
+    bodyGradient: { kind: "user", cx: 44, cy: 37, r: 62 },
     eye: { rx: 4.2, ry: 7.4, cant: 7, glintDx: -1.4, glintDy: -3.3 },
     mouth: { halfW: 6, depth: 6, openRx: 3, openRy: 2 },
     headset: false,
@@ -109,6 +124,7 @@ export const CHARACTER_GEOMETRY: Readonly<Record<AssistantCharacter, CharacterGe
   // Esfera: ojos algo más redondos y anchos.
   strobi: {
     body: [{ kind: "circle", cx: 50, cy: 50, r: 36 }],
+    bodyGradient: { kind: "user", cx: 44, cy: 37, r: 62 },
     eye: { rx: 4.6, ry: 6.2, cant: 0, glintDx: -1.5, glintDy: -2.8 },
     mouth: { halfW: 6.5, depth: 6.5, openRx: 3.1, openRy: 2 },
     headset: false,

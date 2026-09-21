@@ -31,6 +31,17 @@ describe("AssistantAvatar — presupuesto", () => {
     expect(body?.getAttribute("ry")).toBe("34.5");
     expect(svg.querySelector('[data-layer="mouth"]')?.getAttribute("d")).toBe("M43 60 Q50 67 57 60");
     expect(svg.querySelector('[data-layer="glint"]')?.getAttribute("cx")).toBe("48.6");
+    // El material también: el gradiente del cuerpo es el objectBoundingBox de siempre
+    // (auditoría C1-H1: un círculo en espacio de usuario aclaraba la barriga un 5,7 %).
+    const gradient = svg.querySelector("defs radialGradient") as SVGRadialGradientElement;
+    expect(gradient.hasAttribute("gradientUnits")).toBe(false);
+    expect([gradient.getAttribute("cx"), gradient.getAttribute("cy"), gradient.getAttribute("r")]).toEqual(["0.42", "0.32", "0.85"]);
+  });
+
+  it("los cuerpos de varias piezas comparten una sola luz (gradiente en espacio de usuario)", () => {
+    const { container } = render(<AssistantAvatar expression="neutral" character="cloudee" color="cloud" />);
+    const gradient = container.querySelector("defs radialGradient") as SVGRadialGradientElement;
+    expect(gradient.getAttribute("gradientUnits")).toBe("userSpaceOnUse");
   });
 
   it("los personajes de plataforma viajan en data-character/data-color y no tienen diadema", () => {

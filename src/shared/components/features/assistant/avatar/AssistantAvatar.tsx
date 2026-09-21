@@ -166,10 +166,17 @@ export const AssistantAvatar = memo(
           <clipPath id={id("clip-er")}>
             <ellipse cx="50" cy={AVATAR_EYE_CY} rx={geometry.eye.rx} ry={geometry.eye.ry} />
           </clipPath>
-          {/* Los `stop` no traen color: lo pone el CSS por `data-stop`. El gradiente
-              del cuerpo va en espacio de usuario para que varias piezas (la nube)
-              compartan la misma luz y se lean como una sola. */}
-          <radialGradient id={id("body")} gradientUnits="userSpaceOnUse" cx="44" cy="37" r="62">
+          {/* Los `stop` no traen color: lo pone el CSS por `data-stop`. La luz del
+              cuerpo es por personaje: Lumo conserva su objectBoundingBox de
+              siempre (bit a bit); los de varias piezas la llevan en espacio de
+              usuario para compartir una sola luz y leerse como uno. */}
+          <radialGradient
+            id={id("body")}
+            gradientUnits={geometry.bodyGradient.kind === "user" ? "userSpaceOnUse" : undefined}
+            cx={geometry.bodyGradient.cx}
+            cy={geometry.bodyGradient.cy}
+            r={geometry.bodyGradient.r}
+          >
             <stop data-stop="body-hi" offset="0" />
             <stop data-stop="body-mid" offset="0.66" />
             <stop data-stop="body-deep" offset="1" />

@@ -16,6 +16,7 @@ describe("avatar-characters", () => {
     // aprobada del CMO no cambia por accidente.
     expect(CHARACTER_GEOMETRY.lumo).toEqual({
       body: [{ kind: "ellipse", cx: 50, cy: 50, rx: 37, ry: 34.5 }],
+      bodyGradient: { kind: "bbox", cx: 0.42, cy: 0.32, r: 0.85 },
       eye: { rx: 4.3, ry: 5.8, cant: 0, glintDx: -1.4, glintDy: -2.6 },
       mouth: { halfW: 7, depth: 7, openRx: 3.2, openRy: 2.1 },
       headset: true,
