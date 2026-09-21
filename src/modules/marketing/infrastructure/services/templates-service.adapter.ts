@@ -3,6 +3,7 @@ import type {
   CreateHsmTemplateDTO,
   CreateTemplateDTO,
   HsmTemplateDTO,
+  MessagingWindowDTO,
   TemplateDTO,
   UpdateTemplateDTO,
 } from "@/modules/marketing/domain/template-catalog";
@@ -31,6 +32,32 @@ export function updateTemplate(id: string, dto: UpdateTemplateDTO): Promise<Temp
 
 export function deleteTemplate(id: string): Promise<void> {
   return http.delete<void>(`/marketing/templates/${id}`);
+}
+
+/**
+ * Edita y reenvía a aprobación. NO lleva nombre ni idioma: Meta no los deja
+ * cambiar. La categoría solo si la plantilla no está aprobada.
+ */
+export function updateHsmTemplate(
+  templateId: string,
+  input: { body: string; examples?: string[]; category?: HsmTemplateDTO["category"] },
+): Promise<HsmTemplateDTO> {
+  return http.patch<HsmTemplateDTO>(`/marketing/hsm-templates/${templateId}`, input);
+}
+
+/** Borra en Meta y en la base. Borrar una aprobada bloquea su nombre 30 días. */
+export function deleteHsmTemplate(templateId: string): Promise<void> {
+  return http.delete<void>(`/marketing/hsm-templates/${templateId}`);
+}
+
+/**
+ * El cupo de conversaciones nuevas que Meta deja abrir en 24 h, del portafolio
+ * entero. `limit: null` = sin tope conocido; NO es cero.
+ */
+export function getMessagingWindow(channelId: string): Promise<MessagingWindowDTO> {
+  return http.get<MessagingWindowDTO>("/marketing/hsm-templates/messaging-window", {
+    channel_id: channelId,
+  });
 }
 
 export async function listHsmTemplates(params: {

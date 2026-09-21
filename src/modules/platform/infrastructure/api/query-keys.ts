@@ -15,12 +15,27 @@ export const platformKeys = {
     limits: (id: string) => [...platformKeys.tenants.all, id, "limits"] as const,
     database: (id: string) => [...platformKeys.tenants.all, id, "database"] as const,
     features: (id: string) => [...platformKeys.tenants.all, id, "features"] as const,
+    voice: (id: string) => [...platformKeys.tenants.all, id, "voice"] as const,
     migrations: (id: string) => [...platformKeys.tenants.all, id, "migrations"] as const,
   },
 
   plans: {
     all: ["platform", "plans"] as const,
     list: () => [...platformKeys.plans.all, "list"] as const,
+  },
+
+  // Puesta en marcha conversacional. Los guiones y las entrevistas se
+  // invalidan por separado: editar un guion no cambia ninguna entrevista en
+  // curso (cada una congela su copia), y aplicar una no toca el catálogo.
+  intake: {
+    all: ["platform", "intake"] as const,
+    blueprints: () => [...platformKeys.intake.all, "blueprints"] as const,
+    blueprint: (id: string) => [...platformKeys.intake.all, "blueprints", id] as const,
+    sessions: (filters: { status?: string; company_id?: string }) =>
+      [...platformKeys.intake.all, "sessions", filters] as const,
+    session: (id: string) => [...platformKeys.intake.all, "sessions", id] as const,
+    applyPlan: (id: string) => [...platformKeys.intake.all, "sessions", id, "apply"] as const,
+    ladder: (companyId: string) => [...platformKeys.intake.all, "ladder", companyId] as const,
   },
 
   pricing: {

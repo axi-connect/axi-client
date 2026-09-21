@@ -27,16 +27,16 @@ describe("springToLinear", () => {
 describe("globals.css está en sincronía con cssEase", () => {
   const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
 
-  it("--axel-ease-spring", () => {
-    expect(css).toContain(`--axel-ease-spring: ${cssEase.spring};`);
+  it("--av-ease-spring", () => {
+    expect(css).toContain(`--av-ease-spring: ${cssEase.spring};`);
   });
-  it("--axel-ease-snappy", () => {
-    expect(css).toContain(`--axel-ease-snappy: ${cssEase.snappy};`);
+  it("--av-ease-snappy", () => {
+    expect(css).toContain(`--av-ease-snappy: ${cssEase.snappy};`);
   });
-  it("--axel-ease-smooth", () => {
-    expect(css).toContain(`--axel-ease-smooth: ${cssEase.smooth};`);
+  it("--av-ease-smooth", () => {
+    expect(css).toContain(`--av-ease-smooth: ${cssEase.smooth};`);
   });
   it("el fallback sin linear() usa la curva documentada", () => {
-    expect(css).toContain(`--axel-ease-spring: ${cssEase.fallback};`);
+    expect(css).toContain(`--av-ease-spring: ${cssEase.fallback};`);
   });
 });

@@ -1,0 +1,642 @@
+<title>Constructor de plantillas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root{ --background:#ffffff;--foreground:#171717;--axi-brand:#e65759;--axi-brand-2:#e02f2f;--axi-violet:#7c3aed;--axi-amber:#f0a431;--axi-muted:#f4f4f5;--axi-success:#16a34a;--axi-warning:#d97706;--axi-destructive:#dc2626;--axi-info:#2563eb;--axi-on-color:#ffffff;--accent-mix:14%;color-scheme:light; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --background:#0a0a0a;--foreground:#ededed;--axi-brand:#fb7185;--axi-brand-2:#df4f4f;--axi-violet:#a78bfa;--axi-amber:#fbbf24;--axi-muted:#18181b;--axi-success:#4ade80;--axi-warning:#fbbf24;--axi-destructive:#f87171;--axi-info:#60a5fa;--axi-on-color:#0a0a0a;--accent-mix:42%;color-scheme:dark; } }
+:root[data-theme="dark"]{ --background:#0a0a0a;--foreground:#ededed;--axi-brand:#fb7185;--axi-brand-2:#df4f4f;--axi-violet:#a78bfa;--axi-amber:#fbbf24;--axi-muted:#18181b;--axi-success:#4ade80;--axi-warning:#fbbf24;--axi-destructive:#f87171;--axi-info:#60a5fa;--axi-on-color:#0a0a0a;--accent-mix:42%;color-scheme:dark; }
+:root{
+  --border:color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --border-soft:color-mix(in srgb, var(--border) 55%, transparent);
+  --secondary:color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --muted:var(--axi-muted);
+  --muted-fg:color-mix(in srgb, var(--foreground) 70%, transparent);
+  --faint-fg:color-mix(in srgb, var(--foreground) 48%, transparent);
+  --accent:color-mix(in srgb, var(--axi-brand) var(--accent-mix), var(--background));
+  --input:color-mix(in srgb, var(--foreground) 14%, var(--background));
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;
+  --shadow-float:0 1px 2px rgb(0 0 0/.05),0 4px 12px rgb(0 0 0/.06);
+  --shadow-overlay:0 1px 2px rgb(0 0 0/.06),0 16px 48px rgb(0 0 0/.16);
+  --font-body:"Poppins",Helvetica,Arial,sans-serif;
+  --font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* El lienzo del chat: verde de WhatsApp muy rebajado, para que la burbuja se
+     lea como lo que es. No es color de marca de axi y por eso no sale de aquí. */
+  --chat-ground:#e7ded5;
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --chat-ground:#10161a; } }
+:root[data-theme="dark"]{ --chat-ground:#10161a; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--background);color:var(--foreground);font-family:var(--font-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:108px}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:inherit;text-decoration:none}
+img{max-width:100%}
+[hidden]{display:none!important}
+.ic{flex:none}
+.muted{color:var(--muted-fg)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--axi-brand) 50%,transparent)}
+
+/* ─────────── Chrome del mockup (NO es producto) ─────────── */
+.mk-bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:100;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;padding:6px 8px;border-radius:999px;font-size:11.5px;
+  background:color-mix(in srgb,var(--background) 80%,transparent);border:1px solid color-mix(in srgb,var(--border) 60%,transparent);box-shadow:var(--shadow-overlay);backdrop-filter:saturate(160%) blur(16px);max-width:calc(100vw - 24px)}
+.mk-tag{display:flex;align-items:center;gap:6px;padding:0 8px;font-weight:600;color:var(--muted-fg);white-space:nowrap}
+.mk-grp{display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--secondary);flex-wrap:wrap;justify-content:center}
+.mk-grp button{padding:5px 10px;border-radius:999px;color:var(--muted-fg);font-weight:500;white-space:nowrap}
+.mk-grp button[aria-pressed="true"]{background:var(--accent);color:var(--foreground)}
+.mk-theme{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;color:var(--muted-fg);font-weight:500}
+
+/* ─────────── Cabecera ─────────── */
+.app-header{border-bottom:1px solid var(--border);padding:10px 24px}
+.app-header .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.app-header h1{font-size:18px;font-weight:700}
+.crumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--faint-fg)}
+.wrap{max-width:1120px;margin:0 auto;padding:22px 24px 0}
+@media (max-width:520px){.wrap{padding:18px 16px 0}.app-header{padding:10px 16px}}
+.head h2{font-size:22px;letter-spacing:-.02em}
+.head .sub{font-size:13px;color:var(--muted-fg);margin-top:4px;max-width:64ch}
+
+/* ─────────── Botones ─────────── */
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;font-weight:500;font-size:13px;border:1px solid transparent;transition:background .2s,color .2s,border-color .2s,opacity .2s}
+.btn .ic{width:16px;height:16px}
+.btn-primary{background:var(--axi-brand);color:var(--axi-on-color)}
+.btn-primary:hover{background:var(--axi-brand-2)}
+.btn-primary[aria-disabled="true"]{opacity:.42;cursor:not-allowed}
+.btn-outline{border-color:var(--border);background:var(--background)}
+.btn-outline:hover{background:var(--secondary)}
+.btn-ghost{color:var(--muted-fg)}
+.btn-ghost:hover{background:var(--secondary);color:var(--foreground)}
+.btn-sm{height:30px;padding:0 11px;font-size:12.5px;gap:6px}
+.btn-sm .ic{width:14px;height:14px}
+.btn-icon{width:28px;height:28px;padding:0;justify-content:center;border-radius:var(--r-sm)}
+
+/* ─────────── El taller: piezas a la izquierda, teléfono a la derecha ─────────── */
+/* El teléfono se queda pegado al hacer scroll: el sentido del constructor es
+   ver el efecto de cada campo, y si la previa se va arriba deja de servir. */
+.shop{display:grid;gap:18px;margin-top:18px;align-items:start}
+@media (min-width:960px){.shop{grid-template-columns:minmax(0,1fr) 300px}}
+.pieces{display:flex;flex-direction:column;gap:10px;min-width:0}
+
+/* ─────────── Una pieza ─────────── */
+.piece{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--background);overflow:clip}
+.piece>header{display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--foreground) 2.5%,var(--background))}
+.piece>header .glyph{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:var(--r-sm);background:color-mix(in srgb,var(--foreground) 6%,transparent);color:var(--muted-fg)}
+.piece>header .glyph .ic{width:14px;height:14px}
+.piece>header .txt{min-width:0;display:flex;flex-direction:column;gap:1px}
+.piece>header b{font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.piece>header i{font-style:normal;font-size:11.5px;color:var(--muted-fg)}
+.piece>header .end{margin-left:auto;display:flex;align-items:center;gap:6px}
+.piece .body{padding:13px;display:flex;flex-direction:column;gap:10px}
+/* El cuerpo es lo único obligatorio: se marca con el filete, no con un asterisco. */
+.piece.required{border-left:3px solid color-mix(in srgb,var(--axi-brand) 55%,transparent)}
+
+/* ─────────── Campos ─────────── */
+.field{display:flex;flex-direction:column;gap:6px}
+.field .lbl{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:500;color:var(--muted-fg)}
+.field .lbl .count{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--faint-fg)}
+.field .lbl .count.over{color:var(--axi-destructive);font-weight:600}
+.inp,.sel select,textarea.inp{width:100%;height:36px;padding:0 11px;border:1px solid var(--input);border-radius:var(--r-sm);background:var(--background);font-size:13px}
+textarea.inp{height:auto;min-height:84px;padding:9px 11px;line-height:1.55;resize:vertical}
+.sel{position:relative;display:flex;align-items:center}
+.sel select{appearance:none;padding-right:32px}
+.sel .ic{position:absolute;right:10px;width:14px;height:14px;color:var(--faint-fg);pointer-events:none}
+.hint{font-size:11.5px;color:var(--faint-fg);line-height:1.5}
+.row2{display:grid;gap:9px}
+@media (min-width:520px){.row2{grid-template-columns:1fr 1fr}}
+
+/* ─────────── Elegir el tipo de cabecera ─────────── */
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:999px;background:var(--secondary)}
+.seg button{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12.5px;color:var(--muted-fg)}
+.seg button .ic{width:13px;height:13px}
+.seg button[aria-pressed="true"]{background:var(--background);color:var(--foreground);font-weight:500;box-shadow:var(--shadow-float)}
+
+/* ─────────── Añadir pieza ─────────── */
+.adders{display:flex;flex-wrap:wrap;gap:8px}
+.adder{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border:1px dashed var(--border);border-radius:999px;font-size:12.5px;color:var(--muted-fg);transition:border-color .18s,color .18s,background .18s}
+.adder:hover{border-color:color-mix(in srgb,var(--axi-brand) 45%,var(--border));color:var(--foreground);background:var(--secondary)}
+.adder .ic{width:14px;height:14px}
+
+/* ─────────── Botones de la plantilla ─────────── */
+/* DOS grupos, y no una lista suelta: Meta exige que las respuestas rápidas
+   vayan juntas —«rápida, URL, rápida» es combinación inválida— así que el
+   constructor no deja mezclarlas. Lo que no se puede representar, no falla. */
+.bgroup{border:1px solid var(--border);border-radius:var(--r-md);overflow:clip}
+.bgroup>.gh{display:flex;align-items:center;gap:8px;padding:7px 11px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--foreground) 3%,var(--background));font-size:11.5px;color:var(--muted-fg);font-weight:500}
+.bgroup>.gh .ic{width:13px;height:13px}
+.bgroup>.gh .cap{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--faint-fg);font-weight:400}
+.brow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 11px}
+.brow+.brow{border-top:1px solid var(--border-soft)}
+.brow .grip{color:var(--faint-fg);cursor:grab}
+.brow .grip .ic{width:14px;height:14px}
+.brow .kind{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:999px;background:var(--secondary);border:1px solid var(--border-soft);font-size:11.5px;color:var(--muted-fg);white-space:nowrap}
+.brow .kind .ic{width:13px;height:13px}
+.brow .inp{height:30px;flex:1 1 130px;min-width:0}
+.brow .rm{margin-left:auto}
+.bempty{padding:11px;font-size:12px;color:var(--faint-fg)}
+
+/* ─────────── El teléfono ─────────── */
+.phone{position:sticky;top:16px;display:flex;flex-direction:column;gap:10px}
+.screen{border:1px solid var(--border);border-radius:var(--r-xl);background:var(--chat-ground);padding:14px 12px;box-shadow:var(--shadow-float)}
+.bubble{background:var(--background);border-radius:var(--r-md);border-top-left-radius:6px;overflow:clip;box-shadow:0 1px 1px rgb(0 0 0/.12);max-width:270px}
+.bubble .media{aspect-ratio:1.91/1;background:linear-gradient(135deg,color-mix(in srgb,var(--axi-brand) 26%,var(--muted)),color-mix(in srgb,var(--axi-violet) 22%,var(--muted)));display:grid;place-items:center;color:var(--muted-fg)}
+.bubble .media .ic{width:22px;height:22px;opacity:.75}
+.bubble .pad{padding:8px 10px 6px}
+.bubble .bhead{font-size:13.5px;font-weight:600;line-height:1.35;margin-bottom:3px}
+.bubble .btext{font-size:13px;line-height:1.5;white-space:pre-wrap}
+.bubble .bfoot{margin-top:5px;font-size:11px;color:var(--faint-fg)}
+.bubble mark{background:color-mix(in srgb,var(--axi-brand) 18%,transparent);color:inherit;border-radius:4px;padding:0 3px;font-weight:500}
+.bubble .stamp{display:block;text-align:right;font-size:10px;color:var(--faint-fg);padding:0 10px 6px}
+.bubble .stamp .ic{width:12px;height:12px;display:inline-block;vertical-align:-2px;color:var(--axi-info)}
+.bubble .acts{border-top:1px solid var(--border-soft)}
+.bubble .act{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;font-size:12.5px;color:#1d9bf0;font-weight:500}
+.bubble .act+.act{border-top:1px solid var(--border-soft)}
+.bubble .act .ic{width:13px;height:13px}
+.phone .cap{font-size:11px;color:var(--faint-fg);text-align:center;line-height:1.45}
+
+/* ─────────── Avisos ─────────── */
+.callout{display:flex;gap:9px;align-items:flex-start;border:1px solid;border-radius:var(--r-md);padding:10px 12px;font-size:12.5px;line-height:1.55;color:var(--muted-fg)}
+.callout .ic{margin-top:1px;width:15px;height:15px}
+.callout strong{color:var(--foreground);font-weight:600}
+.callout.info{border-color:color-mix(in srgb,var(--axi-info) 26%,var(--border));background:color-mix(in srgb,var(--axi-info) 6%,var(--background))}
+.callout.info>.ic{color:var(--axi-info)}
+.callout.warn{border-color:color-mix(in srgb,var(--axi-warning) 30%,var(--border));background:color-mix(in srgb,var(--axi-warning) 7%,var(--background))}
+.callout.warn>.ic{color:var(--axi-warning)}
+.callout.calm{border-color:var(--border);background:var(--secondary)}
+.callout.calm>.ic{color:var(--muted-fg)}
+
+/* ─────────── Pie del formulario ─────────── */
+.foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* ─────────── Notas ─────────── */
+.notes{display:grid;gap:12px;margin-top:16px}
+@media (min-width:760px){.notes{grid-template-columns:1fr 1fr}}
+.note{border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;display:flex;flex-direction:column;gap:6px;background:var(--background)}
+.note h3{font-size:13px}
+.note p{font-size:12.5px;color:var(--muted-fg);line-height:1.6}
+.note .k{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--faint-fg);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.note .k .ic{width:13px;height:13px}
+.note code{font-family:var(--font-mono);font-size:11.5px;background:var(--secondary);border:1px solid var(--border-soft);border-radius:5px;padding:1px 5px}
+</style>
+
+<div class="mk-bar" role="toolbar" aria-label="Controles del mockup">
+  <span class="mk-tag"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Mockup &middot; Plantillas de Meta</span>
+  <div class="mk-grp" role="group" aria-label="Vistas"><button class="mk-view" data-view="minimo" aria-pressed="true">Solo cuerpo</button><button class="mk-view" data-view="completa" aria-pressed="false">Con cabecera y pie</button><button class="mk-view" data-view="botones" aria-pressed="false">Botones</button><button class="mk-view" data-view="limites" aria-pressed="false">En el tope</button><button class="mk-view" data-view="media" aria-pressed="false">Con imagen</button><button class="mk-view" data-view="notas" aria-pressed="false">Qu&eacute; cambia</button></div>
+  <button class="mk-theme" id="theme-btn"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><span id="theme-txt">Oscuro</span></button>
+</div>
+
+
+<div class="app-header">
+  <div class="row">
+    <h1>Nueva plantilla de Meta</h1>
+    <span class="crumb">Marketing &rsaquo; Plantillas de Meta</span>
+  </div>
+</div>
+
+<div class="wrap" id="view-minimo">
+  <div class="head">
+    <h2>Una plantilla se arma por piezas</h2>
+    <p class="sub">Solo el cuerpo es obligatorio. Lo dem&aacute;s se a&ntilde;ade cuando hace falta, y cada pieza aparece en la previa en cuanto la escribes.</p>
+  </div>
+  
+<div class="shop">
+  <div class="pieces">
+    
+<section class="piece required">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12H3"/><path d="M17 18H3"/><path d="M21 6H3"/></svg></span>
+    <span class="txt"><b>Cuerpo</b><i>Lo &uacute;nico que Meta exige</i></span>
+    <span class="end"></span>
+  </header>
+  <div class="body">
+    <div class="field">
+      <span class="lbl">Texto<span class="count">0/1024</span></span>
+      <textarea class="inp" data-count data-max="1024"
+        aria-label="Cuerpo del mensaje">Hola {{1}}, en Savage abrimos la temporada con 30% en toda la colección. Es hasta el domingo.</textarea>
+      <div class="adders">
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>Insertar hueco</button>
+      </div>
+      <p class="hint">Los huecos se rellenan al enviar con el dato de cada contacto.
+        Meta exige un ejemplo por cada uno.</p>
+    </div></div>
+</section>
+    <div class="adders">
+      <button class="adder" data-goto="completa"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>A&ntilde;adir cabecera</button>
+      <button class="adder" data-goto="completa"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>A&ntilde;adir pie</button>
+      <button class="adder" data-goto="botones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>A&ntilde;adir botones</button>
+    </div>
+    <p class="callout calm"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Una plantilla solo con cuerpo es lo que se puede
+      crear hoy: texto plano. La imagen, el pie y los botones son opcionales para Meta, pero son
+      la diferencia entre un aviso y algo que el cliente puede <strong>responder de un
+      toque</strong> &mdash; y ese toque es lo que abre la ventana de 24 h sin que teclee nada.</span></p>
+    
+<div class="foot">
+  <span class="hint">Meta suele decidir en minutos; puede tardar hasta 48 h.</span>
+  <span style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm">Cancelar</button>
+    <button class="btn btn-primary">Enviar a revisi&oacute;n de Meta</button>
+  </span>
+</div>
+  </div>
+  
+<aside class="phone">
+  <div class="screen"><div class="bubble"><div class="pad"><div class="btext">Hola <mark>Laura</mark>, en Savage abrimos la temporada con 30% en toda la colecci&oacute;n. Es hasta el domingo.</div></div><span class="stamp">12:04 <svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg></span></div></div>
+  <p class="cap">As&iacute; le llega hoy: sin imagen, sin pie y sin ning&uacute;n bot&oacute;n.</p>
+</aside>
+</div>
+</div>
+
+<div class="wrap" id="view-completa" hidden>
+  <div class="head">
+    <h2>Cabecera, cuerpo y pie</h2>
+    <p class="sub">Cada pieza tiene su tope de caracteres y sus reglas, y el contador cuenta lo que cuenta Meta &mdash; no lo que nos parezca.</p>
+  </div>
+  
+<div class="shop">
+  <div class="pieces">
+    
+<section class="piece">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg></span>
+    <span class="txt"><b>Cabecera</b><i>Texto o imagen &middot; opcional</i></span>
+    <span class="end"><button class="btn btn-ghost btn-icon" aria-label="Quitar la cabecera"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+  </header>
+  <div class="body">
+    <div class="seg" role="group" aria-label="Tipo de cabecera">
+      <button aria-pressed="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>Texto</button>
+      <button aria-pressed="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Imagen</button>
+    </div>
+    <div class="field">
+      <span class="lbl">Texto de la cabecera<span class="count">0/60</span></span>
+      <input class="inp" data-count data-max="60" aria-label="Texto de la cabecera"
+        value="Temporada nueva en Savage">
+      <p class="hint">Admite <strong>un solo hueco</strong>, y no admite negritas ni cursivas.</p>
+    </div></div>
+</section>
+    
+<section class="piece required">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12H3"/><path d="M17 18H3"/><path d="M21 6H3"/></svg></span>
+    <span class="txt"><b>Cuerpo</b><i>Lo &uacute;nico que Meta exige</i></span>
+    <span class="end"></span>
+  </header>
+  <div class="body">
+    <div class="field">
+      <span class="lbl">Texto<span class="count">0/1024</span></span>
+      <textarea class="inp" data-count data-max="1024"
+        aria-label="Cuerpo del mensaje">Hola {{1}}, en Savage abrimos la temporada con 30% en toda la colección. Es hasta el domingo.</textarea>
+      <div class="adders">
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>Insertar hueco</button>
+      </div>
+      <p class="hint">Los huecos se rellenan al enviar con el dato de cada contacto.
+        Meta exige un ejemplo por cada uno.</p>
+    </div></div>
+</section>
+    
+<section class="piece">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg></span>
+    <span class="txt"><b>Pie</b><i>60 caracteres, sin huecos &middot; opcional</i></span>
+    <span class="end"><button class="btn btn-ghost btn-icon" aria-label="Quitar el pie"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+  </header>
+  <div class="body">
+    <div class="field">
+      <span class="lbl">Texto del pie<span class="count">0/60</span></span>
+      <input class="inp" data-count data-max="60" aria-label="Texto del pie"
+        value="Responde SALIR para no recibir más promociones">
+      <p class="hint">Sin huecos: Meta no los admite en el pie. Es el sitio donde suele ir
+        la salida del cliente.</p>
+    </div></div>
+</section>
+    <div class="adders">
+      <button class="adder" data-goto="botones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>A&ntilde;adir botones</button>
+    </div>
+    
+<div class="foot">
+  <span class="hint">Cuatro piezas, un solo env&iacute;o.</span>
+  <span style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm">Cancelar</button>
+    <button class="btn btn-primary">Enviar a revisi&oacute;n de Meta</button>
+  </span>
+</div>
+  </div>
+  
+<aside class="phone">
+  <div class="screen"><div class="bubble"><div class="pad"><div class="bhead">Temporada nueva en Savage</div><div class="btext">Hola <mark>Laura</mark>, en Savage abrimos la temporada con 30% en toda la colecci&oacute;n. Es hasta el domingo.</div><div class="bfoot">Responde SALIR para no recibir m&aacute;s promociones</div></div><span class="stamp">12:04 <svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg></span></div></div>
+  <p class="cap">La cabecera va en negrita arriba; el pie, en gris peque&ntilde;o abajo.</p>
+</aside>
+</div>
+</div>
+
+<div class="wrap" id="view-botones" hidden>
+  <div class="head">
+    <h2>Los botones, en dos grupos</h2>
+    <p class="sub">El bot&oacute;n de respuesta r&aacute;pida es lo que abre la ventana de 24 h sin que el cliente teclee; el de enlace es lo que lo lleva al cat&aacute;logo.</p>
+  </div>
+  
+<div class="shop">
+  <div class="pieces">
+    
+<section class="piece">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg></span>
+    <span class="txt"><b>Botones</b><i>Hasta 10, en dos grupos</i></span>
+    <span class="end"><button class="btn btn-ghost btn-icon" aria-label="Quitar los botones"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+  </header>
+  <div class="body">
+    <div class="bgroup">
+      <div class="gh"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>Respuestas rápidas<span class="cap">2 de 10</span></div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>Rápida</span>
+        <input class="inp" value="Ver la colección" aria-label="Texto del botón">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>Rápida</span>
+        <input class="inp" value="No me interesa" aria-label="Texto del botón">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      <div class="brow">
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Añadir respuesta rápida</button>
+      </div>
+    </div>
+
+    <div class="bgroup">
+      <div class="gh"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Acciones<span class="cap">1 de 4</span></div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Enlace</span>
+        <input class="inp" value="Ir a la tienda" aria-label="Texto del botón"><input class="inp mono" value="savage.co/temporada" aria-label="Dirección">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      <div class="brow">
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Enlace</button>
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>Llamar</button>
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copiar código</button>
+      </div>
+    </div>
+
+    <p class="callout warn"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Con más de tres botones, WhatsApp enseña
+      solo dos y esconde el resto detr&aacute;s de <strong>&laquo;Ver todas las opciones&raquo;</strong>.
+      Y una plantilla con cuatro o m&aacute;s, o que mezcle r&aacute;pidas con acciones,
+      <strong>no se puede ver en WhatsApp de escritorio</strong>: a quien la reciba ah&iacute; se le
+      pedir&aacute; abrirla en el celular.</span></p></div>
+</section>
+    <p class="callout info"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span>Los dos grupos no son un capricho de
+      presentaci&oacute;n: Meta <strong>exige</strong> que las respuestas r&aacute;pidas vayan
+      juntas. &laquo;R&aacute;pida, enlace, r&aacute;pida&raquo; es una combinaci&oacute;n que su
+      API rechaza. Separarlas en dos grupos hace que esa combinaci&oacute;n
+      <strong>no se pueda ni construir</strong>.</span></p>
+    
+<div class="foot">
+  <span class="hint">El orden dentro de cada grupo s&iacute; lo eliges t&uacute;.</span>
+  <span style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm">Cancelar</button>
+    <button class="btn btn-primary">Enviar a revisi&oacute;n de Meta</button>
+  </span>
+</div>
+  </div>
+  
+<aside class="phone">
+  <div class="screen"><div class="bubble"><div class="pad"><div class="bhead">Temporada nueva en Savage</div><div class="btext">Hola <mark>Laura</mark>, en Savage abrimos la temporada con 30% en toda la colecci&oacute;n. Es hasta el domingo.</div><div class="bfoot">Responde SALIR para no recibir m&aacute;s promociones</div></div><span class="stamp">12:04 <svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg></span><div class="acts"><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Ir a la tienda</div><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>Ver la colecci&oacute;n</div><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>Ver todas las opciones</div></div></div></div>
+  <p class="cap">Con m&aacute;s de tres, WhatsApp ense&ntilde;a dos y esconde el resto.</p>
+</aside>
+</div>
+</div>
+
+<div class="wrap" id="view-limites" hidden>
+  <div class="head">
+    <h2>Cuando se llega al tope</h2>
+    <p class="sub">Las reglas de Meta dejan de ser errores que llegan despu&eacute;s y se convierten en cosas que la interfaz no te deja hacer.</p>
+  </div>
+  
+<div class="shop">
+  <div class="pieces">
+    
+<section class="piece">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg></span>
+    <span class="txt"><b>Botones</b><i>Cada tipo tiene su tope</i></span>
+    <span class="end"></span>
+  </header>
+  <div class="body">
+    <div class="bgroup">
+      <div class="gh"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Acciones<span class="cap">4 de 4 &middot; al tope</span></div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Enlace</span>
+        <input class="inp" value="Ir a la tienda" aria-label="Texto">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Enlace</span>
+        <input class="inp" value="Ver ofertas" aria-label="Texto">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>Llamar</span>
+        <input class="inp" value="Ll&aacute;manos" aria-label="Texto">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      
+      <div class="brow">
+        <span class="grip"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+        <span class="kind"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copiar</span>
+        <input class="inp mono" value="TEMP30" aria-label="C&oacute;digo">
+        <span class="rm"><button class="btn btn-ghost btn-icon" aria-label="Quitar el botón"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      <div class="brow">
+        <button class="adder" aria-disabled="true" style="opacity:.45;cursor:not-allowed">
+          <svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Enlace &middot; m&aacute;ximo 2</button>
+        <button class="adder" aria-disabled="true" style="opacity:.45;cursor:not-allowed">
+          <svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>Llamar &middot; m&aacute;ximo 1</button>
+        <button class="adder" aria-disabled="true" style="opacity:.45;cursor:not-allowed">
+          <svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copiar c&oacute;digo &middot; m&aacute;ximo 1</button>
+      </div>
+    </div></div>
+</section>
+    <p class="callout warn"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>Los topes son de Meta y no se negocian:
+      <strong>dos enlaces</strong>, <strong>un tel&eacute;fono</strong>, <strong>un copiar
+      c&oacute;digo</strong> y hasta <strong>diez r&aacute;pidas</strong>, con un total de diez.
+      El bot&oacute;n de a&ntilde;adir se apaga al llegar, en vez de dejarte llenar el formulario
+      y que Meta lo rechace un minuto despu&eacute;s.</span></p>
+    <p class="callout calm"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg><span>Esta combinaci&oacute;n
+      <strong>no se ve en WhatsApp de escritorio</strong>. A quien la reciba ah&iacute; se le
+      pedir&aacute; abrirla en el celular, as&iacute; que conviene saberlo antes de mandarla a
+      ochocientas personas.</span></p>
+    
+<div class="foot">
+  <span class="hint"></span>
+  <span style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm">Cancelar</button>
+    <button class="btn btn-primary">Enviar a revisi&oacute;n de Meta</button>
+  </span>
+</div>
+  </div>
+  
+<aside class="phone">
+  <div class="screen"><div class="bubble"><div class="pad"><div class="bhead">Temporada nueva en Savage</div><div class="btext">Hola <mark>Laura</mark>, en Savage abrimos la temporada con 30% en toda la colecci&oacute;n. Es hasta el domingo.</div></div><span class="stamp">12:04 <svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg></span><div class="acts"><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Ir a la tienda</div><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Ver ofertas</div><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>Ver todas las opciones</div></div></div></div>
+  <p class="cap">Dos visibles y el resto detr&aacute;s de &laquo;Ver todas las opciones&raquo;.</p>
+</aside>
+</div>
+</div>
+
+<div class="wrap" id="view-media" hidden>
+  <div class="head">
+    <h2>Cabecera con imagen</h2>
+    <p class="sub">Es lo que convierte un aviso en algo que se mira. Meta aprueba la plantilla con una imagen de ejemplo; cada campa&ntilde;a manda la suya.</p>
+  </div>
+  
+<div class="shop">
+  <div class="pieces">
+    
+<section class="piece">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></span>
+    <span class="txt"><b>Cabecera</b><i>Imagen &middot; opcional</i></span>
+    <span class="end"><button class="btn btn-ghost btn-icon" aria-label="Quitar la cabecera"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+  </header>
+  <div class="body">
+    <div class="seg" role="group" aria-label="Tipo de cabecera">
+      <button aria-pressed="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>Texto</button>
+      <button aria-pressed="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Imagen</button>
+    </div>
+    <div class="field">
+      <span class="lbl">Imagen de ejemplo</span>
+      <div style="display:flex;align-items:center;gap:10px;border:1px dashed var(--border);
+                  border-radius:var(--r-md);padding:11px">
+        <span style="width:46px;height:46px;flex:none;border-radius:var(--r-sm);
+                     background:linear-gradient(135deg,color-mix(in srgb,var(--axi-brand) 26%,var(--muted)),
+                     color-mix(in srgb,var(--axi-violet) 22%,var(--muted)));display:grid;
+                     place-items:center;color:var(--muted-fg)"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></span>
+        <span style="min-width:0">
+          <span style="display:block;font-size:12.5px;font-weight:500">coleccion-septiembre.jpg</span>
+          <span style="display:block;font-size:11.5px;color:var(--faint-fg)">1.200 &times; 628 &middot; 240 KB</span>
+        </span>
+        <span style="margin-left:auto"><button class="btn btn-ghost btn-icon" aria-label="Quitar la imagen"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>
+      </div>
+      <p class="hint">Meta revisa <strong>esta</strong> imagen, pero al enviar se manda la que
+        elijas en cada campa&ntilde;a. Esta es el ejemplo con el que aprueba la plantilla.</p>
+    </div></div>
+</section>
+    
+<section class="piece required">
+  <header>
+    <span class="glyph"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 12H3"/><path d="M17 18H3"/><path d="M21 6H3"/></svg></span>
+    <span class="txt"><b>Cuerpo</b><i>Lo &uacute;nico que Meta exige</i></span>
+    <span class="end"></span>
+  </header>
+  <div class="body">
+    <div class="field">
+      <span class="lbl">Texto<span class="count">0/1024</span></span>
+      <textarea class="inp" data-count data-max="1024"
+        aria-label="Cuerpo del mensaje">Hola {{1}}, en Savage abrimos la temporada con 30% en toda la colección. Es hasta el domingo.</textarea>
+      <div class="adders">
+        <button class="adder"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>Insertar hueco</button>
+      </div>
+      <p class="hint">Los huecos se rellenan al enviar con el dato de cada contacto.
+        Meta exige un ejemplo por cada uno.</p>
+    </div></div>
+</section>
+    <p class="callout info"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Una cabecera es <strong>texto o imagen</strong>, no
+      las dos. Cambiar de tipo no borra lo que escribiste: se guarda por si vuelves.</span></p>
+    
+<div class="foot">
+  <span class="hint"></span>
+  <span style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm">Cancelar</button>
+    <button class="btn btn-primary">Enviar a revisi&oacute;n de Meta</button>
+  </span>
+</div>
+  </div>
+  
+<aside class="phone">
+  <div class="screen"><div class="bubble"><div class="media"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div><div class="pad"><div class="btext">Hola <mark>Laura</mark>, en Savage abrimos la temporada con 30% en toda la colecci&oacute;n. Es hasta el domingo.</div><div class="bfoot">Responde SALIR para no recibir m&aacute;s promociones</div></div><span class="stamp">12:04 <svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg></span><div class="acts"><div class="act"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Ir a la tienda</div></div></div></div>
+  <p class="cap">La imagen ocupa el ancho de la burbuja, encima del texto.</p>
+</aside>
+</div>
+</div>
+
+<div class="wrap" id="view-notas" hidden>
+  <div class="head">
+    <h2>Qu&eacute; cambia y por qu&eacute;</h2>
+    <p class="sub">Seis decisiones del constructor, con el motivo detr&aacute;s de cada una.</p>
+  </div>
+  <div class="notes"><div class="note"><span class="k"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg>01</span><h3>Piezas que se a&ntilde;aden, no un formulario lleno</h3><p>Lo &uacute;nico obligatorio es el cuerpo. Enseñar de entrada cuatro bloques con sus campos vac&iacute;os convierte una plantilla de dos l&iacute;neas en un tr&aacute;mite. Se empieza con el cuerpo y las dem&aacute;s piezas se piden cuando hacen falta.</p></div><div class="note"><span class="k"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20v-7a4 4 0 0 0-4-4H4"/><path d="M9 14 4 9l5-5"/></svg>02</span><h3>Dos grupos de botones, y no es cosm&eacute;tica</h3><p>Meta <strong>exige</strong> que las respuestas r&aacute;pidas vayan juntas: <code>r&aacute;pida, enlace, r&aacute;pida</code> es una combinaci&oacute;n que su API rechaza con «invalid combination». Separarlas en dos grupos hace que la combinaci&oacute;n inv&aacute;lida <strong>no se pueda representar</strong>, que es mejor que validarla.</p></div><div class="note"><span class="k"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>03</span><h3>Los topes apagan el bot&oacute;n, no rechazan al final</h3><p>Dos enlaces, un tel&eacute;fono, un copiar c&oacute;digo, diez r&aacute;pidas, diez en total. Con el bot&oacute;n de a&ntilde;adir apagado y el motivo escrito al lado, el operador no llena un formulario para que se lo tumben un minuto despu&eacute;s.</p></div><div class="note"><span class="k"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>04</span><h3>La previa no miente sobre lo que ver&aacute; el cliente</h3><p>Con m&aacute;s de tres botones WhatsApp ense&ntilde;a dos y esconde el resto tras «Ver todas las opciones». La previa lo hace igual. Una previa que ense&ntilde;a cinco botones bonitos cuando el cliente ver&aacute; dos es peor que no tenerla.</p></div><div class="note"><span class="k"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>05</span><h3>El aviso del escritorio, antes y no despu&eacute;s</h3><p>Cuatro o m&aacute;s botones, o mezclar r&aacute;pidas con acciones, hace que la plantilla <strong>no se pueda ver en WhatsApp de escritorio</strong>. Es un dato de Meta que no est&aacute; en ninguna parte del producto y que cambia la decisi&oacute;n de quien escribe a ochocientas personas.</p></div><div class="note"><span class="k"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>06</span><h3>Los huecos, solo donde Meta los admite</h3><p>El cuerpo admite varios, la cabecera <strong>uno</strong> y el pie <strong>ninguno</strong>. Por eso el pie no tiene bot&oacute;n de insertar hueco: la regla se cuenta una vez, en la forma del control, en vez de repetirse en un aviso que nadie lee.</p></div></div>
+</div>
+<script>
+(function(){
+  /* ── vistas del mockup ── */
+  var ids = {minimo:"view-minimo", completa:"view-completa", botones:"view-botones",
+             limites:"view-limites", media:"view-media", notas:"view-notas"};
+  function show(n){
+    Object.keys(ids).forEach(function(k){ document.getElementById(ids[k]).hidden = (k !== n); });
+    document.querySelectorAll(".mk-view").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === n));
+    });
+    window.scrollTo({top:0});
+  }
+  document.querySelectorAll(".mk-view").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.getAttribute("data-view")); });
+  });
+  document.querySelectorAll("[data-goto]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.getAttribute("data-goto")); });
+  });
+
+  /* ── segmentado del tipo de cabecera ── */
+  document.querySelectorAll(".seg").forEach(function(seg){
+    seg.querySelectorAll("button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        seg.querySelectorAll("button").forEach(function(b){ b.setAttribute("aria-pressed","false"); });
+        btn.setAttribute("aria-pressed","true");
+      });
+    });
+  });
+
+  /* ── contadores que cuentan lo que cuenta Meta ── */
+  document.querySelectorAll("[data-count]").forEach(function(input){
+    /* El contador se busca dentro del MISMO campo: la pieza del cuerpo aparece
+       en cuatro vistas y con `id` habría cuatro iguales. */
+    var field = input.closest(".field");
+    var out = field ? field.querySelector(".count") : null;
+    var max = Number(input.getAttribute("data-max"));
+    function paint(){
+      if(!out) return;
+      out.textContent = String(input.value.length) + "/" + String(max);
+      out.classList.toggle("over", input.value.length > max);
+    }
+    input.addEventListener("input", paint);
+    paint();
+  });
+
+  /* ── tema ── */
+  var root = document.documentElement,
+      tb = document.getElementById("theme-btn"),
+      tt = document.getElementById("theme-txt");
+  function isDark(){
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function paint(){ tt.textContent = isDark() ? "Claro" : "Oscuro"; }
+  tb.addEventListener("click", function(){
+    root.setAttribute("data-theme", isDark() ? "light" : "dark"); paint();
+  });
+  paint();
+})();
+</script>

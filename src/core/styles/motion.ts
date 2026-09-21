@@ -129,7 +129,7 @@ export function springToLinear(stiffness: number, damping: number, samples = 28)
 
 /**
  * Curvas CSS de la cara de Axel (módulo CMO). Como en el splash, la
- * implementación real vive en `globals.css` (`--axel-ease-*`) porque el
+ * implementación real vive en `globals.css` (`--av-ease-*`, en el bloque `.assistant-avatar` del kit de asistente) porque el
  * `@supports` de `linear()` solo puede resolverse allí; estos valores documentan
  * la coreografía y un test comprueba que el CSS no se ha desincronizado.
  * `spring` ≡ `spring.soft` (260/30, ~430 ms) · `snappy` ≡ `spring.snappy` (400/30, ~400 ms).

@@ -5,7 +5,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
  * del campo, composer anclado abajo, rail a la derecha) para que el contenido no
  * salte al llegar. Un spinner centrado no diría nada de la forma de la pantalla.
  *
- * Lleva `axel-field` a propósito: el fondo del campo es lo primero que se pinta y
+ * Lleva `assistant-field` (el campo del kit de asistente) a propósito: el fondo del campo es lo primero que se pinta y
  * si el skeleton no lo tuviera, la pantalla cambiaría de color al hidratar.
  */
 export default function CmoLoading() {
@@ -15,7 +15,7 @@ export default function CmoLoading() {
       role="status"
       aria-label="Cargando el despacho de Axel"
     >
-      <div className="axel-field flex min-w-0 flex-1 flex-col">
+      <div className="assistant-field flex min-w-0 flex-1 flex-col">
         <div className="flex flex-1 flex-col items-center px-6 pt-8">
           {/* La silueta de Axel (136×140 con su sombra), para que la cara no salte al llegar. */}
           <Skeleton className="mt-1 h-[124px] w-[112px] rounded-[46%]" />

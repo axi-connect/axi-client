@@ -80,11 +80,12 @@ Definidos una sola vez como utilidades en `globals.css` (nunca inline en compone
 **Techo de tinte y sus dos excepciones.** El techo del sistema para teñir una
 superficie es el 14% de `--color-accent`. Lo rompen a propósito dos superficies, y
 las dos están declaradas en `globals.css` con su motivo: `.channel-surface`
-(7–34%, el color oficial del proveedor) y `.axel-field` (hasta el 26%, el aura
-del despacho de Axel). El criterio que las autoriza es el mismo: el tinte no
-compite con el coral de acción ni con los colores de estado, y la superficie
-existe para sentirse habitada, no para presentar datos. Una tercera excepción no
-se añade sin actualizar esta línea.
+(7–34%, el color oficial del proveedor) y `.assistant-field` (hasta el 26%, el
+aura del kit de asistente: el campo de Axel en `/cmo` y el de Alba en
+`/configurar`, la misma superficie en dos rutas). El criterio que las autoriza es
+el mismo: el tinte no compite con el coral de acción ni con los colores de
+estado, y la superficie existe para sentirse habitada, no para presentar datos.
+Una tercera excepción no se añade sin actualizar esta línea.
 
 ### 2.4 Paleta de visualización de datos
 
@@ -262,7 +263,8 @@ retiró la `GridCard` que vino con la plantilla del mega-menú).
 | Sidebar (`AppSidebar`) | Formularios (`DynamicForm`) |
 | `Modal`, `Dialog`, `DetailSheet` | Paneles del inbox (lista + conversación) — el chip de día `sticky` del hilo sí es glass: flota sobre las burbujas, no es superficie de contenido |
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |
-| La barra de Axel (`AxelDock`, módulo CMO) **cuando está acoplada**: sticky sobre el hilo, se vuelve cristal al bajar y transparente en reposo | Las burbujas del hilo de Axel |
+| La barra del kit de asistente (`AssistantDock`, Axel y Alba) **cuando está acoplada**: sticky sobre el hilo, se vuelve cristal al bajar y transparente en reposo | Las burbujas del hilo del asistente (`AssistantBubble`, `UserBubble`): sólidas, sin borde, con `shadow-float` |
+| La cápsula del compositor del asistente (`AssistantComposer`, receta `.glass`) y las píldoras de arranque: flotan sobre el hilo y el aura cae detrás | La lista agrupada de la pregunta y de la ficha (`.grouped-list`) |
 | `FloatingAlert`, tooltips | Cualquier superficie con texto denso |
 
 Regla de legibilidad: el glass solo se posa sobre fondos que controla la app; nunca texto largo sobre glass con contenido moviéndose detrás.
@@ -276,6 +278,8 @@ El registro `/comenzar` (rediseño «Flow», 2026-09-05) pinta sus controles —
 ---
 
 ## 6. Movimiento
+
+> **Un solo avatar vivo por pantalla** (estudio de agentes, 2026-09-21): en una vista con varios personajes (rejilla de agentes, selector de personaje, vista previa del onboarding) solo el del escenario lleva vida (`useAvatarLife`/`useAvatarGaze`); el resto son `AssistantAvatar` estáticos con `transitionMs={0}`. Cinco caras parpadeando a la vez son cinco loops en reposo, que es justo lo que esta sección prohíbe.
 
 Presets centralizados en **`src/core/styles/motion.ts`** — nunca duraciones/curvas ad-hoc:
 
@@ -314,15 +318,18 @@ Reglas:
   arranca solo, es un loop y necesita permiso aquí; si lo enciende el ratón, es
   respuesta a una acción. Los tres se apagan igualmente con
   `prefers-reduced-motion` y ninguno se engancha sin puntero fino.
-- **La cara de Axel (módulo CMO, `AxelAvatar`) tampoco es una excepción**, y se
+- **La cara del asistente (`AssistantAvatar`, kit `shared/components/features/assistant`;
+  Axel en `/cmo` y Alba en `/configurar`) tampoco es una excepción**, y se
   diseñó para no serlo: en reposo no hay un solo temporizador ni `rAF` vivo. La
-  mirada la enciende el puntero (`useAxelGaze`: un `rAF` por movimiento, ninguno
+  mirada la enciende el puntero (`useAvatarGaze`: un `rAF` por movimiento, ninguno
   cuando el ratón se para); el guiño y el saludo son gestos finitos (≤ 900 ms)
   disparados por un toque; el parpadeo, las sacadas y la respiración existen
-  **solo mientras hay un turno del servidor en curso** (`useAxelLife`), como el
+  **solo mientras hay un turno del servidor en curso** (`useAvatarLife`), como el
   haz de `CatalogScan`; y el cambio de humor es una transición finita de
   `transform`. El antiguo anillo cometa del orbe giraba en reposo repintando un
-  `conic-gradient` cada frame: se eliminó con el orbe.
+  `conic-gradient` cada frame: se eliminó con el orbe. Los tres puntos de «está
+  escribiendo» (`AssistantThinking`) y la onda del dictado (`AssistantComposer`)
+  son indicadores de un trabajo en curso: existen mientras dura y mueren con él.
 - **Celebraciones**: una ráfaga de confeti **finita** (`Confetti` +
   `brandCelebration`, ~2,5 s, termina sola) tampoco es un loop: la dispara una
   acción del usuario que merece celebrarse y acaba. Hoy hay **dos, ambas en el
@@ -402,6 +409,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |
 | Carga de vista/tabla/formulario | Ver §9.1 (Estados de carga) |
+| Conversación con un asistente de IA (avatar, barra acoplable, burbujas, pregunta con opciones, «pensando», compositor con voz opcional, píldoras, aura) | El kit `shared/components/features/assistant` (`AssistantChatShell` + `AssistantDock` + `AssistantHeroAvatar` + `AssistantBubble`/`UserBubble`/`SystemNote` + `AssistantQuestion` + `AssistantThinking` + `AssistantComposer` + `StarterPills`; el campo es `.assistant-field`). Lo consumen Axel (`cmo`) y Alba (`intake`); cada slice aporta store, copy y personaje (nombre + accesorio). La firma «✦ nombre» es SIEMPRE `AssistantMark`. El inbox de operadores es mensajería (ticks, media) y sigue aparte |
 
 Patrones de estado obligatorios en toda vista: **cargando** (§9.1), **vacío** (icono + frase + acción sugerida), **error** (`errorMessage(err)` + reintento).
 

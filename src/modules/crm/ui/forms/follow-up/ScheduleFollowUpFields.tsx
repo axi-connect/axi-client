@@ -308,7 +308,7 @@ export function OpeningTemplatePicker({
     topic: formErrors.topic?.message,
   };
   const selected = templates.find((template) => template.id === (templateId || values.opening_template_id));
-  const params = selected === undefined ? [] : defaultOpeningParams(countTemplateVariables(selected.body));
+  const params = selected === undefined ? [] : defaultOpeningParams((countTemplateVariables(selected.body) ?? 0));
   const usesTopic = params.includes("topic");
   const preview =
     selected === undefined

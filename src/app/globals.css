@@ -1079,7 +1079,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 /* ==========================================================================
-   LA CARA DE AXEL — `AxelAvatar` (src/modules/cmo/ui/components/AxelAvatar.tsx)
+   LA CARA DEL ASISTENTE — `AssistantAvatar` (shared/components/features/assistant)
+   La misma cara para Axel (/cmo) y Alba (/configurar); el personaje lo dan el
+   nombre y el accesorio (Alba lleva la diadema siempre).
    --------------------------------------------------------------------------
    El componente es geometría; el material vive aquí y entra por `data-layer` /
    `data-stop`, igual que `.glass-glyph`. Cero `filter`, cero `backdrop-filter`:
@@ -1087,8 +1089,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
    El movimiento es SOLO `transform` sobre los grupos «rig», dirigido por
    variables: las de la POSE las escribe React en el `style` del `<svg>`
-   (`--axel-yaw`, `--axel-mouth`, `--axel-l-top`…) y las de RUNTIME las escriben
-   los hooks por ref (`--gaze-x/y` la mirada, `--axel-sac-x/y` las sacadas,
+   (`--av-yaw`, `--av-mouth`, `--av-l-top`…) y las de RUNTIME las escriben
+   los hooks por ref (`--gaze-x/y` la mirada, `--av-sac-x/y` las sacadas,
    `data-blink` el parpadeo). Nunca compiten por la misma propiedad.
 
    Dos decisiones que explican la forma que tiene:
@@ -1104,241 +1106,281 @@ h1, h2, h3, h4, h5, h6, .font-heading {
       tristeza aparecía sobre los ojos (bug visto en el mockup). Con `:where()` el
       origen de cada pieza manda siempre.
    ========================================================================== */
-.axel-avatar {
+.assistant-avatar {
   display: block;
   overflow: visible;
 
-  --axel-body-hi: #ffffff;
-  --axel-body-mid: #f7f5f0;
-  --axel-body-deep: #e1ddd4;
-  --axel-occ: #b9b3a8;
-  --axel-hot: #ffffff;
-  --axel-ink: #2b2b30;
-  --axel-ink-hi: #55555c;
-  --axel-glint: #ffffff;
-  --axel-lid: #f7f5f0;
+  --av-body-hi: #ffffff;
+  --av-body-mid: #f7f5f0;
+  --av-body-deep: #e1ddd4;
+  --av-occ: #b9b3a8;
+  --av-hot: #ffffff;
+  --av-ink: #2b2b30;
+  --av-ink-hi: #55555c;
+  --av-glint: #ffffff;
+  --av-lid: #f7f5f0;
+  /* Contorno bajo el cuerpo (solo con data-color): en oscuro la silueta ya se lee. */
+  --av-outline: color-mix(in srgb, var(--foreground) 16%, transparent);
 
   /* Curvas: las mismas que `cssEase` en core/styles/motion.ts (hay un test que lo comprueba). */
-  --axel-ease-spring: linear(0, 0.0263, 0.0905, 0.1755, 0.2694, 0.3643, 0.4553, 0.5393, 0.6148, 0.6813, 0.7388, 0.7879, 0.8292, 0.8636, 0.892, 0.9151, 0.9339, 0.949, 0.961, 0.9705, 0.9779, 0.9837, 0.9881, 0.9915, 0.994, 0.9959, 0.9973, 0.9983, 1);
-  --axel-ease-snappy: linear(0, 0.0353, 0.122, 0.2363, 0.3611, 0.4846, 0.599, 0.7, 0.7855, 0.8554, 0.9105, 0.9523, 0.9826, 1.0035, 1.0169, 1.0245, 1.0279, 1.0282, 1.0266, 1.0238, 1.0204, 1.0168, 1.0134, 1.0103, 1.0075, 1.0053, 1.0035, 1.0021, 1);
-  --axel-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --av-ease-spring: linear(0, 0.0263, 0.0905, 0.1755, 0.2694, 0.3643, 0.4553, 0.5393, 0.6148, 0.6813, 0.7388, 0.7879, 0.8292, 0.8636, 0.892, 0.9151, 0.9339, 0.949, 0.961, 0.9705, 0.9779, 0.9837, 0.9881, 0.9915, 0.994, 0.9959, 0.9973, 0.9983, 1);
+  --av-ease-snappy: linear(0, 0.0353, 0.122, 0.2363, 0.3611, 0.4846, 0.599, 0.7, 0.7855, 0.8554, 0.9105, 0.9523, 0.9826, 1.0035, 1.0169, 1.0245, 1.0279, 1.0282, 1.0266, 1.0238, 1.0204, 1.0168, 1.0134, 1.0103, 1.0075, 1.0053, 1.0035, 1.0021, 1);
+  --av-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Defaults de la pose (React los sobreescribe) y del runtime (los hooks). */
-  --axel-yaw: 0;
-  --axel-pitch: 0;
-  --axel-roll: 0;
-  --axel-depth: 1;
-  --axel-face-sx: 1;
-  --axel-gap: 12;
-  --axel-gx: 0;
-  --axel-gy: 0;
-  --axel-mouth: 0.9;
-  --axel-mouth-w: 1;
-  --axel-open: 0;
-  --axel-dur: 480ms;
-  --axel-ease: var(--axel-ease-spring);
+  --av-yaw: 0;
+  --av-pitch: 0;
+  --av-roll: 0;
+  --av-depth: 1;
+  --av-face-sx: 1;
+  --av-gap: 12;
+  --av-gx: 0;
+  --av-gy: 0;
+  --av-mouth: 0.9;
+  --av-mouth-w: 1;
+  --av-open: 0;
+  --av-eye-cant: 0;
+  --av-dur: 480ms;
+  --av-ease: var(--av-ease-spring);
 
   /* Giro efectivo = pose + seguimiento del puntero (la cabeza sigue al 30 %). */
-  --yaw: calc(var(--axel-yaw) + var(--gaze-x, 0) * 6);
-  --pitch: calc(var(--axel-pitch) + var(--gaze-y, 0) * 4);
+  --yaw: calc(var(--av-yaw) + var(--gaze-x, 0) * 6);
+  --pitch: calc(var(--av-pitch) + var(--gaze-y, 0) * 4);
 }
 
-.dark .axel-avatar {
-  --axel-body-hi: #fbfaf7;
-  --axel-body-mid: #f1eee7;
-  --axel-body-deep: #d2cdc3;
-  --axel-occ: #9a948a;
-  --axel-ink: #1d1d21;
-  --axel-ink-hi: #4a4a52;
-  --axel-lid: #f1eee7;
+.dark .assistant-avatar {
+  --av-body-hi: #fbfaf7;
+  --av-body-mid: #f1eee7;
+  --av-body-deep: #d2cdc3;
+  --av-occ: #9a948a;
+  --av-ink: #1d1d21;
+  --av-ink-hi: #4a4a52;
+  --av-lid: #f1eee7;
+  --av-outline: transparent;
 }
+
+/* Paleta del cuerpo por `data-color` (estudio de agentes, plan agent_studio §6 C1).
+   Solo se mueve el material del cuerpo: la tinta de ojos y boca es la misma en
+   los ocho (≥ 3:1 sobre `body-mid` en ambos temas; tabla en agent-studio.html).
+   Sin `data-color` no aplica nada: Axel y Alba siguen con el material de arriba.
+   `white` es ese mismo material, explícito para que pueda llevar contorno. */
+.assistant-avatar[data-color="white"]  { --av-body-hi: #ffffff; --av-body-mid: #f7f5f0; --av-body-deep: #e1ddd4; --av-occ: #b9b3a8; --av-lid: #f7f5f0; }
+.assistant-avatar[data-color="cloud"]  { --av-body-hi: #eceef1; --av-body-mid: #d5d8de; --av-body-deep: #b3b8c2; --av-occ: #868c98; --av-lid: #d5d8de; }
+.assistant-avatar[data-color="coral"]  { --av-body-hi: #ffe6e4; --av-body-mid: #f8bcb9; --av-body-deep: #e9908e; --av-occ: #b46666; --av-lid: #f8bcb9; }
+.assistant-avatar[data-color="amber"]  { --av-body-hi: #fff1d2; --av-body-mid: #f8d78f; --av-body-deep: #e6b75a; --av-occ: #ad8639; --av-lid: #f8d78f; }
+.assistant-avatar[data-color="violet"] { --av-body-hi: #efe6ff; --av-body-mid: #d6c6f8; --av-body-deep: #b59ce9; --av-occ: #7f64b3; --av-lid: #d6c6f8; }
+.assistant-avatar[data-color="mint"]   { --av-body-hi: #def8ee; --av-body-mid: #b7e9d3; --av-body-deep: #8fd0b3; --av-occ: #5f9c82; --av-lid: #b7e9d3; }
+.assistant-avatar[data-color="sky"]    { --av-body-hi: #def0ff; --av-body-mid: #b8daf8; --av-body-deep: #8dbde9; --av-occ: #5f8db6; --av-lid: #b8daf8; }
+.assistant-avatar[data-color="rose"]   { --av-body-hi: #ffe6f1; --av-body-mid: #f7c1d8; --av-body-deep: #e796ba; --av-occ: #b0668b; --av-lid: #f7c1d8; }
+.dark .assistant-avatar[data-color="white"]  { --av-body-hi: #fbfaf7; --av-body-mid: #f1eee7; --av-body-deep: #d2cdc3; --av-occ: #9a948a; --av-lid: #f1eee7; }
+.dark .assistant-avatar[data-color="cloud"]  { --av-body-hi: #e3e6eb; --av-body-mid: #c9cdd5; --av-body-deep: #a2a8b3; --av-occ: #6f7685; --av-lid: #c9cdd5; }
+.dark .assistant-avatar[data-color="coral"]  { --av-body-hi: #ffdcd9; --av-body-mid: #f5aeaa; --av-body-deep: #de817e; --av-occ: #9e5553; --av-lid: #f5aeaa; }
+.dark .assistant-avatar[data-color="amber"]  { --av-body-hi: #ffecc4; --av-body-mid: #f5cf7c; --av-body-deep: #dcae4a; --av-occ: #967127; --av-lid: #f5cf7c; }
+.dark .assistant-avatar[data-color="violet"] { --av-body-hi: #ebe0ff; --av-body-mid: #cfbcf6; --av-body-deep: #ab90e4; --av-occ: #6d529f; --av-lid: #cfbcf6; }
+.dark .assistant-avatar[data-color="mint"]   { --av-body-hi: #d6f5e8; --av-body-mid: #a9e3ca; --av-body-deep: #7fc7a7; --av-occ: #4f8a70; --av-lid: #a9e3ca; }
+.dark .assistant-avatar[data-color="sky"]    { --av-body-hi: #d5ecff; --av-body-mid: #a9d2f5; --av-body-deep: #7db2e3; --av-occ: #4e7ea8; --av-lid: #a9d2f5; }
+.dark .assistant-avatar[data-color="rose"]   { --av-body-hi: #ffdfee; --av-body-mid: #f3b4d0; --av-body-deep: #df87ae; --av-occ: #9c567c; --av-lid: #f3b4d0; }
+/* Con cuerpo de color el especular baja: un blanco al 50 % sobre pastel parece un gorro. */
+.assistant-avatar[data-color]:not([data-color="white"]) { --av-hot: var(--av-body-hi); }
+.assistant-avatar[data-color]:not([data-color="white"]) [data-layer="hot"] { opacity: 0.22; }
+/* Contorno: la copia bajo el cuerpo, un 3 % más grande. Solo con data-color; en oscuro
+   `--av-outline` es transparente. La transparencia va en el GRUPO (opacity), no en cada
+   pieza: con fill translúcido las piezas de la nube se solapaban en los valles y el alfa
+   se sumaba (muescas oscuras en el contorno). */
+.assistant-avatar [data-layer="outline"] { fill: var(--av-outline); opacity: 0; transform: scale(1.03); transform-box: view-box; transform-origin: 50px 50px; }
+.assistant-avatar[data-color] [data-layer="outline"] { opacity: 1; }
 
 @supports not (transition-timing-function: linear(0, 1)) {
-  .axel-avatar {
-    --axel-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
-    --axel-ease-snappy: cubic-bezier(0.22, 1, 0.36, 1);
+  .assistant-avatar {
+    --av-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --av-ease-snappy: cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
 /* Material por data-stop / data-layer. */
-.axel-avatar [data-stop="body-hi"] { stop-color: var(--axel-body-hi); }
-.axel-avatar [data-stop="body-mid"] { stop-color: var(--axel-body-mid); }
-.axel-avatar [data-stop="body-deep"] { stop-color: var(--axel-body-deep); }
-.axel-avatar [data-stop="occ"] { stop-color: var(--axel-occ); }
-.axel-avatar [data-stop="hot"] { stop-color: var(--axel-hot); }
-.axel-avatar [data-stop="ink"] { stop-color: var(--axel-ink); }
-.axel-avatar [data-stop="ink-hi"] { stop-color: var(--axel-ink-hi); }
-.axel-avatar [data-stop="none"] { stop-color: transparent; }
-.axel-avatar [data-layer="glint"] { fill: var(--axel-glint); }
-.axel-avatar [data-layer="lid"] { fill: var(--axel-lid); }
-.axel-avatar [data-layer="mouth"] { stroke: var(--axel-ink); fill: none; stroke-linecap: round; }
-.axel-avatar [data-layer="mouth-open"] { fill: var(--axel-ink); }
-.axel-avatar [data-layer="acc"] { fill: var(--axel-ink); }
-.axel-avatar [data-layer="acc-line"] { stroke: var(--axel-ink); fill: none; stroke-linecap: round; }
-.axel-avatar [data-layer="acc-hi"] { fill: var(--axel-ink-hi); }
+.assistant-avatar [data-stop="body-hi"] { stop-color: var(--av-body-hi); }
+.assistant-avatar [data-stop="body-mid"] { stop-color: var(--av-body-mid); }
+.assistant-avatar [data-stop="body-deep"] { stop-color: var(--av-body-deep); }
+.assistant-avatar [data-stop="occ"] { stop-color: var(--av-occ); }
+.assistant-avatar [data-stop="hot"] { stop-color: var(--av-hot); }
+.assistant-avatar [data-stop="ink"] { stop-color: var(--av-ink); }
+.assistant-avatar [data-stop="ink-hi"] { stop-color: var(--av-ink-hi); }
+.assistant-avatar [data-stop="none"] { stop-color: transparent; }
+.assistant-avatar [data-layer="glint"] { fill: var(--av-glint); }
+.assistant-avatar [data-layer="lid"] { fill: var(--av-lid); }
+.assistant-avatar [data-layer="mouth"] { stroke: var(--av-ink); fill: none; stroke-linecap: round; }
+.assistant-avatar [data-layer="mouth-open"] { fill: var(--av-ink); }
+.assistant-avatar [data-layer="acc"] { fill: var(--av-ink); }
+.assistant-avatar [data-layer="acc-line"] { stroke: var(--av-ink); fill: none; stroke-linecap: round; }
+.assistant-avatar [data-layer="acc-hi"] { fill: var(--av-ink-hi); }
 
 /* Accesorio: uno a la vez, por `data-acc` en la raíz. */
-.axel-avatar [data-acc-part] { display: none; }
-.axel-avatar[data-acc="headset"] [data-acc-part="headset"] { display: inline; }
+.assistant-avatar [data-acc-part] { display: none; }
+.assistant-avatar[data-acc="headset"] [data-acc-part="headset"] { display: inline; }
 
 /* El rig. `:where()` = especificidad cero: los orígenes de cada pieza ganan (decisión 2). */
-.axel-avatar :where([class^="axel-rig-"]) {
+.assistant-avatar :where([class^="assistant-rig-"]) {
   transform-box: view-box;
   transform-origin: 50px 50px;
-  transition: transform var(--axel-dur) var(--axel-ease);
+  transition: transform var(--av-dur) var(--av-ease);
 }
-.axel-avatar[data-tracking="1"] :where([class^="axel-rig-"]) {
+.assistant-avatar[data-tracking="1"] :where([class^="assistant-rig-"]) {
   transition-duration: 90ms;
   transition-timing-function: linear;
 }
-.axel-avatar[data-gaze="settle"] :where([class^="axel-rig-"]) {
+.assistant-avatar[data-gaze="settle"] :where([class^="assistant-rig-"]) {
   transition-duration: 400ms;
   transition-timing-function: ease-out;
 }
 
-.axel-rig-body {
-  transform: translate(calc(var(--yaw) * 0.25px * var(--axel-depth)), calc(var(--pitch) * 0.2px * var(--axel-depth)))
-    rotate(calc(var(--axel-roll) * 1deg));
+.assistant-rig-body {
+  transform: translate(calc(var(--yaw) * 0.25px * var(--av-depth)), calc(var(--pitch) * 0.2px * var(--av-depth)))
+    rotate(calc(var(--av-roll) * 1deg));
 }
-.axel-rig-hot {
+.assistant-rig-hot {
   transform: translate(calc(var(--yaw) * -0.45px), calc(var(--pitch) * -0.4px));
 }
-.axel-rig-band {
-  transform: translate(calc(var(--yaw) * 0.4px), calc(var(--pitch) * 0.3px)) rotate(calc(var(--axel-roll) * 1deg));
+.assistant-rig-band {
+  transform: translate(calc(var(--yaw) * 0.4px), calc(var(--pitch) * 0.3px)) rotate(calc(var(--av-roll) * 1deg));
 }
-.axel-rig-face {
-  transform: translate(calc(var(--yaw) * 0.9px * var(--axel-depth)), calc(var(--pitch) * 0.7px * var(--axel-depth)))
-    rotate(calc(var(--axel-roll) * 1deg)) scaleX(var(--axel-face-sx));
+.assistant-rig-face {
+  transform: translate(calc(var(--yaw) * 0.9px * var(--av-depth)), calc(var(--pitch) * 0.7px * var(--av-depth)))
+    rotate(calc(var(--av-roll) * 1deg)) scaleX(var(--av-face-sx));
 }
-.axel-rig-eye-l {
-  transform: translate(calc(var(--axel-gap) * -1px), 0) scaleX(var(--axel-l-sx)) scale(var(--axel-l-scale));
+.assistant-rig-eye-l {
+  transform: translate(calc(var(--av-gap) * -1px), 0) rotate(calc(var(--av-eye-cant) * 1deg)) scaleX(var(--av-l-sx)) scale(var(--av-l-scale));
   transform-origin: 50px 47px;
 }
-.axel-rig-eye-r {
-  transform: translate(calc(var(--axel-gap) * 1px), 0) scaleX(var(--axel-r-sx)) scale(var(--axel-r-scale));
+.assistant-rig-eye-r {
+  transform: translate(calc(var(--av-gap) * 1px), 0) rotate(calc(var(--av-eye-cant) * -1deg)) scaleX(var(--av-r-sx)) scale(var(--av-r-scale));
   transform-origin: 50px 47px;
 }
 /* Brillo del ojo: mirada de la expresión + puntero + sacadas. */
-.axel-rig-pupil {
+.assistant-rig-pupil {
   transform: translate(
-    calc((var(--axel-gx) + var(--gaze-x, 0) + var(--axel-sac-x, 0)) * 1.6px),
-    calc((var(--axel-gy) + var(--gaze-y, 0) + var(--axel-sac-y, 0)) * 1.4px)
+    calc((var(--av-gx) + var(--gaze-x, 0) + var(--av-sac-x, 0)) * 1.6px),
+    calc((var(--av-gy) + var(--gaze-y, 0) + var(--av-sac-y, 0)) * 1.4px)
   );
 }
-.axel-rig-lips {
-  transform: translate(calc((var(--axel-gx) + var(--gaze-x, 0)) * 0.6px), calc(var(--axel-gy) * 0.5px));
+.assistant-rig-lips {
+  transform: translate(calc((var(--av-gx) + var(--gaze-x, 0)) * 0.6px), calc(var(--av-gy) * 0.5px));
 }
 /* La boca pivota en la línea del labio: sonríe, se aplana o se invierte sin moverse de sitio. */
-.axel-rig-mouth {
-  transform: scaleY(var(--axel-mouth)) scaleX(var(--axel-mouth-w));
+.assistant-rig-mouth {
+  transform: scaleY(var(--av-mouth)) scaleX(var(--av-mouth-w));
   transform-origin: 50px 60px;
 }
-.axel-rig-open {
-  transform: scaleY(var(--axel-open));
+.assistant-rig-open {
+  transform: scaleY(var(--av-open));
   transform-origin: 50px 60.2px;
 }
-.axel-rig-lid-top { transform-box: fill-box; transform-origin: 50% 0%; }
-.axel-rig-lid-bot { transform-box: fill-box; transform-origin: 50% 100%; }
-.axel-rig-eye-l .axel-rig-lid-top { transform: rotate(calc(var(--axel-l-tilt) * 1deg)) scaleY(var(--axel-l-top)); }
-.axel-rig-eye-l .axel-rig-lid-bot { transform: scaleY(var(--axel-l-bot)); }
-.axel-rig-eye-r .axel-rig-lid-top { transform: rotate(calc(var(--axel-r-tilt) * -1deg)) scaleY(var(--axel-r-top)); }
-.axel-rig-eye-r .axel-rig-lid-bot { transform: scaleY(var(--axel-r-bot)); }
+.assistant-rig-lid-top { transform-box: fill-box; transform-origin: 50% 0%; }
+.assistant-rig-lid-bot { transform-box: fill-box; transform-origin: 50% 100%; }
+.assistant-rig-eye-l .assistant-rig-lid-top { transform: rotate(calc(var(--av-l-tilt) * 1deg)) scaleY(var(--av-l-top)); }
+.assistant-rig-eye-l .assistant-rig-lid-bot { transform: scaleY(var(--av-l-bot)); }
+.assistant-rig-eye-r .assistant-rig-lid-top { transform: rotate(calc(var(--av-r-tilt) * -1deg)) scaleY(var(--av-r-top)); }
+.assistant-rig-eye-r .assistant-rig-lid-bot { transform: scaleY(var(--av-r-bot)); }
 
 /* Parpadeo: grupo propio para no pisar las transforms de los párpados. Solo lo dispara el hook. */
-.axel-rig-blink { transform-box: fill-box; transform-origin: 50% 50%; transition: none; }
-.axel-avatar[data-blink="1"] .axel-rig-blink { animation: axel-blink 150ms ease-in-out; }
-@keyframes axel-blink { 50% { transform: scaleY(0.08); } }
+.assistant-rig-blink { transform-box: fill-box; transform-origin: 50% 50%; transition: none; }
+.assistant-avatar[data-blink="1"] .assistant-rig-blink { animation: av-blink 150ms ease-in-out; }
+@keyframes av-blink { 50% { transform: scaleY(0.08); } }
 
 /* Gestos: finitos; el hook los apaga por temporizador. */
-.axel-rig-gesture { transition: none; }
-.axel-avatar[data-gesture="nod"] .axel-rig-gesture { animation: axel-nod 500ms cubic-bezier(0.4, 0, 0.2, 1); }
-@keyframes axel-nod { 35% { transform: translateY(3.5px); } 70% { transform: translateY(-1.5px); } }
-.axel-avatar[data-gesture="wave"] .axel-rig-gesture { animation: axel-wave 900ms ease-in-out; }
-@keyframes axel-wave { 20% { transform: rotate(-9deg); } 45% { transform: rotate(8deg); } 70% { transform: rotate(-5deg); } }
-.axel-avatar[data-gesture="wink"] .axel-rig-eye-r .axel-rig-blink { animation: axel-wink 600ms ease-in-out; }
-@keyframes axel-wink { 25%, 70% { transform: scaleY(0.08); } }
+.assistant-rig-gesture { transition: none; }
+.assistant-avatar[data-gesture="nod"] .assistant-rig-gesture { animation: av-nod 500ms cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes av-nod { 35% { transform: translateY(3.5px); } 70% { transform: translateY(-1.5px); } }
+.assistant-avatar[data-gesture="wave"] .assistant-rig-gesture { animation: av-wave 900ms ease-in-out; }
+@keyframes av-wave { 20% { transform: rotate(-9deg); } 45% { transform: rotate(8deg); } 70% { transform: rotate(-5deg); } }
+.assistant-avatar[data-gesture="wink"] .assistant-rig-eye-r .assistant-rig-blink { animation: av-wink 600ms ease-in-out; }
+@keyframes av-wink { 25%, 70% { transform: scaleY(0.08); } }
 
 /* Hablando: la boca se abre y cierra y la cabeza asiente apenas — SOLO mientras
    llegan deltas. El nodo existe mientras el servidor escribe: indicador de un
    trabajo en curso, no un loop del workspace (DESIGN-SYSTEM §6). */
-.axel-avatar[data-expression="speaking"] .axel-rig-gesture { animation: axel-talk 1.7s ease-in-out infinite; }
-.axel-avatar[data-expression="speaking"] .axel-rig-open { animation: axel-open 640ms ease-in-out infinite alternate; }
-@keyframes axel-talk { 50% { transform: translateY(1.2px); } }
-@keyframes axel-open { from { transform: scaleY(0.12); } to { transform: scaleY(1); } }
+.assistant-avatar[data-expression="speaking"] .assistant-rig-gesture { animation: av-talk 1.7s ease-in-out infinite; }
+.assistant-avatar[data-expression="speaking"] .assistant-rig-open { animation: av-open 640ms ease-in-out infinite alternate; }
+@keyframes av-talk { 50% { transform: translateY(1.2px); } }
+@keyframes av-open { from { transform: scaleY(0.12); } to { transform: scaleY(1); } }
 
 /* ==========================================================================
-   EL SUELO — `AxelStage`: el personaje de pie sobre una sombra de contacto
+   EL SUELO — `AssistantStage`: el personaje de pie sobre una sombra de contacto
    --------------------------------------------------------------------------
    Sustituye al orbe. La sombra es un radial sin `filter`. La respiración va en
    el raíz HTML (compositor) y SOLO con `--busy`, o sea con un turno en curso;
    la sombra se encoge en contrafase, como si el personaje se levantara.
    ========================================================================== */
-.axel-stage {
+.assistant-stage {
   position: relative;
   display: block;
-  width: 136px;
-  height: 140px;
+  width: var(--stage-w, 136px);
+  height: var(--stage-h, 140px);
   flex: none;
-  --axel-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
+  --av-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
 }
-.dark .axel-stage {
-  --axel-shadow: color-mix(in srgb, #000000 55%, transparent);
+.dark .assistant-stage {
+  --av-shadow: color-mix(in srgb, #000000 55%, transparent);
 }
-.axel-stage-figure {
+/* El escenario grande del estudio de agentes; la sombra escala con el ancho. */
+.assistant-stage--hero {
+  --stage-w: 232px;
+  --stage-h: 240px;
+}
+.assistant-stage-figure {
   position: absolute;
   inset: 0 0 8px;
   display: block;
   transform-origin: 50% 90%;
 }
-.axel-stage-figure > .axel-avatar {
+.assistant-stage-figure > .assistant-avatar {
   width: 100%;
   height: 100%;
 }
-.axel-ground {
+.assistant-ground {
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 96px;
-  height: 18px;
+  width: calc(var(--stage-w, 136px) * 0.706);
+  height: calc(var(--stage-w, 136px) * 0.132);
   transform: translateX(-50%);
   border-radius: 9999px;
   pointer-events: none;
   background: radial-gradient(
     ellipse at 50% 50%,
-    var(--axel-shadow) 0%,
-    color-mix(in srgb, var(--axel-shadow) 45%, transparent) 45%,
+    var(--av-shadow) 0%,
+    color-mix(in srgb, var(--av-shadow) 45%, transparent) 45%,
     transparent 72%
   );
 }
-.axel-stage--busy .axel-stage-figure { animation: axel-breathe 1.6s ease-in-out infinite; }
-.axel-stage--busy .axel-ground { animation: axel-ground-breathe 1.6s ease-in-out infinite; }
-@keyframes axel-breathe {
+.assistant-stage--busy .assistant-stage-figure { animation: av-breathe 1.6s ease-in-out infinite; }
+.assistant-stage--busy .assistant-ground { animation: assistant-ground-breathe 1.6s ease-in-out infinite; }
+@keyframes av-breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.035) translateY(-1.5px); }
 }
-@keyframes axel-ground-breathe {
+@keyframes assistant-ground-breathe {
   0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 1; }
   50% { transform: translateX(-50%) scaleX(0.92); opacity: 0.8; }
 }
 
 /* Movimiento reducido: las expresiones SÍ cambian (de golpe), nada viaja ni respira. */
 @media (prefers-reduced-motion: reduce) {
-  .axel-avatar,
-  .axel-avatar * {
+  .assistant-avatar,
+  .assistant-avatar * {
     transition: none !important;
     animation: none !important;
   }
-  .axel-stage--busy .axel-stage-figure,
-  .axel-stage--busy .axel-ground {
+  .assistant-stage--busy .assistant-stage-figure,
+  .assistant-stage--busy .assistant-ground {
     animation: none;
   }
 }
 
 /* ==========================================================================
-   EL CAMPO DEL DESPACHO — el aura
+   EL CAMPO DEL ASISTENTE — el aura (/cmo y /configurar)
    --------------------------------------------------------------------------
-   El fondo de la conversación con Axel. Va en el `<main>` de `CmoView`, nunca
-   en el chat: tiene que quedar detrás del hero, del hilo Y del compositor a la
+   El fondo de la conversación con el asistente. Va en el `<main>` de cada
+   vista (`CmoView`, `SetupView`), nunca en el chat: tiene que quedar detrás del hero, del hilo Y del compositor a la
    vez, y cuando empezaba debajo del briefing aparecía una costura de 1px que
    partía la pantalla en dos.
 
@@ -1346,14 +1388,14 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    nada arriba — ni haz, ni destello, ni dot-grid — y no hay borde: el aura se
    insinúa, no se dibuja. Son dos resplandores encajados:
 
-     .axel-field           color base + grano fino tileado   ← cobertura total
-     .axel-field::before   el halo ancho                     ← la masa
-     .axel-field::after    el núcleo, más estrecho y vivo    ← el foco
+     .assistant-field           color base + grano fino tileado   ← cobertura total
+     .assistant-field::before   el halo ancho                     ← la masa
+     .assistant-field::after    el núcleo, más estrecho y vivo    ← el foco
 
    Cuatro decisiones que explican la forma que tiene:
 
    1. **El color base vive en el ELEMENTO, no en las capas de luz.** Separados,
-      `--axel-veil` sube el tinte en oscuro sin duplicar la estructura — el
+      `--av-veil` sube el tinte en oscuro sin duplicar la estructura — el
       mismo truco que `.dark .channel-surface::before`. Si el fondo viajara en
       una capa que se atenúa, atenuarla dejaría fondo desnudo detrás.
 
@@ -1374,14 +1416,14 @@ h1, h2, h3, h4, h5, h6, .font-heading {
       sancionada en `.channel-surface` (7–34%) y por el mismo criterio: el tinte
       no compite con el coral de acción ni con los colores de estado, y esta es
       la única superficie del panel que existe para sentirse habitada. Queda
-      declarada en DESIGN-SYSTEM §6.
+      declarada en DESIGN-SYSTEM §2.3 como `.assistant-field`.
 
-   El núcleo hace además el trabajo que antes hacía `.axel-composer-glow`: cae
+   El núcleo hace además el trabajo que antes hacía una clase de bloom propia del compositor: cae
    justo detrás del compositor y es lo que hace que el input se lea como la
    fuente de luz de la pantalla en vez de una caja pegada abajo. Por eso esa
    clase ya no existe.
    ========================================================================== */
-.axel-field {
+.assistant-field {
   position: relative;
   isolation: isolate;
   /* La decoración NUNCA sale de la caja que la posee. Sin esto las capas de luz
@@ -1394,7 +1436,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
   /* Intensidad del aura. Sobre negro el mismo `color-mix` se ve la mitad, así
      que en oscuro va al máximo y en claro se atenúa. */
-  --axel-veil: 0.8;
+  --av-veil: 0.8;
 
   background-color: color-mix(in srgb, var(--foreground) 3%, var(--background));
   /* Grano. Es la mitad de la sensación de superficie física y cuesta un solo
@@ -1406,15 +1448,15 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   background-size: 180px 180px;
 }
 
-.dark .axel-field {
-  --axel-veil: 1;
+.dark .assistant-field {
+  --av-veil: 1;
 }
 
 /* El halo ancho: la masa del aura, la que da la silueta de la burbuja.
    `closest-side` sin forma explícita = elipse inscrita en la caja, así que el
    degradado se estira con el campo y la cresta cae siempre a la misma altura
    relativa (el 30% superior queda limpio para el texto). */
-.axel-field::before {
+.assistant-field::before {
   content: "";
   position: absolute;
   left: -20%;
@@ -1423,7 +1465,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   height: 140%;
   z-index: -2;
   pointer-events: none;
-  opacity: var(--axel-veil);
+  opacity: var(--av-veil);
   background-image: radial-gradient(
     closest-side,
     color-mix(in srgb, var(--axi-violet) 22%, transparent) 0%,
@@ -1436,7 +1478,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 /* El núcleo: más estrecho, más vivo y con una pizca de coral al alejarse del
    centro. Sin él el halo queda demasiado difuso a la altura del compositor y
    el input vuelve a leerse como una caja pegada abajo. */
-.axel-field::after {
+.assistant-field::after {
   content: "";
   position: absolute;
   left: 8%;
@@ -1445,7 +1487,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   height: 74%;
   z-index: -1;
   pointer-events: none;
-  opacity: var(--axel-veil);
+  opacity: var(--av-veil);
   background-image: radial-gradient(
     closest-side,
     color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%,
@@ -1850,7 +1892,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 /* ==========================================================================
-   EL DESPACHO — la barra de Axel (`AxelDock`) y el compositor que baja
+   EL CHAT DEL KIT — la barra (`AssistantDock`), el compositor que baja, las
+   burbujas y la lista agrupada
    --------------------------------------------------------------------------
    Plan: docs/plans/cmo_despacho_minimalista_plan.md §3–§4.
 
@@ -1868,25 +1911,25 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
    Los tres números que se hablan con el hook viven aquí como variables:
    `--dock-h` (altura de la barra = `DOCK_HEIGHT_PX`), `--dock-scale` (40/140) y
-   la reserva `.axel-hero-spacer`.
+   la reserva `.assistant-hero-spacer`.
    ========================================================================== */
-.axel-chat[data-empty] {
+.assistant-chat[data-empty] {
   justify-content: center;
 }
-.axel-chat[data-empty] > .axel-scroller {
+.assistant-chat[data-empty] > .assistant-scroller {
   /* Del tamaño de su contenido, pero encogible: si el informe trae dos tarjetas
      y no caben, vuelve a hacer scroll en vez de desbordar el campo. */
   flex: 0 1 auto;
 }
 
-.axel-dock {
+.assistant-dock {
   position: sticky;
   top: 8px;
   z-index: 20;
   --dock-h: 56px;
   --dock-scale: 0.2857;
 }
-.axel-dock__bar {
+.assistant-dock__bar {
   position: relative;
   display: flex;
   align-items: center;
@@ -1897,7 +1940,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 /* El cristal, como pseudo: se enciende por `opacity` (receta de `.glass`, §5.1;
    permitido en §5.2 como superficie flotante sticky). */
-.axel-dock__bar::before {
+.assistant-dock__bar::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1911,12 +1954,12 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: var(--shadow-float);
   transition: opacity 240ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.axel-chat[data-docked] .axel-dock__bar::before {
+.assistant-chat[data-docked] .assistant-dock__bar::before {
   opacity: 1;
 }
 /* El stage de Axel: tamaño intrínseco del hero, centrado en la barra con
    unidades de contenedor (`50cqw`), sin JavaScript. */
-.axel-dock__hero {
+.assistant-dock__hero {
   position: absolute;
   top: 8px;
   left: 8px;
@@ -1927,41 +1970,177 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
-.axel-chat[data-docked] .axel-dock__hero {
+.assistant-chat[data-docked] .assistant-dock__hero {
   transform: translate(0, 0) scale(var(--dock-scale));
 }
-.axel-dock__title,
-.axel-dock__day {
+.assistant-dock__title,
+.assistant-dock__meta {
   opacity: 0;
   transition: opacity 200ms ease;
 }
-.axel-dock__title {
+.assistant-dock__title {
   margin-left: 52px;
   font-size: 13px;
   font-weight: 700;
 }
-.axel-dock__day {
+.assistant-dock__meta {
   margin-left: 8px;
   font-size: 11px;
   color: var(--color-muted-foreground);
 }
-.axel-chat[data-docked] .axel-dock__title,
-.axel-chat[data-docked] .axel-dock__day {
+.assistant-chat[data-docked] .assistant-dock__title,
+.assistant-chat[data-docked] .assistant-dock__meta {
   opacity: 1;
 }
 /* Reserva para el avatar colgando: (140 + 8) − 56 + holgura. */
-.axel-hero-spacer {
+.assistant-hero-spacer {
   height: 132px;
 }
-.axel-chat[data-empty] .axel-hero-spacer {
+.assistant-chat[data-empty] .assistant-hero-spacer {
   height: 116px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .axel-dock__hero,
-  .axel-dock__bar::before,
-  .axel-dock__title,
-  .axel-dock__day {
+  .assistant-dock__hero,
+  .assistant-dock__bar::before,
+  .assistant-dock__title,
+  .assistant-dock__meta {
     transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Burbujas, compositor, pregunta y pensando (kit de asistente)
+   --------------------------------------------------------------------------
+   Las tarjetas del hilo son SÓLIDAS (§5.2): se leen. El cristal queda para lo
+   que flota: la barra acoplada, la cápsula del compositor (`.glass`) y las
+   píldoras. La burbuja del humano va en coral degradado —la voz de la persona,
+   como el azul de Messages— y el violeta se reserva a la IA. Los degradados con
+   `color-mix` anidado viven aquí, no en `bg-[...]` (frágil de extraer).
+   -------------------------------------------------------------------------- */
+.assistant-bubble-user {
+  color: var(--axi-on-color);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--axi-brand) 78%, white) 0%,
+    var(--axi-brand) 45%,
+    var(--axi-brand-2) 100%
+  );
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--axi-brand) 28%, transparent);
+}
+.assistant-send {
+  color: var(--axi-on-color);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--axi-brand) 78%, white) 0%,
+    var(--axi-brand) 45%,
+    var(--axi-brand-2) 100%
+  );
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--axi-brand) 30%, transparent);
+}
+.assistant-send:not(:disabled):hover {
+  filter: brightness(1.06);
+}
+
+/* Entrada de un mensaje NUEVO de la sesión: finita, solo transform/opacity. */
+.assistant-rise {
+  animation: assistant-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes assistant-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* La lista agrupada (Ajustes de iOS): filas con hairline inset y chevron. La
+   usan las opciones de la pregunta y la ficha de datos de Alba. */
+.grouped-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+}
+.grouped-row {
+  position: relative;
+}
+.grouped-row + .grouped-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  height: 1px;
+  background: color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+
+/* «Está escribiendo»: tres puntos. Indicador ligado a un turno del servidor
+   (§6): el nodo existe mientras el turno dura. */
+.assistant-dots > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--foreground) 35%, transparent);
+  animation: assistant-dot 1.2s ease-in-out infinite;
+}
+.assistant-dots > i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.assistant-dots > i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes assistant-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* La onda del dictado: existe solo mientras el micrófono graba. */
+.assistant-wave {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 22px;
+}
+.assistant-wave > i {
+  width: 3px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--axi-brand);
+  animation: assistant-wave 0.9s ease-in-out infinite;
+}
+.assistant-wave > i:nth-child(2) { animation-delay: 0.1s; }
+.assistant-wave > i:nth-child(3) { animation-delay: 0.2s; }
+.assistant-wave > i:nth-child(4) { animation-delay: 0.3s; }
+.assistant-wave > i:nth-child(5) { animation-delay: 0.4s; }
+.assistant-wave > i:nth-child(6) { animation-delay: 0.5s; }
+.assistant-wave > i:nth-child(7) { animation-delay: 0.6s; }
+@keyframes assistant-wave {
+  50% {
+    height: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-rise {
+    animation: none;
+  }
+  .assistant-dots > i,
+  .assistant-wave > i {
+    animation: none;
+    opacity: 0.7;
   }
 }

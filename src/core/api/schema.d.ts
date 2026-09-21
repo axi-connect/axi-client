@@ -1228,7 +1228,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["VoiceSettingsController_get_v1"];
-        put: operations["VoiceSettingsController_update_v1"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1314,38 +1314,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ai-characters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["AiCharactersController_list_v1"];
-        put?: never;
-        post: operations["AiCharactersController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ai-characters/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["AiCharactersController_remove_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["AiCharactersController_update_v1"];
         trace?: never;
     };
     "/api/v1/ai-voices": {
@@ -1444,17 +1412,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ai-voice-credential": {
+    "/api/v1/platform/tenants/{id}/voice": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["TtsCredentialController_status_v1"];
-        put: operations["TtsCredentialController_set_v1"];
+        get: operations["PlatformTenantVoiceController_read_v1"];
+        put?: never;
         post?: never;
-        delete: operations["TtsCredentialController_remove_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/voice/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformTenantVoiceController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/voice/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformTenantVoiceController_setCredential_v1"];
+        post?: never;
+        delete: operations["PlatformTenantVoiceController_removeCredential_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3716,6 +3716,22 @@ export interface paths {
         patch: operations["MarketingTemplatesController_update_v1"];
         trace?: never;
     };
+    "/api/v1/marketing/hsm-templates/messaging-window": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HsmTemplatesController_messagingWindow_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketing/hsm-templates": {
         parameters: {
             query?: never;
@@ -3730,6 +3746,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketing/hsm-templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["HsmTemplatesController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["HsmTemplatesController_update_v1"];
         trace?: never;
     };
     "/api/v1/marketing/hsm-templates/sync": {
@@ -6564,6 +6596,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/intake/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicIntakeController_open_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicIntakeController_message_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PublicIntakeController_answers_v1"];
+        trace?: never;
+    };
+    "/api/v1/public/intake/{token}/voice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicIntakeController_voice_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/blueprints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeBlueprintsController_list_v1"];
+        put?: never;
+        post: operations["PlatformIntakeBlueprintsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/blueprints/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeBlueprintsController_get_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["PlatformIntakeBlueprintsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["PlatformIntakeBlueprintsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/ladder/{company_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_ladderFor_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_list_v1"];
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_reissue_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_cancel_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/intake/sessions/{id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformIntakeSessionsController_preview_v1"];
+        put?: never;
+        post: operations["PlatformIntakeSessionsController_execute_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8286,14 +8510,41 @@ export interface components {
                 model_params: {
                     [key: string]: unknown;
                 };
-                /** Format: uuid */
-                character_id: string | null;
                 handoff_policy: {
                     [key: string]: unknown;
                 };
                 voice_policy: {
                     [key: string]: unknown;
                 };
+                appearance: {
+                    /** @enum {string} */
+                    character: "cloudee" | "nova" | "strobi";
+                    /** @enum {string} */
+                    color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+                };
+                voice: {
+                    provider: string;
+                    voice_id: string;
+                    model_id?: string;
+                    settings?: {
+                        [key: string]: unknown;
+                    };
+                } | null;
+                brief: {
+                    /** @enum {string} */
+                    role: "ventas" | "reservas" | "soporte" | "captacion";
+                    goal?: string;
+                    /** @enum {string} */
+                    tone: "cercano" | "formal" | "directo";
+                    /** @default [] */
+                    always: string[];
+                    /** @default [] */
+                    never: string[];
+                    /** @default [] */
+                    handoff_when: string[];
+                    /** @default [] */
+                    business_facts: string[];
+                } | null;
                 intentions: {
                     /** Format: uuid */
                     intention_id: string;
@@ -8341,14 +8592,41 @@ export interface components {
             model_params: {
                 [key: string]: unknown;
             };
-            /** Format: uuid */
-            character_id: string | null;
             handoff_policy: {
                 [key: string]: unknown;
             };
             voice_policy: {
                 [key: string]: unknown;
             };
+            appearance: {
+                /** @enum {string} */
+                character: "cloudee" | "nova" | "strobi";
+                /** @enum {string} */
+                color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+            };
+            voice: {
+                provider: string;
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            brief: {
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                goal?: string;
+                /** @enum {string} */
+                tone: "cercano" | "formal" | "directo";
+                /** @default [] */
+                always: string[];
+                /** @default [] */
+                never: string[];
+                /** @default [] */
+                handoff_when: string[];
+                /** @default [] */
+                business_facts: string[];
+            } | null;
             intentions: {
                 /** Format: uuid */
                 intention_id: string;
@@ -8384,8 +8662,6 @@ export interface components {
                 temperature?: number;
                 max_tokens?: number;
             };
-            /** Format: uuid */
-            character_id?: string;
             handoff_policy?: {
                 keywords?: string[];
                 max_failures?: number;
@@ -8396,6 +8672,39 @@ export interface components {
                 mode?: "mirror";
                 max_per_conversation?: number;
                 max_chars?: number;
+            };
+            appearance?: {
+                /** @enum {string} */
+                character: "cloudee" | "nova" | "strobi";
+                /** @enum {string} */
+                color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+            };
+            voice?: {
+                /** @enum {string} */
+                provider: "elevenlabs";
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+            } | Record<string, never>;
+            brief?: {
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                goal?: string;
+                /** @enum {string} */
+                tone: "cercano" | "formal" | "directo";
+                /** @default [] */
+                always: string[];
+                /** @default [] */
+                never: string[];
+                /** @default [] */
+                handoff_when: string[];
+                /** @default [] */
+                business_facts: string[];
             };
         };
         UpdateAiAgentDto: {
@@ -8422,8 +8731,39 @@ export interface components {
                 max_per_conversation?: number;
                 max_chars?: number;
             };
-            /** Format: uuid */
-            character_id?: string | null;
+            appearance?: {
+                /** @enum {string} */
+                character: "cloudee" | "nova" | "strobi";
+                /** @enum {string} */
+                color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+            };
+            voice?: {
+                /** @enum {string} */
+                provider: "elevenlabs";
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+            } | Record<string, never>;
+            brief?: {
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                goal?: string;
+                /** @enum {string} */
+                tone: "cercano" | "formal" | "directo";
+                /** @default [] */
+                always: string[];
+                /** @default [] */
+                never: string[];
+                /** @default [] */
+                handoff_when: string[];
+                /** @default [] */
+                business_facts: string[];
+            } | null;
         };
         SetAgentIntentionsDto: {
             intentions: {
@@ -8439,94 +8779,6 @@ export interface components {
                     require_promotions?: boolean;
                 };
             }[];
-        };
-        CharacterListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                avatar_url: string | null;
-                style: {
-                    [key: string]: unknown;
-                } | null;
-                voice: {
-                    [key: string]: unknown;
-                } | null;
-                resources: {
-                    [key: string]: unknown;
-                } | null;
-                is_system: boolean;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-        };
-        CreateCharacterDto: {
-            name: string;
-            /** Format: uri */
-            avatar_url?: string;
-            style?: {
-                [key: string]: unknown;
-            };
-            voice?: {
-                /** @enum {string} */
-                provider: "elevenlabs";
-                voice_id: string;
-                model_id?: string;
-                settings?: {
-                    stability?: number;
-                    similarity_boost?: number;
-                    style?: number;
-                    speed?: number;
-                };
-            } | Record<string, never>;
-            resources?: {
-                [key: string]: unknown;
-            };
-        };
-        CharacterDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            avatar_url: string | null;
-            style: {
-                [key: string]: unknown;
-            } | null;
-            voice: {
-                [key: string]: unknown;
-            } | null;
-            resources: {
-                [key: string]: unknown;
-            } | null;
-            is_system: boolean;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        UpdateCharacterDto: {
-            name?: string;
-            /** Format: uri */
-            avatar_url?: string;
-            style?: {
-                [key: string]: unknown;
-            };
-            voice?: {
-                /** @enum {string} */
-                provider: "elevenlabs";
-                voice_id: string;
-                model_id?: string;
-                settings?: {
-                    stability?: number;
-                    similarity_boost?: number;
-                    style?: number;
-                    speed?: number;
-                };
-            } | Record<string, never>;
-            resources?: {
-                [key: string]: unknown;
-            };
         };
         AiVoiceListDto: {
             data: {
@@ -8569,7 +8821,7 @@ export interface components {
                 preview_generated_at: string | null;
                 is_active: boolean;
                 sort_order: number;
-                characters_count: number;
+                agents_count: number;
                 /** Format: date-time */
                 updated_at: string;
             }[];
@@ -8622,9 +8874,25 @@ export interface components {
         VoicePreviewResultDto: {
             preview_url: string;
         };
-        TtsCredentialStatusDto: {
-            configured: boolean;
-            provider: string;
+        PlatformTenantVoiceDto: {
+            ai_enabled: boolean;
+            plan: {
+                code: string;
+                /** @enum {string} */
+                tier: "sbs" | "enterprise";
+            } | null;
+            credential: {
+                configured: boolean;
+                /** @enum {string} */
+                provider: "elevenlabs";
+            };
+            usage: {
+                used: number;
+                limit: number | null;
+                pct_used: number | null;
+                /** Format: date-time */
+                period_end: string;
+            } | null;
         };
         SetTtsCredentialDto: {
             api_key: string;
@@ -12150,6 +12418,11 @@ export interface components {
             } | null;
             is_active?: boolean;
         };
+        MessagingWindowDto: {
+            limit: number | null;
+            used: number;
+            remaining: number | null;
+        };
         HsmTemplatesListDto: {
             data: {
                 /** Format: uuid */
@@ -12164,10 +12437,76 @@ export interface components {
                 components: unknown[];
                 /** @enum {string} */
                 approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+                rejected_reason: string | null;
+                quality_score: string | null;
+                editable: boolean;
+                edit_blocked_reason: string | null;
+                /** Format: date-time */
+                edit_retry_at: string | null;
                 external_id: string | null;
                 /** Format: date-time */
                 updated_at: string;
             }[];
+        };
+        UpdateHsmTemplateDto: {
+            body: string;
+            examples?: string[];
+            /** @enum {string} */
+            category?: "marketing" | "utility" | "authentication";
+            header?: ({
+                /** @enum {string} */
+                format: "text";
+                text: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                format: "image" | "video" | "document";
+                handle: string;
+            }) | null;
+            footer?: string | null;
+            buttons?: ({
+                /** @enum {string} */
+                type: "quick_reply";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "url";
+                text: string;
+                url: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                type: "phone_number";
+                text: string;
+                phone_number: string;
+            } | {
+                /** @enum {string} */
+                type: "copy_code";
+                example: string;
+            })[] | null;
+        };
+        HsmTemplateDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            channel_id: string;
+            name: string;
+            language: string;
+            /** @enum {string} */
+            category: "marketing" | "utility" | "authentication";
+            body: string;
+            components: unknown[];
+            /** @enum {string} */
+            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
+            rejected_reason: string | null;
+            quality_score: string | null;
+            editable: boolean;
+            edit_blocked_reason: string | null;
+            /** Format: date-time */
+            edit_retry_at: string | null;
+            external_id: string | null;
+            /** Format: date-time */
+            updated_at: string;
         };
         SyncHsmTemplatesDto: {
             /** Format: uuid */
@@ -12185,23 +12524,37 @@ export interface components {
             category: "marketing" | "utility" | "authentication";
             body: string;
             examples?: string[];
-        };
-        HsmTemplateDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            channel_id: string;
-            name: string;
-            language: string;
-            /** @enum {string} */
-            category: "marketing" | "utility" | "authentication";
-            body: string;
-            components: unknown[];
-            /** @enum {string} */
-            approval_status: "pending" | "approved" | "rejected" | "paused" | "disabled";
-            external_id: string | null;
-            /** Format: date-time */
-            updated_at: string;
+            header?: {
+                /** @enum {string} */
+                format: "text";
+                text: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                format: "image" | "video" | "document";
+                handle: string;
+            };
+            footer?: string;
+            buttons?: ({
+                /** @enum {string} */
+                type: "quick_reply";
+                text: string;
+            } | {
+                /** @enum {string} */
+                type: "url";
+                text: string;
+                url: string;
+                example?: string;
+            } | {
+                /** @enum {string} */
+                type: "phone_number";
+                text: string;
+                phone_number: string;
+            } | {
+                /** @enum {string} */
+                type: "copy_code";
+                example: string;
+            })[];
         };
         AutomationsListDto: {
             data: {
@@ -16131,10 +16484,18 @@ export interface components {
                         [key: string]: boolean;
                     };
                 }[];
-                /** Format: uuid */
-                recommended_character_id: string | null;
-                /** Format: uuid */
-                recommended_voice_id: string | null;
+                /** @enum {string|null} */
+                recommended_character_code: "cloudee" | "nova" | "strobi" | null;
+                /** @enum {string|null} */
+                recommended_color_code: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose" | null;
+                recommended_voice: {
+                    provider: string;
+                    voice_id: string;
+                    model_id?: string;
+                    settings?: {
+                        [key: string]: unknown;
+                    };
+                } | null;
                 placeholders: string[];
                 recommended: boolean;
             }[];
@@ -16145,10 +16506,24 @@ export interface components {
                 name?: string;
                 /** @enum {string} */
                 tone?: "cercano" | "formal" | "directo";
-                /** Format: uuid */
-                character_id?: string;
-                /** Format: uuid */
-                voice_id?: string;
+                appearance?: {
+                    /** @enum {string} */
+                    character: "cloudee" | "nova" | "strobi";
+                    /** @enum {string} */
+                    color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+                };
+                voice?: {
+                    /** @enum {string} */
+                    provider: "elevenlabs";
+                    voice_id: string;
+                    model_id?: string;
+                    settings?: {
+                        stability?: number;
+                        similarity_boost?: number;
+                        style?: number;
+                        speed?: number;
+                    };
+                };
                 extra_instructions?: string;
             };
             /** @enum {string} */
@@ -16168,14 +16543,27 @@ export interface components {
             model_params: {
                 [key: string]: unknown;
             };
-            /** Format: uuid */
-            character_id: string | null;
             handoff_policy: {
                 [key: string]: unknown;
             };
             voice_policy: {
                 [key: string]: unknown;
             };
+            appearance: {
+                character: string;
+                color: string;
+            };
+            voice: {
+                provider: string;
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            brief: {
+                [key: string]: unknown;
+            } | null;
             intentions: unknown[];
             /** Format: date-time */
             created_at: string;
@@ -16297,6 +16685,568 @@ export interface components {
             create_categories?: boolean;
             /** @enum {string} */
             on_duplicate?: "skip" | "update";
+        };
+        IntakeSessionViewDto: {
+            /** @enum {string} */
+            status: "in_progress" | "completed" | "applied";
+            assistant_name: string;
+            company_name: string;
+            invite_name: string | null;
+            estimated_minutes: number;
+            turns_left: number;
+            voice_enabled: boolean;
+            messages: {
+                id: string;
+                /** @enum {string} */
+                role: "assistant" | "client";
+                body: string;
+                question: {
+                    question: string;
+                    options: {
+                        label: string;
+                        hint: string | null;
+                    }[];
+                    allow_free_text: boolean;
+                } | null;
+                captured: {
+                    code: string;
+                    label: string;
+                }[];
+                voice: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            topics: {
+                code: string;
+                title: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    help: string | null;
+                    options: string[] | null;
+                    value: unknown;
+                    display: string | null;
+                    /** @enum {string|null} */
+                    source: "known" | "derived" | "stated" | "proposed" | null;
+                    needs_confirmation: boolean;
+                    skipped: {
+                        /** @enum {string} */
+                        reason: "no_aplica" | "no_sabe" | "luego";
+                        /** @enum {string} */
+                        source: "chat" | "ficha" | "niche";
+                        note: string | null;
+                    } | null;
+                }[];
+            }[];
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                next_field: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            closing: string | null;
+            summary: {
+                axi_applies: number;
+                applied: boolean;
+                you_do: {
+                    label: string;
+                    value: string;
+                    where: string;
+                }[];
+                to_activate: {
+                    /** @enum {string} */
+                    step: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp" | "channel_agent";
+                    label: string;
+                    where: string;
+                }[];
+            } | null;
+        };
+        SendIntakeMessageDto: {
+            message: string;
+            voice?: boolean;
+        };
+        IntakeTurnResultDto: {
+            reply: string;
+            question: {
+                question: string;
+                options: {
+                    label: string;
+                    hint: string | null;
+                }[];
+                allow_free_text: boolean;
+            } | null;
+            captured: {
+                code: string;
+                label: string;
+            }[];
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                next_field: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            finished: boolean;
+            closing: string | null;
+            summary: {
+                axi_applies: number;
+                applied: boolean;
+                you_do: {
+                    label: string;
+                    value: string;
+                    where: string;
+                }[];
+                to_activate: {
+                    /** @enum {string} */
+                    step: "niche" | "business_hours" | "catalog" | "agents" | "whatsapp" | "channel_agent";
+                    label: string;
+                    where: string;
+                }[];
+            } | null;
+            turns_left: number;
+            captured_values: {
+                code: string;
+                value: unknown;
+                display: string | null;
+                /** @enum {string|null} */
+                source: "known" | "derived" | "stated" | "proposed" | null;
+            }[];
+            skipped_now: {
+                code: string;
+                label: string;
+                /** @enum {string} */
+                reason: "no_aplica" | "no_sabe" | "luego";
+                /** @enum {string} */
+                source: "chat" | "ficha" | "niche";
+            }[];
+            removed: string[];
+            reopened: string[];
+        };
+        PatchIntakeAnswersDto: {
+            answers?: {
+                field_code: string;
+                value: unknown;
+            }[];
+            defer?: string[];
+            resume?: string[];
+            skip?: {
+                field_code: string;
+                /** @enum {string} */
+                reason: "no_aplica" | "no_sabe" | "luego";
+                note?: string | null;
+            }[];
+            unskip?: string[];
+        };
+        PatchIntakeAnswersResultDto: {
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                next_field: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            applied: string[];
+            rejected: {
+                field_code: string;
+                reason: string;
+            }[];
+            skipped: string[];
+            unskipped: string[];
+        };
+        IntakeTranscriptionDto: {
+            text: string;
+        };
+        BlueprintListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+                description: string | null;
+                objective: string;
+                tone: string;
+                assistant_name: string;
+                greeting: string;
+                closing: string;
+                estimated_minutes: number;
+                topics: {
+                    code: string;
+                    title: string;
+                    purpose: string;
+                    fields: {
+                        code: string;
+                        label: string;
+                        question: string;
+                        /** @enum {string} */
+                        kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                        required: boolean;
+                        options?: string[];
+                        help?: string;
+                        example?: string;
+                        /** @enum {string} */
+                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                        handoff?: string;
+                    }[];
+                }[];
+                is_active: boolean;
+                version: number;
+                stage: number;
+                niche_codes: string[];
+                requires_stage: number | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                sessions: number;
+            }[];
+        };
+        BlueprintDto: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string | null;
+            objective: string;
+            tone: string;
+            assistant_name: string;
+            greeting: string;
+            closing: string;
+            estimated_minutes: number;
+            topics: {
+                code: string;
+                title: string;
+                purpose: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    question: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    options?: string[];
+                    help?: string;
+                    example?: string;
+                    /** @enum {string} */
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    handoff?: string;
+                }[];
+            }[];
+            is_active: boolean;
+            version: number;
+            stage: number;
+            niche_codes: string[];
+            requires_stage: number | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateBlueprintDto: {
+            code?: string;
+            name: string;
+            description?: string | null;
+            objective: string;
+            tone?: string;
+            assistant_name?: string;
+            greeting?: string;
+            closing?: string;
+            estimated_minutes?: number;
+            topics: {
+                code: string;
+                title: string;
+                purpose: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    question: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    options?: string[];
+                    help?: string;
+                    example?: string;
+                    /** @enum {string} */
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    handoff?: string;
+                }[];
+            }[];
+            stage?: number;
+            niche_codes?: string[];
+            requires_stage?: number | null;
+        };
+        UpdateBlueprintDto: {
+            name?: string;
+            description?: string | null;
+            objective?: string;
+            tone?: string;
+            assistant_name?: string;
+            greeting?: string;
+            closing?: string;
+            estimated_minutes?: number;
+            topics?: {
+                code: string;
+                title: string;
+                purpose: string;
+                fields: {
+                    code: string;
+                    label: string;
+                    question: string;
+                    /** @enum {string} */
+                    kind: "text" | "long_text" | "number" | "money" | "email" | "phone" | "url" | "choice" | "multi_choice" | "boolean" | "weekly_hours" | "faq_list" | "list";
+                    required: boolean;
+                    options?: string[];
+                    help?: string;
+                    example?: string;
+                    /** @enum {string} */
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    handoff?: string;
+                }[];
+            }[];
+            stage?: number;
+            niche_codes?: string[];
+            requires_stage?: number | null;
+            is_active?: boolean;
+        };
+        IntakeLadderDto: {
+            /** Format: uuid */
+            company_id: string;
+            niche_code: string | null;
+            stages: {
+                stage: number;
+                /** Format: uuid */
+                blueprint_id: string | null;
+                blueprint_name: string | null;
+                /** @enum {string|null} */
+                status: "pending" | "in_progress" | "completed" | "applied" | "cancelled" | null;
+                /** Format: uuid */
+                session_id: string | null;
+                can_emit: boolean;
+                blocked_reason: string | null;
+            }[];
+            next_stage: number | null;
+        };
+        SessionListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string | null;
+                blueprint_name: string;
+                /** @enum {string} */
+                status: "pending" | "in_progress" | "completed" | "applied" | "cancelled";
+                invite_name: string | null;
+                percent: number;
+                last_topic: string | null;
+                turn_count: number;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                last_activity_at: string | null;
+                /** Format: date-time */
+                expires_at: string;
+            }[];
+        };
+        SessionDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string | null;
+            blueprint_name: string;
+            /** @enum {string} */
+            status: "pending" | "in_progress" | "completed" | "applied" | "cancelled";
+            invite_name: string | null;
+            percent: number;
+            last_topic: string | null;
+            turn_count: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_activity_at: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uuid */
+            blueprint_id: string;
+            blueprint_version: number;
+            invite_email: string | null;
+            invite_phone: string | null;
+            source_url: string | null;
+            progress: {
+                topics: {
+                    code: string;
+                    title: string;
+                    required: number;
+                    resolved: number;
+                    pending_confirmation: number;
+                    captured: number;
+                    answered: number;
+                    skipped: number;
+                    open: number;
+                    total: number;
+                    deferred: boolean;
+                    /** @enum {string} */
+                    status: "done" | "in_progress" | "pending" | "deferred";
+                }[];
+                percent: number;
+                next_topic: string | null;
+                next_field: string | null;
+                has_pending_required: boolean;
+                has_pending_confirmation: boolean;
+            };
+            topics: {
+                code: string;
+                title: string;
+                deferred: boolean;
+                fields: {
+                    code: string;
+                    label: string;
+                    target: string | null;
+                    required: boolean;
+                    display: string | null;
+                    /** @enum {string|null} */
+                    source: "known" | "derived" | "stated" | "proposed" | null;
+                    skipped: {
+                        /** @enum {string} */
+                        reason: "no_aplica" | "no_sabe" | "luego";
+                        /** @enum {string} */
+                        source: "chat" | "ficha" | "niche";
+                    } | null;
+                }[];
+            }[];
+            transcript: {
+                /** @enum {string} */
+                role: "assistant" | "client";
+                body: string;
+                voice: boolean;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            apply_result: unknown;
+            /** Format: date-time */
+            applied_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+        };
+        CreateSessionDto: {
+            /** Format: uuid */
+            blueprint_id: string;
+            /** Format: uuid */
+            company_id: string;
+            invite_name?: string | null;
+            /** Format: email */
+            invite_email?: string | null;
+            invite_phone?: string | null;
+            /** Format: uri */
+            source_url?: string | null;
+        };
+        CreatedSessionDto: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
+            prefill: {
+                known: number;
+                derived: number;
+                proposed: number;
+                niche_skipped: number;
+                website_failed: boolean;
+            };
+        };
+        ReissuedLinkDto: {
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        ApplyPlanDto: {
+            changes: {
+                target: string;
+                label: string;
+                before: string | null;
+                after: string;
+            }[];
+            skipped: {
+                target: string;
+                label: string;
+                reason: string;
+            }[];
+            pending: {
+                label: string;
+                value: string;
+                where: string;
+            }[];
+            hash: string;
+        };
+        ApplySessionDto: {
+            plan_hash?: string;
+        };
+        ApplyOutcomeDto: {
+            applied: {
+                target: string;
+                label: string;
+                before: string | null;
+                after: string;
+            }[];
+            skipped: {
+                target: string;
+                label: string;
+                reason: string;
+            }[];
+            pending: {
+                label: string;
+                value: string;
+                where: string;
+            }[];
         };
     };
     responses: never;
@@ -18678,27 +19628,6 @@ export interface operations {
             };
         };
     };
-    VoiceSettingsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VoiceSettingsDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     RecognitionSettingsController_get_v1: {
         parameters: {
             query?: never;
@@ -18890,92 +19819,6 @@ export interface operations {
             };
         };
     };
-    AiCharactersController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterListDto"];
-                };
-            };
-        };
-    };
-    AiCharactersController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCharacterDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterDto"];
-                };
-            };
-        };
-    };
-    AiCharactersController_remove_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AiCharactersController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCharacterDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterDto"];
-                };
-            };
-        };
-    };
     AiVoicesController_list_v1: {
         parameters: {
             query?: never;
@@ -19129,11 +19972,13 @@ export interface operations {
             };
         };
     };
-    TtsCredentialController_status_v1: {
+    PlatformTenantVoiceController_read_v1: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -19143,16 +19988,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TtsCredentialStatusDto"];
+                    "application/json": components["schemas"]["PlatformTenantVoiceDto"];
                 };
             };
         };
     };
-    TtsCredentialController_set_v1: {
+    PlatformTenantVoiceController_updateSettings_v1: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSettingsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformTenantVoiceController_setCredential_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -19169,11 +20039,13 @@ export interface operations {
             };
         };
     };
-    TtsCredentialController_remove_v1: {
+    PlatformTenantVoiceController_removeCredential_v1: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -23898,6 +24770,27 @@ export interface operations {
             };
         };
     };
+    HsmTemplatesController_messagingWindow_v1: {
+        parameters: {
+            query: {
+                channel_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagingWindowDto"];
+                };
+            };
+        };
+    };
     HsmTemplatesController_list_v1: {
         parameters: {
             query: {
@@ -23935,6 +24828,50 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HsmTemplateDto"];
+                };
+            };
+        };
+    };
+    HsmTemplatesController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    HsmTemplatesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateHsmTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -28669,6 +29606,388 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogImportDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_open_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeSessionViewDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_message_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendIntakeMessageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeTurnResultDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_answers_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchIntakeAnswersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatchIntakeAnswersResultDto"];
+                };
+            };
+        };
+    };
+    PublicIntakeController_voice_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeTranscriptionDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_list_v1: {
+        parameters: {
+            query?: {
+                include_inactive?: "0" | "1" | "true" | "yes" | "false" | "no";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintListDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBlueprintDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_get_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformIntakeBlueprintsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBlueprintDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlueprintDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_ladderFor_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntakeLadderDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "pending" | "in_progress" | "completed" | "applied" | "cancelled";
+                company_id?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionListDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedSessionDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetailDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_reissue_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReissuedLinkDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_cancel_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformIntakeSessionsController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyPlanDto"];
+                };
+            };
+        };
+    };
+    PlatformIntakeSessionsController_execute_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplySessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyOutcomeDto"];
                 };
             };
         };

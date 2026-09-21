@@ -18,7 +18,7 @@ import { CmoBoardRail } from "./components/CmoBoardRail";
  * del módulo es que la disrupción está en la conversación, y por eso las
  * propuestas se leen DENTRO del hilo, no en una pantalla aparte.
  *
- * **Un solo campo.** `axel-field` vive aquí, en el `<main>`, y no en el chat: su
+ * **Un solo campo.** `assistant-field` vive aquí, en el `<main>`, y no en el chat: su
  * fondo (el aura que sube del borde inferior) tiene que quedar detrás del hero,
  * del hilo y del composer a la vez. Cuando el campo empezaba debajo del briefing, la
  * banda de arriba heredaba el degradado `muted` de la superficie del panel y
@@ -89,7 +89,7 @@ export function CmoView() {
 
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden" data-app-view>
-      <main className="axel-field flex min-w-0 flex-1 flex-col">
+      <main className="assistant-field flex min-w-0 flex-1 flex-col">
         <AxelChat
           ownerName={firstName(user?.name ?? null)}
           briefing={briefing.data ?? null}

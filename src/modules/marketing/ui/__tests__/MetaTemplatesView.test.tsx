@@ -9,12 +9,16 @@ jest.mock("@/shared/auth/auth.hooks", () => ({
 }));
 
 const showAlert = jest.fn();
+const showModal = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert, showModal: jest.fn(), closeModal: jest.fn() }),
+  useAlert: () => ({ showAlert, showModal, closeModal: jest.fn() }),
 }));
 
 jest.mock("@/modules/channels/public", () => ({ listChannels: jest.fn() }));
 jest.mock("@/modules/marketing/infrastructure/services/templates-service.adapter", () => ({
+  deleteHsmTemplate: jest.fn(),
+  updateHsmTemplate: jest.fn(),
+  createHsmTemplate: jest.fn(),
   listHsmTemplates: jest.fn(),
   syncHsmTemplates: jest.fn(),
 }));
@@ -37,10 +41,15 @@ function hsm(over: Partial<HsmTemplateDTO> = {}): HsmTemplateDTO {
     body: "Hola {{1}}, tenemos novedades",
     components: [],
     approval_status: "approved",
+    rejected_reason: null,
+    quality_score: null,
+    editable: true,
+    edit_blocked_reason: null,
+    edit_retry_at: null,
     external_id: null,
     updated_at: "2026-08-01T00:00:00.000Z",
     ...over,
-  } as HsmTemplateDTO;
+  };
 }
 
 const CLOUD = {
@@ -129,5 +138,127 @@ describe("sin canal cloud", () => {
     ).toBeInTheDocument();
     // Sin canal no se pide nada al backend de marketing.
     expect(api.listHsmTemplates).not.toHaveBeenCalled();
+  });
+});
+
+describe("lo que Meta contesta sobre una plantilla", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+  });
+
+  it("enseña POR QUÉ la rechazó, no una frase genérica", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h9",
+        name: "promo_rechazada",
+        approval_status: "rejected",
+        rejected_reason: "El cuerpo promete un descuento que no aparece en el pie",
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    // Antes solo decía qué HACER, nunca qué estaba MAL, que es lo único que
+    // sirve para corregirla.
+    expect(
+      await screen.findByText("El cuerpo promete un descuento que no aparece en el pie"),
+    ).toBeInTheDocument();
+  });
+
+  it("traduce el enum de Meta: «INVALID_FORMAT» no le dice nada a nadie", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h12",
+        name: "promo_rechazada",
+        approval_status: "rejected",
+        // Meta manda un ENUM, no una frase. Pintarlo crudo era un paso atrás
+        // respecto de la frase genérica que había antes.
+        rejected_reason: "INVALID_FORMAT",
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByText(/El formato no le vale a Meta/)).toBeInTheDocument();
+    expect(screen.queryByText("INVALID_FORMAT")).not.toBeInTheDocument();
+  });
+
+  it("y respeta la prosa cuando Meta sí la manda", async () => {
+    const prosa = "Your template has parameters placed next to each other without text between them.";
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "h13", approval_status: "rejected", rejected_reason: prosa }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByText(new RegExp(prosa.slice(0, 30)))).toBeInTheDocument();
+  });
+
+  it("avisa de la calidad solo cuando ya no es verde", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "h10", name: "promo_verde", quality_score: "GREEN" }),
+      hsm({ id: "h11", name: "promo_amarilla", quality_score: "YELLOW" }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    // La calidad es el aviso PREVIO a que Meta pause la plantilla.
+    expect(await screen.findByText(/Calidad yellow/)).toBeInTheDocument();
+    expect(screen.queryByText(/Calidad green/)).not.toBeInTheDocument();
+  });
+});
+
+describe("editar y borrar una plantilla", () => {
+  beforeEach(() => {
+    channelsApi.listChannels.mockResolvedValue(CLOUD);
+  });
+
+  it("deja editar una rechazada, que es el callejón que esto desatasca", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({ id: "h20", name: "promo_rechazada", approval_status: "rejected", editable: true }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByRole("button", { name: /Editar/ })).toBeEnabled();
+  });
+
+  it("no deja editar la que Meta tiene en revisión, y dice por qué", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h21",
+        approval_status: "pending",
+        editable: false,
+        edit_blocked_reason: "Meta todavía la está revisando",
+        edit_retry_at: null,
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByRole("button", { name: /Editar/ })).toBeDisabled();
+    expect(screen.getByText(/Meta todavía la está revisando/)).toBeInTheDocument();
+  });
+
+  it("cuando el bloqueo tiene hora, la dice: un error se vuelve instrucción", async () => {
+    api.listHsmTemplates.mockResolvedValue([
+      hsm({
+        id: "h22",
+        approval_status: "approved",
+        editable: false,
+        edit_blocked_reason: "Meta solo deja editar una plantilla aprobada una vez cada 24 h",
+        edit_retry_at: "2026-09-17T14:30:00.000Z",
+      }),
+    ]);
+    render(<MetaTemplatesView />);
+
+    expect(await screen.findByText(/Podrás el/)).toBeInTheDocument();
+  });
+
+  it("borrar una APROBADA avisa de que Meta bloquea el nombre 30 días", async () => {
+    api.listHsmTemplates.mockResolvedValue([hsm({ id: "h23", approval_status: "approved" })]);
+    render(<MetaTemplatesView />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Borrar" }));
+    // Borrar no es deshacer, y quien borra tiene que saberlo ANTES.
+    expect(showModal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: expect.stringContaining("30 días") as unknown as string,
+      }),
+    );
   });
 });

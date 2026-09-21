@@ -1,10 +1,5 @@
 import { AgentsProvider } from "@/modules/agents/infrastructure/stores/agent.context";
 
-export default function AgentsLayout({ children, form }: { children: React.ReactNode; form: React.ReactNode }) {
-    return (
-        <AgentsProvider>
-            {children}
-            {form}
-        </AgentsProvider>
-    )
+export default function AgentsLayout({ children }: { children: React.ReactNode }) {
+  return <AgentsProvider>{children}</AgentsProvider>;
 }

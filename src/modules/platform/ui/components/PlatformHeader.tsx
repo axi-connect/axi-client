@@ -27,6 +27,7 @@ const LABELS: Record<string, string> = {
   users: "Usuarios",
   plan: "Plan & Límites",
   database: "Base de datos",
+  voice: "Voz",
   // "audit" bajo un tenant y en el top-level comparten label ("Auditoría").
   // Sub-secciones de Calidad.
   runs: "Ejecuciones",

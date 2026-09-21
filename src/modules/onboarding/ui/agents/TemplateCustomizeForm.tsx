@@ -5,9 +5,15 @@ import { useId } from "react";
 
 import { Input } from "@/shared/components/ui/input";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { characterStyle, type CharacterDTO } from "@/modules/agents/public";
+import {
+  CharacterPicker,
+  ColorPalette,
+  COLOR_LABELS,
+  CHARACTER_LABELS,
+  VoiceSelector,
+  type AiVoiceDTO,
+} from "@/modules/agents/public";
 import {
   AGENT_TONES,
   EXTRA_INSTRUCTIONS_MAX,
@@ -20,20 +26,20 @@ import {
  * Formulario de personalización de una plantilla (antes el cuerpo de un
  * `DetailSheet`; desde el onboarding «Flow» vive en la pantalla, al lado del
  * teléfono de vista previa, para que cada cambio se vea al instante). Solo lo
- * que el dueño entiende: nombre, tono, personalidad y datos clave. Modelo,
- * temperatura y límites los fija la plantilla; el enlace a Agentes deja claro
- * dónde están los ajustes avanzados, sin insinuarlos aquí. Es controlado y
- * puro: el paso guarda el borrador.
+ * que el dueño entiende: nombre, tono, **personaje y color** (el catálogo de
+ * plataforma, D4), voz y datos clave. Modelo, temperatura y límites los fija la
+ * plantilla; el enlace a Agentes deja claro dónde están los ajustes avanzados,
+ * sin insinuarlos aquí. Es controlado y puro: el paso guarda el borrador.
  */
 export function TemplateCustomizeForm({
   draft,
   onDraftChange,
-  characters,
+  voices,
 }: {
   draft: AgentTemplateDraft;
   onDraftChange: (next: AgentTemplateDraft) => void;
-  /** `null` mientras cargan; `[]` si no hay o fallaron (el selector queda deshabilitado). */
-  characters: CharacterDTO[] | null;
+  /** Catálogo de voces; `null` mientras carga, `[]` si no hay o falló. */
+  voices: AiVoiceDTO[] | null;
 }) {
   const nameId = useId();
   const factsId = useId();
@@ -60,26 +66,29 @@ export function TemplateCustomizeForm({
         />
       </div>
 
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between">
+          <p className="text-sm font-medium">Personaje</p>
+          <p className="text-muted-foreground text-xs">
+            {CHARACTER_LABELS[draft.appearance.character]} · {COLOR_LABELS[draft.appearance.color]}
+          </p>
+        </div>
+        <CharacterPicker
+          size="compact"
+          value={draft.appearance.character}
+          color={draft.appearance.color}
+          onChange={(character) => patch({ appearance: { ...draft.appearance, character } })}
+        />
+        <ColorPalette value={draft.appearance.color} onChange={(color) => patch({ appearance: { ...draft.appearance, color } })} />
+        <p className="text-muted-foreground text-xs">Es la cara con la que aparece en tu panel; se puede cambiar después.</p>
+      </div>
+
       <div className="space-y-1.5">
-        <p className="text-sm font-medium">Personalidad</p>
-        <Select value={draft.character_id ?? ""} onValueChange={(value) => patch({ character_id: value || null })} disabled={characters === null}>
-          <SelectTrigger className="w-full" aria-label="Personalidad">
-            <SelectValue placeholder={characters === null ? "Cargando…" : "Elige una personalidad"} />
-          </SelectTrigger>
-          <SelectContent>
-            {(characters ?? []).map((character) => {
-              const style = characterStyle(character);
-              return (
-                <SelectItem key={character.id} value={character.id}>
-                  {character.name}
-                  {style.tone ? ` · ${style.tone}` : ""}
-                  {character.is_system ? " (del sistema)" : ""}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <p className="text-muted-foreground text-xs">Define el estilo de escritura y la voz si el personaje la tiene.</p>
+        <p className="text-sm font-medium">Voz</p>
+        <VoiceSelector voices={voices} value={draft.voice_id} onChange={(voice_id) => patch({ voice_id })} />
+        <p className="text-muted-foreground text-xs">
+          Si eliges una, responderá con notas de voz cuando el cliente le hable con audio (requiere la voz activa en tu empresa).
+        </p>
       </div>
 
       <div className="space-y-1.5">

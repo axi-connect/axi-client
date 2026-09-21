@@ -3,13 +3,24 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Check, Info, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CircleDollarSign,
+  Clock,
+  Gauge,
+  Info,
+  MessageSquare,
+  Users,
+} from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
+import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
+import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import { FormSkeleton } from "@/shared/components/features/loading";
 import {
   AudienceFilterBuilder,
@@ -47,7 +58,26 @@ import {
   previewAudience,
   updateCampaign,
 } from "@/modules/marketing/infrastructure/services/campaigns-service.adapter";
-import { listTemplates } from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import {
+  getMessagingWindow,
+  listHsmTemplates,
+  listTemplates,
+} from "@/modules/marketing/infrastructure/services/templates-service.adapter";
+import { messagingWindowNotice } from "@/modules/marketing/domain/messaging-window";
+import {
+  isUsableForMarketing,
+  type HsmTemplateDTO,
+  type MessagingWindowDTO,
+} from "@/modules/marketing/domain/template-catalog";
+import { HsmTemplatePicker } from "@/modules/marketing/ui/components/HsmTemplatePicker";
+import { renderHsmPreview } from "@/modules/marketing/domain/hsm-preview";
+import { hsmPreviewValue } from "@/modules/marketing/domain/hsm-params";
+import { bulkOpeningCost, formatUsd } from "@/modules/marketing/domain/template-cost";
+import { listChannels } from "@/modules/channels/public";
+import { loadMyCompanyOnce } from "@/modules/companies/public";
+
+/** Las etiquetas en el orden del asistente, que es lo que pide `StepIndicator`. */
+const STEP_LABELS = WIZARD_STEPS.map((step) => WIZARD_STEP_LABELS[step]);
 
 /**
  * Wizard de creación de campaña.
@@ -71,6 +101,12 @@ export function CampaignWizard() {
   const [segments, setSegments] = useState<SegmentDTO[]>([]);
   const [tags, setTags] = useState<TagDTO[]>([]);
   const [templates, setTemplates] = useState<TemplateDTO[] | null>(null);
+  /** `null` = todavía buscando; `[]` = no hay ninguna aprobada de marketing. */
+  const [hsmTemplates, setHsmTemplates] = useState<HsmTemplateDTO[] | null>(null);
+  const [cloudChannels, setCloudChannels] = useState<{ id: string; name: string }[]>([]);
+  const [cloudChannelId, setCloudChannelId] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState("tu empresa");
+  const [window_, setWindow] = useState<MessagingWindowDTO | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -80,8 +116,44 @@ export function CampaignWizard() {
       listTemplates()
         .then((rows) => setTemplates(rows.filter((t) => t.is_active)))
         .catch(() => setTemplates([])),
+      loadMyCompanyOnce()
+        .then((company) => setCompanyName(company.name || "tu empresa"))
+        .catch(() => undefined),
     ]);
   }, []);
+
+  // Las plantillas de Meta viven en la WABA, no en la campaña, y una campaña no
+  // elige canal: el despacho lo resuelve por contacto. Se toma el primer
+  // WhatsApp Cloud, igual que hace el seguimiento masivo del CRM y por el mismo
+  // motivo — en un lote no hay UN contacto del que deducirlo.
+  useEffect(() => {
+    void listChannels()
+      .then((res) => {
+        const cloud = res.data.filter((channel) => channel.kind === "whatsapp_cloud");
+        setCloudChannels(cloud.map((channel) => ({ id: channel.id, name: channel.name })));
+        setCloudChannelId(cloud[0]?.id ?? null);
+        if (cloud.length === 0) setHsmTemplates([]);
+      })
+      .catch(() => {
+        setCloudChannels([]);
+        setHsmTemplates([]);
+      });
+  }, []);
+
+  // Las plantillas son del canal elegido: cambiar de número cambia la lista, y
+  // la que estuviera elegida deja de existir.
+  useEffect(() => {
+    if (cloudChannelId === null) return;
+    setHsmTemplates(null);
+    void listHsmTemplates({ channel_id: cloudChannelId, approval_status: "approved" })
+      .then((rows) => setHsmTemplates(rows.filter(isUsableForMarketing)))
+      .catch(() => setHsmTemplates([]));
+    // El cupo de Meta es del portafolio: hace falta para decir en cuántos días
+    // sale la campaña ANTES de lanzarla, no después.
+    void getMessagingWindow(cloudChannelId)
+      .then(setWindow)
+      .catch(() => setWindow(null));
+  }, [cloudChannelId]);
 
   const patch = useCallback(
     (next: Partial<CampaignDraft>) => setDraft((prev) => ({ ...prev, ...next })),
@@ -189,6 +261,18 @@ export function CampaignWizard() {
 
   const selectedTemplate = templates.find((t) => t.id === draft.templateId) ?? null;
   const selectedSegment = segments.find((s) => s.id === draft.segmentId) ?? null;
+  const selectedHsm = hsmTemplates?.find((t) => t.id === draft.hsmChannelTemplateId) ?? null;
+  /** Un destinatario de ejemplo, para que la previa no se lea en abstracto. */
+  const previewSample = { first_name: "Laura", full_name: "Laura Restrepo", company_name: companyName };
+  // Tope, no previsión: la estimación no dice cuántos están fuera de la ventana.
+  const hsmCost =
+    selectedHsm === null || estimate === null
+      ? null
+      : bulkOpeningCost(estimate.estimatedReach, selectedHsm.category);
+  const windowNotice =
+    selectedHsm === null || estimate === null
+      ? null
+      : messagingWindowNotice(estimate.estimatedReach, window_);
 
   return (
     <div className="flex flex-col gap-5">
@@ -202,35 +286,15 @@ export function CampaignWizard() {
         <h1 className="text-2xl font-semibold tracking-tight">Nueva campaña</h1>
       </div>
 
-      <ol className="flex flex-wrap items-center gap-2">
-        {WIZARD_STEPS.map((s, index) => {
-          const state = index < stepIndex ? "done" : index === stepIndex ? "current" : "todo";
-          return (
-            <li key={s} className="flex items-center gap-2">
-              {index > 0 && <span aria-hidden="true" className="h-px w-5 bg-border" />}
-              <span
-                className={cn(
-                  "flex items-center gap-1.5 text-sm",
-                  state === "current" ? "font-medium text-foreground" : "text-muted-foreground",
-                )}
-                aria-current={state === "current" ? "step" : undefined}
-              >
-                <span
-                  className={cn(
-                    "flex size-5.5 items-center justify-center rounded-full border text-[0.6875rem] font-semibold",
-                    state === "current" && "border-primary bg-primary text-primary-foreground",
-                    state === "done" && "border-success/45 bg-success/15 text-success",
-                    state === "todo" && "border-border",
-                  )}
-                >
-                  {state === "done" ? <Check className="size-3" aria-hidden="true" /> : index + 1}
-                </span>
-                {WIZARD_STEP_LABELS[s]}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      {/* El indicador es el compartido: este asistente tenía una copia propia
+          que pintaba «completado» en verde, contra la gramática de marca
+          (violeta) que ya seguían los otros seis consumidores. */}
+      <StepIndicator
+        steps={STEP_LABELS}
+        current={stepIndex}
+        onStepClick={(index) => setStep(WIZARD_STEPS[index])}
+        ariaLabel="Progreso de la campaña"
+      />
 
       <section className="rounded-2xl border border-border bg-background p-5">
         {step === "audiencia" && (
@@ -347,78 +411,156 @@ export function CampaignWizard() {
 
         {step === "contenido" && (
           <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-semibold tracking-tight">¿Qué les dices?</h2>
-
-            {templates.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                No tienes plantillas activas.{" "}
-                <Link href="/marketing/settings/templates" className="underline">
-                  Crea una
-                </Link>{" "}
-                para poder enviar la campaña.
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">¿Qué les dices?</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Son dos mensajes, no uno: el que ve quien te escribió hace poco y el que necesita
+                quien lleva más de 24 h en silencio.
               </p>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 md:items-start">
-                <div className="space-y-1.5">
-                  <label htmlFor="c-template" className="text-xs font-medium text-muted-foreground">
-                    Plantilla
-                  </label>
-                  <select
-                    id="c-template"
-                    value={draft.templateId ?? ""}
-                    onChange={(e) => patch({ templateId: e.target.value || null })}
-                    className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
-                  >
-                    <option value="">Elige una plantilla…</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground">
-                    En campañas solo se rellenan{" "}
-                    <span className="font-mono">{"{{first_name}}"}</span>,{" "}
-                    <span className="font-mono">{"{{contact_name}}"}</span> y{" "}
-                    <span className="font-mono">{"{{company_name}}"}</span>. Para dar un cupón,
-                    escribe el código compartido de tu promoción dentro del texto.
-                  </p>
-                </div>
+            </div>
 
-                <div className="space-y-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">Vista previa</span>
-                  <div className="rounded-md border border-border/60 bg-foreground/[0.03] p-3.5">
-                    {selectedTemplate?.body ? (
-                      <div className="max-w-[32ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
-                        {previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)}
-                        <span className="mt-1 block text-right text-[0.625rem] text-muted-foreground">
-                          12:04 ✓✓
-                        </span>
-                      </div>
-                    ) : (
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              {/* Dentro de la ventana: el mensaje de siempre, texto libre. */}
+              <section className="overflow-clip rounded-xl border border-border">
+                <header className="flex items-center gap-2.5 border-b border-border bg-foreground/[0.025] px-3.5 py-2.5">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground/[0.06] text-muted-foreground">
+                    <MessageSquare aria-hidden="true" className="size-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">A quien te escribió hace poco</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Dentro de las 24 h · texto libre
+                    </span>
+                  </span>
+                </header>
+                <div className="flex flex-col gap-3 p-3.5">
+                  {templates.length === 0 ? (
+                    <p className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
+                      No tienes plantillas activas.{" "}
+                      <Link href="/marketing/settings/templates" className="underline">
+                        Crea una
+                      </Link>
+                      .
+                    </p>
+                  ) : (
+                    <>
+                      <select
+                        id="c-template"
+                        aria-label="Plantilla del tenant"
+                        value={draft.templateId ?? ""}
+                        onChange={(e) => patch({ templateId: e.target.value || null })}
+                        className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                      >
+                        <option value="">Elige una plantilla…</option>
+                        {templates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.name}
+                          </option>
+                        ))}
+                      </select>
                       <p className="text-xs text-muted-foreground">
-                        Elige una plantilla y aquí verás cómo le llega al cliente.
+                        Se rellenan <span className="font-mono">{"{{first_name}}"}</span>,{" "}
+                        <span className="font-mono">{"{{contact_name}}"}</span> y{" "}
+                        <span className="font-mono">{"{{company_name}}"}</span>.
                       </p>
-                    )}
-                  </div>
+                      {selectedTemplate?.body ? (
+                        <div className="rounded-lg border border-border/60 bg-foreground/[0.03] p-3.5">
+                          <div className="max-w-[32ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
+                            {previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)}
+                          </div>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
                 </div>
-              </div>
-            )}
+              </section>
 
-            <p className="flex gap-2.5 rounded-xl border border-warning/30 bg-warning/[0.07] px-4 py-3 text-sm leading-relaxed text-muted-foreground">
-              <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
-              <span>
-                Los contactos que lleven más de 24 h sin escribirte solo pueden recibir una{" "}
-                <strong className="font-medium text-foreground">plantilla de Meta</strong>. Sin ella,
-                esos se omitirán y lo verás en el detalle de la campaña.{" "}
-                <Link href="/marketing/settings/meta-templates" className="underline">
-                  Ver las plantillas de Meta
-                </Link>
-              </span>
-            </p>
+              {/* Fuera de la ventana: solo cruza una plantilla aprobada de Meta. */}
+              <section className="overflow-clip rounded-xl border border-border">
+                <header className="flex items-center gap-2.5 border-b border-border bg-foreground/[0.025] px-3.5 py-2.5">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground/[0.06] text-muted-foreground">
+                    <Clock aria-hidden="true" className="size-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">A quien lleva más de 24 h</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Fuera de ventana · solo plantilla de Meta
+                    </span>
+                  </span>
+                </header>
+                <div className="flex flex-col gap-3 p-3.5">
+                  {cloudChannelId === null ? (
+                    <Callout tone="warn" icon={AlertTriangle}>
+                      Las plantillas de Meta viven en un número de{" "}
+                      <strong className="font-medium text-foreground">WhatsApp Cloud</strong>, y
+                      todavía no tienes ninguno conectado. La campaña puede salir igual: solo
+                      llegará a quien esté dentro de la ventana.{" "}
+                      <Link href="/settings/channels" className="underline">
+                        Conectar WhatsApp
+                      </Link>
+                    </Callout>
+                  ) : hsmTemplates === null ? (
+                    <p className="text-xs text-muted-foreground">Buscando tus plantillas…</p>
+                  ) : hsmTemplates.length === 0 ? (
+                    // Aquí vivía la franja ámbar que solo avisaba y enlazaba
+                    // fuera: ahora el aviso trae su propia salida.
+                    <Callout tone="warn" icon={AlertTriangle}>
+                      Meta solo deja abrir una conversación fría con una{" "}
+                      <strong className="font-medium text-foreground">plantilla aprobada</strong> de
+                      categoría marketing, y no tienes ninguna. Sin ella, esos contactos se omiten y
+                      lo verás en el detalle de la campaña.{" "}
+                      <Link href="/marketing/settings/meta-templates" className="underline">
+                        Crear una plantilla
+                      </Link>
+                    </Callout>
+                  ) : (
+                    <>
+                      {/* Con un solo número no hay nada que elegir y el selector
+                          sería ruido. Con varios SÍ hay que decirlo: la
+                          plantilla pertenece a uno solo, y Meta no la conoce en
+                          los demás. */}
+                      {cloudChannels.length > 1 && (
+                        <div className="space-y-1.5">
+                          <label
+                            htmlFor="c-cloud-channel"
+                            className="text-xs font-medium text-muted-foreground"
+                          >
+                            Número desde el que sale
+                          </label>
+                          <select
+                            id="c-cloud-channel"
+                            value={cloudChannelId ?? ""}
+                            onChange={(e) => {
+                              setCloudChannelId(e.target.value);
+                              patch({ hsmChannelTemplateId: null, hsmParamMapping: [] });
+                            }}
+                            className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm"
+                          >
+                            {cloudChannels.map((channel) => (
+                              <option key={channel.id} value={channel.id}>
+                                {channel.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <HsmTemplatePicker
+                      templates={hsmTemplates}
+                      value={draft.hsmChannelTemplateId}
+                      onChange={(id) => patch({ hsmChannelTemplateId: id })}
+                      mapping={draft.hsmParamMapping}
+                      onMappingChange={(mapping) => patch({ hsmParamMapping: mapping })}
+                      sample={previewSample}
+                      recipients={estimate?.estimatedReach ?? null}
+                        emptyLabel="Sin plantilla · se omiten los que lleven más de 24 h"
+                      />
+                    </>
+                  )}
+                </div>
+              </section>
+            </div>
           </div>
         )}
-
         {step === "programacion" && (
           <div className="flex flex-col gap-4">
             <h2 className="text-lg font-semibold tracking-tight">¿Cuándo sale?</h2>
@@ -501,22 +643,74 @@ export function CampaignWizard() {
                     : "Sin calcular"
                 }
               />
-              <Summary label="Contenido" value={selectedTemplate?.name ?? "Sin plantilla"} />
+              <Summary
+                label="Coste tope"
+                value={
+                  hsmCost === null
+                    ? "Sin plantilla de Meta"
+                    : `${formatUsd(hsmCost.total_usd)}`
+                }
+              />
               <Summary
                 label="Salida"
                 value={draft.scheduledDate === "" ? "Ahora mismo" : `${draft.scheduledDate} ${draft.scheduledTime}`}
               />
             </dl>
 
-            {selectedTemplate?.body && (
-              <div className="rounded-md border border-border/60 bg-foreground/[0.03] p-3.5">
-                <div className="max-w-[32ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
-                  {previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)}
-                  <span className="mt-1 block text-right text-[0.625rem] text-muted-foreground">
-                    12:04 ✓✓
-                  </span>
-                </div>
-              </div>
+            {/* Los DOS mensajes, no uno: es lo que de verdad va a salir. */}
+            <div className="grid gap-3 lg:grid-cols-2">
+              <ReviewMessage
+                icon={MessageSquare}
+                title="Dentro de 24 h"
+                subtitle={selectedTemplate?.name ?? "Sin plantilla"}
+              >
+                {selectedTemplate?.body
+                  ? previewTemplate(selectedTemplate.body, CAMPAIGN_TEMPLATE_VARIABLES)
+                  : null}
+              </ReviewMessage>
+              <ReviewMessage
+                icon={Clock}
+                title="Fuera de 24 h"
+                subtitle={selectedHsm?.name ?? "Se omiten los contactos fríos"}
+              >
+                {selectedHsm === null
+                  ? null
+                  : renderHsmPreview(selectedHsm.body, (index) => {
+                      const entry = draft.hsmParamMapping.find((row) => row.index === index);
+                      return entry === undefined ? null : hsmPreviewValue(entry.source, previewSample);
+                    }).map((segment, position) => (
+                      <span
+                        key={position}
+                        className={segment.variable ? "rounded bg-primary/15 px-1 font-medium" : undefined}
+                      >
+                        {segment.text}
+                      </span>
+                    ))}
+              </ReviewMessage>
+            </div>
+
+            {windowNotice !== null && (
+              <Callout tone="warn" icon={Gauge}>
+                Meta te deja abrir{" "}
+                <strong className="font-medium text-foreground">
+                  {windowNotice.limit.toLocaleString("es-CO")} conversaciones nuevas cada 24 h
+                </strong>
+                , y ese cupo lo comparten todos tus números. Esta campaña{" "}
+                <strong className="font-medium text-foreground">
+                  saldrá repartida en {windowNotice.days} días
+                </strong>
+                : no tienes que hacer nada, se reparte sola. Mandarlo todo de golpe es lo que baja
+                el cupo, no lo que lo sube.
+              </Callout>
+            )}
+
+            {hsmCost !== null && hsmCost.category === "marketing" && (
+              <Callout tone="warn" icon={CircleDollarSign}>
+                Es una plantilla de <strong className="font-medium text-foreground">marketing</strong>,
+                unas 25 veces más cara que una utility. Como mucho{" "}
+                <strong className="font-medium text-foreground">{formatUsd(hsmCost.total_usd)}</strong>,
+                y solo por las que Meta entregue de verdad.
+              </Callout>
             )}
           </div>
         )}
@@ -619,5 +813,41 @@ function Summary({ label, value }: { label: string; value: string }) {
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 text-sm font-medium">{value}</dd>
     </div>
+  );
+}
+
+/** Una de las dos mitades del envío, en la revisión: quién lo recibe y qué lee. */
+function ReviewMessage({
+  icon: Icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-clip rounded-xl border border-border">
+      <header className="flex items-center gap-2.5 border-b border-border bg-foreground/[0.025] px-3.5 py-2.5">
+        <span className="grid size-7 shrink-0 place-items-center rounded-md bg-foreground/[0.06] text-muted-foreground">
+          <Icon aria-hidden className="size-3.5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold">{title}</span>
+          <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>
+        </span>
+      </header>
+      <div className="p-3.5">
+        {children === null ? (
+          <p className="text-xs text-muted-foreground">Nada que enviar por aquí.</p>
+        ) : (
+          <div className="max-w-[32ch] rounded-2xl rounded-bl-sm border border-border/60 bg-background px-3 py-2 text-sm leading-relaxed shadow-sm">
+            {children}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

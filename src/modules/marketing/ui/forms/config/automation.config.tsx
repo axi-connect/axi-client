@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  sendsWithoutParams,
+  type HsmTemplateDTO,
+} from "@/modules/marketing/domain/template-catalog";
 import { MessageSquare, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
@@ -366,6 +370,8 @@ function chipToggleField<T extends string>(
 export function buildAutomationFormFields(options: {
   promotions: PromotionDTO[];
   editing: boolean;
+  /** Aprobadas del canal cloud. Vacío = no se pudieron traer: se escribe a mano. */
+  hsmTemplates?: readonly HsmTemplateDTO[];
 }): ReadonlyArray<FieldConfig<AutomationFormValues>> {
   return [
     createInputField<AutomationFormValues>("name", {
@@ -663,12 +669,85 @@ export function buildAutomationFormFields(options: {
       max: 720,
       help: "Cuánto tiempo después del mensaje se le atribuye una compra.",
     }),
-    createInputField<AutomationFormValues>("hsm_template_name", {
+    // Se elige de las aprobadas en vez de teclear el nombre: un nombre mal
+    // escrito no fallaba al guardar, fallaba al ejecutarse la regla, semanas
+    // después y sin que nadie estuviera mirando.
+    hsmTemplateField(options.hsmTemplates ?? []),
+  ];
+}
+
+/**
+ * La plantilla de Meta de una automatización, elegida de las aprobadas.
+ *
+ * Referencia por NOMBRE, no por id: así lo guarda `marketing_automation` y así
+ * lo resuelve el despacho. Si la lista viene vacía —porque no hay canal cloud o
+ * la llamada falló— se cae a un campo de texto: peor es dejar al operador sin
+ * poder encender la regla.
+ *
+ * **Solo se ofrecen las que no llevan variables.** Este camino no tiene mapeo
+ * de parámetros: el despacho manda `{name, language}` y nada más, así que una
+ * plantilla con `{{1}}` saldría pelada y Meta la rechazaría al ejecutarse la
+ * regla. Se dice por qué faltan en vez de esconderlas sin más, que es lo que
+ * convierte «no encuentro mi plantilla» en un rato perdido.
+ */
+function hsmTemplateField(
+  templates: readonly HsmTemplateDTO[],
+): FieldConfig<AutomationFormValues> {
+  return createCustomField<AutomationFormValues>(
+    "hsm_template_name",
+    ({ value, setValue, getError }) => {
+      const current = typeof value === "string" ? value : "";
+      const usable = templates.filter(sendsWithoutParams);
+      const omitted = templates.length - usable.length;
+      const known = usable.some((template) => template.name === current);
+      return (
+        <div className="space-y-1">
+          {templates.length === 0 ? (
+            <input
+              type="text"
+              placeholder="recuperacion_deal"
+              value={current}
+              aria-invalid={Boolean(getError())}
+              onChange={(e) => setValue("hsm_template_name" as never, e.target.value as never)}
+              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
+            />
+          ) : (
+            <select
+              aria-label="Plantilla de Meta"
+              value={known ? current : ""}
+              aria-invalid={Boolean(getError())}
+              onChange={(e) => setValue("hsm_template_name" as never, e.target.value as never)}
+              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
+            >
+              <option value="">Elige una plantilla aprobada…</option>
+              {usable.map((template) => (
+                <option key={template.id} value={template.name}>
+                  {template.name} · {template.language}
+                </option>
+              ))}
+              {/* Una regla vieja puede apuntar a una plantilla que ya no está:
+                  se conserva visible en vez de borrársela por la espalda. */}
+              {current !== "" && !known && (
+                <option value={current}>{current} · ya no está en Meta</option>
+              )}
+            </select>
+          )}
+          {getError() ? (
+            <p className="text-xs text-destructive">{getError()}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Obligatoria para encender esta regla: escribe fuera de la ventana de 24 h.
+              {omitted > 0 &&
+                ` Se omiten ${String(omitted)} plantilla(s) con variables: esta regla no sabe rellenarlas.`}
+            </p>
+          )}
+        </div>
+      );
+    },
+    {
       label: "Plantilla de Meta",
-      placeholder: "recuperacion_deal",
-      description: "Obligatoria para encender esta regla: escribe fuera de la ventana de 24 h.",
       // Delegar no la necesita: la tarea de agente abre por su cuenta.
       isVisible: (v) => v.action_kind === "message" && requiresHsm(v.trigger_type),
-    }),
-  ];
+    },
+  );
 }

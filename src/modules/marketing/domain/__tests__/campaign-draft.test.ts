@@ -37,6 +37,39 @@ describe("blockerForStep", () => {
     expect(blockerForStep("contenido", draft({ hsmChannelTemplateId: "h1" }))).toBeNull();
   });
 
+  it("no deja pasar con un hueco de la plantilla de Meta sin decidir", () => {
+    // Meta rechaza el envío ENTERO si sobra o falta un parámetro, así que esto
+    // no es un detalle estético: es la diferencia entre llegar y no llegar.
+    const pending = draft({
+      hsmChannelTemplateId: "h1",
+      hsmParamMapping: [
+        { index: 1, source: "contact_first_name" },
+        { index: 2, source: "static:" },
+      ],
+    });
+    expect(blockerForStep("contenido", pending)).toBe("Falta decir qué va en {{2}}");
+
+    const ready = draft({
+      hsmChannelTemplateId: "h1",
+      hsmParamMapping: [
+        { index: 1, source: "contact_first_name" },
+        { index: 2, source: "static:30%" },
+      ],
+    });
+    expect(blockerForStep("contenido", ready)).toBeNull();
+  });
+
+  it("el mapeo viaja al servidor, y viaja null si no hay plantilla de Meta", () => {
+    const mapping = [{ index: 1, source: "contact_first_name" }];
+    expect(
+      toUpdateCampaignDTO(draft({ hsmChannelTemplateId: "h1", hsmParamMapping: mapping })),
+    ).toMatchObject({ hsm_channel_template_id: "h1", hsm_param_mapping: mapping });
+    // Un mapeo huérfano es un 422 en el servidor, y con razón.
+    expect(
+      toUpdateCampaignDTO(draft({ hsmChannelTemplateId: null, hsmParamMapping: mapping })),
+    ).toMatchObject({ hsm_param_mapping: null });
+  });
+
   it("exige día y hora juntos, o ninguno", () => {
     expect(blockerForStep("programacion", draft())).toBeNull();
     expect(blockerForStep("programacion", draft({ scheduledDate: "2026-08-08" }))).toContain("hora");

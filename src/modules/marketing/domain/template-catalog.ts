@@ -9,6 +9,7 @@ export type CreateTemplateDTO = Schemas["CreateTemplateDto"];
 export type UpdateTemplateDTO = Schemas["UpdateTemplateDto"];
 
 export type HsmTemplateDTO = Schemas["HsmTemplateDto"];
+export type MessagingWindowDTO = Schemas["MessagingWindowDto"];
 export type CreateHsmTemplateDTO = Schemas["CreateHsmTemplateDto"];
 
 /**
@@ -144,9 +145,70 @@ export const TEMPLATE_VARIABLE_MESSAGES: Record<
   adjacent: "Dos variables no pueden ir pegadas: separa {{1}} y {{2}} con texto",
 };
 
-export function countTemplateVariables(body: string): number {
+/**
+ * Cuántos huecos tiene el cuerpo, o **`null` si Meta no lo aceptaría**.
+ *
+ * Devolvía un número a secas, y traducía «no entiendo este cuerpo» a CERO — que
+ * significa «no hay huecos que rellenar». Con eso, una plantilla con `{{1}}`
+ * repetido no pintaba ni una fila de variable, el operador no veía nada raro y
+ * el envío salía sin parámetros: Meta lo rechaza entero con 132000. El gemelo
+ * de este bug vivía en el servidor y mordía en dos flujos a la vez.
+ *
+ * `null` obliga a quien llama a decidir qué enseñar. Si vuelves a querer un
+ * número a secas, el motivo lo tienes en `inspectTemplateVariables`.
+ */
+/**
+ * El motivo del rechazo que manda Meta, legible.
+ *
+ * `rejected_reason` NO siempre es una frase: cuando el webhook trae
+ * `rejection_info` guardamos la prosa de Meta, pero si no, lo que llega es un
+ * ENUM —`INCORRECT_CATEGORY`, `INVALID_FORMAT`, `PROMOTIONAL`…— y pintarlo
+ * crudo le deja al operador colombiano un «INVALID_FORMAT» en inglés, que es
+ * peor que la frase genérica que había antes.
+ */
+const META_REJECTION_LABELS: Record<string, string> = {
+  ABUSIVE_CONTENT: "Meta la consideró contenido abusivo o engañoso",
+  INCORRECT_CATEGORY: "La categoría no corresponde al contenido: Meta la clasificaría de otra",
+  INVALID_FORMAT: "El formato no le vale a Meta: revisa variables, saltos y puntuación",
+  PROMOTIONAL: "Tiene tono promocional y la enviaste como utility",
+  SCAM: "Meta la leyó como un intento de estafa",
+  TAG_CONTENT_MISMATCH: "El contenido no corresponde a la etiqueta que elegiste",
+};
+
+export function rejectionReasonLabel(raw: string | null): string | null {
+  if (raw === null) return null;
+  const value = raw.trim();
+  if (value.length === 0 || value.toUpperCase() === "NONE") return null;
+  // Un enum es MAYÚSCULAS y guiones bajos; cualquier otra cosa ya es prosa.
+  return /^[A-Z_]+$/.test(value) ? (META_REJECTION_LABELS[value] ?? value) : value;
+}
+
+/** Por qué Meta no aceptaría ese cuerpo, en español. `null` si está bien. */
+export function templateVariableIssue(body: string): string | null {
   const verdict = inspectTemplateVariables(body);
-  return verdict.ok ? verdict.count : 0;
+  return verdict.ok ? null : TEMPLATE_VARIABLE_MESSAGES[verdict.reason];
+}
+
+export function countTemplateVariables(body: string): number | null {
+  const verdict = inspectTemplateVariables(body);
+  return verdict.ok ? verdict.count : null;
+}
+
+/**
+ * Si esta plantilla se puede mandar **sin parámetros**.
+ *
+ * Las automatizaciones no tienen mapeo de variables: su despacho manda
+ * `{name, language}` y nada más. Una plantilla con `{{1}}` elegida aquí sale
+ * pelada, y Meta la rechaza con 132000 **al ejecutarse la regla** — semanas
+ * después de configurarla, sin que nadie esté mirando. El diseño siempre
+ * asumió HSM sin variables; lo que faltaba era que algo lo comprobara.
+ *
+ * Un cuerpo que no se entiende (`null`) también queda fuera: es la misma
+ * cautela que en el servidor, donde traducir «no lo entiendo» a «cero huecos»
+ * mandaba lotes enteros que Meta rechazaba.
+ */
+export function sendsWithoutParams(template: HsmTemplateDTO): boolean {
+  return countTemplateVariables(template.body) === 0;
 }
 
 /**

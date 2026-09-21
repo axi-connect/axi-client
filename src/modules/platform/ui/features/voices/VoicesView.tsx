@@ -238,7 +238,7 @@ export function VoicesView() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Voces IA</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            El catálogo curado que ven todos los tenants en el selector de voz de sus characters.
+            El catálogo curado que ven todos los tenants en el selector de voz de sus agentes.
             El orden de esta tabla es el orden del selector.
           </p>
         </div>
@@ -283,7 +283,7 @@ export function VoicesView() {
                 <TableHead>Voz</TableHead>
                 <TableHead>Perfil</TableHead>
                 <TableHead>Modelo</TableHead>
-                <TableHead className="text-right">Characters</TableHead>
+                <TableHead className="text-right">Agentes</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="w-12">
                   <span className="sr-only">Acciones</span>
@@ -364,10 +364,10 @@ export function VoicesView() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {voice.characters_count === 0 ? (
+                      {voice.agents_count === 0 ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
-                        voice.characters_count
+                        voice.agents_count
                       )}
                     </TableCell>
                     <TableCell>
@@ -393,7 +393,7 @@ export function VoicesView() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Retirar una voz la oculta del selector sin romper los characters que ya la usan (la ven como
+        Retirar una voz la oculta del selector sin romper los agentes que ya la usan (la ven como
         «ya no disponible»). El punto ámbar en la muestra indica que la voz se editó después de
         generarla.
       </p>
@@ -415,9 +415,9 @@ export function VoicesView() {
         config={{
           title: `Retirar «${retiring?.name ?? ""}»`,
           description:
-            retiring !== null && retiring.characters_count > 0
-              ? `${String(retiring.characters_count)} character${retiring.characters_count === 1 ? "" : "s"} la usa${retiring.characters_count === 1 ? "" : "n"} hoy: seguirán funcionando y sus dueños la verán como «ya no disponible» hasta elegir otra. Puedes reactivarla cuando quieras.`
-              : "Ningún character la usa — retiro sin impacto. Puedes reactivarla cuando quieras.",
+            retiring !== null && retiring.agents_count > 0
+              ? `${String(retiring.agents_count)} agente${retiring.agents_count === 1 ? "" : "s"} habla${retiring.agents_count === 1 ? "" : "n"} con ella hoy: seguirán funcionando y sus dueños la verán como «ya no disponible» hasta elegir otra. Puedes reactivarla cuando quieras.`
+              : "Ningún agente la usa — retiro sin impacto. Puedes reactivarla cuando quieras.",
           actions: [
             { label: "Cancelar", variant: "outline", asClose: true },
             {

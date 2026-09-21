@@ -1,21 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import {
-  canGreet,
-  GESTURE_MS,
-  gestureForTap,
-  PROUD_MS,
-  resolveAxelMood,
-  TAP_COOLDOWN_MS,
-  TAP_WINDOW_MS,
-  type AxelGesture,
-  type AxelMood,
-} from "@/modules/cmo/domain/axel-mood";
 import { useCmoStore, type CmoBlocker, type UiMessage } from "@/modules/cmo/infrastructure/stores/cmo.store";
+import { PROUD_MS, useAssistantMood, type AssistantMoodState } from "@/shared/components/features/assistant";
 
 type CmoStoreState = ReturnType<typeof useCmoStore.getState>;
 
@@ -52,98 +41,25 @@ export const selectMoodSnapshot = (state: CmoStoreState): MoodSnapshot => {
   };
 };
 
-export interface AxelMoodState {
-  mood: AxelMood;
-  gesture: AxelGesture | null;
-  /** false = sin gestos, sin mirada, sin transiciones (`prefers-reduced-motion`). */
-  motion: boolean;
-  /** Toque/click/Enter sobre Axel. Inerte bajo reduced-motion, en cooldown o con Axel ocupado. */
-  greet: () => void;
-}
+export type AxelMoodState = Omit<AssistantMoodState, "playGesture">;
 
 /**
- * El humor de Axel, derivado del store, más los dos únicos estados con reloj:
- * la celebración de una propuesta nueva y el gesto en curso.
+ * El humor de Axel: la costura entre el store del CMO y el reloj de humor del
+ * kit (`useAssistantMood`, que resuelve la cara y gobierna gestos y saludo).
  *
- * Los temporizadores viven aquí y no en el dominio (que es puro) ni en el
- * renderer (que solo pinta). Un gesto termina por `setTimeout`, no por
- * `animationend`: bajo reduced-motion la animación es `none` y ese evento no
- * llegaría nunca. Todo se limpia al desmontar y al ocultarse la pestaña.
+ * Lo único que queda aquí, porque solo el CMO lo sabe, es **qué es una buena
+ * noticia**: una propuesta recién armada. Celebración solo con lo NUEVO. En el
+ * primer efecto se anotan el último id y el contador y no se celebra nada —
+ * un hilo recargado con una propuesta vieja como último mensaje no es una
+ * noticia. Con la pestaña oculta tampoco: la insignia de `unseen` ya persiste,
+ * y volver para encontrarse una celebración a medias es peor que ninguna.
  */
 export function useAxelMood({ ownerTyping }: { ownerTyping: boolean }): AxelMoodState {
   const snap = useCmoStore(useShallow(selectMoodSnapshot));
-  const reduced: boolean | null = useReducedMotion();
-  const motion = reduced !== true;
-
   const [celebrating, setCelebrating] = useState(false);
-  const [gesture, setGesture] = useState<AxelGesture | null>(null);
   const proudTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const gestureTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cooldownUntil = useRef(0);
-  const taps = useRef({ count: 0, firstAt: 0 });
 
-  const endGesture = useCallback(() => {
-    if (gestureTimer.current !== null) clearTimeout(gestureTimer.current);
-    gestureTimer.current = null;
-    setGesture(null);
-    cooldownUntil.current = Date.now() + TAP_COOLDOWN_MS;
-  }, []);
-
-  const playGesture = useCallback(
-    (kind: AxelGesture) => {
-      if (gestureTimer.current !== null) clearTimeout(gestureTimer.current);
-      setGesture(kind);
-      gestureTimer.current = setTimeout(endGesture, GESTURE_MS[kind]);
-    },
-    [endGesture],
-  );
-
-  /**
-   * Celebración: solo lo NUEVO. En el primer efecto se anotan el último id y
-   * el contador y no se celebra nada — un hilo recargado con una propuesta
-   * vieja como último mensaje no es una noticia. Con la pestaña oculta tampoco:
-   * la insignia de `unseen` ya persiste, y volver a la pestaña para encontrarse
-   * una celebración a medias es peor que ninguna.
-   */
-  const seen = useRef<{ lastId: string | null; unseen: number } | null>(null);
-  useEffect(() => {
-    const previous = seen.current;
-    seen.current = { lastId: snap.lastId, unseen: snap.unseen };
-    if (previous === null) return;
-    const newProposalMessage =
-      snap.lastId !== previous.lastId && snap.lastRole === "axel" && snap.lastProposal;
-    const newUnseen = snap.unseen > previous.unseen;
-    if (!newProposalMessage && !newUnseen) return;
-    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    setCelebrating(true);
-    if (motion) playGesture("nod");
-    if (proudTimer.current !== null) clearTimeout(proudTimer.current);
-    proudTimer.current = setTimeout(() => {
-      proudTimer.current = null;
-      setCelebrating(false);
-    }, PROUD_MS);
-  }, [snap.lastId, snap.unseen, snap.lastRole, snap.lastProposal, motion, playGesture]);
-
-  // La pestaña se oculta: el gesto no debe reaparecer a medias al volver.
-  useEffect(() => {
-    const onVisibility = () => {
-      if (document.visibilityState !== "visible") endGesture();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [endGesture]);
-
-  useEffect(
-    () => () => {
-      if (proudTimer.current !== null) clearTimeout(proudTimer.current);
-      if (gestureTimer.current !== null) clearTimeout(gestureTimer.current);
-    },
-    [],
-  );
-
-  const mood = resolveAxelMood({
+  const { mood, gesture, motion, greet, playGesture } = useAssistantMood({
     blocker: snap.blocker,
     thinking: snap.thinking,
     streaming: snap.streaming,
@@ -151,7 +67,8 @@ export function useAxelMood({ ownerTyping }: { ownerTyping: boolean }): AxelMood
       snap.lastRole === null
         ? null
         : {
-            role: snap.lastRole,
+            // Los roles del CMO traducidos a los del kit.
+            role: snap.lastRole === "owner" ? "user" : snap.lastRole === "axel" ? "assistant" : "system",
             failed: snap.lastFailed,
             hasProposal: snap.lastProposal,
             hasQuestion: snap.lastQuestion,
@@ -160,16 +77,30 @@ export function useAxelMood({ ownerTyping }: { ownerTyping: boolean }): AxelMood
     celebrating,
   });
 
-  const greet = useCallback(() => {
-    if (!motion || gestureTimer.current !== null || Date.now() < cooldownUntil.current) return;
-    if (!canGreet(mood)) return;
-    const now = Date.now();
-    if (now - taps.current.firstAt > TAP_WINDOW_MS) taps.current = { count: 0, firstAt: now };
-    taps.current.count += 1;
-    const kind = gestureForTap(taps.current.count);
-    if (kind === "wave") taps.current = { count: 0, firstAt: 0 };
-    playGesture(kind);
-  }, [motion, mood, playGesture]);
+  const seen = useRef<{ lastId: string | null; unseen: number } | null>(null);
+  useEffect(() => {
+    const previous = seen.current;
+    seen.current = { lastId: snap.lastId, unseen: snap.unseen };
+    if (previous === null) return;
+    const newProposalMessage = snap.lastId !== previous.lastId && snap.lastRole === "axel" && snap.lastProposal;
+    const newUnseen = snap.unseen > previous.unseen;
+    if (!newProposalMessage && !newUnseen) return;
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    setCelebrating(true);
+    playGesture("nod");
+    if (proudTimer.current !== null) clearTimeout(proudTimer.current);
+    proudTimer.current = setTimeout(() => {
+      proudTimer.current = null;
+      setCelebrating(false);
+    }, PROUD_MS);
+  }, [snap.lastId, snap.unseen, snap.lastRole, snap.lastProposal, playGesture]);
+
+  useEffect(
+    () => () => {
+      if (proudTimer.current !== null) clearTimeout(proudTimer.current);
+    },
+    [],
+  );
 
   return { mood, gesture, motion, greet };
 }

@@ -1,0 +1,1041 @@
+<title>Puesta en marcha conversacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+
+<style>
+  /* ═══════════════════════════════════════════════════════════════
+     TOKENS — lenguaje iOS con la marca de axi
+     Suelo agrupado (systemGroupedBackground) con un sesgo cálido,
+     tarjetas blancas, hairlines a baja alfa, coral como color de
+     acción (el «azul» de iOS aquí es el coral de axi), violeta como
+     acento de IA.
+     ═══════════════════════════════════════════════════════════════ */
+  :root {
+    --ground: #f4f3f1;
+    --card: #ffffff;
+    --card-2: #f7f6f4;
+    --ink: #1c1b1a;
+    --ink-2: #6f6a66;
+    --ink-3: #a19b96;
+    --hair: rgb(60 60 67 / .12);
+    --hair-strong: rgb(60 60 67 / .2);
+    --coral: #e65759;
+    --coral-deep: #d9383c;
+    --on-coral: #ffffff;
+    --violet: #7c3aed;
+    --violet-tint: rgb(124 58 237 / .09);
+    --green: #22a04a;
+    --green-tint: rgb(34 160 74 / .1);
+    --amber: #e8a23a;
+    --glass: rgb(255 255 255 / .72);
+    --glass-strong: rgb(255 255 255 / .86);
+    --shadow-1: 0 1px 1px rgb(28 27 26 / .04), 0 2px 8px rgb(28 27 26 / .04);
+    --shadow-2: 0 2px 6px rgb(28 27 26 / .06), 0 14px 36px rgb(28 27 26 / .08);
+    --shadow-3: 0 6px 18px rgb(28 27 26 / .10), 0 32px 80px rgb(28 27 26 / .16);
+    --ease: cubic-bezier(.32, .72, 0, 1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b0a0a;
+      --card: #1a1817;
+      --card-2: #211f1d;
+      --ink: #f2efec;
+      --ink-2: #a8a19b;
+      --ink-3: #6f6a66;
+      --hair: rgb(255 255 255 / .1);
+      --hair-strong: rgb(255 255 255 / .18);
+      --coral: #f8707a;
+      --coral-deep: #e2555d;
+      --on-coral: #1a0a0b;
+      --violet: #a78bfa;
+      --violet-tint: rgb(167 139 250 / .14);
+      --green: #4ade80;
+      --green-tint: rgb(74 222 128 / .12);
+      --amber: #fbbf24;
+      --glass: rgb(26 24 23 / .72);
+      --glass-strong: rgb(26 24 23 / .88);
+      --shadow-1: 0 1px 1px rgb(0 0 0 / .4), 0 2px 8px rgb(0 0 0 / .3);
+      --shadow-2: 0 2px 6px rgb(0 0 0 / .4), 0 14px 36px rgb(0 0 0 / .4);
+      --shadow-3: 0 6px 18px rgb(0 0 0 / .5), 0 32px 80px rgb(0 0 0 / .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0b0a0a;
+    --card: #1a1817;
+    --card-2: #211f1d;
+    --ink: #f2efec;
+    --ink-2: #a8a19b;
+    --ink-3: #6f6a66;
+    --hair: rgb(255 255 255 / .1);
+    --hair-strong: rgb(255 255 255 / .18);
+    --coral: #f8707a;
+    --coral-deep: #e2555d;
+    --on-coral: #1a0a0b;
+    --violet: #a78bfa;
+    --violet-tint: rgb(167 139 250 / .14);
+    --green: #4ade80;
+    --green-tint: rgb(74 222 128 / .12);
+    --amber: #fbbf24;
+    --glass: rgb(26 24 23 / .72);
+    --glass-strong: rgb(26 24 23 / .88);
+    --shadow-1: 0 1px 1px rgb(0 0 0 / .4), 0 2px 8px rgb(0 0 0 / .3);
+    --shadow-2: 0 2px 6px rgb(0 0 0 / .4), 0 14px 36px rgb(0 0 0 / .4);
+    --shadow-3: 0 6px 18px rgb(0 0 0 / .5), 0 32px 80px rgb(0 0 0 / .6);
+  }
+
+  * { box-sizing: border-box; }
+  button { font: inherit; color: inherit; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 44px 80px;
+  }
+
+  /* ── Encabezado de la página de revisión ─────────────────────── */
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 44px);
+    font-weight: 600;
+    letter-spacing: -.03em;
+    line-height: 1.06;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 60ch;
+    margin: 0;
+    font-weight: 300;
+  }
+  .lede b { color: var(--ink); font-weight: 500; }
+
+  /* ── Controles del prototipo (segmentado iOS) ───────────────── */
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin: 30px 0 22px;
+  }
+  .seg {
+    display: inline-flex; position: relative;
+    background: rgb(120 120 128 / .14);
+    border-radius: 999px; padding: 2px; gap: 0;
+  }
+  .seg button {
+    border: 0; background: transparent; color: var(--ink-2);
+    font-size: 13px; font-weight: 500;
+    padding: 7px 16px; border-radius: 999px; cursor: pointer;
+    transition: color .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--card); color: var(--ink); box-shadow: var(--shadow-1);
+  }
+  .pill-btn {
+    border: 0; cursor: pointer;
+    background: rgb(120 120 128 / .14); color: var(--ink);
+    font-size: 13px; font-weight: 500;
+    padding: 9px 16px; border-radius: 999px;
+    transition: background .2s var(--ease), transform .12s var(--ease);
+  }
+  .pill-btn:hover { background: rgb(120 120 128 / .22); }
+  .pill-btn:active { transform: scale(.97); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     EL DISPOSITIVO
+     ═══════════════════════════════════════════════════════════════ */
+  .stage {
+    position: relative; isolation: isolate;
+    margin-inline: auto; width: 100%;
+    background: var(--ground);
+    border: 1px solid var(--hair);
+    overflow: hidden;
+    box-shadow: var(--shadow-3);
+    transition: max-width .5s var(--ease), border-radius .5s var(--ease);
+  }
+  .stage[data-view="desk"]  { max-width: 1180px; border-radius: 22px; }
+  .stage[data-view="phone"] { max-width: 400px;  border-radius: 48px; border-width: 8px; border-color: var(--ink); }
+  :root[data-theme="dark"] .stage[data-view="phone"],
+  .stage[data-view="phone"] { border-color: #1c1b1a; }
+
+  /* El aura: dos radiales quietos. Nada que repinte. */
+  .stage::before {
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(42rem 26rem at 8% -12%, rgb(230 87 89 / .10), transparent 62%),
+      radial-gradient(36rem 22rem at 96% 2%,  rgb(124 58 237 / .09), transparent 60%);
+  }
+
+  .app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 700px; }
+  .stage[data-view="phone"] .app { height: 760px; }
+
+  /* ── Barra superior: material translúcido ───────────────────── */
+  .bar {
+    flex: none; position: relative; z-index: 3;
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
+    border-bottom: 1px solid var(--hair);
+  }
+  .bar-row { display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
+  .stage[data-view="phone"] .bar-row { padding: 22px 18px 12px; }
+  .who { min-width: 0; flex: 1; }
+  .who b { display: block; font-size: 15px; font-weight: 600; letter-spacing: -.012em; line-height: 1.2; }
+  .who b span { font-weight: 400; color: var(--ink-2); }
+  .who small { display: block; font-size: 12.5px; color: var(--ink-2); margin-top: 1px; }
+
+  /* El orbe de Alba — el signo de IA de Apple es un orbe, no una cara. */
+  .orb { position: relative; flex: none; display: inline-block; }
+  .orb::before {
+    content: ""; position: absolute; inset: -30%; border-radius: 999px;
+    background: radial-gradient(circle, rgb(124 58 237 / .32), transparent 65%);
+    opacity: 0; transition: opacity .4s var(--ease);
+  }
+  .orb i {
+    display: block; width: 100%; height: 100%; border-radius: 999px;
+    background:
+      radial-gradient(circle at 30% 28%, rgb(255 255 255 / .55), transparent 42%),
+      conic-gradient(from 210deg, #ff8a8c, #e65759 30%, #8b5cf6 62%, #c084fc 82%, #ff8a8c);
+    box-shadow: inset 0 -2px 4px rgb(0 0 0 / .18), 0 1px 3px rgb(28 27 26 / .18);
+  }
+  .orb[data-busy="true"]::before { opacity: 1; animation: halo 1.8s ease-in-out infinite; }
+  .orb[data-busy="true"] i { animation: breathe 1.8s ease-in-out infinite; }
+  @keyframes halo    { 50% { transform: scale(1.25); opacity: .55; } }
+  @keyframes breathe { 50% { transform: scale(1.06); } }
+
+  /* Progreso — cápsulas finas, texto en palabras */
+  .prog { display: flex; flex-direction: column; gap: 7px; }
+  .prog-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .prog-top b { font-size: 13px; font-weight: 600; letter-spacing: -.005em; }
+  .prog-top span { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .segs { display: flex; gap: 5px; list-style: none; margin: 0; padding: 0; }
+  .segs li { height: 4px; flex: 1; border-radius: 999px; background: rgb(120 120 128 / .18); overflow: hidden; }
+  .segs i {
+    display: block; height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, var(--coral), var(--coral-deep));
+    transition: width .7s var(--ease), background .3s;
+  }
+  .segs li[data-s="half"] i { width: 50%; background: var(--violet); opacity: .8; }
+  .segs li[data-s="full"] i { width: 100%; }
+  .segs li[data-s="skip"] i { width: 100%; background: rgb(120 120 128 / .32); }
+
+  .prog-wide { display: none; width: 280px; flex: none; }
+  .prog-narrow { padding: 0 18px 13px; }
+  .stage[data-view="desk"] .prog-wide { display: flex; }
+  .stage[data-view="desk"] .prog-narrow { display: none; }
+
+  .sheet-btn {
+    flex: none; display: inline-flex; align-items: center; gap: 6px;
+    border: 0; cursor: pointer;
+    background: rgb(120 120 128 / .14); color: var(--ink);
+    font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;
+    padding: 7px 12px; border-radius: 999px;
+  }
+  .stage[data-view="desk"] .sheet-btn { display: none; }
+
+  /* ── Cuerpo ─────────────────────────────────────────────────── */
+  .body { flex: 1; min-height: 0; display: flex; }
+  .chat-col { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
+
+  .thread { flex: 1; min-height: 0; overflow-y: auto; padding: 24px 18px 110px; scroll-behavior: smooth; }
+  .thread-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+
+  /* Mensajes — iMessage */
+  .msg { display: flex; flex-direction: column; gap: 6px; animation: rise .45s var(--ease) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.985); } }
+
+  .msg.ai { align-items: flex-start; }
+  .msg.me { align-items: flex-end; }
+
+  .bubble {
+    max-width: 82%;
+    padding: 12px 16px;
+    font-size: 15px; line-height: 1.5;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .msg.ai .bubble {
+    background: var(--card); color: var(--ink);
+    border-radius: 22px 22px 22px 6px;
+    box-shadow: var(--shadow-1);
+    font-weight: 300;
+  }
+  .msg.me .bubble {
+    background: linear-gradient(160deg, #ee6f70, var(--coral) 45%, var(--coral-deep));
+    color: var(--on-coral);
+    border-radius: 22px 22px 6px 22px;
+    font-weight: 400;
+    box-shadow: 0 2px 10px rgb(230 87 89 / .28);
+  }
+  .meta { font-size: 11.5px; color: var(--ink-3); display: inline-flex; align-items: center; gap: 5px; padding: 0 6px; }
+  .meta svg { opacity: .8; }
+
+  /* «Anotado» — una sola línea tranquila, no tres pastillas */
+  .noted {
+    display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    padding: 0 6px; font-size: 12px; color: var(--green);
+    animation: rise .45s var(--ease) both;
+  }
+  .noted b { font-weight: 500; }
+  .noted span::before { content: "·"; margin: 0 6px 0 0; color: var(--ink-3); }
+  .noted span:first-of-type::before { content: none; }
+
+  /* El selector: lista agrupada tipo iOS */
+  .picker { width: 100%; max-width: 82%; margin-top: 4px; animation: rise .5s var(--ease) both; animation-delay: .08s; }
+  .picker-h {
+    margin: 0 0 8px; padding: 0 16px;
+    font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .picker-h svg { color: var(--violet); }
+  .picker ul {
+    list-style: none; margin: 0; padding: 0;
+    background: var(--card); border-radius: 18px;
+    box-shadow: var(--shadow-1); overflow: hidden;
+  }
+  .picker li + li button { border-top: 1px solid var(--hair); }
+  .picker button {
+    width: 100%; text-align: left; border: 0; background: transparent; cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px 13px 18px;
+    transition: background .15s var(--ease);
+  }
+  .picker button:hover { background: var(--card-2); }
+  .picker button:active { background: rgb(120 120 128 / .16); }
+  .picker button:disabled { cursor: default; color: var(--ink-2); }
+  .picker button:disabled:hover { background: transparent; }
+  .picker .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .picker b { font-size: 15px; font-weight: 500; letter-spacing: -.005em; }
+  .picker small { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+  .picker .chev { color: var(--ink-3); flex: none; }
+  .write-instead {
+    margin: 10px 0 0; padding: 0 16px;
+    border: 0; background: none; cursor: pointer;
+    font-size: 13px; color: var(--coral); font-weight: 500;
+  }
+  .write-instead:active { opacity: .6; }
+
+  .thinking { display: inline-flex; align-items: center; gap: 4px; padding: 14px 18px; background: var(--card); border-radius: 22px 22px 22px 6px; box-shadow: var(--shadow-1); }
+  .thinking i { width: 7px; height: 7px; border-radius: 999px; background: var(--ink-3); animation: blink 1.3s ease-in-out infinite; }
+  .thinking i:nth-child(2) { animation-delay: .16s; }
+  .thinking i:nth-child(3) { animation-delay: .32s; }
+  @keyframes blink { 0%,60%,100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
+
+  /* ── Compositor flotante (Messages) ─────────────────────────── */
+  .composer {
+    position: absolute; inset-inline: 0; bottom: 0; z-index: 2;
+    padding: 12px 16px 18px;
+    background: linear-gradient(to top, var(--ground) 55%, transparent);
+    pointer-events: none;
+  }
+  .stage[data-view="phone"] .composer { padding-bottom: 28px; }
+  .composer-inner {
+    pointer-events: auto;
+    max-width: 640px; margin: 0 auto;
+    display: flex; align-items: flex-end; gap: 8px;
+  }
+  .capsule {
+    flex: 1; min-width: 0;
+    display: flex; align-items: flex-end; gap: 6px;
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--hair-strong);
+    border-radius: 26px;
+    padding: 6px 6px 6px 18px;
+    box-shadow: var(--shadow-2);
+    transition: border-color .2s var(--ease);
+  }
+  .capsule:focus-within { border-color: rgb(230 87 89 / .5); }
+  .capsule textarea {
+    flex: 1; min-width: 0; border: 0; background: transparent; resize: none; outline: none;
+    color: inherit; font: inherit; font-size: 15px; line-height: 1.45; padding: 8px 0;
+    max-height: 120px;
+  }
+  .capsule textarea::placeholder { color: var(--ink-3); }
+  .rnd {
+    width: 38px; height: 38px; flex: none; border: 0; border-radius: 999px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; color: var(--ink-2);
+    transition: background .15s var(--ease), transform .12s var(--ease), color .15s;
+  }
+  .rnd:hover { background: rgb(120 120 128 / .14); color: var(--ink); }
+  .rnd:active { transform: scale(.92); }
+  .rnd.send { background: linear-gradient(160deg, #ee6f70, var(--coral) 45%, var(--coral-deep)); color: var(--on-coral); box-shadow: 0 2px 10px rgb(230 87 89 / .3); }
+  .rnd.send:hover { background: linear-gradient(160deg, #ee6f70, var(--coral) 45%, var(--coral-deep)); color: var(--on-coral); filter: brightness(1.04); }
+  .cnote { font-size: 11.5px; color: var(--ink-3); padding: 0 24px; margin: 6px 0 0; }
+
+  /* Grabando */
+  .recording { display: flex; align-items: center; gap: 12px; padding: 4px 6px 4px 8px; width: 100%; }
+  .recording .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--coral); animation: throb 1.1s ease-in-out infinite; flex: none; }
+  @keyframes throb { 50% { opacity: .3; } }
+  .recording p { margin: 0; flex: 1; font-size: 15px; }
+  .recording time { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .wave { display: flex; align-items: center; gap: 2px; height: 22px; }
+  .wave i { width: 3px; border-radius: 2px; background: var(--coral); animation: wave 1s ease-in-out infinite; }
+  .wave i:nth-child(odd) { animation-delay: .2s; }
+  .wave i:nth-child(3n) { animation-delay: .4s; }
+  @keyframes wave { 0%,100% { height: 6px; } 50% { height: 20px; } }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LA FICHA VIVA — listas agrupadas (Ajustes / Contactos)
+     ═══════════════════════════════════════════════════════════════ */
+  .card-col {
+    width: 380px; flex: none; display: none; flex-direction: column; min-height: 0;
+    border-left: 1px solid var(--hair);
+    background: var(--ground);
+  }
+  .stage[data-view="desk"] .card-col { display: flex; }
+
+  .card-head { flex: none; padding: 20px 22px 12px; }
+  .card-head h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.025em; line-height: 1.15; }
+  .card-head p { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); }
+
+  .card-note {
+    margin: 6px 20px 4px;
+    padding: 12px 14px;
+    background: var(--violet-tint);
+    border-radius: 14px;
+    font-size: 13px; line-height: 1.45; color: var(--ink);
+    display: flex; gap: 9px; align-items: flex-start;
+  }
+  .card-note svg { color: var(--violet); flex: none; margin-top: 2px; }
+
+  .card-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 20px 28px; }
+
+  .grp { margin-top: 22px; }
+  .grp:first-child { margin-top: 10px; }
+  .grp-h {
+    margin: 0 0 8px; padding: 0 16px;
+    font-size: 12.5px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .grp-h small { text-transform: none; letter-spacing: 0; color: var(--ink-3); font-weight: 400; margin-left: 6px; }
+  .rows { list-style: none; margin: 0; padding: 0; background: var(--card); border-radius: 18px; box-shadow: var(--shadow-1); overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 11px 14px 11px 16px; position: relative; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--hair); }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .k { margin: 0; font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+  .row .need { width: 5px; height: 5px; border-radius: 999px; background: var(--amber); }
+  .row .v { margin: 2px 0 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; letter-spacing: -.005em; }
+  .row .v.empty { color: var(--ink-3); }
+  .row .src { margin: 3px 0 0; font-size: 11.5px; color: var(--violet); display: inline-flex; align-items: center; gap: 4px; }
+  .row .src.known { color: var(--ink-3); }
+  .row .chev { color: var(--ink-3); flex: none; opacity: 0; transition: opacity .15s; }
+  .row:hover .chev { opacity: 1; }
+  .row.filled .v { animation: flash 1.2s var(--ease) both; border-radius: 6px; }
+  @keyframes flash {
+    0% { background: var(--green-tint); box-shadow: 0 0 0 6px var(--green-tint); }
+    100% { background: transparent; box-shadow: none; }
+  }
+  .row.confirm { background: linear-gradient(90deg, var(--violet-tint), transparent 70%); }
+  /* Propuesto por el TIPO DE NEGOCIO: mismo peso visual que lo deducido —las dos
+     cosas piden un «así es»— pero otra procedencia, y la ficha lo dice. */
+  .row .src.prop { color: var(--coral); }
+  .row.propose { background: linear-gradient(90deg, rgb(255 90 60 / .07), transparent 70%); }
+  .get.prop { background: rgb(255 90 60 / .1); color: var(--coral); }
+  .get.prop:hover { background: rgb(255 90 60 / .16); }
+
+  /* ── La propuesta EDITABLE (F2 §5.3) ──────────────────────────────────────
+     Una lista propuesta no se edita en una caja de texto separada por comas:
+     eso obliga a releer la propuesta entera para quitar una etapa. Cada
+     elemento es una ficha con su nombre, su sitio y su «quitar». */
+  .row.open { display: block; padding: 10px 12px 12px 16px; background: var(--card-2); }
+  .row.open .k { margin-bottom: 8px; }
+  .chips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--hair);
+    border-radius: 12px; padding: 7px 8px 7px 10px;
+  }
+  .chip .ord { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; width: 14px; flex: none; }
+  .chip input {
+    flex: 1; min-width: 0; border: 0; background: none; outline: none;
+    font: inherit; font-size: 14.5px; color: var(--ink); padding: 0;
+  }
+  .chip .mv, .chip .rm {
+    border: 0; background: none; cursor: pointer; color: var(--ink-3);
+    width: 26px; height: 26px; border-radius: 999px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .chip .mv:hover, .chip .rm:hover { background: var(--fill); color: var(--ink); }
+  .chip .mv[disabled] { opacity: .3; cursor: default; }
+  .chip .rm:hover { color: var(--coral); }
+  .chip-add {
+    margin-top: 8px; width: 100%; border: 1px dashed var(--hair-strong);
+    background: none; border-radius: 12px; padding: 8px; cursor: pointer;
+    font: inherit; font-size: 13.5px; color: var(--ink-2);
+  }
+  .chip-add:hover { border-color: var(--coral); color: var(--coral); }
+  .chip-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .chip-foot .why { flex: 1; margin: 0; font-size: 11.5px; color: var(--ink-3); line-height: 1.35; }
+
+  /* Botón cápsula (App Store «OBTENER») */
+  .get {
+    flex: none; border: 0; cursor: pointer;
+    background: var(--violet-tint); color: var(--violet);
+    font-size: 12.5px; font-weight: 600; letter-spacing: .01em;
+    padding: 6px 13px; border-radius: 999px;
+    transition: transform .12s var(--ease), background .15s;
+  }
+  .get:hover { background: rgb(124 58 237 / .16); }
+  .get:active { transform: scale(.95); }
+
+  .tick { width: 22px; height: 22px; flex: none; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgb(120 120 128 / .14); color: var(--ink-3); }
+  .tick.done { background: var(--green); color: #fff; }
+  .tick.now  { background: var(--violet-tint); color: var(--violet); }
+  .row.topic .v { font-size: 15px; margin: 0; }
+  .row.topic.skip .v { color: var(--ink-3); }
+  .later { border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--coral); font-weight: 500; padding: 0; }
+  .later:active { opacity: .6; }
+
+  /* ── Hoja móvil ─────────────────────────────────────────────── */
+  .sheet { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+  .sheet[data-open="true"] { pointer-events: auto; }
+  .scrim { position: absolute; inset: 0; border: 0; padding: 0; cursor: pointer; background: rgb(0 0 0 / .28); opacity: 0; transition: opacity .3s var(--ease); }
+  .sheet[data-open="true"] .scrim { opacity: 1; }
+  .sheet-panel {
+    position: absolute; inset-inline: 0; bottom: 0; max-height: 90%;
+    display: flex; flex-direction: column;
+    background: var(--ground);
+    border-radius: 24px 24px 0 0;
+    box-shadow: var(--shadow-3);
+    transform: translateY(102%);
+    transition: transform .42s var(--ease);
+  }
+  .stage[data-view="phone"] .sheet-panel { border-radius: 40px 40px 0 0; }
+  .sheet[data-open="true"] .sheet-panel { transform: none; }
+  .grab { flex: none; display: flex; justify-content: center; padding: 10px 0 0; }
+  .grab i { width: 36px; height: 5px; border-radius: 999px; background: rgb(120 120 128 / .32); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     NOTAS DE DISEÑO
+     ═══════════════════════════════════════════════════════════════ */
+  .notes { margin-top: 64px; }
+  .notes h2 { font-size: 24px; font-weight: 600; letter-spacing: -.025em; margin: 0 0 6px; }
+  .notes > p { margin: 0 0 24px; font-size: 15px; color: var(--ink-2); max-width: 60ch; line-height: 1.55; font-weight: 300; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(256px, 1fr)); }
+  .note { background: var(--card); border-radius: 20px; padding: 20px 20px 18px; box-shadow: var(--shadow-1); }
+  .note h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; letter-spacing: -.012em; }
+  .note p { margin: 0; font-size: 13.5px; line-height: 1.58; color: var(--ink-2); font-weight: 300; }
+  .note p + p { margin-top: 8px; }
+  .note b { color: var(--ink); font-weight: 500; }
+  .stat { font-variant-numeric: tabular-nums; color: var(--violet); font-weight: 500; }
+
+  .open-q { margin-top: 36px; background: var(--card); border-radius: 20px; padding: 20px 22px; box-shadow: var(--shadow-1); border-left: 3px solid var(--amber); }
+  .open-q h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+  .open-q ol { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.75; color: var(--ink-2); font-weight: 300; }
+  .open-q ol b { color: var(--ink); font-weight: 500; }
+
+  @media (max-width: 720px) { .app { height: 640px; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">axi · mockup de revisión</p>
+  <h1>Pon a punto tu cuenta hablando</h1>
+  <p class="lede">
+    El cliente abre un enlace desde WhatsApp y cuenta su negocio. Sin cuenta, sin contraseña, sin pestañas.
+    Toca las opciones para recorrerlo: <b>la ficha se llena sola</b> — la mitad del diseño que hace que esto
+    no se rompa con cuarenta datos.
+  </p>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Tamaño de pantalla">
+      <button type="button" id="v-phone" aria-pressed="true">iPhone</button>
+      <button type="button" id="v-desk" aria-pressed="false">Escritorio</button>
+    </div>
+    <button type="button" class="pill-btn" id="restart">Volver a empezar</button>
+    <button type="button" class="pill-btn" id="theme">Tema</button>
+  </div>
+
+  <div class="stage" data-view="phone" id="stage">
+    <div class="app">
+      <header class="bar">
+        <div class="bar-row">
+          <span class="orb" id="head-orb" data-busy="false" style="width:34px;height:34px" aria-hidden="true"><i></i></span>
+          <div class="who">
+            <b>Alba <span>· axi</span></b>
+            <small>Poniendo a punto Savage</small>
+          </div>
+          <div class="prog prog-wide" id="prog-wide"></div>
+          <button type="button" class="sheet-btn" id="open-sheet">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+            <span id="chip-count">0/18</span>
+          </button>
+        </div>
+        <div class="prog prog-narrow" id="prog-narrow"></div>
+      </header>
+
+      <div class="body">
+        <section class="chat-col">
+          <div class="thread" id="thread">
+            <div class="thread-inner" id="thread-inner"></div>
+          </div>
+          <div class="composer"><div class="composer-inner" id="composer"></div></div>
+        </section>
+        <aside class="card-col" id="card-desk"></aside>
+      </div>
+
+      <div class="sheet" data-open="false" id="sheet">
+        <button type="button" class="scrim" id="scrim" aria-label="Cerrar"></button>
+        <div class="sheet-panel">
+          <div class="grab"><i></i></div>
+          <div class="card-col" id="card-mobile" style="display:flex;width:auto;border-left:0;flex:1;min-height:0;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="notes">
+    <h2>Por qué está hecho así</h2>
+    <p>Ocho decisiones que salieron de mirar qué funciona y qué no en onboarding conversacional, no de qué se veía bonito.</p>
+
+    <div class="grid">
+      <div class="note">
+        <h3>No preguntar lo que ya se sabe</h3>
+        <p>Antes de la primera pregunta se lee el perfil del tenant y, si se dio la URL, su página web. Lo deducido llega marcado como <b>«lo vi en su web»</b> y se confirma de un toque.</p>
+        <p>Cuarenta preguntas se vuelven ocho confirmaciones.</p>
+      </div>
+      <div class="note">
+        <h3>Chat <em>y</em> ficha, no chat solo</h3>
+        <p>Una pregunta a la vez dobla la finalización frente a un formulario de página única <span class="stat">47,3 % vs. 21,5 %</span>. Pero por encima de unas catorce preguntas se siente <b>más</b> largo: no hay panorama, no se puede editar ni saltar.</p>
+        <p>Configurar un tenant son 30–40 datos. La ficha es lo que lo sostiene.</p>
+      </div>
+      <div class="note">
+        <h3>Dictar, no teclear</h3>
+        <p>WhatsApp mueve <span class="stat">~7.000 M</span> de notas de voz al día y dictar es unas tres veces más rápido que teclear en un móvil. En Latinoamérica la voz es cultural.</p>
+        <p>De un audio de veinte segundos salen cuatro datos de golpe.</p>
+      </div>
+      <div class="note">
+        <h3>Nada bloquea</h3>
+        <p>Cualquier tema se aplaza con un toque y <b>sale del avance</b>. En onboarding B2B, del 40 % al 60 % del tiempo se pierde en pasos poco claros, no en complejidad real.</p>
+        <p>Insistir es lo que hace que alguien cierre la pestaña.</p>
+      </div>
+      <div class="note">
+        <h3>Proponer, no preguntar</h3>
+        <p>«¿Cómo organizas tu catálogo?» obliga a diseñar una taxonomía de memoria en un chat. <b>«Para un restaurante suelo ver entradas, platos fuertes, bebidas y postres, ¿te sirve?»</b> se contesta con un toque.</p>
+        <p>Lo del sector se propone y cuesta cero IA. Lo del negocio —tarifas, medios de pago, horarios— se pregunta: inventarlo sería inventarle cifras a una empresa real.</p>
+      </div>
+      <div class="note">
+        <h3>Una propuesta se corrige, no se rehace</h3>
+        <p>El embudo propuesto aterriza como <b>estructura editable</b>: cada paso con su nombre, su sitio y su «quitar». Una caja de texto con comas obliga a releer la propuesta entera para cambiar una etapa.</p>
+        <p>Y nada se aplica hasta el «Listo»: lo propuesto pide confirmación igual que lo deducido.</p>
+      </div>
+      <div class="note">
+        <h3>Se propone, no se ejecuta</h3>
+        <p>Lo recogido <b>nunca</b> se escribe solo en la cuenta. Plataforma ve el antes/después de cada campo y confirma.</p>
+        <p>Una IA escribiendo sola en la configuración de una empresa es un incidente con fecha.</p>
+      </div>
+      <div class="note">
+        <h3>Se ve dónde se cae la gente</h3>
+        <p>La consola guarda el tema en el que se quedó cada persona. Es lo que convierte esto en aprendizaje de producto en vez de registros de chat que nadie lee.</p>
+      </div>
+    </div>
+
+    <div class="open-q">
+      <h3>Lo que falta decidir</h3>
+      <ol>
+        <li><b>El nombre.</b> Hoy es «Alba». No es Axel a propósito: mezclar los dos personajes ensucia los dos. Se cambia sin desplegar.</li>
+        <li><b>Quién paga.</b> Hoy el gasto es de axi.</li>
+        <li><b>Qué más debe aplicarse solo.</b> Ya se escriben también embudo, etiquetas, medios de pago, categorías del catálogo, sedes, zonas de envío, avisos de pedido, recordatorios de cita y los límites del seguimiento. Lo que no se aplica solo dice ahora <b>dónde lo pone una persona</b>.</li>
+        <li><b>Los presets por sector son una hipótesis.</b> Los embudos y etiquetas que se proponen no salieron de datos de uso: hay que revisarlos antes de sembrarlos. Las categorías sí — vienen del catálogo de nichos que ya está en producción.</li>
+        <li><b>Repartir temas entre personas.</b> El modelo lo soporta; la pantalla es v2.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    var ICON = {
+      check: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+      checkS: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+      spark: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.7L19.5 9.5l-5.7 1.8L12 17l-1.8-5.7L4.5 9.5l5.7-1.8z"/></svg>',
+      sparkS: '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.7L19.5 9.5l-5.7 1.8L12 17l-1.8-5.7L4.5 9.5l5.7-1.8z"/></svg>',
+      arrow: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+      mic: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>',
+      micS: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>',
+      stop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="3"/></svg>',
+      chev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+      clock: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      up: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+      down: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+      x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+    };
+
+    /**
+     * Qué lista se está editando ahora mismo en la ficha, si alguna.
+     *
+     * Solo una a la vez, y a propósito: dos listas abiertas en una columna
+     * estrecha convierten la ficha en un formulario, que es justo lo que esta
+     * pantalla existe para no ser.
+     */
+    var editing = null;
+
+    var TOPICS = [
+      { code: "negocio",  title: "Tu negocio en una frase", fields: [
+        { code: "que_venden", label: "Qué venden", req: true },
+        { code: "sector",     label: "Sector" },
+        { code: "promesa",    label: "Por qué les compran a ustedes", req: true },
+        { code: "publico",    label: "A quién le venden" }
+      ]},
+      { code: "atencion", title: "Cuándo y dónde atienden", fields: [
+        { code: "horario",   label: "Horario de atención", req: true },
+        { code: "direccion", label: "Dirección" },
+        { code: "ciudad",    label: "Ciudad" },
+        { code: "cobertura", label: "A dónde llegan" }
+      ]},
+      { code: "voz", title: "Cómo le hablan a un cliente", fields: [
+        { code: "tono",   label: "Tono", req: true },
+        { code: "saludo", label: "Cómo saludan" },
+        { code: "reglas", label: "Reglas de trato" }
+      ]},
+      { code: "preguntas", title: "Lo que siempre les preguntan", fields: [
+        { code: "faqs", label: "Preguntas frecuentes", req: true }
+      ]},
+      { code: "embudo", title: "Los pasos de una venta", fields: [
+        { code: "etapas",    label: "Pasos de una venta", req: true, list: true },
+        { code: "etiquetas", label: "Cómo separas a tus clientes", list: true }
+      ]},
+      { code: "venta", title: "Cómo cierran una venta", fields: [
+        { code: "pagos",   label: "Medios de pago", req: true },
+        { code: "envios",  label: "Cómo despachan" },
+        { code: "entrega", label: "Tiempo de entrega" },
+        { code: "cambios", label: "Cambios y devoluciones" }
+      ]},
+      { code: "limites", title: "Lo que el asistente no debe hacer", fields: [
+        { code: "no_hacer", label: "Lo que no debe hacer" },
+        { code: "escalar",  label: "Cuándo llamar a una persona" }
+      ]}
+    ];
+
+    var PREFILL = {
+      ciudad:    { value: "Medellín",                              src: "known" },
+      sector:    { value: "Moda deportiva",                        src: "derived" },
+      cobertura: { value: "Toda Colombia",                         src: "derived" },
+      envios:    { value: "Coordinadora · gratis desde $150.000",  src: "derived" },
+      // PROPUESTO por el tipo de negocio (F2 §5): no sale de su web ni de
+      // nuestra base, sale del sector. Cuesta cero IA y convierte «diséñame tu
+      // embudo» en «corrígeme este».
+      etapas:    { value: "Consulta → Cotización → Pago confirmado → Despachado", src: "proposed",
+                   items: ["Consulta", "Cotización", "Pago confirmado", "Despachado"] },
+      etiquetas: { value: "Mayorista · Cliente frecuente · Cambio pendiente", src: "proposed",
+                   items: ["Mayorista", "Cliente frecuente", "Cambio pendiente"] }
+    };
+
+    var SCRIPT = [
+      {
+        say: "Hola Daniela 👋 Soy Alba, del equipo de axi.\n\nVengo a dejar listo el asistente de Savage sin que tengas que pelearte con ningún formulario. Son 6 temas, unos 7 minutos. Puedes escribirme o mandarme un audio, saltarte lo que quieras y volver después.\n\nYa le di una mirada a su página, así que empiezo confirmando.",
+        ask: { q: "Veo que venden ropa deportiva para mujer y llegan a todo el país. ¿Voy bien?",
+          opts: [ { l: "Sí, exacto", h: "Licras, tops y conjuntos" }, { l: "Casi, corrijo algo", h: null } ] }
+      },
+      {
+        pick: 0, voice: true,
+        me: "Sí, exacto. Somos licras, tops y conjuntos, sobre todo para mujeres que entrenan. Abrimos de lunes a sábado de 9 a 7 y estamos en el Poblado.",
+        catch: ["que_venden", "horario", "direccion"],
+        set: {
+          que_venden: { value: "Ropa deportiva para mujer: licras, tops y conjuntos", src: "stated" },
+          horario:    { value: "Lun – sáb · 9:00 – 19:00", src: "stated" },
+          direccion:  { value: "El Poblado, Medellín", src: "stated" },
+          publico:    { value: "Mujeres que entrenan", src: "stated" },
+          sector:     { value: "Moda deportiva", src: "stated" },
+          cobertura:  { value: "Toda Colombia", src: "stated" }
+        },
+        say: "Perfecto, anoté todo eso de una.",
+        ask: { q: "¿Por qué crees que te eligen a ti y no a la tienda de al lado? Es lo que va a decir el asistente cuando alguien dude.",
+          opts: [ { l: "Por la calidad de la tela", h: "Dura más que la de la competencia" }, { l: "Por las tallas", h: "Hasta XXL con la misma tela" }, { l: "Por la atención", h: "Acompañamos la compra" } ] }
+      },
+      {
+        pick: 1, me: "Por las tallas",
+        catch: ["promesa"],
+        set: { promesa: { value: "Los únicos con tallas hasta XXL en la misma tela", src: "stated" } },
+        say: "Esa es buena, y casi nadie la dice. La voy a usar.",
+        ask: { q: "¿Cómo prefieres que el asistente le hable a una clienta?",
+          opts: [ { l: "Cercano y relajado, de tú", h: "Como a una amiga" }, { l: "Amable pero formal, de usted", h: null }, { l: "Directo y breve", h: null } ] }
+      },
+      {
+        pick: 0, me: "Cercano y relajado, de tú",
+        catch: ["tono"],
+        set: { tono: { value: "Cercano y relajado, de tú", src: "stated" } },
+        say: "Listo. Nos queda lo más útil: las preguntas que te hacen todo el tiempo. Cada una que me des es una conversación que tu equipo ya no atiende.",
+        ask: { q: "¿Qué es lo primero que escribe una clienta?",
+          opts: [ { l: "«¿Hacen envíos?»", h: "Y cuánto cuesta" }, { l: "«¿Tienen mi talla?»", h: null }, { l: "«¿Cuánto vale?»", h: null } ] }
+      },
+      {
+        pick: 0, me: "«¿Hacen envíos?»",
+        catch: ["faqs", "entrega"],
+        set: { faqs: { value: "3 preguntas con respuesta", src: "stated" }, entrega: { value: "2 a 4 días hábiles", src: "stated" } },
+        say: "Anotada, con la respuesta y dos más que salieron de ahí.\n\nNos falta poco: cómo te pagan.",
+        ask: { q: "¿Cómo te pueden pagar?",
+          opts: [ { l: "Contraentrega y Nequi", h: "Lo más común" }, { l: "Transferencia y tarjeta", h: null }, { l: "Todas las anteriores", h: null } ] }
+      },
+      {
+        pick: 2, me: "Todas las anteriores",
+        catch: ["pagos"],
+        set: { pagos: { value: "Contraentrega · Nequi · Transferencia · Tarjeta", src: "stated" } },
+        done: true,
+        say: "¡Listo, Daniela! Con esto ya tengo lo que necesitaba de Savage.\n\nEl equipo de axi lo revisa y lo deja aplicado en tu cuenta. Si algo no quedó como querías, ábreme este mismo enlace y lo corriges."
+      }
+    ];
+
+    var step, answers, deferred, busy, flash;
+    function reset() {
+      step = 0; busy = false; deferred = {}; answers = {}; flash = {};
+      for (var k in PREFILL) if (Object.prototype.hasOwnProperty.call(PREFILL, k)) answers[k] = { value: PREFILL[k].value, src: PREFILL[k].src };
+    }
+
+    var $ = function (id) { return document.getElementById(id); };
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+    function labelOf(code) {
+      for (var i = 0; i < TOPICS.length; i++) for (var j = 0; j < TOPICS[i].fields.length; j++) if (TOPICS[i].fields[j].code === code) return TOPICS[i].fields[j].label;
+      return code;
+    }
+    function topicState(t) {
+      if (deferred[t.code]) return "skip";
+      var req = t.fields.filter(function (f) { return f.req; });
+      var got = req.filter(function (f) { return answers[f.code] && answers[f.code].src === "stated"; });
+      var any = t.fields.filter(function (f) { return answers[f.code]; });
+      if (req.length === 0) return any.length ? "full" : "empty";
+      if (got.length === req.length) return "full";
+      return any.length ? "half" : "empty";
+    }
+    function counts() {
+      var total = 0, filled = 0;
+      TOPICS.forEach(function (t) { t.fields.forEach(function (f) { total++; if (answers[f.code]) filled++; }); });
+      return { total: total, filled: filled };
+    }
+    function label() {
+      var counted = TOPICS.filter(function (t) { return !deferred[t.code]; });
+      var pend = counted.filter(function (t) { return topicState(t) !== "full"; }).length;
+      if (pend === 0) return "Ya está todo";
+      if (pend === counted.length) return "Empezamos";
+      if (pend === 1) return "Queda uno";
+      if (pend <= counted.length / 2) return "Ya casi";
+      return "Quedan " + pend;
+    }
+
+    function renderProgress(node) {
+      var counted = TOPICS.filter(function (t) { return !deferred[t.code]; });
+      var done = counted.filter(function (t) { return topicState(t) === "full"; }).length;
+      node.innerHTML = '<div class="prog-top"><b>' + label() + '</b><span>' + done + ' de ' + counted.length + '</span></div>' +
+        '<ol class="segs">' + TOPICS.map(function (t) { return '<li data-s="' + topicState(t) + '" title="' + esc(t.title) + '"><i></i></li>'; }).join("") + '</ol>';
+    }
+
+    function renderCard(node) {
+      var c = counts(), pend = [], prop = [];
+      for (var k in answers) if (answers[k].src === "derived") pend.push(k);
+      for (var k2 in answers) if (answers[k2].src === "proposed") prop.push(k2);
+      var h = '<div class="card-head"><h3>Lo que ya sabemos</h3><p>' + c.filled + ' de ' + c.total + ' datos · toca cualquiera para corregirlo</p></div>';
+      if (pend.length) h += '<div class="card-note">' + ICON.spark + '<span>' + (pend.length === 1 ? "Un dato lo saqué de su página web y falta que lo confirmes." : pend.length + " datos los saqué de su página web y falta que los confirmes.") + '</span></div>';
+      if (prop.length) h += '<div class="card-note" style="color:var(--coral)">' + ICON.spark + '<span>Te dejé ' + (prop.length === 1 ? 'una propuesta' : prop.length + ' propuestas') + ' por tu tipo de negocio. Tócala y córrígela: no se aplica nada hasta que digas que sí.</span></div>';
+      h += '<div class="card-body">';
+      TOPICS.forEach(function (t) {
+        h += '<section class="grp"><h4 class="grp-h">' + esc(t.title) + (deferred[t.code] ? '<small>para después</small>' : '') + '</h4><ul class="rows">';
+        t.fields.forEach(function (f) {
+          var a = answers[f.code], der = a && a.src === "derived", pro = a && a.src === "proposed";
+
+          // ── La propuesta ABIERTA: cada elemento con su nombre, su sitio y su
+          // «quitar». Es la diferencia entre corregir una lista y rehacerla.
+          if (editing === f.code && a && a.items) {
+            h += '<li class="row open">' +
+              '<p class="k">' + esc(f.label) + '</p><ul class="chips">' +
+              a.items.map(function (item, i) {
+                return '<li class="chip">' +
+                  '<span class="ord">' + (i + 1) + '</span>' +
+                  '<input value="' + esc(item) + '" data-edit="' + f.code + '" data-i="' + i + '" aria-label="Paso ' + (i + 1) + '">' +
+                  '<button type="button" class="mv" data-up="' + f.code + '" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Subir">' + ICON.up + '</button>' +
+                  '<button type="button" class="mv" data-down="' + f.code + '" data-i="' + i + '"' + (i === a.items.length - 1 ? ' disabled' : '') + ' aria-label="Bajar">' + ICON.down + '</button>' +
+                  '<button type="button" class="rm" data-rm="' + f.code + '" data-i="' + i + '" aria-label="Quitar">' + ICON.x + '</button>' +
+                  '</li>';
+              }).join('') +
+              '</ul>' +
+              '<button type="button" class="chip-add" data-add="' + f.code + '">+ Añadir</button>' +
+              '<div class="chip-foot"><p class="why">Solo se AÑADE lo que falte. Nada de lo que ya tengas se reordena ni se borra.</p>' +
+              '<button type="button" class="get prop" data-ok="' + f.code + '">Listo</button></div>' +
+              '</li>';
+            return;
+          }
+
+          h += '<li class="row' + (der ? " confirm" : "") + (pro ? " propose" : "") + (flash[f.code] ? " filled" : "") + '" ' +
+            (a && a.items ? 'data-open="' + f.code + '"' : '') + '>' +
+            '<div class="txt"><p class="k">' + esc(f.label) + (f.req && !a ? '<span class="need"></span>' : '') + '</p>' +
+            '<p class="v' + (a ? '' : ' empty') + '">' + (a ? esc(a.value) : 'Sin contestar') + '</p>' +
+            (a && a.src === "known" ? '<p class="src known">Ya lo teníamos</p>' : '') +
+            (der ? '<p class="src">' + ICON.sparkS + ' Lo vi en su web</p>' : '') +
+            (pro ? '<p class="src prop">' + ICON.sparkS + ' Propuesto para tu tipo de negocio</p>' : '') +
+            '</div>' +
+            (der ? '<button type="button" class="get" data-ok="' + f.code + '">Así es</button>'
+                 : pro ? '<button type="button" class="get prop" data-open="' + f.code + '">Revisar</button>'
+                 : '<span class="chev">' + ICON.chev + '</span>') +
+            '</li>';
+        });
+        h += '</ul></section>';
+      });
+      h += '<section class="grp"><h4 class="grp-h">Temas</h4><ul class="rows">';
+      TOPICS.forEach(function (t) {
+        var s = topicState(t);
+        var tick = s === "full" ? '<span class="tick done">' + ICON.check + '</span>' : s === "skip" ? '<span class="tick">' + ICON.clock + '</span>' : s === "half" ? '<span class="tick now"><i style="width:6px;height:6px;border-radius:999px;background:currentColor;display:block"></i></span>' : '<span class="tick"><i style="width:6px;height:6px;border-radius:999px;background:currentColor;display:block"></i></span>';
+        var act = s === "full" ? '' : s === "skip" ? '<button type="button" class="later" data-resume="' + t.code + '">Retomar</button>' : '<button type="button" class="later" data-defer="' + t.code + '">Luego</button>';
+        h += '<li class="row topic' + (s === "skip" ? ' skip' : '') + '">' + tick + '<div class="txt"><p class="v">' + esc(t.title) + '</p></div>' + act + '</li>';
+      });
+      h += '</ul></section></div>';
+      node.innerHTML = h;
+    }
+
+    function renderComposer(mode) {
+      var node = $("composer");
+      if (mode === "rec") {
+        node.innerHTML = '<div class="capsule"><div class="recording"><span class="dot"></span><p>Te escucho… <time>0:04</time></p>' +
+          '<span class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>' +
+          '<button type="button" class="rnd send" aria-label="Terminar de dictar">' + ICON.stop + '</button></div></div>';
+        return;
+      }
+      if (mode === "done") {
+        node.innerHTML = '<p class="cnote" style="text-align:center;flex:1">Este enlace sigue funcionando por si quieres corregir algo.</p>';
+        return;
+      }
+      node.innerHTML = '<div class="capsule"><textarea id="draft" rows="1" placeholder="Escribe o toca el micrófono…" aria-label="Tu respuesta"></textarea>' +
+        '<button type="button" class="rnd" id="mic" aria-label="Dictar">' + ICON.mic + '</button>' +
+        '<button type="button" class="rnd send" id="send" aria-label="Enviar">' + ICON.arrow + '</button></div>';
+    }
+
+    // Editar el nombre de un elemento de la propuesta, sin repintar en cada tecla.
+    document.addEventListener("change", function (ev) {
+      var input = ev.target.closest ? ev.target.closest("[data-edit]") : null;
+      if (!input) return;
+      var code = input.getAttribute("data-edit"), i = parseInt(input.getAttribute("data-i"), 10);
+      var items = answers[code].items;
+      items[i] = input.value.trim() || items[i];
+      answers[code].value = items.join(code === "etapas" ? " → " : " · ");
+      paint();
+    });
+
+    function pushAssistant(entry, live) {
+      var wrap = document.createElement("div"); wrap.className = "msg ai";
+      var h = '';
+      if (entry.say) h += '<div class="bubble">' + esc(entry.say) + '</div>';
+      if (entry.catch && entry.catch.length) h += '<p class="noted">' + ICON.checkS + '<b>Anotado</b>' + entry.catch.map(function (c) { return '<span>' + esc(labelOf(c)) + '</span>'; }).join('') + '</p>';
+      if (entry.ask) {
+        h += '<div class="picker"><p class="picker-h">' + ICON.sparkS + ' Elige una</p><ul>' +
+          entry.ask.opts.map(function (o, i) {
+            return '<li><button type="button" data-pick="' + i + '"' + (live ? '' : ' disabled') + '><span class="txt"><b>' + esc(o.l) + '</b>' + (o.h ? '<small>' + esc(o.h) + '</small>' : '') + '</span><span class="chev">' + ICON.chev + '</span></button></li>';
+          }).join('') + '</ul>' +
+          '<button type="button" class="write-instead">Prefiero contarlo yo</button></div>';
+      }
+      wrap.innerHTML = h;
+      $("thread-inner").appendChild(wrap); scroll();
+    }
+    function pushMe(text, voice) {
+      var wrap = document.createElement("div"); wrap.className = "msg me";
+      wrap.innerHTML = '<div class="bubble">' + esc(text) + '</div>' + (voice ? '<span class="meta">' + ICON.micS + ' Dictado</span>' : '');
+      $("thread-inner").appendChild(wrap); scroll();
+    }
+    function pushThinking() {
+      var wrap = document.createElement("div"); wrap.className = "msg ai";
+      wrap.innerHTML = '<div class="thinking"><i></i><i></i><i></i></div>';
+      $("thread-inner").appendChild(wrap); scroll(); return wrap;
+    }
+    function scroll() { var t = $("thread"); requestAnimationFrame(function () { t.scrollTop = t.scrollHeight; }); }
+
+    function advance() {
+      if (busy) return;
+      var next = SCRIPT[step + 1]; if (!next) return;
+      busy = true;
+      Array.prototype.forEach.call(document.querySelectorAll(".picker button[data-pick]"), function (b) { b.disabled = true; });
+      if (next.voice) {
+        renderComposer("rec");
+        setTimeout(function () {
+          renderComposer("idle");
+          var d = $("draft"); if (d) { d.value = next.me; d.style.height = "auto"; d.style.height = Math.min(d.scrollHeight, 120) + "px"; }
+          setTimeout(function () { send(next); }, 1200);
+        }, 1700);
+        return;
+      }
+      send(next);
+    }
+    function send(next) {
+      if (next.me) pushMe(next.me, !!next.voice);
+      renderComposer(next.done ? "done" : "idle");
+      $("head-orb").setAttribute("data-busy", "true");
+      var row = pushThinking();
+      setTimeout(function () {
+        row.remove(); $("head-orb").setAttribute("data-busy", "false");
+        flash = {};
+        if (next.set) for (var k in next.set) if (Object.prototype.hasOwnProperty.call(next.set, k)) { answers[k] = next.set[k]; flash[k] = true; }
+        step++; pushAssistant(next, true); paint(); busy = false;
+        if (next.done) renderComposer("done");
+      }, 1400);
+    }
+
+    function paint() {
+      renderProgress($("prog-wide")); renderProgress($("prog-narrow"));
+      renderCard($("card-desk")); renderCard($("card-mobile"));
+      var c = counts(); $("chip-count").textContent = c.filled + "/" + c.total;
+    }
+    function boot() {
+      reset(); $("thread-inner").innerHTML = ""; renderComposer("idle");
+      pushAssistant(SCRIPT[0], true); paint(); $("thread").scrollTop = 0;
+    }
+
+    document.addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (t.closest("[data-pick]") && !t.closest("[data-pick]").disabled) return advance();
+      if (t.closest("#mic") || t.closest("#send")) return advance();
+      var ok = t.closest("[data-ok]"); if (ok) { var okc = ok.getAttribute("data-ok"); answers[okc].src = "stated"; editing = null; flash = {}; flash[okc] = true; return paint(); }
+
+      var open = t.closest("[data-open]");
+      if (open) { editing = open.getAttribute("data-open"); return paint(); }
+
+      var up = t.closest("[data-up]"), down = t.closest("[data-down]"), rm = t.closest("[data-rm]"), add = t.closest("[data-add]");
+      if (up || down || rm || add) {
+        var node = up || down || rm || add;
+        var code = node.getAttribute("data-up") || node.getAttribute("data-down") || node.getAttribute("data-rm") || node.getAttribute("data-add");
+        var items = answers[code].items, i = parseInt(node.getAttribute("data-i"), 10);
+        if (up)   { items.splice(i - 1, 0, items.splice(i, 1)[0]); }
+        if (down) { items.splice(i + 1, 0, items.splice(i, 1)[0]); }
+        if (rm)   { items.splice(i, 1); }
+        if (add)  { items.push("Nuevo paso"); }
+        answers[code].value = items.join(code === "etapas" ? " → " : " · ");
+        return paint();
+      }
+      var def = t.closest("[data-defer]"); if (def) { deferred[def.getAttribute("data-defer")] = true; flash = {}; return paint(); }
+      var res = t.closest("[data-resume]"); if (res) { delete deferred[res.getAttribute("data-resume")]; flash = {}; return paint(); }
+      if (t.closest("#open-sheet")) return $("sheet").setAttribute("data-open", "true");
+      if (t.closest("#scrim")) return $("sheet").setAttribute("data-open", "false");
+    });
+    $("v-phone").addEventListener("click", function () { $("stage").setAttribute("data-view", "phone"); $("v-phone").setAttribute("aria-pressed", "true"); $("v-desk").setAttribute("aria-pressed", "false"); });
+    $("v-desk").addEventListener("click", function () { $("stage").setAttribute("data-view", "desk"); $("v-desk").setAttribute("aria-pressed", "true"); $("v-phone").setAttribute("aria-pressed", "false"); $("sheet").setAttribute("data-open", "false"); });
+    $("restart").addEventListener("click", boot);
+    $("theme").addEventListener("click", function () {
+      var r = document.documentElement, now = r.getAttribute("data-theme");
+      var dark = now === "dark" || (!now && matchMedia("(prefers-color-scheme: dark)").matches);
+      r.setAttribute("data-theme", dark ? "light" : "dark");
+    });
+    boot();
+  })();
+</script>

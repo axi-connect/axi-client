@@ -1,0 +1,882 @@
+<title>Estudio de agentes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{GOOGLE}}
+<style>
+{{FONTS}}
+
+/* ======================================================================
+   CAPA 1 — tokens literales de axi-client/src/app/globals.css
+   ====================================================================== */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #171717;
+  --axi-brand: #e65759;
+  --axi-brand-2: #e02f2f;
+  --axi-violet: #7c3aed;
+  --axi-amber: #f0a431;
+  --axi-muted: #f4f4f5;
+  --axi-success: #16a34a;
+  --axi-warning: #d97706;
+  --axi-destructive: #dc2626;
+  --axi-info: #2563eb;
+  --axi-on-color: #ffffff;
+  --accent-mix: 14%;
+  --veil: 0.8;
+  --scene-veil: 0.32;
+  --stage-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
+  /* material del avatar (familia Lumo = color «white») */
+  --av-body-hi: #ffffff; --av-body-mid: #f7f5f0; --av-body-deep: #e1ddd4;
+  --av-occ: #b9b3a8; --av-hot: #ffffff; --av-ink: #2b2b30; --av-ink-hi: #55555c;
+  --av-glint: #ffffff; --av-lid: #f7f5f0;
+  --av-outline: color-mix(in srgb, var(--foreground) 16%, transparent);
+  /* paleta curada (8 códigos). Solo el cuerpo cambia; la tinta es la misma. */
+  --av-c-white-hi: #ffffff; --av-c-white-mid: #f7f5f0; --av-c-white-deep: #e1ddd4; --av-c-white-occ: #b9b3a8;
+  --av-c-cloud-hi: #eceef1; --av-c-cloud-mid: #d5d8de; --av-c-cloud-deep: #b3b8c2; --av-c-cloud-occ: #868c98;
+  --av-c-coral-hi: #ffe6e4; --av-c-coral-mid: #f8bcb9; --av-c-coral-deep: #e9908e; --av-c-coral-occ: #b46666;
+  --av-c-amber-hi: #fff1d2; --av-c-amber-mid: #f8d78f; --av-c-amber-deep: #e6b75a; --av-c-amber-occ: #ad8639;
+  --av-c-violet-hi: #efe6ff; --av-c-violet-mid: #d6c6f8; --av-c-violet-deep: #b59ce9; --av-c-violet-occ: #7f64b3;
+  --av-c-mint-hi: #def8ee; --av-c-mint-mid: #b7e9d3; --av-c-mint-deep: #8fd0b3; --av-c-mint-occ: #5f9c82;
+  --av-c-sky-hi: #def0ff; --av-c-sky-mid: #b8daf8; --av-c-sky-deep: #8dbde9; --av-c-sky-occ: #5f8db6;
+  --av-c-rose-hi: #ffe6f1; --av-c-rose-mid: #f7c1d8; --av-c-rose-deep: #e796ba; --av-c-rose-occ: #b0668b;
+  /* entorno del mockup (no producto) */
+  --mk-ground: #ecebe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #0a0a0a; --foreground: #ededed;
+    --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24;
+    --axi-muted: #18181b; --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa;
+    --axi-on-color: #0a0a0a; --accent-mix: 42%; --veil: 1; --scene-veil: 1;
+    --stage-shadow: color-mix(in srgb, #000000 55%, transparent);
+    --av-body-hi: #fbfaf7; --av-body-mid: #f1eee7; --av-body-deep: #d2cdc3; --av-occ: #9a948a;
+    --av-ink: #1d1d21; --av-ink-hi: #4a4a52; --av-lid: #f1eee7; --av-outline: transparent;
+    --av-c-white-hi: #fbfaf7; --av-c-white-mid: #f1eee7; --av-c-white-deep: #d2cdc3; --av-c-white-occ: #9a948a;
+    --av-c-cloud-hi: #e3e6eb; --av-c-cloud-mid: #c9cdd5; --av-c-cloud-deep: #a2a8b3; --av-c-cloud-occ: #6f7685;
+    --av-c-coral-hi: #ffdcd9; --av-c-coral-mid: #f5aeaa; --av-c-coral-deep: #de817e; --av-c-coral-occ: #9e5553;
+    --av-c-amber-hi: #ffecc4; --av-c-amber-mid: #f5cf7c; --av-c-amber-deep: #dcae4a; --av-c-amber-occ: #967127;
+    --av-c-violet-hi: #ebe0ff; --av-c-violet-mid: #cfbcf6; --av-c-violet-deep: #ab90e4; --av-c-violet-occ: #6d529f;
+    --av-c-mint-hi: #d6f5e8; --av-c-mint-mid: #a9e3ca; --av-c-mint-deep: #7fc7a7; --av-c-mint-occ: #4f8a70;
+    --av-c-sky-hi: #d5ecff; --av-c-sky-mid: #a9d2f5; --av-c-sky-deep: #7db2e3; --av-c-sky-occ: #4e7ea8;
+    --av-c-rose-hi: #ffdfee; --av-c-rose-mid: #f3b4d0; --av-c-rose-deep: #df87ae; --av-c-rose-occ: #9c567c;
+    --mk-ground: #141416;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0a0a0a; --foreground: #ededed;
+  --axi-brand: #fb7185; --axi-brand-2: #df4f4f; --axi-violet: #a78bfa; --axi-amber: #fbbf24;
+  --axi-muted: #18181b; --axi-success: #4ade80; --axi-warning: #fbbf24; --axi-destructive: #f87171; --axi-info: #60a5fa;
+  --axi-on-color: #0a0a0a; --accent-mix: 42%; --veil: 1; --scene-veil: 1;
+  --stage-shadow: color-mix(in srgb, #000000 55%, transparent);
+  --av-body-hi: #fbfaf7; --av-body-mid: #f1eee7; --av-body-deep: #d2cdc3; --av-occ: #9a948a;
+  --av-ink: #1d1d21; --av-ink-hi: #4a4a52; --av-lid: #f1eee7; --av-outline: transparent;
+  --av-c-white-hi: #fbfaf7; --av-c-white-mid: #f1eee7; --av-c-white-deep: #d2cdc3; --av-c-white-occ: #9a948a;
+  --av-c-cloud-hi: #e3e6eb; --av-c-cloud-mid: #c9cdd5; --av-c-cloud-deep: #a2a8b3; --av-c-cloud-occ: #6f7685;
+  --av-c-coral-hi: #ffdcd9; --av-c-coral-mid: #f5aeaa; --av-c-coral-deep: #de817e; --av-c-coral-occ: #9e5553;
+  --av-c-amber-hi: #ffecc4; --av-c-amber-mid: #f5cf7c; --av-c-amber-deep: #dcae4a; --av-c-amber-occ: #967127;
+  --av-c-violet-hi: #ebe0ff; --av-c-violet-mid: #cfbcf6; --av-c-violet-deep: #ab90e4; --av-c-violet-occ: #6d529f;
+  --av-c-mint-hi: #d6f5e8; --av-c-mint-mid: #a9e3ca; --av-c-mint-deep: #7fc7a7; --av-c-mint-occ: #4f8a70;
+  --av-c-sky-hi: #d5ecff; --av-c-sky-mid: #a9d2f5; --av-c-sky-deep: #7db2e3; --av-c-sky-occ: #4e7ea8;
+  --av-c-rose-hi: #ffdfee; --av-c-rose-mid: #f3b4d0; --av-c-rose-deep: #df87ae; --av-c-rose-occ: #9c567c;
+  --mk-ground: #141416;
+}
+
+/* CAPA 2 — semánticos derivados (mismas fórmulas que @theme inline) */
+:root {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: color-mix(in srgb, var(--foreground) 12%, var(--background));
+  --color-border-soft: color-mix(in srgb, var(--foreground) 7%, var(--background));
+  --color-secondary: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --color-muted-foreground: color-mix(in srgb, var(--foreground) 70%, transparent);
+  --color-accent: color-mix(in srgb, var(--axi-brand) var(--accent-mix), var(--background));
+  --color-input: color-mix(in srgb, var(--foreground) 14%, var(--background));
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.06), 0 16px 48px rgb(0 0 0 / 0.16);
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Nexa", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease-spring: linear(0, 0.0263, 0.0905, 0.1755, 0.2694, 0.3643, 0.4553, 0.5393, 0.6148, 0.6813, 0.7388, 0.7879, 0.8292, 0.8636, 0.892, 0.9151, 0.9339, 0.949, 0.961, 0.9705, 0.9779, 0.9837, 0.9881, 0.9915, 0.994, 0.9959, 0.9973, 0.9983, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--mk-ground); color: var(--color-foreground); font-family: var(--font-sans); font-size: 14px; line-height: 1.5; padding-block: 0 48px; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { margin: 0; }
+p { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+a { color: inherit; }
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--axi-brand); outline-offset: 2px; }
+.ic { flex: none; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.muted { color: var(--color-muted-foreground); }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ======================================================================
+   Barra del mockup (no es producto)
+   ====================================================================== */
+.mk-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 16px; margin: 0 0 18px;
+  background: color-mix(in srgb, var(--color-background) 82%, transparent); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px); border-bottom: 1px solid var(--color-border); }
+.mk-bar .tag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--color-muted-foreground); margin-right: 10px; }
+.mk-bar .tab { padding: 6px 12px; border-radius: 9999px; font-size: 13px; font-weight: 500; color: var(--color-muted-foreground); border: 1px solid transparent; }
+.mk-bar .tab[aria-pressed="true"] { background: var(--color-foreground); color: var(--color-background); }
+.mk-bar .tab:not([aria-pressed="true"]):hover { border-color: var(--color-border); color: var(--color-foreground); }
+.mk-bar .spacer { flex: 1; }
+.mk-bar .ib { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--color-muted-foreground); }
+.mk-bar .ib:hover { background: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--color-foreground); }
+.mk-note { width: 100%; font-size: 12.5px; color: var(--color-muted-foreground); padding-top: 2px; }
+.mk-note b { color: var(--color-foreground); font-weight: 500; }
+
+/* ======================================================================
+   KIT DE ASISTENTE — lo que ya vive en globals.css + las 3 adiciones (C1)
+   ====================================================================== */
+.assistant-field { position: relative; isolation: isolate; overflow: clip;
+  background-color: color-mix(in srgb, var(--foreground) 3%, var(--background));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 180px 180px; }
+.assistant-field::before { content: ""; position: absolute; left: -20%; right: -20%; bottom: -70%; height: 140%; z-index: -2; pointer-events: none; opacity: var(--veil);
+  background-image: radial-gradient(closest-side, color-mix(in srgb, var(--axi-violet) 22%, transparent) 0%, color-mix(in srgb, var(--axi-violet) 11%, transparent) 38%, color-mix(in srgb, var(--axi-violet) 3%, transparent) 70%, transparent 100%); }
+.assistant-field::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: -34%; height: 74%; z-index: -1; pointer-events: none; opacity: var(--veil);
+  background-image: radial-gradient(closest-side, color-mix(in srgb, var(--axi-violet) 26%, transparent) 0%, color-mix(in srgb, var(--axi-brand) 9%, transparent) 46%, transparent 100%); }
+
+/* Escenario: tamaño por variables (C1: --stage-w/--stage-h) */
+.assistant-stage { position: relative; display: block; width: var(--stage-w, 136px); height: var(--stage-h, 140px); flex: none; }
+.assistant-stage-figure { position: absolute; inset: 0 0 8px; display: block; transform-origin: 50% 90%; }
+.assistant-stage-figure > .assistant-avatar { width: 100%; height: 100%; }
+.assistant-ground { position: absolute; left: 50%; bottom: 0; width: calc(var(--stage-w, 136px) * .7); height: calc(var(--stage-w, 136px) * .13); transform: translateX(-50%); border-radius: 9999px; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, var(--stage-shadow) 0%, color-mix(in srgb, var(--stage-shadow) 45%, transparent) 45%, transparent 72%); }
+.assistant-stage--busy .assistant-stage-figure { animation: av-breathe 1.6s ease-in-out infinite; }
+.assistant-stage--busy .assistant-ground { animation: av-ground-breathe 1.6s ease-in-out infinite; }
+@keyframes av-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035) translateY(-1.5px); } }
+@keyframes av-ground-breathe { 0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 1; } 50% { transform: translateX(-50%) scaleX(.92); opacity: .8; } }
+.hero-btn { display: block; padding: 0; border-radius: 32px; }
+.hero-btn:hover .assistant-stage-figure { transform: translateY(-1px); }
+
+/* La cara: geometría en el SVG, material aquí */
+.assistant-avatar { display: block; overflow: visible;
+  --av-yaw: 0; --av-pitch: 0; --av-roll: 0; --av-depth: 1; --av-face-sx: 1; --av-gap: 12; --av-gx: 0; --av-gy: 0;
+  --av-mouth: .9; --av-mouth-w: 1; --av-open: 0; --av-dur: 480ms; --av-ease: var(--ease-spring); --av-eye-cant: 0;
+  --yaw: calc(var(--av-yaw) + var(--gaze-x, 0) * 6); --pitch: calc(var(--av-pitch) + var(--gaze-y, 0) * 4); }
+.assistant-avatar [data-stop="body-hi"] { stop-color: var(--av-body-hi); }
+.assistant-avatar [data-stop="body-mid"] { stop-color: var(--av-body-mid); }
+.assistant-avatar [data-stop="body-deep"] { stop-color: var(--av-body-deep); }
+.assistant-avatar [data-stop="occ"] { stop-color: var(--av-occ); }
+.assistant-avatar [data-stop="hot"] { stop-color: var(--av-hot); }
+.assistant-avatar [data-stop="ink"] { stop-color: var(--av-ink); }
+.assistant-avatar [data-stop="ink-hi"] { stop-color: var(--av-ink-hi); }
+.assistant-avatar [data-stop="none"] { stop-color: transparent; }
+.assistant-avatar [data-layer="glint"] { fill: var(--av-glint); }
+.assistant-avatar [data-layer="lid"] { fill: var(--av-lid); }
+.assistant-avatar [data-layer="mouth"] { stroke: var(--av-ink); fill: none; stroke-linecap: round; }
+.assistant-avatar [data-layer="mouth-open"] { fill: var(--av-ink); }
+.assistant-avatar [data-layer="acc"] { fill: var(--av-ink); }
+.assistant-avatar [data-layer="acc-line"] { stroke: var(--av-ink); fill: none; stroke-linecap: round; }
+.assistant-avatar [data-layer="acc-hi"] { fill: var(--av-ink-hi); }
+.assistant-avatar [data-acc-part] { display: none; }
+.assistant-avatar[data-acc="headset"] [data-acc-part="headset"] { display: inline; }
+/* C1 · contorno en claro: una capa bajo el cuerpo, 3 % más grande; sin data-color no existe (Axel/Alba intactos) */
+.assistant-avatar [data-layer="outline"] { fill: transparent; transform: scale(1.03); transform-box: view-box; transform-origin: 50px 50px; }
+.assistant-avatar[data-color] [data-layer="outline"] { fill: var(--av-outline); }
+/* C1 · con cuerpo de color el especular baja (sobre pastel un blanco al 50 % parece un gorro) */
+.assistant-avatar[data-color]:not([data-color="white"]) [data-layer="hot"] { opacity: .22; }
+.assistant-avatar[data-color]:not([data-color="white"]) { --av-hot: var(--av-body-hi); }
+/* C1 · paleta: 8 bloques que solo mueven el material del cuerpo */
+.assistant-avatar[data-color="white"]  { --av-body-hi: var(--av-c-white-hi);  --av-body-mid: var(--av-c-white-mid);  --av-body-deep: var(--av-c-white-deep);  --av-occ: var(--av-c-white-occ);  --av-lid: var(--av-c-white-mid); }
+.assistant-avatar[data-color="cloud"]  { --av-body-hi: var(--av-c-cloud-hi);  --av-body-mid: var(--av-c-cloud-mid);  --av-body-deep: var(--av-c-cloud-deep);  --av-occ: var(--av-c-cloud-occ);  --av-lid: var(--av-c-cloud-mid); }
+.assistant-avatar[data-color="coral"]  { --av-body-hi: var(--av-c-coral-hi);  --av-body-mid: var(--av-c-coral-mid);  --av-body-deep: var(--av-c-coral-deep);  --av-occ: var(--av-c-coral-occ);  --av-lid: var(--av-c-coral-mid); }
+.assistant-avatar[data-color="amber"]  { --av-body-hi: var(--av-c-amber-hi);  --av-body-mid: var(--av-c-amber-mid);  --av-body-deep: var(--av-c-amber-deep);  --av-occ: var(--av-c-amber-occ);  --av-lid: var(--av-c-amber-mid); }
+.assistant-avatar[data-color="violet"] { --av-body-hi: var(--av-c-violet-hi); --av-body-mid: var(--av-c-violet-mid); --av-body-deep: var(--av-c-violet-deep); --av-occ: var(--av-c-violet-occ); --av-lid: var(--av-c-violet-mid); }
+.assistant-avatar[data-color="mint"]   { --av-body-hi: var(--av-c-mint-hi);   --av-body-mid: var(--av-c-mint-mid);   --av-body-deep: var(--av-c-mint-deep);   --av-occ: var(--av-c-mint-occ);   --av-lid: var(--av-c-mint-mid); }
+.assistant-avatar[data-color="sky"]    { --av-body-hi: var(--av-c-sky-hi);    --av-body-mid: var(--av-c-sky-mid);    --av-body-deep: var(--av-c-sky-deep);    --av-occ: var(--av-c-sky-occ);    --av-lid: var(--av-c-sky-mid); }
+.assistant-avatar[data-color="rose"]   { --av-body-hi: var(--av-c-rose-hi);   --av-body-mid: var(--av-c-rose-mid);   --av-body-deep: var(--av-c-rose-deep);   --av-occ: var(--av-c-rose-occ);   --av-lid: var(--av-c-rose-mid); }
+
+.assistant-avatar :where([class^="assistant-rig-"]) { transform-box: view-box; transform-origin: 50px 50px; transition: transform var(--av-dur) var(--av-ease); }
+.assistant-rig-body { transform: translate(calc(var(--yaw) * .25px * var(--av-depth)), calc(var(--pitch) * .2px * var(--av-depth))) rotate(calc(var(--av-roll) * 1deg)); }
+.assistant-rig-hot { transform: translate(calc(var(--yaw) * -.45px), calc(var(--pitch) * -.4px)); }
+.assistant-rig-band { transform: translate(calc(var(--yaw) * .4px), calc(var(--pitch) * .3px)) rotate(calc(var(--av-roll) * 1deg)); }
+.assistant-rig-face { transform: translate(calc(var(--yaw) * .9px * var(--av-depth)), calc(var(--pitch) * .7px * var(--av-depth))) rotate(calc(var(--av-roll) * 1deg)) scaleX(var(--av-face-sx)); }
+/* C1 · --av-eye-cant (0 por defecto → Lumo idéntico) */
+.assistant-rig-eye-l { transform: translate(calc(var(--av-gap) * -1px), 0) rotate(calc(var(--av-eye-cant) * 1deg)) scaleX(var(--av-l-sx)) scale(var(--av-l-scale)); transform-origin: 50px 47px; }
+.assistant-rig-eye-r { transform: translate(calc(var(--av-gap) * 1px), 0) rotate(calc(var(--av-eye-cant) * -1deg)) scaleX(var(--av-r-sx)) scale(var(--av-r-scale)); transform-origin: 50px 47px; }
+.assistant-rig-pupil { transform: translate(calc((var(--av-gx) + var(--gaze-x, 0)) * 1.6px), calc((var(--av-gy) + var(--gaze-y, 0)) * 1.4px)); }
+.assistant-rig-lips { transform: translate(calc((var(--av-gx) + var(--gaze-x, 0)) * .6px), calc(var(--av-gy) * .5px)); }
+.assistant-rig-mouth { transform: scaleY(var(--av-mouth)) scaleX(var(--av-mouth-w)); transform-origin: 50px 60px; }
+.assistant-rig-open { transform: scaleY(var(--av-open)); transform-origin: 50px 60.2px; }
+.assistant-rig-lid-top { transform-box: fill-box; transform-origin: 50% 0%; }
+.assistant-rig-lid-bot { transform-box: fill-box; transform-origin: 50% 100%; }
+.assistant-rig-eye-l .assistant-rig-lid-top { transform: rotate(calc(var(--av-l-tilt) * 1deg)) scaleY(var(--av-l-top)); }
+.assistant-rig-eye-l .assistant-rig-lid-bot { transform: scaleY(var(--av-l-bot)); }
+.assistant-rig-eye-r .assistant-rig-lid-top { transform: rotate(calc(var(--av-r-tilt) * -1deg)) scaleY(var(--av-r-top)); }
+.assistant-rig-eye-r .assistant-rig-lid-bot { transform: scaleY(var(--av-r-bot)); }
+.assistant-rig-blink { transform-box: fill-box; transform-origin: 50% 50%; transition: none; }
+.assistant-avatar[data-expression="speaking"] .assistant-rig-gesture { animation: av-talk 1.7s ease-in-out infinite; }
+.assistant-avatar[data-expression="speaking"] .assistant-rig-open { animation: av-open 640ms ease-in-out infinite alternate; }
+.assistant-avatar[data-gesture="wink"] .assistant-rig-eye-r .assistant-rig-blink { animation: av-blink 600ms ease-in-out 1; }
+.assistant-avatar[data-gesture="nod"] .assistant-rig-gesture { animation: av-nod 500ms var(--ease-spring) 1; }
+.assistant-avatar[data-gesture="wave"] .assistant-rig-gesture { animation: av-wave 900ms ease-in-out 1; }
+.assistant-avatar.is-blinking .assistant-rig-blink { animation: av-blink 170ms ease-in-out 1; }
+@keyframes av-talk { 50% { transform: translateY(1.2px); } }
+@keyframes av-open { from { transform: scaleY(.12); } to { transform: scaleY(1); } }
+@keyframes av-blink { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.08); } }
+@keyframes av-nod { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(2.4px); } 70% { transform: translateY(-1px); } }
+@keyframes av-wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 50% { transform: rotate(5deg); } 75% { transform: rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .assistant-avatar, .assistant-avatar * { animation: none !important; transition: none !important; }
+  .assistant-stage--busy .assistant-stage-figure, .assistant-stage--busy .assistant-ground { animation: none !important; }
+}
+
+/* ======================================================================
+   Shell del panel (content, max-w-7xl p-6) y primitivos
+   ====================================================================== */
+.page { max-width: 1120px; margin: 0 auto; padding: 4px 24px 24px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-muted-foreground); flex-wrap: wrap; }
+.crumb b { color: var(--color-foreground); font-weight: 500; }
+.crumb a { text-decoration: none; }
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.header h1 { font-size: 28px; font-weight: 600; letter-spacing: -.02em; line-height: 1.15; text-wrap: balance; }
+.header .lead { color: var(--color-muted-foreground); font-size: 13.5px; margin-top: 4px; max-width: 64ch; }
+.header .right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: var(--radius-md); border: 1px solid transparent; background: var(--axi-brand); color: var(--axi-on-color); font-weight: 500; font-size: 14px; white-space: nowrap; text-decoration: none; transition: filter 150ms, transform 120ms, background 150ms; }
+.btn:hover { filter: brightness(1.06); } .btn:active { transform: scale(.97); }
+.btn.outline { background: var(--color-background); color: var(--color-foreground); border-color: var(--color-border); }
+.btn.outline:hover { background: var(--color-secondary); filter: none; }
+.btn.ghost { background: transparent; color: var(--color-foreground); }
+.btn.ghost:hover { background: var(--color-secondary); filter: none; }
+.btn.ghost.danger { color: var(--axi-destructive); }
+.btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn.icon { width: 36px; padding: 0; } .btn.icon.sm { width: 32px; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: var(--color-secondary); color: var(--color-foreground); white-space: nowrap; }
+.badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-muted-foreground); opacity: .5; flex: none; }
+.badge.ok .dot { background: var(--axi-success); opacity: 1; } .badge.warn .dot { background: var(--axi-warning); opacity: 1; } .badge.off .dot { opacity: .35; }
+.badge .ic { color: var(--color-muted-foreground); }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 9999px; font-size: 12.5px; border: 1px solid var(--color-border); background: var(--color-background); white-space: nowrap; }
+.chip .ic { color: var(--color-muted-foreground); }
+.chip.ai { border-color: transparent; background: color-mix(in srgb, var(--axi-violet) 10%, transparent); color: var(--axi-violet); }
+
+/* pastilla segmentada (segmented.tsx §9.3) */
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9999px; background: color-mix(in srgb, var(--color-secondary) 70%, transparent); border: 1px solid var(--color-border-soft); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 13px; border-radius: 9999px; color: var(--color-muted-foreground); font-weight: 500; font-size: 13px; white-space: nowrap; transition: background 150ms, color 150ms; }
+.seg button[aria-checked="true"] { background: var(--color-background); color: var(--color-foreground); box-shadow: var(--shadow-float); }
+.seg.sm button { height: 26px; padding: 0 10px; font-size: 12px; }
+
+.input, .select, .textarea { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--color-input); background: var(--color-background); color: var(--color-foreground); font-size: 14px; width: 100%; font-family: inherit; }
+.textarea { align-items: flex-start; padding: 8px 12px; min-height: 72px; line-height: 1.45; resize: vertical; }
+textarea.textarea { display: block; }
+input.input { outline-offset: 0; }
+.input::placeholder, textarea::placeholder { color: var(--color-muted-foreground); }
+.ph { color: var(--color-muted-foreground); }
+.select .ic { color: var(--color-muted-foreground); }
+.select .val { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field .lbl { font-size: 13px; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.field .lbl small { font-weight: 400; color: var(--color-muted-foreground); font-size: 12px; }
+.field .hint { font-size: 12.5px; color: var(--color-muted-foreground); line-height: 1.45; }
+.req { color: var(--axi-brand); }
+
+.sw { position: relative; display: inline-block; width: 32px; height: 18px; border-radius: 9999px; background: var(--color-input); flex: none; transition: background .2s var(--ease-smooth); vertical-align: middle; }
+.sw::after { content: ""; position: absolute; top: 1px; left: 1px; width: 16px; height: 16px; border-radius: 50%; background: var(--color-background); transition: transform .2s var(--ease-smooth); box-shadow: 0 1px 2px rgb(0 0 0 / .15); }
+.sw[aria-checked="true"] { background: var(--axi-brand); } .sw[aria-checked="true"]::after { transform: translateX(14px); }
+.sw[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+
+.notice { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-secondary); font-size: 13px; line-height: 1.5; }
+.notice .ic { margin-top: 2px; color: var(--axi-info); }
+.notice.warn .ic { color: var(--axi-warning); } .notice.err .ic { color: var(--axi-destructive); } .notice.ok .ic { color: var(--axi-success); }
+.notice b { font-weight: 500; }
+.notice a { color: var(--color-foreground); font-weight: 500; text-underline-offset: 3px; text-decoration-color: var(--color-border); }
+
+/* ======================================================================
+   Rejilla de agentes (/admin/agents)
+   ====================================================================== */
+.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.acard { position: relative; display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; align-items: center; padding: 14px 16px 14px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-background); text-decoration: none; color: inherit; min-width: 0; transition: transform 160ms var(--ease-smooth), box-shadow 160ms var(--ease-smooth), border-color 160ms; }
+.acard:hover { transform: translateY(-2px); box-shadow: var(--shadow-float); border-color: color-mix(in srgb, var(--foreground) 20%, var(--background)); }
+.acard .assistant-stage { --stage-w: 104px; --stage-h: 108px; }
+.acard-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.acard-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.acard-top b { font-size: 16px; font-weight: 600; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acard .role { font-size: 12.5px; color: var(--color-muted-foreground); }
+.acard .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.acard .kebab { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--color-muted-foreground); opacity: 0; transition: opacity 150ms; }
+.acard:hover .kebab, .acard:focus-within .kebab { opacity: 1; }
+.acard .kebab:hover { background: var(--color-secondary); color: var(--color-foreground); }
+.acard.new { grid-template-columns: 1fr; place-items: center; text-align: center; border-style: dashed; background: transparent; min-height: 138px; gap: 6px; color: var(--color-muted-foreground); }
+.acard.new .plus { width: 40px; height: 40px; border-radius: 12px; background: var(--color-secondary); display: grid; place-items: center; color: var(--color-foreground); }
+.acard.new:hover { border-color: var(--axi-brand); color: var(--color-foreground); }
+
+.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 48px 20px 44px; border: 1px solid var(--color-border); border-radius: 24px; background: var(--color-background); }
+.empty .trio { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 6px; }
+.empty .trio .assistant-stage { --stage-w: 120px; --stage-h: 124px; }
+.empty .trio .assistant-stage:nth-child(2) { --stage-w: 144px; --stage-h: 148px; }
+.empty h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; font-family: var(--font-heading); }
+.empty p { color: var(--color-muted-foreground); font-size: 14px; max-width: 46ch; }
+.empty .acts { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+
+/* ======================================================================
+   Estudio (/admin/agents/new · /admin/agents/[id])
+   ====================================================================== */
+.studio { display: grid; gap: 24px; grid-template-columns: 1fr; align-items: start; min-width: 0; }
+@media (min-width: 1024px) { .studio:not(.force-1col) { grid-template-columns: minmax(320px, 372px) minmax(0, 1fr); gap: 32px; } .studio:not(.force-1col) .scene-col { position: sticky; top: 74px; } }
+.scene-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.scene { border-radius: 24px; padding: 22px 18px 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; --veil: var(--scene-veil); border: 1px solid var(--color-border-soft); }
+.scene .assistant-stage { --stage-w: 232px; --stage-h: 240px; }
+.force-1col .scene { flex-direction: row; align-items: center; gap: 14px; padding: 14px 16px; }
+.force-1col .scene .assistant-stage { --stage-w: 128px; --stage-h: 132px; }
+.force-1col .scene .who { align-items: flex-start; text-align: left; }
+.scene .who { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 6px; text-align: center; min-width: 0; }
+.scene .who b { font-family: var(--font-heading); font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.scene .who small { font-size: 12.5px; color: var(--color-muted-foreground); }
+.scene .who .status { margin-top: 6px; }
+.opt { display: flex; flex-direction: column; gap: 8px; }
+.opt h3 { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--color-muted-foreground); font-weight: 600; font-family: var(--font-sans); display: flex; justify-content: space-between; align-items: baseline; }
+.opt h3 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
+.picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tile { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 8px 6px 8px; border-radius: 16px; border: 1px solid var(--color-border); background: var(--color-background); transition: border-color 150ms, box-shadow 150ms, transform 120ms; }
+.tile:hover { border-color: color-mix(in srgb, var(--foreground) 24%, var(--background)); }
+.tile:active { transform: scale(.98); }
+.tile[aria-checked="true"] { border-color: var(--axi-brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--axi-brand) 18%, transparent); }
+.tile .assistant-avatar { width: 58px; height: 58px; }
+.tile b { font-size: 12.5px; font-weight: 600; }
+.tile small { font-size: 11px; color: var(--color-muted-foreground); }
+.palette { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 16%, transparent); position: relative; transition: transform 120ms; }
+.swatch:hover { transform: scale(1.08); }
+.swatch[aria-checked="true"] { outline: 2px solid var(--axi-brand); outline-offset: 3px; }
+.swatch[aria-checked="true"]::after { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--av-ink); opacity: .75; }
+.voice-row { display: flex; gap: 8px; align-items: center; }
+.voice-row .select { flex: 1; min-width: 0; }
+.play { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--color-foreground); color: var(--color-background); flex: none; }
+.play.off { background: var(--color-secondary); color: var(--color-muted-foreground); }
+.voice-desc { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.voice-desc .ic { color: var(--color-muted-foreground); }
+.ranges { display: grid; gap: 10px; padding: 12px 12px 6px; }
+.range { display: grid; grid-template-columns: 90px minmax(0, 1fr) 36px; align-items: center; gap: 10px; font-size: 12.5px; }
+.range .bar { position: relative; height: 4px; border-radius: 9999px; background: var(--color-input); }
+.range .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 9999px; background: var(--axi-brand); width: var(--p); }
+.range .bar b { position: absolute; top: 50%; left: var(--p); width: 14px; height: 14px; border-radius: 50%; background: var(--color-background); border: 1px solid var(--color-border); box-shadow: var(--shadow-float); transform: translate(-50%, -50%); }
+.range .v { text-align: right; font-variant-numeric: tabular-nums; color: var(--color-muted-foreground); }
+.disabled-block { opacity: .55; pointer-events: none; filter: saturate(.6); }
+
+.panel { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.sec { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.sec-head h2 { font-size: 17px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+.sec-head p { font-size: 13px; color: var(--color-muted-foreground); max-width: 62ch; margin-top: 2px; }
+.sec-head .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; background: var(--color-secondary); font-size: 12px; font-weight: 600; color: var(--color-muted-foreground); }
+
+/* ficha = lista etiqueta → valor (nunca tabla) */
+.glist { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background); overflow: hidden; }
+.grow { display: grid; grid-template-columns: 148px minmax(0, 1fr); gap: 6px 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--color-border-soft); min-width: 0; }
+.grow:last-child { border-bottom: 0; }
+.grow .k { font-size: 13px; font-weight: 500; }
+.grow .k small { display: block; font-weight: 400; font-size: 11.5px; color: var(--color-muted-foreground); }
+.grow .v { min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.grow .v.full > * { flex: 1; }
+@media (max-width: 560px) { .grow { grid-template-columns: 1fr; } }
+
+.rules { display: flex; flex-direction: column; gap: 14px; }
+.rl { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background); min-width: 0; }
+.rl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 14px 8px; }
+.rl-head b { font-size: 14px; font-weight: 600; }
+.rl-head .cnt { font-family: var(--font-mono); font-size: 11.5px; color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.rl-hint { padding: 0 14px 10px; font-size: 12.5px; color: var(--color-muted-foreground); }
+.rl-item { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px 8px; align-items: start; padding: 8px 10px 8px 8px; border-top: 1px solid var(--color-border-soft); }
+.rl-item .grip { color: var(--color-muted-foreground); opacity: .5; cursor: grab; padding-top: 4px; }
+.rl-item .txt { font-size: 14px; line-height: 1.45; padding: 3px 6px; border-radius: 8px; min-width: 0; overflow-wrap: anywhere; }
+.rl-item .txt[contenteditable]:focus { outline: 2px solid var(--axi-brand); outline-offset: 0; background: var(--color-background); }
+.rl-item.editing .txt { outline: 2px solid var(--axi-brand); background: color-mix(in srgb, var(--axi-brand) 5%, transparent); }
+.rl-item.err .txt { outline: 2px solid var(--axi-destructive); }
+.rl-item .acts { display: flex; gap: 0; opacity: 0; transition: opacity 120ms; }
+.rl-item:hover .acts, .rl-item:focus-within .acts, .rl-item.editing .acts { opacity: 1; }
+.rl-item .acts button { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; color: var(--color-muted-foreground); }
+.rl-item .acts button:hover { background: var(--color-secondary); color: var(--color-foreground); }
+.rl-item .acts button.del:hover { color: var(--axi-destructive); }
+.rl-foot { grid-column: 2 / -1; display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.rl-item.err .rl-foot { color: var(--axi-destructive); }
+.rl-add { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--color-border-soft); }
+.rl-add .input { flex: 1; }
+.rl-empty { padding: 4px 14px 14px; font-size: 13px; color: var(--color-muted-foreground); display: flex; gap: 8px; align-items: flex-start; }
+.rl-empty .ic { color: var(--axi-violet); margin-top: 3px; }
+.rl-empty em { font-style: normal; color: var(--color-foreground); }
+
+.acc { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background); }
+.acc-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 14px 16px; text-align: left; }
+.acc-btn b { font-size: 14.5px; font-weight: 600; }
+.acc-btn small { color: var(--color-muted-foreground); font-size: 12.5px; }
+.acc-btn .chev { margin-left: auto; color: var(--color-muted-foreground); transition: transform 200ms var(--ease-smooth); }
+.acc-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.acc-body { border-top: 1px solid var(--color-border-soft); padding: 16px; display: grid; gap: 16px 20px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .acc-body { grid-template-columns: 1fr 1fr; } .acc-body .full { grid-column: 1 / -1; } }
+.intent { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--color-border-soft); }
+.intent:last-child { border-bottom: 0; }
+.intent b { font-size: 13.5px; font-weight: 500; }
+.intent small { grid-column: 1; font-size: 12px; color: var(--color-muted-foreground); }
+.intent .reqs { grid-column: 1; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.savebar { position: sticky; bottom: 12px; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  background: color-mix(in srgb, var(--color-background) 72%, transparent); -webkit-backdrop-filter: saturate(160%) blur(16px); backdrop-filter: saturate(160%) blur(16px); box-shadow: var(--shadow-float); flex-wrap: wrap; }
+.savebar .msg { font-size: 13px; color: var(--color-muted-foreground); display: flex; align-items: center; gap: 6px; min-width: 0; }
+.savebar .msg.err { color: var(--axi-destructive); }
+.savebar .msg.ok { color: var(--axi-success); }
+.savebar .spacer { flex: 1; }
+
+/* ======================================================================
+   Estados y móvil
+   ====================================================================== */
+.states { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.state { border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: var(--color-background); padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+.state .assistant-stage { --stage-w: 136px; --stage-h: 140px; }
+.state b { font-size: 14px; font-weight: 600; }
+.state small { font-size: 12.5px; color: var(--color-muted-foreground); }
+.contrast { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-background); overflow-x: auto; }
+.contrast table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 560px; }
+.contrast th, .contrast td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--color-border-soft); }
+.contrast th { font-size: 12px; font-weight: 500; color: var(--color-muted-foreground); }
+.contrast tr:last-child td { border-bottom: 0; }
+.contrast .dotc { display: inline-block; width: 16px; height: 16px; border-radius: 50%; vertical-align: -3px; margin-right: 8px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 16%, transparent); }
+.pass { color: var(--axi-success); font-weight: 500; } .fail { color: var(--axi-destructive); font-weight: 500; }
+.phone { width: 390px; max-width: 100%; margin: 0 auto; border: 1px solid var(--color-border); border-radius: 36px; padding: 14px 0 0; background: var(--color-background); box-shadow: var(--shadow-overlay); overflow: hidden; }
+.phone .notch { width: 110px; height: 26px; border-radius: 9999px; background: var(--color-foreground); margin: 0 auto 8px; opacity: .9; }
+.phone .page { padding: 4px 16px 20px; gap: 16px; }
+.phone .header h1 { font-size: 22px; }
+.phone .savebar { position: static; margin: 0 -16px -20px; border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; padding-bottom: 22px; }
+.phone .studio { gap: 18px; }
+.phone .panel { gap: 20px; }
+.phone .picker .tile .assistant-avatar { width: 48px; height: 48px; }
+.phone .grow { grid-template-columns: 1fr; gap: 4px; padding: 10px 14px; }
+</style>
+
+<div class="mk-bar" role="group" aria-label="Vistas del mockup">
+  <span class="tag">F0 · Estudio de agentes</span>
+  <button class="tab" data-view="grid-empty" aria-pressed="false">Sin agentes</button>
+  <button class="tab" data-view="grid" aria-pressed="false">Rejilla</button>
+  <button class="tab" data-view="new" aria-pressed="false">Crear</button>
+  <button class="tab" data-view="edit" aria-pressed="false">Editar</button>
+  <button class="tab" data-view="states" aria-pressed="false">Estados y paleta</button>
+  <button class="tab" data-view="mobile" aria-pressed="false">Móvil</button>
+  <span class="spacer"></span>
+  <button class="ib" id="theme" aria-label="Cambiar tema" title="Tema">{{ic:sun-moon:18}}</button>
+  <span class="mk-note" id="mk-note"></span>
+</div>
+
+<!-- ============================================================ -->
+<section class="view" data-view="grid-empty" data-note="<b>/admin/agents</b> sin agentes. EmptyState con los tres personajes (estáticos, sin vida) y una sola acción." hidden>
+  <div class="page">
+    <nav class="crumb" aria-label="Breadcrumb">Administración {{ic:chevron-right:14}} <b>Agentes</b></nav>
+    <div class="header"><div><h1>Agentes</h1><p class="lead">Cada agente tiene una cara, una voz y unas reglas. Los canales deciden con cuál atienden.</p></div></div>
+    <div class="empty">
+      <div class="trio">
+        <span data-avatar="neutral" data-character="cloudee" data-color="cloud"></span>
+        <span data-avatar="proud" data-character="nova" data-color="coral"></span>
+        <span data-avatar="curious" data-character="strobi" data-color="mint"></span>
+      </div>
+      <h2>Tu equipo empieza aquí</h2>
+      <p>Elige un personaje, dale voz y cuéntale cómo atiende tu negocio. En cinco minutos está respondiendo.</p>
+      <div class="acts"><a class="btn" href="#new" data-go="new">{{ic:plus:16}} Crear tu primer agente</a><a class="btn ghost" href="#">Ver una plantilla por tipo de negocio</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="view" data-view="grid" data-note="<b>/admin/agents</b> con cinco agentes. Tarjeta = personaje + nombre + rol + estado (punto) + canales que lo usan + voz. Toda la tarjeta navega al estudio; el menú ⋮ solo elimina." hidden>
+  <div class="page">
+    <nav class="crumb" aria-label="Breadcrumb">Administración {{ic:chevron-right:14}} <b>Agentes</b></nav>
+    <div class="header">
+      <div><h1>Agentes</h1><p class="lead">Cada agente tiene una cara, una voz y unas reglas. Los canales deciden con cuál atienden.</p></div>
+      <div class="right"><a class="btn" href="#new" data-go="new">{{ic:plus:16}} Crear agente</a></div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="view" data-view="new" data-note="<b>/admin/agents/new</b>. Izquierda: el personaje vivo (sigue el puntero, parpadea mientras trabajas, guiña al tocarlo) y sus opciones. Derecha: especificaciones y reglas. Lo técnico, plegado en «Avanzado». Toca los personajes y los colores." hidden>
+  <div class="page" data-studio="new"></div>
+</section>
+
+<!-- ============================================================ -->
+<section class="view" data-view="edit" data-note="<b>/admin/agents/[id]</b> — Valentina, con el brief completo: una regla en edición, otra que se pasa de 200 caracteres, la voz con ajustes abiertos y «Avanzado» desplegado. «Guardar» solo se enciende si hay cambios." hidden>
+  <div class="page" data-studio="edit"></div>
+</section>
+
+<!-- ============================================================ -->
+<section class="view" data-view="states" data-note="Los humores del escenario nacen de acciones, nunca de temporizadores en reposo. Abajo, la paleta con el contraste de la tinta de ojos sobre el cuerpo en ambos temas (mínimo 3:1)." hidden>
+  <div class="page">
+    <div class="header"><div><h1>Estados del estudio</h1><p class="lead">Qué cara pone el personaje según lo que pasa en la pantalla, y qué ve la persona en cada caso.</p></div></div>
+    <div class="states" id="states"></div>
+
+    <div class="sec">
+      <div class="sec-head"><div><h2>Voz de empresa apagada</h2><p>El bloque de voz queda deshabilitado y explica dónde encenderla. El resto del estudio sigue editable.</p></div></div>
+      <div class="studio" style="grid-template-columns:minmax(0,372px)">
+        <div class="scene-col" style="position:static">
+          <div class="opt disabled-block"><h3>Voz <small>opcional</small></h3>
+            <div class="voice-row"><div class="select"><span class="val">{{ic:mic-off:15}} Sin voz</span>{{ic:chevron-down:15}}</div><button class="play off" aria-label="Escuchar muestra" disabled>{{ic:play:16}}</button></div>
+          </div>
+          <div class="notice warn">{{ic:triangle-alert:18}}<div><b>Las notas de voz están apagadas para tu empresa.</b> Enciéndelas en <a href="#">Configuración → Voz</a> y vuelve aquí para elegir cómo suena este agente.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><div><h2>Barra de guardado</h2><p>Un solo sitio para guardar, cancelar y eliminar. El error se dice ahí, en una frase, y el personaje pone la cara.</p></div></div>
+      <div class="savebar"><span class="msg">{{ic:pencil:14}} Cambios sin guardar</span><span class="spacer"></span><button class="btn ghost">Cancelar</button><button class="btn">Guardar cambios</button></div>
+      <div class="savebar"><span class="msg err">{{ic:circle-alert:14}} No pudimos guardar: la voz elegida ya no está en el catálogo. Elige otra e inténtalo de nuevo.</span><span class="spacer"></span><button class="btn ghost">Cancelar</button><button class="btn">Reintentar</button></div>
+      <div class="savebar"><span class="msg ok">{{ic:circle-check:14}} Guardado hace un momento</span><span class="spacer"></span><button class="btn ghost danger">{{ic:trash-2:14}} Eliminar agente</button><button class="btn" disabled>Guardar cambios</button></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><div><h2>Paleta y contraste</h2><p>Se guarda el código, nunca el hex. La tinta de ojos y boca es la misma en los ocho; lo que cambia es el cuerpo. Calculado en vivo sobre estos tokens.</p></div></div>
+      <div class="contrast" id="contrast"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="view" data-view="mobile" data-note="390 px: una columna. El escenario se compacta a una fila (personaje + nombre + estado) y los selectores caben en el ancho; la barra de guardado se pega abajo." hidden>
+  <div class="phone"><div class="notch"></div><div class="page" data-studio="mobile"></div></div>
+</section>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- rig: poses (puerto 1:1 de avatar-rig.ts) ---------- */
+  const EYE = { top: .02, bot: 0, tilt: 0, sx: 1, scale: 1 };
+  const eye = (o) => ({ ...EYE, ...o });
+  const ex = (o) => ({ yaw: 0, pitch: 0, roll: 0, depth: 1, gap: 12, gx: 0, gy: 0, mouth: .9, mouthW: 1, open: 0, l: EYE, r: EYE, ...o });
+  const POSES = {
+    neutral: ex({}),
+    listening: ex({ pitch: 3, roll: -3, gap: 12.4, mouth: 1.05, mouthW: 1.05, l: eye({ top: 0, scale: 1.06 }), r: eye({ top: 0, scale: 1.06 }) }),
+    thinking: ex({ yaw: 9, pitch: -5, gx: .9, gy: -1, mouth: .25, mouthW: .8, l: eye({ top: .16, tilt: -6 }), r: eye({ top: .26, tilt: -4 }) }),
+    speaking: ex({ pitch: -1, mouth: .75, open: 1, l: eye({ top: 0, scale: 1.03 }), r: eye({ top: 0, scale: 1.03 }) }),
+    proud: ex({ pitch: -6, gap: 12.4, mouth: 1.35, mouthW: 1.18, l: eye({ top: .08, bot: .38, tilt: 4 }), r: eye({ top: .08, bot: .38, tilt: 4 }) }),
+    curious: ex({ roll: 7, yaw: -6, gx: -.4, mouth: .5, mouthW: .75, l: eye({ top: 0, scale: 1.16 }), r: eye({ top: .22, scale: .88 }) }),
+    sorry: ex({ pitch: 7, gy: .7, mouth: -.55, mouthW: .85, l: eye({ top: .28, tilt: 16, bot: .06 }), r: eye({ top: .28, tilt: 16, bot: .06 }) }),
+    asleep: ex({ pitch: 9, roll: 2, gy: .4, mouth: .35, mouthW: .7, l: eye({ top: .92, bot: .06 }), r: eye({ top: .92, bot: .06 }) }),
+  };
+  const r3 = (v, d = 3) => String(Math.round(v * 10 ** d) / 10 ** d);
+  function poseVars(name) {
+    const p = POSES[name]; const cos = Math.cos(p.yaw * Math.PI / 180 * 2.2); const far = p.yaw > 0 ? 'l' : 'r';
+    const s = { '--av-yaw': r3(p.yaw), '--av-pitch': r3(p.pitch), '--av-roll': r3(p.roll), '--av-depth': r3(p.depth), '--av-face-sx': r3(.94 + .06 * cos), '--av-gap': r3(p.gap * (.86 + .14 * cos), 2), '--av-gx': r3(p.gx), '--av-gy': r3(p.gy), '--av-mouth': r3(p.mouth), '--av-mouth-w': r3(p.mouthW), '--av-open': r3(p.open) };
+    for (const side of ['l', 'r']) { const e = p[side]; const sq = side === far ? 1 - Math.abs(p.yaw) * .012 : 1;
+      s[`--av-${side}-top`] = r3(e.top); s[`--av-${side}-bot`] = r3(e.bot); s[`--av-${side}-tilt`] = r3(e.tilt); s[`--av-${side}-sx`] = r3(e.sx * sq); s[`--av-${side}-scale`] = r3(e.scale); }
+    return s;
+  }
+
+  /* ---------- rig: geometría por personaje (lo que irá a avatar-characters.ts) ----------
+     Landmarks fijos para los cuatro: ojos en cy 47, labio en y 60 (los transform-origin del CSS). */
+  const CHARACTERS = {
+    lumo:    { label: 'Lumo',    tag: 'Axel y Alba',      body: [{ t: 'ellipse', cx: 50, cy: 50, rx: 37, ry: 34.5 }], eye: { rx: 4.3, ry: 5.8, cant: 0 }, mouth: { hw: 7,   d: 7,   orx: 3.2, ory: 2.1 }, headset: true },
+    cloudee: { label: 'Cloudee', tag: 'Ligero y cercano', body: [{ t: 'ellipse', cx: 50, cy: 58, rx: 36, ry: 20 }, { t: 'circle', cx: 31, cy: 46, r: 15 }, { t: 'circle', cx: 53, cy: 38, r: 19 }, { t: 'circle', cx: 72, cy: 46, r: 14 }], eye: { rx: 3.4, ry: 6.6, cant: 0 }, mouth: { hw: 4.6, d: 4.4, orx: 2.4, ory: 1.6 }, headset: false },
+    nova:    { label: 'Nova',    tag: 'Curioso y atento', body: [{ t: 'path', d: 'M50 11 C68 11 84 32 84 56 C84 77 69 90 50 90 C31 90 16 77 16 56 C16 32 32 11 50 11 Z' }], eye: { rx: 4.2, ry: 7.4, cant: 7 }, mouth: { hw: 6, d: 6, orx: 3, ory: 2 }, headset: false },
+    strobi:  { label: 'Strobi',  tag: 'Sereno y claro',   body: [{ t: 'circle', cx: 50, cy: 50, r: 36 }], eye: { rx: 4.6, ry: 6.2, cant: 0 }, mouth: { hw: 6.5, d: 6.5, orx: 3.1, ory: 2 }, headset: false },
+  };
+  const COLORS = { white: 'Blanco', cloud: 'Nube', coral: 'Coral', amber: 'Ámbar', violet: 'Violeta', mint: 'Menta', sky: 'Cielo', rose: 'Rosa' };
+  const shape = (s, attrs = '') => s.t === 'ellipse' ? `<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx}" ry="${s.ry}" ${attrs}/>` : s.t === 'circle' ? `<circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" ${attrs}/>` : `<path d="${s.d}" ${attrs}/>`;
+  let uidN = 0;
+  function eyeSvg(side, id, g) {
+    const { rx, ry } = g.eye; const cy = 47, lidH = ry * 2 + 3;
+    return `<g class="assistant-rig-eye-${side}"><g class="assistant-rig-blink"><g clip-path="url(#${id}-clip-e${side})"><ellipse cx="50" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${id}-ink)"/><g class="assistant-rig-pupil"><ellipse data-layer="glint" cx="${50 - rx * .33}" cy="${cy - ry * .45}" rx="1.1" ry="1.4" opacity=".9"/></g><rect data-layer="lid" class="assistant-rig-lid-top" x="43" y="${cy - ry - 3}" width="14" height="${lidH}"/><rect data-layer="lid" class="assistant-rig-lid-bot" x="43" y="${cy - ry}" width="14" height="${lidH}"/></g></g></g>`;
+  }
+  function avatarSvg(expression, { character = 'lumo', color = null, acc = 'none' } = {}) {
+    const g = CHARACTERS[character] || CHARACTERS.lumo; const id = 'av' + (++uidN);
+    const vars = Object.entries(poseVars(expression)).map(([k, v]) => `${k}:${v}`).join(';') + `;--av-eye-cant:${g.eye.cant}`;
+    const body = g.body.map((s) => shape(s, `fill="url(#${id}-body)"`)).join('');
+    const outline = g.body.map((s) => shape(s)).join('');
+    const clip = g.body.map((s) => shape(s)).join('');
+    const m = g.mouth;
+    const band = g.headset ? `<g class="assistant-rig-band" data-acc-part="headset"><path data-layer="acc-line" d="M16 50 C16 26 30 15.5 50 15.5 C70 15.5 84 26 84 50" stroke-width="4.2"/><rect data-layer="acc" x="9.5" y="40.5" width="9" height="19" rx="4.5"/><rect data-layer="acc" x="81.5" y="40.5" width="9" height="19" rx="4.5"/><rect data-layer="acc-hi" x="11" y="43.5" width="2.8" height="13" rx="1.4"/><path data-layer="acc-line" d="M86 58 C86 68 76 71.5 66 70" stroke-width="2.4"/><ellipse data-layer="acc" cx="63.5" cy="70" rx="4.4" ry="2.9"/></g>` : '';
+    return `<svg viewBox="0 0 100 100" class="assistant-avatar" aria-hidden="true" focusable="false" data-expression="${expression}" data-character="${character}" ${color ? `data-color="${color}"` : ''} data-acc="${acc}" style="${vars}">
+<g class="assistant-rig-gesture"><g class="assistant-rig-body"><g data-layer="outline">${outline}</g>${body}<g clip-path="url(#${id}-clip-body)"><ellipse cx="58" cy="70" rx="46" ry="38" fill="url(#${id}-occ)"/><g class="assistant-rig-hot"><ellipse data-layer="hot" cx="38" cy="30" rx="24" ry="18" fill="url(#${id}-hot)" opacity=".5"/></g></g></g>
+<g class="assistant-rig-face">${eyeSvg('l', id, g)}${eyeSvg('r', id, g)}<g class="assistant-rig-lips"><g class="assistant-rig-open"><ellipse data-layer="mouth-open" cx="50" cy="${60 + m.ory + .2}" rx="${m.orx}" ry="${m.ory}"/></g><g class="assistant-rig-mouth"><path data-layer="mouth" d="M${50 - m.hw} 60 Q50 ${60 + m.d} ${50 + m.hw} 60" stroke-width="2.6"/></g></g></g>
+${band}</g>
+<defs><clipPath id="${id}-clip-body">${clip}</clipPath><clipPath id="${id}-clip-el"><ellipse cx="50" cy="47" rx="${g.eye.rx}" ry="${g.eye.ry}"/></clipPath><clipPath id="${id}-clip-er"><ellipse cx="50" cy="47" rx="${g.eye.rx}" ry="${g.eye.ry}"/></clipPath>
+<radialGradient id="${id}-body" gradientUnits="userSpaceOnUse" cx="44" cy="37" r="62"><stop data-stop="body-hi" offset="0"/><stop data-stop="body-mid" offset=".66"/><stop data-stop="body-deep" offset="1"/></radialGradient>
+<radialGradient id="${id}-occ" cx=".5" cy=".5" r=".5"><stop data-stop="none" offset=".62"/><stop data-stop="occ" offset="1" stop-opacity=".32"/></radialGradient>
+<radialGradient id="${id}-hot" cx=".5" cy=".5" r=".5"><stop data-stop="hot" offset="0" stop-opacity=".9"/><stop data-stop="none" offset="1"/></radialGradient>
+<linearGradient id="${id}-ink" x1="0" y1="0" x2=".3" y2="1"><stop data-stop="ink-hi" offset="0"/><stop data-stop="ink" offset=".7"/></linearGradient></defs></svg>`;
+  }
+  function mountStage(el) {
+    el.classList.add('assistant-stage'); if (el.hasAttribute('data-busy')) el.classList.add('assistant-stage--busy');
+    el.innerHTML = `<span class="assistant-ground"></span><span class="assistant-stage-figure">${avatarSvg(el.dataset.avatar || 'neutral', { character: el.dataset.character || 'lumo', color: el.dataset.color || null, acc: el.dataset.acc || 'none' })}</span>`;
+    return el;
+  }
+  const setExpression = (stage, name) => { const svg = $('.assistant-avatar', stage); if (!svg) return; svg.dataset.expression = name; Object.entries(poseVars(name)).forEach(([k, v]) => svg.style.setProperty(k, v)); };
+  const setColor = (stage, color) => { $$('.assistant-avatar', stage).forEach((svg) => { svg.dataset.color = color; }); };
+  function gesture(stage, name) {
+    if (reduced) return; const svg = $('.assistant-avatar', stage); if (!svg) return;
+    svg.removeAttribute('data-gesture'); void svg.offsetWidth; svg.dataset.gesture = name;
+    clearTimeout(svg._g); svg._g = setTimeout(() => svg.removeAttribute('data-gesture'), { wink: 600, nod: 500, wave: 900 }[name]);
+  }
+
+  /* ---------- datos de ejemplo ---------- */
+  const ROLE = { ventas: { s: 'Ventas', l: 'Vende y toma pedidos' }, reservas: { s: 'Reservas', l: 'Gestiona la agenda' }, soporte: { s: 'Soporte', l: 'Atiende soporte' }, captacion: { s: 'Captación', l: 'Capta clientes nuevos' } };
+  const STATUS = { active: { l: 'Activo', c: 'ok', face: 'neutral' }, paused: { l: 'Pausado', c: 'warn', face: 'asleep' }, draft: { l: 'Borrador', c: 'off', face: 'curious' } };
+  const TONE = { cercano: 'Cercano', formal: 'Formal', directo: 'Directo' };
+  const CH = (kind) => kind === 'instagram' ? '{{ic:instagram:13}}' : '{{ic:message-circle:13}}';
+  const AGENTS = [
+    { id: 'valentina', name: 'Valentina', character: 'nova', color: 'coral', role: 'ventas', status: 'active', channels: [{ k: 'whatsapp', n: 'Savage · WhatsApp' }], voice: { name: 'Lucía', desc: 'cálida · es-CO' }, model: 'Claude Sonnet 5' },
+    { id: 'mateo', name: 'Mateo', character: 'cloudee', color: 'sky', role: 'soporte', status: 'active', channels: [{ k: 'instagram', n: '@savage.co' }, { k: 'whatsapp', n: 'Soporte' }], voice: { name: 'Andrés', desc: 'sereno · es-CO' }, model: 'Claude Sonnet 5' },
+    { id: 'sofia', name: 'Sofía', character: 'strobi', color: 'mint', role: 'reservas', status: 'paused', channels: [{ k: 'whatsapp', n: 'Reservas · WhatsApp' }], voice: { name: 'Camila', desc: 'clara · es-CO' }, model: 'Claude Haiku 4.5' },
+    { id: 'camila', name: 'Camila', character: 'nova', color: 'violet', role: 'captacion', status: 'draft', channels: [], voice: null, model: 'Claude Sonnet 5' },
+    { id: 'andres', name: 'Andrés', character: 'cloudee', color: 'cloud', role: 'ventas', status: 'active', channels: [{ k: 'whatsapp', n: 'Mayoristas' }], voice: null, model: 'Claude Sonnet 5' },
+  ];
+  const EDIT = {
+    ...AGENTS[0],
+    brief: {
+      role: 'ventas', tone: 'cercano',
+      goal: 'Cerrar ventas de la colección vigente por WhatsApp: cotizar con precios reales, armar el pedido y compartir los medios de pago sin que el cliente tenga que preguntar dos veces.',
+      always: [
+        'Saluda por el nombre si ya lo conoces y ve directo a lo que preguntó.',
+        'Cotiza solo con el catálogo: si un producto no aparece, dilo y ofrece el más parecido.',
+        'Confirma talla y color antes de armar el pedido.',
+        'Cuando pidan fotos, envía las del catálogo; nunca describas de memoria.',
+        { text: 'Menciona el envío gratis desde $250.000 solo cuando el carrito se acerque.', editing: true },
+        'Cierra cada pedido leyendo el resumen: productos, total y medio de pago.',
+        'Si pasa más de una hora sin respuesta, no insistas: espera a que vuelva.',
+        { text: 'Cuando el cliente dude entre dos prendas, compáralas en una sola frase por tela, ocasión y cuidado, recomienda una con un motivo concreto y ofrece enviar las dos fotos juntas para que decida viendo, sin repetir precios que ya dijiste antes.', err: true },
+      ],
+      never: ['Nunca inventes precios, descuentos ni tiempos de entrega.', 'No apliques descuentos: solo comunica la política vigente.', 'No pidas datos de tarjeta por el chat.', 'No hables de la competencia.'],
+      handoff_when: ['Pide hablar con una persona, aunque sea de forma indirecta.', 'Hay un reclamo por un pedido ya pagado.', 'Pregunta por ventas al por mayor o facturación a empresa.'],
+      business_facts: ['Tienda en Medellín; envíos a toda Colombia en 2–4 días hábiles.', 'Cambios hasta 15 días con la etiqueta puesta; no hay devolución de dinero.', 'Despachos de lunes a viernes, 9:00–18:00.', 'Pagos: Wompi (tarjeta, PSE, Nequi) y transferencia Bancolombia.', 'Envío gratis desde $250.000.'],
+    },
+    system_prompt: 'Usa «tú». Si el cliente escribe en inglés, responde en inglés. Las tallas van de XS a XL; la guía está en savage.co/tallas.',
+    advanced: { provider: 'Anthropic', model: 'claude-sonnet-5', temperature: 0.6, max_tokens: 700, skills: ['moda', 'tallas', 'envíos'], keywords: ['asesor', 'humano', 'persona'], max_failures: 3, voice_on: true, max_notes: 6, max_chars: 600,
+      intentions: [{ n: 'Ventas', d: 'Cotiza, arma pedidos y comparte medios de pago', on: true, reqs: ['catálogo', 'pedidos', 'pagos'] }, { n: 'Soporte', d: 'Estado del pedido, cambios y garantías', on: true, reqs: ['pedidos'] }, { n: 'Seguimiento', d: 'Retoma conversaciones que quedaron a medias', on: false, reqs: [] }] },
+    voiceSettings: { stability: .55, similarity: .8, speed: 1.0 },
+  };
+  const NEW = { id: null, name: '', character: 'nova', color: 'white', role: 'ventas', status: 'draft', channels: [], voice: null, model: 'Claude Sonnet 5',
+    brief: { role: 'ventas', tone: 'cercano', goal: '', always: [], never: [], handoff_when: [], business_facts: [] }, system_prompt: '',
+    advanced: { provider: 'Anthropic', model: 'claude-sonnet-5', temperature: 0.6, max_tokens: 700, skills: [], keywords: ['asesor', 'humano'], max_failures: 3, voice_on: false, max_notes: 6, max_chars: 600,
+      intentions: [{ n: 'Ventas', d: 'Cotiza, arma pedidos y comparte medios de pago', on: true, reqs: ['catálogo', 'pedidos', 'pagos'] }, { n: 'Soporte', d: 'Estado del pedido, cambios y garantías', on: false, reqs: ['pedidos'] }, { n: 'Reservas', d: 'Consulta disponibilidad y agenda citas', on: false, reqs: ['agenda'] }] } };
+
+  /* ---------- rejilla ---------- */
+  function cardHtml(a) {
+    const st = STATUS[a.status];
+    const chans = a.channels.length ? a.channels.map((c) => `<span class="chip">${CH(c.k)} ${esc(c.n)}</span>`).join('') : `<span class="chip" style="border-style:dashed">${'{{ic:plug:13}}'} Sin canal asignado</span>`;
+    const voice = a.voice ? `<span class="chip">{{ic:mic:13}} ${esc(a.voice.name)}</span>` : `<span class="chip muted">{{ic:mic-off:13}} Sin voz</span>`;
+    return `<a class="acard" href="#edit" data-go="edit" aria-label="${esc(a.name)}, ${ROLE[a.role].l}, ${st.l}">
+      <span data-avatar="${st.face}" data-character="${a.character}" data-color="${a.color}"></span>
+      <span class="acard-body"><span class="acard-top"><b>${esc(a.name)}</b><span class="badge ${st.c}"><span class="dot"></span>${st.l}</span></span>
+      <span class="role">${ROLE[a.role].l} · ${CHARACTERS[a.character].label}</span>
+      <span class="meta">${chans}${voice}</span></span>
+      <button class="kebab" aria-label="Más acciones de ${esc(a.name)}" onclick="event.preventDefault();event.stopPropagation()">{{ic:ellipsis-vertical:16}}</button></a>`;
+  }
+  $('#cards').innerHTML = AGENTS.map(cardHtml).join('') + `<a class="acard new" href="#new" data-go="new"><span class="plus">{{ic:plus:18}}</span><b>Crear agente</b><small>Personaje, voz y reglas en cinco minutos</small></a>`;
+
+  /* ---------- estudio ---------- */
+  function ruleItem(r) {
+    const o = typeof r === 'string' ? { text: r } : r; const n = o.text.length;
+    return `<div class="rl-item ${o.editing ? 'editing' : ''} ${o.err ? 'err' : ''}"><span class="grip" aria-hidden="true">{{ic:grip-vertical:14}}</span><div class="txt" contenteditable="true" spellcheck="false" role="textbox" aria-label="Regla">${esc(o.text)}</div><span class="acts"><button aria-label="Subir">{{ic:arrow-up:14}}</button><button aria-label="Bajar">{{ic:arrow-down:14}}</button><button class="del" aria-label="Quitar">{{ic:x:14}}</button></span>${o.editing || o.err ? `<span class="rl-foot"><span>${o.err ? 'Se pasa de 200 caracteres: acórtala o divídela en dos.' : 'Enter guarda · Esc cancela · Alt+↑↓ reordena'}</span><span>${n}/200</span></span>` : ''}</div>`;
+  }
+  function ruleList(key, title, hint, items, max, example) {
+    const list = items.map(ruleItem).join('');
+    const empty = items.length ? '' : `<div class="rl-empty">{{ic:sparkles:14}}<span>Por ejemplo: <em>${esc(example)}</em></span></div>`;
+    return `<div class="rl" data-list="${key}" data-max="${max}"><div class="rl-head"><b>${title}</b><span class="cnt">${items.length}/${max}</span></div><div class="rl-hint">${hint}</div>${empty}<div class="rl-items">${list}</div>
+      <div class="rl-add"><input class="input" type="text" placeholder="Añade una regla y pulsa Enter" aria-label="Nueva regla de ${title}" maxlength="200"><button class="btn outline sm" type="button">{{ic:plus:14}} Añadir</button></div></div>`;
+  }
+  const seg = (name, opts, value, small) => `<div class="seg ${small ? 'sm' : ''}" role="radiogroup" aria-label="${name}" data-seg="${name}">${Object.entries(opts).map(([k, l]) => `<button type="button" role="radio" aria-checked="${k === value}" data-v="${k}">${l}</button>`).join('')}</div>`;
+  const range = (label, v, min, max, fmt) => `<div class="range"><span>${label}</span><span class="bar" style="--p:${((v - min) / (max - min) * 100).toFixed(1)}%"><i></i><b></b></span><span class="v">${fmt(v)}</span></div>`;
+
+  function studioHtml(a, mode, mobile) {
+    const isNew = mode === 'new'; const st = STATUS[a.status]; const b = a.brief; const adv = a.advanced;
+    const chans = a.channels.length ? a.channels.map((c) => `<span class="chip">${CH(c.k)} ${esc(c.n)}</span>`).join('') + `<a class="chip" href="#" style="border-style:dashed">{{ic:plus:12}} Otro canal</a>`
+      : `<span class="muted" style="font-size:13px">Todavía no lo usa ningún canal.</span> <a class="chip" href="#">{{ic:external-link:12}} Asignar en Canales</a>`;
+    const voice = a.voice
+      ? `<div class="voice-row"><div class="select" role="combobox" aria-expanded="false"><span class="val">{{ic:mic:15}} <b style="font-weight:500">${esc(a.voice.name)}</b> <span class="muted">· ${esc(a.voice.desc)}</span></span>{{ic:chevron-down:15}}</div><button class="play" aria-label="Escuchar muestra de ${esc(a.voice.name)}" data-preview>{{ic:play:16}}</button></div>
+         <div class="acc" style="border-radius:12px"><button class="acc-btn" style="padding:10px 12px" aria-expanded="${!isNew && !mobile}" data-acc><small>Ajustar voz</small><span class="chev">{{ic:chevron-down:16}}</span></button><div class="acc-body" style="display:block;padding:0" ${!isNew && !mobile ? '' : 'hidden'}><div class="ranges">${range('Estabilidad', a.voiceSettings?.stability ?? .5, 0, 1, (v) => v.toFixed(2))}${range('Similitud', a.voiceSettings?.similarity ?? .75, 0, 1, (v) => v.toFixed(2))}${range('Velocidad', a.voiceSettings?.speed ?? 1, .7, 1.2, (v) => v.toFixed(2) + '×')}</div></div></div>`
+      : `<div class="voice-row"><div class="select" role="combobox" aria-expanded="false"><span class="val ph">{{ic:mic-off:15}} Sin voz · responde solo por texto</span>{{ic:chevron-down:15}}</div><button class="play off" aria-label="Escuchar muestra" disabled>{{ic:play:16}}</button></div><p class="voice-desc">{{ic:info:13}} Elige una voz para que responda con notas de voz cuando el cliente le hable.</p>`;
+    return `
+    <nav class="crumb" aria-label="Breadcrumb"><a href="#grid" data-go="grid">Agentes</a> {{ic:chevron-right:14}} <b>${isNew ? 'Nuevo agente' : esc(a.name)}</b></nav>
+    <div class="header"><div><h1>${isNew ? 'Nuevo agente' : esc(a.name)}</h1><p class="lead">${isNew ? 'Elige quién es, cómo suena y cómo atiende. Puedes cambiarlo todo después.' : 'Cambia su cara, su voz o sus reglas. Lo que guardes aplica en la siguiente conversación.'}</p></div>
+      ${isNew ? '' : `<div class="right"><a class="btn outline sm" href="#">{{ic:message-square-text:14}} Probar en el simulador</a></div>`}</div>
+    <div class="studio ${mobile ? 'force-1col' : ''}">
+      <div class="scene-col">
+        <div class="scene assistant-field">
+          <button class="hero-btn" aria-label="Saludar a ${esc(a.name || 'tu agente')}" data-hero><span data-avatar="${isNew ? 'neutral' : st.face}" data-character="${a.character}" data-color="${a.color}"></span></button>
+          <div class="who"><b data-name-mirror>${esc(a.name) || 'Tu agente'}</b><small data-who-sub>${CHARACTERS[a.character].label} · ${COLORS[a.color]}${a.voice ? ' · voz de ' + esc(a.voice.name) : ''}</small><span class="badge ${st.c} status"><span class="dot"></span>${st.l}</span></div>
+        </div>
+        <div class="opt"><h3>Personaje <small>tres, de la casa</small></h3>
+          <div class="picker" role="radiogroup" aria-label="Personaje">${['cloudee', 'nova', 'strobi'].map((c) => `<button class="tile" type="button" role="radio" aria-checked="${c === a.character}" data-char="${c}">${avatarSvg('neutral', { character: c, color: a.color })}<b>${CHARACTERS[c].label}</b><small>${CHARACTERS[c].tag}</small></button>`).join('')}</div></div>
+        <div class="opt"><h3>Color <small data-color-label>${COLORS[a.color]}</small></h3>
+          <div class="palette" role="radiogroup" aria-label="Color del personaje">${Object.entries(COLORS).map(([k, l]) => `<button class="swatch" type="button" role="radio" aria-checked="${k === a.color}" aria-label="${l}" title="${l}" data-color="${k}" style="--sw:var(--av-c-${k}-mid)"></button>`).join('')}</div></div>
+        <div class="opt" data-voice-block><h3>Voz <small>opcional</small></h3>${voice}</div>
+      </div>
+
+      <div class="panel">
+        <div class="sec"><div class="sec-head"><div><h2>Especificaciones</h2><p>Quién es para tus clientes y dónde trabaja.</p></div></div>
+          <div class="glist">
+            <div class="grow"><div class="k">Nombre <span class="req">*</span><small>Así se presenta al cliente</small></div><div class="v full"><input class="input" id="${mode}-name" type="text" value="${esc(a.name)}" placeholder="Por ejemplo, Valentina" data-name maxlength="80"></div></div>
+            <div class="grow"><div class="k">Rol<small>Lo que hace de verdad</small></div><div class="v">${seg('Rol', Object.fromEntries(Object.entries(ROLE).map(([k, v]) => [k, v.s])), b.role)}</div></div>
+            <div class="grow"><div class="k">Estado</div><div class="v">${seg('Estado', { active: 'Activo', paused: 'Pausado', draft: 'Borrador' }, a.status)}</div></div>
+            <div class="grow"><div class="k">Canales que lo usan<small>Se asignan desde cada canal</small></div><div class="v">${chans}</div></div>
+            <div class="grow"><div class="k">Modelo<small>Cerebro que responde</small></div><div class="v full"><div class="select" role="combobox" aria-expanded="false"><span class="val">{{ic:sparkles:14}} ${esc(a.model)} <span class="muted">· recomendado</span></span>{{ic:chevron-down:15}}</div></div></div>
+          </div></div>
+
+        <div class="sec"><div class="sec-head"><div><h2>Reglas</h2><p>Frases cortas que el agente lee antes de cada respuesta. Una idea por regla; el orden importa.</p></div></div>
+          <div class="glist">
+            <div class="grow"><div class="k">Objetivo<small>Una frase, ≤ 300</small></div><div class="v full"><textarea class="textarea" id="${mode}-goal" rows="2" placeholder="Qué tiene que lograr en cada conversación. Por ejemplo: cerrar la venta con el pedido armado y el medio de pago compartido." maxlength="300">${esc(b.goal)}</textarea></div></div>
+            <div class="grow"><div class="k">Tono</div><div class="v">${seg('Tono', TONE, b.tone)}<span class="muted" style="font-size:12.5px">${b.tone === 'formal' ? 'De usted, sin apodos' : b.tone === 'directo' ? 'Sin rodeos ni relleno' : 'De tú, cálido'}</span></div></div>
+          </div>
+          <div class="rules">
+            ${ruleList('always', 'Lo que siempre hace', 'Comportamientos que quieres ver en cada conversación.', b.always, 8, 'Confirma talla y color antes de armar el pedido.')}
+            ${ruleList('never', 'Lo que nunca hace', 'Líneas que no cruza aunque el cliente insista.', b.never, 8, 'Nunca inventes precios ni tiempos de entrega.')}
+            ${ruleList('handoff_when', 'Cuándo pasa a una persona', 'Señales para entregar la conversación a alguien del equipo.', b.handoff_when, 6, 'Hay un reclamo por un pedido ya pagado.')}
+            ${ruleList('business_facts', 'Datos del negocio', 'Lo que tiene que saber de memoria: horarios, envíos, pagos, políticas.', b.business_facts, 10, 'Envíos a toda Colombia en 2–4 días hábiles.')}
+          </div>
+          <div class="field"><span class="lbl"><span>Instrucciones adicionales <span class="req">*</span></span><small>Texto libre · ${a.system_prompt.length}/20.000</small></span>
+            <textarea class="textarea" id="${mode}-prompt" rows="3" placeholder="Todo lo que no cabe arriba: idioma, excepciones, cómo hablar de un tema delicado…">${esc(a.system_prompt)}</textarea>
+            <span class="hint">Lo que escribas aquí va después de las reglas. Cuanto más pongas en las listas de arriba, menos hace falta aquí.</span></div>
+        </div>
+
+        <div class="acc"><button class="acc-btn" aria-expanded="${!isNew && !mobile}" data-acc>{{ic:settings-2:16}}<b>Avanzado</b><small>Modelo, límites, intenciones y política de voz</small><span class="chev">{{ic:chevron-down:16}}</span></button>
+          <div class="acc-body" ${!isNew && !mobile ? '' : 'hidden'}>
+            <div class="field"><span class="lbl">Proveedor</span><div class="select"><span class="val">${adv.provider}</span>{{ic:chevron-down:15}}</div></div>
+            <div class="field"><span class="lbl">Modelo</span><div class="select"><span class="val mono">${adv.model}</span>{{ic:chevron-down:15}}</div></div>
+            <div class="field"><span class="lbl"><span>Temperatura</span><small>máx. 1 en Anthropic</small></span><input class="input tnum" type="text" value="${adv.temperature}"></div>
+            <div class="field"><span class="lbl">Máx. tokens por respuesta</span><input class="input tnum" type="text" value="${adv.max_tokens}"></div>
+            <div class="field"><span class="lbl">Especialidades</span><div class="input" style="flex-wrap:wrap;gap:6px;justify-content:flex-start;padding:5px 8px;min-height:40px">${adv.skills.map((s) => `<span class="chip">${esc(s)} {{ic:x:11}}</span>`).join('')}<span class="ph" style="font-size:13px">${adv.skills.length ? '' : 'moda, tallas, envíos…'}</span></div></div>
+            <div class="field"><span class="lbl"><span>Palabras que escalan</span><small>además de las reglas</small></span><div class="input" style="flex-wrap:wrap;gap:6px;justify-content:flex-start;padding:5px 8px;min-height:40px">${adv.keywords.map((s) => `<span class="chip">${esc(s)} {{ic:x:11}}</span>`).join('')}</div></div>
+            <div class="field"><span class="lbl">Fallos antes de escalar</span><input class="input tnum" type="text" value="${adv.max_failures}"></div>
+            <div class="field full"><span class="lbl">Intenciones que atiende</span><div class="glist" style="padding:0 14px">${adv.intentions.map((i) => `<div class="intent"><b>${i.n}</b><button class="sw" role="switch" aria-checked="${i.on}" aria-label="${i.n}" data-sw></button><small>${i.d}</small>${i.reqs.length ? `<span class="reqs">${i.reqs.map((r) => `<span class="chip ai">${r}</span>`).join('')}</span>` : ''}</div>`).join('')}</div></div>
+            <div class="field full"><span class="lbl"><span>Política de voz</span><small>${a.voice ? 'requiere una voz elegida' : 'elige una voz primero'}</small></span>
+              <div class="glist"><div class="grow"><div class="k">Responder con notas de voz<small>Cuando el cliente le habla por audio</small></div><div class="v"><button class="sw" role="switch" aria-checked="${adv.voice_on}" aria-disabled="${!a.voice}" aria-label="Responder con notas de voz" data-sw></button></div></div>
+                <div class="grow"><div class="k">Máximo por conversación</div><div class="v"><input class="input tnum" style="width:90px" type="text" value="${adv.max_notes}"> <span class="muted" style="font-size:12.5px">notas de voz</span></div></div>
+                <div class="grow"><div class="k">Largo máximo</div><div class="v"><input class="input tnum" style="width:90px" type="text" value="${adv.max_chars}"> <span class="muted" style="font-size:12.5px">caracteres ≈ 37 s</span></div></div></div></div>
+          </div></div>
+
+        <div class="savebar" data-savebar><span class="msg" data-savemsg>${isNew ? '{{ic:info:14}} El agente nace en borrador: no atiende hasta que lo actives y un canal lo use.' : '{{ic:circle-check:14}} Todo guardado'}</span><span class="spacer"></span>
+          ${isNew ? '' : `<button class="btn ghost danger" type="button">{{ic:trash-2:14}} Eliminar</button>`}<a class="btn ghost" href="#grid" data-go="grid">Cancelar</a><button class="btn" type="button" data-save ${isNew ? '' : 'disabled'}>${isNew ? 'Crear agente' : 'Guardar cambios'}</button></div>
+      </div>
+    </div>`;
+  }
+
+  /* ---------- comportamiento del estudio ---------- */
+  function wireStudio(root, a) {
+    const stage = $('[data-avatar]', root); mountStage(stage);
+    const hero = $('[data-hero]', root); const savebar = $('[data-savebar]', root); const saveBtn = $('[data-save]', root); const saveMsg = $('[data-savemsg]', root);
+    let dirty = false, taps = 0, tapT = 0;
+    const markDirty = () => { if (dirty) return; dirty = true; saveBtn.removeAttribute('disabled'); if (saveMsg) { saveMsg.className = 'msg'; saveMsg.innerHTML = '{{ic:pencil:14}} Cambios sin guardar'; } };
+    const sub = () => { $('[data-who-sub]', root).textContent = `${CHARACTERS[a.character].label} · ${COLORS[a.color]}${a.voice ? ' · voz de ' + a.voice.name : ''}`; };
+
+    // personaje: al cambiar, la figura se sustituye (misma pose) y asiente
+    $$('[data-char]', root).forEach((t) => t.addEventListener('click', () => {
+      a.character = t.dataset.char; $$('[data-char]', root).forEach((x) => x.setAttribute('aria-checked', String(x === t)));
+      const expr = $('.assistant-avatar', stage).dataset.expression;
+      $('.assistant-stage-figure', stage).innerHTML = avatarSvg(expr, { character: a.character, color: a.color });
+      gesture(stage, 'nod'); sub(); markDirty();
+    }));
+    // color: una variable; los tiles del picker también se tiñen
+    $$('.swatch', root).forEach((s) => s.addEventListener('click', () => {
+      a.color = s.dataset.color; $$('.swatch', root).forEach((x) => x.setAttribute('aria-checked', String(x === s)));
+      setColor(stage, a.color); $$('[data-char] .assistant-avatar', root).forEach((svg) => { svg.dataset.color = a.color; });
+      $('[data-color-label]', root).textContent = COLORS[a.color]; gesture(stage, 'nod'); sub(); markDirty();
+    }));
+    // teclado en los radiogroups (roving)
+    $$('[role="radiogroup"]', root).forEach((g) => g.addEventListener('keydown', (e) => {
+      const items = $$('[role="radio"]', g); const i = items.indexOf(document.activeElement); if (i < 0) return;
+      const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!d) return; e.preventDefault();
+      const n = items[(i + d + items.length) % items.length]; n.focus(); n.click();
+    }));
+    // segmentados y switches
+    $$('[data-seg] button', root).forEach((b) => b.addEventListener('click', () => {
+      $$('button', b.parentElement).forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+      if (b.parentElement.dataset.seg === 'Estado') { const st = STATUS[b.dataset.v]; const badge = $('.who .status', root); badge.className = `badge ${st.c} status`; badge.innerHTML = `<span class="dot"></span>${st.l}`; setExpression(stage, st.face); }
+      markDirty();
+    }));
+    $$('[data-sw]', root).forEach((s) => s.addEventListener('click', () => { if (s.getAttribute('aria-disabled') === 'true') return; s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')); markDirty(); }));
+    // acordeones
+    $$('[data-acc]', root).forEach((b) => b.addEventListener('click', () => { const open = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', String(!open)); b.nextElementSibling.hidden = open; }));
+    // nombre → escenario (escuchando mientras escribes)
+    const name = $('[data-name]', root); let nameT = 0;
+    name.addEventListener('input', () => { $('[data-name-mirror]', root).textContent = name.value.trim() || 'Tu agente'; a.name = name.value; setExpression(stage, 'listening'); clearTimeout(nameT); nameT = setTimeout(() => setExpression(stage, STATUS[a.status].face), 900); markDirty(); });
+    $$('textarea', root).forEach((t) => t.addEventListener('input', markDirty));
+    // listas de reglas
+    $$('.rl', root).forEach((rl) => {
+      const max = +rl.dataset.max; const items = $('.rl-items', rl); const cnt = $('.cnt', rl); const input = $('.rl-add input', rl); const add = $('.rl-add button', rl);
+      const refresh = () => { const n = $$('.rl-item', items).length; cnt.textContent = `${n}/${max}`; const e = $('.rl-empty', rl); if (e) e.hidden = n > 0; add.disabled = n >= max; input.disabled = n >= max; input.placeholder = n >= max ? `Máximo ${max} reglas: junta dos o quita una` : 'Añade una regla y pulsa Enter'; };
+      const addRule = () => { const v = input.value.trim(); if (!v) return; items.insertAdjacentHTML('beforeend', ruleItem(v)); wireItem(items.lastElementChild); input.value = ''; refresh(); setExpression(stage, 'proud'); gesture(stage, 'nod'); setTimeout(() => setExpression(stage, STATUS[a.status].face), 1200); markDirty(); };
+      const wireItem = (it) => {
+        $('.del', it).addEventListener('click', () => { it.remove(); refresh(); markDirty(); });
+        $$('.acts button', it).slice(0, 2).forEach((b, i) => b.addEventListener('click', () => { const s = i === 0 ? it.previousElementSibling : it.nextElementSibling; if (!s) return; i === 0 ? s.before(it) : s.after(it); markDirty(); }));
+        const txt = $('.txt', it);
+        txt.addEventListener('input', () => { const n = txt.textContent.length; it.classList.toggle('err', n > 200); let f = $('.rl-foot', it); if (!f) { it.insertAdjacentHTML('beforeend', '<span class="rl-foot"><span></span><span></span></span>'); f = $('.rl-foot', it); } f.children[0].textContent = n > 200 ? 'Se pasa de 200 caracteres: acórtala o divídela en dos.' : 'Enter guarda · Esc cancela · Alt+↑↓ reordena'; f.children[1].textContent = `${n}/200`; markDirty(); });
+        txt.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); txt.blur(); } if (e.key === 'Escape') txt.blur(); if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); const s = e.key === 'ArrowUp' ? it.previousElementSibling : it.nextElementSibling; if (s) { e.key === 'ArrowUp' ? s.before(it) : s.after(it); txt.focus(); markDirty(); } } });
+        txt.addEventListener('focus', () => it.classList.add('editing')); txt.addEventListener('blur', () => { it.classList.remove('editing'); if (!it.classList.contains('err')) { const f = $('.rl-foot', it); if (f) f.remove(); } });
+      };
+      $$('.rl-item', items).forEach(wireItem);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addRule(); } });
+      add.addEventListener('click', addRule); refresh();
+    });
+    // guardar: pensando → orgulloso; en el mockup, uno de cada cuatro falla para ver el error
+    let saves = 0;
+    saveBtn.addEventListener('click', () => {
+      saves++; saveBtn.setAttribute('disabled', ''); stage.classList.add('assistant-stage--busy'); setExpression(stage, 'thinking'); saveMsg.className = 'msg'; saveMsg.innerHTML = '{{ic:loader-circle:14}} Guardando…';
+      setTimeout(() => { stage.classList.remove('assistant-stage--busy');
+        if (saves % 4 === 0) { setExpression(stage, 'sorry'); saveMsg.className = 'msg err'; saveMsg.innerHTML = '{{ic:circle-alert:14}} No pudimos guardar: la voz elegida ya no está en el catálogo. Elige otra e inténtalo de nuevo.'; saveBtn.removeAttribute('disabled'); saveBtn.textContent = 'Reintentar'; return; }
+        setExpression(stage, 'proud'); gesture(stage, 'nod'); dirty = false; saveMsg.className = 'msg ok'; saveMsg.innerHTML = '{{ic:circle-check:14}} Guardado hace un momento'; saveBtn.textContent = 'Guardar cambios';
+        setTimeout(() => setExpression(stage, STATUS[a.status].face), 2400); }, 1100);
+    });
+    // vida: mirada al puntero sobre la escena, parpadeo solo mientras el puntero está en el estudio, guiño al tocar (3 toques = saludo)
+    if (!reduced) {
+      let raf = 0; const svgOf = () => $('.assistant-avatar', stage);
+      root.addEventListener('pointermove', (ev) => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const svg = svgOf(); const b = svg.getBoundingClientRect(); const dx = (ev.clientX - (b.left + b.width / 2)) / 320, dy = (ev.clientY - (b.top + b.height / 2)) / 320; svg.style.setProperty('--gaze-x', Math.max(-1, Math.min(1, dx)).toFixed(3)); svg.style.setProperty('--gaze-y', Math.max(-1, Math.min(1, dy)).toFixed(3)); }); });
+      root.addEventListener('pointerleave', () => { const svg = svgOf(); svg.style.setProperty('--gaze-x', 0); svg.style.setProperty('--gaze-y', 0); });
+      let blinkT = 0; const blink = () => { const svg = svgOf(); if (!svg || $('.assistant-avatar', stage).dataset.expression === 'asleep') return; svg.classList.add('is-blinking'); setTimeout(() => svg.classList.remove('is-blinking'), 190); if (Math.random() < .25) setTimeout(() => { svg.classList.add('is-blinking'); setTimeout(() => svg.classList.remove('is-blinking'), 190); }, 260); };
+      const schedule = () => { blinkT = setTimeout(() => { blink(); schedule(); }, 2200 + Math.random() * 2600); };
+      root.addEventListener('pointerenter', () => { clearTimeout(blinkT); schedule(); }); root.addEventListener('pointerleave', () => clearTimeout(blinkT));
+    }
+    hero.addEventListener('click', () => { const now = Date.now(); taps = now - tapT < 900 ? taps + 1 : 1; tapT = now; if (taps >= 3) { taps = 0; gesture(stage, 'wave'); setExpression(stage, 'proud'); setTimeout(() => setExpression(stage, STATUS[a.status].face), 1200); } else gesture(stage, 'wink'); });
+  }
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const NEW_A = clone(NEW), EDIT_A = clone(EDIT), MOB_A = clone(NEW);
+  $('[data-studio="new"]').innerHTML = studioHtml(NEW_A, 'new', false); wireStudio($('[data-studio="new"]'), NEW_A);
+  $('[data-studio="edit"]').innerHTML = studioHtml(EDIT_A, 'edit', false); wireStudio($('[data-studio="edit"]'), EDIT_A);
+  $('[data-studio="mobile"]').innerHTML = studioHtml(MOB_A, 'new', true); wireStudio($('[data-studio="mobile"]'), MOB_A);
+  $('[data-studio="edit"] [data-save]').setAttribute('disabled', '');
+  $$('[data-studio="edit"] .rl-item.editing .txt').forEach((t) => t.focus?.());
+
+  /* ---------- estados ---------- */
+  const STATES = [
+    ['neutral', false, 'En reposo', 'Sin temporizadores: parpadea y mira solo mientras trabajas en la pantalla.'],
+    ['listening', false, 'Escribiendo el nombre', 'Escucha mientras tecleas; vuelve a su cara al soltar.'],
+    ['thinking', true, 'Guardando', 'Respira mientras el servidor responde.'],
+    ['proud', false, 'Guardado', 'Orgulloso y asiente; a los dos segundos vuelve al reposo.'],
+    ['sorry', false, 'No se pudo guardar', 'Lo siente; la barra dice qué pasó y qué hacer.'],
+    ['asleep', false, 'Pausado', 'Duerme mientras el agente está en pausa.'],
+    ['speaking', false, 'Escuchando su voz', 'Habla mientras suena la muestra de la voz elegida.'],
+    ['curious', false, 'Borrador', 'Curioso: existe pero aún no atiende.'],
+  ];
+  $('#states').innerHTML = STATES.map(([e, busy, t, d], i) => { const c = ['nova', 'cloudee', 'strobi'][i % 3]; const col = ['coral', 'sky', 'mint', 'violet', 'rose', 'cloud', 'amber', 'white'][i]; return `<div class="state"><span data-avatar="${e}" data-character="${c}" data-color="${col}" ${busy ? 'data-busy' : ''}></span><b>${t}</b><small>${d}</small><span class="mono muted">${e}</span></div>`; }).join('');
+
+  /* ---------- contraste de la paleta (tinta sobre body-mid) ---------- */
+  const lum = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4); return .2126 * r + .7152 * g + .0722 * b; };
+  const ratio = (a, b) => { const [h, l] = [lum(a), lum(b)].sort((x, y) => y - x); return (h + .05) / (l + .05); };
+  const LIGHT = { ink: '#2b2b30', page: '#ffffff', white: '#f7f5f0', cloud: '#d5d8de', coral: '#f8bcb9', amber: '#f8d78f', violet: '#d6c6f8', mint: '#b7e9d3', sky: '#b8daf8', rose: '#f7c1d8' };
+  const DARK = { ink: '#1d1d21', page: '#0a0a0a', white: '#f1eee7', cloud: '#c9cdd5', coral: '#f5aeaa', amber: '#f5cf7c', violet: '#cfbcf6', mint: '#a9e3ca', sky: '#a9d2f5', rose: '#f3b4d0' };
+  const cell = (r, min) => `<td class="tnum ${r >= min ? 'pass' : 'fail'}">${r.toFixed(1)}:1</td>`;
+  $('#contrast').innerHTML = `<table><thead><tr><th>Código</th><th>Cuerpo (claro)</th><th>Tinta / cuerpo · claro</th><th>Cuerpo / fondo · claro</th><th>Tinta / cuerpo · oscuro</th><th>Cuerpo / fondo · oscuro</th></tr></thead><tbody>${Object.keys(COLORS).map((k) => `<tr><td><span class="dotc" style="background:var(--av-c-${k}-mid)"></span>${COLORS[k]} <span class="mono muted">${k}</span></td><td class="mono muted">${LIGHT[k]}</td>${cell(ratio(LIGHT.ink, LIGHT[k]), 3)}${cell(ratio(LIGHT[k], LIGHT.page), 1.15)}${cell(ratio(DARK.ink, DARK[k]), 3)}${cell(ratio(DARK[k], DARK.page), 3)}</tr>`).join('')}</tbody></table>`;
+
+  /* ---------- montar escenarios estáticos y navegación del mockup ---------- */
+  $$('[data-avatar]:not(.assistant-stage)').forEach(mountStage);
+  const views = $$('.view'), tabs = $$('.mk-bar .tab'), note = $('#mk-note');
+  function show(id) { tabs.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === id))); views.forEach((v) => { const on = v.dataset.view === id; v.hidden = !on; if (on) note.innerHTML = v.dataset.note; }); window.scrollTo({ top: 0 }); }
+  tabs.forEach((b) => b.addEventListener('click', () => { show(b.dataset.view); history.replaceState(null, '', '#' + b.dataset.view); }));
+  document.addEventListener('click', (e) => { const a = e.target.closest('[data-go]'); if (!a) return; e.preventDefault(); show(a.dataset.go); history.replaceState(null, '', '#' + a.dataset.go); });
+  $('#theme').addEventListener('click', () => { const root = document.documentElement; const dark = root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches); root.dataset.theme = dark ? 'light' : 'dark'; });
+  const ids = views.map((v) => v.dataset.view); const initial = location.hash.slice(1); show(ids.includes(initial) ? initial : 'grid');
+})();
+</script>

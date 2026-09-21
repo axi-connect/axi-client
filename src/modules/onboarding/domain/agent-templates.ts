@@ -7,18 +7,25 @@
 
 /** Una plantilla del catálogo, tal como la sirve el servidor. */
 import type { Schemas } from "@/core/api/types";
+import {
+  BRIEF_TONE_LABELS,
+  BRIEF_TONES,
+  DEFAULT_APPEARANCE,
+  type AgentAppearance,
+  type AgentBriefTone,
+} from "@/modules/agents/public";
 
 export type AgentTemplateDTO = Schemas["AgentTemplateListDto"]["data"][number];
 
 export type AgentTemplateRole = AgentTemplateDTO["role"];
 
-export const AGENT_TONES = ["cercano", "formal", "directo"] as const;
-export type AgentTone = (typeof AGENT_TONES)[number];
-
+/** El tono es el del brief del agente: una sola fuente (`agents/public`). */
+export const AGENT_TONES = BRIEF_TONES;
+export type AgentTone = AgentBriefTone;
 export const TONE_LABELS: Record<AgentTone, string> = {
-  cercano: "Cercano",
-  formal: "Formal",
-  directo: "Directo",
+  cercano: BRIEF_TONE_LABELS.cercano.label,
+  formal: BRIEF_TONE_LABELS.formal.label,
+  directo: BRIEF_TONE_LABELS.directo.label,
 };
 
 export const ROLE_LABELS: Record<AgentTemplateRole, string> = {
@@ -28,25 +35,29 @@ export const ROLE_LABELS: Record<AgentTemplateRole, string> = {
   captacion: "Captación",
 };
 
-export type AgentTemplateOverrides = {
-  name?: string;
-  tone?: AgentTone;
-  character_id?: string;
-  voice_id?: string;
-  /** «Datos clave que debe saber»: zonas, políticas, promociones. Máx. 2000. */
-  extra_instructions?: string;
-};
+export type CreateAgentFromTemplateDTO = Schemas["CreateAgentFromTemplateDto"];
+
+/** Los overrides tal como los acepta el servidor (la voz es la forma NO vacía: aquí no se «quita»). */
+export type AgentTemplateOverrides = NonNullable<CreateAgentFromTemplateDTO["overrides"]>;
 
 export const EXTRA_INSTRUCTIONS_MAX = 2000;
-
-export type CreateAgentFromTemplateDTO = Schemas["CreateAgentFromTemplateDto"];
 
 export type AgentTemplateDraft = {
   name: string;
   tone: AgentTone;
-  character_id: string | null;
+  appearance: AgentAppearance;
+  /** `external_voice_id` del catálogo; `""` = sin voz. */
+  voice_id: string;
   extra_instructions: string;
 };
+
+/** Lo que la plantilla recomienda como cara, o el default global. */
+export function templateAppearance(template: AgentTemplateDTO): AgentAppearance {
+  return {
+    character: template.recommended_character_code ?? DEFAULT_APPEARANCE.character,
+    color: template.recommended_color_code ?? DEFAULT_APPEARANCE.color,
+  };
+}
 
 /** «Joao, vendedor de La Parrilla»: el nombre del negocio manda; sin él, el de la plantilla. */
 export function defaultAgentName(template: AgentTemplateDTO, companyName: string | null): string {
@@ -63,7 +74,9 @@ export function initialDraft(template: AgentTemplateDTO, companyName: string | n
   return {
     name: defaultAgentName(template, companyName),
     tone: "cercano",
-    character_id: template.recommended_character_id,
+    appearance: templateAppearance(template),
+    // Sin voz por defecto: elegirla enciende las notas de voz (cuestan); lo decide el dueño.
+    voice_id: "",
     extra_instructions: "",
   };
 }
@@ -82,7 +95,14 @@ export function toCreateDTO(template: AgentTemplateDTO, draft: AgentTemplateDraf
   if (name && name !== defaultAgentName(template, companyName)) overrides.name = name;
   else if (name && companyName) overrides.name = name; // el nombre con la empresa sí viaja: el servidor no la conoce en la plantilla
   if (draft.tone !== "cercano") overrides.tone = draft.tone;
-  if (draft.character_id && draft.character_id !== template.recommended_character_id) overrides.character_id = draft.character_id;
+  const recommended = templateAppearance(template);
+  if (draft.appearance.character !== recommended.character || draft.appearance.color !== recommended.color) {
+    overrides.appearance = draft.appearance;
+  }
+  // La voz solo viaja si el dueño la eligió: mandarla enciende las notas de voz del agente.
+  if (draft.voice_id !== "") {
+    overrides.voice = { provider: "elevenlabs", voice_id: draft.voice_id };
+  }
   const extra = draft.extra_instructions.trim();
   if (extra) overrides.extra_instructions = extra;
   return {

@@ -1,5 +1,6 @@
 import type { Schemas } from "@/core/api/types";
 import { relativeTime } from "@/core/lib/relative-time";
+import { renderHsmPreview, type PreviewSegment } from "@/modules/marketing/public";
 import {
   addDaysToKey,
   businessDayKey,
@@ -262,11 +263,12 @@ export const OPENING_PARAM_LABELS: Record<OpeningTemplateParam, string> = {
   topic: "tema",
 };
 
-export type PreviewSegment = { text: string; variable: boolean };
+export type { PreviewSegment };
 
 /**
- * Vista previa de la plantilla con los datos reales, en segmentos para que la
- * UI resalte las variables. Misma regla de relleno que el backend
+ * Vista previa con los datos reales. El troceado del cuerpo lo hace
+ * `renderHsmPreview` (compartido con el asistente de campañas); aquí solo se
+ * dice qué va en cada hueco. Misma regla de relleno que el backend
  * (`renderOpeningComponents`): el primer nombre cae al nombre completo y este a
  * «Hola»; el tema en blanco se ve en blanco a propósito — es lo que falta.
  */
@@ -283,20 +285,10 @@ export function renderTemplatePreview(
     company_name: sources.company_name,
     topic: sources.topic,
   };
-  const segments: PreviewSegment[] = [];
-  let cursor = 0;
-  for (const match of body.matchAll(/\{\{(\d+)\}\}/g)) {
-    const index = Number(match[1]) - 1;
-    if (match.index > cursor) segments.push({ text: body.slice(cursor, match.index), variable: false });
-    const source = params[index];
-    segments.push({
-      text: source === undefined ? match[0] : values[source] || "…",
-      variable: true,
-    });
-    cursor = match.index + match[0].length;
-  }
-  if (cursor < body.length) segments.push({ text: body.slice(cursor), variable: false });
-  return segments;
+  return renderHsmPreview(body, (index) => {
+    const source = params[index - 1];
+    return source === undefined ? null : values[source] || "…";
+  });
 }
 
 /** Sugerencia de origen para cada `{{n}}`: {{1}} nombre, {{2}} tema, el resto empresa. */

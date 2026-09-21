@@ -60,10 +60,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "ai/template_immutable": "Las plantillas del sistema no se pueden modificar",
   "ai/character_in_use": "El character está en uso por un agente",
   "ai/intention_code_taken": "Ya existe una intención con ese código",
-  // Voz (§10.5 F2)
-  "ai/tts_byok_requires_enterprise":
-    "La clave propia de ElevenLabs es exclusiva del plan Enterprise",
-  "ai/tts_credential_context": "La credencial de voz solo puede gestionarse desde el panel del negocio",
+  // Voz (§10.5)
   "ai/voice_not_in_catalog": "Esa voz no está en el catálogo: elige una de la lista",
   // CMO (Axel). Los 10 códigos tipados del slice: sin esta tabla se pintaba el
   // `detail` crudo del backend en la burbuja del chat y en los toasts (H17).

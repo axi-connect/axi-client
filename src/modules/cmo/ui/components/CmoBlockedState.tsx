@@ -6,9 +6,8 @@ import { Power } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAxelAccessory } from "@/modules/cmo/infrastructure/hooks/use-axel-appearance";
 import type { CmoBlocker } from "@/modules/cmo/infrastructure/stores/cmo.store";
-import { AxelAvatar } from "./AxelAvatar";
 import { AXEL_LABEL } from "./AxelHeroAvatar";
-import { AxelStage } from "./AxelStage";
+import { AssistantAvatar, AssistantStage } from "@/shared/components/features/assistant";
 
 interface CmoBlockedStateProps {
   blocker: NonNullable<CmoBlocker>;
@@ -37,9 +36,9 @@ export function CmoBlockedState({ blocker, canManage }: CmoBlockedStateProps) {
     <div className="mx-auto flex max-w-md flex-col items-center px-6 py-16 text-center">
       {/* Dormido y estático: sin botón (no saluda), sin mirada, sin vida. */}
       <div role="img" aria-label={AXEL_LABEL} data-mood="asleep">
-        <AxelStage>
-          <AxelAvatar expression="asleep" accessory={accessory} transitionMs={0} />
-        </AxelStage>
+        <AssistantStage>
+          <AssistantAvatar expression="asleep" accessory={accessory} transitionMs={0} />
+        </AssistantStage>
       </div>
       <h2 className="font-heading mt-5 text-xl font-bold">
         {isQuota ? "Axel agotó sus análisis" : "Axel está apagado"}
