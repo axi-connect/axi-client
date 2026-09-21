@@ -49,7 +49,7 @@ const AUTO_VERTICAL = "__auto__"
 
 /**
  * Configuración → Reconocimiento de producto: el opt-in de empresa, el consumo
- * del ciclo y el estado del índice del catálogo. Calco de VoiceSettingsView:
+ * del ciclo y el estado del índice del catálogo. Calco de la antigua VoiceSettingsView (retirada: la voz la gobierna axi desde /platform):
  * es una capacidad de pago y cada estado (apagada, cuota agotada, índice
  * incompleto) se EXPLICA en el punto de uso, jamás se oculta un control.
  */

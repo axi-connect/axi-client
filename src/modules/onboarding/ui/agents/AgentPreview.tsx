@@ -3,7 +3,9 @@
 import { Mic, Plus } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
+import { KIT_CHARACTER, CHARACTER_LABELS, type AgentAppearance } from "@/modules/agents/public";
 import type { AgentTone } from "@/modules/onboarding/domain/agent-templates";
+import { AssistantAvatar } from "@/shared/components/features/assistant";
 import { previewConversation } from "@/modules/onboarding/ui/agents/agent-preview-copy";
 
 /**
@@ -21,14 +23,15 @@ import { previewConversation } from "@/modules/onboarding/ui/agents/agent-previe
 export function AgentPreview({
   name,
   tone,
-  characterName,
+  appearance,
   companyName,
   nicheCode,
   className,
 }: {
   name: string;
   tone: AgentTone;
-  characterName: string | null;
+  /** Personaje + color elegidos: el teléfono muestra la cara real (estática). */
+  appearance: AgentAppearance;
   companyName: string | null;
   nicheCode: string | null;
   className?: string;
@@ -54,12 +57,16 @@ export function AgentPreview({
         </span>
       </div>
       <div className="border-border flex items-center gap-2.5 border-b px-2 pb-2.5">
-        <span className="bg-brand-gradient grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold text-[color:var(--axi-on-color)]">
-          {shownName[0]?.toUpperCase() ?? "A"}
-        </span>
+        <AssistantAvatar
+          expression="neutral"
+          character={KIT_CHARACTER[appearance.character]}
+          color={appearance.color}
+          transitionMs={0}
+          className="size-9 shrink-0"
+        />
         <div className="min-w-0">
           <p className="truncate text-[13.5px] leading-tight font-semibold">{shownName}</p>
-          <p className="text-muted-foreground truncate text-[11px]">{characterName ? `Personalidad: ${characterName} · en línea` : "en línea"}</p>
+          <p className="text-muted-foreground truncate text-[11px]">{CHARACTER_LABELS[appearance.character]} · en línea</p>
         </div>
       </div>
       <ul className="flex h-[262px] flex-col gap-1.5 overflow-hidden px-1 lg:h-[318px]" aria-label="Mensajes de ejemplo">

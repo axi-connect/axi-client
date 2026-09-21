@@ -150,8 +150,8 @@ export function CallsSettingsView() {
             Voz del agente
           </h2>
           <p className="text-muted-foreground text-sm">
-            La voz se configura en el <b>personaje del agente</b> y aplica por igual a las
-            llamadas y a las notas de voz de WhatsApp.
+            La voz se configura en <b>cada agente</b> (Agentes → tu agente → Voz) y aplica por
+            igual a las llamadas y a las notas de voz de WhatsApp.
           </p>
           <Button asChild variant="outline" size="sm" className="mt-3 rounded-full">
             <Link href="/admin/agents">Ir a los agentes</Link>

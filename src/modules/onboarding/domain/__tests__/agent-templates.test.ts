@@ -16,8 +16,9 @@ const sales: AgentTemplateDTO = {
   description: "Presenta la carta y arma el pedido.",
   default_skills: ["Catálogo", "Pedidos"],
   intention_codes: [{ code: "sales_inquiry", requirements: { require_catalog: true } }],
-  recommended_character_id: "char-sys",
-  recommended_voice_id: null,
+  recommended_character_code: "nova",
+  recommended_color_code: "coral",
+  recommended_voice: null,
   placeholders: ["company.name"],
   recommended: true,
 }

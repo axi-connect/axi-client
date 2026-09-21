@@ -16,7 +16,7 @@ const VOICE: PlatformVoice = {
   preview_generated_at: null,
   is_active: true,
   sort_order: 10,
-  characters_count: 0,
+  agents_count: 0,
   updated_at: "2026-08-31T10:00:00.000Z",
 };
 

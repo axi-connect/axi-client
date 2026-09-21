@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { clearTenantAgentsCache, listCharacters, type AiAgentDTO, type CharacterDTO } from "@/modules/agents/public";
+import { clearTenantAgentsCache, listAiVoices, type AiAgentDTO, type AiVoiceDTO } from "@/modules/agents/public";
 import {
   ROLE_LABELS,
   TONE_LABELS,
@@ -18,6 +18,7 @@ import {
   toCreateDTO,
   type AgentTemplateDTO,
   type AgentTemplateDraft,
+  templateAppearance,
 } from "@/modules/onboarding/domain/agent-templates";
 import { nicheByCode } from "@/modules/onboarding/domain/niches";
 import {
@@ -68,7 +69,7 @@ export function AgentTemplatesStep({
   const [templates, setTemplates] = useState<AgentTemplateDTO[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
-  const [characters, setCharacters] = useState<CharacterDTO[] | null>(null);
+  const [voices, setVoices] = useState<AiVoiceDTO[] | null>(null);
   const [customizing, setCustomizing] = useState(false);
   const [choosingAnother, setChoosingAnother] = useState(false);
   const [draft, setDraft] = useState<AgentTemplateDraft | null>(null);
@@ -98,26 +99,27 @@ export function AgentTemplatesStep({
     };
   }, [nicheForTemplates, reloadKey]);
 
-  // Las personalidades se cargan una vez: el teléfono muestra su nombre y el
-  // formulario las ofrece. Si fallan, el selector queda deshabilitado y el
-  // paso sigue: la plantilla trae su personalidad recomendada.
+  // El catálogo de voces se carga al entrar en «Personalizar» (sus preview_url
+  // presignados caducan en 1 h). Si falla, el selector queda deshabilitado y
+  // el paso sigue: la voz es opcional.
   useEffect(() => {
+    if (!customizing) return;
     let cancelled = false;
-    listCharacters()
+    setVoices(null);
+    listAiVoices()
       .then((response) => {
-        if (!cancelled) setCharacters(response.data);
+        if (!cancelled) setVoices(response.data);
       })
       .catch(() => {
-        if (!cancelled) setCharacters([]);
+        if (!cancelled) setVoices([]);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [customizing]);
 
   const selected = templates?.find((template) => template.code === selectedCode) ?? null;
   const phase: Phase = customizing ? "customize" : created.length > 0 && !choosingAnother ? "created" : "choose";
-  const characterName = (id: string | null) => characters?.find((character) => character.id === id)?.name ?? null;
 
   async function create(dto: ReturnType<typeof toCreateDTO>, template: AgentTemplateDTO, tone: string) {
     setCreateError(null);
@@ -148,13 +150,13 @@ export function AgentTemplatesStep({
       <FlowScreen focusHeading size="wide" title={`Dale su voz a ${draft.name.trim() || selected.name}`} lead="Cambia lo que quieras; todo se puede ajustar después en Agentes.">
         <div className="grid w-full gap-5 text-left lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
           <div className="bg-background border-border rounded-2xl border p-5 shadow-[0_12px_40px_rgb(0_0_0/.06)] sm:p-6">
-            <TemplateCustomizeForm draft={draft} onDraftChange={setDraft} characters={characters} />
+            <TemplateCustomizeForm draft={draft} onDraftChange={setDraft} voices={voices} />
           </div>
           <AgentPreview
             className="order-first justify-self-center lg:order-none lg:sticky lg:top-3"
             name={draft.name}
             tone={draft.tone}
-            characterName={characterName(draft.character_id)}
+            appearance={draft.appearance}
             companyName={companyName}
             nicheCode={nicheCode}
           />
@@ -287,7 +289,7 @@ export function AgentTemplatesStep({
             className="order-first justify-self-center lg:order-none lg:sticky lg:top-3"
             name={defaultAgentName(selected, companyName)}
             tone="cercano"
-            characterName={characterName(selected.recommended_character_id)}
+            appearance={templateAppearance(selected)}
             companyName={companyName}
             nicheCode={nicheCode}
           />

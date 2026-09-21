@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Sidebar del panel de plataforma: navegación ESTÁTICA (6 secciones, sin
- * RBAC) sobre los primitivos compartidos de `shared/components/layout/
+ * Sidebar del panel de plataforma: navegación ESTÁTICA (sin RBAC) agrupada
+ * por SECCIONES con título (`PLATFORM_NAV_SECTIONS`: orden fijo entre
+ * secciones, por longitud dentro de cada una), sobre los primitivos compartidos de `shared/components/layout/
  * sidebar/core` — misma materia (glass) y comportamiento (colapso, rail,
  * atajo ⌘B) que el panel de tenant, con el badge violeta que identifica la
  * consola interna. Footer: email del admin + countdown de sesión + salir.
@@ -36,6 +37,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
@@ -44,7 +46,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/shared/components/layout/sidebar/core";
-import { PLATFORM_NAV } from "../../domain/navigation";
+import { PLATFORM_NAV_SECTIONS } from "../../domain/navigation";
 import { usePlatformAuth } from "../../infrastructure/auth/platform-auth.context";
 import { useTriggeredAlertsCount } from "../../infrastructure/api/hooks/use-analytics";
 import { SessionCountdownChip } from "./SessionCountdownChip";
@@ -112,27 +114,31 @@ export function PlatformSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="sidebar-scroll">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {PLATFORM_NAV.map((item) => {
-                const Icon = NAV_ICONS[item.icon];
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton asChild isActive={isActive(item.path)} tooltip={item.label}>
-                      <Link href={item.path}>
-                        {Icon ? <Icon /> : null}
-                        <span>{item.label}</span>
-                        <NavLinkSpinner />
-                      </Link>
-                    </SidebarMenuButton>
-                    {item.path === "/platform/analytics" && <AlertsBadge />}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {PLATFORM_NAV_SECTIONS.map((section) => (
+          <SidebarGroup key={section.title ?? "inicio"} className={section.title === null ? "pb-0" : undefined}>
+            {/* El título se oculta solo en modo icono (lo hace el primitivo); la sección queda como bloque */}
+            {section.title !== null ? <SidebarGroupLabel>{section.title}</SidebarGroupLabel> : null}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  const Icon = NAV_ICONS[item.icon];
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton asChild isActive={isActive(item.path)} tooltip={item.label}>
+                        <Link href={item.path}>
+                          {Icon ? <Icon /> : null}
+                          <span>{item.label}</span>
+                          <NavLinkSpinner />
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.path === "/platform/analytics" && <AlertsBadge />}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="px-3 py-2">
