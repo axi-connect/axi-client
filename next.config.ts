@@ -66,6 +66,10 @@ const nextConfig: NextConfig = {
       // conversaciones y correos: redirige, no 404.
       { source: "/settings/company/pagos", destination: "/settings/payments", permanent: true },
       { source: "/workspace/channels/create", destination: "/settings/channels/connect", permanent: true },
+      // Estudio de agentes (2026-09-21): los modales @form pasaron a páginas y los characters desaparecieron
+      { source: "/admin/agents/create", destination: "/admin/agents/new", permanent: true },
+      { source: "/admin/agents/update/:id", destination: "/admin/agents/:id", permanent: true },
+      { source: "/admin/agents/characters/:path*", destination: "/admin/agents", permanent: true },
       { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
     ];
   },

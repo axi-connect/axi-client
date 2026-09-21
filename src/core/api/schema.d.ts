@@ -1316,38 +1316,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ai-characters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["AiCharactersController_list_v1"];
-        put?: never;
-        post: operations["AiCharactersController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ai-characters/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["AiCharactersController_remove_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["AiCharactersController_update_v1"];
-        trace?: never;
-    };
     "/api/v1/ai-voices": {
         parameters: {
             query?: never;
@@ -8366,14 +8334,41 @@ export interface components {
                 model_params: {
                     [key: string]: unknown;
                 };
-                /** Format: uuid */
-                character_id: string | null;
                 handoff_policy: {
                     [key: string]: unknown;
                 };
                 voice_policy: {
                     [key: string]: unknown;
                 };
+                appearance: {
+                    /** @enum {string} */
+                    character: "cloudee" | "nova" | "strobi";
+                    /** @enum {string} */
+                    color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+                };
+                voice: {
+                    provider: string;
+                    voice_id: string;
+                    model_id?: string;
+                    settings?: {
+                        [key: string]: unknown;
+                    };
+                } | null;
+                brief: {
+                    /** @enum {string} */
+                    role: "ventas" | "reservas" | "soporte" | "captacion";
+                    goal?: string;
+                    /** @enum {string} */
+                    tone: "cercano" | "formal" | "directo";
+                    /** @default [] */
+                    always: string[];
+                    /** @default [] */
+                    never: string[];
+                    /** @default [] */
+                    handoff_when: string[];
+                    /** @default [] */
+                    business_facts: string[];
+                } | null;
                 intentions: {
                     /** Format: uuid */
                     intention_id: string;
@@ -8421,14 +8416,41 @@ export interface components {
             model_params: {
                 [key: string]: unknown;
             };
-            /** Format: uuid */
-            character_id: string | null;
             handoff_policy: {
                 [key: string]: unknown;
             };
             voice_policy: {
                 [key: string]: unknown;
             };
+            appearance: {
+                /** @enum {string} */
+                character: "cloudee" | "nova" | "strobi";
+                /** @enum {string} */
+                color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+            };
+            voice: {
+                provider: string;
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            brief: {
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                goal?: string;
+                /** @enum {string} */
+                tone: "cercano" | "formal" | "directo";
+                /** @default [] */
+                always: string[];
+                /** @default [] */
+                never: string[];
+                /** @default [] */
+                handoff_when: string[];
+                /** @default [] */
+                business_facts: string[];
+            } | null;
             intentions: {
                 /** Format: uuid */
                 intention_id: string;
@@ -8464,8 +8486,6 @@ export interface components {
                 temperature?: number;
                 max_tokens?: number;
             };
-            /** Format: uuid */
-            character_id?: string;
             handoff_policy?: {
                 keywords?: string[];
                 max_failures?: number;
@@ -8476,6 +8496,39 @@ export interface components {
                 mode?: "mirror";
                 max_per_conversation?: number;
                 max_chars?: number;
+            };
+            appearance?: {
+                /** @enum {string} */
+                character: "cloudee" | "nova" | "strobi";
+                /** @enum {string} */
+                color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+            };
+            voice?: {
+                /** @enum {string} */
+                provider: "elevenlabs";
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+            } | Record<string, never>;
+            brief?: {
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                goal?: string;
+                /** @enum {string} */
+                tone: "cercano" | "formal" | "directo";
+                /** @default [] */
+                always: string[];
+                /** @default [] */
+                never: string[];
+                /** @default [] */
+                handoff_when: string[];
+                /** @default [] */
+                business_facts: string[];
             };
         };
         UpdateAiAgentDto: {
@@ -8502,8 +8555,39 @@ export interface components {
                 max_per_conversation?: number;
                 max_chars?: number;
             };
-            /** Format: uuid */
-            character_id?: string | null;
+            appearance?: {
+                /** @enum {string} */
+                character: "cloudee" | "nova" | "strobi";
+                /** @enum {string} */
+                color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+            };
+            voice?: {
+                /** @enum {string} */
+                provider: "elevenlabs";
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    stability?: number;
+                    similarity_boost?: number;
+                    style?: number;
+                    speed?: number;
+                };
+            } | Record<string, never>;
+            brief?: {
+                /** @enum {string} */
+                role: "ventas" | "reservas" | "soporte" | "captacion";
+                goal?: string;
+                /** @enum {string} */
+                tone: "cercano" | "formal" | "directo";
+                /** @default [] */
+                always: string[];
+                /** @default [] */
+                never: string[];
+                /** @default [] */
+                handoff_when: string[];
+                /** @default [] */
+                business_facts: string[];
+            } | null;
         };
         SetAgentIntentionsDto: {
             intentions: {
@@ -8519,94 +8603,6 @@ export interface components {
                     require_promotions?: boolean;
                 };
             }[];
-        };
-        CharacterListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                avatar_url: string | null;
-                style: {
-                    [key: string]: unknown;
-                } | null;
-                voice: {
-                    [key: string]: unknown;
-                } | null;
-                resources: {
-                    [key: string]: unknown;
-                } | null;
-                is_system: boolean;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-        };
-        CreateCharacterDto: {
-            name: string;
-            /** Format: uri */
-            avatar_url?: string;
-            style?: {
-                [key: string]: unknown;
-            };
-            voice?: {
-                /** @enum {string} */
-                provider: "elevenlabs";
-                voice_id: string;
-                model_id?: string;
-                settings?: {
-                    stability?: number;
-                    similarity_boost?: number;
-                    style?: number;
-                    speed?: number;
-                };
-            } | Record<string, never>;
-            resources?: {
-                [key: string]: unknown;
-            };
-        };
-        CharacterDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            avatar_url: string | null;
-            style: {
-                [key: string]: unknown;
-            } | null;
-            voice: {
-                [key: string]: unknown;
-            } | null;
-            resources: {
-                [key: string]: unknown;
-            } | null;
-            is_system: boolean;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        UpdateCharacterDto: {
-            name?: string;
-            /** Format: uri */
-            avatar_url?: string;
-            style?: {
-                [key: string]: unknown;
-            };
-            voice?: {
-                /** @enum {string} */
-                provider: "elevenlabs";
-                voice_id: string;
-                model_id?: string;
-                settings?: {
-                    stability?: number;
-                    similarity_boost?: number;
-                    style?: number;
-                    speed?: number;
-                };
-            } | Record<string, never>;
-            resources?: {
-                [key: string]: unknown;
-            };
         };
         AiVoiceListDto: {
             data: {
@@ -8649,7 +8645,7 @@ export interface components {
                 preview_generated_at: string | null;
                 is_active: boolean;
                 sort_order: number;
-                characters_count: number;
+                agents_count: number;
                 /** Format: date-time */
                 updated_at: string;
             }[];
@@ -15972,10 +15968,18 @@ export interface components {
                         [key: string]: boolean;
                     };
                 }[];
-                /** Format: uuid */
-                recommended_character_id: string | null;
-                /** Format: uuid */
-                recommended_voice_id: string | null;
+                /** @enum {string|null} */
+                recommended_character_code: "cloudee" | "nova" | "strobi" | null;
+                /** @enum {string|null} */
+                recommended_color_code: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose" | null;
+                recommended_voice: {
+                    provider: string;
+                    voice_id: string;
+                    model_id?: string;
+                    settings?: {
+                        [key: string]: unknown;
+                    };
+                } | null;
                 placeholders: string[];
                 recommended: boolean;
             }[];
@@ -15986,10 +15990,24 @@ export interface components {
                 name?: string;
                 /** @enum {string} */
                 tone?: "cercano" | "formal" | "directo";
-                /** Format: uuid */
-                character_id?: string;
-                /** Format: uuid */
-                voice_id?: string;
+                appearance?: {
+                    /** @enum {string} */
+                    character: "cloudee" | "nova" | "strobi";
+                    /** @enum {string} */
+                    color: "white" | "cloud" | "coral" | "amber" | "violet" | "mint" | "sky" | "rose";
+                };
+                voice?: {
+                    /** @enum {string} */
+                    provider: "elevenlabs";
+                    voice_id: string;
+                    model_id?: string;
+                    settings?: {
+                        stability?: number;
+                        similarity_boost?: number;
+                        style?: number;
+                        speed?: number;
+                    };
+                };
                 extra_instructions?: string;
             };
             /** @enum {string} */
@@ -16009,14 +16027,27 @@ export interface components {
             model_params: {
                 [key: string]: unknown;
             };
-            /** Format: uuid */
-            character_id: string | null;
             handoff_policy: {
                 [key: string]: unknown;
             };
             voice_policy: {
                 [key: string]: unknown;
             };
+            appearance: {
+                character: string;
+                color: string;
+            };
+            voice: {
+                provider: string;
+                voice_id: string;
+                model_id?: string;
+                settings?: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            brief: {
+                [key: string]: unknown;
+            } | null;
             intentions: unknown[];
             /** Format: date-time */
             created_at: string;
@@ -19289,92 +19320,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiAgentDto"];
-                };
-            };
-        };
-    };
-    AiCharactersController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterListDto"];
-                };
-            };
-        };
-    };
-    AiCharactersController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCharacterDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterDto"];
-                };
-            };
-        };
-    };
-    AiCharactersController_remove_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AiCharactersController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCharacterDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterDto"];
                 };
             };
         };

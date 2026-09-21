@@ -10,13 +10,14 @@ jest.mock("@/modules/onboarding/infrastructure/services/agent-templates-service.
   createAgentFromTemplate: (...args: unknown[]) => createAgentFromTemplate(...args),
 }))
 
-jest.mock("@/modules/agents/public", () => ({
-  clearTenantAgentsCache: jest.fn(),
-  listCharacters: () =>
-    Promise.resolve({ data: [{ id: "char-sys", name: "Asesor profesional", style: { tone: "profesional" }, voice: null, resources: null, is_system: true }] }),
-  characterStyle: (character: { style: Record<string, unknown> | null }) => character.style ?? {},
-  characterHasVoice: () => false,
-}))
+jest.mock("@/modules/agents/public", () => {
+  const actual = jest.requireActual<typeof import("@/modules/agents/public")>("@/modules/agents/public")
+  return {
+    ...actual,
+    clearTenantAgentsCache: jest.fn(),
+    listAiVoices: () => Promise.resolve({ data: [] }),
+  }
+})
 
 const sales: AgentTemplateDTO = {
   code: "restaurants_ventas",
@@ -26,8 +27,9 @@ const sales: AgentTemplateDTO = {
   description: "Presenta la carta, arma el pedido y lo pasa a cocina.",
   default_skills: ["Catálogo", "Pedidos"],
   intention_codes: [{ code: "sales_inquiry" }],
-  recommended_character_id: "char-sys",
-  recommended_voice_id: null,
+  recommended_character_code: "nova",
+  recommended_color_code: "coral",
+  recommended_voice: null,
   placeholders: ["company.name"],
   recommended: true,
 }
@@ -91,10 +93,10 @@ describe("AgentTemplatesStep", () => {
     fireEvent.change(screen.getByLabelText(/nombre del agente/i), { target: { value: "Joao" } })
     fireEvent.click(screen.getByRole("radio", { name: /formal/i }))
     fireEvent.change(screen.getByLabelText(/datos clave/i), { target: { value: "Domicilios en Laureles." } })
-    // El teléfono cambia en vivo: nombre nuevo, tono formal y la personalidad recomendada.
+    // El teléfono cambia en vivo: nombre nuevo, tono formal y el personaje recomendado por la plantilla (D11).
     const phone = screen.getByTestId("agent-preview")
     expect(phone).toHaveTextContent(/Le atiende Joao, de La Parrilla/)
-    expect(phone).toHaveTextContent(/Personalidad: Asesor profesional/)
+    expect(phone).toHaveTextContent(/Nova · en línea/)
 
     fireEvent.click(screen.getByRole("button", { name: /crear agente/i }))
 

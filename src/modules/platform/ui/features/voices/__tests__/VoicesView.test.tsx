@@ -37,14 +37,14 @@ const voice = (over: Partial<PlatformVoice>): PlatformVoice => ({
   preview_generated_at: "2026-08-31T09:00:00.000Z",
   is_active: true,
   sort_order: 10,
-  characters_count: 0,
+  agents_count: 0,
   updated_at: "2026-08-31T08:00:00.000Z",
   ...over,
 });
 
 const VOICES: PlatformVoice[] = [
   voice({}),
-  voice({ id: "v2", external_voice_id: "ErXw", name: "Antonio", characters_count: 3 }),
+  voice({ id: "v2", external_voice_id: "ErXw", name: "Antonio", agents_count: 3 }),
   voice({ id: "v3", external_voice_id: "XB0f", name: "Carlota", preview_url: null, preview_generated_at: null, is_active: false }),
 ];
 
@@ -65,7 +65,7 @@ describe("VoicesView (§10.5 curaduría)", () => {
     expect(screen.getByText("Valentina")).toBeInTheDocument();
     expect(screen.getByText("Inactivo")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Muestra de Carlota pendiente" })).toBeDisabled();
-    // El conteo de characters vive en la fila de su voz (0 = raya, no número)
+    // El conteo de agentes vive en la fila de su voz (0 = raya, no número)
     const antonioRow = screen.getByText("Antonio").closest("tr");
     expect(within(antonioRow as HTMLElement).getByText("3")).toBeInTheDocument();
     const valentinaRow = screen.getByText("Valentina").closest("tr");
@@ -102,14 +102,14 @@ describe("VoicesView (§10.5 curaduría)", () => {
     expect(screen.getByRole("button", { name: "Bajar Carlota" })).toBeDisabled();
   });
 
-  it("retirar pide confirmación con el conteo real de characters", async () => {
+  it("retirar pide confirmación con el conteo real de agentes", async () => {
     setActiveMutateAsync.mockResolvedValue(undefined);
     render(<VoicesView />);
 
     fireEvent.click(screen.getByRole("button", { name: "Acciones de Antonio" }));
     fireEvent.click(await screen.findByText("Retirar del selector"));
 
-    expect(await screen.findByText(/3 characters la usan hoy/u)).toBeInTheDocument();
+    expect(await screen.findByText(/3 agentes hablan con ella hoy/u)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Retirar voz" }));
     await waitFor(() =>
       expect(setActiveMutateAsync).toHaveBeenCalledWith({ id: "v2", is_active: false }),
