@@ -3,7 +3,7 @@
 (voice_governance_platform_plan.md, tanda 2 del estudio de agentes).
 
 Vistas: sidebar de platform agrupado por secciones (expandido y en modo icono); pestaña «Voz» de la
-ficha del tenant en sus estados (activa con llave propia · apagada en plan sin BYOK · quitar la llave);
+ficha del tenant en sus estados (activa con llave propia · apagada sin llave · quitar la llave);
 el estudio del agente cuando la empresa tiene la voz apagada (texto honesto: ya no hay pantalla del
 tenant a la que enviar). El tema (claro/oscuro) se alterna con el botón de la barra.
 
@@ -64,8 +64,9 @@ SIDEBAR_CSS = """<style>
 .bar{height:8px;border-radius:999px;background:var(--secondary);border:1px solid var(--border-soft);overflow:hidden;max-width:420px}
 .bar i{display:block;height:100%;border-radius:999px;background:var(--axi-violet)}
 .bar.warn i{background:var(--axi-warning)} .bar.full i{background:var(--axi-destructive)}
-.keyrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:560px}
-.keyrow .input{flex:1;min-width:220px}
+.vrow .vwide{grid-column:1 / -1;display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.keyrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.keyrow .input{flex:1;min-width:260px}
 </style>"""
 
 
@@ -101,11 +102,12 @@ def head(name: str, plan: str, nit: str, city: str) -> str:
     {K.nav(TABS, "Voz", "Secciones del tenant", "inline")}"""
 
 
-def row(icon: str, title: str, desc: str, ctl: str = "", meta: str = "", off: bool = False) -> str:
+def row(icon: str, title: str, desc: str, ctl: str = "", meta: str = "", off: bool = False, wide: str = "") -> str:
     m = f'<div class="vm">{meta}</div>' if meta else ""
     c = f'<div class="ctl">{ctl}</div>' if ctl else ""
+    w = f'<div class="vwide">{wide}</div>' if wide else ""  # ocupa las tres columnas: para controles que necesitan todo el ancho
     return f"""<div class="vrow {"off" if off else ""}"><div class="vic">{ic(icon, size=18)}</div>
-      <div><div class="vt">{title}</div><div class="vd">{desc}</div>{m}</div>{c}</div>"""
+      <div><div class="vt">{title}</div><div class="vd">{desc}</div>{m}</div>{c}{w}</div>"""
 
 
 def es(n: int) -> str:
@@ -131,11 +133,11 @@ def voice_card_on() -> str:
               "Lo que ya gastó este tenant en caracteres de voz; el límite lo fija su plan (pestaña Plan & Límites).",
               meta=usage_bar(178_400, 300_000, "30 sep"))
         + row("layers", f'Plan {badge("Enterprise", "violet")}',
-              "La llave propia de ElevenLabs solo se admite en Enterprise: el tenant contrata directo con el proveedor y puede clonar su voz.",
-              ctl=btn("Cambiar plan", "arrow-up-right", "ghost sm"))
+              "Contexto: a quién le estás gestionando la voz. El plan no bloquea nada aquí — la llave la decide axi.",
+              ctl=btn("Ver plan", "arrow-up-right", "ghost sm"))
         + row("key-round", f'Llave propia de ElevenLabs {badge("Configurada · elevenlabs", "ok")}',
               "Escríbela una vez: no se vuelve a mostrar. Mientras haya llave, la voz de este tenant se sintetiza con su cuenta, no con la de axi.",
-              meta=f"""<div class="keyrow">{K.input("", "Pega la llave nueva para reemplazarla", icon="key-round", fid="byok")}{btn("Guardar", "check", "sm")}{btn("Quitar llave", "trash-2", "outline sm destructive")}</div>
+              wide=f"""<div class="keyrow">{K.input("", "Pega la llave nueva para reemplazarla", icon="key-round", fid="byok")}{btn("Guardar", "check", "sm")}{btn("Quitar llave", "trash-2", "outline sm destructive")}</div>
               <div class="small muted">{ic("shield-check", size=13)} Cifrada con envelope AES-256-GCM. Guardada por <b>ops@megaguay.com.co</b> el 12 sep 2026 · queda en Auditoría.</div>""")
     )
     return card(body)
@@ -146,14 +148,15 @@ def voice_card_off() -> str:
         row("mic-off", f'Notas de voz {badge("Desactivada", "off")}',
             "Este tenant atiende solo por texto. Al encenderla, sus agentes que ya tengan voz elegida responderán con audio cuando el cliente les hable con audio.",
             ctl=K.switch(False, label="Notas de voz de la empresa"), off=True)
-        + row("gauge", "Consumo del ciclo", "Sin consumo en este ciclo · el plan Esencial no incluye límite propio de voz: si se enciende, gasta contra el límite general.",
+        + row("gauge", "Consumo del ciclo", "Sin consumo en este ciclo · el plan Esencial no trae límite propio de voz: si se enciende, gasta contra el límite general.",
               meta='<div class="bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Caracteres de voz del ciclo"><i style="width:0"></i></div>', off=True)
         + row("layers", f'Plan {badge("Esencial", "outline")}',
-              "La llave propia requiere Enterprise. Cambia el plan primero; la llave se habilita sola.",
-              ctl=btn("Cambiar plan", "arrow-up-right", "ghost sm"))
+              "Contexto: a quién le estás gestionando la voz. El plan no bloquea nada aquí — la llave la decide axi.",
+              ctl=btn("Ver plan", "arrow-up-right", "ghost sm"))
         + row("key-round", f'Llave propia de ElevenLabs {badge("Usa la cuenta de axi", "outline")}',
-              "Disponible en Enterprise. Mientras tanto, la voz de este tenant se sintetiza con la cuenta de axi y se cobra por caracteres.",
-              meta=f"""<div class="keyrow" aria-disabled="true" style="opacity:.55">{K.input("", "Requiere plan Enterprise", icon="lock", fid="byok-off")}{btn("Guardar", "check", "sm", "disabled")}</div>""", off=True)
+              "Sin llave, la voz de este tenant se sintetiza con la cuenta de axi y se cobra por caracteres. Pégala aquí si el tenant contrató directo con ElevenLabs.",
+              wide=f"""<div class="keyrow">{K.input("", "Pega la llave de ElevenLabs del tenant", icon="key-round", fid="byok-off")}{btn("Guardar", "check", "sm")}</div>
+              <div class="small muted">{ic("shield-check", size=13)} Se cifra al guardar y no se vuelve a mostrar · queda en Auditoría con tu usuario.</div>""")
     )
     return card(body)
 
@@ -236,9 +239,9 @@ VIEWS = [
     ("nav", "1 · Sidebar por secciones", view_nav(),
      "Seis secciones en orden fijo (Dashboard solo · Operación · Dinero · IA · Control · Configuración); dentro de cada una, de menor a mayor longitud, con test de invariante. Título en `SidebarGroupLabel`; en modo icono se oculta y queda una línea separadora. La insignia de alertas sigue en Analytics."),
     ("voz-on", "2 · Tenant · Voz activa", view_on(),
-     "Pestaña «Voz» nueva en la ficha (hermana de Funciones). Lista etiqueta → valor, un solo indicador por fila: interruptor de empresa, consumo del ciclo (el GET de voz lo devuelve: limits de platform no trae `used`), plan, llave write-only con Guardar/Quitar. Solo super_admin; todo auditado."),
-    ("voz-off", "3 · Tenant · Voz apagada, plan sin BYOK", view_off(),
-     "Plan Esencial: la llave se ve deshabilitada con el motivo (requiere Enterprise) y el atajo es cambiar el plan; el consumo dice que no hay límite propio. Nada se esconde: se explica en el punto de uso."),
+     "Pestaña «Voz» nueva en la ficha (hermana de Funciones). Lista etiqueta → valor, un solo indicador por fila: interruptor de empresa, consumo del ciclo (el GET de voz lo devuelve: limits de platform no trae `used`), plan como contexto, llave write-only a todo el ancho con Guardar/Quitar (cambio pedido por el dueño). Solo super_admin; todo auditado."),
+    ("voz-off", "3 · Tenant · Voz apagada, sin llave", view_off(),
+     "Decisión del dueño (V5): desde platform la llave se pega SIEMPRE, sin exigir plan — quien la pega es axi. El plan aparece solo como contexto y no bloquea el input. El consumo dice que no hay límite propio."),
     ("quitar", "4 · Quitar la llave (confirmación escrita)", view_remove(),
      "`ConfirmTyped` del kit de platform: escribir el nombre del tenant; el botón se enciende solo con el texto exacto. El texto dice qué pasa mañana con su voz (cuenta de axi, cobro por caracteres, voces clonadas fuera)."),
     ("estudio", "5 · Estudio · voz de empresa apagada", view_studio(),
