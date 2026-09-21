@@ -12895,6 +12895,54 @@ export interface components {
             /** @enum {string} */
             outcome: "queued" | "skipped";
         };
+        CollectionsSettingsDto: {
+            deposit_pct: number;
+            /** @enum {string} */
+            installments_strategy: "equal_monthly" | "single_balance" | "custom_count";
+            installments_count: number;
+            final_due_days_before_service: number;
+            min_days_between_installments: number;
+            fallback_term_days: number;
+            min_plan_total_cents: number;
+            grace_days: number;
+            reminder_days_before: number[];
+            overdue_reminder_days: number[];
+            reminder_channels: {
+                whatsapp: boolean;
+                email: boolean;
+            };
+            pause_on_promise: boolean;
+            templates: {
+                due_soon: {
+                    enabled: boolean;
+                    body: string;
+                };
+                due_today: {
+                    enabled: boolean;
+                    body: string;
+                };
+                overdue: {
+                    enabled: boolean;
+                    body: string;
+                };
+            };
+            /** @default {} */
+            hsm_templates: {
+                due_soon?: {
+                    name: string;
+                    language: string;
+                };
+                due_today?: {
+                    name: string;
+                    language: string;
+                };
+                overdue?: {
+                    name: string;
+                    language: string;
+                };
+            };
+            available_variables: string[];
+        };
         CollectionsPolicyDto: {
             deposit_pct: number;
             /** @enum {string} */
@@ -24726,7 +24774,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CollectionsPolicyDto"];
+                    "application/json": components["schemas"]["CollectionsSettingsDto"];
                 };
             };
         };

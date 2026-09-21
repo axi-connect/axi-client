@@ -92,16 +92,39 @@ describe("relativeDay", () => {
 });
 
 describe("unknownReminderVariables", () => {
+  // La lista la manda el SERVIDOR: es lo que hace que esta comprobación siga
+  // siendo cierta cuando el renderizador cambie. Un espejo copiado a mano
+  // bloquearía plantillas válidas o dejaría pasar huecos sin rellenar.
+  const delServidor = ["contact_name", "amount", "installments_count"];
+
   it("caza la que el servidor no sabe rellenar", () => {
     // Sin esto, `{{descuento}}` sale TAL CUAL en el WhatsApp de un cliente.
     expect(
-      unknownReminderVariables("Hola {{contact_name}}, te doy {{descuento}}"),
+      unknownReminderVariables(
+        "Hola {{contact_name}}, te doy {{descuento}}",
+        delServidor,
+      ),
     ).toEqual(["descuento"]);
   });
 
   it("no se queja de las que sí existen", () => {
     expect(
-      unknownReminderVariables("{{amount}} de {{installments_count}}"),
+      unknownReminderVariables(
+        "{{amount}} de {{installments_count}}",
+        delServidor,
+      ),
+    ).toEqual([]);
+  });
+
+  it("una variable NUEVA del servidor deja de ser un error aquí", () => {
+    // La deriva que más duele de un espejo copiado: el servidor aprende a
+    // rellenar algo, el dueño lo escribe, y la pantalla le bloquea el guardado
+    // de una plantilla perfectamente válida.
+    expect(
+      unknownReminderVariables("Te quedan {{cupos_restantes}}", [
+        ...delServidor,
+        "cupos_restantes",
+      ]),
     ).toEqual([]);
   });
 });

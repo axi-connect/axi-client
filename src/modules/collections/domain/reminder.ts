@@ -12,6 +12,8 @@
 import type { Schemas } from "@/core/api/types";
 
 export type CollectionsPolicyDTO = Schemas["CollectionsPolicyDto"];
+/** Lo que devuelve `GET /collections/settings`: la política y, de solo lectura, las variables. */
+export type CollectionsSettingsDTO = Schemas["CollectionsSettingsDto"];
 export type ReminderTemplates = CollectionsPolicyDTO["templates"];
 export type ReminderTemplateKey = keyof ReminderTemplates;
 export type HsmTemplates = CollectionsPolicyDTO["hsm_templates"];
@@ -47,26 +49,22 @@ export const REMINDER_CHANNEL_LABELS: Record<ReminderChannel, string> = {
 };
 
 /**
- * Las variables que el servidor sabe rellenar (`collection_reminder_template.ts`).
+ * Cómo se llama cada variable en español.
  *
- * Es un espejo declarado a mano, y lo es a propósito: el wire no las expone, y
- * ofrecer una que el servidor no conoce dejaría `{{lo_que_sea}}` literal en el
- * WhatsApp de un cliente. `reminder-variables.test.ts` lo amarra.
+ * Solo las ETIQUETAS se declaran aquí. **La lista la manda el servidor**, por
+ * `available_variables` del endpoint de ajustes: un espejo copiado a mano se
+ * desincroniza en las dos direcciones y las dos hacen daño — si el servidor
+ * añade una, esta pantalla bloquea una plantilla perfectamente válida; si quita
+ * una, deja guardar un texto que llega con `{{lo_que_sea}}` literal al WhatsApp
+ * de un cliente, que es justo el fallo que el espejo pretendía evitar. Y el
+ * candado que lo habría amarrado no se podía escribir desde este lado: el
+ * cliente no puede leer la lista del servidor.
+ *
+ * Una variable nueva que el servidor ofrezca y aquí no tenga nombre se muestra
+ * con su código crudo, no se esconde: ver `{{cupo_restante}}` es feo, no
+ * poder usarla es un fallo.
  */
-export const REMINDER_VARIABLES = [
-  "contact_name",
-  "order_number",
-  "amount",
-  "balance",
-  "due_date",
-  "installment_seq",
-  "installments_count",
-  "payment_methods",
-] as const;
-
-export type ReminderVariable = (typeof REMINDER_VARIABLES)[number];
-
-export const REMINDER_VARIABLE_LABELS: Record<ReminderVariable, string> = {
+export const REMINDER_VARIABLE_LABELS: Record<string, string> = {
   contact_name: "Nombre del cliente",
   order_number: "Número del pedido",
   amount: "Importe de la cuota",
@@ -79,10 +77,18 @@ export const REMINDER_VARIABLE_LABELS: Record<ReminderVariable, string> = {
 
 export const MAX_TEMPLATE_BODY = 1000;
 
-/** Las variables escritas en un texto que el servidor NO sabe rellenar. */
-export function unknownReminderVariables(body: string): string[] {
+/**
+ * Las variables escritas en un texto que el servidor NO sabe rellenar.
+ *
+ * `available` viene del contrato, nunca de una constante local: es el único
+ * modo de que esta comprobación siga siendo cierta cuando el servidor cambie.
+ */
+export function unknownReminderVariables(
+  body: string,
+  available: readonly string[],
+): string[] {
   const found = body.match(/\{\{\s*(\w+)\s*\}\}/g) ?? [];
-  const known = new Set<string>(REMINDER_VARIABLES);
+  const known = new Set<string>(available);
   const bad = found
     .map((hole) => hole.replace(/[{}\s]/g, ""))
     .filter((name) => !known.has(name));
@@ -220,7 +226,7 @@ function startOfDay(date: Date): Date {
  * Los datos de ejemplo de la vista previa: una expedición real de la cartera,
  * no un «Lorem». Un texto se juzga con las cifras dentro.
  */
-export const SAMPLE_REMINDER_VARS: Record<ReminderVariable, string> = {
+export const SAMPLE_REMINDER_VARS: Record<string, string> = {
   contact_name: "Laura Gómez",
   order_number: "#42",
   amount: "$ 3.797.500",

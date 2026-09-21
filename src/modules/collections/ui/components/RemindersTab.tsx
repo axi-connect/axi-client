@@ -17,10 +17,10 @@ import {
   REMINDER_TEMPLATE_KEYS,
   REMINDER_TEMPLATE_LABELS,
   REMINDER_VARIABLE_LABELS,
-  REMINDER_VARIABLES,
   renderReminderPreview,
   unknownReminderVariables,
   type CollectionsPolicyDTO,
+  type CollectionsSettingsDTO,
   type ReminderTemplateKey,
 } from "@/modules/collections/domain/reminder";
 import {
@@ -45,7 +45,7 @@ const MAX_OFFSETS = 6;
  */
 export function RemindersTab() {
   const { showAlert } = useAlert();
-  const [policy, setPolicy] = useState<CollectionsPolicyDTO | null>(null);
+  const [policy, setPolicy] = useState<CollectionsSettingsDTO | null>(null);
   const [editing, setEditing] = useState<ReminderTemplateKey | null>(null);
   const [blocked, setBlocked] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -68,7 +68,14 @@ export function RemindersTab() {
     if (policy === null) return;
     setSaving(true);
     try {
-      setPolicy(await saveCollectionsPolicy(policy));
+      // `available_variables` es de SOLO LECTURA: se quita antes de guardar en
+      // vez de confiar en que el servidor la descarte. Lo que se manda dice lo
+      // que se quiere cambiar.
+      const { available_variables, ...deal } = policy;
+      setPolicy({
+        ...(await saveCollectionsPolicy(deal)),
+        available_variables,
+      });
       showAlert({
         tone: "success",
         title: "Recordatorios guardados",
@@ -307,15 +314,18 @@ function TemplateEditor({
   saving,
 }: {
   which: ReminderTemplateKey;
-  policy: CollectionsPolicyDTO;
-  onPatch: (changes: Partial<CollectionsPolicyDTO>) => void;
+  policy: CollectionsSettingsDTO;
+  onPatch: (changes: Partial<CollectionsSettingsDTO>) => void;
   onClose: () => void;
   onSave: () => void;
   saving: boolean;
 }) {
   const template = policy.templates[which];
   const hsm = policy.hsm_templates[which];
-  const unknown = unknownReminderVariables(template.body);
+  const unknown = unknownReminderVariables(
+    template.body,
+    policy.available_variables,
+  );
 
   function patchTemplate(changes: Partial<typeof template>) {
     onPatch({
@@ -371,7 +381,7 @@ function TemplateEditor({
         <TemplateTextField
           value={template.body}
           onChange={(body) => patchTemplate({ body })}
-          variables={REMINDER_VARIABLES}
+          variables={policy.available_variables}
           labels={REMINDER_VARIABLE_LABELS}
           maxLength={MAX_TEMPLATE_BODY}
           label={`Texto del aviso de ${REMINDER_TEMPLATE_LABELS[which].toLowerCase()}`}

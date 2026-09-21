@@ -1,4 +1,5 @@
 import { http } from "@/core/services/http";
+import type { CollectionsSettingsDTO } from "@/modules/collections/domain/reminder";
 import type {
   CollectionsPolicyDTO,
   PlanDetailDTO,
@@ -44,8 +45,12 @@ export function getPlanByOrder(orderId: string): Promise<PlanDetailDTO> {
   return http.get<PlanDetailDTO>(`/collections/plans/by-order/${orderId}`);
 }
 
-export function getCollectionsPolicy(): Promise<CollectionsPolicyDTO> {
-  return http.get<CollectionsPolicyDTO>("/collections/settings");
+/**
+ * La política MÁS `available_variables`, que es de solo lectura y viaja por el
+ * wire para que el cliente no tenga que espejar la lista del renderizador.
+ */
+export function getCollectionsPolicy(): Promise<CollectionsSettingsDTO> {
+  return http.get<CollectionsSettingsDTO>("/collections/settings");
 }
 
 export function saveCollectionsPolicy(

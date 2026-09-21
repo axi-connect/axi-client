@@ -39,6 +39,18 @@ const policy = (overrides: Record<string, unknown> = {}) => ({
     overdue: { enabled: true, body: "Tienes una cuota pendiente." },
   },
   hsm_templates: {},
+  // Las manda el SERVIDOR, no una constante del cliente: el fixture lo refleja
+  // porque es de donde la pantalla las va a sacar de verdad.
+  available_variables: [
+    "contact_name",
+    "order_number",
+    "amount",
+    "balance",
+    "due_date",
+    "installment_seq",
+    "installments_count",
+    "payment_methods",
+  ],
   ...overrides,
 });
 
@@ -170,5 +182,26 @@ describe("RemindersTab", () => {
     expect(
       screen.getByRole("button", { name: "Guardar el texto" }),
     ).toBeDisabled();
+  });
+
+  it("ofrece las variables que el SERVIDOR dice, no una lista copiada", async () => {
+    // Si el servidor aprende a rellenar una variable nueva, la pantalla la
+    // ofrece sin tocar el cliente; y lo que ofrece es exactamente lo que el
+    // renderizador sabe cerrar.
+    mockGet.mockResolvedValue(
+      policy({ available_variables: ["contact_name", "cupos_restantes"] }),
+    );
+    render(<RemindersTab />);
+
+    fireEvent.click(
+      await screen.findByLabelText("Editar el texto de antes de vencer"),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "{{cupos_restantes}}" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "{{payment_methods}}" }),
+    ).not.toBeInTheDocument();
   });
 });
