@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 
+import { ASSISTANT_CHARACTERS } from "@/shared/components/features/assistant/avatar/avatar-characters";
 import { ASSISTANT_EXPRESSION_NAMES } from "@/shared/components/features/assistant/avatar/avatar-rig";
 import { AssistantAvatar } from "../AssistantAvatar";
 
@@ -10,12 +11,43 @@ import { AssistantAvatar } from "../AssistantAvatar";
  * cuenta antes que el Performance panel.
  */
 describe("AssistantAvatar — presupuesto", () => {
-  it("cabe en 70 nodos y 6 gradientes", () => {
-    const { container } = render(<AssistantAvatar expression="neutral" accessory="headset" />);
+  it.each(ASSISTANT_CHARACTERS)("«%s» cabe en 70 nodos y 6 gradientes", (character) => {
+    const { container } = render(<AssistantAvatar expression="neutral" accessory="headset" character={character} color="coral" />);
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.querySelectorAll("*").length).toBeLessThanOrEqual(70);
     expect(svg?.querySelectorAll("radialGradient, linearGradient").length).toBeLessThanOrEqual(6);
+  });
+
+  it("sin personaje ni color es Lumo con su material: ni data-color ni diadema distinta", () => {
+    const { container } = render(<AssistantAvatar expression="neutral" />);
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    expect(svg.dataset.character).toBe("lumo");
+    expect(svg.hasAttribute("data-color")).toBe(false);
+    expect(svg.style.getPropertyValue("--av-eye-cant")).toBe("0");
+    // La geometría aprobada del CMO, literal.
+    const body = svg.querySelector(".assistant-rig-body > ellipse");
+    expect(body?.getAttribute("rx")).toBe("37");
+    expect(body?.getAttribute("ry")).toBe("34.5");
+    expect(svg.querySelector('[data-layer="mouth"]')?.getAttribute("d")).toBe("M43 60 Q50 67 57 60");
+    expect(svg.querySelector('[data-layer="glint"]')?.getAttribute("cx")).toBe("48.6");
+  });
+
+  it("los personajes de plataforma viajan en data-character/data-color y no tienen diadema", () => {
+    const { container } = render(<AssistantAvatar expression="neutral" character="cloudee" color="sky" accessory="headset" />);
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    expect(svg.dataset.character).toBe("cloudee");
+    expect(svg.dataset.color).toBe("sky");
+    expect(svg.querySelector("[data-acc-part]")).toBeNull();
+    // Cuatro piezas de nube, pintadas con el mismo gradiente; el contorno y el clip las repiten sin relleno.
+    expect(svg.querySelectorAll(".assistant-rig-body > ellipse, .assistant-rig-body > circle").length).toBe(4);
+    expect(svg.querySelectorAll('[data-layer="outline"] > *').length).toBe(4);
+  });
+
+  it("la inclinación del ojo es una variable, no un path distinto", () => {
+    const { container } = render(<AssistantAvatar expression="neutral" character="nova" />);
+    const svg = container.querySelector("svg") as SVGSVGElement;
+    expect(svg.style.getPropertyValue("--av-eye-cant")).toBe("7");
   });
 
   it("no usa filtros, ni backdrop-filter, ni un solo hex: el material vive en globals.css", () => {

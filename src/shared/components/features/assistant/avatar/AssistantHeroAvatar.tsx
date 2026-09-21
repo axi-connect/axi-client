@@ -8,6 +8,7 @@ import { useAvatarLife } from "../hooks/use-avatar-life";
 import { AssistantAvatar } from "./AssistantAvatar";
 import { AssistantStage } from "./AssistantStage";
 import { gazeAllowed, isLiveMood, MOOD_EXPRESSION, type AssistantGesture, type AssistantMood } from "./avatar-mood";
+import type { AssistantAvatarColor, AssistantCharacter } from "./avatar-characters";
 import type { AssistantAccessory } from "./avatar-rig";
 
 interface AssistantHeroAvatarProps {
@@ -16,6 +17,11 @@ interface AssistantHeroAvatarProps {
   /** false = sin gestos, sin mirada, sin transiciones (`prefers-reduced-motion`). */
   motion: boolean;
   accessory: AssistantAccessory;
+  /** Personaje y color del cuerpo; sin ellos es Lumo con su material de siempre. */
+  character?: AssistantCharacter;
+  color?: AssistantAvatarColor;
+  /** Tamaño del escenario (`hero` = el estudio de agentes). */
+  stageSize?: "default" | "hero";
   /** Toque/click/Enter sobre el personaje. */
   onGreet: () => void;
   /** Quién es, para el lector de pantalla («Axel, tu director de mercadeo»). */
@@ -47,6 +53,9 @@ export const AssistantHeroAvatar = memo(function AssistantHeroAvatar({
   gesture,
   motion,
   accessory,
+  character,
+  color,
+  stageSize,
   onGreet,
   label,
   greetLabel,
@@ -59,10 +68,12 @@ export const AssistantHeroAvatar = memo(function AssistantHeroAvatar({
   useAvatarGaze(ref, { enabled: motion && gazeAllowed(mood) && gesture === null });
 
   const figure = (
-    <AssistantStage busy={live}>
+    <AssistantStage busy={live} size={stageSize}>
       <AssistantAvatar
         ref={ref}
         expression={MOOD_EXPRESSION[mood]}
+        character={character}
+        color={color}
         accessory={accessory}
         gesture={gesture}
         transitionMs={motion ? 480 : 0}

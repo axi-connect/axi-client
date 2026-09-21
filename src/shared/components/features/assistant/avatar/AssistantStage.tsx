@@ -7,6 +7,8 @@ import { cn } from "@/core/lib/utils";
 interface AssistantStageProps {
   /** true mientras Axel trabaja: el personaje respira y su sombra se encoge en contrafase. */
   busy?: boolean;
+  /** `hero` = el escenario grande del estudio de agentes (232×240). El default es el del dock (136×140). */
+  size?: "default" | "hero";
   className?: string;
   children: ReactNode;
 }
@@ -20,9 +22,12 @@ interface AssistantStageProps {
  * curso— es un `transform` del raíz HTML: compositor, sin repintar el SVG.
  * Decorativo: quien lo envuelve decide si es un botón o una imagen.
  */
-export function AssistantStage({ busy = false, className, children }: AssistantStageProps) {
+export function AssistantStage({ busy = false, size = "default", className, children }: AssistantStageProps) {
   return (
-    <span className={cn("assistant-stage", busy && "assistant-stage--busy", className)} aria-hidden="true">
+    <span
+      className={cn("assistant-stage", busy && "assistant-stage--busy", size === "hero" && "assistant-stage--hero", className)}
+      aria-hidden="true"
+    >
       <span className="assistant-ground" />
       <span className="assistant-stage-figure">{children}</span>
     </span>

@@ -17,6 +17,21 @@ export type {
 
 export { AssistantAvatar, type AssistantAvatarProps } from "./avatar/AssistantAvatar";
 export { AssistantStage } from "./avatar/AssistantStage";
+export {
+  ASSISTANT_AVATAR_COLORS,
+  ASSISTANT_CHARACTERS,
+  AVATAR_EYE_CY,
+  AVATAR_LIP_Y,
+  CHARACTER_GEOMETRY,
+  isAssistantAvatarColor,
+  isAssistantCharacter,
+  mouthOpenCy,
+  mouthPath,
+  type AssistantAvatarColor,
+  type AssistantCharacter,
+  type BodyShape,
+  type CharacterGeometry,
+} from "./avatar/avatar-characters";
 export { AssistantHeroAvatar } from "./avatar/AssistantHeroAvatar";
 export { AssistantDock, useTodayLabel } from "./avatar/AssistantDock";
 export {

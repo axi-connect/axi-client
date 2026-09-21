@@ -1137,6 +1137,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --av-mouth: 0.9;
   --av-mouth-w: 1;
   --av-open: 0;
+  --av-eye-cant: 0;
   --av-dur: 480ms;
   --av-ease: var(--av-ease-spring);
 
@@ -1154,6 +1155,36 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   --av-ink-hi: #4a4a52;
   --av-lid: #f1eee7;
 }
+
+/* Paleta del cuerpo por `data-color` (estudio de agentes, plan agent_studio §6 C1).
+   Solo se mueve el material del cuerpo: la tinta de ojos y boca es la misma en
+   los ocho (≥ 3:1 sobre `body-mid` en ambos temas; tabla en agent-studio.html).
+   Sin `data-color` no aplica nada: Axel y Alba siguen con el material de arriba.
+   `white` es ese mismo material, explícito para que pueda llevar contorno. */
+.assistant-avatar[data-color="white"]  { --av-body-hi: #ffffff; --av-body-mid: #f7f5f0; --av-body-deep: #e1ddd4; --av-occ: #b9b3a8; --av-lid: #f7f5f0; }
+.assistant-avatar[data-color="cloud"]  { --av-body-hi: #eceef1; --av-body-mid: #d5d8de; --av-body-deep: #b3b8c2; --av-occ: #868c98; --av-lid: #d5d8de; }
+.assistant-avatar[data-color="coral"]  { --av-body-hi: #ffe6e4; --av-body-mid: #f8bcb9; --av-body-deep: #e9908e; --av-occ: #b46666; --av-lid: #f8bcb9; }
+.assistant-avatar[data-color="amber"]  { --av-body-hi: #fff1d2; --av-body-mid: #f8d78f; --av-body-deep: #e6b75a; --av-occ: #ad8639; --av-lid: #f8d78f; }
+.assistant-avatar[data-color="violet"] { --av-body-hi: #efe6ff; --av-body-mid: #d6c6f8; --av-body-deep: #b59ce9; --av-occ: #7f64b3; --av-lid: #d6c6f8; }
+.assistant-avatar[data-color="mint"]   { --av-body-hi: #def8ee; --av-body-mid: #b7e9d3; --av-body-deep: #8fd0b3; --av-occ: #5f9c82; --av-lid: #b7e9d3; }
+.assistant-avatar[data-color="sky"]    { --av-body-hi: #def0ff; --av-body-mid: #b8daf8; --av-body-deep: #8dbde9; --av-occ: #5f8db6; --av-lid: #b8daf8; }
+.assistant-avatar[data-color="rose"]   { --av-body-hi: #ffe6f1; --av-body-mid: #f7c1d8; --av-body-deep: #e796ba; --av-occ: #b0668b; --av-lid: #f7c1d8; }
+.dark .assistant-avatar[data-color="white"]  { --av-body-hi: #fbfaf7; --av-body-mid: #f1eee7; --av-body-deep: #d2cdc3; --av-occ: #9a948a; --av-lid: #f1eee7; }
+.dark .assistant-avatar[data-color="cloud"]  { --av-body-hi: #e3e6eb; --av-body-mid: #c9cdd5; --av-body-deep: #a2a8b3; --av-occ: #6f7685; --av-lid: #c9cdd5; }
+.dark .assistant-avatar[data-color="coral"]  { --av-body-hi: #ffdcd9; --av-body-mid: #f5aeaa; --av-body-deep: #de817e; --av-occ: #9e5553; --av-lid: #f5aeaa; }
+.dark .assistant-avatar[data-color="amber"]  { --av-body-hi: #ffecc4; --av-body-mid: #f5cf7c; --av-body-deep: #dcae4a; --av-occ: #967127; --av-lid: #f5cf7c; }
+.dark .assistant-avatar[data-color="violet"] { --av-body-hi: #ebe0ff; --av-body-mid: #cfbcf6; --av-body-deep: #ab90e4; --av-occ: #6d529f; --av-lid: #cfbcf6; }
+.dark .assistant-avatar[data-color="mint"]   { --av-body-hi: #d6f5e8; --av-body-mid: #a9e3ca; --av-body-deep: #7fc7a7; --av-occ: #4f8a70; --av-lid: #a9e3ca; }
+.dark .assistant-avatar[data-color="sky"]    { --av-body-hi: #d5ecff; --av-body-mid: #a9d2f5; --av-body-deep: #7db2e3; --av-occ: #4e7ea8; --av-lid: #a9d2f5; }
+.dark .assistant-avatar[data-color="rose"]   { --av-body-hi: #ffdfee; --av-body-mid: #f3b4d0; --av-body-deep: #df87ae; --av-occ: #9c567c; --av-lid: #f3b4d0; }
+/* Con cuerpo de color el especular baja: un blanco al 50 % sobre pastel parece un gorro. */
+.assistant-avatar[data-color]:not([data-color="white"]) { --av-hot: var(--av-body-hi); }
+.assistant-avatar[data-color]:not([data-color="white"]) [data-layer="hot"] { opacity: 0.22; }
+/* Contorno: la copia bajo el cuerpo, un 3 % más grande. Solo con data-color y solo en claro
+   (sobre el fondo casi negro la silueta ya se lee). */
+.assistant-avatar [data-layer="outline"] { fill: transparent; transform: scale(1.03); transform-box: view-box; transform-origin: 50px 50px; }
+.assistant-avatar[data-color] [data-layer="outline"] { fill: color-mix(in srgb, var(--foreground) 16%, transparent); }
+.dark .assistant-avatar[data-color] [data-layer="outline"] { fill: transparent; }
 
 @supports not (transition-timing-function: linear(0, 1)) {
   .assistant-avatar {
@@ -1213,11 +1244,11 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     rotate(calc(var(--av-roll) * 1deg)) scaleX(var(--av-face-sx));
 }
 .assistant-rig-eye-l {
-  transform: translate(calc(var(--av-gap) * -1px), 0) scaleX(var(--av-l-sx)) scale(var(--av-l-scale));
+  transform: translate(calc(var(--av-gap) * -1px), 0) rotate(calc(var(--av-eye-cant) * 1deg)) scaleX(var(--av-l-sx)) scale(var(--av-l-scale));
   transform-origin: 50px 47px;
 }
 .assistant-rig-eye-r {
-  transform: translate(calc(var(--av-gap) * 1px), 0) scaleX(var(--av-r-sx)) scale(var(--av-r-scale));
+  transform: translate(calc(var(--av-gap) * 1px), 0) rotate(calc(var(--av-eye-cant) * -1deg)) scaleX(var(--av-r-sx)) scale(var(--av-r-scale));
   transform-origin: 50px 47px;
 }
 /* Brillo del ojo: mirada de la expresión + puntero + sacadas. */
@@ -1278,13 +1309,18 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .assistant-stage {
   position: relative;
   display: block;
-  width: 136px;
-  height: 140px;
+  width: var(--stage-w, 136px);
+  height: var(--stage-h, 140px);
   flex: none;
   --av-shadow: color-mix(in srgb, var(--foreground) 22%, transparent);
 }
 .dark .assistant-stage {
   --av-shadow: color-mix(in srgb, #000000 55%, transparent);
+}
+/* El escenario grande del estudio de agentes; la sombra escala con el ancho. */
+.assistant-stage--hero {
+  --stage-w: 232px;
+  --stage-h: 240px;
 }
 .assistant-stage-figure {
   position: absolute;
@@ -1300,8 +1336,8 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 96px;
-  height: 18px;
+  width: calc(var(--stage-w, 136px) * 0.706);
+  height: calc(var(--stage-w, 136px) * 0.132);
   transform: translateX(-50%);
   border-radius: 9999px;
   pointer-events: none;
