@@ -1,9 +1,9 @@
 "use client";
 
 import { Info, TriangleAlert } from "lucide-react";
-import Link from "next/link";
 import { useEffect } from "react";
 
+import { salesWhatsAppUrl } from "@/core/config/env";
 import { cn } from "@/core/lib/utils";
 import { VOICE_SETTING_RANGES, type VoiceFormValues } from "@/modules/agents/domain/agent-voice";
 import type { AiVoiceDTO, VoiceSettingsDTO } from "@/modules/agents/domain/voice";
@@ -52,11 +52,16 @@ export function VoicePicker({
         <p className="flex items-start gap-2 rounded-xl border border-border bg-secondary p-3 text-xs">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
           <span>
-            <b className="font-medium">Las notas de voz están apagadas para tu empresa.</b> Enciéndelas en{" "}
-            <Link href="/settings/voice" className="font-medium text-foreground underline-offset-3 hover:underline">
-              Configuración → Voz
-            </Link>{" "}
-            y vuelve aquí para elegir cómo suena este agente.
+            <b className="font-medium">Las notas de voz están apagadas para tu empresa.</b> Las activa el equipo de axi:{" "}
+            <a
+              href={salesWhatsAppUrl("Hola, quiero activar las notas de voz para mi empresa.")}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-foreground underline-offset-3 hover:underline"
+            >
+              escríbenos por WhatsApp
+            </a>{" "}
+            y, cuando estén encendidas, vuelve aquí para elegir cómo suena este agente.
           </span>
         </p>
       ) : null}

@@ -1,18 +1,18 @@
 import type { Schemas } from "@/core/api/types";
 
 /**
- * Contratos de voz del slice agents (§10.5 F2).
+ * Contratos de voz del slice agents (§10.5).
  *
  * - Catálogo curado (`GET /ai-voices`): lista corta de voces pre-aprobadas por
  *   la plataforma; el tenant elige de aquí, jamás navega el proveedor.
- * - Switch del tenant (`/ai-agents/voice-settings`): opt-in de empresa —
- *   la voz cuesta dinero y viene APAGADA por defecto.
- * - Credencial BYOK (`/ai-voice-credential`): exclusiva de plan enterprise,
- *   write-only (el GET jamás devuelve la clave).
+ * - Interruptor de la empresa (`GET /ai-agents/voice-settings`): SOLO lectura.
+ *   La voz cuesta dinero y viene APAGADA por defecto; la enciende axi desde
+ *   /platform (gobierno de la voz, 2026-09-21), no el tenant.
+ * - La llave propia de ElevenLabs también la gestiona axi desde /platform; el
+ *   tenant no tiene contrato para ella. La voz POR AGENTE vive en `agent.ts`.
  */
 export type AiVoiceDTO = Schemas["AiVoiceListDto"]["data"][number];
 export type VoiceSettingsDTO = Schemas["VoiceSettingsDto"];
-export type TtsCredentialStatusDTO = Schemas["TtsCredentialStatusDto"];
 
 export const VOICE_GENDER_LABELS: Record<string, string> = {
   female: "Femenina",

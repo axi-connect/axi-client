@@ -1228,7 +1228,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["VoiceSettingsController_get_v1"];
-        put: operations["VoiceSettingsController_update_v1"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1412,17 +1412,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ai-voice-credential": {
+    "/api/v1/platform/tenants/{id}/voice": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["TtsCredentialController_status_v1"];
-        put: operations["TtsCredentialController_set_v1"];
+        get: operations["PlatformTenantVoiceController_read_v1"];
+        put?: never;
         post?: never;
-        delete: operations["TtsCredentialController_remove_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/voice/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformTenantVoiceController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/voice/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PlatformTenantVoiceController_setCredential_v1"];
+        post?: never;
+        delete: operations["PlatformTenantVoiceController_removeCredential_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -8698,9 +8730,25 @@ export interface components {
         VoicePreviewResultDto: {
             preview_url: string;
         };
-        TtsCredentialStatusDto: {
-            configured: boolean;
-            provider: string;
+        PlatformTenantVoiceDto: {
+            ai_enabled: boolean;
+            plan: {
+                code: string;
+                /** @enum {string} */
+                tier: "sbs" | "enterprise";
+            } | null;
+            credential: {
+                configured: boolean;
+                /** @enum {string} */
+                provider: "elevenlabs";
+            };
+            usage: {
+                used: number;
+                limit: number | null;
+                pct_used: number | null;
+                /** Format: date-time */
+                period_end: string;
+            } | null;
         };
         SetTtsCredentialDto: {
             api_key: string;
@@ -16417,7 +16465,7 @@ export interface components {
                         help?: string;
                         example?: string;
                         /** @enum {string} */
-                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                         handoff?: string;
                     }[];
                 }[];
@@ -16460,7 +16508,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                     handoff?: string;
                 }[];
             }[];
@@ -16499,7 +16547,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                     handoff?: string;
                 }[];
             }[];
@@ -16531,7 +16579,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
                     handoff?: string;
                 }[];
             }[];
@@ -19112,27 +19160,6 @@ export interface operations {
             };
         };
     };
-    VoiceSettingsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VoiceSettingsDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     RecognitionSettingsController_get_v1: {
         parameters: {
             query?: never;
@@ -19477,11 +19504,13 @@ export interface operations {
             };
         };
     };
-    TtsCredentialController_status_v1: {
+    PlatformTenantVoiceController_read_v1: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -19491,16 +19520,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TtsCredentialStatusDto"];
+                    "application/json": components["schemas"]["PlatformTenantVoiceDto"];
                 };
             };
         };
     };
-    TtsCredentialController_set_v1: {
+    PlatformTenantVoiceController_updateSettings_v1: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSettingsDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlatformTenantVoiceController_setCredential_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -19517,11 +19571,13 @@ export interface operations {
             };
         };
     };
-    TtsCredentialController_remove_v1: {
+    PlatformTenantVoiceController_removeCredential_v1: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

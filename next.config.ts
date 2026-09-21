@@ -70,6 +70,8 @@ const nextConfig: NextConfig = {
       { source: "/admin/agents/create", destination: "/admin/agents/new", permanent: true },
       { source: "/admin/agents/update/:id", destination: "/admin/agents/:id", permanent: true },
       { source: "/admin/agents/characters/:path*", destination: "/admin/agents", permanent: true },
+      // Gobierno de la voz (2026-09-21): la pantalla del tenant murió; el interruptor y la llave son de /platform
+      { source: "/settings/voice", destination: "/admin/agents", permanent: true },
       { source: "/workspace/channels/:id", destination: "/settings/channels/:id", permanent: true },
     ];
   },

@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { AudioLines, DollarSign, Mic, Type } from "lucide-react";
+import { salesWhatsAppUrl } from "@/core/config/env";
 import { Badge } from "@/shared/components/ui/badge";
 import { DashboardCard, MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
 import { CardEmpty } from "@/shared/components/features/card-empty";
@@ -113,11 +113,11 @@ export function VoiceCard({
       )}
       {noUsage && (
         <p className="pb-2 text-center text-xs text-muted-foreground">
-          Activa las notas de voz en{" "}
-          <Link href="/settings/voice" className="font-medium text-brand underline-offset-2 hover:underline">
-            Configuración → Voz
-          </Link>{" "}
-          y elige la voz de tu character.
+          Las notas de voz las activa el equipo de axi:{" "}
+          <a href={salesWhatsAppUrl("Hola, quiero activar las notas de voz para mi empresa.")} target="_blank" rel="noreferrer" className="font-medium text-brand underline-offset-2 hover:underline">
+            escríbenos por WhatsApp
+          </a>{" "}
+          y luego elige la voz de cada agente en su estudio.
         </p>
       )}
     </DashboardCard>

@@ -140,7 +140,9 @@ describe("AgentStudioView", () => {
     voiceSettings.ai_enabled = false;
     renderStudio({ mode: "create" });
     expect(await screen.findByText(/apagadas para tu empresa/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /configuración → voz/i })).toHaveAttribute("href", "/settings/voice");
+    // Ya no hay pantalla del tenant a la que enviar: la voz la enciende axi (gobierno de la voz)
+    expect(screen.queryByRole("link", { name: /configuración → voz/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /escríbenos por whatsapp/i })).toHaveAttribute("href", expect.stringContaining("wa.me/"));
   });
 
   it("un error del servidor se dice en la barra y el personaje lo siente; en reposo no quedan temporizadores", async () => {
