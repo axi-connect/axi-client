@@ -95,7 +95,7 @@ describe("agent-studio.mappers", () => {
     expect(values.provider).toBe("openai_compatible");
   });
 
-  it("roleFromIntentions: la misma heurística que la migración del servidor", () => {
+  it("roleFromIntentions: precedencia fija venta > captación > soporte/técnico > ventas (la vista no trae priority)", () => {
     const of = (...types: string[]) => roleFromIntentions(types.map((type) => ({ type })));
     expect(of("sales", "support")).toBe("ventas");
     expect(of("onboarding", "support")).toBe("captacion");

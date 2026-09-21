@@ -42,11 +42,13 @@ export function defaultStudioValues(models: readonly AiModelDTO[] | null): Agent
 
 /**
  * Un agente anterior al estudio no tiene brief. Su rol se DERIVA de las
- * intenciones que ya atiende —la misma heurística que la migración del
- * servidor: venta manda; si no, captación; si no, soporte/técnico; si no,
- * ventas—. Sin esto, abrir un agente de soporte para cambiarle el color y
- * guardar lo convertía en «quien vende y toma los pedidos» sin avisar
- * (auditoría C-H1).
+ * intenciones que ya atiende con una precedencia FIJA: venta manda; si no,
+ * captación; si no, soporte/técnico; si no, ventas. La migración del servidor
+ * usó los mismos códigos pero ordenando por `priority`, que la vista del
+ * agente no expone; los dos caminos nunca ven el mismo agente (la migración
+ * solo rellenó briefs y esto solo actúa cuando el brief es null). Sin esto,
+ * abrir un agente de soporte para cambiarle el color y guardar lo convertía
+ * en «quien vende y toma los pedidos» sin avisar (auditoría C-H1).
  */
 export function roleFromIntentions(intentions: readonly { type: string }[]): AgentBriefRole {
   const types = new Set(intentions.map((link) => link.type));
