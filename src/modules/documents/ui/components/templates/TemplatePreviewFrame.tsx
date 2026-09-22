@@ -56,6 +56,11 @@ export function fitZoom(containerWidth: number, preferred: number): number {
   return Math.min(preferred, available / A4_WIDTH_PX);
 }
 
+/** Los niveles fijos más «ajustada al ancho», sin repetir y en orden. */
+export function zoomLadder(fitted: number): number[] {
+  return [...new Set<number>([...ZOOMS, fitted])].sort((a, b) => a - b);
+}
+
 /**
  * La hoja: un `<iframe sandbox="">` con el HTML de la MISMA cadena que el PDF.
  * `sandbox` sin permisos = origen opaco, sin scripts, sin formularios; el HTML
@@ -93,21 +98,24 @@ export function TemplatePreviewFrame({
   }, []);
   const fitted = containerWidth === null ? 0.65 : fitZoom(containerWidth, 1);
   const zoom = choice === null ? fitted : (ZOOMS[choice] ?? fitted);
-  // Desde «ajustar», acercar salta al primer nivel POR ENCIMA de lo que cabe.
-  const firstAbove = ZOOMS.findIndex((level) => level > fitted);
-  const canZoomIn =
-    choice === null ? firstAbove !== -1 : choice < ZOOMS.length - 1;
-  const canZoomOut = choice !== null;
-  const zoomIn = () =>
-    setChoice((current) =>
-      current === null ? firstAbove : Math.min(ZOOMS.length - 1, current + 1),
+  // La escalera: los niveles fijos MÁS «ajustada», en orden, y se sube y se
+  // baja por TODOS. Con «ajustada» como extremo, en escritorio (≈770 px de
+  // columna, ajustada ≈ 93 %) solo quedaba el 100 % por encima y nada por
+  // debajo: los dos botones muertos y sin forma de ver la página entera de un
+  // vistazo (hallazgo del auditor, el defecto anterior con el signo cambiado).
+  const ladder = zoomLadder(fitted);
+  const at = ladder.indexOf(zoom);
+  const canZoomIn = at !== -1 && at < ladder.length - 1;
+  const canZoomOut = at > 0;
+  const step = (delta: number) => {
+    const next = ladder[at + delta];
+    if (next === undefined) return;
+    setChoice(
+      next === fitted ? null : ZOOMS.findIndex((level) => level === next),
     );
-  const zoomOut = () =>
-    setChoice((current) => {
-      if (current === null) return null;
-      const next = current - 1;
-      return next < 0 || (ZOOMS[next] ?? 0) <= fitted ? null : next;
-    });
+  };
+  const zoomIn = () => step(1);
+  const zoomOut = () => step(-1);
   const srcDoc = useMemo(
     () => (html === null ? null : withHostFonts(html)),
     [html],

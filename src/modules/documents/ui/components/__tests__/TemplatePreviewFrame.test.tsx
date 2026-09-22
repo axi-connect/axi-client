@@ -5,6 +5,7 @@ import {
   TemplatePreviewFrame,
   fitZoom,
   withHostFonts,
+  zoomLadder,
 } from "@/modules/documents/ui/components/templates/TemplatePreviewFrame";
 
 describe("fitZoom (ajustar al ancho)", () => {
@@ -17,6 +18,20 @@ describe("fitZoom (ajustar al ancho)", () => {
   it("en escritorio manda el zoom elegido", () => {
     expect(fitZoom(1200, 0.65)).toBe(0.65);
     expect(fitZoom(1200, 1)).toBe(1);
+  });
+
+  it("la escalera baja también: con un contenedor ancho «ajustada» ya es el 100 % y los niveles pequeños siguen alcanzables", () => {
+    // Con «ajustada» como extremo, en escritorio (≈770 px de columna) solo
+    // quedaba el 100 % por encima y NADA por debajo: dos botones muertos y sin
+    // forma de ver la página entera (hallazgo del auditor).
+    expect(fitZoom(1200, 1)).toBe(1);
+    expect(zoomLadder(fitZoom(1200, 1))).toEqual([0.5, 0.65, 0.8, 1]);
+    const desk = fitZoom(770, 1);
+    expect(desk).toBeGreaterThan(0.8);
+    expect(desk).toBeLessThan(1);
+    expect(zoomLadder(desk)).toEqual([0.5, 0.65, 0.8, desk, 1]);
+    const phone = fitZoom(390, 1);
+    expect(zoomLadder(phone)).toEqual([phone, 0.5, 0.65, 0.8, 1]);
   });
 });
 
