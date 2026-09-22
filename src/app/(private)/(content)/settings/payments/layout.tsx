@@ -4,7 +4,7 @@ import { PaymentsHubNav } from "@/modules/payments/public";
 
 /**
  * Shell del hub Pagos (Ventas): cabecera + pestañas por sub-ruta — Medios ·
- * Plan de pagos · Moneda y TRM · Documentos, filtradas por función del tenant.
+ * Plan de pagos · Recordatorios · Moneda y TRM, filtradas por función del tenant.
  * Sustituye a la pestaña «Medios de pago» de Mi empresa (F2 Cobros).
  */
 export default function PaymentsHubLayout({ children }: { children: ReactNode }) {
@@ -13,7 +13,7 @@ export default function PaymentsHubLayout({ children }: { children: ReactNode })
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Pagos</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Cómo te pagan tus clientes: medios, plan de pagos, moneda y documentos.
+          Cómo te pagan tus clientes: medios, plan de pagos, recordatorios y moneda.
         </p>
       </header>
       <PaymentsHubNav />

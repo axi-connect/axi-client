@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  ArrowRightLeft,
-  Bell,
-  CalendarClock,
-  FileText,
-  Wallet,
-} from "lucide-react";
+import { ArrowRightLeft, Bell, CalendarClock, Wallet } from "lucide-react";
 
 import { useFeatures } from "@/shared/auth/features.hooks";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
@@ -15,7 +9,6 @@ export const PAYMENTS_HUB_BASE = "/settings/payments";
 export const PAYMENTS_FX_PATH = `${PAYMENTS_HUB_BASE}/moneda`;
 export const PAYMENTS_PLAN_PATH = `${PAYMENTS_HUB_BASE}/plan`;
 export const PAYMENTS_REMINDERS_PATH = `${PAYMENTS_HUB_BASE}/recordatorios`;
-export const PAYMENTS_DOCUMENTS_PATH = `${PAYMENTS_HUB_BASE}/documentos`;
 
 /**
  * Pestañas del hub Pagos, filtradas por FUNCIÓN del tenant (no por plan): un
@@ -27,8 +20,9 @@ export const PAYMENTS_DOCUMENTS_PATH = `${PAYMENTS_HUB_BASE}/documentos`;
  * vista quien muestra el 403: esconder pestañas por un error de red deja al
  * dueño sin saber qué tiene contratado.
  *
- * «Plan de pagos» y «Documentos» llegan con F4 y F7; hasta entonces sus rutas
- * no existen y no se ofrecen.
+ * «Documentos» NO es pestaña de Pagos (F7 Cobros, decisión del dueño): los
+ * documentos son el papel de la empresa y los consume cualquier proceso, así
+ * que su configuración vive en Mi empresa › Documentos.
  */
 export function paymentsHubTabs(
   has: (code: string) => boolean,
@@ -63,19 +57,11 @@ export function paymentsHubTabs(
       label: "Moneda y TRM",
       icon: ArrowRightLeft,
     });
-  if (has("documents") && DOCUMENTS_TAB_READY) {
-    items.push({
-      href: PAYMENTS_DOCUMENTS_PATH,
-      label: "Documentos",
-      icon: FileText,
-    });
-  }
   return items;
 }
 
-/** Interruptores de entrega: la pestaña existe cuando existe su pantalla (F4 / F7). */
+/** Interruptor de entrega: la pestaña existe cuando existe su pantalla (F4). */
 const PLAN_TAB_READY = true;
-const DOCUMENTS_TAB_READY = false;
 
 export function PaymentsHubNav() {
   const { loaded, hasFeature } = useFeatures();

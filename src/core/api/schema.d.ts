@@ -4468,6 +4468,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/document-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentTypesController_types_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentTemplatesController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentTemplatesController_one_v1"];
+        put: operations["DocumentTemplatesController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates/{type}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentTemplatesController_resetToSystem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/document-templates/{type}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentTemplatesController_preview_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsSettingsController_settings_v1"];
+        put: operations["DocumentsSettingsController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geo/search": {
         parameters: {
             query?: never;
@@ -13680,6 +13776,883 @@ export interface components {
             last_inbound_at: string | null;
             window_hours: number | null;
             supports_templates: boolean;
+        };
+        DocumentTypesDto: {
+            types: {
+                code: string;
+                label: string;
+                issuable: boolean;
+                default_prefix: string;
+                data_domains: string[];
+                allowed_blocks: ("heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer")[];
+                required_blocks: ("heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer")[];
+                legal_notice: string | null;
+                variables: {
+                    name: string;
+                    label: string;
+                    domain: string;
+                    kind: string;
+                }[];
+            }[];
+            block_catalog: {
+                /** @enum {string} */
+                type: "heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer";
+                label: string;
+                description: string;
+                consumes: string[];
+                /** @enum {string} */
+                repeat: "none" | "template" | "data";
+                supports_when: boolean;
+                editable: boolean;
+            }[];
+        };
+        DocumentTemplatesDto: {
+            templates: {
+                /** @enum {string} */
+                type_code: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+                slug: string;
+                /** @enum {string} */
+                source: "system" | "tenant";
+                version: number;
+                template_version_id: string | null;
+                template: {
+                    /** @enum {number} */
+                    schema_version: 1;
+                    theme: {
+                        accent_color: string | null;
+                    };
+                    blocks: ({
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "heading";
+                        text: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "paragraph";
+                        text: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "clauses";
+                        numbered: boolean;
+                        items: {
+                            title: string | null;
+                            body: string;
+                        }[];
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "key_values";
+                        pairs: {
+                            label: string;
+                            value: string;
+                        }[];
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "parties";
+                        /** @enum {string} */
+                        show: "issuer" | "counterparty" | "both";
+                        issuer_label: string;
+                        counterparty_label: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "line_items_table";
+                        show_quantity: boolean;
+                        show_unit_price: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "totals";
+                        show_dual_currency: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "schedule_table";
+                        show_paid: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "payment_summary";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "signatures";
+                        issuer_label: string;
+                        counterparty_label: string;
+                        show_date: boolean;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "image";
+                        /** @enum {string} */
+                        source: "issuer_logo";
+                        /** @enum {string} */
+                        align: "left" | "center" | "right";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "legal_notice";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "page_footer";
+                        text: string;
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "divider";
+                    } | {
+                        id: string;
+                        when?: {
+                            /** @enum {string} */
+                            path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                            /** @enum {string} */
+                            is: "present" | "absent";
+                        } | null;
+                        /** @enum {string} */
+                        type: "spacer";
+                        /** @enum {string} */
+                        size: "sm" | "md" | "lg";
+                    })[];
+                };
+                /** Format: date-time */
+                updated_at: string | null;
+            }[];
+        };
+        DocumentTemplateDto: {
+            /** @enum {string} */
+            type_code: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+            slug: string;
+            /** @enum {string} */
+            source: "system" | "tenant";
+            version: number;
+            template_version_id: string | null;
+            template: {
+                /** @enum {number} */
+                schema_version: 1;
+                theme: {
+                    accent_color: string | null;
+                };
+                blocks: ({
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "heading";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "paragraph";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "clauses";
+                    numbered: boolean;
+                    items: {
+                        title: string | null;
+                        body: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "key_values";
+                    pairs: {
+                        label: string;
+                        value: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "parties";
+                    /** @enum {string} */
+                    show: "issuer" | "counterparty" | "both";
+                    issuer_label: string;
+                    counterparty_label: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "line_items_table";
+                    show_quantity: boolean;
+                    show_unit_price: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "totals";
+                    show_dual_currency: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "schedule_table";
+                    show_paid: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "payment_summary";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "signatures";
+                    issuer_label: string;
+                    counterparty_label: string;
+                    show_date: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "image";
+                    /** @enum {string} */
+                    source: "issuer_logo";
+                    /** @enum {string} */
+                    align: "left" | "center" | "right";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "legal_notice";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "page_footer";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "divider";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "spacer";
+                    /** @enum {string} */
+                    size: "sm" | "md" | "lg";
+                })[];
+            };
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        SaveDocumentTemplateDto: {
+            template: {
+                /** @enum {number} */
+                schema_version: 1;
+                theme: {
+                    accent_color: string | null;
+                };
+                blocks: ({
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "heading";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "paragraph";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "clauses";
+                    numbered: boolean;
+                    items: {
+                        title: string | null;
+                        body: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "key_values";
+                    pairs: {
+                        label: string;
+                        value: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "parties";
+                    /** @enum {string} */
+                    show: "issuer" | "counterparty" | "both";
+                    issuer_label: string;
+                    counterparty_label: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "line_items_table";
+                    show_quantity: boolean;
+                    show_unit_price: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "totals";
+                    show_dual_currency: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "schedule_table";
+                    show_paid: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "payment_summary";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "signatures";
+                    issuer_label: string;
+                    counterparty_label: string;
+                    show_date: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "image";
+                    /** @enum {string} */
+                    source: "issuer_logo";
+                    /** @enum {string} */
+                    align: "left" | "center" | "right";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "legal_notice";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "page_footer";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "divider";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "spacer";
+                    /** @enum {string} */
+                    size: "sm" | "md" | "lg";
+                })[];
+            };
+        };
+        PreviewDocumentTemplateDto: {
+            template?: {
+                /** @enum {number} */
+                schema_version: 1;
+                theme: {
+                    accent_color: string | null;
+                };
+                blocks: ({
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "heading";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "paragraph";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "clauses";
+                    numbered: boolean;
+                    items: {
+                        title: string | null;
+                        body: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "key_values";
+                    pairs: {
+                        label: string;
+                        value: string;
+                    }[];
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "parties";
+                    /** @enum {string} */
+                    show: "issuer" | "counterparty" | "both";
+                    issuer_label: string;
+                    counterparty_label: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "line_items_table";
+                    show_quantity: boolean;
+                    show_unit_price: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "totals";
+                    show_dual_currency: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "schedule_table";
+                    show_paid: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "payment_summary";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "signatures";
+                    issuer_label: string;
+                    counterparty_label: string;
+                    show_date: boolean;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "image";
+                    /** @enum {string} */
+                    source: "issuer_logo";
+                    /** @enum {string} */
+                    align: "left" | "center" | "right";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "legal_notice";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "page_footer";
+                    text: string;
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "divider";
+                } | {
+                    id: string;
+                    when?: {
+                        /** @enum {string} */
+                        path: "counterparty" | "commerce" | "commerce.service_date" | "commerce.valid_until" | "fx" | "schedule" | "payment" | "payments" | "issuer.logo";
+                        /** @enum {string} */
+                        is: "present" | "absent";
+                    } | null;
+                    /** @enum {string} */
+                    type: "spacer";
+                    /** @enum {string} */
+                    size: "sm" | "md" | "lg";
+                })[];
+            };
+            issuer?: {
+                legal_name?: string | null;
+                tax_id_label?: string;
+                address?: string | null;
+                city?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                footer_note?: string | null;
+            };
+        };
+        DocumentPreviewDto: {
+            html: string;
+        };
+        DocumentsSettingsDto: {
+            issuer: {
+                legal_name: string | null;
+                tax_id_label: string;
+                address: string | null;
+                city: string | null;
+                phone: string | null;
+                email: string | null;
+                footer_note: string | null;
+            };
+            numbering: {
+                prefixes: {
+                    [key: string]: string;
+                };
+            };
+            auto_issue: {
+                contract_on_confirm: boolean;
+                contract_on_deposit_verified: boolean;
+                receipt_on_payment_verified: boolean;
+            };
+            auto_send: {
+                contract: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+                receipt: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+            };
+            hsm_fallback: {
+                name: string;
+                language: string;
+            } | null;
+            prefix_defaults: {
+                [key: string]: string;
+            };
+            company_defaults: {
+                name: string;
+                nit: string;
+                address: string | null;
+                city: string | null;
+            };
+        };
+        UpdateDocumentsSettingsDto: {
+            issuer: {
+                legal_name: string | null;
+                tax_id_label: string;
+                address: string | null;
+                city: string | null;
+                phone: string | null;
+                email: string | null;
+                footer_note: string | null;
+            };
+            numbering: {
+                prefixes: {
+                    [key: string]: string;
+                };
+            };
         };
         GeoSearchResultsDto: {
             items: {
@@ -26136,6 +27109,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactReachabilityDto"];
+                };
+            };
+        };
+    };
+    DocumentTypesController_types_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTypesDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplatesDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_one_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplateDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveDocumentTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplateDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_resetToSystem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentTemplateDto"];
+                };
+            };
+        };
+    };
+    DocumentTemplatesController_preview_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewDocumentTemplateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentPreviewDto"];
+                };
+            };
+        };
+    };
+    DocumentsSettingsController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsSettingsDto"];
+                };
+            };
+        };
+    };
+    DocumentsSettingsController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDocumentsSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsSettingsDto"];
                 };
             };
         };

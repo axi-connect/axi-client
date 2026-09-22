@@ -22,6 +22,10 @@ De ahí salen las cuatro decisiones del diseño:
 5. **Vive en Mi empresa, no en Pagos.** Los documentos son el papel de la EMPRESA y los consume
    cualquier proceso (pedidos, CRM, agenda): su configuración va junto a la identidad del negocio.
    El slice `documents` del cliente es autónomo y sus componentes se montan desde donde haga falta.
+6. **La previa dice que es muestra.** Se parece al PDF de verdad, así que el papel lleva una marca «MUESTRA»
+   (opción del render, no de los datos) y la paginación no se inventa: la calcula Chromium al generar.
+7. **La hoja nunca desaparece.** Una variable desconocida o la red caída ponen una barra sobre el papel,
+   no un velo: el dueño necesita ver el documento mientras lo arregla.
 
 Uso:  python3 document-template-editor.build.py   (AXI_MOCKUP_ARTBOARDS_DIR=… exporta artboards)
 """
@@ -34,11 +38,11 @@ ic, btn, badge = K.ic, K.btn, K.badge
 
 EXTRA_CSS = """
 /* ── Página (mismo molde que F4/F5: una columna de trabajo, con aire) ─────── */
-.wrap{max-width:1180px;margin:0 auto;padding:40px 40px 80px;display:flex;flex-direction:column;gap:26px}
+.wrap{max-width:1360px;margin:0 auto;padding:40px 40px 80px;display:flex;flex-direction:column;gap:26px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .topbar .ttl{font-size:19px;font-weight:600;letter-spacing:-.015em}
 .topbar .acts{display:flex;gap:8px;align-items:center}
-.two{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:34px;align-items:start}
+.two{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:34px;align-items:start}
 .set-title{font-size:13px;color:var(--muted-foreground);padding:0 4px 9px;font-weight:500;display:flex;align-items:center;gap:8px}
 .set-title .n{margin-left:auto;font-variant-numeric:tabular-nums}
 .set-note{font-size:12.5px;color:var(--muted-foreground);padding:10px 4px 0;line-height:1.55;max-width:60ch}
@@ -103,7 +107,7 @@ EXTRA_CSS = """
 .sheet-bar .live .d{width:7px;height:7px;border-radius:50%;background:var(--axi-success)}
 .sheet-bar .zoom{margin-left:auto;display:flex;gap:2px}
 .sheet-frame{background:color-mix(in srgb, var(--foreground) 5%, var(--background));border:1px solid var(--border);border-radius:18px;padding:26px;display:flex;justify-content:center;position:relative;overflow:hidden}
-.sheet{width:560px;min-height:790px;background:#fff;color:#18181b;box-shadow:0 1px 2px rgb(0 0 0/.08),0 18px 44px rgb(0 0 0/.16);
+.sheet{width:640px;min-height:905px;background:#fff;color:#18181b;box-shadow:0 1px 2px rgb(0 0 0/.08),0 18px 44px rgb(0 0 0/.16);
        padding:44px 42px 54px;font-family:var(--font-body);font-size:9.6px;line-height:1.5;position:relative;--paper-accent:#e65759}
 .sheet .dhead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--paper-accent);padding-bottom:9px;margin-bottom:14px}
 .sheet .dhead .kind{font-size:9px;color:#52525b}
@@ -138,9 +142,10 @@ EXTRA_CSS = """
 .sheet .legal{font-size:8.2px;color:#52525b;border:1px solid #e4e4e7;padding:6px 8px;border-radius:4px;margin:8px 0}
 .sheet .pfoot{position:absolute;left:42px;right:42px;bottom:22px;font-size:7.8px;color:#71717a;text-align:center;border-top:1px solid #e4e4e7;padding-top:5px}
 .sheet .pnum{position:absolute;right:42px;bottom:10px;font-size:7.5px;color:#a1a1aa}
+.sheet .wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font-family:var(--font-heading);font-weight:700;font-size:64px;letter-spacing:.12em;color:rgba(24,24,27,.07);transform:rotate(-28deg)}
 .sheet .mark{outline:2px solid color-mix(in srgb, var(--axi-brand) 70%, transparent);outline-offset:3px;border-radius:2px}
-.frozen{position:absolute;inset:0;background:color-mix(in srgb, var(--background) 70%, transparent);display:grid;place-items:center;backdrop-filter:blur(1.5px)}
-.frozen .msg{background:var(--background);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow-float);max-width:320px;line-height:1.45}
+.frozen{position:absolute;left:26px;right:26px;top:26px;display:flex;justify-content:center;pointer-events:none}
+.frozen .msg{background:color-mix(in srgb, var(--background) 95%, transparent);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:13px;display:flex;gap:10px;align-items:flex-start;box-shadow:var(--shadow-overlay);max-width:420px;line-height:1.45;backdrop-filter:blur(6px)}
 .frozen .msg .ic{color:var(--axi-warning);flex:none}
 .sheet.sk{display:flex;flex-direction:column;gap:10px}
 
@@ -210,11 +215,16 @@ def kind_tabs(active: str = "Contrato", source: str = "tenant") -> str:
     tabs = "".join(
         f'<button role="radio" aria-checked="{str(t == active).lower()}">{ic(i, size=15)}{t}</button>' for t, i in KINDS
     )
-    src = (f'{badge("Tu versión 3 · editada hace 2 días", "violet")}' if source == "tenant"
-           else f'{badge("Modelo de Axi para agencias", "info")}')
+    if source == "tenant":
+        src = f'{badge("Tu versión 3 · editada hace 2 días", "violet")}{btn("Restablecer al modelo de Axi", "rotate-ccw", "ghost xs")}'
+    else:
+        # Primera vez: no hay nada a lo que «restablecer», así que el botón no existe;
+        # en su lugar, la frase que quita el miedo a tocar.
+        src = (f'{badge("Modelo de Axi para agencias", "info")}'
+               f'<span class="small muted">Edita lo que quieras: al guardar nace tu versión 1 y el modelo de Axi sigue ahí para volver.</span>')
     return f"""<div class="kinds">
       <div class="seg inline sm" role="radiogroup" aria-label="Tipo de documento">{tabs}</div>
-      <span class="src">{src}{btn("Restablecer al modelo de Axi", "rotate-ccw", "ghost xs")}</span>
+      <span class="src">{src}</span>
     </div>"""
 
 
@@ -266,8 +276,10 @@ def clause_editor(bad: bool = False) -> str:
         <div class="cb">{c2}</div></div>
       <div class="clause"><div class="ch"><span class="num">3</span><span class="t">Forma de pago</span>{btn("", "chevron-up", "ghost icon xs", 'aria-label="Subir la cláusula 3"')}{btn("", "chevron-down", "ghost icon xs", 'aria-label="Bajar la cláusula 3"')}{btn("", "x", "ghost icon xs", 'aria-label="Quitar la cláusula 3"')}</div>
         <div class="cb">{c3}</div></div>
+      <div class="clause"><div class="ch"><span class="num">4</span><span class="t">Cambios y cancelaciones</span>{btn("", "chevron-up", "ghost icon xs", 'aria-label="Subir la cláusula 4"')}{btn("", "chevron-down", "ghost icon xs", 'aria-label="Bajar la cláusula 4"')}{btn("", "x", "ghost icon xs", 'aria-label="Quitar la cláusula 4"')}</div>
+        <div class="cb">Los cambios de fecha o de viajero y las cancelaciones se rigen por la política publicada por la agencia y aceptada al reservar.</div></div>
       {warn}
-      <div class="varbar"><span class="lbl">Variables de un contrato</span>{chips}<span class="count">3 de 20 cláusulas</span></div>
+      <div class="varbar"><span class="lbl">Variables de un contrato</span>{chips}<span class="count">4 de 20 cláusulas</span></div>
       <div class="add-row" style="padding:2px 0 0;justify-content:flex-start">{btn("Añadir cláusula", "plus", "outline xs")}</div>
     </div>"""
 
@@ -281,7 +293,7 @@ def block_list(mode: str = "full") -> str:
         blk("users", "Partes", "La agencia · El viajero", required=True),
         blk("text", "Párrafo", f'Entre {v("company_legal_name")} (la agencia) y {v("contact_name")} (el viajero) se celebra…'),
         blk("list", "Datos en pares", f'Reserva · Fecha de salida · Viajeros'),
-        blk("list-ordered", "Cláusulas", "6 cláusulas · Objeto, Precio, Forma de pago, Cambios…",
+        blk("list-ordered", "Cláusulas", "4 cláusulas · Objeto, Precio, Forma de pago, Cambios y cancelaciones",
             cls=("open" + (" bad" if mode == "bad" else "")) if open_clauses else "",
             editor=clause_editor(bad=(mode == "bad")) if open_clauses else ""),
         blk("table", "Tabla de ítems", "Descripción · Cant. · Precio unitario · Total", tags=T_DATA),
@@ -353,7 +365,8 @@ def sheet(mode: str = "full", mark: str = "") -> str:
       <p>Para constancia se firma en Bogotá el 22 de septiembre de 2026.</p>
       <div class="sigs"><div class="sig">Por la agencia<div class="dt">Fecha: ____________</div></div><div class="sig">El viajero<div class="dt">Fecha: ____________</div></div></div>
       <div class="pfoot">JuanitoXpeditions · Calle 93 # 11-27, oficina 402 Bogotá · +57 300 123 4567 · reservas@juanitoxpeditions.co</div>
-      <div class="pnum">1 / 2</div>
+      <div class="pnum">A4 · la paginación se calcula al generar el PDF</div>
+      <div class="wm" aria-hidden="true">MUESTRA</div>
     </div>"""
     overlay = ""
     if mode == "frozen":
@@ -375,19 +388,19 @@ def sheet_col(mode: str = "full", mark: str = "", note: str = "Se actualiza al e
     </div>"""
 
 
-def editor(mode: str = "full", with_palette: bool = False, sheet_mode: str = "full", mark: str = "", dirty: bool = True) -> str:
+def editor(mode: str = "full", with_palette: bool = False, sheet_mode: str = "full", mark: str = "", dirty: bool = True, source: str = "tenant") -> str:
     save = btn("Guardar plantilla", "") if dirty else btn("Guardar plantilla", "", "", 'aria-disabled="true" style="opacity:.5"')
     pal = palette() if with_palette else ""
     body = f"""
-      {kind_tabs("Contrato")}
+      {kind_tabs("Contrato", source)}
       <div class="two">
         <div class="pal-anchor">
           <p class="set-title">{ic("layers", size=14)}Los bloques del contrato, en el orden en que se imprimen<span class="n">12</span></p>
           {block_list(mode)}
           {pal}
-          <p class="set-note">Lo que lleva <b>«filas desde los datos»</b> se rellena con el pedido al emitir; lo que dice
-            <b>«solo si hay plan de pagos»</b> desaparece solo en un contrato de pago único. Nada de esto se configura:
-            es lo que cada bloque ES.</p>
+          <p class="set-note">Lo que lleva <b>«filas desde los datos»</b> se rellena con el pedido al emitir y
+            <b>«solo si hay plan de pagos»</b> es lo que ese bloque es. Lo que sí decides tú es <b>cuándo aparece</b> un
+            párrafo, unas cláusulas o unos pares: dentro de cada uno, en «Cuándo aparece».</p>
           <div class="savebar">{btn("Descartar cambios", "", "ghost")}{save}</div>
         </div>
         {sheet_col(sheet_mode, mark)}
@@ -459,7 +472,7 @@ def settings() -> str:
 def disabled() -> str:
     return f"""<div class="wrap">
       <div class="topbar"><p class="ttl">Mi empresa</p><span class="small muted">Savage Wear · tienda de ropa</span></div>
-      {K.nav(TABS[:3], "Funciones", "Ajustes de la empresa")}
+      {K.nav(TABS[:3], "General", "Ajustes de la empresa")}
       <div class="void">
         <span class="vic">{ic("file-x", size=22)}</span>
         <h3>Aquí no hay documentos</h3>
@@ -489,6 +502,8 @@ def mobile() -> str:
 VIEWS = [
     ("editor", "1 · El editor", editor("full"),
      "Vive en Mi empresa › Documentos, no en Pagos: es el papel de la empresa y lo consume cualquier proceso. El papel manda: la hoja A4 ocupa la mitad derecha y se actualiza al escribir con los datos de una reserva de ejemplo. A la izquierda, los bloques del contrato en el orden en que se imprimen — se leen como el índice del documento, no como un formulario. Cada bloque dice de qué depende («filas desde los datos», «solo si hay plan de pagos») en su propia fila; los obligatorios llevan candado y no se pueden quitar."),
+    ("primera-vez", "1b · La primera vez", editor("full", dirty=False, source="system"),
+     "El minuto que decide si el dueño confía en la función: abre Documentos y nunca ha editado nada. Manda el modelo de Axi para su nicho, la hoja ya está completa con datos de ejemplo, y no hay «Restablecer» porque no hay nada a lo que volver. La frase junto a la insignia quita el miedo a tocar: al guardar nace su versión 1 y el modelo sigue ahí."),
     ("oscuro", "2 · Oscuro", editor("full"),
      "El papel es blanco también en modo oscuro: la hoja no cambia con el tema porque es papel, y lo que el dueño está decidiendo es cómo se ve impreso."),
     ("paleta", "3 · Añadir bloque", editor("full", with_palette=True),
@@ -496,9 +511,9 @@ VIEWS = [
     ("clausulas", "4 · Cláusulas", editor("clauses", mark="clauses"),
      "Un bloque se edita bajo su propia fila, sin cambiar de pantalla. Las cláusulas se suben, bajan y quitan con botones (sin arrastrar); las variables son piezas moradas y la barra de abajo ofrece SOLO las de un contrato. La hoja resalta el bloque que se está tocando."),
     ("variable", "5 · Variable desconocida", editor("bad", sheet_mode="frozen", mark="clauses"),
-     "Una variable que no existe frena la hoja: el texto la marca en rojo, el aviso dice cómo se llama de verdad y ofrece corregirla, y la vista previa se queda en espera. Es el mismo 422 del servidor, pero antes y con las mismas palabras."),
+     "Una variable que no existe frena la hoja: el texto la marca en rojo, el aviso dice cómo se llama de verdad y ofrece corregirla, y la vista previa se queda en espera con una barra encima — la hoja sigue visible mientras se arregla. Es el mismo 422 del servidor, pero antes y con las mismas palabras."),
     ("cargando", "6 · Actualizando y sin conexión", editor("full", sheet_mode="error"),
-     "La hoja nunca desaparece: mientras actualiza se ve la última versión buena, y si falla la red lo dice encima de ella con «Reintentar». La vista previa la produce el servidor con la misma cadena que el PDF, así que lo que se ve es lo que va a salir."),
+     "La hoja nunca desaparece: mientras actualiza se ve la última versión buena, y si falla la red lo dice en una BARRA sobre ella —no un velo— con «Reintentar». La vista previa la produce el servidor con la misma cadena que el PDF, así que lo que se ve es lo que va a salir."),
     ("cambio", "7 · Cambiar de tipo con cambios", with_modal(editor("full"), modal_switch()),
      "Las pastillas de tipo cambian el panel, no la URL. Con cambios sin guardar, cambiar de tipo pregunta y nombra la versión que crearía: cada guardado es una versión nueva, nunca una sobreescritura."),
     ("restablecer", "8 · Restablecer", with_modal(editor("full"), modal_reset()),
@@ -506,7 +521,7 @@ VIEWS = [
     ("emisor", "9 · Emisor y numeración", settings(),
      "Quién emite y cómo se numera, con la hoja al lado para ver el resultado antes de guardar. Lo vacío cae a la ficha de Mi empresa (el placeholder lo dice); el NIT y el isotipo siempre salen de allí. Los prefijos son por tipo y no reinician la cuenta; la factura aparece apagada porque existe en el catálogo pero no se emite sin conexión fiscal."),
     ("sin-funcion", "10 · Sin la función", disabled(),
-     "Savage Wear no emite documentos: la pestaña Documentos no existe en Mi empresa, el servidor responde 403 y el agente no sabe que la función existe. Se enciende al lado, en Funciones."),
+     "Savage Wear no emite documentos: la pestaña Documentos no existe en Mi empresa y el agente no sabe que la función existe. Quien entre por URL directa a /settings/company/documentos ve ESTE panel (el 403 del servidor, explicado) con la pestaña ausente del nav, sin redirección. Un rol sin el permiso «Configurar plantillas» ve otro mensaje distinto que lo manda a quien administra los roles."),
     ("movil", "11 · Móvil", mobile(),
      "Un A4 a 390 píxeles no se lee y un editor que la comprime tampoco: en el móvil la hoja se abre aparte y a pantalla completa, y la lista de bloques ocupa el ancho."),
 ]
@@ -516,15 +531,16 @@ if __name__ == "__main__":
     K.build_html("Documentos · plantillas por bloques", "Mockup F0 · no es producto",
                  "Cobros · F7 «Esqueleto documents»", VIEWS)
     K.export_artboards([
-        {"file": "documents-editor.dc.html", "title": "El editor · el papel manda", "body": editor("full"), "w": 1440, "h": 1280},
+        {"file": "documents-editor.dc.html", "title": "El editor · el papel manda", "body": editor("full"), "w": 1440, "h": 1400},
+        {"file": "documents-first-time.dc.html", "title": "La primera vez · manda el modelo de Axi", "body": editor("full", dirty=False, source="system"), "w": 1440, "h": 1400},
         {"file": "documents-editor-dark.dc.html", "title": "El editor · oscuro (el papel sigue blanco)", "body": editor("full"), "w": 1440, "h": 1280, "dark": True},
-        {"file": "documents-palette.dc.html", "title": "Añadir bloque · solo lo que un contrato admite", "body": editor("full", with_palette=True), "w": 1440, "h": 1280},
-        {"file": "documents-clauses.dc.html", "title": "Cláusulas · se editan bajo su fila", "body": editor("clauses", mark="clauses"), "w": 1440, "h": 1500},
-        {"file": "documents-bad-variable.dc.html", "title": "Variable desconocida · la hoja espera", "body": editor("bad", sheet_mode="frozen", mark="clauses"), "w": 1440, "h": 1560},
-        {"file": "documents-offline.dc.html", "title": "Sin conexión · la última versión buena", "body": editor("full", sheet_mode="error"), "w": 1440, "h": 1280},
-        {"file": "documents-switch.dc.html", "title": "Cambiar de tipo con cambios", "body": with_modal(editor("full"), modal_switch()), "w": 1440, "h": 1280},
-        {"file": "documents-reset.dc.html", "title": "Restablecer · el historial no se borra", "body": with_modal(editor("full"), modal_reset()), "w": 1440, "h": 1280},
-        {"file": "documents-issuer.dc.html", "title": "Emisor y numeración", "body": settings(), "w": 1440, "h": 1280},
+        {"file": "documents-palette.dc.html", "title": "Añadir bloque · solo lo que un contrato admite", "body": editor("full", with_palette=True), "w": 1440, "h": 1400},
+        {"file": "documents-clauses.dc.html", "title": "Cláusulas · se editan bajo su fila", "body": editor("clauses", mark="clauses"), "w": 1440, "h": 1620},
+        {"file": "documents-bad-variable.dc.html", "title": "Variable desconocida · la hoja espera", "body": editor("bad", sheet_mode="frozen", mark="clauses"), "w": 1440, "h": 1680},
+        {"file": "documents-offline.dc.html", "title": "Sin conexión · la última versión buena", "body": editor("full", sheet_mode="error"), "w": 1440, "h": 1400},
+        {"file": "documents-switch.dc.html", "title": "Cambiar de tipo con cambios", "body": with_modal(editor("full"), modal_switch()), "w": 1440, "h": 1400},
+        {"file": "documents-reset.dc.html", "title": "Restablecer · el historial no se borra", "body": with_modal(editor("full"), modal_reset()), "w": 1440, "h": 1400},
+        {"file": "documents-issuer.dc.html", "title": "Emisor y numeración", "body": settings(), "w": 1440, "h": 1400},
         {"file": "documents-disabled.dc.html", "title": "Sin la función", "body": disabled(), "w": 1440, "h": 560},
         {"file": "documents-mobile.dc.html", "title": "Móvil · la hoja se abre aparte", "body": mobile(), "w": 460, "h": 760},
     ])

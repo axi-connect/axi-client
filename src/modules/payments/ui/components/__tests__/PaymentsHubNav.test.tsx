@@ -62,9 +62,9 @@ describe("PaymentsHubNav", () => {
     ]);
   });
 
-  it("«Documentos» sigue sin ofrecerse: su pantalla llega en F7", () => {
-    // El interruptor de entrega existe para esto — una pestaña que lleva a una
-    // ruta que no existe es peor que no tenerla.
+  it("«Documentos» NO es pestaña de Pagos: vive en Mi empresa (F7, decisión del dueño)", () => {
+    // Los documentos son el papel de la empresa y los consume cualquier
+    // proceso; ni con la función encendida aparecen aquí.
     expect(
       paymentsHubTabs(() => true, true).map((tab) => tab.href),
     ).not.toContain("/settings/payments/documentos");
