@@ -28,6 +28,11 @@ export const COMPANY_DOCUMENTS_PATH = `${COMPANY_SETTINGS_BASE}/documentos`;
  * consume cualquier proceso (pedidos, CRM, agenda), así que su configuración va
  * junto a la identidad del negocio. Se gatea por la función `documents`, con
  * `loaded` para no pintar y quitar (mismo criterio que el hub Pagos).
+ *
+ * Deliberadamente por FUNCIÓN y no por permiso: un vendedor de un tenant con
+ * documentos encendidos ve la pestaña, entra y lee «esto lo configura quien
+ * administra», con quién pedírselo. Es descubrible; esconderla por permiso
+ * dejaría a media empresa sin saber que los documentos existen.
  */
 export function companySettingsTabs(
   has: (code: string) => boolean,

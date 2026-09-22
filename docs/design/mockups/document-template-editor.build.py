@@ -487,15 +487,15 @@ def mobile() -> str:
     rows = "".join([
         blk("heading", "Título", f'Contrato de servicios turísticos {v("document_number")}', required=True),
         blk("users", "Partes", "La agencia · El viajero", required=True),
-        blk("list-ordered", "Cláusulas", "6 cláusulas"),
+        blk("list-ordered", "Cláusulas", "4 cláusulas"),
         blk("table", "Tabla de ítems", "", tags=T_DATA),
         blk("calendar-clock", "Plan de pagos", "", tags=T_PLAN),
     ])
     return f"""<div class="phone">
       <div class="ph-top"><span class="t">Contrato</span>{btn("Guardar", "", "sm")}</div>
-      <div class="peek"><div style="display:flex;gap:12px;align-items:center"><div class="mini"></div><div><div class="t">Ver la hoja</div><div class="s">CTR-2026-0001 · al día</div></div></div>{ic("chevron-right", size=16)}</div>
       <div class="blocks">{rows}<div class="add-row">{btn("Añadir bloque", "plus", "outline sm")}</div></div>
-      <p class="set-note">En el móvil la hoja se abre aparte y a pantalla completa: un A4 a 390 píxeles no se lee y un editor que la comprime tampoco.</p>
+      <div class="peek"><div style="display:flex;gap:12px;align-items:center"><div class="mini"></div><div><div class="t">La hoja, debajo</div><div class="s">Ajustada al ancho · amplía con el zoom y desplaza</div></div></div>{ic("chevron-down", size=16)}</div>
+      <p class="set-note">En el móvil la hoja va debajo de los bloques, <b>ajustada al ancho</b> de la pantalla: nunca se recorta. Con el zoom se amplía y se desplaza para leer el detalle; no hay pantalla aparte en F7.</p>
     </div>"""
 
 
@@ -523,7 +523,7 @@ VIEWS = [
     ("sin-funcion", "10 · Sin la función", disabled(),
      "Savage Wear no emite documentos: la pestaña Documentos no existe en Mi empresa y el agente no sabe que la función existe. Quien entre por URL directa a /settings/company/documentos ve ESTE panel (el 403 del servidor, explicado) con la pestaña ausente del nav, sin redirección. Un rol sin el permiso «Configurar plantillas» ve otro mensaje distinto que lo manda a quien administra los roles."),
     ("movil", "11 · Móvil", mobile(),
-     "Un A4 a 390 píxeles no se lee y un editor que la comprime tampoco: en el móvil la hoja se abre aparte y a pantalla completa, y la lista de bloques ocupa el ancho."),
+     "En el móvil la lista de bloques ocupa el ancho y la hoja va debajo, ajustada al ancho de la pantalla (el zoom por defecto es «lo que cabe», y con el zoom se amplía y desplaza): nunca se recorta. No hay pantalla aparte en F7 — es una decisión declarada, no un hueco."),
 ]
 
 if __name__ == "__main__":
@@ -542,5 +542,5 @@ if __name__ == "__main__":
         {"file": "documents-reset.dc.html", "title": "Restablecer · el historial no se borra", "body": with_modal(editor("full"), modal_reset()), "w": 1440, "h": 1400},
         {"file": "documents-issuer.dc.html", "title": "Emisor y numeración", "body": settings(), "w": 1440, "h": 1400},
         {"file": "documents-disabled.dc.html", "title": "Sin la función", "body": disabled(), "w": 1440, "h": 560},
-        {"file": "documents-mobile.dc.html", "title": "Móvil · la hoja se abre aparte", "body": mobile(), "w": 460, "h": 760},
+        {"file": "documents-mobile.dc.html", "title": "Móvil · la hoja debajo, ajustada al ancho", "body": mobile(), "w": 460, "h": 760},
     ])

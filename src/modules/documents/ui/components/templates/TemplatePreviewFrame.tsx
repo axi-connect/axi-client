@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2,
   RefreshCw,
@@ -39,7 +39,20 @@ export function withHostFonts(html: string): string {
 
 const ZOOMS = [0.5, 0.65, 0.8, 1] as const;
 /** El ancho del A4 a 96 dpi, que es a lo que Chromium imprime. */
-const A4_WIDTH_PX = 794;
+export const A4_WIDTH_PX = 794;
+const FRAME_PADDING_PX = 32;
+
+/**
+ * El zoom «ajustar al ancho»: lo que cabe en el contenedor medido. En un
+ * teléfono de 390 puntos ni el 50 % cabe (397 px contra ~358 disponibles), y
+ * un contenedor que recorta deja la hoja cortada por los dos lados sin forma
+ * de ver el resto (hallazgo del auditor). Por eso el nivel por defecto es el
+ * que quepa, y el contenedor desplaza en vez de recortar.
+ */
+export function fitZoom(containerWidth: number, preferred: number): number {
+  const available = Math.max(containerWidth - FRAME_PADDING_PX, 120);
+  return Math.min(preferred, available / A4_WIDTH_PX);
+}
 
 /**
  * La hoja: un `<iframe sandbox="">` con el HTML de la MISMA cadena que el PDF.
@@ -62,7 +75,22 @@ export function TemplatePreviewFrame({
   title?: string;
 }) {
   const [zoomIndex, setZoomIndex] = useState(1);
-  const zoom = ZOOMS[zoomIndex] ?? 0.65;
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const node = frameRef.current;
+    if (node === null || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width !== undefined) setContainerWidth(width);
+    });
+    observer.observe(node);
+    setContainerWidth(node.clientWidth);
+    return () => observer.disconnect();
+  }, []);
+  const preferred = ZOOMS[zoomIndex] ?? 0.65;
+  const zoom =
+    containerWidth === null ? preferred : fitZoom(containerWidth, preferred);
   const srcDoc = useMemo(
     () => (html === null ? null : withHostFonts(html)),
     [html],
@@ -108,7 +136,10 @@ export function TemplatePreviewFrame({
         </div>
       </div>
 
-      <div className="relative flex justify-center overflow-hidden rounded-2xl border border-border bg-foreground/5 p-4 md:p-6">
+      <div
+        ref={frameRef}
+        className="relative flex justify-center overflow-x-auto overflow-y-hidden rounded-2xl border border-border bg-foreground/5 p-4 md:p-6"
+      >
         {srcDoc === null ? (
           <div
             role="status"

@@ -49,22 +49,39 @@ export function useTemplatePreview(input: {
       ? null
       : `${type}|${templateHash(template)}|${JSON.stringify(issuer ?? null)}`;
 
+  // Lo que se ENVÍA va en una ref: el efecto no lo lee del render, así que la
+  // huella es la única dependencia y no hace falta silenciar al linter. Hoy la
+  // huella serializa la carga entera; si algún día se abaratara, esta ref
+  // seguiría mandando la plantilla actual y no una vieja.
+  const payload = useRef({ template, issuer });
+  payload.current = { template, issuer };
+
   useEffect(() => {
-    if (!enabled || template === null || hash === null) return;
+    if (!enabled || hash === null) return;
     if (blocked) {
       setStatus("blocked");
       return;
     }
-    if (hash === lastHash.current && status === "ready") return;
+    // `lastHash` solo se escribe tras un render BUENO: si coincide, el HTML en
+    // memoria ya es este — se vuelve a «al día» sin pedir nada (p. ej. al
+    // corregir una variable dejando la plantilla como estaba).
+    if (hash === lastHash.current) {
+      setStatus("ready");
+      return;
+    }
 
     const timer = window.setTimeout(() => {
       controller.current?.abort();
       const own = new AbortController();
       controller.current = own;
       setStatus("loading");
+      const { template: body, issuer: who } = payload.current;
+      if (body === null) return;
       previewDocumentTemplate(
         type,
-        issuer === undefined ? { template } : { template, issuer },
+        who === undefined
+          ? { template: body }
+          : { template: body, issuer: who },
         own.signal,
       )
         .then((result) => {
@@ -76,6 +93,7 @@ export function useTemplatePreview(input: {
         })
         .catch((cause: unknown) => {
           if (own.signal.aborted) return;
+          lastHash.current = null;
           setError(
             errorMessage(cause, "No se pudo actualizar la vista previa"),
           );
@@ -86,8 +104,6 @@ export function useTemplatePreview(input: {
     return () => {
       window.clearTimeout(timer);
     };
-    // `status` a propósito fuera: cambiarlo no debe re-pedir la previa.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hash, blocked, enabled, attempt, type]);
 
   useEffect(() => () => controller.current?.abort(), []);
