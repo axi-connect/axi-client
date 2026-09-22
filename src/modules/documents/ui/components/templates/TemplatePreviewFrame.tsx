@@ -46,8 +46,10 @@ const FRAME_PADDING_PX = 32;
  * El zoom «ajustar al ancho»: lo que cabe en el contenedor medido. En un
  * teléfono de 390 puntos ni el 50 % cabe (397 px contra ~358 disponibles), y
  * un contenedor que recorta deja la hoja cortada por los dos lados sin forma
- * de ver el resto (hallazgo del auditor). Por eso el nivel por defecto es el
- * que quepa, y el contenedor desplaza en vez de recortar.
+ * de ver el resto (hallazgo del auditor). Por eso «lo que cabe» es el nivel
+ * INICIAL — no un techo: al acercar, la hoja crece por encima y el contenedor
+ * desplaza en vez de recortar (segundo hallazgo: como techo, los cuatro
+ * niveles pintaban lo mismo y «Acercar» respondía sin cambiar un píxel).
  */
 export function fitZoom(containerWidth: number, preferred: number): number {
   const available = Math.max(containerWidth - FRAME_PADDING_PX, 120);
@@ -74,7 +76,8 @@ export function TemplatePreviewFrame({
   onRetry: () => void;
   title?: string;
 }) {
-  const [zoomIndex, setZoomIndex] = useState(1);
+  // null = «ajustar al ancho»; un número = el nivel que la persona eligió.
+  const [choice, setChoice] = useState<number | null>(null);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
   useEffect(() => {
@@ -88,9 +91,23 @@ export function TemplatePreviewFrame({
     setContainerWidth(node.clientWidth);
     return () => observer.disconnect();
   }, []);
-  const preferred = ZOOMS[zoomIndex] ?? 0.65;
-  const zoom =
-    containerWidth === null ? preferred : fitZoom(containerWidth, preferred);
+  const fitted = containerWidth === null ? 0.65 : fitZoom(containerWidth, 1);
+  const zoom = choice === null ? fitted : (ZOOMS[choice] ?? fitted);
+  // Desde «ajustar», acercar salta al primer nivel POR ENCIMA de lo que cabe.
+  const firstAbove = ZOOMS.findIndex((level) => level > fitted);
+  const canZoomIn =
+    choice === null ? firstAbove !== -1 : choice < ZOOMS.length - 1;
+  const canZoomOut = choice !== null;
+  const zoomIn = () =>
+    setChoice((current) =>
+      current === null ? firstAbove : Math.min(ZOOMS.length - 1, current + 1),
+    );
+  const zoomOut = () =>
+    setChoice((current) => {
+      if (current === null) return null;
+      const next = current - 1;
+      return next < 0 || (ZOOMS[next] ?? 0) <= fitted ? null : next;
+    });
   const srcDoc = useMemo(
     () => (html === null ? null : withHostFonts(html)),
     [html],
@@ -108,15 +125,20 @@ export function TemplatePreviewFrame({
         <span className="truncate">
           Con los datos de una reserva de ejemplo
         </span>
-        <div className="ml-auto flex gap-0.5">
+        <div className="ml-auto flex items-center gap-0.5">
+          <span className="mr-1 tabular-nums">
+            {choice === null
+              ? "Ajustada al ancho"
+              : `${String(Math.round(zoom * 100))} %`}
+          </span>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             className="size-8"
             aria-label="Alejar la hoja"
-            disabled={zoomIndex === 0}
-            onClick={() => setZoomIndex((index) => Math.max(0, index - 1))}
+            disabled={!canZoomOut}
+            onClick={zoomOut}
           >
             <ZoomOut aria-hidden="true" className="size-4" />
           </Button>
@@ -126,10 +148,8 @@ export function TemplatePreviewFrame({
             size="icon"
             className="size-8"
             aria-label="Acercar la hoja"
-            disabled={zoomIndex === ZOOMS.length - 1}
-            onClick={() =>
-              setZoomIndex((index) => Math.min(ZOOMS.length - 1, index + 1))
-            }
+            disabled={!canZoomIn}
+            onClick={zoomIn}
           >
             <ZoomIn aria-hidden="true" className="size-4" />
           </Button>
