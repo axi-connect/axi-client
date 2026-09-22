@@ -69,6 +69,9 @@ Crear **`orders/public.ts`** (`listOrders`, `getOrder`, `OrderStatusBadge`, `ord
 `ProductAttributesSection.tsx`: mapeo **exhaustivo** por `attribute.type` (`text | number | boolean | select | date`) con `<input type="date">` para `date`; sin fallback implícito. Formulario de variante: campo «Fecha de servicio» cuando el tipo de producto declara el eje `date`; deshabilitado con motivo en variantes gobernadas por integración.
 
 ### `documents` (nuevo, F7/F8/F9)
+
+> **Plan profundo de F7 (2026-09-22): `axi-server/docs/plans/cobros_f7_documents_plan.md` §8.** Cambios respecto a lo de abajo: el editor es **de bloques de verdad** (lista ordenada + paleta «Añadir bloque» filtrada por `allowed_blocks` del tipo + un formulario por tipo de bloque con mapeo exhaustivo); tipos, bloques y variables llegan por el wire desde `GET /document-types` (el cliente no tiene catálogos propios); el selector de tipo es `Tabs variant="pill"` (mismo URL, cambia panel) con guarda de cambios sin guardar; la vista previa pinta en `<iframe sandbox="" srcDoc>` el HTML de la MISMA cadena `materialize → renderHtml` que usará el PDF, con las fuentes del host inyectadas (`/fonts/poppins`, `/fonts/nexa` con CORS en `next.config`) y debounce 500 ms + `AbortController` + salto por hash; `DOCUMENTS_TAB_READY` pasa a `true` en esta fase; los ajustes de F7 son solo emisor y numeración (emisión/envío automático llegan en F9).
+
 ```
 domain/document.ts     DocumentDTO, DocumentKind, DOCUMENT_KIND_LABELS, DOCUMENT_STATUS_MAP, DELIVERY_STATUS_MAP, DELIVERY_SKIP_LABELS, isOutdated(doc, order)
 domain/template.ts     espejo puro de la whitelist: DOCUMENT_TEMPLATE_VARIABLES[kind], TEMPLATE_VARIABLE_LABELS, invalidDocumentTemplateVariables, límites
