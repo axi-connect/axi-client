@@ -19,6 +19,9 @@ De ahí salen las cuatro decisiones del diseño:
    documento pertenece esa variable, y la vista previa se congela hasta corregirla — antes que
    el 422 del servidor, y con las mismas palabras.
 4. **El papel es blanco también en modo oscuro.** La hoja no cambia con el tema: es papel.
+5. **Vive en Mi empresa, no en Pagos.** Los documentos son el papel de la EMPRESA y los consume
+   cualquier proceso (pedidos, CRM, agenda): su configuración va junto a la identidad del negocio.
+   El slice `documents` del cliente es autónomo y sus componentes se montan desde donde haga falta.
 
 Uso:  python3 document-template-editor.build.py   (AXI_MOCKUP_ARTBOARDS_DIR=… exporta artboards)
 """
@@ -184,8 +187,12 @@ EXTRA_CSS = """
 .phone .peek .s{font-size:12px;color:var(--muted-foreground)}
 """
 
-TABS = [("Medios", "credit-card"), ("Plan de pagos", "calendar-clock"),
-        ("Recordatorios", "bell"), ("Moneda y TRM", "banknote"), ("Documentos", "file-text")]
+# Mi empresa, no Pagos (decisión del dueño, 2026-09-22): los documentos son el papel
+# de la EMPRESA —emisor, numeración, plantillas— y los consume cualquier proceso
+# (pedidos, CRM, agenda), así que su configuración vive junto a la identidad del
+# negocio y no dentro de cobros. La pestaña solo aparece con la función encendida.
+TABS = [("General", "building-2"), ("Sucursales", "map-pin"), ("Funciones", "toggle-right"),
+        ("Documentos", "file-text")]
 
 KINDS = [("Contrato", "file-signature"), ("Cotización", "file-text"), ("Propuesta", "presentation"),
          ("Recibo", "receipt"), ("Estado de cuenta", "list-ordered"), ("Cuenta de cobro", "file-badge")]
@@ -193,8 +200,8 @@ KINDS = [("Contrato", "file-signature"), ("Cotización", "file-text"), ("Propues
 
 def hub(active: str, body: str, who: str = "JuanitoXpeditions · agencia de expediciones") -> str:
     return f"""<div class="wrap">
-      <div class="topbar"><p class="ttl">Pagos</p><span class="small muted">{who}</span></div>
-      {K.nav(TABS, active, "Ajustes de pagos")}
+      <div class="topbar"><p class="ttl">Mi empresa</p><span class="small muted">{who}</span></div>
+      {K.nav(TABS, active, "Ajustes de la empresa")}
       {body}
     </div>"""
 
@@ -451,13 +458,13 @@ def settings() -> str:
 
 def disabled() -> str:
     return f"""<div class="wrap">
-      <div class="topbar"><p class="ttl">Pagos</p><span class="small muted">Savage Wear · tienda de ropa</span></div>
-      {K.nav([("Medios", "credit-card")], "Medios", "Ajustes de pagos")}
+      <div class="topbar"><p class="ttl">Mi empresa</p><span class="small muted">Savage Wear · tienda de ropa</span></div>
+      {K.nav(TABS[:3], "Funciones", "Ajustes de la empresa")}
       <div class="void">
         <span class="vic">{ic("file-x", size=22)}</span>
         <h3>Aquí no hay documentos</h3>
-        <p>Esta tienda no emite contratos ni cuentas de cobro: la pestaña no existe, el servidor responde 403 a quien la
-          pida y el agente no sabe que existe. Si algún día los necesita, se encienden en Mi empresa › Funciones.</p>
+        <p>Esta tienda no emite contratos ni cuentas de cobro: la pestaña Documentos no existe, el servidor responde 403 a
+          quien la pida y el agente no sabe que existe. Si algún día los necesita, se enciende aquí mismo, en Funciones.</p>
         <div class="acts">{btn("Ir a Funciones", "toggle-right", "outline sm")}</div>
       </div>
     </div>"""
@@ -481,7 +488,7 @@ def mobile() -> str:
 
 VIEWS = [
     ("editor", "1 · El editor", editor("full"),
-     "El papel manda: la hoja A4 ocupa la mitad derecha y se actualiza al escribir con los datos de una reserva de ejemplo. A la izquierda, los bloques del contrato en el orden en que se imprimen — se leen como el índice del documento, no como un formulario. Cada bloque dice de qué depende («filas desde los datos», «solo si hay plan de pagos») en su propia fila; los obligatorios llevan candado y no se pueden quitar."),
+     "Vive en Mi empresa › Documentos, no en Pagos: es el papel de la empresa y lo consume cualquier proceso. El papel manda: la hoja A4 ocupa la mitad derecha y se actualiza al escribir con los datos de una reserva de ejemplo. A la izquierda, los bloques del contrato en el orden en que se imprimen — se leen como el índice del documento, no como un formulario. Cada bloque dice de qué depende («filas desde los datos», «solo si hay plan de pagos») en su propia fila; los obligatorios llevan candado y no se pueden quitar."),
     ("oscuro", "2 · Oscuro", editor("full"),
      "El papel es blanco también en modo oscuro: la hoja no cambia con el tema porque es papel, y lo que el dueño está decidiendo es cómo se ve impreso."),
     ("paleta", "3 · Añadir bloque", editor("full", with_palette=True),
@@ -499,7 +506,7 @@ VIEWS = [
     ("emisor", "9 · Emisor y numeración", settings(),
      "Quién emite y cómo se numera, con la hoja al lado para ver el resultado antes de guardar. Lo vacío cae a la ficha de Mi empresa (el placeholder lo dice); el NIT y el isotipo siempre salen de allí. Los prefijos son por tipo y no reinician la cuenta; la factura aparece apagada porque existe en el catálogo pero no se emite sin conexión fiscal."),
     ("sin-funcion", "10 · Sin la función", disabled(),
-     "Savage Wear no emite documentos: la pestaña no existe, el servidor responde 403 y el agente no sabe que la función existe. Se enciende en Mi empresa › Funciones."),
+     "Savage Wear no emite documentos: la pestaña Documentos no existe en Mi empresa, el servidor responde 403 y el agente no sabe que la función existe. Se enciende al lado, en Funciones."),
     ("movil", "11 · Móvil", mobile(),
      "Un A4 a 390 píxeles no se lee y un editor que la comprime tampoco: en el móvil la hoja se abre aparte y a pantalla completa, y la lista de bloques ocupa el ancho."),
 ]
