@@ -4,7 +4,7 @@ import type {
   CommercialPaceDTO,
   CommercialPlanDTO,
   GoalInputDTO,
-  GoalResponseDTO,
+  GoalResponseWireDTO,
   PaceGranularity,
 } from "@/modules/commercial/domain/commercial";
 
@@ -20,10 +20,11 @@ import type {
  *  - **`GET /commercial/pace` nunca calcula en caliente**: lee el rollup y el
  *    plan; si la fila de hoy tiene más de 10 min encola el refresco y responde
  *    `stale: true`. La pantalla pinta lo que hay y el WS (F8) trae lo nuevo.
+ *    Sin meta responde 404 `commercial/goal_not_found`: se pide solo con meta.
  */
 
-export function getGoal(): Promise<GoalResponseDTO> {
-  return http.get<GoalResponseDTO>("/commercial/goal");
+export function getGoal(): Promise<GoalResponseWireDTO> {
+  return http.get<GoalResponseWireDTO>("/commercial/goal");
 }
 
 /** Fijar o cambiar la meta del mes en curso (a mitad de mes se recalcula desde hoy). */
@@ -31,8 +32,9 @@ export function putGoal(input: GoalInputDTO): Promise<CommercialGoalDTO> {
   return http.put<CommercialGoalDTO>("/commercial/goal", input);
 }
 
-export function getPlan(): Promise<CommercialPlanDTO> {
-  return http.get<CommercialPlanDTO>("/commercial/plan");
+/** El plan vigente, o `null` si el periodo no tiene meta (200, no 404). */
+export function getPlan(): Promise<CommercialPlanDTO | null> {
+  return http.get<CommercialPlanDTO | null>("/commercial/plan");
 }
 
 /**

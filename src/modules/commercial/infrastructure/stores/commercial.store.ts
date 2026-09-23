@@ -86,7 +86,8 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     await Promise.all([
       getPlan()
         .then((data) => {
-          if (seq.plan === planSeq) set({ plan: ready(data) });
+          // `null` = el periodo no tiene plan (200): la sección queda lista y vacía.
+          if (seq.plan === planSeq) set({ plan: data === null ? { status: "ready", data: null, error: null } : ready(data) });
         })
         .catch((error: unknown) => {
           if (seq.plan === planSeq) set((state) => ({ plan: failed(state.plan, errorMessage(error)) }));
