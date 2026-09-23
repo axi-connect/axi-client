@@ -63,17 +63,6 @@ function Row({
   );
 }
 
-/**
- * A dónde vuelve la oportunidad si se deshace. El servidor añade
- * `last_move.from_stage_name`; mientras el contrato generado no lo traiga se
- * lee con tolerancia y, si falta, el modal dice «a la etapa anterior».
- */
-function lastMoveFromStageName(move: ContactJourneyDTO["last_move"]): string | null {
-  if (move === null) return null;
-  const value = (move as { from_stage_name?: unknown }).from_stage_name;
-  return typeof value === "string" && value !== "" ? value : null;
-}
-
 type State =
   | { kind: "loading" }
   | { kind: "ready"; data: ContactJourneyDTO }
@@ -174,7 +163,8 @@ export function ContactJourneyCard({
               dealId: state.data.deal?.id ?? "",
               eventId: move.event_id,
               toStageName: state.data.stage?.name ?? "la etapa",
-              fromStageName: lastMoveFromStageName(state.data.last_move),
+              // A dónde vuelve si se deshace; `null` (etapa borrada) → «a la etapa anterior».
+              fromStageName: state.data.last_move?.from_stage_name ?? null,
               byAi: move.actor_type === "ai_agent",
             })
           }

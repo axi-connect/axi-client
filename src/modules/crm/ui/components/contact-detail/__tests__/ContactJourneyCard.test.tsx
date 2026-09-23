@@ -44,6 +44,8 @@ function journey(over: Partial<ContactJourneyDTO> = {}): ContactJourneyDTO {
       rule_code: null,
       at: new Date().toISOString(),
       revertible: true,
+      // null = la etapa de origen se borró después: el modal dice «a la etapa anterior».
+      from_stage_name: null,
     },
     cadence: {
       attempts_used: 1,
@@ -82,7 +84,7 @@ describe("ContactJourneyCard", () => {
     expect(screen.queryByRole("button", { name: /Pausar/ })).not.toBeInTheDocument();
   });
 
-  it("sin from_stage_name el modal dice «a la etapa anterior»", async () => {
+  it("con from_stage_name null el modal dice «a la etapa anterior»", async () => {
     getContactJourney.mockResolvedValue(journey());
     render(<ContactJourneyCard contactId="c1" canManage />);
     fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
@@ -157,7 +159,7 @@ describe("ContactJourneyCard", () => {
     getContactJourney.mockReset();
     getContactJourney
       .mockResolvedValueOnce(
-        journey({ last_move: { ...journey().last_move!, from_stage_name: "Cita agendada" } as never }),
+        journey({ last_move: { ...journey().last_move!, from_stage_name: "Cita agendada" } }),
       )
       .mockResolvedValue(
         journey({
@@ -171,6 +173,7 @@ describe("ContactJourneyCard", () => {
             rule_code: "appointment_booked",
             at: new Date().toISOString(),
             revertible: false,
+            from_stage_name: "Contactado",
           },
         }),
       );
