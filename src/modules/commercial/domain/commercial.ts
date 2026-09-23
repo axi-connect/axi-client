@@ -50,17 +50,28 @@ export type PaceStatus = CommercialPaceDTO["status"];
 /** Los resultados clave derivados de la meta (D8), en el orden de la lista. */
 export type KeyResultKey = PaceKeyResultDTO["key"];
 
-/**
- * Una acción que Axi propone para acelerar la ruta. F6: sustituir por el
- * `Schemas[...]` de `GET /commercial/proposals` cuando exista; en F3 solo
- * tipa la prop de `ActionList`, que se monta sin propuestas.
+/*
+ * ---------------------------------------------------------------- propuestas
+ *
+ * «Axi propone» (F6): `GET /commercial/proposals`, `GET /commercial/proposals/:id`,
+ * `POST …/approve` y `POST …/reject`. Lo sirve un controller de cmo (el dueño
+ * de `cmo_proposal`) con los DTOs de `cmo/presentation/dto/cmo.dto.ts`.
  */
-export interface CommercialProposalDTO {
-  id: string;
-  title: string;
-  headline: string | null;
-  rationale: string;
-  status: "pending" | "approved" | "rejected" | "expired";
-  expires_at: string | null;
-  created_at: string;
-}
+
+export type CommercialProposalListDTO = Schemas["CommercialProposalListDto"];
+export type CommercialProposalDetailDTO = Schemas["CommercialProposalDetailDto"];
+/**
+ * Una acción que Axi propone para acelerar la ruta: la misma fila de
+ * `cmo_proposal` que ve Axel, más la cuenta del método comercial
+ * (`target_key_result`, `estimated_sales`, `covers_pct`, `basis`), que viaja en
+ * `null` cuando la fila no la trae. `artifacts` es abierto: se lee con
+ * `readOutreach` (`domain/proposals.ts`).
+ */
+export type CommercialProposalDTO = CommercialProposalListDTO["data"][number];
+export type CommercialProposalKind = CommercialProposalDTO["kind"];
+export type CommercialProposalStatus = CommercialProposalDTO["status"];
+export type CommercialProposalEvidenceDTO = CommercialProposalDTO["evidence"][number];
+/** Lo aplicado y lo fallido por separado; `applied[].detail` es el parcial en palabras. */
+export type CommercialApprovalResultDTO = Schemas["ApprovalResultDto"];
+export type RejectCommercialProposalDTO = Schemas["RejectProposalDto"];
+export type RejectCommercialProposalResultDTO = Schemas["RejectResultDto"];

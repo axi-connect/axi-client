@@ -1,4 +1,10 @@
-import type { CommercialGoalDTO, CommercialPaceDTO, CommercialPlanDTO, GoalResponseDTO } from "@/modules/commercial/domain/commercial";
+import type {
+  CommercialGoalDTO,
+  CommercialPaceDTO,
+  CommercialPlanDTO,
+  CommercialProposalDTO,
+  GoalResponseDTO,
+} from "@/modules/commercial/domain/commercial";
 
 export const goal: CommercialGoalDTO = {
   id: "g1",
@@ -112,4 +118,42 @@ export const learningPace: CommercialPaceDTO = {
   days_until_projection: 5,
   business_days_elapsed: 1,
   business_days_left: 25,
+};
+
+/** La propuesta por desvío tal como la arma `pace_proposal.ts` del servidor. */
+export const proposal: CommercialProposalDTO = {
+  id: "11111111-1111-4111-8111-111111111111",
+  kind: "goal_pace",
+  status: "pending",
+  title: "Retomar 12 cotizaciones abiertas para volver al ritmo de septiembre",
+  headline: "≈ 2 ventas · cubre el 20 % del atraso",
+  rationale: "Vas por debajo del ritmo de septiembre: estos 12 contactos ya pidieron cotización y nadie los está siguiendo.",
+  evidence: [
+    { label: "Días hábiles que quedan", value: "6", source: "plan" },
+    { label: "Ventas", value: "27 de 33 esperadas a hoy", source: "history" },
+  ],
+  risks: [],
+  artifacts: [
+    {
+      type: "agent_task_bulk_spec",
+      label: "Retomar 12 cotizaciones con el agente",
+      spec: {
+        contact_ids: Array.from({ length: 12 }, (_, i) => `c${String(i)}`),
+        objective: "Retomar la cotización abierta y proponer cerrar esta semana.",
+        task_channel: "message",
+        per_hour: 12,
+        starts_at_offset_hours: 15,
+        agent_id: null,
+      },
+    },
+  ],
+  source: "commercial",
+  expires_at: "2026-09-27T04:59:59.999Z",
+  decided_at: null,
+  reject_reason: null,
+  created_at: "2026-09-23T23:00:00.000Z",
+  target_key_result: "sales",
+  estimated_sales: 2,
+  covers_pct: 20,
+  basis: "12 × 50 % × 35 % = 2",
 };

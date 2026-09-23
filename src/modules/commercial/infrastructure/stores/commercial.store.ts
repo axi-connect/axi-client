@@ -3,18 +3,25 @@ import { create } from "zustand";
 import { API_ERROR_CODES, HttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import type {
+  CommercialApprovalResultDTO,
   CommercialGoalDTO,
   CommercialPaceDTO,
   CommercialPlanDTO,
+  CommercialProposalDTO,
   GoalInputDTO,
   GoalResponseDTO,
+  RejectCommercialProposalResultDTO,
 } from "@/modules/commercial/domain/commercial";
+import { approvedThisPeriod } from "@/modules/commercial/domain/proposals";
 import {
+  approveProposal as approveProposalApi,
   getGoal,
   getPace,
   getPlan,
+  listProposals,
   previewPlan as previewPlanApi,
   putGoal,
+  rejectProposal as rejectProposalApi,
 } from "@/modules/commercial/infrastructure/services/commercial-service.adapter";
 
 /** Estado de una sección (mismo patrón que cmo/analytics/dashboard). */
@@ -45,6 +52,16 @@ interface CommercialState {
   pace: Section<CommercialPaceDTO>;
   /** «Lo que implica» del editor de meta: la vista previa de la cifra tecleada. */
   preview: Section<CommercialPlanDTO>;
+  /** «Axi propone»: pendientes primero y, detrás, las aprobadas del mes (con «Ver qué quedó»). */
+  proposals: Section<CommercialProposalDTO[]>;
+  /**
+   * Lo que dejó cada aprobación de esta sesión, por id: aprobar desde la lista
+   * abre el detalle y el detalle pinta aquí el resultado (el servidor no lo
+   * vuelve a dar: aprobar es de una sola vez).
+   */
+  approvals: Record<string, CommercialApprovalResultDTO>;
+  /** Lo decidido en esta sesión (aprobada o rechazada), para no resucitar filas con una carga vieja. */
+  decisions: Record<string, ProposalDecision>;
   blocker: CommercialBlocker;
   saving: boolean;
 
@@ -57,7 +74,19 @@ interface CommercialState {
   /** Vista previa con aborto: la petición anterior se cancela al llegar la siguiente cifra. */
   previewPlan: (input: GoalInputDTO) => Promise<void>;
   cancelPreview: () => void;
+  /** Pendientes + aprobadas del mes, en paralelo. Un fallo deja la sección en error sin tumbar la ruta. */
+  loadProposals: () => Promise<void>;
+  /**
+   * Aprueba (una sola vez: el segundo clic es 409). Lanza al llamador, que
+   * pinta el error; al salir bien guarda el resultado, marca la fila aprobada y
+   * recarga plan y ritmo (el lote puede mover la ruta).
+   */
+  approveProposal: (id: string) => Promise<CommercialApprovalResultDTO>;
+  /** Rechaza con motivo. Lanza al llamador; la fila sale de la lista de pendientes. */
+  rejectProposal: (id: string, reason: string | undefined) => Promise<RejectCommercialProposalResultDTO>;
 }
+
+type ProposalDecision = Pick<CommercialProposalDTO, "status" | "decided_at">;
 
 function blockerFor(error: unknown): CommercialBlocker {
   if (error instanceof HttpError && error.code === API_ERROR_CODES.capabilityNotGranted) return "no_plan";
@@ -76,7 +105,21 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
    * respuesta que llegó tarde. Viven en el closure del store, no a nivel de
    * módulo: un valor global sobreviviría a HMR y a los resets entre tests.
    */
-  const seq = { goal: 0, plan: 0, pace: 0 };
+  const seq = { goal: 0, plan: 0, pace: 0, proposals: 0 };
+  /**
+   * Una carga de la lista que salió ANTES del clic trae la fila aún
+   * pendiente; al llegar se le aplica lo decidido en esta sesión en vez de
+   * descartarla (descartarla dejaría la sección cargando para siempre).
+   */
+  function applyDecisions(rows: readonly CommercialProposalDTO[]): CommercialProposalDTO[] {
+    const { decisions } = get();
+    return rows
+      .filter((row) => decisions[row.id]?.status !== "rejected")
+      .map((row) => {
+        const decision = decisions[row.id];
+        return decision === undefined ? row : { ...row, ...decision };
+      });
+  }
   let previewController: AbortController | null = null;
 
   async function loadPaceAndPlan(): Promise<void> {
@@ -107,6 +150,9 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     plan: idle(),
     pace: idle(),
     preview: idle(),
+    proposals: idle(),
+    approvals: {},
+    decisions: {},
     blocker: null,
     saving: false,
 
@@ -176,11 +222,71 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       previewController = null;
       set({ preview: idle() });
     },
+
+    loadProposals: async () => {
+      const mine = (seq.proposals += 1);
+      set((state) => ({ proposals: loading(state.proposals) }));
+      try {
+        const [pending, approved] = await Promise.all([listProposals("pending"), listProposals("approved")]);
+        if (seq.proposals !== mine) return;
+        const periodStart = get().goal.data?.goal?.period_start ?? null;
+        const rows = applyDecisions(pending);
+        const seen = new Set(rows.map((row) => row.id));
+        const settled = approvedThisPeriod(applyDecisions(approved), periodStart).filter((row) => !seen.has(row.id));
+        set({ proposals: ready([...rows, ...settled]) });
+      } catch (error: unknown) {
+        if (seq.proposals !== mine) return;
+        set((state) => ({ proposals: failed(state.proposals, errorMessage(error)) }));
+      }
+    },
+
+    approveProposal: async (id) => {
+      const result = await approveProposalApi(id);
+      const decidedAt = new Date().toISOString();
+      set((state) => ({
+        decisions: { ...state.decisions, [id]: { status: "approved", decided_at: decidedAt } },
+        approvals: { ...state.approvals, [id]: result },
+        proposals: patchProposal(state.proposals, id, { status: "approved", decided_at: decidedAt }),
+      }));
+      void get().reloadPace();
+      return result;
+    },
+
+    rejectProposal: async (id, reason) => {
+      const result = await rejectProposalApi(id, reason === undefined ? {} : { reason });
+      set((state) => ({
+        decisions: { ...state.decisions, [id]: { status: "rejected", decided_at: new Date().toISOString() } },
+        proposals:
+          state.proposals.data === null
+            ? state.proposals
+            : { ...state.proposals, data: state.proposals.data.filter((proposal) => proposal.id !== id) },
+      }));
+      return result;
+    },
   };
 });
+
+function patchProposal(
+  section: Section<CommercialProposalDTO[]>,
+  id: string,
+  patch: Partial<CommercialProposalDTO>,
+): Section<CommercialProposalDTO[]> {
+  if (section.data === null) return section;
+  return { ...section, data: section.data.map((proposal) => (proposal.id === id ? { ...proposal, ...patch } : proposal)) };
+}
 
 /** Solo para tests. */
 export function resetCommercialStore(): void {
   useCommercialStore.getState().cancelPreview();
-  useCommercialStore.setState({ goal: idle(), plan: idle(), pace: idle(), preview: idle(), blocker: null, saving: false });
+  useCommercialStore.setState({
+    goal: idle(),
+    plan: idle(),
+    pace: idle(),
+    preview: idle(),
+    proposals: idle(),
+    approvals: {},
+    decisions: {},
+    blocker: null,
+    saving: false,
+  });
 }

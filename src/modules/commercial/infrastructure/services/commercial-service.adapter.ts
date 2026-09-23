@@ -1,11 +1,18 @@
 import { http } from "@/core/services/http";
 import type {
+  CommercialApprovalResultDTO,
   CommercialGoalDTO,
   CommercialPaceDTO,
+  CommercialProposalDetailDTO,
+  CommercialProposalDTO,
+  CommercialProposalListDTO,
+  CommercialProposalStatus,
   CommercialPlanDTO,
   GoalInputDTO,
   GoalResponseWireDTO,
   PaceGranularity,
+  RejectCommercialProposalDTO,
+  RejectCommercialProposalResultDTO,
 } from "@/modules/commercial/domain/commercial";
 
 /**
@@ -57,4 +64,32 @@ export function previewPlan(input: GoalInputDTO, signal?: AbortSignal): Promise<
 
 export function getPace(granularity: PaceGranularity = "day"): Promise<CommercialPaceDTO> {
   return http.get<CommercialPaceDTO>("/commercial/pace", { granularity });
+}
+
+/*
+ * «Axi propone» (F6). Lo sirve un controller del módulo cmo bajo el prefijo
+ * `commercial/proposals` (capacidad `crm`, permisos `commercial:read` y
+ * `commercial:approve`): solo `source='commercial'`; una propuesta de Axel
+ * pedida por aquí es un 404. Aprobar y rechazar pasan por los MISMOS casos de
+ * uso que /cmo.
+ */
+
+/** Sin `status` el servidor devuelve las pendientes (hasta 20). */
+export async function listProposals(status: CommercialProposalStatus = "pending"): Promise<CommercialProposalDTO[]> {
+  const response = await http.get<CommercialProposalListDTO>("/commercial/proposals", { status });
+  return response.data;
+}
+
+export async function getProposal(id: string): Promise<CommercialProposalDTO> {
+  const response = await http.get<CommercialProposalDetailDTO>(`/commercial/proposals/${encodeURIComponent(id)}`);
+  return response.data;
+}
+
+/** Una sola vez: el segundo clic es un 409 del servidor (la transición es atómica). */
+export function approveProposal(id: string): Promise<CommercialApprovalResultDTO> {
+  return http.post<CommercialApprovalResultDTO>(`/commercial/proposals/${encodeURIComponent(id)}/approve`);
+}
+
+export function rejectProposal(id: string, body: RejectCommercialProposalDTO): Promise<RejectCommercialProposalResultDTO> {
+  return http.post<RejectCommercialProposalResultDTO>(`/commercial/proposals/${encodeURIComponent(id)}/reject`, body);
 }

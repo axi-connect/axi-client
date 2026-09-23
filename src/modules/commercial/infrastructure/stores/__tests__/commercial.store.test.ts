@@ -1,14 +1,16 @@
 const mockGet = jest.fn<Promise<unknown>, [string, unknown?, { signal?: AbortSignal }?]>();
 const mockPut = jest.fn<Promise<unknown>, [string, unknown?]>();
+const mockPost = jest.fn<Promise<unknown>, [string, unknown?]>();
 jest.mock("@/core/services/http", () => ({
   http: {
     get: (path: string, params?: unknown, options?: { signal?: AbortSignal }) => mockGet(path, params, options),
     put: (path: string, body?: unknown) => mockPut(path, body),
+    post: (path: string, body?: unknown) => mockPost(path, body),
   },
 }));
 
 import { HttpError } from "@/core/api/problem";
-import type { CommercialGoalDTO, GoalResponseDTO } from "@/modules/commercial/domain/commercial";
+import type { CommercialGoalDTO, CommercialProposalDTO, GoalResponseDTO } from "@/modules/commercial/domain/commercial";
 import { resetCommercialStore, useCommercialStore } from "../commercial.store";
 
 const goal: CommercialGoalDTO = {
@@ -54,6 +56,7 @@ beforeEach(() => {
   resetCommercialStore();
   mockGet.mockReset();
   mockPut.mockReset();
+  mockPost.mockReset();
 });
 
 describe("load", () => {
@@ -245,5 +248,132 @@ describe("saveGoal", () => {
     await expect(useCommercialStore.getState().saveGoal({ target_revenue_cents: 0 })).rejects.toThrow("validación");
     expect(useCommercialStore.getState().goal.status).toBe("idle");
     expect(useCommercialStore.getState().saving).toBe(false);
+  });
+});
+
+function proposalRow(id: string, patch: Partial<CommercialProposalDTO> = {}): CommercialProposalDTO {
+  return {
+    id,
+    kind: "goal_pace",
+    status: "pending",
+    title: `Propuesta ${id}`,
+    headline: null,
+    rationale: "Motivo.",
+    evidence: [],
+    risks: [],
+    artifacts: [],
+    source: "commercial",
+    expires_at: null,
+    decided_at: null,
+    reject_reason: null,
+    created_at: "2026-09-20T12:00:00.000Z",
+    target_key_result: "sales",
+    estimated_sales: 2,
+    covers_pct: 20,
+    basis: null,
+    ...patch,
+  };
+}
+
+/** `/commercial/proposals` responde según `?status=`; el resto, por ruta. */
+function serveProposals(byStatus: Record<string, CommercialProposalDTO[] | Promise<unknown>>, routes: Record<string, unknown> = {}): void {
+  mockGet.mockImplementation((path, params) => {
+    if (path === "/commercial/proposals") {
+      const status = (params as { status: string }).status;
+      const hit = byStatus[status];
+      return hit instanceof Promise ? hit : Promise.resolve({ data: hit ?? [] });
+    }
+    const hit = routes[path];
+    return hit === undefined ? Promise.reject(new Error(`sin ruta ${path}`)) : Promise.resolve(hit);
+  });
+}
+
+describe("propuestas", () => {
+  it("pendientes primero y detrás solo las aprobadas del mes de la meta", async () => {
+    useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
+    serveProposals({
+      pending: [proposalRow("p1")],
+      approved: [
+        proposalRow("a1", { status: "approved", decided_at: "2026-09-16T15:00:00.000Z" }),
+        proposalRow("a0", { status: "approved", decided_at: "2026-08-28T15:00:00.000Z" }),
+      ],
+    });
+
+    await useCommercialStore.getState().loadProposals();
+
+    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p1", "a1"]);
+    expect(mockGet).toHaveBeenCalledWith("/commercial/proposals", { status: "pending" }, undefined);
+    expect(mockGet).toHaveBeenCalledWith("/commercial/proposals", { status: "approved" }, undefined);
+  });
+
+  it("una carga vieja no pisa a la nueva (número de secuencia)", async () => {
+    let releaseOld: (value: unknown) => void = () => {};
+    const old = new Promise((resolve) => {
+      releaseOld = resolve;
+    });
+    serveProposals({ pending: old, approved: [] });
+    const first = useCommercialStore.getState().loadProposals();
+    serveProposals({ pending: [proposalRow("new")], approved: [] });
+    await useCommercialStore.getState().loadProposals();
+    releaseOld({ data: [proposalRow("old")] });
+    await first;
+
+    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["new"]);
+  });
+
+  it("aprobar guarda el resultado, marca la fila y recarga plan y ritmo", async () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: withGoal, error: null },
+      proposals: { status: "ready", data: [proposalRow("p1")], error: null },
+    });
+    const result = { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados" }], failed: [] };
+    mockPost.mockResolvedValue(result);
+    serveProposals({}, { "/commercial/plan": { status: "ready" }, "/commercial/pace": { status: "on_track" } });
+
+    await expect(useCommercialStore.getState().approveProposal("p1")).resolves.toEqual(result);
+
+    const state = useCommercialStore.getState();
+    expect(mockPost).toHaveBeenCalledWith("/commercial/proposals/p1/approve", undefined);
+    expect(state.approvals.p1).toEqual(result);
+    expect(state.proposals.data?.[0].status).toBe("approved");
+    await Promise.resolve();
+    expect(mockGet).toHaveBeenCalledWith("/commercial/pace", { granularity: "day" }, undefined);
+  });
+
+  it("una carga que salió antes de aprobar no resucita la fila pendiente", async () => {
+    useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
+    let release: (value: unknown) => void = () => {};
+    serveProposals(
+      { pending: new Promise((resolve) => { release = resolve; }), approved: [] },
+      { "/commercial/plan": {}, "/commercial/pace": {} },
+    );
+    const loading = useCommercialStore.getState().loadProposals();
+    mockPost.mockResolvedValue({ applied: [], failed: [] });
+    await useCommercialStore.getState().approveProposal("p1");
+    release({ data: [proposalRow("p1")] });
+    await loading;
+
+    const state = useCommercialStore.getState();
+    expect(state.proposals.status).toBe("ready");
+    expect(state.proposals.data?.[0].status).toBe("approved");
+  });
+
+  it("rechazar manda el motivo y saca la fila de la lista", async () => {
+    useCommercialStore.setState({ proposals: { status: "ready", data: [proposalRow("p1"), proposalRow("p2")], error: null } });
+    mockPost.mockResolvedValue({ directive_created: false });
+
+    await useCommercialStore.getState().rejectProposal("p1", "Es pronto para volver a escribirles.");
+
+    expect(mockPost).toHaveBeenCalledWith("/commercial/proposals/p1/reject", { reason: "Es pronto para volver a escribirles." });
+    expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p2"]);
+  });
+
+  it("aprobar que falla lanza al llamador y no toca la lista", async () => {
+    useCommercialStore.setState({ proposals: { status: "ready", data: [proposalRow("p1")], error: null } });
+    mockPost.mockRejectedValue(new HttpError({ status: 409, code: "cmo/proposal_already_decided", message: "Ya se decidió" }));
+
+    await expect(useCommercialStore.getState().approveProposal("p1")).rejects.toThrow("Ya se decidió");
+    expect(useCommercialStore.getState().proposals.data?.[0].status).toBe("pending");
+    expect(useCommercialStore.getState().approvals.p1).toBeUndefined();
   });
 });
