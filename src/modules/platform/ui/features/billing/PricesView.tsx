@@ -82,6 +82,8 @@ import {
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
 import { PublishPriceSheet } from "./PublishPriceSheet";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 
 type Interval = "monthly" | "annual";
 /** Un fallo de verja tal como viaja en `details.failures` del 409 o en el informe. */
@@ -855,19 +857,25 @@ function PublishBatchSheet({
   return (
     <DetailSheet open={open} onOpenChange={onOpenChange} size="md" title="Publicar vigencia" subtitle={`Cierra la vigencia actual y crea ${cellCount} celdas en una sola transacción.`}>
       <div className="flex flex-col gap-4 p-5">
-        <p className="text-muted-foreground border-info/24 bg-info/8 rounded-xl border p-3 text-xs leading-relaxed">
-          Las celdas rigen desde las <b>00:00 de Bogotá</b> de la fecha elegida. Las facturas ya emitidas y los términos con
-          promoción conservan su precio: por eso una tarifa se sucede en vez de editarse.
-        </p>
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertDescription>
+            Las celdas rigen desde las <b>00:00 de Bogotá</b> de la fecha elegida. Las facturas ya emitidas y los términos con
+            promoción conservan su precio: por eso una tarifa se sucede en vez de editarse.
+          </AlertDescription>
+        </Alert>
         <div>
           <Label htmlFor="batch-from">Vigente desde *</Label>
           <Input id="batch-from" type="date" className="mt-1.5 tabular-nums" value={effectiveFrom} onChange={(event) => setEffectiveFrom(event.target.value)} />
         </div>
         <GatePanel gate={gate} />
         {blocked.length > 0 ? (
-          <p className="text-destructive border-destructive/40 bg-destructive/8 rounded-xl border p-3 text-xs">
-            No se puede publicar: {blocked[0].label} — {blocked[0].detail} ({blocked[0].value}).
-          </p>
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>
+              No se puede publicar: {blocked[0].label} — {blocked[0].detail} ({blocked[0].value}).
+            </AlertDescription>
+          </Alert>
         ) : null}
         <section aria-label="Verja de margen del borrador" className="flex flex-col gap-2">
           <h3 className="text-[13px] font-semibold">
@@ -881,24 +889,30 @@ function PublishBatchSheet({
             </span>
           </h3>
           {previewError !== null && report === null ? (
-            <p className="text-destructive border-destructive/40 bg-destructive/8 rounded-xl border p-3 text-xs">{previewError}</p>
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertDescription>{previewError}</AlertDescription>
+            </Alert>
           ) : null}
           {marginFailures.map((failure, index) => (
-            <p key={`f-${index}`} className="text-destructive border-destructive/40 bg-destructive/8 rounded-xl border p-2.5 text-xs">
-              <b className="block font-mono text-[11px]">{GATE_CHECK_LABELS[failure.check] ?? failure.check}</b>
-              {failure.detail}
-            </p>
+            <Alert key={`f-${index}`} variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertTitle className="font-mono text-[11px]">{GATE_CHECK_LABELS[failure.check] ?? failure.check}</AlertTitle>
+              <AlertDescription>{failure.detail}</AlertDescription>
+            </Alert>
           ))}
           {marginWarnings.map((warning, index) => (
-            <p key={`w-${index}`} className="text-warning border-warning/40 bg-warning/8 rounded-xl border p-2.5 text-xs">
-              <b className="block font-mono text-[11px]">{GATE_CHECK_LABELS[warning.check] ?? warning.check}</b>
-              {warning.detail}
-            </p>
+            <Alert key={`w-${index}`} variant="warning">
+              <TriangleAlert aria-hidden="true" />
+              <AlertTitle className="font-mono text-[11px]">{GATE_CHECK_LABELS[warning.check] ?? warning.check}</AlertTitle>
+              <AlertDescription>{warning.detail}</AlertDescription>
+            </Alert>
           ))}
           {!previewing && report !== null && marginFailures.length === 0 ? (
-            <p className="text-success border-success/40 bg-success/10 rounded-xl border p-2.5 text-xs">
-              La verja de margen pasa. La base con que pasó queda guardada con la publicación.
-            </p>
+            <Alert variant="success">
+              <CircleCheck aria-hidden="true" />
+              <AlertDescription>La verja de margen pasa. La base con que pasó queda guardada con la publicación.</AlertDescription>
+            </Alert>
           ) : null}
           {marginFailures.length > 0 ? (
             <p className="text-muted-foreground text-xs">
@@ -939,10 +953,13 @@ function OverrideSheet({
   return (
     <DetailSheet open={open} onOpenChange={onOpenChange} size="md" title="Anular celda" subtitle={target ? `${target.planSlug} · ${target.tierCode}` : undefined}>
       <div className="flex flex-col gap-4 p-5">
-        <p className="text-muted-foreground border-info/24 bg-info/8 rounded-xl border p-3 text-xs leading-relaxed">
-          Derivada: <b className="tabular-nums">{target ? formatMoney(target.derived) : ""}</b>. Una celda anulada sigue
-          pasando redondeo y monotonía; solo queda exenta de la aditividad, y el motivo queda escrito en la fila.
-        </p>
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertDescription>
+            Derivada: <b className="tabular-nums">{target ? formatMoney(target.derived) : ""}</b>. Una celda anulada sigue
+            pasando redondeo y monotonía; solo queda exenta de la aditividad, y el motivo queda escrito en la fila.
+          </AlertDescription>
+        </Alert>
         <div>
           <Label htmlFor="ov-amount">Precio mensual de la celda (COP) *</Label>
           <Input id="ov-amount" className="mt-1.5 tabular-nums" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} />

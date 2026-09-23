@@ -527,7 +527,7 @@ mano.** `info`, `warning` y `success` siguen la receta AA: tinte en borde y
 superficie, color **solo en el icono**, texto en `foreground`. `destructive`
 deja el rojo en el texto (4,8:1, pasa) y trae su borde tintado. `default` es la
 nota neutra. El icono va como primer hijo, sin clases: la variante le da tamaño
-y color. Hasta 2026-09-23 había 22 copias a mano solo en `/platform`
+y color. Hasta 2026-09-23 había 30 copias a mano solo en `/platform`
 (`border-warning/30 bg-warning/5`, `text-warning` sobre ámbar a 3:1…); se
 retiraron todas. Un tinte que no existe como variante (el violeta de una nota de
 voz) no justifica una copia: la nota es `info`.
