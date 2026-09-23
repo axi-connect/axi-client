@@ -5,6 +5,7 @@ import { goalResponse, pace, plan, proposal } from "./fixtures";
 
 type Ent = { entitlements: null; loaded: boolean; hasCapability: (code: string) => boolean };
 const mockEntitlements = jest.fn<Ent, []>(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
+jest.mock("@/modules/commercial/infrastructure/realtime/use-commercial-realtime", () => ({ useCommercialRealtime: () => undefined }));
 jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => mockEntitlements() }));
 jest.mock("@/modules/companies/public", () => ({ useMyCompany: () => ({ company: { currency: "COP" } }) }));
 const permissions = new Set(["commercial:read", "commercial:manage"]);

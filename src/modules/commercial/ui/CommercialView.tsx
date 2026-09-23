@@ -12,6 +12,7 @@ import { keyResultHref } from "@/modules/commercial/domain/key-result";
 import { commercialProposalHref } from "@/modules/commercial/domain/proposals";
 import { monthLabel } from "@/modules/commercial/domain/format";
 import { isLearning } from "@/modules/commercial/domain/pace";
+import { useCommercialRealtime } from "@/modules/commercial/infrastructure/realtime/use-commercial-realtime";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useMyCompany } from "@/modules/companies/public";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -67,9 +68,13 @@ export function CommercialView() {
     if (enabled && canRead && goal.status === "idle") void load();
   }, [enabled, canRead, goal.status, load]);
 
+  // Tiempo real (F8): la meta, el plan, el ritmo y «Axi propone» se recargan
+  // al avisar el servidor, con debounce y sin romper la secuencia del store.
+  useCommercialRealtime({ enabled: enabled && canRead && blocker === null, proposals: true });
+
   // «Axi propone» se pide con meta y una vez por montaje: aprobar o rechazar
   // actualiza la lista en el store, y al volver de otra pantalla puede haber
-  // propuestas nuevas (hasta F8 no llegan por WS).
+  // propuestas que llegaron mientras no se escuchaba.
   const hasGoal = goal.data?.goal != null;
   useEffect(() => {
     if (enabled && canRead && hasGoal) void loadProposals();

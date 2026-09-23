@@ -9,6 +9,7 @@ import { formatInteger } from "@/core/lib/commercial-units";
 import { formatMillions, formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { PACE_BADGES } from "@/modules/commercial/domain/labels";
 import { displayStatus, expectedPct, gap, isLearning, progressPct } from "@/modules/commercial/domain/pace";
+import { useCommercialRealtime } from "@/modules/commercial/infrastructure/realtime/use-commercial-realtime";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
@@ -40,7 +41,13 @@ export function GoalProgressBlock() {
     if (enabled && goal.status === "idle") void load();
   }, [enabled, goal.status, load]);
 
-  if (!enabled || blocker !== null || goal.status !== "ready" || goal.data === null) return null;
+  // F8: la franja se mueve sola con `commercial.pace_updated` (y la meta con
+  // `goal_set`), sin recargar el Panel.
+  useCommercialRealtime({ enabled: enabled && blocker === null });
+
+  // Con datos se pinta aunque se esté recargando (el refetch de un evento no
+  // debe hacer parpadear la franja); sin datos, nada.
+  if (!enabled || blocker !== null || goal.data === null) return null;
 
   if (goal.data.goal === null) {
     // Sin permiso para fijarla, el enlace prometería un formulario que no se puede usar.
