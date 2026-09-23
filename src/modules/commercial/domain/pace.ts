@@ -16,6 +16,16 @@ export function progressPct(actual: number, target: number): number {
   return clampPct((actual / target) * 100);
 }
 
+/**
+ * La razón en %, SIN tope arriba (nunca negativa): «132 %» de un ticket por
+ * encima del plan o de una proyección que pasa la meta. La línea y las reglas
+ * se acotan con `progressPct`; la CIFRA no esconde el excedente (C10).
+ */
+export function ratioPct(actual: number, target: number): number {
+  if (!Number.isFinite(actual) || !Number.isFinite(target) || target <= 0) return 0;
+  return Math.max(0, (actual / target) * 100);
+}
+
 /** Dónde deberías ir hoy si el mes se reparte por igual entre sus días hábiles. */
 export function expectedPct(daysElapsed: number, daysTotal: number): number {
   if (!Number.isFinite(daysElapsed) || !Number.isFinite(daysTotal) || daysTotal <= 0) return 0;

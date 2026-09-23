@@ -18,7 +18,8 @@ import {
   type PlanInputKey,
 } from "@/modules/commercial/domain/key-result";
 import { isOffPace, KR_LABELS, PACE_BADGES } from "@/modules/commercial/domain/labels";
-import { gap, isLearning, progressPct } from "@/modules/commercial/domain/pace";
+import { gap, isLearning, ratioPct } from "@/modules/commercial/domain/pace";
+import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import { Button } from "@/shared/components/ui/button";
 import { PaceTrend } from "./PaceTrend";
@@ -68,11 +69,21 @@ export function KeyResultDetail({
   );
 }
 
-/** El pie: dónde se ve el dato con más detalle (CRM o Analítica, por href). */
+/**
+ * El pie: cuántas acciones propuestas empujan este resultado (las pendientes
+ * con `target_key_result` = la clave, del mismo store que «Axi propone») y
+ * dónde se ve el dato con más detalle (CRM o Analítica, por href).
+ */
 export function KeyResultDetailFooter({ detailKey }: { detailKey: KeyResultDetailKey }) {
   const link = KR_FOOT_LINKS[detailKey];
+  const pushing = useCommercialStore(
+    (state) => state.proposals.data?.filter((row) => row.status === "pending" && row.target_key_result === detailKey).length ?? 0,
+  );
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="min-w-0 flex-1 text-[12.5px] text-accent-violet">
+        {pushing === 0 ? null : pushing === 1 ? "1 acción propuesta empuja este resultado" : `${formatInteger(pushing)} acciones propuestas empujan este resultado`}
+      </p>
       <Button asChild variant="outline" size="sm">
         <Link href={link.href}>
           {link.label}
@@ -124,7 +135,7 @@ function TicketFigure({ pace, plan }: { pace: CommercialPaceDTO; plan: Commercia
           }
         />
         {actual !== null && planned !== null ? (
-          <SheetRow label="Frente al plan" value={formatPct(progressPct(actual, planned.value))} secondary="del ticket con el que se trazó la ruta" />
+          <SheetRow label="Frente al plan" value={formatPct(ratioPct(actual, planned.value))} secondary="del ticket con el que se trazó la ruta" />
         ) : null}
       </SheetList>
     </div>
@@ -146,7 +157,7 @@ function PathList({ kr, pace, learning }: { kr: PaceKeyResultDTO; pace: Commerci
     <SheetList title="El camino">
       <SheetRow
         label="Recorrido"
-        value={`${formatInteger(kr.actual)} ${unitOf(kr.key, kr.actual)} · ${formatPct(progressPct(kr.actual, kr.target))}`}
+        value={`${formatInteger(kr.actual)} ${unitOf(kr.key, kr.actual)} · ${formatPct(ratioPct(kr.actual, kr.target))}`}
         secondary={answered}
       />
       {learning ? null : (
@@ -171,7 +182,7 @@ function PathList({ kr, pace, learning }: { kr: PaceKeyResultDTO; pace: Commerci
           {projected !== null ? (
             <SheetRow
               label="Proyección al cierre"
-              value={`${formatInteger(projected)} ${unitOf(kr.key, projected)} · ${formatPct(progressPct(projected, kr.target))}`}
+              value={`${formatInteger(projected)} ${unitOf(kr.key, projected)} · ${formatPct(ratioPct(projected, kr.target))}`}
               secondary={
                 kr.key === "sales" && pace.projected_revenue_cents !== null
                   ? `${formatInteger(kr.actual)} ÷ ${formatInteger(elapsed)} × ${formatInteger(total)} días · ${formatMillions(pace.projected_revenue_cents, pace.currency)}`
