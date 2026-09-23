@@ -3,7 +3,7 @@
 import { Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import type { AppointmentDTO, AppointmentStatus } from "@/modules/scheduling/domain/appointment";
-import { fmtTimeRange } from "@/modules/scheduling/domain/business-time";
+import { fmtTimeRange } from "@/core/lib/business-time";
 
 /** Tinte por estado del bloque en la grilla horaria (borde izquierdo + fondo). */
 const BLOCK_CLASSES: Record<AppointmentStatus, string> = {

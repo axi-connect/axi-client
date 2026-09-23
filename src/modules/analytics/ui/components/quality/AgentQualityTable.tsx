@@ -1,7 +1,7 @@
 "use client";
 
 import { TriangleAlert } from "lucide-react";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ScoreBadge } from "./score-badge";

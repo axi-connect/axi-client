@@ -17,4 +17,4 @@ export {
   todayKey,
   weekdayOfKey,
   type DayKey,
-} from "./domain/business-time";
+} from "@/core/lib/business-time";

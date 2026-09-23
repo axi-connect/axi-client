@@ -17,7 +17,7 @@ import {
   businessDayKey,
   fmtDayMonth,
   fmtTime,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { describeRrule } from "@/modules/scheduling/domain/recurrence";
 import {
   isAutomaticReminder,

@@ -7,7 +7,7 @@ import type {
   AppointmentSegment,
   AppointmentStatus,
 } from "@/modules/scheduling/domain/appointment";
-import { fmtTime, monthOfKey, type DayKey } from "@/modules/scheduling/domain/business-time";
+import { fmtTime, monthOfKey, type DayKey } from "@/core/lib/business-time";
 
 const MAX_CHIPS = 3;
 

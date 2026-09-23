@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { AudioLines, DollarSign, Mic, Type } from "lucide-react";
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { Badge } from "@/shared/components/ui/badge";
-import { DashboardCard, MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard, MetricTile } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
 import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
 import { ChartSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";

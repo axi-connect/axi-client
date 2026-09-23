@@ -1,5 +1,5 @@
 import type { CreateAppointmentDTO, UpdateAppointmentDTO } from "./appointment";
-import { instantFromBusiness, type DayKey } from "./business-time";
+import { instantFromBusiness, type DayKey } from "@/core/lib/business-time";
 
 /**
  * Constructores de payload del formulario de cita (puros, testeables).

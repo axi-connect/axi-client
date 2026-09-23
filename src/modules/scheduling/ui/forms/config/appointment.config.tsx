@@ -17,7 +17,7 @@ import {
   businessDayKey,
   hhmmFromInstant,
   type DayKey,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { TimeAvailabilityField } from "../fields/TimeAvailabilityField";
 
 /**

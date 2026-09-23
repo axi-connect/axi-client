@@ -15,7 +15,7 @@ import {
   fmtDayLong,
   fmtTimeRange,
   type DayKey,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { LIST_MAX_DAYS } from "@/modules/scheduling/domain/calendar-range";
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 
