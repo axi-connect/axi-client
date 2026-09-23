@@ -1,11 +1,9 @@
-## Axi Connect — CRM + Marketplace de Influencia
+## Axi Connect — vende y progresa por chat
 
-Plataforma moderna que integra CRM, automatización de marketing y un marketplace de influencia para conectar empresas con creadores de contenido de forma ágil, estratégica y medible. Construida con Next.js (App Router), React y TypeScript, y un sistema de diseño modular basado en Tailwind CSS, shadcn/ui y Radix UI.
+axi es la plataforma con la que un negocio vende y progresa por WhatsApp, Instagram y Messenger: agentes de IA que venden con el catálogo real, un equipo humano que toma el control cuando hace falta, un CRM que guarda lo que pasó con cada cliente y una meta del mes que se persigue todos los días. Construida con Next.js (App Router), React y TypeScript, y un sistema de diseño modular basado en Tailwind CSS, shadcn/ui y Radix UI.
 
-- **Propósito**: potenciar la conexión estratégica entre empresas, creadores y clientes con resultados medibles.
-- **Visión**: ser la plataforma CRM más accesible, intuitiva y adaptable de Latinoamérica, reconocida por integrar tecnología, automatización y experiencia de usuario para acelerar el crecimiento de las empresas; a la vez, liderar la gestión de relaciones comerciales y de influencia en LATAM.
-- **Valores**: innovación, confianza, claridad, agilidad y resultados.
-- **Slogan**: EL FUTURO DEL SERVICIO AL CLIENTE.
+- **Posicionamiento**: axi vende progreso. No vendemos software ni «inteligencia artificial»: vendemos el progreso que se ve en los números de cada mes, y el camino para llegar (`docs/business/knowledge-base.md` §20.0).
+- **Voz**: cercano-profesional, tuteo, frases cortas; cada cifra con su camino y su procedencia (`docs/design/DESIGN.md` §7).
 
 ### Propuesta de valor
 - Un CRM ligero, intuitivo y adaptable al contexto latinoamericano.

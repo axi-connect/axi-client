@@ -405,6 +405,7 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Fechas estilo mensajería (lista, separadores de día, hora de burbuja) | `core/lib/day-label.ts` (`formatConversationTime`, `formatDayLabel`, `formatClockTime`) |
 | Marca en una cabecera (isotipo + wordmark) | `BrandLockup` (`shared/components/ui/brand-lockup.tsx`) — RSC-compatible, `size="md"\|"sm"`; solo el isotipo → `BrandMark` (DESIGN.md §2.2) |
 | Celebración puntual (una ráfaga, no un loop) | `Confetti` + `brandCelebration` (`shared/components/ui/confetti.tsx`) — canvas-confetti en diferido, colores de `readBrandPaletteCss`, reduced-motion lo apaga; ver §6 |
+| Progreso hacia una meta (meta del mes, ritmo, proyección) | `RouteLine` (slice `commercial`, F3): una línea, tramo recorrido con gradiente de marca, marcador hueco «hoy» (donde deberías ir) y prolongación punteada de proyección; la cifra siempre con su procedencia (DESIGN.md §1.4 y §7.1). Nunca anillos ni tiles de vanidad |
 | Overlay navegable | Slot paralelo `@modal`/`@form` + ruta interceptada |
 | Navegación jerárquica en el sidebar | `NavItemNode` + `nav-tree` / `nav-active` (ver §9.2) |
 | Pestañas, sub-navegación de sección y filtros segmentados | La pastilla de §9.3 — `NavTabs`, `Tabs variant="pill"` o `SegmentedControl` |

@@ -8,11 +8,12 @@
 
 ## 1. Esencia de la marca
 
-**Axi Connect** es una plataforma SaaS de atención al cliente omnicanal con agentes de IA. La marca debe transmitir tres ideas simultáneas:
+**Axi Connect** es la plataforma con la que un negocio vende y progresa por chat: pone una meta, la persigue todos los días y ve el camino que falta, con agentes de IA que venden como su mejor vendedor y un equipo humano que toma el control cuando hace falta. Atender es el medio; el progreso es lo que vendemos (`docs/business/knowledge-base.md` §20.0). La marca debe transmitir cuatro ideas simultáneas:
 
 1. **Fluidez** — las conversaciones fluyen entre canales, entre IA y humanos, sin fricción. Visualmente: superficies líquidas, glass, gradientes suaves, movimiento físico.
 2. **Claridad profesional** — es una herramienta de trabajo diario para operadores y administradores. Visualmente: minimalismo, jerarquía tipográfica nítida, mucho espacio en blanco, cero ruido decorativo en zonas de trabajo.
 3. **Calidez tecnológica** — hay IA, pero al servicio de conversaciones humanas. Visualmente: el coral como color de acción (cálido, no corporativo-frío), esquinas redondeadas, microcopy cercano.
+4. **Progreso** — el producto muestra siempre camino recorrido y camino que falta. Una meta no se espera: se persigue, y la interfaz enseña dónde vas y cuánto queda. Visualmente: una línea de ruta (`RouteLine`, DESIGN-SYSTEM §9), cifras con su procedencia («según tu historia», «lo dijiste tú», «supuesto»), nunca un tablero de vanidad — ni anillos, ni tiles de KPI que celebran sin decir qué sigue.
 
 **Referente estético: Apple / iOS.** Minimalista, materiales translúcidos (glassmorphism selectivo), tipografía como protagonista, movimiento sutil y físico, obsesión por el detalle. Nunca recargado, nunca genérico-enterprise.
 
@@ -178,6 +179,32 @@ Presets y duraciones exactas en DESIGN-SYSTEM §6.
 - Errores útiles: qué pasó + qué hacer («No pudimos conectar con WhatsApp. Verifica el QR e inténtalo de nuevo»), nunca códigos crudos ni culpar al usuario.
 - Sin jerga corporativa fría («sinergia», «solución integral») ni informalidad excesiva (emojis en UI de trabajo, humor forzado).
 - Microcopy breve: si una frase puede ser tres palabras, no son ocho.
+
+### 7.1 La voz del progreso
+
+Reglas que nacen con el módulo Comercial y valen para todo texto que hable de metas, cifras o resultados (posicionamiento «axi vende progreso», `docs/business/knowledge-base.md` §20.0). Cada regla lleva un ejemplo: así sí / así no.
+
+1. **La meta se persigue.** Se dice «faltan», «llegas», «recorrido», «camino». Nunca «déficit», «incumplimiento», «por debajo del objetivo».
+   - Así sí: «Para llegar faltan $ 11 M: 3 ventas al día en los 6 días que quedan.»
+   - Así no: «Estás por debajo del objetivo mensual.»
+2. **Cifra + camino + siguiente paso, siempre juntos.** Una cifra sola es un regaño o una vanidad.
+   - Así sí: «Vas al ritmo. Mantén 2 ventas al día y llegas.»
+   - Así no: «Ventas del mes: 18.»
+3. **Sin porcentajes negativos.** Se cuenta lo recorrido y lo que falta, no el hueco.
+   - Así sí: «18 de 42 · faltan 24.»
+   - Así no: «Vas −57 % respecto al objetivo.»
+4. **Cada cifra con su procedencia.** «Según tu historia», «lo dijiste tú», «supuesto para clínicas estéticas». Es honestidad de marca, no un tecnicismo, y se muestra al lado de la cifra, no en un tooltip.
+   - Así sí: «Ticket promedio $ 380.000 · lo dijiste tú.»
+   - Así no: «Ticket promedio estimado: $ 380.000.»
+5. **Celebrar con sobriedad.** Una frase, un dato, cero emojis en la herramienta de trabajo. La ráfaga de `Confetti` (§6) es para hitos, una vez.
+   - Así sí: «Meta cumplida con 4 días de sobra. Lo que venga ahora es camino extra.»
+   - Así no: «¡Felicitaciones! ¡Estás rompiendo récords! 🚀»
+6. **Cuando no sabemos, lo decimos con calma.** Sin culpar a los datos ni al usuario; se dice qué falta y cuándo habrá respuesta.
+   - Así sí: «Estamos aprendiendo tu ritmo. En 5 días tendrás proyección y acciones.»
+   - Así no: «Datos insuficientes para el cálculo.»
+7. **Axi propone en voz baja; el dueño decide.** Las propuestas van en violeta, firmadas «Axi propone», con su porqué y lo que va a pasar si se aprueba. Nada sale sin aprobación.
+   - Así sí: «Axi propone: retomar 14 cotizaciones frías mañana a las 9:00.» → Aprobar · Rechazar
+   - Así no: «Recomendación del sistema: se ejecutará una campaña de reactivación.»
 
 ---
 
