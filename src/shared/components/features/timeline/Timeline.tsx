@@ -64,7 +64,7 @@ export interface TimelineItem {
    * Acción de la entrada (p. ej. «Deshacer»), a la derecha. Con ratón aparece
    * al pasar por la entrada o al enfocar algo dentro de ella (`.hover-reveal`
    * de globals.css); en táctil, donde no hay hover, siempre visible. La
-   * entrada es un `group`.
+   * entrada es el `.reveal-group`.
    */
   action?: React.ReactNode;
 }
@@ -142,7 +142,7 @@ export function Timeline({ items, className }: { items: TimelineItem[]; classNam
       {items.map((item, index) => {
         const Icon = item.icon;
         return (
-          <li key={item.id} className="group relative flex gap-3 pb-4 last:pb-0">
+          <li key={item.id} className="reveal-group relative flex gap-3 pb-4 last:pb-0">
             {/* Conectora: se omite en la última entrada para no dejar un cabo suelto */}
             {index < items.length - 1 && (
               <span

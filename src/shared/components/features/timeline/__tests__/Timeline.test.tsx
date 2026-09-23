@@ -56,7 +56,7 @@ describe("Timeline", () => {
     expect(screen.getByText("IA")).toBeInTheDocument();
   });
 
-  it("pinta la acción a la derecha como `hover-reveal` dentro de la entrada `group`", () => {
+  it("pinta la acción a la derecha como `hover-reveal` dentro de la entrada `reveal-group`", () => {
     render(
       <Timeline
         items={[item({ id: "a", action: <button type="button">Deshacer</button> })]}
@@ -64,9 +64,10 @@ describe("Timeline", () => {
     );
     const action = screen.getByRole("button", { name: "Deshacer" });
     // `.hover-reveal` solo se esconde bajo `@media (hover: hover)` y vuelve
-    // con el hover o el foco de su `.group`: en táctil queda siempre a la vista.
+    // con el hover o el foco de su `.reveal-group` (clase propia: un `.group`
+    // ancestro cualquiera no la dispara); en táctil queda siempre a la vista.
     expect(action.parentElement?.className).toContain("hover-reveal");
-    expect(screen.getByRole("listitem").className).toContain("group");
+    expect(screen.getByRole("listitem").className).toContain("reveal-group");
   });
 
   it("sin acción no deja el hueco", () => {
