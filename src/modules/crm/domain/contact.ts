@@ -52,14 +52,8 @@ export type ContactRow = {
 
 export type ContactProfileDTO = Schemas["ContactProfileDto"];
 export type ContactTagDTO = Schemas["ContactTagsDto"]["data"][number];
-// TEMPORAL (F4): sustituir por Schemas["TimelineDto"] al regenerar
-// core/api/schema.d.ts — el servidor añade la fuente `lifecycle` (cambios de
-// ciclo de vida) y el contrato generado aún no la trae.
-type GeneratedTimelineEntryDTO = Schemas["TimelineDto"]["data"][number];
-export type TimelineSource = GeneratedTimelineEntryDTO["source"] | "lifecycle";
-export type TimelineEntryDTO = Omit<GeneratedTimelineEntryDTO, "source"> & {
-  source: TimelineSource;
-};
+export type TimelineEntryDTO = Schemas["TimelineDto"]["data"][number];
+export type TimelineSource = TimelineEntryDTO["source"];
 export type DuplicatePairDTO = Schemas["DuplicatesListDto"]["data"][number];
 
 export const TIMELINE_SOURCES: readonly TimelineSource[] = [

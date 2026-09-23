@@ -8,13 +8,38 @@
  * Perdido NO son kinds: siguen siendo `deal.status` (D7 del CRM, P3 del plan).
  */
 
+import type { Schemas } from "@/core/api/types";
 import type { StatusMap } from "@/shared/components/features/status-badge";
 
-// TEMPORAL (F4): sustituir por Schemas["..."] al regenerar core/api/schema.d.ts
-// (el servidor construye `/crm/journey` y `/crm/contacts/:id/journey` en
-// paralelo; estos tipos copian su contrato previsto).
+/* ───────────────────────────── Wire types ───────────────────────────────── */
 
-export const STAGE_KINDS = [
+export type JourneyDTO = Schemas["JourneyDto"];
+export type JourneyStageDTO = JourneyDTO["stages"][number];
+/** `null` en la etapa = no gobierna el seguimiento. */
+export type JourneyCadenceDTO = NonNullable<JourneyStageDTO["cadence"]>;
+export type JourneyTemplateDTO = JourneyDTO["templates"][number];
+export type JourneyTemplateStageDTO = JourneyTemplateDTO["stages"][number];
+/** El PUT acepta una lista PARCIAL: el editor manda solo la etapa que cambió. */
+export type PutJourneyDTO = Schemas["UpdateJourneyDto"];
+export type PutJourneyStageDTO = PutJourneyDTO["stages"][number];
+/**
+ * `last_move` = el último `stage_changed` NO revertido (con `revertible`);
+ * `ambiguous` = varias oportunidades abiertas y ninguna que seguir.
+ */
+export type ContactJourneyDTO = Schemas["ContactJourneyDto"];
+export type JourneyActorType = NonNullable<ContactJourneyDTO["last_move"]>["actor_type"];
+
+export type StageKind = JourneyStageDTO["stage_kind"];
+export type SemanticStageKind = Exclude<StageKind, "custom">;
+export type CadenceChannel = JourneyCadenceDTO["channel"];
+export type ExhaustedAction = JourneyCadenceDTO["exhausted_action"];
+
+/**
+ * Los `Record<StageKind, …>` de abajo son la verja: un kind nuevo en el
+ * contrato rompe el build aquí y obliga a nombrarlo; estas listas son el
+ * ORDEN en que se ofrecen, no la fuente del tipo.
+ */
+export const STAGE_KINDS: readonly StageKind[] = [
   "new",
   "contacted",
   "qualified",
@@ -24,9 +49,7 @@ export const STAGE_KINDS = [
   "commitment",
   "fulfillment",
   "custom",
-] as const;
-export type StageKind = (typeof STAGE_KINDS)[number];
-export type SemanticStageKind = Exclude<StageKind, "custom">;
+];
 
 export const STAGE_KIND_LABELS: Record<StageKind, string> = {
   new: "Nuevo",
@@ -68,8 +91,7 @@ export const STAGE_KIND_ORDER: readonly SemanticStageKind[] = [
   "fulfillment",
 ];
 
-export const CADENCE_CHANNELS = ["message", "call", "call_then_message"] as const;
-export type CadenceChannel = (typeof CADENCE_CHANNELS)[number];
+export const CADENCE_CHANNELS: readonly CadenceChannel[] = ["message", "call", "call_then_message"];
 
 export const CADENCE_CHANNEL_LABELS: Record<CadenceChannel, string> = {
   message: "Mensaje",
@@ -77,8 +99,7 @@ export const CADENCE_CHANNEL_LABELS: Record<CadenceChannel, string> = {
   call_then_message: "Llamada y luego mensaje",
 };
 
-export const EXHAUSTED_ACTIONS = ["mark_lost", "let_cool", "hand_to_human"] as const;
-export type ExhaustedAction = (typeof EXHAUSTED_ACTIONS)[number];
+export const EXHAUSTED_ACTIONS: readonly ExhaustedAction[] = ["mark_lost", "let_cool", "hand_to_human"];
 
 export const EXHAUSTED_ACTION_LABELS: Record<ExhaustedAction, string> = {
   mark_lost: "Marcar perdida",
@@ -96,98 +117,6 @@ export const DEFAULT_CADENCE: JourneyCadenceDTO = {
   channel: "message",
   exhausted_action: "let_cool",
 };
-
-/* ───────────────────────────── Wire types ───────────────────────────────── */
-
-export interface JourneyCadenceDTO {
-  max_attempts: number;
-  wait_hours: number;
-  channel: CadenceChannel;
-  exhausted_action: ExhaustedAction;
-}
-
-export interface JourneyStageDTO {
-  stage_id: string;
-  name: string;
-  position: number;
-  stage_kind: StageKind;
-  /** `null` = la etapa no gobierna el seguimiento. */
-  cadence: JourneyCadenceDTO | null;
-  /** Tiempo máximo en la etapa, en días («máx. 10 días»). */
-  rotting_days: number | null;
-  auto_advance: boolean;
-  /** Qué la mueve sola, ya en español («cita agendada», «cotización enviada»). */
-  moves_on: string[];
-}
-
-export interface JourneyTemplateStageDTO {
-  name: string;
-  stage_kind: StageKind;
-  cadence: JourneyCadenceDTO | null;
-  rotting_days?: number | null;
-}
-
-export interface JourneyTemplateDTO {
-  niche_code: string;
-  name: string;
-  stages: JourneyTemplateStageDTO[];
-}
-
-export interface JourneyDTO {
-  pipeline_id: string;
-  /** Plantilla aplicada por última vez; `null` si el recorrido se armó a mano. */
-  template_code: string | null;
-  stages: JourneyStageDTO[];
-  templates: JourneyTemplateDTO[];
-}
-
-export interface PutJourneyStageDTO {
-  stage_id: string;
-  stage_kind: StageKind;
-  cadence: JourneyCadenceDTO | null;
-  rotting_days: number | null;
-  auto_advance: boolean;
-}
-
-export interface PutJourneyDTO {
-  stages: PutJourneyStageDTO[];
-}
-
-export type JourneyActorType = "user" | "ai_agent" | "system";
-
-export interface ContactJourneyDTO {
-  deal: { id: string; title: string; value_cents: number | null; ai_moves_paused: boolean } | null;
-  /**
-   * `true` con `deal: null` cuando el contacto tiene VARIAS oportunidades
-   * abiertas: no hay un recorrido que seguir desde la ficha (P7 del plan).
-   */
-  ambiguous: boolean;
-  stage: {
-    name: string;
-    stage_kind: StageKind;
-    entered_at: string;
-    days_in_stage: number;
-    rotting_days: number | null;
-  } | null;
-  /** El último `stage_changed` NO revertido; null si no hubo o ya se deshizo. */
-  last_move: {
-    event_id: string;
-    actor_type: JourneyActorType;
-    actor_name: string | null;
-    reason: string | null;
-    rule_code: string | null;
-    at: string;
-    /** El servidor dice si aceptará el revert; sin el campo se decide por `rule_code`. */
-    revertible?: boolean;
-  } | null;
-  cadence: {
-    attempts_used: number;
-    max_attempts: number;
-    next_run_at: string | null;
-    channel: CadenceChannel;
-    enrollment_id: string | null;
-  } | null;
-}
 
 /**
  * Qué pasa con «Se mueve sola» al cambiar el tipo de una etapa: Personalizada

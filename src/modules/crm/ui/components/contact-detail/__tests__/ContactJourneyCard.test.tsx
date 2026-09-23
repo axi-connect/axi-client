@@ -43,6 +43,7 @@ function journey(over: Partial<ContactJourneyDTO> = {}): ContactJourneyDTO {
       reason: "Pidió la cotización del tratamiento completo",
       rule_code: null,
       at: new Date().toISOString(),
+      revertible: true,
     },
     cadence: {
       attempts_used: 1,
@@ -110,8 +111,11 @@ describe("ContactJourneyCard", () => {
     expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
     unmount();
 
+    // El pago verificado fija la etapa junto al «ganado»: el servidor lo marca no revertible.
     getContactJourney.mockResolvedValue(
-      journey({ last_move: { ...journey().last_move!, actor_type: "system", reason: null, rule_code: "paid" } }),
+      journey({
+        last_move: { ...journey().last_move!, actor_type: "system", reason: null, rule_code: "paid", revertible: false },
+      }),
     );
     render(<ContactJourneyCard contactId="c1" canManage />);
     expect(await screen.findByText(/regla: pago verificado/)).toBeInTheDocument();

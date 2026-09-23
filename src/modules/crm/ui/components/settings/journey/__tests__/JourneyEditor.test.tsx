@@ -63,15 +63,15 @@ function journey(over: Partial<JourneyDTO> = {}): JourneyDTO {
         niche_code: "restaurants",
         name: "Restaurantes",
         stages: [
-          { name: "Pedido", stage_kind: "new", cadence: { max_attempts: 2, wait_hours: 2, channel: "message", exhausted_action: "let_cool" } },
+          { name: "Pedido", stage_kind: "new", cadence: { max_attempts: 2, wait_hours: 2, channel: "message", exhausted_action: "let_cool" }, rotting_days: null },
         ],
       },
       {
         niche_code: "health_beauty",
         name: "Salud y belleza",
         stages: [
-          { name: "Cita", stage_kind: "meeting", cadence: { max_attempts: 4, wait_hours: 24, channel: "call_then_message", exhausted_action: "hand_to_human" } },
-          { name: "Asistió", stage_kind: "qualified", cadence: null },
+          { name: "Cita", stage_kind: "meeting", cadence: { max_attempts: 4, wait_hours: 24, channel: "call_then_message", exhausted_action: "hand_to_human" }, rotting_days: 7 },
+          { name: "Asistió", stage_kind: "qualified", cadence: null, rotting_days: null },
         ],
       },
       { niche_code: "software_saas", name: "Software y servicios digitales", stages: [] },

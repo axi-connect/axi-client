@@ -3,7 +3,7 @@
 Cliente de la fase F4 del plan `axi-server/docs/plans/commercial_method_plan.md`
 («Recorrido vivo»). Tres piezas: el editor `/crm/settings/recorrido`, la card
 «Recorrido» del Contacto 360 y las entradas nuevas del historial con «Deshacer».
-El servidor se construyó en paralelo: los tipos wire son TEMPORALES (abajo).
+Los tipos wire salen del contrato generado (`core/api/schema.d.ts`, § Contrato).
 
 > **Regla dura de despliegue: el servidor va ANTES que el cliente.** El cliente
 > pide el historial con `sources=…,lifecycle` y el `timelineQuerySchema` de
@@ -144,21 +144,16 @@ Pipeline.» 404/403 → no se pinta. Tests en `__tests__/ContactJourneyCard.test
   propio `focus-visible`/`aria-expanded`; en táctil siempre visible. La fila es
   el `.reveal-group` más cercano; no se anidan.
 
-## Tipos TEMPORALES a sustituir al regenerar `core/api/schema.d.ts`
-Marcados con `// TEMPORAL (F4)`:
-- `src/modules/crm/domain/journey.ts`: `JourneyCadenceDTO`, `JourneyStageDTO`,
-  `JourneyTemplateStageDTO`, `JourneyTemplateDTO`, `JourneyDTO`,
-  `PutJourneyStageDTO`, `PutJourneyDTO`, `ContactJourneyDTO` (con `ambiguous` y
-  `last_move.revertible?`), `JourneyActorType`, `StageKind`, `CadenceChannel`,
-  `ExhaustedAction`.
-  Supuestos que el servidor debe cumplir (acordados en la auditoría J1/J5/J7):
-  `PUT /crm/journey` acepta una lista parcial y `auto_advance` por etapa;
-  `GET /crm/contacts/:id/journey` trae `ambiguous`, `deal.ai_moves_paused`,
-  `last_move` = último `stage_changed` NO revertido con `rule_code` y
-  `revertible`, y `stage: null` sin deal; el timeline manda
-  `payload.revertible` en los `stage_changed`.
-- `src/modules/crm/domain/contact.ts`: `TimelineSource` y `TimelineEntryDTO`
-  amplían el generado con `source: "lifecycle"`.
+## Contrato
+Los tipos wire salen de `core/api/schema.d.ts` (regenerado en `c121fef` desde el
+openapi del servidor F4): `Schemas["JourneyDto"]`, `Schemas["UpdateJourneyDto"]`
+(lista parcial de etapas), `Schemas["ApplyJourneyTemplateDto"]`,
+`Schemas["ContactJourneyDto"]` (con `ambiguous` y `last_move.revertible`),
+`Schemas["RevertStageChangeDto"]`, `UpdateDealDto.ai_moves_paused` y
+`TimelineDto` con `source: "lifecycle"`. Ya no queda ningún tipo TEMPORAL en el
+slice; `STAGE_KINDS`/`CADENCE_CHANNELS`/`EXHAUSTED_ACTIONS` son listas de ORDEN
+tipadas contra el contrato y los `Record<StageKind, …>` son la verja de
+exhaustividad.
 
 ## Deuda
 - **«Pausar cadencia» no se pinta**: no existe endpoint. Cuando llegue, la fila
@@ -173,5 +168,3 @@ Marcados con `// TEMPORAL (F4)`:
   no se tocó `onboarding/domain/niches.ts`.
 - `formatShortDate` da «03 de oct de 2026» (más largo que el «3 oct» del
   mockup); es el helper compartido.
-- Al regenerar `schema.d.ts` hay que sustituir los tipos TEMPORALES y borrar el
-  `Omit` de `contact.ts`.
