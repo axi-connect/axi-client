@@ -1,5 +1,6 @@
 import { formatInteger } from "@/core/lib/commercial-units";
 import type { CommercialApprovalResultDTO, CommercialProposalDTO } from "./commercial";
+import { CRM_AI_MISSING_FAILED } from "./copy";
 
 /**
  * Las acciones que Axi propone, dichas como las lee el dueño — módulo PURO.
@@ -239,7 +240,13 @@ export function approvalLines(result: CommercialApprovalResultDTO, plans: readon
         : `${parsed.skipped === 1 ? "1 quedó fuera" : `${formatInteger(parsed.skipped)} quedaron fuera`}${parsed.reasons === null ? "" : ` (${parsed.reasons})`}.`;
     return { tone: "ok", title, detail: out };
   });
-  const failed = result.failed.map((item): ApprovalLine => ({ tone: "warn", title: `No se pudo: ${item.label}.`, detail: item.reason }));
+  const failed = result.failed.map(
+    (item): ApprovalLine => ({
+      tone: "warn",
+      title: `No se pudo: ${item.label}.`,
+      detail: isCrmAiMissing(item.reason) ? CRM_AI_MISSING_FAILED : item.reason,
+    }),
+  );
   return [...applied, ...failed];
 }
 
@@ -266,4 +273,10 @@ export function approvedThisPeriod(
   return proposals
     .filter((proposal) => proposal.status === "approved" && (periodStart === null || (proposal.decided_at ?? "") >= periodStart))
     .slice(0, limit);
+}
+
+/** El servidor rechaza el artefacto con `entitlements/capability_not_granted`
+ * y un mensaje que nombra `crm_ai` (OutreachActionsService). */
+function isCrmAiMissing(reason: string): boolean {
+  return /crm_ai/.test(reason);
 }

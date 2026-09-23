@@ -13,9 +13,12 @@ export interface ApproveAccess {
 
 /**
  * Quién decide una acción propuesta (C5): el permiso `commercial:approve` Y
- * la capacidad `crm_ai` del plan (el lote lo trabaja el agente de IA; sin
- * ella el servidor respondería 403 al aprobar). Mientras las capacidades
- * cargan no se ofrece ni se niega: ni botón ni línea.
+ * la capacidad `crm_ai` del plan (el lote lo trabaja el agente de IA). El
+ * servidor NO responde 403 sin `crm_ai`: aprobar solo exige `crm` +
+ * `commercial:approve`, y la capacidad se comprueba al encender cada artefacto,
+ * que vuelve como `failed` en un 200 (`approvalLines` lo explica con
+ * `CRM_AI_MISSING_FAILED`). Ocultar el botón evita ese camino; mientras las
+ * capacidades cargan no se ofrece ni se niega: ni botón ni línea.
  */
 export function useApproveAccess(): ApproveAccess {
   const { hasPermission } = useAuth();

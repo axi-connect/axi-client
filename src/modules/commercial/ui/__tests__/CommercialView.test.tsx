@@ -140,7 +140,7 @@ describe("CommercialView", () => {
     render(<CommercialView />);
     const actions = screen.getByRole("region", { name: "Axi propone" });
     expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
-    expect(within(actions).getByText("Tu plan no incluye que el agente trabaje listas; pídele a un administrador.")).toBeInTheDocument();
+    expect(within(actions).getByText("Tu plan no incluye CRM con IA: el agente no puede trabajar esta lista.")).toBeInTheDocument();
   });
 
   it("una aprobada sin resultado en esta sesión dice cuándo se aprobó y ofrece «Ver»; con resultado, «Ver qué quedó» (C6)", () => {

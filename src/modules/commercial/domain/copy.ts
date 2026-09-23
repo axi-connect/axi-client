@@ -174,7 +174,14 @@ export const REJECTED_MESSAGE = "Anotado. Axi no vuelve a proponerlo esta semana
  * Con permiso pero sin la capacidad `crm_ai`: el lote lo trabaja el agente de
  * IA, y el plan del tenant no lo incluye (C5). Solo lectura, sin «Aprobar».
  */
-export const NO_CRM_AI_MESSAGE = "Tu plan no incluye que el agente trabaje listas; pídele a un administrador.";
+export const NO_CRM_AI_MESSAGE = "Tu plan no incluye CRM con IA: el agente no puede trabajar esta lista.";
+
+/**
+ * Se aprobó sin `crm_ai` (las capacidades no cargaron y el botón se mostró):
+ * el servidor aprueba y devuelve el artefacto como fallido (Y2). La línea dice
+ * por qué en vez del mensaje técnico.
+ */
+export const CRM_AI_MISSING_FAILED = "Tu plan no incluye CRM con IA, así que el agente no pudo empezar. Pídele a un administrador que lo active.";
 
 /** «Después» de aprobar: dónde se ve el avance. */
 export const AFTER_APPROVAL_NOTE = "Verás el avance en Ventas cerradas y en Tareas. Nada se envía sin tu aprobación.";

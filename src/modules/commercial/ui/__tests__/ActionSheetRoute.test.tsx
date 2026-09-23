@@ -149,7 +149,7 @@ describe("ActionSheetRoute / ActionDetail", () => {
   it("con permiso pero sin crm_ai: sin Aprobar ni Rechazar y la línea del plan (C5)", async () => {
     capabilities.delete("crm_ai");
     render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
-    expect(await screen.findByText("Tu plan no incluye que el agente trabaje listas; pídele a un administrador.")).toBeInTheDocument();
+    expect(await screen.findByText("Tu plan no incluye CRM con IA: el agente no puede trabajar esta lista.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Aprobar|Rechazar/ })).toBeNull();
   });
 

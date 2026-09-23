@@ -22,6 +22,15 @@ const EXACT: Record<string, TargetResolver> = {
       : typeof d.deal_id === "string"
         ? `/crm/pipeline/deal/${d.deal_id}`
         : "/crm/pipeline",
+  // Recorrido (F4): «La cadencia de Ana se agotó» → su ficha, donde la card
+  // «Recorrido» dice qué pasó y deja reactivar. `crm.journey_` no es familia
+  // `crm.deal_`: sin esta entrada el clic solo la marcaba leída (Y1).
+  "crm.journey_cadence_exhausted": (d) =>
+    typeof d.contact_id === "string"
+      ? `/crm/contacts/${d.contact_id}`
+      : typeof d.deal_id === "string"
+        ? `/crm/pipeline/deal/${d.deal_id}`
+        : "/crm/pipeline",
 }
 
 /** Resolvers por familia (prefijo `familia.`). */

@@ -1,3 +1,4 @@
+import { CRM_AI_MISSING_FAILED } from "../copy";
 import {
   approvalLines,
   approvedOnPhrase,
@@ -75,6 +76,20 @@ describe("readOutreachDetail y approvalLines", () => {
     expect(lines[0].title).toMatch(/^Listo\. 36 contactos entran en seguimiento (mañana|hoy) a las \d+:00\.$/);
     expect(lines[0].detail).toBe("2 quedaron fuera (2 baja comercial).");
     expect(lines[1]).toEqual({ tone: "warn", title: "No se pudo: Campaña.", detail: "la plantilla sigue en revisión" });
+  });
+
+  it("sin crm_ai el artefacto fallido explica el plan, no el mensaje técnico (Y2)", () => {
+    const [line] = approvalLines(
+      {
+        applied: [],
+        failed: [
+          { type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" },
+        ],
+      },
+      [],
+    );
+    expect(line).toEqual({ tone: "warn", title: "No se pudo: Lote.", detail: CRM_AI_MISSING_FAILED });
+    expect(line.detail).not.toMatch(/crm_ai/);
   });
 
   it("un detalle que no se entiende se pinta crudo", () => {

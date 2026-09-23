@@ -128,4 +128,12 @@ describe("método comercial (F8)", () => {
     // El resto de `crm.deal_*` sigue abriendo el deal.
     expect(notificationTarget("crm.deal_stalled", { deal_id: "d-3", contact_id: "c-7" })).toBe("/crm/pipeline/deal/d-3");
   });
+
+  it("la cadencia agotada abre la ficha del contacto; sin contacto, el deal (Y1)", () => {
+    expect(notificationTarget("crm.journey_cadence_exhausted", { contact_id: "c-7", deal_id: "d-3" })).toBe(
+      "/crm/contacts/c-7",
+    );
+    expect(notificationTarget("crm.journey_cadence_exhausted", { deal_id: "d-3" })).toBe("/crm/pipeline/deal/d-3");
+    expect(notificationTarget("crm.journey_cadence_exhausted", {})).toBe("/crm/pipeline");
+  });
 });
