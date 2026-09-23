@@ -3,7 +3,7 @@
 import { RotateCcw } from "lucide-react";
 
 import type { CommercialProposalDTO } from "@/modules/commercial/domain/commercial";
-import { LEARNING_PROPOSALS_MESSAGE, NO_APPROVE_PERMISSION_MESSAGE, NO_PROPOSALS_MESSAGE } from "@/modules/commercial/domain/copy";
+import { LEARNING_PROPOSALS_MESSAGE, NO_PROPOSALS_MESSAGE } from "@/modules/commercial/domain/copy";
 import { commercialProposalHref } from "@/modules/commercial/domain/proposals";
 import { AssistantMark } from "@/shared/components/features/assistant";
 import { Button } from "@/shared/components/ui/button";
@@ -17,7 +17,11 @@ export interface ActionListProps {
   onRetry?: () => void;
   learning?: boolean;
   canApprove?: boolean;
+  /** Sin poder aprobar: a quién pedírselo (permiso o plan sin `crm_ai`). `null` = no se dice nada aún. */
+  readOnlyMessage?: string | null;
   onApprove?: (id: string) => Promise<void>;
+  /** Ids con el resultado de su aprobación en esta sesión (C6). */
+  resultIds?: ReadonlySet<string>;
 }
 
 /**
@@ -25,10 +29,20 @@ export interface ActionListProps {
  * superficie del módulo con violeta (D4: axi propone, el dueño aprueba), y la
  * firma es `AssistantMark`, como en todo el producto.
  *
- * Sin permiso de aprobar, las filas enlazan al detalle de solo lectura y una
- * línea dice a quién pedírselo (vista «sin permiso» del mockup).
+ * Sin permiso de aprobar (o sin la capacidad `crm_ai`), las filas enlazan al
+ * detalle de solo lectura y una línea dice a quién pedírselo (vista «sin
+ * permiso» del mockup).
  */
-export function ActionList({ proposals, error = null, onRetry, learning = false, canApprove = false, onApprove }: ActionListProps) {
+export function ActionList({
+  proposals,
+  error = null,
+  onRetry,
+  learning = false,
+  canApprove = false,
+  readOnlyMessage = null,
+  onApprove,
+  resultIds,
+}: ActionListProps) {
   const empty = proposals !== undefined && proposals.length === 0;
   const hasPending = proposals?.some((proposal) => proposal.status === "pending") ?? false;
   return (
@@ -67,10 +81,11 @@ export function ActionList({ proposals, error = null, onRetry, learning = false,
               href={commercialProposalHref(proposal.id)}
               canApprove={canApprove}
               onApprove={onApprove}
+              hasResult={resultIds?.has(proposal.id) ?? false}
             />
           ))}
-          {!canApprove && hasPending ? (
-            <li className="grouped-row px-4 py-3 text-[12.5px] text-muted-foreground">{NO_APPROVE_PERMISSION_MESSAGE}</li>
+          {!canApprove && hasPending && readOnlyMessage !== null ? (
+            <li className="grouped-row px-4 py-3 text-[12.5px] text-muted-foreground">{readOnlyMessage}</li>
           ) : null}
         </ul>
       )}

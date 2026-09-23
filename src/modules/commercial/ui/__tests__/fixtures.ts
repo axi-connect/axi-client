@@ -156,4 +156,5 @@ export const proposal: CommercialProposalDTO = {
   estimated_sales: 2,
   covers_pct: 20,
   basis: "12 × 50 % × 35 % = 2",
+  estimate_source: "history",
 };

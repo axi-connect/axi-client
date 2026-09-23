@@ -6,7 +6,7 @@ import { Check, ChevronRight } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { CommercialProposalDTO } from "@/modules/commercial/domain/commercial";
-import { expiryPhrase, proposalHeadline } from "@/modules/commercial/domain/proposals";
+import { approvedOnPhrase, expiryPhrase, proposalHeadline } from "@/modules/commercial/domain/proposals";
 import { StatusBadge } from "@/shared/components/features/status-badge";
 import type { StatusMap } from "@/shared/components/features/status-badge/types";
 import { Button } from "@/shared/components/ui/button";
@@ -27,19 +27,26 @@ export interface ActionRowProps {
   canApprove: boolean;
   /** Aprueba desde la lista; el llamador abre el detalle con el resultado. */
   onApprove?: (id: string) => Promise<void>;
+  /**
+   * Esta sesión tiene el resultado de la aprobación (se aprobó aquí). Sin él,
+   * una aprobada dice «Se aprobó el …» y ofrece «Ver», no «Ver qué quedó»: el
+   * servidor no guarda qué quedó (C6).
+   */
+  hasResult?: boolean;
 }
 
 /**
  * Una acción propuesta: título, el titular en violeta («+2 ventas estimadas ·
  * cubre el 20 % de lo que falta para volver al ritmo») y la razón. «Aprobar»
  * siempre visible; «Ver» aparece al pasar el ratón (y siempre en táctil,
- * `.hover-reveal`). Aprobada baja de tono y ofrece «Ver qué quedó».
+ * `.hover-reveal`). Aprobada baja de tono y ofrece «Ver qué quedó» si esta
+ * sesión tiene el resultado; si no, «Se aprobó el {fecha}» y «Ver».
  *
  * La fila es un enlace ESTIRADO (el `<a>` del título cubre la fila con
  * `after:inset-0`) y los botones quedan FUERA de él, por encima: un `<button>`
  * dentro de un `<a>` no es HTML válido (M16 del mockup).
  */
-export function ActionRow({ proposal, href, canApprove, onApprove }: ActionRowProps) {
+export function ActionRow({ proposal, href, canApprove, onApprove, hasResult = false }: ActionRowProps) {
   const [busy, setBusy] = useState(false);
   const settled = proposal.status !== "pending";
   const { primary } = proposalHeadline(proposal);
@@ -78,7 +85,11 @@ export function ActionRow({ proposal, href, canApprove, onApprove }: ActionRowPr
         {primary !== null && !settled ? (
           <span className="text-[13.5px] font-medium text-accent-violet tabular-nums">{primary}</span>
         ) : null}
-        <span className="text-[12.5px] text-muted-foreground">{proposal.rationale}</span>
+        {settled && proposal.status === "approved" && !hasResult ? (
+          <span className="text-[12.5px] text-muted-foreground">{approvedOnPhrase(proposal.decided_at)}</span>
+        ) : (
+          <span className="text-[12.5px] text-muted-foreground">{proposal.rationale}</span>
+        )}
       </div>
       {/* Por encima del enlace estirado pero SIN capturar clics: solo el botón
           los recibe; «Ver» y «Ver qué quedó» dejan pasar el clic al enlace. */}
@@ -89,7 +100,7 @@ export function ActionRow({ proposal, href, canApprove, onApprove }: ActionRowPr
             aria-hidden
             className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[12.5px] font-medium text-foreground"
           >
-            Ver qué quedó
+            {proposal.status === "approved" && hasResult ? "Ver qué quedó" : "Ver"}
           </span>
         ) : (
           <>

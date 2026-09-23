@@ -1,5 +1,6 @@
 import {
   approvalLines,
+  approvedOnPhrase,
   approvedThisPeriod,
   commercialProposalHref,
   expiryPhrase,
@@ -7,6 +8,7 @@ import {
   proposalHeadline,
   readOutreach,
   readOutreachDetail,
+  startDatePhrase,
   startPhrase,
 } from "../proposals";
 import { proposal } from "../../ui/__tests__/fixtures";
@@ -97,5 +99,17 @@ describe("helpers", () => {
       { ...proposal, id: "b", status: "approved" as const, decided_at: "2026-08-30T00:00:00Z" },
     ];
     expect(approvedThisPeriod(rows, "2026-09-01").map((row) => row.id)).toEqual(["a"]);
+  });
+});
+
+describe("aprobadas en pasado (C6)", () => {
+  it("approvedOnPhrase dice la fecha en pasado y tolera lo ilegible", () => {
+    expect(approvedOnPhrase(new Date(2026, 8, 22, 10).toISOString())).toBe("Se aprobó el 22 de septiembre");
+    expect(approvedOnPhrase(null)).toBe("Se aprobó");
+    expect(approvedOnPhrase("no es fecha")).toBe("Se aprobó");
+  });
+
+  it("startDatePhrase da la fecha aunque ya haya pasado (startPhrase diría «desde ahora»)", () => {
+    expect(startDatePhrase(new Date(2026, 8, 21, 9, 0))).toBe("el lunes 21 a las 9:00");
   });
 });

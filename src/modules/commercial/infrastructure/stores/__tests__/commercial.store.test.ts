@@ -295,6 +295,7 @@ function proposalRow(id: string, patch: Partial<CommercialProposalDTO> = {}): Co
     estimated_sales: 2,
     covers_pct: 20,
     basis: null,
+    estimate_source: null,
     ...patch,
   };
 }

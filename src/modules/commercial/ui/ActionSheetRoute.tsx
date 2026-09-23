@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { HttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -36,7 +36,20 @@ export function ActionSheetRoute({ proposalId, closeBehavior }: { proposalId: st
   const [load, setLoad] = useState<Load>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
   const proposal = load.kind === "ready" ? load.proposal : null;
-  const state = useActionDetail(proposalId, proposal);
+
+  // El servidor dijo que ya no está como se pinta (409: la decidió otra
+  // persona o pestaña; 403): se vuelve a leer SIN pasar por el skeleton —el
+  // panel no parpadea—. La lista de la ruta la recarga el store (C4).
+  const onStale = useCallback(() => {
+    getProposal(proposalId)
+      .then((data) => {
+        setLoad({ kind: "ready", proposal: data });
+      })
+      .catch((error: unknown) => {
+        if (error instanceof HttpError && error.status === 404) setLoad({ kind: "gone" });
+      });
+  }, [proposalId]);
+  const state = useActionDetail(proposalId, proposal, onStale);
 
   useEffect(() => {
     if (!canRead) return;

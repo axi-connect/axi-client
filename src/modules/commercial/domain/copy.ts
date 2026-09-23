@@ -170,5 +170,14 @@ export const REJECT_NOTE = "Rechazar guarda el motivo y Axi no vuelve a proponer
 /** Rechazada: la confirmación. */
 export const REJECTED_MESSAGE = "Anotado. Axi no vuelve a proponerlo esta semana.";
 
+/**
+ * Con permiso pero sin la capacidad `crm_ai`: el lote lo trabaja el agente de
+ * IA, y el plan del tenant no lo incluye (C5). Solo lectura, sin «Aprobar».
+ */
+export const NO_CRM_AI_MESSAGE = "Tu plan no incluye que el agente trabaje listas; pídele a un administrador.";
+
 /** «Después» de aprobar: dónde se ve el avance. */
 export const AFTER_APPROVAL_NOTE = "Verás el avance en Ventas cerradas y en Tareas. Nada se envía sin tu aprobación.";
+
+/** «Después» de una ya aprobada: en presente, sin prometer lo que no se guardó (C6). */
+export const AFTER_APPROVED_NOTE = "El avance se ve en Ventas cerradas y en Tareas.";

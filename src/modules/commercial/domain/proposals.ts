@@ -72,9 +72,24 @@ export interface OutreachPlan {
   agentId: string | null;
 }
 
+/**
+ * Espejo de dos entradas de `ARTIFACT_LABELS` de cmo (`cmo/domain/proposal-labels.ts`).
+ * No se importa: `cmo` ya consume `commercial/public` (la tarjeta enlaza aquí y
+ * el briefing pinta el chip) y un barrel de cmo para esto cerraría un ciclo
+ * entre los dos slices. Si cambia una, cambia la otra.
+ */
 export const OUTREACH_TYPE_LABELS: Record<OutreachType, string> = {
   agent_task_bulk_spec: "Lote de seguimiento",
   sequence_enrollment_spec: "Secuencia",
+};
+
+/**
+ * Dónde se ve lo que encendió una acción aprobada (el pie del detalle y la
+ * fila «Contactos» de lo aprobado). `commercial` no importa de `crm`: href.
+ */
+export const OUTREACH_DESTINATIONS: Record<OutreachType, { href: string; label: string }> = {
+  agent_task_bulk_spec: { href: "/crm/tasks", label: "Ver en Tareas" },
+  sequence_enrollment_spec: { href: "/crm/settings/sequences", label: "Ver en Secuencias" },
 };
 
 export const OUTREACH_CHANNEL_LABELS: Record<OutreachChannel, string> = {
@@ -147,7 +162,42 @@ export function startPhrase(startsAt: Date, now: Date = new Date()): string {
   const days = Math.round((day(startsAt) - day(now)) / 86_400_000);
   if (days === 0) return `hoy a las ${clock(startsAt)}`;
   if (days === 1) return `mañana a las ${clock(startsAt)}`;
+  return startDatePhrase(startsAt);
+}
+
+/**
+ * El arranque de una acción YA aprobada, en fecha y no en relativo: «el lunes
+ * 28 a las 9:00». `startPhrase` diría «desde ahora» de algo que pasó (C6).
+ */
+export function startDatePhrase(startsAt: Date): string {
   return `el ${WEEKDAYS[startsAt.getDay()]} ${String(startsAt.getDate())} a las ${clock(startsAt)}`;
+}
+
+const MONTHS = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+] as const;
+
+/**
+ * Una aprobada de la que esta sesión no guarda el resultado (el servidor no
+ * lo persiste: aprobar es de una vez), dicha en PASADO: «Se aprobó el 22 de
+ * septiembre». Sin fecha legible, «Se aprobó».
+ */
+export function approvedOnPhrase(decidedAt: string | null): string {
+  if (decidedAt === null) return "Se aprobó";
+  const date = new Date(decidedAt);
+  if (Number.isNaN(date.getTime())) return "Se aprobó";
+  return `Se aprobó el ${String(date.getDate())} de ${MONTHS[date.getMonth()]}`;
 }
 
 /**

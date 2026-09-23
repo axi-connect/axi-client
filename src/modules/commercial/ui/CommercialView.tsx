@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Lock, Pencil, RotateCcw } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
@@ -18,6 +18,7 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { Button } from "@/shared/components/ui/button";
+import { useApproveAccess } from "./hooks/use-approve-access";
 import { CommercialSkeleton } from "./CommercialSkeleton";
 import { ActionList } from "./components/ActionList";
 import { CommercialBlockedState } from "./components/CommercialBlockedState";
@@ -50,12 +51,14 @@ export function CommercialView() {
   const proposals = useCommercialStore((state) => state.proposals);
   const loadProposals = useCommercialStore((state) => state.loadProposals);
   const approveProposal = useCommercialStore((state) => state.approveProposal);
+  const approvals = useCommercialStore((state) => state.approvals);
+  const resultIds = useMemo(() => new Set(Object.keys(approvals)), [approvals]);
   const router = useRouter();
   const { showAlert } = useAlert();
 
   const canRead = hasPermission("commercial:read");
   const canManage = hasPermission("commercial:manage");
-  const canApprove = hasPermission("commercial:approve");
+  const { canApprove, readOnlyMessage } = useApproveAccess();
   const enabled = !loaded || hasCapability("crm");
 
   // Solo la primera vez: guardar la meta ya recarga plan y ritmo, y el Panel
@@ -183,7 +186,9 @@ export function CommercialView() {
             error={proposals.status === "error" ? proposals.error : null}
             onRetry={() => void loadProposals()}
             canApprove={canApprove}
+            readOnlyMessage={readOnlyMessage}
             onApprove={onApprove}
+            resultIds={resultIds}
           />
         </>
       )}

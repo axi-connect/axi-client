@@ -12,6 +12,10 @@ jest.mock("@/modules/commercial/infrastructure/services/commercial-service.adapt
 }));
 const permissions = new Set(["commercial:read", "commercial:approve"]);
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: (code: string) => permissions.has(code) }) }));
+const capabilities = new Set(["crm", "crm_ai"]);
+jest.mock("@/shared/auth/entitlements.hooks", () => ({
+  useEntitlements: () => ({ entitlements: null, loaded: true, hasCapability: (code: string) => capabilities.has(code) }),
+}));
 const mockBack = jest.fn();
 jest.mock("next/navigation", () => ({ useRouter: () => ({ back: mockBack, replace: jest.fn(), push: jest.fn() }) }));
 const mockShowAlert = jest.fn();
@@ -45,6 +49,7 @@ afterEach(cleanup);
 beforeEach(() => {
   resetCommercialStore();
   permissions.add("commercial:approve");
+  capabilities.add("crm_ai");
   mockGetProposal.mockReset().mockResolvedValue(proposal);
   approveProposal.mockReset();
   rejectProposal.mockReset();
@@ -77,6 +82,8 @@ describe("ActionSheetRoute / ActionDetail", () => {
     expect(screen.getByText("Lote de seguimiento")).toBeInTheDocument();
     expect(screen.getByText("+2 ventas estimadas · cubre el 20 % de lo que falta para volver al ritmo")).toHaveClass("text-accent-violet");
     expect(screen.getByText("La cuenta: 12 × 50 % × 35 % = 2")).toBeInTheDocument();
+    // La procedencia del titular (`estimate_source`) va junto a la cuenta.
+    expect(screen.getByText("La cuenta: 12 × 50 % × 35 % = 2").parentElement).toHaveTextContent("según tu historia");
     expect(screen.getByRole("region", { name: "Por qué ahora" })).toHaveTextContent("27 de 33 esperadas a hoy");
     const plan = screen.getByRole("region", { name: "Qué va a pasar" });
     expect(plan).toHaveTextContent("12 contactos");
@@ -90,7 +97,7 @@ describe("ActionSheetRoute / ActionDetail", () => {
     expect(approveProposal).toHaveBeenCalledWith(proposal.id);
     expect(await screen.findByText(/^Listo\. 10 contactos entran en seguimiento /)).toBeInTheDocument();
     expect(screen.getByText("2 quedaron fuera (2 baja comercial).")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Ver en Tareas/ })).toHaveAttribute("href", "/crm/tasks");
+    for (const link of screen.getAllByRole("link", { name: /Ver en Tareas/ })) expect(link).toHaveAttribute("href", "/crm/tasks");
     expect(screen.queryByRole("button", { name: /^Aprobar$/ })).toBeNull();
   });
 
@@ -137,5 +144,72 @@ describe("ActionSheetRoute / ActionDetail", () => {
     mockGetProposal.mockRejectedValue(new HttpError({ status: 404, code: "cmo/proposal_not_found", message: "no" }));
     render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
     expect(await screen.findByText("Esta acción ya no está")).toBeInTheDocument();
+  });
+
+  it("con permiso pero sin crm_ai: sin Aprobar ni Rechazar y la línea del plan (C5)", async () => {
+    capabilities.delete("crm_ai");
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    expect(await screen.findByText("Tu plan no incluye que el agente trabaje listas; pídele a un administrador.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Aprobar|Rechazar/ })).toBeNull();
+  });
+
+  it("doble clic en Aprobar: una sola aprobación (C9)", async () => {
+    approveProposal.mockImplementation(() => new Promise(() => {}));
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    const button = await screen.findByRole("button", { name: /^Aprobar$/ });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(approveProposal).toHaveBeenCalledTimes(1);
+    expect(button).toBeDisabled();
+  });
+
+  it.each([
+    [409, "cmo/proposal_not_pending"],
+    [403, "rbac/permission_denied"],
+  ])("un %s al aprobar avisa y vuelve a leer la propuesta sin skeleton (C4)", async (status, code) => {
+    approveProposal.mockRejectedValue(new HttpError({ status, code, message: "no" }));
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    mockGetProposal.mockResolvedValue({ ...proposal, status: "approved", decided_at: "2026-09-22T15:00:00.000Z" });
+    fireEvent.click(await screen.findByRole("button", { name: /^Aprobar$/ }));
+
+    await waitFor(() => {
+      expect(mockShowAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" }));
+    });
+    expect(mockGetProposal).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText("Se aprobó el 22 de septiembre.")).toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Cargando la acción" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Aprobar$/ })).toBeNull();
+  });
+
+  it("un 409 al rechazar también vuelve a leerla", async () => {
+    rejectProposal.mockRejectedValue(new HttpError({ status: 409, code: "cmo/proposal_not_pending", message: "Esa propuesta ya fue decidida" }));
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Rechazar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Rechazar" }));
+    await waitFor(() => {
+      expect(mockGetProposal).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("aprobada fuera de esta sesión: en pasado, con lo que devuelve el servidor y sin futuro (C6)", async () => {
+    mockGetProposal.mockResolvedValue({ ...proposal, status: "approved", decided_at: "2026-09-22T15:00:00.000Z" });
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    expect(await screen.findByText("Se aprobó el 22 de septiembre.")).toBeInTheDocument();
+    expect(screen.getByText("Lo que se encendió se sigue en Tareas.")).toBeInTheDocument();
+    const approved = screen.getByRole("region", { name: "Lo que se aprobó" });
+    expect(approved).toHaveTextContent("12 contactos");
+    expect(approved).toHaveTextContent("quedaron fuera al aprobar");
+    expect(approved).not.toHaveTextContent(/mañana|desde ahora|quedan fuera/);
+    expect(screen.queryByRole("region", { name: "Qué va a pasar" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Después" })).toHaveTextContent("El avance se ve en Ventas cerradas y en Tareas.");
+    expect(screen.queryByText(/^Verás/)).toBeNull();
+    expect(screen.queryByText(/^Listo\./)).toBeNull();
+    for (const link of screen.getAllByRole("link", { name: "Ver en Tareas" })) expect(link).toHaveAttribute("href", "/crm/tasks");
+  });
+
+  it("la evidencia se pinta tal cual como texto (C13)", async () => {
+    mockGetProposal.mockResolvedValue({ ...proposal, evidence: [{ label: "Ventas del mes", value: "$ 18,9 M COP", source: "history" }] });
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    expect(await screen.findByText("$ 18,9 M COP")).toBeInTheDocument();
   });
 });

@@ -128,6 +128,38 @@ describe("CommercialView", () => {
     expect(within(actions).getByText(/Pídele a un administrador que apruebe/)).toBeInTheDocument();
   });
 
+  it("con permiso pero sin crm_ai: la fila enlaza, sin botón, y dice que el plan no lo incluye (C5)", () => {
+    mockEntitlements.mockReturnValue({ entitlements: null, loaded: true, hasCapability: (code) => code !== "crm_ai" });
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [proposal], error: null },
+    });
+    render(<CommercialView />);
+    const actions = screen.getByRole("region", { name: "Axi propone" });
+    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
+    expect(within(actions).getByText("Tu plan no incluye que el agente trabaje listas; pídele a un administrador.")).toBeInTheDocument();
+  });
+
+  it("una aprobada sin resultado en esta sesión dice cuándo se aprobó y ofrece «Ver»; con resultado, «Ver qué quedó» (C6)", () => {
+    const approved = { ...proposal, id: "a1", status: "approved" as const, decided_at: "2026-09-22T15:00:00.000Z" };
+    const here = { ...proposal, id: "a2", title: "Otra", status: "approved" as const, decided_at: "2026-09-23T15:00:00.000Z" };
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [approved, here], error: null },
+      approvals: { a2: { applied: [], failed: [] } },
+    });
+    render(<CommercialView />);
+    const [first, second] = within(screen.getByRole("region", { name: "Axi propone" })).getAllByRole("listitem");
+    expect(first).toHaveTextContent("Se aprobó el 22 de septiembre");
+    expect(first).toHaveTextContent(/Ver$/);
+    expect(first).not.toHaveTextContent("Ver qué quedó");
+    expect(second).toHaveTextContent("Ver qué quedó");
+  });
+
   it("carga una sola vez, solo si la sección está en idle", () => {
     render(<CommercialView />);
     expect(load).toHaveBeenCalledTimes(1);
