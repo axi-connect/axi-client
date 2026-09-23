@@ -49,7 +49,18 @@ CSS = r"""
 }
 [data-sileo-title].axi-t{text-transform:none;font-weight:600;font-size:13px;letter-spacing:-.005em}
 [data-sileo-button].axi-b{text-decoration:none;font-weight:600;font-family:var(--font-body)}
-[data-sileo-description].axi-d{color:color-mix(in srgb, var(--pill-ink) 72%, transparent);font-size:13px;line-height:1.45}
+/* sileo pinta el cuerpo al 50 % con [data-sileo-viewport][data-theme=…] [data-sileo-description]
+   (0,3,0) e inyecta su CSS después del nuestro: hace falta (0,4,0) para que el 72 % AA gane. */
+[data-sileo-viewport][data-theme] [data-sileo-description].axi-d{color:color-mix(in srgb, var(--pill-ink) 72%, transparent);font-size:13px;line-height:1.45}
+/* El gooey (σ = 8 + umbral de alfa) se come ~6 px del extremo: 14 px nominales = 8 px reales,
+   icono concéntrico con la curva. A la derecha sileo ya suma 10 px (PILL_PADDING): con 4 px el
+   título respira ~16 px. sileo mide este padding con getComputedStyle, así que el ancho se reajusta. */
+[data-sileo-viewport] [data-sileo-header]{padding-inline:14px 4px}
+/* El relleno llega como atributo SVG (fill="#…") y no se entera de un cambio de tema con avisos
+   abiertos. Una propiedad CSS gana al atributo de presentación: el color sigue al token al vuelo. */
+:root{--toast-fill:var(--foreground)}
+:root[data-toast-mode="surface"]{--toast-fill:var(--toast-surface)}
+[data-sileo-svg] rect[data-sileo-pill],[data-sileo-svg] rect[data-sileo-body]{fill:var(--toast-fill)}
 [data-sileo-svg]{filter:drop-shadow(0 1px 2px rgb(0 0 0/.10)) drop-shadow(0 10px 28px rgb(0 0 0/.16))}
 
 /* ---- página */
@@ -111,11 +122,11 @@ pre.map .k{color:var(--muted-foreground)}
 .phone{width:300px;max-width:100%;height:230px}
 /* réplica estática de la píldora de sileo */
 .pill-demo{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(340px,calc(100% - 24px));
-  background:var(--foreground);color:var(--background);border-radius:18px;padding:0 0 12px;box-shadow:0 10px 28px rgb(0 0 0/.16)}
-.pill-demo .h{height:40px;display:flex;align-items:center;gap:8px;padding:0 8px}
+  background:var(--foreground);color:var(--background);border-radius:20px;padding:0 0 12px;box-shadow:0 10px 28px rgb(0 0 0/.16)}
+.pill-demo .h{height:40px;display:flex;align-items:center;gap:8px;padding:0 16px 0 8px}
 .pill-demo .bd{width:24px;height:24px;border-radius:50%;display:grid;place-items:center}
 .pill-demo .t{font-size:13px;font-weight:600}
-.pill-demo p{margin:0;padding:4px 14px 0;font-size:13px;line-height:1.45;opacity:.72}
+.pill-demo p{margin:0;padding:4px 16px 0;font-size:13px;line-height:1.45;opacity:.72}
 .before-after{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 @media (max-width: 860px){ .before-after{grid-template-columns:minmax(0,1fr)} }
 
@@ -397,6 +408,7 @@ def view_ds() -> str:
             <div><b>Un botón como mucho</b>Verbo concreto («Ver», «Deshacer», «Reintentar»). Con botón, el aviso no se cierra solo.</div>
             <div><b>Nunca para confirmar</b>Si hace falta decidir, es <code>showModal</code>. Si el estado dura, es <code>Alert</code> en línea.</div>
             <div><b>Promesa para esperas</b>Si la acción tarda más de ~1 s, <code>notify.promise</code>: un solo aviso que cambia de estado, nunca «Guardando» + «Guardado».</div>
+            <div><b>Anatomía de la píldora</b>40 px de alto; icono de 24 px concéntrico con el extremo (8 px reales por los cuatro lados); título a ~16 px del borde derecho; cuerpo con 16 px. El padding del header es 14 px / 4 px porque el filtro «gooey» se come ~6 px del extremo y sileo ya suma 10 px a la derecha: compensa, no es arbitrario.</div>
             <div><b>Una ranura, salvo los errores</b>Un éxito nuevo se transforma sobre el anterior (lo nativo de sileo). Errores y advertencias llevan id propio y se apilan: nunca se pisan.</div>
             <div><b>Nada de avisos por cargar</b>Un GET que carga la vista no avisa si sale bien; si falla, la vista pinta su estado de error (§9) y el aviso es opcional.</div>
           </div></section>

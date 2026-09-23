@@ -1,6 +1,6 @@
 # Notificaciones con sileo — plan
 
-> Rama `feat/sileo-notifications` (cliente). Estado: **F0 entregada, esperando aprobación del dueño.**
+> Rama `feat/sileo-notifications` (cliente). Estado: **F0 entregada; D1–D5 aprobadas por el dueño el 2026-09-23**, con un ajuste de espaciado de la píldora compacta pedido antes de aprobar la F0.
 > Mockup: `docs/design/mockups/notificaciones-sileo.html` (build `notificaciones-sileo.build.py`,
 > adaptador `notificaciones-sileo.adapter.js`), con sileo 0.1.5 real incrustado.
 
@@ -37,7 +37,7 @@ banner, para que ningún módulo vuelva a inventar el suyo. Aprovechar para corr
 - `aria-live="polite"` fijo; con `prefers-reduced-motion` anula duraciones.
 - Duración por defecto 6000 ms; `null` = no se cierra; swipe para descartar.
 
-## Decisiones propuestas (a aprobar en el mockup)
+## Decisiones (aprobadas 2026-09-23, tal cual la recomendación)
 
 | # | Decisión | Recomendación | Alternativa |
 |---|---|---|---|
@@ -54,6 +54,9 @@ banner, para que ningún módulo vuelva a inventar el suyo. Aprovechar para corr
   `to-options.ts` (traducción `showAlert` → `SileoOptions`, con jest), `toaster.tsx` (tema de
   next-themes, `fill` desde `--toast-fill`). `AlertProvider.showAlert` delega en `notify`
   conservando identidad estable. Tokens `--toast-*` y overrides `[data-sileo-*]` en `globals.css`.
+  `[data-sileo-header]{padding-inline:14px 4px}`: el filtro «gooey» se come ~6 px del extremo
+  (medido: con los 8 px de sileo el icono quedaba a 2 px del borde y a 0 px en la curva, y el
+  título a 21 px por la derecha); con 14/4 el icono queda concéntrico a 8 px y el título a ~16 px.
   Regla `no-restricted-imports` para `sileo` fuera de `core/notifications`. `framer-motion ^12.34`.
 - **F2 — Migración de los 13 sitios**: 10 páginas de `FloatingAlert` → `showAlert`; 3
   `StatusAlert` en línea → `Alert`. Borrar `floating-alert.tsx` y la variante flotante de

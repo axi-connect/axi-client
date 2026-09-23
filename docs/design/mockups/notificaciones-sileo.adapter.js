@@ -54,6 +54,7 @@ function render() {
   const fill = ink ? t.fg : t.bg;
   const pillIsDark = ink ? !dark : dark;
   document.documentElement.dataset.pill = pillIsDark ? "dark" : "light";
+  document.documentElement.dataset.toastMode = cfg.mode;
   root.render(React.createElement(Toaster, {
     position: cfg.position,
     offset: cfg.position.startsWith("top") ? { top: cfg.offsetTop, right: 16, left: 16 } : { bottom: 16, right: 16, left: 16 },
