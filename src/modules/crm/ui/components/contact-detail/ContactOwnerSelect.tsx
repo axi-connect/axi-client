@@ -104,7 +104,6 @@ export function ContactOwnerSelect({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo cambiar el responsable"),
-        open: true,
       });
     } finally {
       setSaving(false);

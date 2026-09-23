@@ -69,11 +69,10 @@ export function EnrollInSequenceButton({
                       `${String(group.count)} ${BULK_SKIP_LABELS[group.reason as BulkSkipReason] ?? group.reason}`,
                   )
                   .join(" · "),
-          open: true,
         });
         setOpen(false);
       } catch (err) {
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo inscribir"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudo inscribir") });
       } finally {
         setBusy(false);
       }

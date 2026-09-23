@@ -145,7 +145,7 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
         const created = await createAgent(toAgentDto(values, null));
         if (values.intentions.length > 0) await setAgentIntentions(created.id, toIntentionsDto(values, null));
         void fetchAgents();
-        showAlert({ tone: "success", title: `${created.name} ya existe`, description: "Actívalo y asígnalo a un canal cuando esté listo.", open: true });
+        showAlert({ tone: "success", title: `${created.name} ya existe`, description: "Actívalo y asígnalo a un canal cuando esté listo." });
         form.reset(values);
         router.replace(`/admin/agents/${created.id}`);
       }
@@ -200,7 +200,7 @@ export function AgentStudioView({ mode, agentId = null }: { mode: "create" | "ed
               try {
                 await deleteAgent(agent.id);
                 await fetchAgents();
-                showAlert({ tone: "success", title: "Agente eliminado", open: true });
+                showAlert({ tone: "success", title: "Agente eliminado" });
                 leave();
               } catch (error) {
                 showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar el agente") });

@@ -102,7 +102,6 @@ export function RecognitionSettingsView() {
         description: aiEnabled
           ? "Desde la próxima foto, el agente reconoce el producto y lo cotiza."
           : "Las fotos siguen llegando al inbox; el agente pide la referencia por texto.",
-        open: true,
         autoCloseMs: 3000,
       })
     } catch (err) {
@@ -111,7 +110,6 @@ export function RecognitionSettingsView() {
         tone: "error",
         title: "No se pudo guardar el cambio",
         description: errorMessage(err),
-        open: true,
       })
     } finally {
       setSavingSwitch(false)
@@ -127,7 +125,6 @@ export function RecognitionSettingsView() {
         tone: "success",
         title: "Indexación en marcha",
         description: "Solo se procesa lo que cambió. En unos segundos verás las cifras al día.",
-        open: true,
         autoCloseMs: 3000,
       })
       // El índice avanza en segundo plano: una relectura corta basta para el caso normal
@@ -137,7 +134,6 @@ export function RecognitionSettingsView() {
         tone: "error",
         title: "No se pudo iniciar la indexación",
         description: errorMessage(err),
-        open: true,
       })
     } finally {
       setReindexing(false)
@@ -154,10 +150,10 @@ export function RecognitionSettingsView() {
     setSavingEnrichment(true)
     try {
       await updateRecognitionSettings(next)
-      showAlert({ tone: "success", ...success, open: true, autoCloseMs: 3000 })
+      showAlert({ tone: "success", ...success, autoCloseMs: 3000 })
     } catch (err) {
       setSettings(previous)
-      showAlert({ tone: "error", title: "No se pudo guardar el cambio", description: errorMessage(err), open: true })
+      showAlert({ tone: "error", title: "No se pudo guardar el cambio", description: errorMessage(err) })
     } finally {
       setSavingEnrichment(false)
     }
@@ -172,12 +168,11 @@ export function RecognitionSettingsView() {
         tone: "success",
         title: "Enriquecimiento en marcha",
         description: "Solo se genera lo que falta o quedó desactualizado. Las cifras se actualizan en segundos.",
-        open: true,
         autoCloseMs: 3000,
       })
       window.setTimeout(() => void getEnrichmentStats().then(setStats).catch(() => undefined), 4000)
     } catch (err) {
-      showAlert({ tone: "error", title: "No se pudo iniciar el enriquecimiento", description: errorMessage(err), open: true })
+      showAlert({ tone: "error", title: "No se pudo iniciar el enriquecimiento", description: errorMessage(err) })
     } finally {
       setEnriching(false)
     }
@@ -192,7 +187,6 @@ export function RecognitionSettingsView() {
         tone: "success",
         title: "Clasificación en marcha",
         description: "Lo que fijaste tú no se toca. Las cifras se actualizan en segundos.",
-        open: true,
         autoCloseMs: 3000,
       })
       window.setTimeout(
@@ -200,7 +194,7 @@ export function RecognitionSettingsView() {
         4000,
       )
     } catch (err) {
-      showAlert({ tone: "error", title: "No se pudo iniciar la clasificación", description: errorMessage(err), open: true })
+      showAlert({ tone: "error", title: "No se pudo iniciar la clasificación", description: errorMessage(err) })
     } finally {
       setClassifying(false)
     }

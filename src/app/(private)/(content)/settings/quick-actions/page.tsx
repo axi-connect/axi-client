@@ -31,7 +31,6 @@ export default function QuickActionsPage() {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudieron cargar las acciones rápidas"),
-        open: true,
       })
     }
   }

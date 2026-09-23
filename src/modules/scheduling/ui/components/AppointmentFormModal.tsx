@@ -74,7 +74,6 @@ export function AppointmentFormModal({
         showAlert({
           tone: "error",
           title: errorMessage(err, "La cita ya no existe"),
-          open: true,
         });
         close();
       }

@@ -74,7 +74,6 @@ export default function Contact360Page({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo cargar el contacto"),
-        open: true,
       });
       router.replace("/crm/contacts");
     }

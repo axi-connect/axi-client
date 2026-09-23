@@ -81,7 +81,6 @@ export function TransitionConfirmDialog({
         tone: "error",
         title: "No se pudo completar la acción",
         description: result.message,
-        open: true,
       });
     }
   }

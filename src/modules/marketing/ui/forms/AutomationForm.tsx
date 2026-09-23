@@ -89,7 +89,6 @@ export function AutomationForm({
           showAlert({
             tone: "success",
             title: automation ? "Regla actualizada" : "Regla creada, apagada",
-            open: true,
           });
           onSaved(saved);
         } catch (error) {
@@ -97,7 +96,6 @@ export function AutomationForm({
             showAlert({
               tone: "error",
               title: errorMessage(error, "No se pudo guardar la regla"),
-              open: true,
             });
           }
         }

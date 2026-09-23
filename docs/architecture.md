@@ -443,7 +443,7 @@ Dos namespaces del backend: **`/inbox`** (eventos de conversación/uso/notificac
 
 **Setup shadcn/ui** (`components.json`): estilo **new-york**, `rsc: true`, `tsx: true`, Tailwind con `cssVariables` y `baseColor: zinc` (sin `tailwind.config` — v4), iconos **lucide**. Alias: `ui → @/shared/components/ui`, `utils → @/core/lib/utils`, `lib → @/core/lib`, `hooks → @/core/hooks`.
 
-**Primitivos** (`shared/components/ui/`): `alert`, `avatar` (imagen con fallback de inicial), `badge`, `brand-loader`/`brand-mark`, `button` (+`button-group`), `command`, `context-menu`, `dialog`, `dropdown-menu`, `floating-alert`, `form`, `input`, `label`, `modal`, `notice` (`StatusAlert`), `pagination` (`BasicPagination`), `popover`, `progress`, `select`, `separator`, `sheet`, `skeleton`, `sparkles`, `table`, `tabs`, `textarea`, `tooltip`. Variantes con **cva**.
+**Primitivos** (`shared/components/ui/`): `alert`, `avatar` (imagen con fallback de inicial), `badge`, `brand-loader`/`brand-mark`, `button` (+`button-group`), `command`, `context-menu`, `dialog`, `dropdown-menu`, `form`, `input`, `label`, `modal`, `pagination` (`BasicPagination`), `popover`, `progress`, `select`, `separator`, `sheet`, `skeleton`, `sparkles`, `table`, `tabs`, `textarea`, `tooltip`. Variantes con **cva**.
 
 **Theming** (`src/app/globals.css`, Tailwind v4 `@theme inline`):
 - Tokens de marca (`:root`): `--axi-brand: #E65759`, `--axi-brand-2: #e02f2f`, `--axi-muted: #f4f4f5`. Dark (`.dark`): `--axi-brand: #fb7185`, `--axi-brand-2: #df4f4f`, `--axi-muted: #18181b`.

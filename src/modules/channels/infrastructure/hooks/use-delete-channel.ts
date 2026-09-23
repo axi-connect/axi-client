@@ -50,13 +50,12 @@ export function useDeleteChannel({ onDeleted }: { onDeleted?: (channelId: string
                 await deleteChannel(channel.id);
                 removeChannel(channel.id);
                 closeModal();
-                showAlert({ tone: "success", title: "Canal eliminado", open: true, autoCloseMs: 3500 });
+                showAlert({ tone: "success", title: "Canal eliminado", autoCloseMs: 3500 });
                 onDeleted?.(channel.id);
               } catch (err) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo eliminar el canal"),
-                  open: true,
                 });
               } finally {
                 deletingRef.current = false;

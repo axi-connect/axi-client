@@ -28,7 +28,6 @@ import {
 } from "@/modules/catalog/infrastructure/services/product-enrichment-service.adapter";
 import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = AppAlert;
 
 /**
  * Sección «Búsqueda con IA» del detalle del producto (plan catalog_enrichment,
@@ -50,7 +49,7 @@ export function ProductEnrichmentSection({
   /** `canManage` y la categoría NO gobernada (`locked_fields` del backend). */
   canApplyCategory: boolean;
   onCategoryApplied: () => void | Promise<void>;
-  setAlert?: (cfg: AlertConfig) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const [enrichment, setEnrichment] = useState<ProductEnrichmentDTO | null>(product.enrichment ?? null);
   const [busy, setBusy] = useState<"regenerate" | "save" | "toggle" | "category" | null>(null);

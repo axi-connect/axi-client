@@ -154,7 +154,6 @@ export function ContactImportWizard({
           tone: "error",
           title: "No pudimos usar ese archivo",
           description: reason,
-          open: true,
         });
         return;
       }
@@ -179,7 +178,6 @@ export function ContactImportWizard({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo iniciar la importación"),
-        open: true,
       });
     } finally {
       setSubmitting(false);

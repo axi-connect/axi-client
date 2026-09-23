@@ -199,12 +199,11 @@ export function CreateHsmTemplateModal({
         title: isEditing ? "Enviada de nuevo a revisión" : "Enviada a revisión de Meta",
         description:
           "Suele decidir en minutos; puede tardar hasta 48 h. Mientras haya alguna en revisión, la pantalla se refresca sola.",
-        open: true,
       });
       onCreated(created);
       onOpenChange(false);
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "Meta rechazó la plantilla"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "Meta rechazó la plantilla") });
     } finally {
       setSubmitting(false);
     }

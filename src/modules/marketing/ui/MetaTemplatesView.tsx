@@ -151,13 +151,12 @@ export function MetaTemplatesView() {
             void (async () => {
               try {
                 await deleteHsmTemplate(template.id);
-                showAlert({ tone: "success", title: "Plantilla borrada", open: true });
+                showAlert({ tone: "success", title: "Plantilla borrada" });
                 if (channelId !== null) await load(channelId);
               } catch (err) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "Meta no dejó borrarla"),
-                  open: true,
                 });
               }
             })();
@@ -178,14 +177,12 @@ export function MetaTemplatesView() {
           synced === 0
             ? "Meta no devolvió plantillas nuevas"
             : `${synced} ${synced === 1 ? "plantilla sincronizada" : "plantillas sincronizadas"}`,
-        open: true,
       });
       await load(channelId);
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "Meta rechazó la sincronización"),
-        open: true,
       });
     } finally {
       setSyncing(false);

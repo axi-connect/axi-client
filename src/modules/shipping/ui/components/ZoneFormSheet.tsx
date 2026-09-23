@@ -84,7 +84,7 @@ export function ZoneFormSheet({
       else await createShippingZone(toCreateZoneDTO(values));
       onSaved();
       onOpenChange(false);
-      showAlert({ tone: "success", title: isEditing ? "Zona actualizada" : "Zona creada", open: true, autoCloseMs: 3000 });
+      showAlert({ tone: "success", title: isEditing ? "Zona actualizada" : "Zona creada", autoCloseMs: 3000 });
     } catch (error) {
       setErrors({ name: errorMessage(error, "No se pudo guardar la zona. Revisa el nombre e inténtalo de nuevo.") });
     } finally {

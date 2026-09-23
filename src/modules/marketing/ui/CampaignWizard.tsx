@@ -188,7 +188,6 @@ export function CampaignWizard() {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo guardar el borrador"),
-        open: true,
       });
     } finally {
       setBusy(false);
@@ -205,7 +204,6 @@ export function CampaignWizard() {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo recalcular la audiencia"),
-        open: true,
       });
     } finally {
       setBusy(false);
@@ -238,7 +236,6 @@ export function CampaignWizard() {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo lanzar la campaña"),
-                  open: true,
                 });
                 setBusy(false);
               }

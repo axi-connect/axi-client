@@ -32,7 +32,6 @@ import type { AppAlert } from "@/core/notifications";
 
 const BANNER_DISMISSED_KEY = "axi.catalog.photos_banner_dismissed";
 
-type AlertConfig = AppAlert;
 
 /**
  * Sección "Fotos" del detalle (F16): galería del producto (comodín para
@@ -51,7 +50,7 @@ export function ProductPhotosSection({
   product: ProductDTO;
   canManage: boolean;
   onSaved: (updated: ProductDTO) => void;
-  setAlert?: (cfg: AlertConfig) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const { productImages, byVariant } = groupProductImages(product.images);
   const [lightbox, setLightbox] = useState<{ id: string; alt: string } | null>(null);

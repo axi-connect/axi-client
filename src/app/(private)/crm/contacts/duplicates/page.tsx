@@ -38,7 +38,6 @@ export default function ContactDuplicatesPage() {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudieron cargar los duplicados"),
-        open: true,
       });
       setPairs([]);
     }

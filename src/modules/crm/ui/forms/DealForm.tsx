@@ -49,14 +49,13 @@ export function DealForm({
           const deal = await createDeal(toCreateDealDTO(values, pipelineId ?? undefined));
           void fetchBoard();
           void fetchStats();
-          showAlert({ tone: "success", title: "Oportunidad creada", open: true });
+          showAlert({ tone: "success", title: "Oportunidad creada" });
           onSuccess(deal.id);
         } catch (err) {
           if (isHttpError(err) && err.is("crm/deal_already_open")) {
             showAlert({
               tone: "error",
               title: "La conversación de ese contacto ya tiene una oportunidad abierta",
-              open: true,
             });
             return;
           }
@@ -64,7 +63,6 @@ export function DealForm({
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudo crear la oportunidad"),
-              open: true,
             });
           }
         }

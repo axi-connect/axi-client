@@ -149,7 +149,6 @@ export function QuickActionsMenu({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo enviar la acción"),
-        open: true,
       })
     } finally {
       setExecuting(false)

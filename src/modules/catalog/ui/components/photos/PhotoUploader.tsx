@@ -11,7 +11,6 @@ import {
 } from "@/modules/catalog/domain/product";
 import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = AppAlert;
 
 /**
  * Tile de subida (drag&drop + click) para una galería. Valida formato y
@@ -32,7 +31,7 @@ export function PhotoUploader({
   remaining: number;
   disabled: boolean;
   onUploaded: () => void | Promise<void>;
-  setAlert?: (cfg: AlertConfig) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);

@@ -26,8 +26,6 @@ export type AppAlert = {
   description?: string
   actions?: AlertAction[]
   autoCloseMs?: number
-  /** Heredado del aviso anterior; no tiene efecto. */
-  open?: boolean
 }
 
 /**

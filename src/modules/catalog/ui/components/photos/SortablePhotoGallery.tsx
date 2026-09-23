@@ -25,7 +25,6 @@ import { PhotoTile } from "./PhotoTile";
 import { PhotoUploader } from "./PhotoUploader";
 import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = AppAlert;
 
 /**
  * Galería de UN contenedor (producto o una variante) con drag&drop de
@@ -60,7 +59,7 @@ export function SortablePhotoGallery({
   onDelete: (image: ProductImageDTO) => void;
   onRetryImport?: (image: ProductImageDTO) => void;
   onImageError?: () => void;
-  setAlert?: (cfg: AlertConfig) => void;
+  setAlert?: (alert: AppAlert) => void;
   /** Mensaje cuando la galería está vacía (p.ej. fallback de variante). */
   emptyHint?: React.ReactNode;
   className?: string;

@@ -95,7 +95,6 @@ export function DealDetailRail({ dealId, onClose }: { dealId: string; onClose: (
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo cargar la oportunidad"),
-        open: true,
       });
       onClose();
     }
@@ -119,19 +118,19 @@ export function DealDetailRail({ dealId, onClose }: { dealId: string; onClose: (
       const fresh = await updateDeal(dealId, dto);
       setDeal(fresh);
       void refreshBoardDeal(dealId);
-      showAlert({ tone: "success", title: successTitle, open: true });
+      showAlert({ tone: "success", title: successTitle });
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar") });
     }
   };
 
   const handleTransition = async (action: "reopen") => {
     const result = await transition(dealId, action);
     if (result.ok) {
-      showAlert({ tone: "success", title: "Oportunidad reabierta", open: true });
+      showAlert({ tone: "success", title: "Oportunidad reabierta" });
       void load();
     } else {
-      showAlert({ tone: "error", title: result.message, open: true });
+      showAlert({ tone: "error", title: result.message });
     }
   };
 

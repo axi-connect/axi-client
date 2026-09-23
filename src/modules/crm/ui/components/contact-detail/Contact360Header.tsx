@@ -93,7 +93,6 @@ export function Contact360Header({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo reasignar el dueño"),
-        open: true,
       });
     }
   };
@@ -101,13 +100,12 @@ export function Contact360Header({
   const handleDelete = async () => {
     try {
       await deleteContact(contact.id);
-      showAlert({ tone: "success", title: "Contacto eliminado", open: true });
+      showAlert({ tone: "success", title: "Contacto eliminado" });
       router.replace("/crm/contacts");
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo eliminar el contacto"),
-        open: true,
       });
     } finally {
       closeModal();
@@ -116,7 +114,7 @@ export function Contact360Header({
 
   const copy = (value: string) => {
     void navigator.clipboard?.writeText(value);
-    showAlert({ tone: "success", title: "Copiado al portapapeles", open: true });
+    showAlert({ tone: "success", title: "Copiado al portapapeles" });
   };
 
   return (

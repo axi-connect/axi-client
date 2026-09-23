@@ -71,7 +71,7 @@ export function PipelineBoard({
     const to = String(event.over.id);
     if (deal.stage_id === to) return;
     void moveDeal(deal.id, to).then((result) => {
-      if (!result.ok) showAlert({ tone: "error", title: result.message, open: true });
+      if (!result.ok) showAlert({ tone: "error", title: result.message });
     });
   }
 
