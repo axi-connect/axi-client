@@ -30,6 +30,7 @@ export function RouteHero({ pace, plan }: { pace: CommercialPaceDTO; plan: Comme
   const projected =
     learning || pace.projected_revenue_cents === null || target <= 0 ? null : pace.projected_revenue_cents / target;
   const sales = pace.key_results.find((kr) => kr.key === "sales");
+  const projection = learning ? null : projectionLine(pace.projected_revenue_cents, target, pace.currency);
 
   const headline = paceHeadline({
     status,
@@ -61,7 +62,12 @@ export function RouteHero({ pace, plan }: { pace: CommercialPaceDTO; plan: Comme
         done={done / 100}
         expected={expected}
         projected={projected}
-        projectedLabel={learning ? null : projectionLine(pace.projected_revenue_cents, target, pace.currency)}
+        projectedLabel={projection}
+        figures={{
+          actual: formatMillions(pace.actual_revenue_cents, pace.currency),
+          target: formatMoney(target, pace.currency),
+          projected: projection,
+        }}
         weeks={weekTicks(pace.period_start, pace.period_end, pace.weekdays)}
         progress={t}
       />

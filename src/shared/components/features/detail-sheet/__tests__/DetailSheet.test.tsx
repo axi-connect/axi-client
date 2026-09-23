@@ -121,4 +121,35 @@ describe("DetailSheet", () => {
     )
     await waitFor(() => expect(calls).toEqual(["a", "c"]))
   })
+
+  it("al cerrarse (o desmontarse, como al hacer «atrás» en una ruta interceptada) el foco vuelve al disparador", async () => {
+    function Harness({ open, mounted = true }: { open: boolean; mounted?: boolean }) {
+      return (
+        <Wrapper>
+          <button type="button">Abrir detalle</button>
+          {mounted ? (
+            <DetailSheet open={open} onOpenChange={() => {}} title="Detalle">
+              <button type="button">Dentro</button>
+            </DetailSheet>
+          ) : null}
+        </Wrapper>
+      )
+    }
+    const { rerender } = render(<Harness open={false} />)
+    const trigger = screen.getByRole("button", { name: "Abrir detalle" })
+    trigger.focus()
+    rerender(<Harness open />)
+    await findBackdrop()
+    // Radix atrapa el foco dentro del panel mientras está abierto.
+    await waitFor(() => expect(document.activeElement).not.toBe(trigger))
+    rerender(<Harness open mounted={false} />)
+    await waitFor(() => expect(document.activeElement).toBe(trigger))
+
+    // Y cerrando con `open={false}` (el panel sigue montado).
+    rerender(<Harness open />)
+    await findBackdrop()
+    await waitFor(() => expect(document.activeElement).not.toBe(trigger))
+    rerender(<Harness open={false} />)
+    await waitFor(() => expect(document.activeElement).toBe(trigger))
+  })
 })

@@ -20,6 +20,12 @@ interface RouteLineProps {
   /** Franja del panel: 28 px de alto, sin semanas ni bandera. */
   compact?: boolean;
   /**
+   * Las cifras, ya formateadas, para la etiqueta accesible: el lector de
+   * pantalla oye «$ 18,9 M de $ 30.000.000» y no solo porcentajes. La
+   * proyección, con su importe («$ 24,6 M · 82 %»).
+   */
+  figures?: { actual: string; target: string; projected?: string | null };
+  /**
    * Progreso de entrada 0–1 aportado por el padre (el hero comparte un solo
    * motor con la cifra grande). Sin él la línea anima por su cuenta.
    */
@@ -28,6 +34,16 @@ interface RouteLineProps {
 }
 
 const PAD_PCT = 1.2;
+
+/**
+ * La pista (lo que falta del mes) mezcla el texto con el fondo al 50 %: ≥ 3:1
+ * contra el fondo en claro (3,41:1) y en oscuro (4,71:1), el mínimo AA de un
+ * elemento gráfico (WCAG 1.4.11). El 6 % de `--color-secondary` daba 1,1:1 y
+ * el 35 % sugerido, 2,22:1 en claro. Lo fija `RouteLine.test.tsx` leyendo los
+ * tokens de `globals.css`.
+ */
+export const ROUTE_TRACK_MIX_PCT = 50;
+const TRACK_COLOR = `color-mix(in srgb, var(--foreground) ${String(ROUTE_TRACK_MIX_PCT)}%, var(--background))`;
 /** Hasta dónde puede asomar la proyección más allá de la bandera (1 = la meta). */
 const PROJECTION_MAX = 1.04;
 const track = (value: number, max = 1): string => `${String(PAD_PCT + Math.min(max, Math.max(0, value)) * (100 - 2 * PAD_PCT))}%`;
@@ -67,7 +83,17 @@ function SelfDrivenRouteLine(props: RouteLineProps) {
   return <RouteLineBase {...props} progress={t} />;
 }
 
-function RouteLineBase({ done, expected = null, projected = null, projectedLabel = null, weeks = [], compact = false, progress: t, className }: RouteLineProps & { progress: number }) {
+function RouteLineBase({
+  done,
+  expected = null,
+  projected = null,
+  projectedLabel = null,
+  weeks = [],
+  compact = false,
+  figures,
+  progress: t,
+  className,
+}: RouteLineProps & { progress: number }) {
   const gradientId = useId();
 
   const doneClamped = Math.min(1, Math.max(0, done));
@@ -78,9 +104,15 @@ function RouteLineBase({ done, expected = null, projected = null, projectedLabel
   const height = compact ? 28 : 40;
   const y = height / 2;
   const label = [
-    `Ruta del mes: ${String(Math.round(doneClamped * 100))} % recorrido`,
+    figures === undefined
+      ? `Ruta del mes: ${String(Math.round(doneClamped * 100))} % recorrido`
+      : `Ruta del mes: ${figures.actual} de ${figures.target}, ${String(Math.round(doneClamped * 100))} % recorrido`,
     expected !== null ? `${String(Math.round(expected * 100))} % esperado a hoy` : null,
-    showProjection ? `proyección ${String(Math.round(projected * 100))} %` : null,
+    showProjection
+      ? figures?.projected != null
+        ? `proyección ${figures.projected}`
+        : `proyección ${String(Math.round(projected * 100))} %`
+      : null,
   ]
     .filter((part) => part !== null)
     .join(", ");
@@ -105,7 +137,7 @@ function RouteLineBase({ done, expected = null, projected = null, projectedLabel
             <stop offset="1" stopColor="var(--color-brand-2)" />
           </linearGradient>
         </defs>
-        <line x1={track(0)} x2={track(1)} y1={y} y2={y} stroke="var(--color-secondary)" strokeWidth={compact ? 6 : 8} strokeLinecap="round" />
+        <line x1={track(0)} x2={track(1)} y1={y} y2={y} stroke={TRACK_COLOR} strokeWidth={compact ? 6 : 8} strokeLinecap="round" />
         {!compact
           ? weeks.slice(0, -1).map((week) => (
               <line
@@ -125,7 +157,9 @@ function RouteLineBase({ done, expected = null, projected = null, projectedLabel
             x2={track(projClamped, PROJECTION_MAX)}
             y1={y}
             y2={y}
-            stroke="var(--color-muted-foreground)"
+            // Sobre la pista al 50 %: el trazo va en el color del texto para
+            // seguir leyéndose (el gris apagado desaparecía encima).
+            stroke="var(--color-foreground)"
             strokeWidth={2}
             strokeDasharray="3 6"
             strokeLinecap="round"

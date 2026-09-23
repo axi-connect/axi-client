@@ -6,6 +6,7 @@ import { ArrowRight, Route } from "lucide-react";
 
 import { formatMoney } from "@/core/lib/format";
 import { formatInteger } from "@/core/lib/commercial-units";
+import { projectionLine } from "@/modules/commercial/domain/copy";
 import { formatMillions, formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { PACE_BADGES } from "@/modules/commercial/domain/labels";
 import { displayStatus, expectedPct, gap, isLearning, progressPct } from "@/modules/commercial/domain/pace";
@@ -103,7 +104,18 @@ export function GoalProgressBlock() {
         </span>
         <StatusBadge status={displayStatus(p)} map={PACE_BADGES} appearance="dot" />
       </p>
-      <RouteLine compact done={done / 100} expected={expected} projected={projected} className="mt-1" />
+      <RouteLine
+        compact
+        done={done / 100}
+        expected={expected}
+        projected={projected}
+        figures={{
+          actual: formatMillions(p.actual_revenue_cents, p.currency),
+          target: formatMoney(p.target_revenue_cents, p.currency),
+          projected: learning ? null : projectionLine(p.projected_revenue_cents, p.target_revenue_cents, p.currency),
+        }}
+        className="mt-1"
+      />
     </section>
   );
 }
