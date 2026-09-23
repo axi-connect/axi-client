@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useReconnect } from "@/core/realtime/use-reconnect";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useOrdersStore } from "@/modules/orders/infrastructure/stores/orders.store";
 
@@ -15,7 +15,6 @@ import { useOrdersStore } from "@/modules/orders/infrastructure/stores/orders.st
 export function useOrdersSocket() {
   const { socket, connected } = useSocket("inbox");
   const store = useOrdersStore;
-  const wasConnectedRef = useRef(false);
 
   useSocketEvent(socket, "order.created", (payload) => {
     store.getState().onOrderCreated(payload);
@@ -37,13 +36,8 @@ export function useOrdersSocket() {
     store.getState().onOrderUpdated(payload);
   });
 
-  useEffect(() => {
-    if (connected && wasConnectedRef.current) {
-      // Reconexión (no primera conexión): recuperar lo perdido
-      void store.getState().fetchBoard();
-    }
-    wasConnectedRef.current = connected;
-  }, [connected, store]);
+  // Reconexión (no primera conexión): recuperar lo perdido
+  useReconnect(connected, () => store.getState().fetchBoard());
 
   return { connected };
 }

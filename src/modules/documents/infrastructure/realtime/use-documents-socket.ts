@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 import type { DocumentLifecycleEvent } from "@/core/realtime/events";
+import { useReconnect } from "@/core/realtime/use-reconnect";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 
 /**
@@ -22,9 +23,6 @@ export function useDocumentsSocket(options: {
   const { socket, connected } = useSocket("inbox");
   const optionsRef = useRef(options);
   optionsRef.current = options;
-  // «Alguna vez conectado»: la reconexión es la SEGUNDA subida. Un flag que se
-  // apaga al caer el socket no la vería nunca.
-  const everConnectedRef = useRef(false);
 
   const handle = (event: DocumentLifecycleEvent) => {
     const current = optionsRef.current;
@@ -34,13 +32,10 @@ export function useDocumentsSocket(options: {
   useSocketEvent(socket, "document.issued", handle);
   useSocketEvent(socket, "document.failed", handle);
 
-  useEffect(() => {
-    if (!connected) return;
-    if (everConnectedRef.current && optionsRef.current.enabled !== false) {
+  useReconnect(connected, () => {
+    if (optionsRef.current.enabled !== false)
       void optionsRef.current.onChange();
-    }
-    everConnectedRef.current = true;
-  }, [connected]);
+  });
 
   return { connected };
 }

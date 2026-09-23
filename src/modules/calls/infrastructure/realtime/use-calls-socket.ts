@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useReconnect } from "@/core/realtime/use-reconnect";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useLiveCallsStore } from "@/modules/calls/infrastructure/stores/live-calls.store";
 
@@ -14,7 +15,6 @@ import { useLiveCallsStore } from "@/modules/calls/infrastructure/stores/live-ca
 export function useCallsSocket() {
   const { socket, connected } = useSocket("inbox");
   const store = useLiveCallsStore;
-  const wasConnectedRef = useRef(false);
 
   useSocketEvent(socket, "call.started", () => store.getState().scheduleRefresh());
   useSocketEvent(socket, "call.status_changed", () => store.getState().scheduleRefresh());
@@ -23,12 +23,7 @@ export function useCallsSocket() {
   // el KPI del ciclo cambia).
   useSocketEvent(socket, "call.summary_ready", () => store.getState().scheduleRefresh());
 
-  useEffect(() => {
-    if (connected && wasConnectedRef.current) {
-      void store.getState().fetchLive();
-    }
-    wasConnectedRef.current = connected;
-  }, [connected, store]);
+  useReconnect(connected, () => store.getState().fetchLive());
 
   // Un re-fetch agendado no debe disparar contra una vista ya desmontada.
   useEffect(() => () => store.getState().cancelRefresh(), [store]);

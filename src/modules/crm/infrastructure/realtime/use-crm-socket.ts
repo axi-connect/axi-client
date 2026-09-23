@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useReconnect } from "@/core/realtime/use-reconnect";
 import { useSocket, useSocketEvent } from "@/core/realtime/use-socket";
 import { useBoardStore } from "@/modules/crm/infrastructure/stores/board.store";
 
@@ -13,7 +13,6 @@ import { useBoardStore } from "@/modules/crm/infrastructure/stores/board.store";
 export function useCrmSocket() {
   const { socket, connected } = useSocket("inbox");
   const store = useBoardStore;
-  const wasConnectedRef = useRef(false);
 
   useSocketEvent(socket, "crm.deal_created", (payload) => {
     store.getState().onDealCreated(payload);
@@ -39,13 +38,10 @@ export function useCrmSocket() {
     store.getState().onDealStalled(payload);
   });
 
-  useEffect(() => {
-    if (connected && wasConnectedRef.current) {
-      void store.getState().fetchBoard();
-      void store.getState().fetchStats();
-    }
-    wasConnectedRef.current = connected;
-  }, [connected, store]);
+  useReconnect(connected, () => {
+    void store.getState().fetchBoard();
+    void store.getState().fetchStats();
+  });
 
   return { connected };
 }
