@@ -1,4 +1,4 @@
-import { API_ERROR_CODES, HttpError, isHttpError, parseHttpError } from "../problem";
+import { API_ERROR_CODES, HttpError, emptyIfForbidden, isHttpError, parseHttpError } from "../problem";
 
 /**
  * Fixtures basados en respuestas reales del GlobalExceptionFilter del backend
@@ -100,5 +100,19 @@ describe("parseHttpError", () => {
     const error = await parseHttpError(fakeResponse({ status: 404, body: { code: "resource/not_found", title: "Not found", status: 404, type: "x" } }));
     expect(isHttpError(error)).toBe(true);
     expect(isHttpError(new Error("x"))).toBe(false);
+  });
+});
+
+describe("emptyIfForbidden", () => {
+  it("un 403 se convierte en el valor vacío: la sección no existe para este usuario", () => {
+    const forbidden = new HttpError({ status: 403, code: "auth/forbidden", message: "Forbidden" });
+    expect(emptyIfForbidden({ data: [] })(forbidden)).toEqual({ data: [] });
+  });
+
+  it("cualquier otro error SUBE: una API caída no es «no tiene pedidos»", () => {
+    const down = new HttpError({ status: 500, code: "http/500", message: "HTTP 500" });
+    expect(() => emptyIfForbidden([])(down)).toThrow(down);
+    const network = new TypeError("fetch failed");
+    expect(() => emptyIfForbidden([])(network)).toThrow(network);
   });
 });

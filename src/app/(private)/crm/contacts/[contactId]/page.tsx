@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { emptyIfForbidden } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { BrandLoader } from "@/shared/components/ui/brand-loader";
@@ -65,9 +66,12 @@ export default function Contact360Page({
         getContactProfile(contactId),
         getContactTags(contactId),
         listDeals({ contact_id: contactId, page_size: 25 }),
-        // Sin permiso de pedidos la card sale vacía, no la página entera
-        listOrders({ contact_id: contactId, page_size: 10 }).catch(() => ({ data: [] })),
-        listAssignableUsers().catch(() => []),
+        // Solo SIN PERMISO de pedidos o de usuarios la sección sale vacía y la
+        // página sigue; cualquier otro error se ve (una API caída no es «sin pedidos»)
+        listOrders({ contact_id: contactId, page_size: 10 }).catch(
+          emptyIfForbidden<{ data: OrderDTO[] }>({ data: [] }),
+        ),
+        listAssignableUsers().catch(emptyIfForbidden<Awaited<ReturnType<typeof listAssignableUsers>>>([])),
       ]);
       setBundle({
         contact,

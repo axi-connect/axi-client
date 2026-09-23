@@ -192,3 +192,17 @@ export async function parseHttpError(res: Response): Promise<HttpError> {
     retryAfterSeconds,
   });
 }
+
+/**
+ * Para una sección OPCIONAL de una página compuesta: si el usuario no tiene el
+ * permiso de esa sección (403) se pinta vacía y el resto de la página sigue;
+ * cualquier otro error (red caída, 500, 404 del recurso) sube y se ve. Un
+ * `catch` que devuelve vacío para todo convertiría una API caída en «este
+ * contacto no tiene pedidos», que es mentira.
+ */
+export function emptyIfForbidden<T>(fallback: T): (error: unknown) => T {
+  return (error) => {
+    if (isHttpError(error) && error.status === 403) return fallback;
+    throw error;
+  };
+}
