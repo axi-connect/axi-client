@@ -61,6 +61,13 @@ Los iconos por kind viven en `ui/components/settings/journey/stage-kind-icons.ts
   `resumeAiMoves` (`PATCH /crm/deals/:id {ai_moves_paused:false}`).
 - `journey-events.ts`: `emitJourneyChanged(detail)` y
   `subscribeJourneyChanged(contactId, handler) → unsubscribe`.
+- `realtime/use-journey-realtime.ts` (F8): escucha `crm.deal_stage_changed` y
+  `crm.deal_stage_reverted` del namespace `/inbox` y, si el deal es del
+  contacto abierto, reemite `crm:journey:changed` con debounce de 1 s. Lo
+  monta UNA vez la página del 360 (`crm/contacts/[contactId]/page.tsx`): la
+  card, el historial y la página ya escuchan el CustomEvent, así que un paso
+  del agente, de una regla o de otra pestaña los recarga sin un segundo
+  camino. Test en `realtime/__tests__/use-journey-realtime.test.tsx`.
 - `hooks/use-revert-stage-change.ts`: **el único** «Deshacer». Confirma en un
   modal («¿Deshacer el paso a X?» · «La oportunidad vuelve a {from} y queda en
   el historial» + la frase de la pausa si lo movió la IA; la acción NO es
@@ -155,7 +162,24 @@ slice; `STAGE_KINDS`/`CADENCE_CHANNELS`/`EXHAUSTED_ACTIONS` son listas de ORDEN
 tipadas contra el contrato y los `Record<StageKind, …>` son la verja de
 exhaustividad.
 
+## Tiempo real y campanita (F8)
+- `core/realtime/events.ts`: `CrmDealStageChangedEvent` gana los campos del
+  recorrido (`to_stage_id`, `from_kind`/`to_kind`, `reason`, `rule_code`,
+  `actor_type`, `event_id`, `from_stage_name`/`to_stage_name`,
+  `contact_name`), opcionales para no romperse con un emisor viejo; nuevo
+  `CrmDealStageRevertedEvent`.
+- Campanita: `crm.deal_stage_changed_by_agent` («El agente movió a Ana a …»)
+  abre la ficha del contacto (`notifications/domain/notification-target.ts`);
+  el resto de `crm.deal_*` sigue abriendo el deal.
+
 ## Deuda
+- **`crm.deal_stage_reverted` no viaja por WS**: el servidor lo publica en su
+  bus pero no está en `REALTIME_EVENTS`; el hook lo escucha para cuando lo
+  esté. Hoy un «Deshacer» de otra pestaña no refresca esta ficha (el local sí).
+- **El kanban no recarga al reconectar** (`realtime/use-crm-socket.ts`): la
+  comparación `connected && wasConnected` con el ref actualizado en cada
+  cambio nunca es cierta en false→true. Fuera de F8; el molde bueno está en
+  `commercial/infrastructure/realtime/use-commercial-realtime.ts`.
 - **«Pausar cadencia» no se pinta**: no existe endpoint. Cuando llegue, la fila
   «Cadencia» de `ContactJourneyCard.tsx` gana la acción (`hover-reveal`).
 - **Deshacer confía en el servidor**: la card y el historial obedecen a
