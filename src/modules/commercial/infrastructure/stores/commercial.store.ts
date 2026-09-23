@@ -65,8 +65,19 @@ interface CommercialState {
   blocker: CommercialBlocker;
   saving: boolean;
 
-  /** Carga la meta y, si la hay, el plan y el ritmo en paralelo (cada uno falla por su cuenta). */
+  /**
+   * Carga la meta y, si la hay, el plan y el ritmo en paralelo (cada uno falla
+   * por su cuenta). Con una carga en vuelo devuelve ESA promesa: en
+   * navegación dura la ruta del mes y el panel de un resultado montan a la
+   * vez y ambos ven `idle` en su primer render (C8).
+   */
   load: () => Promise<void>;
+  /**
+   * Vuelve a cargar todo aunque haya una carga en vuelo: espera a que termine
+   * y pide otra, porque la que iba pudo salir ANTES del cambio que avisa el
+   * evento de tiempo real (F8). No es para el primer montaje: para eso `load`.
+   */
+  refresh: () => Promise<void>;
   /** Solo plan y ritmo, para después de un cambio o un evento. */
   reloadPace: () => Promise<void>;
   /** Fija la meta. Lanza el error al llamador (el formulario lo pinta) y recarga plan y ritmo. */
@@ -77,12 +88,16 @@ interface CommercialState {
   /** Pendientes + aprobadas del mes, en paralelo. Un fallo deja la sección en error sin tumbar la ruta. */
   loadProposals: () => Promise<void>;
   /**
-   * Aprueba (una sola vez: el segundo clic es 409). Lanza al llamador, que
-   * pinta el error; al salir bien guarda el resultado, marca la fila aprobada y
-   * recarga plan y ritmo (el lote puede mover la ruta).
+   * Aprueba (una sola vez: el segundo clic es 409). Con una aprobación de la
+   * MISMA propuesta en vuelo devuelve esa promesa y no hace otro POST (C9: la
+   * fila y el panel tienen su propio `busy`, pero un doble clic entre los dos
+   * no se veía). Lanza al llamador, que pinta el error; un 409 (otra persona o
+   * pestaña la decidió) o un 403 recargan la lista, que ya no dice la verdad
+   * (C4). Al salir bien guarda el resultado, marca la fila aprobada y recarga
+   * plan y ritmo (el lote puede mover la ruta).
    */
   approveProposal: (id: string) => Promise<CommercialApprovalResultDTO>;
-  /** Rechaza con motivo. Lanza al llamador; la fila sale de la lista de pendientes. */
+  /** Rechaza con motivo. Lanza al llamador (409/403 recargan la lista); la fila sale de la lista de pendientes. */
   rejectProposal: (id: string, reason: string | undefined) => Promise<RejectCommercialProposalResultDTO>;
 }
 
@@ -91,6 +106,15 @@ type ProposalDecision = Pick<CommercialProposalDTO, "status" | "decided_at">;
 function blockerFor(error: unknown): CommercialBlocker {
   if (error instanceof HttpError && error.code === API_ERROR_CODES.capabilityNotGranted) return "no_plan";
   return null;
+}
+
+/**
+ * La propuesta ya no está como la pinta la pantalla: la decidió otra persona o
+ * pestaña (`409 cmo/proposal_not_pending`), o este usuario dejó de poder
+ * decidirla (403). Lo que toca es releerla, no reintentar.
+ */
+export function isStaleDecision(error: unknown): boolean {
+  return error instanceof HttpError && (error.status === 409 || error.status === 403);
 }
 
 function isAbort(error: unknown): boolean {
@@ -121,6 +145,10 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       });
   }
   let previewController: AbortController | null = null;
+  /** La carga completa en vuelo (C8): un segundo `load()` la comparte. */
+  let loadInflight: Promise<void> | null = null;
+  /** Aprobaciones en vuelo por id (C9): un doble clic no manda dos POST. */
+  const approving = new Map<string, Promise<CommercialApprovalResultDTO>>();
 
   async function loadPaceAndPlan(): Promise<void> {
     const planSeq = (seq.plan += 1);
@@ -145,6 +173,51 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     ]);
   }
 
+  async function loadAll(): Promise<void> {
+    const goalSeq = (seq.goal += 1);
+    set((state) => ({ goal: loading(state.goal), blocker: null }));
+    let response: GoalResponseDTO;
+    try {
+      response = await getGoal();
+    } catch (error: unknown) {
+      if (seq.goal !== goalSeq) return;
+      const blocker = blockerFor(error);
+      set((state) => ({
+        blocker,
+        goal: blocker === null ? failed(state.goal, errorMessage(error)) : { status: "ready", data: null, error: null },
+      }));
+      return;
+    }
+    if (seq.goal !== goalSeq) return;
+    set({ goal: ready(response) });
+    if (response.goal === null) {
+      // Sin meta no hay plan ni ritmo: pedirlos sería recibir dos 404.
+      seq.plan += 1;
+      seq.pace += 1;
+      set({ plan: idle(), pace: idle() });
+      return;
+    }
+    await loadPaceAndPlan();
+  }
+
+  async function approveOnce(id: string): Promise<CommercialApprovalResultDTO> {
+    let result: CommercialApprovalResultDTO;
+    try {
+      result = await approveProposalApi(id);
+    } catch (error: unknown) {
+      if (isStaleDecision(error)) void get().loadProposals();
+      throw error;
+    }
+    const decidedAt = new Date().toISOString();
+    set((state) => ({
+      decisions: { ...state.decisions, [id]: { status: "approved", decided_at: decidedAt } },
+      approvals: { ...state.approvals, [id]: result },
+      proposals: patchProposal(state.proposals, id, { status: "approved", decided_at: decidedAt }),
+    }));
+    void get().reloadPace();
+    return result;
+  }
+
   return {
     goal: idle(),
     plan: idle(),
@@ -156,31 +229,16 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     blocker: null,
     saving: false,
 
-    load: async () => {
-      const goalSeq = (seq.goal += 1);
-      set((state) => ({ goal: loading(state.goal), blocker: null }));
-      let response: GoalResponseDTO;
-      try {
-        response = await getGoal();
-      } catch (error: unknown) {
-        if (seq.goal !== goalSeq) return;
-        const blocker = blockerFor(error);
-        set((state) => ({
-          blocker,
-          goal: blocker === null ? failed(state.goal, errorMessage(error)) : { status: "ready", data: null, error: null },
-        }));
-        return;
-      }
-      if (seq.goal !== goalSeq) return;
-      set({ goal: ready(response) });
-      if (response.goal === null) {
-        // Sin meta no hay plan ni ritmo: pedirlos sería recibir dos 404.
-        seq.plan += 1;
-        seq.pace += 1;
-        set({ plan: idle(), pace: idle() });
-        return;
-      }
-      await loadPaceAndPlan();
+    load: () => {
+      loadInflight ??= loadAll().finally(() => {
+        loadInflight = null;
+      });
+      return loadInflight;
+    },
+
+    refresh: async () => {
+      if (loadInflight !== null) await loadInflight;
+      await get().load();
     },
 
     reloadPace: async () => {
@@ -240,20 +298,24 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       }
     },
 
-    approveProposal: async (id) => {
-      const result = await approveProposalApi(id);
-      const decidedAt = new Date().toISOString();
-      set((state) => ({
-        decisions: { ...state.decisions, [id]: { status: "approved", decided_at: decidedAt } },
-        approvals: { ...state.approvals, [id]: result },
-        proposals: patchProposal(state.proposals, id, { status: "approved", decided_at: decidedAt }),
-      }));
-      void get().reloadPace();
-      return result;
+    approveProposal: (id) => {
+      const inflight = approving.get(id);
+      if (inflight !== undefined) return inflight;
+      const run = approveOnce(id).finally(() => {
+        approving.delete(id);
+      });
+      approving.set(id, run);
+      return run;
     },
 
     rejectProposal: async (id, reason) => {
-      const result = await rejectProposalApi(id, reason === undefined ? {} : { reason });
+      let result: RejectCommercialProposalResultDTO;
+      try {
+        result = await rejectProposalApi(id, reason === undefined ? {} : { reason });
+      } catch (error: unknown) {
+        if (isStaleDecision(error)) void get().loadProposals();
+        throw error;
+      }
       set((state) => ({
         decisions: { ...state.decisions, [id]: { status: "rejected", decided_at: new Date().toISOString() } },
         proposals:

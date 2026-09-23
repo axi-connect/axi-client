@@ -136,24 +136,48 @@ describe("load", () => {
     release(withGoal);
     await pending;
   });
+
+  it("dos load() a la vez comparten la carga: goal, plan y ritmo se piden una vez (C8)", async () => {
+    serve({ "/commercial/goal": withGoal, "/commercial/plan": { status: "ready" }, "/commercial/pace": { status: "behind" } });
+
+    const first = useCommercialStore.getState().load();
+    const second = useCommercialStore.getState().load();
+    expect(second).toBe(first);
+    await Promise.all([first, second]);
+
+    const paths = mockGet.mock.calls.map(([path]) => path);
+    expect(paths.filter((path) => path === "/commercial/goal")).toHaveLength(1);
+    expect(paths.filter((path) => path === "/commercial/plan")).toHaveLength(1);
+    expect(paths.filter((path) => path === "/commercial/pace")).toHaveLength(1);
+  });
+
+  it("refresh() con una carga en vuelo espera y vuelve a pedir (el evento pudo llegar después)", async () => {
+    serve({ "/commercial/goal": withGoal, "/commercial/plan": { status: "ready" }, "/commercial/pace": { status: "behind" } });
+
+    const first = useCommercialStore.getState().load();
+    await useCommercialStore.getState().refresh();
+    await first;
+
+    expect(mockGet.mock.calls.filter(([path]) => path === "/commercial/goal")).toHaveLength(2);
+  });
 });
 
 describe("carrera entre cargas", () => {
-  it("una respuesta vieja de goal no pisa a la nueva", async () => {
-    const resolvers: Array<(value: unknown) => void> = [];
+  it("una respuesta vieja de goal no pisa la meta que se guardó mientras tanto", async () => {
+    let releaseGoal: (value: unknown) => void = () => {};
     mockGet.mockImplementation((path) =>
-      path === "/commercial/goal" ? new Promise((resolve) => { resolvers.push(resolve); }) : Promise.resolve({}),
+      path === "/commercial/goal" ? new Promise((resolve) => { releaseGoal = resolve; }) : Promise.resolve({}),
     );
+    mockPut.mockResolvedValue(goal);
     const first = useCommercialStore.getState().load();
-    const second = useCommercialStore.getState().load();
-    resolvers[1]({ ...withGoal, goal: null });
-    await second;
-    resolvers[0](withGoal);
+    await useCommercialStore.getState().saveGoal({ target_revenue_cents: 1 });
+    const paceCalls = mockGet.mock.calls.filter(([path]) => path === "/commercial/pace").length;
+    releaseGoal({ ...withGoal, goal: null });
     await first;
 
-    expect(useCommercialStore.getState().goal.data?.goal).toBeNull();
+    expect(useCommercialStore.getState().goal.data?.goal).toEqual(goal);
     // La respuesta vieja tampoco dispara plan/ritmo.
-    expect(mockGet.mock.calls.filter(([path]) => path === "/commercial/pace")).toHaveLength(0);
+    expect(mockGet.mock.calls.filter(([path]) => path === "/commercial/pace")).toHaveLength(paceCalls);
   });
 
   it("guardar la meta y montar la vista a la vez: gana el ritmo más nuevo", async () => {
@@ -276,6 +300,11 @@ function proposalRow(id: string, patch: Partial<CommercialProposalDTO> = {}): Co
 }
 
 /** `/commercial/proposals` responde según `?status=`; el resto, por ruta. */
+/** Deja correr la recarga de la lista que dispara un 409/403 (va en `void`). */
+async function waitForProposals(): Promise<void> {
+  for (let i = 0; i < 5; i += 1) await Promise.resolve();
+}
+
 function serveProposals(byStatus: Record<string, CommercialProposalDTO[] | Promise<unknown>>, routes: Record<string, unknown> = {}): void {
   mockGet.mockImplementation((path, params) => {
     if (path === "/commercial/proposals") {
@@ -368,12 +397,43 @@ describe("propuestas", () => {
     expect(useCommercialStore.getState().proposals.data?.map((row) => row.id)).toEqual(["p2"]);
   });
 
-  it("aprobar que falla lanza al llamador y no toca la lista", async () => {
+  it("aprobar que falla con 409 lanza al llamador, no inventa el resultado y recarga la lista (C4)", async () => {
     useCommercialStore.setState({ proposals: { status: "ready", data: [proposalRow("p1")], error: null } });
-    mockPost.mockRejectedValue(new HttpError({ status: 409, code: "cmo/proposal_already_decided", message: "Ya se decidió" }));
+    mockPost.mockRejectedValue(new HttpError({ status: 409, code: "cmo/proposal_not_pending", message: "Esa propuesta ya fue decidida" }));
+    serveProposals({ pending: [], approved: [proposalRow("p1", { status: "approved", decided_at: "2026-09-21T10:00:00Z" })] });
+    useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
 
-    await expect(useCommercialStore.getState().approveProposal("p1")).rejects.toThrow("Ya se decidió");
-    expect(useCommercialStore.getState().proposals.data?.[0].status).toBe("pending");
+    await expect(useCommercialStore.getState().approveProposal("p1")).rejects.toThrow("Esa propuesta ya fue decidida");
     expect(useCommercialStore.getState().approvals.p1).toBeUndefined();
+    await waitForProposals();
+    expect(mockGet).toHaveBeenCalledWith("/commercial/proposals", { status: "pending" }, undefined);
+    expect(useCommercialStore.getState().proposals.data?.[0]).toMatchObject({ id: "p1", status: "approved" });
+  });
+
+  it("un 403 al aprobar también recarga la lista; un 500 no", async () => {
+    useCommercialStore.setState({ proposals: { status: "ready", data: [proposalRow("p1")], error: null } });
+    serveProposals({ pending: [proposalRow("p1")], approved: [] });
+    mockPost.mockRejectedValueOnce(new HttpError({ status: 403, code: "rbac/permission_denied", message: "no" }));
+    await expect(useCommercialStore.getState().approveProposal("p1")).rejects.toThrow();
+    expect(mockGet).toHaveBeenCalledTimes(2);
+
+    mockGet.mockClear();
+    mockPost.mockRejectedValueOnce(new HttpError({ status: 500, code: "internal", message: "boom" }));
+    await expect(useCommercialStore.getState().approveProposal("p1")).rejects.toThrow();
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+
+  it("doble clic en aprobar: un solo POST y la misma promesa (C9)", async () => {
+    useCommercialStore.setState({ proposals: { status: "ready", data: [proposalRow("p1")], error: null } });
+    let release: (value: unknown) => void = () => {};
+    mockPost.mockReturnValue(new Promise((resolve) => { release = resolve; }));
+
+    const first = useCommercialStore.getState().approveProposal("p1");
+    const second = useCommercialStore.getState().approveProposal("p1");
+    expect(second).toBe(first);
+    release({ applied: [], failed: [] });
+    await Promise.all([first, second]);
+
+    expect(mockPost).toHaveBeenCalledTimes(1);
   });
 });
