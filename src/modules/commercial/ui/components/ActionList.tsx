@@ -1,7 +1,7 @@
 "use client";
 
 import type { CommercialProposalDTO } from "@/modules/commercial/domain/commercial";
-import { LEARNING_PROPOSALS_MESSAGE, NO_PROPOSALS_MESSAGE } from "@/modules/commercial/domain/copy";
+import { LEARNING_PROPOSALS_MESSAGE, NO_PROPOSALS_MESSAGE, PROPOSALS_COMING_MESSAGE } from "@/modules/commercial/domain/copy";
 import { AssistantMark } from "@/shared/components/features/assistant";
 import { ActionRow } from "./ActionRow";
 
@@ -10,10 +10,12 @@ import { ActionRow } from "./ActionRow";
  * superficie del módulo con violeta (D4: axi propone, el dueño aprueba), y la
  * firma es `AssistantMark`, como en todo el producto.
  *
- * En F3 la lista nace vacía: `GET /commercial/proposals` y los botones
- * Aprobar/Ver llegan en F6. El hueco ya dice lo que va a haber aquí.
+ * `proposals` sin definir = F3, las propuestas aún no se cargan: el hueco
+ * dice que llegan, NO «estás al día» (con ritmo bajo sería mentira). Una
+ * lista vacía de verdad (F6) sí dice «Estás al día…».
  */
-export function ActionList({ proposals, learning = false }: { proposals: readonly CommercialProposalDTO[]; learning?: boolean }) {
+export function ActionList({ proposals, learning = false }: { proposals?: readonly CommercialProposalDTO[]; learning?: boolean }) {
+  const message = learning ? LEARNING_PROPOSALS_MESSAGE : proposals === undefined ? PROPOSALS_COMING_MESSAGE : NO_PROPOSALS_MESSAGE;
   return (
     <section aria-labelledby="commercial-actions" className="overflow-hidden rounded-2xl border border-border bg-background shadow-float">
       <header className="flex items-center gap-2 px-4 pt-3.5 pb-1">
@@ -22,10 +24,8 @@ export function ActionList({ proposals, learning = false }: { proposals: readonl
           Axi propone
         </h2>
       </header>
-      {proposals.length === 0 ? (
-        <p className="px-4 pt-2 pb-4 text-[14px] text-muted-foreground">
-          {learning ? LEARNING_PROPOSALS_MESSAGE : NO_PROPOSALS_MESSAGE}
-        </p>
+      {proposals === undefined || proposals.length === 0 ? (
+        <p className="px-4 pt-2 pb-4 text-[14px] text-muted-foreground">{message}</p>
       ) : (
         <ul className="grouped-list rounded-none">
           {proposals.map((proposal) => (

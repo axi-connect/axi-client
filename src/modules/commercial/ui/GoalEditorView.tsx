@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Flag, Route, TriangleAlert } from "lucide-react";
+import { ChevronDown, Flag, Lock, RotateCcw, Route, TriangleAlert } from "lucide-react";
 
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { CommercialPlanDTO, FigureDTO, GoalInputDTO, PlanRateDTO } from "@/modules/commercial/domain/commercial";
 import { GOAL_SAVED_MESSAGE, midMonthLine } from "@/modules/commercial/domain/copy";
-import { formatCount, formatPct, monthLabel } from "@/modules/commercial/domain/format";
-import { toIsoDate } from "@/modules/commercial/domain/weeks";
+import { formatInteger } from "@/core/lib/commercial-units";
+import { formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
+import { useEntitlements } from "@/shared/auth/entitlements.hooks";
+import { EmptyState } from "@/shared/components/features/empty-state";
 import { PriceInput } from "@/shared/components/features/price-input";
 import { Button } from "@/shared/components/ui/button";
 import { Callout } from "@/shared/components/ui/callout";
@@ -21,6 +23,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { CommercialBlockedState } from "./components/CommercialBlockedState";
 import { SourceMark } from "./components/SourceMark";
 
 type Preset = "last" | "plus10" | "plus25" | "custom";
@@ -40,12 +43,19 @@ const PREVIEW_DEBOUNCE_MS = 350;
  * previa del embudo al revés, debounced y con aborto (la cifra que el usuario
  * ya cambió no puede pisar a la nueva). Lo que se toque en «Ajustar supuestos»
  * pasa a decir «lo dijiste tú».
+ *
+ * Mismo gate que la ruta: sin `commercial:read` no hay pantalla; sin la
+ * capacidad `crm` (o con el 403 del servidor) el bloqueado; error de red con
+ * reintento; y sin `commercial:manage` no se pinta el formulario, que solo
+ * produciría un 403 al guardar.
  */
 export function GoalEditorView() {
   const router = useRouter();
   const { showAlert } = useAlert();
   const { hasPermission } = useAuth();
+  const { loaded, hasCapability } = useEntitlements();
   const goal = useCommercialStore((state) => state.goal);
+  const blocker = useCommercialStore((state) => state.blocker);
   const pace = useCommercialStore((state) => state.pace);
   const preview = useCommercialStore((state) => state.preview);
   const saving = useCommercialStore((state) => state.saving);
@@ -54,11 +64,13 @@ export function GoalEditorView() {
   const previewPlan = useCommercialStore((state) => state.previewPlan);
   const cancelPreview = useCommercialStore((state) => state.cancelPreview);
 
+  const canRead = hasPermission("commercial:read");
   const canManage = hasPermission("commercial:manage");
+  const enabled = !loaded || hasCapability("crm");
   const current = goal.data?.goal ?? null;
   const seed = goal.data?.seed ?? null;
   const currency = current?.currency ?? "COP";
-  const month = monthLabel(current?.period_start ?? toIsoDate(new Date()));
+  const month = monthLabel(current?.period_start ?? pace.data?.today ?? monthKeyFallback());
   const lastMonth = seed?.last_month_revenue_cents ?? null;
 
   const [target, setTarget] = useState<number | null>(null);
@@ -69,8 +81,8 @@ export function GoalEditorView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (goal.status === "idle") void load();
-  }, [goal.status, load]);
+    if (enabled && canRead && goal.status === "idle") void load();
+  }, [enabled, canRead, goal.status, load]);
 
   // La cifra inicial: la meta actual, si no la sugerida por la semilla.
   useEffect(() => {
@@ -92,10 +104,10 @@ export function GoalEditorView() {
   }, [target, ticket, closeRate]);
 
   useEffect(() => {
-    if (input === null) return;
+    if (input === null || !canManage) return;
     const timer = setTimeout(() => void previewPlan(input), PREVIEW_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [input, previewPlan]);
+  }, [input, canManage, previewPlan]);
 
   useEffect(() => () => cancelPreview(), [cancelPreview]);
 
@@ -121,13 +133,52 @@ export function GoalEditorView() {
     }
   }
 
-  if (goal.data === null && goal.status !== "error") {
+  if (!canRead) {
+    return (
+      <EmptyState icon={Lock} accent="muted" title="No tienes acceso a Comercial" description="Pídele a un administrador el permiso de lectura del módulo." />
+    );
+  }
+  if (!enabled || blocker === "no_plan") return <CommercialBlockedState />;
+  if (goal.data === null && goal.status === "error") {
+    return (
+      <EmptyState
+        icon={RotateCcw}
+        accent="muted"
+        variant="solid"
+        title="No pude cargar la meta"
+        description={goal.error ?? undefined}
+        action={
+          <Button variant="outline" onClick={() => void load()}>
+            Reintentar
+          </Button>
+        }
+      />
+    );
+  }
+  if (goal.data === null) {
     return (
       <div role="status" aria-label="Cargando" className="mx-auto max-w-[720px] space-y-5">
         <Skeleton className="h-9 w-3/4 rounded-lg" />
         <Skeleton className="h-16 w-full rounded-2xl" />
         <Skeleton className="h-48 w-full rounded-2xl" />
       </div>
+    );
+  }
+
+  if (!canManage) {
+    return (
+      <EmptyState
+        icon={Lock}
+        accent="muted"
+        variant="solid"
+        title="Solo un administrador puede cambiar la meta"
+        description="Pídele a quien administra la cuenta que la fije o la cambie."
+        action={
+          <Button asChild variant="outline">
+            <Link href="/comercial">Volver a la ruta</Link>
+          </Button>
+        }
+      />
     );
   }
 
@@ -140,7 +191,7 @@ export function GoalEditorView() {
         {lastMonth !== null && seed !== null ? (
           <p className="mt-1 text-sm text-muted-foreground">
             El mes pasado: <b className="font-medium text-foreground tabular-nums">{formatMoney(lastMonth, currency)}</b>
-            {seed.last_month_sales !== null ? ` · ${formatCount(seed.last_month_sales)} ventas` : ""}
+            {seed.last_month_sales !== null ? ` · ${formatInteger(seed.last_month_sales)} ventas` : ""}
             {seed.last_month_avg_ticket_cents !== null ? ` · ticket ${formatMoney(seed.last_month_avg_ticket_cents, currency)}` : ""}
           </p>
         ) : (
@@ -162,13 +213,12 @@ export function GoalEditorView() {
 
       <div>
         <Label htmlFor="goal-target" className="sr-only">
-          Meta del mes en pesos
+          Meta del mes en {currency}
         </Label>
         <PriceInput
           id="goal-target"
           value={target}
           currency={currency}
-          disabled={!canManage}
           onChange={(cents) => {
             setTarget(cents);
             setPreset("custom");
@@ -201,7 +251,7 @@ export function GoalEditorView() {
         <div className="grid gap-3 border-t border-border/60 px-4 pt-3 pb-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="goal-ticket">Ticket promedio</Label>
-            <PriceInput id="goal-ticket" value={ticket} currency={currency} disabled={!canManage} onChange={setTicket} placeholder="Como tu historia" />
+            <PriceInput id="goal-ticket" value={ticket} currency={currency} onChange={setTicket} placeholder="Como tu historia" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="goal-close-rate">Cotización → venta (%)</Label>
@@ -209,7 +259,6 @@ export function GoalEditorView() {
               id="goal-close-rate"
               inputMode="decimal"
               value={closeRate}
-              disabled={!canManage}
               placeholder="Como tu historia"
               onChange={(event) => setCloseRate(event.target.value)}
             />
@@ -227,20 +276,22 @@ export function GoalEditorView() {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
-        {canManage ? (
-          <Button type="submit" disabled={saving || input === null}>
-            <Flag aria-hidden className="size-4" />
-            Guardar meta
-          </Button>
-        ) : (
-          <p className="text-xs text-muted-foreground">Solo un administrador puede cambiar la meta.</p>
-        )}
+        <Button type="submit" disabled={saving || input === null}>
+          <Flag aria-hidden className="size-4" />
+          Guardar meta
+        </Button>
         <Button asChild type="button" variant="ghost">
           <Link href="/comercial">Cancelar</Link>
         </Button>
       </div>
     </form>
   );
+}
+
+/** Solo para nombrar el mes en el título cuando aún no hay `today` del servidor. */
+function monthKeyFallback(): string {
+  const now = new Date();
+  return `${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
 function rateText(rate: PlanRateDTO | null, subject: string): string | null {
@@ -281,7 +332,7 @@ function ImpliesList({ preview, loading, error, target, currency }: { preview: C
       </h2>
       {target === null || target <= 0 ? (
         <p className="px-4 pt-2 pb-4 text-[14px] text-muted-foreground">Escribe una cifra y te decimos cuántas ventas, citas y conversaciones hacen falta.</p>
-      ) : error !== null && preview === null ? (
+      ) : preview === null && error !== null ? (
         <p className="px-4 pt-2 pb-4 text-[14px] text-muted-foreground">{error}</p>
       ) : preview === null ? (
         <div className="space-y-3 px-4 pt-2 pb-4" role="status" aria-label="Calculando">
@@ -298,7 +349,12 @@ function ImpliesList({ preview, loading, error, target, currency }: { preview: C
               </Callout>
             </div>
           ) : null}
-          <ul className={`grouped-list rounded-none transition-opacity ${loading ? "opacity-60" : ""}`}>
+          {error !== null ? (
+            <p className="px-4 pt-2 text-[12.5px] text-muted-foreground">
+              No pude recalcular con la última cifra; lo de abajo es de la anterior. {error}
+            </p>
+          ) : null}
+          <ul className={`grouped-list rounded-none transition-opacity ${loading || error !== null ? "opacity-60" : ""}`} aria-busy={loading}>
             {rows
               .filter((row) => row.figure !== null)
               .map((row) => (
@@ -306,14 +362,14 @@ function ImpliesList({ preview, loading, error, target, currency }: { preview: C
                   <span className="text-[12px] text-muted-foreground">{row.label}</span>
                   <span className="text-[15px] font-medium tabular-nums">
                     {row.approx ? "≈ " : ""}
-                    {formatCount(row.figure?.value ?? 0)}
+                    {formatInteger(row.figure?.value ?? 0)}
                   </span>
                   <span className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted-foreground">
                     {row.rate !== null ? <span>{row.rate}</span> : null}
                     {row.rate !== null ? <span aria-hidden>·</span> : null}
                     <SourceMark source={row.figure?.source ?? "benchmark"} nicheLabel={niche} />
                     {row.source?.sample !== null && row.source?.sample !== undefined && row.source.window_days !== null ? (
-                      <span>· {formatCount(row.source.sample)} en {row.source.window_days} días</span>
+                      <span>· {formatInteger(row.source.sample)} en {row.source.window_days} días</span>
                     ) : null}
                   </span>
                 </li>

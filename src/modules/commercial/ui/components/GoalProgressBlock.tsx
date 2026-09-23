@@ -5,9 +5,10 @@ import { useEffect } from "react";
 import { ArrowRight, Route } from "lucide-react";
 
 import { formatMoney } from "@/core/lib/format";
-import { formatCount, formatMillions, formatPct, monthLabel } from "@/modules/commercial/domain/format";
+import { formatInteger } from "@/core/lib/commercial-units";
+import { formatMillions, formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { PACE_BADGES } from "@/modules/commercial/domain/labels";
-import { expectedPct, gap, progressPct } from "@/modules/commercial/domain/pace";
+import { displayStatus, expectedPct, gap, isLearning, progressPct } from "@/modules/commercial/domain/pace";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
@@ -32,6 +33,7 @@ export function GoalProgressBlock() {
   const load = useCommercialStore((state) => state.load);
 
   const canRead = hasPermission("commercial:read");
+  const canManage = hasPermission("commercial:manage");
   const enabled = loaded && hasCapability("crm") && canRead;
 
   useEffect(() => {
@@ -41,6 +43,8 @@ export function GoalProgressBlock() {
   if (!enabled || blocker !== null || goal.status !== "ready" || goal.data === null) return null;
 
   if (goal.data.goal === null) {
+    // Sin permiso para fijarla, el enlace prometería un formulario que no se puede usar.
+    if (!canManage) return null;
     return (
       <section aria-label="Sin meta" className="rounded-2xl border border-border bg-background px-5 py-3.5">
         <Link
@@ -58,9 +62,11 @@ export function GoalProgressBlock() {
   if (pace.status === "error" || pace.data === null) return null;
   const p = pace.data;
   const done = progressPct(p.actual_revenue_cents, p.target_revenue_cents);
-  const learning = p.data_sufficiency !== "ok";
+  const learning = isLearning(p);
   const expected = learning ? null : expectedPct(p.business_days_elapsed, p.business_days_total) / 100;
-  const projected = learning || p.projected_revenue_cents === null ? null : p.projected_revenue_cents / p.target_revenue_cents;
+  const projected =
+    learning || p.projected_revenue_cents === null || p.target_revenue_cents <= 0 ? null : p.projected_revenue_cents / p.target_revenue_cents;
+  const missing = gap(p.actual_revenue_cents, p.target_revenue_cents).missing;
   const month = monthLabel(p.period_start);
 
   return (
@@ -72,7 +78,7 @@ export function GoalProgressBlock() {
       <div className="row-span-3 self-center text-right text-[13px]">
         <span className="font-heading block text-[22px] leading-none tracking-tight tabular-nums">{formatPct(done)}</span>
         <span className="text-muted-foreground">
-          {p.business_days_left === 1 ? "falta 1 día hábil" : `faltan ${formatCount(p.business_days_left)} días hábiles`}
+          {p.business_days_left === 1 ? "falta 1 día hábil" : `faltan ${formatInteger(p.business_days_left)} días hábiles`}
         </span>
         <Link
           href="/comercial"
@@ -86,11 +92,9 @@ export function GoalProgressBlock() {
         <b className="font-semibold tabular-nums">{formatMillions(p.actual_revenue_cents, p.currency)}</b>
         <span className="text-muted-foreground">
           de {formatMoney(p.target_revenue_cents, p.currency)}
-          {gap(p.actual_revenue_cents, p.target_revenue_cents).missing > 0
-            ? ` · faltan ${formatMillions(gap(p.actual_revenue_cents, p.target_revenue_cents).missing, p.currency)}`
-            : ""}
+          {missing > 0 ? ` · faltan ${formatMillions(missing, p.currency)}` : ""}
         </span>
-        <StatusBadge status={p.status} map={PACE_BADGES} appearance="dot" />
+        <StatusBadge status={displayStatus(p)} map={PACE_BADGES} appearance="dot" />
       </p>
       <RouteLine compact done={done / 100} expected={expected} projected={projected} className="mt-1" />
     </section>

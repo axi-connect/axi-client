@@ -4,11 +4,15 @@ import { pace, plan } from "../../__tests__/fixtures";
 
 afterEach(cleanup);
 
+const rowOf = (label: RegExp) => screen.getByText(label).closest("li") as HTMLElement;
+
 describe("KeyResultList", () => {
-  it("cada fila es un enlace a su detalle, en el orden del plan y con el ticket tras las ventas", () => {
-    render(<KeyResultList pace={pace} plan={plan} />);
-    const links = screen.getAllByRole("link");
-    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+  it("en F3 las filas NO enlazan (las páginas de detalle no existen); con detailHref sí, en el orden del plan", () => {
+    const { rerender } = render(<KeyResultList pace={pace} plan={plan} />);
+    expect(screen.queryAllByRole("link")).toHaveLength(0);
+
+    rerender(<KeyResultList pace={pace} plan={plan} detailHref={(key) => `/comercial/resultados/${key}`} />);
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/comercial/resultados/sales",
       "/comercial/resultados/avg_ticket",
       "/comercial/resultados/quotes",
@@ -17,15 +21,14 @@ describe("KeyResultList", () => {
     ]);
   });
 
-  it("el badge solo aparece fuera de ritmo; «al ritmo» no lleva nada", () => {
+  it("el badge solo aparece fuera de ritmo; «al ritmo» no lleva nada; behind y at_risk dicen lo mismo", () => {
     render(<KeyResultList pace={pace} plan={plan} />);
-    const sales = screen.getByRole("link", { name: /ventas cerradas/i });
-    expect(within(sales).getByText("Atrasado")).toBeInTheDocument();
-    const contacted = screen.getByRole("link", { name: /contactados/i });
-    expect(within(contacted).queryByText(/Al ritmo|Ritmo bajo|Atrasado/)).toBeNull();
-    const calls = screen.getByRole("link", { name: /llamadas/i });
+    expect(within(rowOf(/ventas cerradas/i)).getByText("Ritmo bajo")).toBeInTheDocument();
+    expect(within(rowOf(/^contactados$/i)).queryByText(/Al ritmo|Ritmo bajo/)).toBeNull();
+    const calls = rowOf(/llamadas hechas/i);
     expect(within(calls).getByText("Ritmo bajo")).toBeInTheDocument();
     expect(within(calls).getByText("supuesto para clínicas estéticas")).toBeInTheDocument();
+    expect(within(calls).getByText("Contestadas 79 de 120")).toBeInTheDocument();
   });
 
   it("las cifras son camino recorrido, y el mix va bajo «Ventas»", () => {
@@ -38,7 +41,7 @@ describe("KeyResultList", () => {
   it("aprendiendo: sin ritmo ni badges, solo la procedencia", () => {
     render(<KeyResultList pace={pace} plan={plan} learning />);
     expect(screen.queryByText(/Ritmo 1,35/)).toBeNull();
-    expect(screen.queryByText("Atrasado")).toBeNull();
+    expect(screen.queryByText("Ritmo bajo")).toBeNull();
     expect(screen.getByText("Aún sin historia para medir el ritmo.")).toBeInTheDocument();
   });
 });

@@ -35,7 +35,7 @@ interface InlineFiguresProps {
   onClick?: () => void;
   /** Lo que va al final de la línea cuando NO es un enlace (una acción). */
   trailing?: React.ReactNode;
-  /** Etiqueta accesible del enlace/botón; por defecto se lee el contenido. */
+  /** Etiqueta accesible del enlace/botón (en la línea estática se lee el contenido). */
   ariaLabel?: string;
   className?: string;
 }
@@ -108,7 +108,7 @@ export function InlineFigures({
   }
 
   return (
-    <div className={cn(shell, "cursor-default")} aria-label={ariaLabel}>
+    <div className={cn(shell, "cursor-default")}>
       {body}
       {trailing}
     </div>

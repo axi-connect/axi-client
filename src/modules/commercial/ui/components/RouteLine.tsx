@@ -4,7 +4,7 @@ import { useId } from "react";
 
 import { cn } from "@/core/lib/utils";
 import type { WeekTick } from "@/modules/commercial/domain/weeks";
-import { useEntrance } from "@/modules/commercial/ui/hooks/use-count-up";
+import { useEntrance } from "@/modules/commercial/ui/hooks/use-entrance";
 
 interface RouteLineProps {
   /** Camino recorrido, 0–1. */
@@ -17,8 +17,13 @@ interface RouteLineProps {
   projectedLabel?: string | null;
   /** Semanas hábiles del mes para las marcas S1…Sn (no en compacto). */
   weeks?: readonly WeekTick[];
-  /** Franja del panel: 40 px de alto, sin semanas ni bandera. */
+  /** Franja del panel: 28 px de alto, sin semanas ni bandera. */
   compact?: boolean;
+  /**
+   * Progreso de entrada 0–1 aportado por el padre (el hero comparte un solo
+   * motor con la cifra grande). Sin él la línea anima por su cuenta.
+   */
+  progress?: number;
   className?: string;
 }
 
@@ -42,11 +47,13 @@ const track = (value: number): string => `${String(PAD_PCT + Math.min(1, Math.ma
  * id repetido resuelve al primero que encuentre.
  *
  * Entrada con el resorte de marca (`spring.soft`, `useReducedMotion` la
- * anula): el tramo recorrido crece desde el origen una sola vez.
+ * anula): el tramo recorrido crece desde el origen una sola vez. La bandera
+ * de la meta es HTML: un `%` dentro de `d=` de un `<path>` no es SVG válido.
  */
-export function RouteLine({ done, expected = null, projected = null, projectedLabel = null, weeks = [], compact = false, className }: RouteLineProps) {
+export function RouteLine({ done, expected = null, projected = null, projectedLabel = null, weeks = [], compact = false, progress, className }: RouteLineProps) {
   const gradientId = useId();
-  const t = useEntrance();
+  const own = useEntrance();
+  const t = progress ?? own;
 
   const doneClamped = Math.min(1, Math.max(0, done));
   const doneNow = doneClamped * t;
@@ -112,15 +119,6 @@ export function RouteLine({ done, expected = null, projected = null, projectedLa
         {doneNow > 0 ? (
           <line x1={track(0)} x2={track(doneNow)} y1={y} y2={y} stroke={`url(#${gradientId})`} strokeWidth={compact ? 6 : 8} strokeLinecap="round" />
         ) : null}
-        {!compact ? (
-          <path
-            d={`M${String(100 - PAD_PCT)}% ${String(y - 20)} v20 M${String(100 - PAD_PCT)}% ${String(y - 20)} h10 l-3 4 3 4 h-10`}
-            stroke="var(--color-foreground)"
-            strokeWidth={1.6}
-            fill="none"
-            transform="translate(-1 0)"
-          />
-        ) : null}
         {expected !== null ? (
           <circle cx={track(expected)} cy={y} r={compact ? 5 : 6} fill="var(--color-background)" stroke="var(--color-foreground)" strokeWidth={2} />
         ) : null}
@@ -128,6 +126,19 @@ export function RouteLine({ done, expected = null, projected = null, projectedLa
           <circle cx={track(doneNow)} cy={y} r={compact ? 5.5 : 7} fill="var(--color-brand)" stroke="var(--color-background)" strokeWidth={3} />
         ) : null}
       </svg>
+
+      {/* La bandera de la meta, al final de la línea */}
+      {!compact ? (
+        <span
+          aria-hidden
+          className="absolute -translate-x-full text-foreground"
+          style={{ left: `calc(${track(1)} + 6px)`, top: 0 }}
+        >
+          <svg width="13" height="22" viewBox="0 0 13 22" className="block">
+            <path d="M1 0v22M1 0h11l-3 4 3 4H1" stroke="currentColor" strokeWidth="1.6" fill="none" />
+          </svg>
+        </span>
+      ) : null}
 
       {/* Etiqueta de la proyección: a la derecha del final punteado; si no cabe, encima a la izquierda */}
       {!compact && showProjection && projectedLabel !== null ? (

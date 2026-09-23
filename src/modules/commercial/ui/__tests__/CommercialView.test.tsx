@@ -72,7 +72,17 @@ describe("CommercialView", () => {
     expect(screen.getByRole("link", { name: /cambiar meta/i })).toHaveAttribute("href", "/comercial/meta");
     expect(screen.getByRole("region", { name: "La ruta del mes" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Resultados clave" })).toBeInTheDocument();
-    expect(screen.getByText("Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.")).toBeInTheDocument();
+    // F3 no carga propuestas: con ritmo bajo «Estás al día» sería mentira.
+    expect(screen.getByText("Las acciones que Axi propone llegan pronto.")).toBeInTheDocument();
+    expect(screen.queryByText(/Estás al día/)).toBeNull();
+    // Nada enlaza a páginas que aún no existen.
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/comercial/meta"]);
+    // Ya había datos: no se vuelve a cargar al montar.
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it("carga una sola vez, solo si la sección está en idle", () => {
+    render(<CommercialView />);
     expect(load).toHaveBeenCalledTimes(1);
   });
 });

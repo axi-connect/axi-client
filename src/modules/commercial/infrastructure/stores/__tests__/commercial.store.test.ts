@@ -1,11 +1,9 @@
 const mockGet = jest.fn<Promise<unknown>, [string, unknown?, { signal?: AbortSignal }?]>();
 const mockPut = jest.fn<Promise<unknown>, [string, unknown?]>();
-const mockPost = jest.fn<Promise<unknown>, [string]>();
 jest.mock("@/core/services/http", () => ({
   http: {
     get: (path: string, params?: unknown, options?: { signal?: AbortSignal }) => mockGet(path, params, options),
     put: (path: string, body?: unknown) => mockPut(path, body),
-    post: (path: string) => mockPost(path),
   },
 }));
 
@@ -56,7 +54,6 @@ beforeEach(() => {
   resetCommercialStore();
   mockGet.mockReset();
   mockPut.mockReset();
-  mockPost.mockReset();
 });
 
 describe("load", () => {
@@ -138,6 +135,47 @@ describe("load", () => {
   });
 });
 
+describe("carrera entre cargas", () => {
+  it("una respuesta vieja de goal no pisa a la nueva", async () => {
+    const resolvers: Array<(value: unknown) => void> = [];
+    mockGet.mockImplementation((path) =>
+      path === "/commercial/goal" ? new Promise((resolve) => { resolvers.push(resolve); }) : Promise.resolve({}),
+    );
+    const first = useCommercialStore.getState().load();
+    const second = useCommercialStore.getState().load();
+    resolvers[1]({ ...withGoal, goal: null });
+    await second;
+    resolvers[0](withGoal);
+    await first;
+
+    expect(useCommercialStore.getState().goal.data?.goal).toBeNull();
+    // La respuesta vieja tampoco dispara plan/ritmo.
+    expect(mockGet.mock.calls.filter(([path]) => path === "/commercial/pace")).toHaveLength(0);
+  });
+
+  it("guardar la meta y montar la vista a la vez: gana el ritmo más nuevo", async () => {
+    serve({ "/commercial/goal": { ...withGoal, goal: null } });
+    await useCommercialStore.getState().load();
+    const paceResolvers: Array<(value: unknown) => void> = [];
+    mockGet.mockImplementation((path) => {
+      if (path === "/commercial/pace") return new Promise((resolve) => { paceResolvers.push(resolve); });
+      if (path === "/commercial/goal") return Promise.resolve(withGoal);
+      return Promise.resolve({});
+    });
+    mockPut.mockResolvedValue(goal);
+
+    await useCommercialStore.getState().saveGoal({ target_revenue_cents: 1 }); // encola pace #1
+    const reload = useCommercialStore.getState().load(); // encola pace #2
+    await Promise.resolve();
+    paceResolvers[1]({ status: "new" });
+    paceResolvers[0]({ status: "old" });
+    await reload;
+    await Promise.resolve();
+
+    expect(useCommercialStore.getState().pace.data).toEqual({ status: "new" });
+  });
+});
+
 describe("previewPlan", () => {
   it("aborta la vista previa anterior al llegar la siguiente cifra", async () => {
     const signals: AbortSignal[] = [];
@@ -197,7 +235,7 @@ describe("saveGoal", () => {
     expect(mockPut).toHaveBeenCalledWith("/commercial/goal", { target_revenue_cents: 3_000_000_000 });
     const state = useCommercialStore.getState();
     expect(state.goal.data?.goal).toEqual(goal);
-    expect(state.goal.data?.seed.source).toBe("history");
+    expect(state.goal.data?.seed?.source).toBe("history");
     expect(state.saving).toBe(false);
     expect(mockGet).toHaveBeenCalledWith("/commercial/plan", undefined, undefined);
   });
@@ -207,16 +245,5 @@ describe("saveGoal", () => {
     await expect(useCommercialStore.getState().saveGoal({ target_revenue_cents: 0 })).rejects.toThrow("validación");
     expect(useCommercialStore.getState().goal.status).toBe("idle");
     expect(useCommercialStore.getState().saving).toBe(false);
-  });
-});
-
-describe("recompute", () => {
-  it("202 → true; 429 → false; otro error se propaga", async () => {
-    mockPost.mockResolvedValueOnce({ queued: true });
-    await expect(useCommercialStore.getState().recompute()).resolves.toBe(true);
-    mockPost.mockRejectedValueOnce(new HttpError({ status: 429, code: "usage/limit_exceeded", message: "espera" }));
-    await expect(useCommercialStore.getState().recompute()).resolves.toBe(false);
-    mockPost.mockRejectedValueOnce(new Error("red"));
-    await expect(useCommercialStore.getState().recompute()).rejects.toThrow("red");
   });
 });

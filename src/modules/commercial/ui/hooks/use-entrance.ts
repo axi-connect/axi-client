@@ -7,8 +7,10 @@ import { spring } from "@/core/styles/motion";
 
 /**
  * Progreso 0→1 de entrada, UNA vez, con el resorte de marca (`spring.soft`).
- * Lo comparten la cifra grande del hero y la línea de la ruta para que las
- * dos lleguen al mismo tiempo. Con `prefers-reduced-motion` empieza en 1.
+ * Es el ÚNICO motor del hero: la cifra grande (`CountUpValue progress`) y la
+ * línea de la ruta (`RouteLine progress`) leen el mismo valor, así llegan a la
+ * vez y hay un solo re-render por frame en vez de dos animaciones sueltas.
+ * Con `prefers-reduced-motion` empieza en 1.
  */
 export function useEntrance(): number {
   const reduced = useReducedMotion();

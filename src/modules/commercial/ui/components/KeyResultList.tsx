@@ -1,6 +1,7 @@
 "use client";
 
 import { formatMoney } from "@/core/lib/format";
+import { formatInteger } from "@/core/lib/commercial-units";
 import type { CommercialPaceDTO, CommercialPlanDTO, KeyResultKey } from "@/modules/commercial/domain/commercial";
 import { missingLine, rateLine } from "@/modules/commercial/domain/copy";
 import { formatPct, monthLabel } from "@/modules/commercial/domain/format";
@@ -9,7 +10,7 @@ import { progressPct } from "@/modules/commercial/domain/pace";
 import { KeyResultRow } from "./KeyResultRow";
 import { SourceMark } from "./SourceMark";
 
-const detailHref = (key: KeyResultKey | "avg_ticket"): string => `/comercial/resultados/${key}`;
+export type KeyResultDetailHref = (key: KeyResultKey | "avg_ticket") => string;
 
 /**
  * «RESULTADOS CLAVE»: los OKR derivados de la meta (D8), en el orden del plan
@@ -19,9 +20,20 @@ const detailHref = (key: KeyResultKey | "avg_ticket"): string => `/comercial/res
  * «Ventas» y no como fila propia.
  *
  * En «aprendiendo» las filas no afirman ritmo: solo camino recorrido y de
- * dónde sale la meta de cada una.
+ * dónde sale la meta de cada una. `detailHref` llega en F6 con las páginas de
+ * detalle; sin él las filas no enlazan.
  */
-export function KeyResultList({ pace, plan, learning = false }: { pace: CommercialPaceDTO; plan: CommercialPlanDTO | null; learning?: boolean }) {
+export function KeyResultList({
+  pace,
+  plan,
+  learning = false,
+  detailHref,
+}: {
+  pace: CommercialPaceDTO;
+  plan: CommercialPlanDTO | null;
+  learning?: boolean;
+  detailHref?: KeyResultDetailHref;
+}) {
   const niche = plan?.benchmark_niche_label ?? null;
   const byKey = new Map(pace.key_results.map((kr) => [kr.key, kr]));
   const month = monthLabel(pace.period_start);
@@ -49,7 +61,7 @@ export function KeyResultList({ pace, plan, learning = false }: { pace: Commerci
           const row = (
             <KeyResultRow
               key={key}
-              href={detailHref(key)}
+              href={detailHref?.(key)}
               label={KR_LABELS[key]}
               value={missingLine(kr.actual, kr.target)}
               secondary={
@@ -63,7 +75,15 @@ export function KeyResultList({ pace, plan, learning = false }: { pace: Commerci
                   </>
                 )
               }
-              extra={key === "sales" ? (learning ? "Aún sin historia para medir el ritmo." : mixLine) : undefined}
+              extra={
+                key === "sales"
+                  ? learning
+                    ? "Aún sin historia para medir el ritmo."
+                    : mixLine
+                  : key === "calls" && kr.answered_actual !== null
+                    ? `Contestadas ${formatInteger(kr.answered_actual)}${kr.answered_expected !== null ? ` de ${formatInteger(kr.answered_expected)}` : ""}`
+                    : undefined
+              }
               pct={progressPct(kr.actual, kr.target)}
               status={learning ? null : kr.status}
             />
@@ -74,7 +94,7 @@ export function KeyResultList({ pace, plan, learning = false }: { pace: Commerci
             row,
             <KeyResultRow
               key="avg_ticket"
-              href={detailHref("avg_ticket")}
+              href={detailHref?.("avg_ticket")}
               label="Ticket promedio"
               value={
                 actualTicket !== null ? (

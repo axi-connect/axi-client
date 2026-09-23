@@ -15,7 +15,6 @@ import {
   getPlan,
   previewPlan as previewPlanApi,
   putGoal,
-  recompute as recomputeApi,
 } from "@/modules/commercial/infrastructure/services/commercial-service.adapter";
 
 /** Estado de una sección (mismo patrón que cmo/analytics/dashboard). */
@@ -58,8 +57,6 @@ interface CommercialState {
   /** Vista previa con aborto: la petición anterior se cancela al llegar la siguiente cifra. */
   previewPlan: (input: GoalInputDTO) => Promise<void>;
   cancelPreview: () => void;
-  /** Recalcular a mano. `false` si el servidor pidió esperar (429). */
-  recompute: () => Promise<boolean>;
 }
 
 function blockerFor(error: unknown): CommercialBlocker {
@@ -72,27 +69,34 @@ function isAbort(error: unknown): boolean {
 }
 
 export const useCommercialStore = create<CommercialState>((set, get) => {
-  /** El controlador de la vista previa en curso. Vive en el closure del store,
-   *  no a nivel de módulo: un valor global sobreviviría a HMR y a los resets
-   *  entre tests. */
+  /**
+   * Número de secuencia por sección: cada petición captura el suyo y solo
+   * escribe si sigue siendo el último. Dos `load()` solapados (el Panel y la
+   * ruta, o guardar la meta y montar la vista) ya no dejan en pantalla la
+   * respuesta que llegó tarde. Viven en el closure del store, no a nivel de
+   * módulo: un valor global sobreviviría a HMR y a los resets entre tests.
+   */
+  const seq = { goal: 0, plan: 0, pace: 0 };
   let previewController: AbortController | null = null;
 
   async function loadPaceAndPlan(): Promise<void> {
+    const planSeq = (seq.plan += 1);
+    const paceSeq = (seq.pace += 1);
     set((state) => ({ plan: loading(state.plan), pace: loading(state.pace) }));
     await Promise.all([
       getPlan()
         .then((data) => {
-          set({ plan: ready(data) });
+          if (seq.plan === planSeq) set({ plan: ready(data) });
         })
         .catch((error: unknown) => {
-          set((state) => ({ plan: failed(state.plan, errorMessage(error)) }));
+          if (seq.plan === planSeq) set((state) => ({ plan: failed(state.plan, errorMessage(error)) }));
         }),
       getPace("day")
         .then((data) => {
-          set({ pace: ready(data) });
+          if (seq.pace === paceSeq) set({ pace: ready(data) });
         })
         .catch((error: unknown) => {
-          set((state) => ({ pace: failed(state.pace, errorMessage(error)) }));
+          if (seq.pace === paceSeq) set((state) => ({ pace: failed(state.pace, errorMessage(error)) }));
         }),
     ]);
   }
@@ -106,11 +110,13 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     saving: false,
 
     load: async () => {
+      const goalSeq = (seq.goal += 1);
       set((state) => ({ goal: loading(state.goal), blocker: null }));
       let response: GoalResponseDTO;
       try {
         response = await getGoal();
       } catch (error: unknown) {
+        if (seq.goal !== goalSeq) return;
         const blocker = blockerFor(error);
         set((state) => ({
           blocker,
@@ -118,9 +124,12 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
         }));
         return;
       }
+      if (seq.goal !== goalSeq) return;
       set({ goal: ready(response) });
       if (response.goal === null) {
         // Sin meta no hay plan ni ritmo: pedirlos sería recibir dos 404.
+        seq.plan += 1;
+        seq.pace += 1;
         set({ plan: idle(), pace: idle() });
         return;
       }
@@ -128,7 +137,7 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     },
 
     reloadPace: async () => {
-      if (get().goal.data?.goal === null) return;
+      if (get().goal.data?.goal == null) return;
       await loadPaceAndPlan();
     },
 
@@ -136,19 +145,9 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       set({ saving: true });
       try {
         const goal = await putGoal(input);
-        set((state) => ({
-          goal: ready({
-            goal,
-            seed: state.goal.data?.seed ?? {
-              last_month_revenue_cents: null,
-              last_month_sales: null,
-              last_month_avg_ticket_cents: null,
-              suggested_target_cents: null,
-              source: "benchmark",
-              niche_label: null,
-            },
-          }),
-        }));
+        // La semilla no se inventa: si no se había cargado, queda `null`.
+        seq.goal += 1;
+        set((state) => ({ goal: ready({ goal, seed: state.goal.data?.seed ?? null }) }));
         void loadPaceAndPlan();
         return goal;
       } finally {
@@ -176,28 +175,11 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       previewController = null;
       set({ preview: idle() });
     },
-
-    recompute: async () => {
-      try {
-        const result = await recomputeApi();
-        return result.queued;
-      } catch (error: unknown) {
-        if (error instanceof HttpError && error.status === 429) return false;
-        throw error;
-      }
-    },
   };
 });
 
 /** Solo para tests. */
 export function resetCommercialStore(): void {
   useCommercialStore.getState().cancelPreview();
-  useCommercialStore.setState({
-    goal: idle(),
-    plan: idle(),
-    pace: idle(),
-    preview: idle(),
-    blocker: null,
-    saving: false,
-  });
+  useCommercialStore.setState({ goal: idle(), plan: idle(), pace: idle(), preview: idle(), blocker: null, saving: false });
 }

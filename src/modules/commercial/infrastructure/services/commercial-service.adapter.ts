@@ -6,7 +6,6 @@ import type {
   GoalInputDTO,
   GoalResponseDTO,
   PaceGranularity,
-  RecomputeResponseDTO,
 } from "@/modules/commercial/domain/commercial";
 
 /**
@@ -56,9 +55,4 @@ export function previewPlan(input: GoalInputDTO, signal?: AbortSignal): Promise<
 
 export function getPace(granularity: PaceGranularity = "day"): Promise<CommercialPaceDTO> {
   return http.get<CommercialPaceDTO>("/commercial/pace", { granularity });
-}
-
-/** Recalcular a mano. 202 encolado; 429 si hace menos de 10 min (`HttpError.retryAfterSeconds`). */
-export function recompute(): Promise<RecomputeResponseDTO> {
-  return http.post<RecomputeResponseDTO>("/commercial/plan/recompute");
 }

@@ -119,7 +119,7 @@ describe("seedLine", () => {
   };
 
   it("con historia: lo vendido y la meta sugerida con su subida", () => {
-    expect(seedLine(seed, "COP").replace(/ /g, " ")).toBe(
+    expect(seedLine(seed, "COP")?.replace(/ /g, " ")).toBe(
       "El mes pasado vendiste $ 22.100.000. Una meta de $ 25.400.000 (+15 %) es alcanzable con tu ritmo.",
     );
   });

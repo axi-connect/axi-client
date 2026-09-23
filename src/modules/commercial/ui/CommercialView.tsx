@@ -6,7 +6,7 @@ import { Lock, Pencil, RotateCcw } from "lucide-react";
 
 import { goalLead, routeTitle } from "@/modules/commercial/domain/copy";
 import { monthLabel } from "@/modules/commercial/domain/format";
-import { toIsoDate } from "@/modules/commercial/domain/weeks";
+import { isLearning } from "@/modules/commercial/domain/pace";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
@@ -45,9 +45,11 @@ export function CommercialView() {
   const canManage = hasPermission("commercial:manage");
   const enabled = !loaded || hasCapability("crm");
 
+  // Solo la primera vez: guardar la meta ya recarga plan y ritmo, y el Panel
+  // pudo haber cargado antes. Un `load()` por montaje pisaba esas respuestas.
   useEffect(() => {
-    if (enabled && canRead) void load();
-  }, [enabled, canRead, load]);
+    if (enabled && canRead && goal.status === "idle") void load();
+  }, [enabled, canRead, goal.status, load]);
 
   if (!canRead) {
     return (
@@ -82,9 +84,8 @@ export function CommercialView() {
     return <CommercialSkeleton />;
   }
 
-  const today = toIsoDate(new Date());
   const current = goal.data.goal;
-  const month = monthLabel(current?.period_start ?? today);
+  const month = monthLabel(current?.period_start ?? pace.data?.today ?? monthKeyFallback());
   const currency = current?.currency ?? "COP";
 
   if (current === null) {
@@ -96,7 +97,7 @@ export function CommercialView() {
     );
   }
 
-  const learning = pace.data?.data_sufficiency !== "ok";
+  const learning = pace.data !== null && isLearning(pace.data);
 
   return (
     <div className="space-y-5">
@@ -130,18 +131,28 @@ export function CommercialView() {
             }
           />
         ) : (
-          <CommercialSkeleton />
+          <CommercialSkeleton withHeader={false} />
         )
       ) : (
         <>
           <RouteHero pace={pace.data} plan={plan.data} />
-          {learning ? <LearningNotice daysElapsed={pace.data.business_days_elapsed} /> : <PaceLine series={pace.data.series} today={today} />}
+          {learning ? <LearningNotice daysElapsed={pace.data.business_days_elapsed} /> : <PaceLine pace={pace.data} />}
           <KeyResultList pace={pace.data} plan={plan.data} learning={learning} />
-          <ActionList proposals={[]} learning={learning} />
+          <ActionList learning={learning} />
         </>
       )}
     </div>
   );
+}
+
+/**
+ * Sin meta y sin ritmo no hay `today` del servidor: el título del vacío usa
+ * el mes del navegador solo para nombrarlo («Ponle una meta a septiembre»);
+ * ninguna cifra sale de aquí.
+ */
+function monthKeyFallback(): string {
+  const now = new Date();
+  return `${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
 function Header({ title, lead, action }: { title: string; lead: string; action?: React.ReactNode }) {

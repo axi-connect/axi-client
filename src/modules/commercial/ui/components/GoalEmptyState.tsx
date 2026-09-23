@@ -14,8 +14,9 @@ import { SourceMark } from "./SourceMark";
  * sale la propuesta (la historia del tenant o lo típico de su nicho), porque
  * hasta la primera cifra del módulo lleva su procedencia.
  */
-export function GoalEmptyState({ month, seed, currency, canManage }: { month: string; seed: GoalSeedDTO; currency: string; canManage: boolean }) {
-  const seedSource = seed.source === "benchmark" || seed.last_month_revenue_cents === null ? "benchmark" : "history";
+export function GoalEmptyState({ month, seed, currency, canManage }: { month: string; seed: GoalSeedDTO | null; currency: string; canManage: boolean }) {
+  const seedSource = seed === null || seed.source === "benchmark" || seed.last_month_revenue_cents === null ? "benchmark" : "history";
+  const seedText = seedLine(seed, currency);
   return (
     <EmptyState
       glyph="money"
@@ -35,10 +36,12 @@ export function GoalEmptyState({ month, seed, currency, canManage }: { month: st
           ) : (
             <p className="text-xs text-muted-foreground">Pídele a un administrador que la defina.</p>
           )}
-          <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-[13px] text-muted-foreground">
-            <SourceMark source={seedSource} nicheLabel={seed.niche_label} className="sr-only" />
-            {seedLine(seed, currency)}
-          </p>
+          {seedText !== null ? (
+            <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-[13px] text-muted-foreground">
+              <SourceMark source={seedSource} nicheLabel={seed?.niche_label} className="sr-only" />
+              {seedText}
+            </p>
+          ) : null}
         </div>
       }
     />
