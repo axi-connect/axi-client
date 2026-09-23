@@ -52,8 +52,14 @@ export type ContactRow = {
 
 export type ContactProfileDTO = Schemas["ContactProfileDto"];
 export type ContactTagDTO = Schemas["ContactTagsDto"]["data"][number];
-export type TimelineEntryDTO = Schemas["TimelineDto"]["data"][number];
-export type TimelineSource = TimelineEntryDTO["source"];
+// TEMPORAL (F4): sustituir por Schemas["TimelineDto"] al regenerar
+// core/api/schema.d.ts — el servidor añade la fuente `lifecycle` (cambios de
+// ciclo de vida) y el contrato generado aún no la trae.
+type GeneratedTimelineEntryDTO = Schemas["TimelineDto"]["data"][number];
+export type TimelineSource = GeneratedTimelineEntryDTO["source"] | "lifecycle";
+export type TimelineEntryDTO = Omit<GeneratedTimelineEntryDTO, "source"> & {
+  source: TimelineSource;
+};
 export type DuplicatePairDTO = Schemas["DuplicatesListDto"]["data"][number];
 
 export const TIMELINE_SOURCES: readonly TimelineSource[] = [
@@ -62,6 +68,7 @@ export const TIMELINE_SOURCES: readonly TimelineSource[] = [
   "orders",
   "conversations",
   "appointments",
+  "lifecycle",
 ];
 
 export const TIMELINE_SOURCE_LABELS: Record<TimelineSource, string> = {
@@ -70,6 +77,7 @@ export const TIMELINE_SOURCE_LABELS: Record<TimelineSource, string> = {
   orders: "Pedidos",
   conversations: "Conversaciones",
   appointments: "Citas",
+  lifecycle: "Ciclo de vida",
 };
 
 export const DUPLICATE_REASON_LABELS: Record<DuplicatePairDTO["reason"], string> = {
