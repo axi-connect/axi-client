@@ -3556,6 +3556,22 @@ export interface paths {
         patch: operations["CrmContactDataController_review_v1"];
         trace?: never;
     };
+    "/api/v1/crm/journey/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CrmJourneyController_getSettings_v1"];
+        put: operations["CrmJourneyController_updateSettings_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/journey": {
         parameters: {
             query?: never;
@@ -4078,6 +4094,86 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["AnalyticsController_evaluateNow_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/goal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommercialController_getGoal_v1"];
+        put: operations["CommercialController_putGoal_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommercialController_getPlan_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/plan/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommercialController_previewPlan_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/plan/recompute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CommercialController_recompute_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/pace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommercialController_getPace_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6228,6 +6324,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/commercial/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommercialProposalsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommercialProposalsController_detail_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposal_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CommercialProposalsController_approve_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposal_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CommercialProposalsController_reject_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications": {
         parameters: {
             query?: never;
@@ -6702,86 +6862,6 @@ export interface paths {
         get: operations["PlatformIntakeSessionsController_preview_v1"];
         put?: never;
         post: operations["PlatformIntakeSessionsController_execute_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/commercial/goal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CommercialController_getGoal_v1"];
-        put: operations["CommercialController_putGoal_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/commercial/plan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CommercialController_getPlan_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/commercial/plan/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CommercialController_previewPlan_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/commercial/plan/recompute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["CommercialController_recompute_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/commercial/pace": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CommercialController_getPace_v1"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -12066,6 +12146,11 @@ export interface components {
             /** @enum {string} */
             action?: "confirm" | "reject" | "release";
         };
+        JourneySettingsDto: {
+            rules_enabled: boolean;
+            ai_stage_moves_enabled: boolean;
+            ai_move_cooldown_hours: number;
+        };
         JourneyDto: {
             /** Format: uuid */
             pipeline_id: string;
@@ -12156,6 +12241,7 @@ export interface components {
                 rule_code: string | null;
                 /** Format: date-time */
                 at: string;
+                from_stage_name: string | null;
                 revertible: boolean;
             } | null;
             cadence: {
@@ -12958,6 +13044,36 @@ export interface components {
                 conversations: number;
                 closed_won: number;
             }[];
+            live_rates: {
+                call_answer_rate: number | null;
+                answered_to_meeting_rate: number | null;
+                meeting_show_rate: number | null;
+                meeting_to_sale_rate: number | null;
+                quote_to_sale_rate: number | null;
+                value_per_meeting_cents: number | null;
+                value_per_visit_cents: number | null;
+                samples: {
+                    calls_placed: number;
+                    calls_answered: number;
+                    appointments_booked: number;
+                    appointments_completed: number;
+                    appointments_no_show: number;
+                    quotes: number;
+                    orders_paid: number;
+                    revenue_paid_cents: number;
+                };
+            } | null;
+            pipeline: {
+                stages: {
+                    /** @enum {string} */
+                    stage_kind: "new" | "contacted" | "qualified" | "meeting" | "proposal" | "negotiation" | "commitment" | "fulfillment";
+                    name: string;
+                    entered: number;
+                    advanced: number;
+                    avg_days_in_stage: number | null;
+                    conversion_pct: number | null;
+                }[];
+            } | null;
             groups?: {
                 key: string | null;
                 label: string | null;
@@ -13114,6 +13230,221 @@ export interface components {
         };
         EvaluateAcceptedDto: {
             enqueued: boolean;
+        };
+        GoalResponseDto: {
+            /** @description null = sin meta en el período (estado normal, no 404) */
+            goal: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                period_kind: "month";
+                period_start: string;
+                period_end: string;
+                currency: string;
+                target_revenue_cents: number;
+                declared_avg_ticket_cents: number | null;
+                declared_close_rate_pct: number | null;
+                declared_last_month_revenue_cents: number | null;
+                declared_max_attempts: number | null;
+                declared_decision_days: number | null;
+                /** @enum {string} */
+                source: "owner" | "intake" | "system";
+                created_at: string;
+                updated_at: string;
+            } | null;
+            seed: {
+                last_month_revenue_cents: number | null;
+                last_month_sales: number | null;
+                last_month_avg_ticket_cents: number | null;
+                suggested_target_cents: number | null;
+                /** @enum {string} */
+                source: "history" | "declared" | "benchmark";
+                niche_label: string | null;
+            };
+        };
+        GoalInputDto: {
+            target_revenue_cents: number;
+            declared_avg_ticket_cents?: number | null;
+            declared_close_rate_pct?: number | null;
+            /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
+            period?: string;
+        };
+        PlanDto: {
+            /**
+             * Format: uuid
+             * @description null en la preview (meta hipotética)
+             */
+            goal_id: string | null;
+            valid_from_date: string;
+            goal_target_cents: number;
+            currency: string;
+            benchmark_niche_code: string | null;
+            benchmark_niche_label: string | null;
+            inputs: {
+                avg_ticket_cents: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                } | null;
+                quote_to_sale: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                };
+                meeting_to_sale: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                } | null;
+                contact_to_quote: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                };
+                lead_to_contact: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                };
+                call_answer: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                } | null;
+                calls_share: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    window_days: number | null;
+                    sample: number | null;
+                } | null;
+            };
+            figures: {
+                needed_sales: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    basis: string | null;
+                };
+                needed_quotes: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    basis: string | null;
+                };
+                needed_meetings: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    basis: string | null;
+                } | null;
+                needed_contacted: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    basis: string | null;
+                };
+                needed_leads: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    basis: string | null;
+                };
+                needed_calls: {
+                    value: number;
+                    /** @enum {string} */
+                    source: "history" | "declared" | "benchmark";
+                    basis: string | null;
+                } | null;
+            };
+            pacing: {
+                business_days_total: number;
+                business_days_elapsed: number;
+                business_days_left: number;
+                per_day_sales: number;
+            };
+            product_mix: {
+                category: string;
+                share_pct: number;
+                suggested_units: number;
+            }[];
+            /**
+             * @description incomplete = sin ticket promedio: las cifras van en 0 y la UI pide el dato
+             * @enum {string}
+             */
+            status: "ready" | "incomplete";
+            computed_at: string;
+        };
+        RecomputeResponseDto: {
+            queued: boolean;
+        };
+        PaceDto: {
+            /** Format: uuid */
+            goal_id: string;
+            period_start: string;
+            period_end: string;
+            /** @description Fecha local del tenant: el cliente no calcula «hoy» con su reloj */
+            today: string;
+            /** @description Días hábiles según el horario del tenant (0 = domingo … 6 = sábado) */
+            weekdays: number[];
+            currency: string;
+            /** @enum {string} */
+            granularity: "day" | "week";
+            target_revenue_cents: number;
+            actual_revenue_cents: number;
+            expected_revenue_cents: number;
+            projected_revenue_cents: number | null;
+            /** @enum {string} */
+            status: "ahead" | "on_track" | "at_risk" | "behind" | "insufficient_data" | "achieved";
+            /** @enum {string} */
+            data_sufficiency: "ok" | "insufficient";
+            days_until_projection: number | null;
+            business_days_total: number;
+            business_days_elapsed: number;
+            business_days_left: number;
+            avg_ticket_actual_cents: number | null;
+            avg_ticket_sales_count: number | null;
+            key_results: {
+                /** @enum {string} */
+                key: "sales" | "quotes" | "meetings" | "contacted" | "leads" | "calls";
+                actual: number;
+                target: number;
+                /** @description Dónde deberías ir hoy (prorrateo por días hábiles) */
+                expected: number;
+                daily_rate_actual: number;
+                daily_rate_expected: number;
+                /** @enum {string} */
+                source: "history" | "declared" | "benchmark";
+                /** @enum {string} */
+                status: "ahead" | "on_track" | "at_risk" | "behind" | "insufficient_data" | "achieved";
+                /** @description Solo en calls: llamadas contestadas reales */
+                answered_actual: number | null;
+                /** @description Solo en calls: contestadas esperadas a hoy */
+                answered_expected: number | null;
+            }[];
+            /** @description Serie ACUMULADA por día (o por semana ISO, un punto = el cierre de la semana): lo real hasta hoy (los días futuros arrastran el acumulado) y lo esperado hasta el fin del período */
+            series: {
+                date: string;
+                revenue_cents: number;
+                expected_revenue_cents: number;
+                sales: number;
+                expected_sales: number;
+            }[];
+            /** @description La fila de hoy tiene más de 10 min: el servidor ya encoló el refresco */
+            stale: boolean;
+            computed_at: string;
         };
         FxSettingsDto: {
             settlement_currency: string;
@@ -14107,7 +14438,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -14121,7 +14452,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat";
+                source: "briefing" | "signal" | "chat" | "commercial";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -14133,7 +14464,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight";
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "expired" | "superseded";
                 title: string;
@@ -14147,7 +14478,7 @@ export interface components {
                 risks: string[];
                 artifacts: unknown[];
                 /** @enum {string} */
-                source: "briefing" | "signal" | "chat";
+                source: "briefing" | "signal" | "chat" | "commercial";
                 expires_at: string | null;
                 decided_at: string | null;
                 reject_reason: string | null;
@@ -16150,12 +16481,73 @@ export interface components {
                 type: string;
                 id: string | null;
                 label: string;
+                detail?: string;
             }[];
             failed: {
                 type: string;
                 label: string;
                 reason: string;
             }[];
+        };
+        CommercialProposalListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "expired" | "superseded";
+                title: string;
+                headline: string | null;
+                rationale: string;
+                evidence: {
+                    label: string;
+                    value: string;
+                    source: string;
+                }[];
+                risks: string[];
+                artifacts: unknown[];
+                /** @enum {string} */
+                source: "briefing" | "signal" | "chat" | "commercial";
+                expires_at: string | null;
+                decided_at: string | null;
+                reject_reason: string | null;
+                created_at: string;
+                target_key_result: string | null;
+                estimated_sales: number | null;
+                covers_pct: number | null;
+                basis: string | null;
+            }[];
+        };
+        CommercialProposalDetailDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "campaign" | "recovery" | "repurchase" | "promotion" | "segment" | "agent_tuning" | "insight" | "goal_pace";
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "expired" | "superseded";
+                title: string;
+                headline: string | null;
+                rationale: string;
+                evidence: {
+                    label: string;
+                    value: string;
+                    source: string;
+                }[];
+                risks: string[];
+                artifacts: unknown[];
+                /** @enum {string} */
+                source: "briefing" | "signal" | "chat" | "commercial";
+                expires_at: string | null;
+                decided_at: string | null;
+                reject_reason: string | null;
+                created_at: string;
+                target_key_result: string | null;
+                estimated_sales: number | null;
+                covers_pct: number | null;
+                basis: string | null;
+            };
         };
         NotificationsListDto: {
             data: {
@@ -16602,6 +16994,15 @@ export interface components {
                     label: string;
                     where: string;
                 }[];
+                goal: {
+                    target_cents: number;
+                    currency: string;
+                    month_label: string;
+                    needed_sales: number | null;
+                    avg_ticket_cents: number | null;
+                    last_month_revenue_cents: number | null;
+                    delta_pct: number | null;
+                } | null;
             } | null;
         };
         SendIntakeMessageDto: {
@@ -16660,6 +17061,15 @@ export interface components {
                     label: string;
                     where: string;
                 }[];
+                goal: {
+                    target_cents: number;
+                    currency: string;
+                    month_label: string;
+                    needed_sales: number | null;
+                    avg_ticket_cents: number | null;
+                    last_month_revenue_cents: number | null;
+                    delta_pct: number | null;
+                } | null;
             } | null;
             turns_left: number;
             captured_values: {
@@ -16757,7 +17167,7 @@ export interface components {
                         help?: string;
                         example?: string;
                         /** @enum {string} */
-                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                        target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration" | "commercial.goal" | "commercial.avg_ticket" | "commercial.last_month_revenue" | "commercial.decision_days" | "crm.agent_tasks_max_attempts";
                         handoff?: string;
                     }[];
                 }[];
@@ -16800,7 +17210,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration" | "commercial.goal" | "commercial.avg_ticket" | "commercial.last_month_revenue" | "commercial.decision_days" | "crm.agent_tasks_max_attempts";
                     handoff?: string;
                 }[];
             }[];
@@ -16839,7 +17249,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration" | "commercial.goal" | "commercial.avg_ticket" | "commercial.last_month_revenue" | "commercial.decision_days" | "crm.agent_tasks_max_attempts";
                     handoff?: string;
                 }[];
             }[];
@@ -16871,7 +17281,7 @@ export interface components {
                     help?: string;
                     example?: string;
                     /** @enum {string} */
-                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration";
+                    target?: "company.activity_description" | "company.industry" | "company.address" | "company.city" | "company.timezone" | "company.schedule" | "playbook.value_proposition" | "playbook.tone" | "playbook.extra_instructions" | "playbook.faqs" | "crm.tags" | "crm.pipeline" | "payments.methods" | "crm.agent_tasks_cap" | "crm.quiet_start_hour" | "crm.quiet_end_hour" | "orders.notifications" | "scheduling.reminders" | "shipping.zones" | "identities.branches" | "catalog.taxonomy" | "knowledge.target_audience" | "knowledge.greeting" | "knowledge.forbidden" | "knowledge.objections" | "knowledge.escalation" | "crm.follow_up_guidance" | "policies.coverage" | "policies.shipping" | "policies.delivery_time" | "policies.returns" | "agents.from_template" | "agents.brief" | "forms.order_intake" | "forms.appointment_booking" | "company.niche" | "crm.segments" | "crm.rotting_days_default" | "forms.contact_registration" | "commercial.goal" | "commercial.avg_ticket" | "commercial.last_month_revenue" | "commercial.decision_days" | "crm.agent_tasks_max_attempts";
                     handoff?: string;
                 }[];
             }[];
@@ -17071,221 +17481,6 @@ export interface components {
                 value: string;
                 where: string;
             }[];
-        };
-        GoalResponseDto: {
-            /** @description null = sin meta en el período (estado normal, no 404) */
-            goal: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                period_kind: "month";
-                period_start: string;
-                period_end: string;
-                currency: string;
-                target_revenue_cents: number;
-                declared_avg_ticket_cents: number | null;
-                declared_close_rate_pct: number | null;
-                declared_last_month_revenue_cents: number | null;
-                declared_max_attempts: number | null;
-                declared_decision_days: number | null;
-                /** @enum {string} */
-                source: "owner" | "intake" | "system";
-                created_at: string;
-                updated_at: string;
-            } | null;
-            seed: {
-                last_month_revenue_cents: number | null;
-                last_month_sales: number | null;
-                last_month_avg_ticket_cents: number | null;
-                suggested_target_cents: number | null;
-                /** @enum {string} */
-                source: "history" | "declared" | "benchmark";
-                niche_label: string | null;
-            };
-        };
-        GoalInputDto: {
-            target_revenue_cents: number;
-            declared_avg_ticket_cents?: number | null;
-            declared_close_rate_pct?: number | null;
-            /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
-            period?: string;
-        };
-        PlanDto: {
-            /**
-             * Format: uuid
-             * @description null en la preview (meta hipotética)
-             */
-            goal_id: string | null;
-            valid_from_date: string;
-            goal_target_cents: number;
-            currency: string;
-            benchmark_niche_code: string | null;
-            benchmark_niche_label: string | null;
-            inputs: {
-                avg_ticket_cents: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                } | null;
-                quote_to_sale: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                };
-                meeting_to_sale: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                } | null;
-                contact_to_quote: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                };
-                lead_to_contact: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                };
-                call_answer: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                } | null;
-                calls_share: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    window_days: number | null;
-                    sample: number | null;
-                } | null;
-            };
-            figures: {
-                needed_sales: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    basis: string | null;
-                };
-                needed_quotes: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    basis: string | null;
-                };
-                needed_meetings: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    basis: string | null;
-                } | null;
-                needed_contacted: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    basis: string | null;
-                };
-                needed_leads: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    basis: string | null;
-                };
-                needed_calls: {
-                    value: number;
-                    /** @enum {string} */
-                    source: "history" | "declared" | "benchmark";
-                    basis: string | null;
-                } | null;
-            };
-            pacing: {
-                business_days_total: number;
-                business_days_elapsed: number;
-                business_days_left: number;
-                per_day_sales: number;
-            };
-            product_mix: {
-                category: string;
-                share_pct: number;
-                suggested_units: number;
-            }[];
-            /**
-             * @description incomplete = sin ticket promedio: las cifras van en 0 y la UI pide el dato
-             * @enum {string}
-             */
-            status: "ready" | "incomplete";
-            computed_at: string;
-        };
-        RecomputeResponseDto: {
-            queued: boolean;
-        };
-        PaceDto: {
-            /** Format: uuid */
-            goal_id: string;
-            period_start: string;
-            period_end: string;
-            /** @description Fecha local del tenant: el cliente no calcula «hoy» con su reloj */
-            today: string;
-            /** @description Días hábiles según el horario del tenant (0 = domingo … 6 = sábado) */
-            weekdays: number[];
-            currency: string;
-            /** @enum {string} */
-            granularity: "day" | "week";
-            target_revenue_cents: number;
-            actual_revenue_cents: number;
-            expected_revenue_cents: number;
-            projected_revenue_cents: number | null;
-            /** @enum {string} */
-            status: "ahead" | "on_track" | "at_risk" | "behind" | "insufficient_data" | "achieved";
-            /** @enum {string} */
-            data_sufficiency: "ok" | "insufficient";
-            days_until_projection: number | null;
-            business_days_total: number;
-            business_days_elapsed: number;
-            business_days_left: number;
-            avg_ticket_actual_cents: number | null;
-            avg_ticket_sales_count: number | null;
-            key_results: {
-                /** @enum {string} */
-                key: "sales" | "quotes" | "meetings" | "contacted" | "leads" | "calls";
-                actual: number;
-                target: number;
-                /** @description Dónde deberías ir hoy (prorrateo por días hábiles) */
-                expected: number;
-                daily_rate_actual: number;
-                daily_rate_expected: number;
-                /** @enum {string} */
-                source: "history" | "declared" | "benchmark";
-                /** @enum {string} */
-                status: "ahead" | "on_track" | "at_risk" | "behind" | "insufficient_data" | "achieved";
-                /** @description Solo en calls: llamadas contestadas reales */
-                answered_actual: number | null;
-                /** @description Solo en calls: contestadas esperadas a hoy */
-                answered_expected: number | null;
-            }[];
-            /** @description Serie ACUMULADA por día (o por semana ISO, un punto = el cierre de la semana): lo real hasta hoy (los días futuros arrastran el acumulado) y lo esperado hasta el fin del período */
-            series: {
-                date: string;
-                revenue_cents: number;
-                expected_revenue_cents: number;
-                sales: number;
-                expected_sales: number;
-            }[];
-            /** @description La fila de hoy tiene más de 10 min: el servidor ya encoló el refresco */
-            stale: boolean;
-            computed_at: string;
         };
     };
     responses: never;
@@ -24442,6 +24637,48 @@ export interface operations {
             };
         };
     };
+    CrmJourneyController_getSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JourneySettingsDto"];
+                };
+            };
+        };
+    };
+    CrmJourneyController_updateSettings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JourneySettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JourneySettingsDto"];
+                };
+            };
+        };
+    };
     CrmJourneyController_get_v1: {
         parameters: {
             query?: never;
@@ -25508,6 +25745,153 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EvaluateAcceptedDto"];
                 };
+            };
+        };
+    };
+    CommercialController_getGoal_v1: {
+        parameters: {
+            query?: {
+                /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalResponseDto"];
+                };
+            };
+        };
+    };
+    CommercialController_putGoal_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalResponseDto"];
+                };
+            };
+        };
+    };
+    CommercialController_getPlan_v1: {
+        parameters: {
+            query?: {
+                /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description El plan vigente, o `null` sin meta (o sin plan todavía) en el período */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDto"] | null;
+                };
+            };
+        };
+    };
+    CommercialController_previewPlan_v1: {
+        parameters: {
+            query: {
+                target_cents: number;
+                avg_ticket_cents?: number;
+                close_rate_pct?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDto"];
+                };
+            };
+        };
+    };
+    CommercialController_recompute_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecomputeResponseDto"];
+                };
+            };
+            /** @description commercial/recompute_too_soon */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CommercialController_getPace_v1: {
+        parameters: {
+            query?: {
+                granularity?: "day" | "week";
+                /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaceDto"];
+                };
+            };
+            /** @description commercial/goal_not_found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -29055,6 +29439,94 @@ export interface operations {
             };
         };
     };
+    CommercialProposalsController_list_v1: {
+        parameters: {
+            query: {
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommercialProposalListDto"];
+                };
+            };
+        };
+    };
+    CommercialProposalsController_detail_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommercialProposalDetailDto"];
+                };
+            };
+        };
+    };
+    CommercialProposalsController_approve_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalResultDto"];
+                };
+            };
+        };
+    };
+    CommercialProposalsController_reject_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectProposalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectResultDto"];
+                };
+            };
+        };
+    };
     NotificationsController_list_v1: {
         parameters: {
             query?: {
@@ -29866,153 +30338,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApplyOutcomeDto"];
                 };
-            };
-        };
-    };
-    CommercialController_getGoal_v1: {
-        parameters: {
-            query?: {
-                /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
-                period?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoalResponseDto"];
-                };
-            };
-        };
-    };
-    CommercialController_putGoal_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GoalInputDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoalResponseDto"];
-                };
-            };
-        };
-    };
-    CommercialController_getPlan_v1: {
-        parameters: {
-            query?: {
-                /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
-                period?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description El plan vigente, o `null` sin meta en el período */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanDto"];
-                };
-            };
-        };
-    };
-    CommercialController_previewPlan_v1: {
-        parameters: {
-            query: {
-                target_cents: number;
-                avg_ticket_cents?: number;
-                close_rate_pct?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlanDto"];
-                };
-            };
-        };
-    };
-    CommercialController_recompute_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RecomputeResponseDto"];
-                };
-            };
-            /** @description commercial/recompute_too_soon */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CommercialController_getPace_v1: {
-        parameters: {
-            query?: {
-                granularity?: "day" | "week";
-                /** @description Mes del período (YYYY-MM). Por omisión, el mes local en curso. */
-                period?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaceDto"];
-                };
-            };
-            /** @description commercial/goal_not_found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
