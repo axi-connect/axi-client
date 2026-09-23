@@ -7,14 +7,5 @@
  * agenda, con la MISMA aritmética que la agenda de citas — nunca la zona del
  * navegador.
  */
-export {
-  addDaysToKey,
-  businessDayKey,
-  diffDays,
-  hhmmFromInstant,
-  instantFromBusiness,
-  minutesIntoDay,
-  todayKey,
-  weekdayOfKey,
-  type DayKey,
-} from "@/core/lib/business-time";
+// La aritmética de fechas de negocio (`DayKey`, `addDaysToKey`, `todayKey`…) vive en
+// `core/lib/business-time` desde F3 del método comercial: se importa de ahí, no de este barrel.

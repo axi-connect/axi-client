@@ -1,4 +1,4 @@
-import { groupSeriesByWeek, isBusinessDay, weekOf, weekProgress, weekTicks } from "../weeks";
+import { isBusinessDay, weekProgress, weekTicks } from "../weeks";
 
 const MON_SAT = [1, 2, 3, 4, 5, 6];
 
@@ -36,24 +36,6 @@ describe("weekTicks", () => {
   });
 });
 
-describe("groupSeriesByWeek / weekOf", () => {
-  const pts = ["2026-09-01", "2026-09-05", "2026-09-06", "2026-09-07", "2026-09-23"].map((date) => ({ date, sales: 1 }));
-
-  it("agrupa de lunes a domingo, en orden, aunque la serie llegue desordenada", () => {
-    const weeks = groupSeriesByWeek([...pts].reverse());
-    expect(weeks.map((w) => w.points.length)).toEqual([3, 1, 1]);
-    expect(weeks[0].start).toBe("2026-08-31");
-    expect(weeks[0].end).toBe("2026-09-06");
-    expect(weeks[1].start).toBe("2026-09-07");
-  });
-
-  it("weekOf encuentra la semana de hoy o null", () => {
-    const weeks = groupSeriesByWeek(pts);
-    expect(weekOf(weeks, "2026-09-23")?.start).toBe("2026-09-21");
-    expect(weekOf(weeks, "2026-09-15")).toBeNull();
-  });
-});
-
 describe("weekProgress (serie ACUMULADA)", () => {
   const series = [
     { date: "2026-09-18", sales: 20, expected_sales: 24 }, // viernes de la semana anterior
@@ -65,18 +47,28 @@ describe("weekProgress (serie ACUMULADA)", () => {
   ];
 
   it("la semana es la diferencia contra el último punto antes del lunes, no la suma de puntos", () => {
-    expect(weekProgress(series, "2026-09-23", MON_SAT)).toEqual({ sales: 6, expected_sales: 6, business_days: 3 });
+    expect(weekProgress(series, "2026-09-23", MON_SAT, "2026-09-01")).toEqual({ sales: 6, expected_sales: 6, business_days: 3 });
   });
 
   it("si el mes empezó esta semana, la base es cero", () => {
-    expect(weekProgress(series.slice(2), "2026-09-23", MON_SAT)).toEqual({ sales: 27, expected_sales: 31, business_days: 3 });
+    expect(weekProgress(series.slice(2), "2026-09-23", MON_SAT, "2026-09-01")).toEqual({ sales: 27, expected_sales: 31, business_days: 3 });
   });
 
   it("sin puntos de la semana no hay ritmo", () => {
-    expect(weekProgress(series.slice(0, 2), "2026-09-23", MON_SAT)).toBeNull();
+    expect(weekProgress(series.slice(0, 2), "2026-09-23", MON_SAT, "2026-09-01")).toBeNull();
+  });
+
+  it("la primera semana del mes se cuenta desde period_start, no desde un lunes de otro mes", () => {
+    // Septiembre 2026 arranca en martes 1: el miércoles 2 lleva 2 días hábiles (mar, mié), no 3 con el lunes 31-ago.
+    const start = [
+      { date: "2026-08-31", sales: 400, expected_sales: 400 }, // agosto, no cuenta como base ni como día
+      { date: "2026-09-01", sales: 1, expected_sales: 2 },
+      { date: "2026-09-02", sales: 3, expected_sales: 4 },
+    ];
+    expect(weekProgress(start, "2026-09-02", MON_SAT, "2026-09-01")).toEqual({ sales: 3, expected_sales: 4, business_days: 2 });
   });
 
   it("los días hábiles transcurridos respetan el calendario del tenant", () => {
-    expect(weekProgress(series, "2026-09-23", [1, 3, 5])?.business_days).toBe(2);
+    expect(weekProgress(series, "2026-09-23", [1, 3, 5], "2026-09-01")?.business_days).toBe(2);
   });
 });

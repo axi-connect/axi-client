@@ -11,13 +11,13 @@ describe("KeyResultList", () => {
     const { rerender } = render(<KeyResultList pace={pace} plan={plan} />);
     expect(screen.queryAllByRole("link")).toHaveLength(0);
 
-    rerender(<KeyResultList pace={pace} plan={plan} detailHref={(key) => `/comercial/resultados/${key}`} />);
+    rerender(<KeyResultList pace={pace} plan={plan} detailHref={(key) => `/x/${key}`} />);
     expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
-      "/comercial/resultados/sales",
-      "/comercial/resultados/avg_ticket",
-      "/comercial/resultados/quotes",
-      "/comercial/resultados/contacted",
-      "/comercial/resultados/calls",
+      "/x/sales",
+      "/x/avg_ticket",
+      "/x/quotes",
+      "/x/contacted",
+      "/x/calls",
     ]);
   });
 

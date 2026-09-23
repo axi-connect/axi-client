@@ -8,6 +8,7 @@ import { goalLead, routeTitle } from "@/modules/commercial/domain/copy";
 import { monthLabel } from "@/modules/commercial/domain/format";
 import { isLearning } from "@/modules/commercial/domain/pace";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
+import { useMyCompany } from "@/modules/companies/public";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
@@ -34,6 +35,7 @@ import { RouteHero } from "./components/RouteHero";
 export function CommercialView() {
   const { hasPermission } = useAuth();
   const { loaded, hasCapability } = useEntitlements();
+  const { company } = useMyCompany();
   const goal = useCommercialStore((state) => state.goal);
   const plan = useCommercialStore((state) => state.plan);
   const pace = useCommercialStore((state) => state.pace);
@@ -86,7 +88,8 @@ export function CommercialView() {
 
   const current = goal.data.goal;
   const month = monthLabel(current?.period_start ?? pace.data?.today ?? monthKeyFallback());
-  const currency = current?.currency ?? "COP";
+  // Sin meta la moneda es la del tenant, no un «COP» fijo.
+  const currency = current?.currency ?? company?.currency ?? "COP";
 
   if (current === null) {
     return (

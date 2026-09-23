@@ -19,13 +19,13 @@ La ruta del mes: el tenant declara cuánto quiere vender, el servidor la traduce
 
 ## Qué falta
 
-- **F6**: `GET /commercial/proposals` y Aprobar/Rechazar (hoy `ActionList` recibe `proposals={[]}` y pinta «Estás al día…»); sub-rutas `resultados/[key]` y `acciones/[id]` con `@sheet` + `DetailSheet` (los `href` ya apuntan ahí); `PaceTrend` sobre el `AreaTrend` promovido.
-- **F7**: chip de meta en el `BriefingHero` de Axel (consume `public.ts`), grupo `goal` en `SetupNextSteps` de Alba, `StageRatesCard`/`PipelineFlowCard` en Analítica.
+- **F6**: `GET /commercial/proposals` y Aprobar/Rechazar (hoy `ActionList` se monta sin `proposals` y dice «Las acciones que Axi propone llegan pronto.»); las páginas de detalle `resultados/[key]` y `acciones/[id]` con `@sheet` + `DetailSheet` (hasta entonces `KeyResultList`, `PaceLine` y `ActionRow` NO enlazan: `detailHref`/`href` llegan con las páginas); `PaceTrend` sobre el `AreaTrend` promovido.
+- **F7**: chip de meta en el `BriefingHero` de Axel (cuando `public.ts` publique los badges del ritmo), grupo `goal` en `SetupNextSteps` de Alba, `StageRatesCard`/`PipelineFlowCard` en Analítica.
 - **F8**: eventos WS `commercial.*` (`stale: true` hoy solo se pinta lo que hay), verja completa y auditor.
 - **Deuda** (con archivo:línea; auditoría F3 2026-09-23):
   - «Ajustar supuestos» expone solo lo que el modelo de la meta guarda (ticket y cotización → venta); el mockup enseña seis supuestos. Si el servidor persiste más tasas declaradas, el editor las gana campo a campo (`src/modules/commercial/ui/GoalEditorView.tsx`, bloque `<details>`).
-  - El bloque del Panel no pinta skeleton mientras carga (misma regla que el banner de onboarding): aparece cuando hay dato (`src/modules/commercial/ui/components/GoalProgressBlock.tsx:44`).
+  - El bloque del Panel no pinta skeleton mientras carga (misma regla que el banner de onboarding): aparece cuando hay dato (`src/modules/commercial/ui/components/GoalProgressBlock.tsx`, el `return null` bajo el `useEffect`).
   - El mes del título en el estado «sin meta» sale del reloj del navegador (`CommercialView.tsx` `monthKeyFallback`, ídem en `GoalEditorView.tsx`): sin meta no hay `pace.today`. Solo nombra el mes; ninguna cifra sale de ahí. Se salda cuando `GET /commercial/goal` traiga `today`.
-  - `RouteLine` sin `progress` del padre (la franja del Panel) anima con su propio `useEntrance` (`RouteLine.tsx`): un motor por instancia, no por página.
-  - `Section<T>` es la sexta copia del patrón: ver `docs/deuda_tecnica.md`.
+  - `RouteLine` sin `progress` del padre (la franja del Panel) monta `SelfDrivenRouteLine` con su propio `useEntrance` (`src/modules/commercial/ui/components/RouteLine.tsx`); con `progress` no arranca ningún motor propio (un solo motor en el hero).
+  - `Section<T>` es la sexta copia del patrón (`src/modules/commercial/infrastructure/stores/commercial.store.ts:20-33`): ver `docs/deuda_tecnica.md`.
   - Al montar `/comercial` con datos ya cargados (por el Panel) no se refresca: F8 trae los eventos WS que lo hacen innecesario (`CommercialView.tsx`, efecto de carga solo en `idle`).

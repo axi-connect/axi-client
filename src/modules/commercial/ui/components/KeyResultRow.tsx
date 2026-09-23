@@ -76,7 +76,7 @@ export function KeyResultRow({ href, label, value, secondary, extra, pct, status
 }
 
 /** La regla fina de 96 px: el único indicador gráfico de la fila. */
-export function Rule({ pct }: { pct: number }) {
+function Rule({ pct }: { pct: number }) {
   const width = Math.min(100, Math.max(2, pct));
   return (
     <span aria-hidden className="block h-1 w-24 shrink-0 overflow-hidden rounded-full bg-secondary">

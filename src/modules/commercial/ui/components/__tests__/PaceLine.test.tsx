@@ -16,7 +16,7 @@ describe("PaceLine", () => {
   });
 
   it("con href (F6) la línea es un enlace con su etiqueta", () => {
-    render(<PaceLine pace={pace} href="/comercial/resultados/sales" />);
+    render(<PaceLine pace={pace} href="/x" />);
     expect(screen.getByRole("link", { name: /ritmo de esta semana: 6 ventas, esperadas 8, 2 al día/i })).toBeInTheDocument();
   });
 

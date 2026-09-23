@@ -13,6 +13,7 @@ import { GOAL_SAVED_MESSAGE, midMonthLine } from "@/modules/commercial/domain/co
 import { formatInteger } from "@/core/lib/commercial-units";
 import { formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
+import { useMyCompany } from "@/modules/companies/public";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 import { EmptyState } from "@/shared/components/features/empty-state";
@@ -54,6 +55,7 @@ export function GoalEditorView() {
   const { showAlert } = useAlert();
   const { hasPermission } = useAuth();
   const { loaded, hasCapability } = useEntitlements();
+  const { company } = useMyCompany();
   const goal = useCommercialStore((state) => state.goal);
   const blocker = useCommercialStore((state) => state.blocker);
   const pace = useCommercialStore((state) => state.pace);
@@ -69,7 +71,7 @@ export function GoalEditorView() {
   const enabled = !loaded || hasCapability("crm");
   const current = goal.data?.goal ?? null;
   const seed = goal.data?.seed ?? null;
-  const currency = current?.currency ?? "COP";
+  const currency = current?.currency ?? company?.currency ?? "COP";
   const month = monthLabel(current?.period_start ?? pace.data?.today ?? monthKeyFallback());
   const lastMonth = seed?.last_month_revenue_cents ?? null;
 

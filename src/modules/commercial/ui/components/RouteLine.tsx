@@ -28,7 +28,9 @@ interface RouteLineProps {
 }
 
 const PAD_PCT = 1.2;
-const track = (value: number): string => `${String(PAD_PCT + Math.min(1, Math.max(0, value)) * (100 - 2 * PAD_PCT))}%`;
+/** Hasta dónde puede asomar la proyección más allá de la bandera (1 = la meta). */
+const PROJECTION_MAX = 1.04;
+const track = (value: number, max = 1): string => `${String(PAD_PCT + Math.min(max, Math.max(0, value)) * (100 - 2 * PAD_PCT))}%`;
 
 /**
  * El instrumento del módulo: UNA línea horizontal (el mes). El tramo
@@ -49,16 +51,29 @@ const track = (value: number): string => `${String(PAD_PCT + Math.min(1, Math.ma
  * Entrada con el resorte de marca (`spring.soft`, `useReducedMotion` la
  * anula): el tramo recorrido crece desde el origen una sola vez. La bandera
  * de la meta es HTML: un `%` dentro de `d=` de un `<path>` no es SVG válido.
+ * La prolongación punteada puede pasar la bandera hasta un 4 % (`overflow:
+ * visible`): «a donde llegas si sigues así» se ve más allá de la meta.
  */
-export function RouteLine({ done, expected = null, projected = null, projectedLabel = null, weeks = [], compact = false, progress, className }: RouteLineProps) {
+export function RouteLine(props: RouteLineProps) {
+  // Un solo motor por pantalla: si el padre trae el progreso, aquí no se
+  // arranca otro. Los hooks no pueden ser condicionales, así que el motor
+  // propio vive en un componente aparte que solo se monta sin `progress`.
+  if (props.progress === undefined) return <SelfDrivenRouteLine {...props} />;
+  return <RouteLineBase {...props} progress={props.progress} />;
+}
+
+function SelfDrivenRouteLine(props: RouteLineProps) {
+  const t = useEntrance();
+  return <RouteLineBase {...props} progress={t} />;
+}
+
+function RouteLineBase({ done, expected = null, projected = null, projectedLabel = null, weeks = [], compact = false, progress: t, className }: RouteLineProps & { progress: number }) {
   const gradientId = useId();
-  const own = useEntrance();
-  const t = progress ?? own;
 
   const doneClamped = Math.min(1, Math.max(0, done));
   const doneNow = doneClamped * t;
   const showProjection = projected !== null && projected > doneClamped;
-  const projClamped = showProjection ? Math.min(1.04, projected) : null;
+  const projClamped = showProjection ? Math.min(PROJECTION_MAX, projected) : null;
 
   const height = compact ? 28 : 40;
   const y = height / 2;
@@ -107,7 +122,7 @@ export function RouteLine({ done, expected = null, projected = null, projectedLa
         {projClamped !== null ? (
           <line
             x1={track(doneNow)}
-            x2={track(projClamped)}
+            x2={track(projClamped, PROJECTION_MAX)}
             y1={y}
             y2={y}
             stroke="var(--color-muted-foreground)"

@@ -15,8 +15,8 @@ import { InlineFigures } from "@/shared/components/features/inline-figures";
  * (`pace.today`, `pace.weekdays`): el navegador no decide qué día es. Con
  * `href` (F6, el detalle de ventas) la línea entera es un enlace.
  */
-export function PaceLine({ pace, href }: { pace: Pick<CommercialPaceDTO, "series" | "today" | "weekdays">; href?: string }) {
-  const week = weekProgress(pace.series, pace.today, pace.weekdays);
+export function PaceLine({ pace, href }: { pace: Pick<CommercialPaceDTO, "series" | "today" | "weekdays" | "period_start">; href?: string }) {
+  const week = weekProgress(pace.series, pace.today, pace.weekdays, pace.period_start);
   if (week === null) return null;
 
   const perDay = week.business_days > 0 ? week.sales / week.business_days : 0;

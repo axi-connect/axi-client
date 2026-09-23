@@ -18,13 +18,6 @@ export interface WeekTick {
   mid_pct: number;
 }
 
-export interface Week<T> {
-  label: string;
-  start: DayKey;
-  end: DayKey;
-  points: T[];
-}
-
 export function isBusinessDay(key: DayKey, weekdays: readonly number[]): boolean {
   return weekdays.includes(weekdayOfKey(key));
 }
@@ -62,30 +55,6 @@ export function weekTicks(startKey: DayKey, endKey: DayKey, weekdays: readonly n
     });
 }
 
-/**
- * Agrupa una serie diaria por semana (lunes a domingo), en orden. Los puntos
- * llegan con `date` (DayKey del tenant); el resto del punto es del llamador.
- */
-export function groupSeriesByWeek<T extends { date: string }>(points: readonly T[]): Week<T>[] {
-  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
-  const weeks: Week<T>[] = [];
-  for (const point of sorted) {
-    const start = weekStartKey(point.date);
-    const last = weeks[weeks.length - 1];
-    if (last === undefined || last.start !== start) {
-      weeks.push({ label: `S${String(weeks.length + 1)}`, start, end: addDaysToKey(start, 6), points: [point] });
-    } else {
-      last.points.push(point);
-    }
-  }
-  return weeks;
-}
-
-/** La semana que contiene `today`, o `null` si la serie no llega a ella. */
-export function weekOf<T extends { date: string }>(weeks: readonly Week<T>[], today: DayKey): Week<T> | null {
-  return weeks.find((week) => week.start <= today && today <= week.end) ?? null;
-}
-
 export interface WeekProgress {
   sales: number;
   expected_sales: number;
@@ -96,21 +65,27 @@ export interface WeekProgress {
 /**
  * Lo que la semana de `today` lleva, a partir de una serie ACUMULADA: el
  * último punto hasta hoy menos el último punto anterior al lunes (0 si el mes
- * empezó esta semana). `null` si la serie no tiene ningún punto de la semana.
+ * empezó esta semana). Los días hábiles transcurridos se cuentan desde
+ * `max(lunes, period_start)`: septiembre de 2026 arranca en martes y el 2 de
+ * septiembre lleva 2 días, no 3 con un lunes de agosto que no es del mes.
+ * `null` si la serie no tiene ningún punto de la semana.
  */
 export function weekProgress(
   series: readonly { date: string; sales: number; expected_sales: number }[],
   today: DayKey,
   weekdays: readonly number[],
+  periodStart: DayKey,
 ): WeekProgress | null {
   const sorted = [...series].sort((a, b) => a.date.localeCompare(b.date));
   const monday = weekStartKey(today);
-  const inWeek = sorted.filter((point) => point.date >= monday && point.date <= today);
+  const from = monday > periodStart ? monday : periodStart;
+  const inWeek = sorted.filter((point) => point.date >= from && point.date <= today);
   if (inWeek.length === 0) return null;
   const last = inWeek[inWeek.length - 1];
-  const before = sorted.filter((point) => point.date < monday).pop();
+  // La base es el último punto del PERIODO anterior al tramo: un punto de otro mes no es base.
+  const before = sorted.filter((point) => point.date >= periodStart && point.date < from).pop();
   const base = before ?? { sales: 0, expected_sales: 0 };
-  const businessDays = eachDay(monday, today).filter((day) => isBusinessDay(day, weekdays)).length;
+  const businessDays = eachDay(from, today).filter((day) => isBusinessDay(day, weekdays)).length;
   return {
     sales: Math.max(0, last.sales - base.sales),
     expected_sales: Math.max(0, last.expected_sales - base.expected_sales),

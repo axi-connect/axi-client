@@ -10,9 +10,9 @@ afterEach(cleanup);
 
 describe("InlineFigures", () => {
   it("con `href` la línea entera es un enlace y lleva la etiqueta accesible", () => {
-    render(<InlineFigures eyebrow="Ritmo · esta semana" figures={figures} href="/comercial/resultados/sales" ariaLabel="Ritmo: 6 ventas" />);
+    render(<InlineFigures eyebrow="Ritmo · esta semana" figures={figures} href="/x" ariaLabel="Ritmo: 6 ventas" />);
     const link = screen.getByRole("link", { name: "Ritmo: 6 ventas" });
-    expect(link).toHaveAttribute("href", "/comercial/resultados/sales");
+    expect(link).toHaveAttribute("href", "/x");
     expect(link).toHaveTextContent("Ritmo · esta semana");
   });
 
