@@ -24,6 +24,16 @@ import { issueDocument } from "@/modules/documents/infrastructure/services/docum
 import { PaperMark } from "./PaperMark";
 
 /**
+ * Lo que el menú dice de cada política, como mapa EXHAUSTIVO sobre el enum del
+ * wire: si el servidor añade una política, esto no compila hasta decidir qué
+ * decirle a la persona.
+ */
+const ISSUE_POLICY_HINT: Record<DocumentTypeView["issue_policy"], string> = {
+  once: "Con los datos de hoy · uno por entidad",
+  many: "Con los datos de hoy",
+};
+
+/**
  * «Emitir» (F8 Cobros): la única acción coral de la sección. Ofrece SOLO lo
  * que el catálogo declara emitible a mano sobre esta entidad; el recibo no
  * aparece para un pedido porque sale solo con cada pago. Lo que ya existe se
@@ -116,9 +126,7 @@ export function IssueDocumentMenu({
               <span className="block text-xs text-muted-foreground">
                 {existing !== null
                   ? "Ya emitido · uno por entidad"
-                  : type.issue_policy === "many"
-                    ? "Con los datos de hoy"
-                    : "Con los datos de hoy · uno por entidad"}
+                  : ISSUE_POLICY_HINT[type.issue_policy]}
               </span>
             </span>
             <span className="flex items-center gap-1 font-mono text-xs text-muted-foreground tabular-nums">
