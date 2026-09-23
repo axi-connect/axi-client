@@ -8,13 +8,13 @@ export const KR_LABELS: Record<KeyResultKey, string> = {
   meetings: "Citas agendadas",
   contacted: "Contactados",
   leads: "Conversaciones nuevas",
-  calls: "Llamadas contestadas",
+  calls: "Llamadas hechas",
 };
 
 export const KR_ORDER: readonly KeyResultKey[] = ["sales", "quotes", "meetings", "contacted", "leads", "calls"];
 
 /** La procedencia de una cifra, dicha como se dice en la pantalla. */
-export const SOURCE_LABELS: Record<SourceKind, string> = {
+const SOURCE_LABELS: Record<SourceKind, string> = {
   history: "según tu historia",
   declared: "lo dijiste tú",
   benchmark: "supuesto para tu tipo de negocio",
@@ -37,8 +37,9 @@ export function sourceLabel(source: SourceKind, nicheLabel?: string | null): str
 export const PACE_BADGES: StatusMap = {
   ahead: { label: "Adelantado", tone: "success" },
   on_track: { label: "Al ritmo", tone: "success" },
+  // Dos umbrales, una sola palabra: la voz «progreso» no gradúa el regaño.
   at_risk: { label: "Ritmo bajo", tone: "warning" },
-  behind: { label: "Atrasado", tone: "warning" },
+  behind: { label: "Ritmo bajo", tone: "warning" },
   insufficient_data: { label: "Aprendiendo tu ritmo", tone: "neutral" },
   achieved: { label: "Cumplida", tone: "success" },
 };

@@ -1,23 +1,12 @@
+import type { CommercialPaceDTO, PaceStatus } from "./commercial";
+
 /**
- * Aritmética del ritmo, en el cliente. El servidor calcula el ritmo oficial;
- * esto es lo que la pantalla necesita derivar sobre la marcha (la barra de
- * una fila, las ventas por día que faltan) y lo que fija la voz «progreso»:
- * ningún número sale negativo.
+ * Aritmética del ritmo, en el cliente. **El estado del ritmo lo decide el
+ * servidor** (`pace.status`, con sus umbrales y su calendario): aquí solo vive
+ * lo que la pantalla deriva sobre la marcha —la barra de una fila, las ventas
+ * por día que faltan— y la regla de la voz «progreso»: ningún número sale
+ * negativo.
  */
-
-export interface PaceThresholds {
-  ahead_pct: number;
-  on_track_pct: number;
-  at_risk_pct: number;
-}
-
-/** Umbrales del plan (`settings.commercial`): >110 adelantado, ≥90 al ritmo, ≥80 ritmo bajo. */
-export const DEFAULT_THRESHOLDS: PaceThresholds = { ahead_pct: 110, on_track_pct: 90, at_risk_pct: 80 };
-
-/** Días hábiles mínimos antes de afirmar un ritmo. */
-export const MIN_BUSINESS_DAYS = 3;
-
-export type PaceStatusValue = "ahead" | "on_track" | "at_risk" | "behind" | "insufficient_data" | "achieved";
 
 const clampPct = (value: number): number => Math.min(100, Math.max(0, value));
 
@@ -50,44 +39,18 @@ export function dailyRateNeeded(missing: number, daysLeft: number): number {
   return missing / daysLeft;
 }
 
-/** Ritmo real hasta hoy. Sin días transcurridos no hay ritmo. */
-export function dailyRateActual(actual: number, daysElapsed: number): number {
-  if (!Number.isFinite(actual) || !Number.isFinite(daysElapsed) || daysElapsed <= 0) return 0;
-  return actual / daysElapsed;
+/**
+ * El estado que se PINTA. Una meta cumplida gana siempre, aunque los datos
+ * no alcancen para un ritmo; sin datos suficientes se está «aprendiendo» sea
+ * lo que sea lo que diga el ritmo. Un solo sitio para esa regla: el hero, la
+ * franja del Panel y las listas la leen de aquí.
+ */
+export function displayStatus(pace: Pick<CommercialPaceDTO, "status" | "data_sufficiency">): PaceStatus {
+  if (pace.status === "achieved") return "achieved";
+  if (pace.data_sufficiency !== "ok") return "insufficient_data";
+  return pace.status;
 }
 
-/**
- * El estado del ritmo, con los umbrales del plan.
- *
- * - Menos de 3 días hábiles → `insufficient_data`: con un día de datos no se
- *   afirma nada.
- * - Meta alcanzada (con `target`) → `achieved`, gane o pierda el ritmo.
- * - Si no, la razón real/esperado contra los umbrales.
- */
-export function paceStatus(
-  actual: number,
-  expected: number,
-  thresholds: PaceThresholds = DEFAULT_THRESHOLDS,
-  daysElapsed: number = MIN_BUSINESS_DAYS,
-  target?: number,
-): PaceStatusValue {
-  if (target !== undefined && target > 0 && actual >= target) return "achieved";
-  if (daysElapsed < MIN_BUSINESS_DAYS || expected <= 0) return "insufficient_data";
-  // `actual * 100 / expected` y no `(actual / expected) * 100`: 110/100*100 da
-  // 110,00000000000001 y el umbral «>110» se cruzaba solo.
-  const ratio = (actual * 100) / expected;
-  if (ratio > thresholds.ahead_pct) return "ahead";
-  if (ratio >= thresholds.on_track_pct) return "on_track";
-  if (ratio >= thresholds.at_risk_pct) return "at_risk";
-  return "behind";
-}
-
-/**
- * A dónde llegas si sigues así, en % de la meta (puede pasar de 100).
- * `null` sin días transcurridos o sin meta.
- */
-export function projectedPct(actual: number, daysElapsed: number, daysTotal: number, target: number): number | null {
-  if (target <= 0 || daysElapsed <= 0 || daysTotal <= 0) return null;
-  const projected = (actual / daysElapsed) * daysTotal;
-  return Math.max(0, (projected / target) * 100);
+export function isLearning(pace: Pick<CommercialPaceDTO, "status" | "data_sufficiency">): boolean {
+  return displayStatus(pace) === "insufficient_data";
 }

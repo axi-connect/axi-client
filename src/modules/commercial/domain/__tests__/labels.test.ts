@@ -17,6 +17,12 @@ describe("labels", () => {
     expect(sourceLabel("history", "clínicas estéticas")).toBe("según tu historia");
   });
 
+  it("los dos umbrales bajos dicen lo mismo, y las llamadas son las hechas", () => {
+    expect(PACE_BADGES.behind.label).toBe("Ritmo bajo");
+    expect(PACE_BADGES.at_risk.label).toBe("Ritmo bajo");
+    expect(KR_LABELS.calls).toBe("Llamadas hechas");
+  });
+
   it("el orden de la lista cubre todas las etiquetas", () => {
     expect([...KR_ORDER].sort()).toEqual(Object.keys(KR_LABELS).sort());
   });

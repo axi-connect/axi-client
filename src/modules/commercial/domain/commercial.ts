@@ -57,10 +57,14 @@ export interface GoalSeedDTO {
   niche_label: string | null;
 }
 
-/** `GET /commercial/goal`: la meta del mes en curso (o `null`) y la semilla. */
+/**
+ * `GET /commercial/goal`: la meta del mes en curso (o `null`) y la semilla.
+ * `seed` es `null` solo en el cliente, cuando la meta se guardó sin haber
+ * cargado antes la respuesta (no se inventa una semilla).
+ */
 export interface GoalResponseDTO {
   goal: CommercialGoalDTO | null;
-  seed: GoalSeedDTO;
+  seed: GoalSeedDTO | null;
 }
 
 /** `PUT /commercial/goal`. Lo que se edita en «Ajustar supuestos» pasa a «lo dijiste tú». */
@@ -135,8 +139,17 @@ export interface PaceKeyResultDTO {
   daily_rate_expected: number;
   source: SourceKind;
   status: PaceStatus;
+  /** Solo en `calls`: el KR cuenta llamadas HECHAS; estas son las contestadas. */
+  answered_actual: number | null;
+  answered_expected: number | null;
 }
 
+/**
+ * Un punto de la serie del mes. **Las cifras son ACUMULADAS** desde el primer
+ * día del periodo (`sales += orders_paid` día a día), no el valor del día: el
+ * valor de una semana es el último punto de la semana menos el último punto
+ * anterior a su lunes.
+ */
 export interface PacePointDTO {
   date: string;
   revenue_cents: number;
@@ -152,6 +165,10 @@ export interface CommercialPaceDTO {
   period_end: string;
   currency: string;
   granularity: PaceGranularity;
+  /** «Hoy» en la zona horaria del tenant (`YYYY-MM-DD`). El navegador no decide qué día es. */
+  today: string;
+  /** Días hábiles del tenant (0=domingo … 6=sábado), de su horario de atención. */
+  weekdays: number[];
   target_revenue_cents: number;
   actual_revenue_cents: number;
   expected_revenue_cents: number;
@@ -170,11 +187,6 @@ export interface CommercialPaceDTO {
   /** La fila de hoy tiene >10 min: el servidor ya encoló el refresco. */
   stale: boolean;
   computed_at: string;
-}
-
-/** `POST /commercial/plan/recompute`: 202 encolado; 429 si hace <10 min. */
-export interface RecomputeResponseDTO {
-  queued: boolean;
 }
 
 /**

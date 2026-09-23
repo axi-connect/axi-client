@@ -50,6 +50,7 @@ describe("paceHeadline", () => {
       "Meta cumplida con 3 días de sobra. Lo que venga ahora es camino extra.",
     );
     expect(paceHeadline({ ...base, status: "achieved", days_left: 1 })).toContain("con 1 día de sobra");
+    expect(paceHeadline({ ...base, status: "achieved", days_left: 0 })).toBe("Meta cumplida hoy. Lo que venga ahora es camino extra.");
   });
 
   it("aprendiendo: cuándo habrá proyección", () => {
@@ -128,6 +129,7 @@ describe("seedLine", () => {
       "Aún no tenemos tu historia: te proponemos empezar con lo típico de «clínicas estéticas».",
     );
     expect(seedLine({ ...seed, source: "benchmark", niche_label: null }, "COP")).toContain("tu tipo de negocio");
+    expect(seedLine(null, "COP")).toBeNull();
   });
 });
 
@@ -143,7 +145,7 @@ describe("learningLine / midMonthLine", () => {
     expect(
       midMonthLine({ currency: "COP", actual_cents: 1_894_000_000, sales_actual: 27, sales_target: 43, days_left: 6 }),
     ).toBe(
-      "Llevas $ 18,9 M y 27 ventas. Si mantienes la meta, la ruta se recalcula desde hoy: faltan 16 ventas en los 6 días hábiles que quedan (2,67 al día). Si la cambias, lo recorrido se conserva.",
+      "Llevas $ 18,9 M y 27 ventas. Si mantienes la meta, la ruta se recalcula desde hoy: faltan 16 ventas en los 6 días hábiles que quedan (2,7 al día). Si la cambias, lo recorrido se conserva.",
     );
   });
 });

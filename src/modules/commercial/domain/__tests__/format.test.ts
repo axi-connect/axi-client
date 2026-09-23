@@ -22,6 +22,7 @@ describe("formatRate", () => {
     expect(formatRate(1.6)).toBe("1,6");
     expect(formatRate(2)).toBe("2");
     expect(formatRate(2.6667)).toBe("2,67");
+    expect(formatRate(2.6667, 1)).toBe("2,7");
   });
 });
 

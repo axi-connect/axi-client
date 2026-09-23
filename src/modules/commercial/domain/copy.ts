@@ -1,6 +1,7 @@
+import { formatInteger } from "@/core/lib/commercial-units";
 import { formatMoney } from "@/core/lib/format";
 import type { GoalSeedDTO, GoalSource, PaceStatus, SourceKind } from "./commercial";
-import { formatCount, formatMillions, formatPct, formatRate, shortDay } from "./format";
+import { formatMillions, formatPct, formatRate, shortDay } from "./format";
 import { sourceLabel } from "./labels";
 import { dailyRateNeeded, gap } from "./pace";
 
@@ -14,14 +15,14 @@ import { dailyRateNeeded, gap } from "./pace";
 /** «1 venta al día» · «3 ventas al día». Siempre hacia arriba: 2,3 ventas no existen. */
 export function salesPerDay(rate: number): string {
   const n = Math.max(1, Math.ceil(rate));
-  return n === 1 ? "1 venta al día" : `${formatCount(n)} ventas al día`;
+  return n === 1 ? "1 venta al día" : `${formatInteger(n)} ventas al día`;
 }
 
 /** «en los 6 días hábiles que quedan» · «en el día hábil que queda» · «hoy». */
 export function daysLeftPhrase(days: number): string {
   if (days <= 0) return "hoy";
   if (days === 1) return "en el día hábil que queda";
-  return `en los ${formatCount(days)} días hábiles que quedan`;
+  return `en los ${formatInteger(days)} días hábiles que quedan`;
 }
 
 function plural(n: number, one: string, many: string): string {
@@ -64,11 +65,12 @@ export function paceHeadline(input: PaceHeadlineInput): string {
     }
     case "achieved": {
       const d = Math.max(0, input.days_left);
-      return `Meta cumplida con ${formatCount(d)} ${plural(d, "día", "días")} de sobra. Lo que venga ahora es camino extra.`;
+      if (d === 0) return "Meta cumplida hoy. Lo que venga ahora es camino extra.";
+      return `Meta cumplida con ${formatInteger(d)} ${plural(d, "día", "días")} de sobra. Lo que venga ahora es camino extra.`;
     }
     case "insufficient_data": {
       const d = Math.max(1, input.days_until_projection ?? 1);
-      return `Estamos aprendiendo tu ritmo. En ${formatCount(d)} ${plural(d, "día", "días")} tendrás proyección y acciones.`;
+      return `Estamos aprendiendo tu ritmo. En ${formatInteger(d)} ${plural(d, "día", "días")} tendrás proyección y acciones.`;
     }
   }
 }
@@ -79,9 +81,9 @@ export function paceHeadline(input: PaceHeadlineInput): string {
  */
 export function missingLine(actual: number, target: number): string {
   const { missing, surplus } = gap(actual, target);
-  const head = `${formatCount(actual)} de ${formatCount(target)}`;
-  if (missing > 0) return `${head} · ${missing === 1 ? "falta 1" : `faltan ${formatCount(missing)}`}`;
-  if (surplus > 0) return `${head} · ${formatCount(surplus)} por delante`;
+  const head = `${formatInteger(actual)} de ${formatInteger(target)}`;
+  if (missing > 0) return `${head} · ${missing === 1 ? "falta 1" : `faltan ${formatInteger(missing)}`}`;
+  if (surplus > 0) return `${head} · ${formatInteger(surplus)} por delante`;
   return `${head} · completo`;
 }
 
@@ -100,7 +102,7 @@ export function rateLine(actualRate: number, expectedRate: number, source: Sourc
 /** El aviso del estado «aprendiendo»: cuánto llevamos y los dos hitos del método. */
 export function learningLine(daysElapsed: number): string {
   const d = Math.max(0, daysElapsed);
-  const so_far = d === 0 ? "Aún no hay un día hábil de datos" : `Llevas ${formatCount(d)} ${plural(d, "día hábil", "días hábiles")} de datos`;
+  const so_far = d === 0 ? "Aún no hay un día hábil de datos" : `Llevas ${formatInteger(d)} ${plural(d, "día hábil", "días hábiles")} de datos`;
   return `${so_far}; con 3 empezamos a proyectar, y a los 30 días tus tasas reales reemplazan los supuestos por tipo de negocio.`;
 }
 
@@ -117,14 +119,15 @@ export function midMonthLine(input: {
 }): string {
   const { missing } = gap(input.sales_actual, input.sales_target);
   const rate = dailyRateNeeded(missing, input.days_left);
-  return `Llevas ${formatMillions(input.actual_cents, input.currency)} y ${formatCount(input.sales_actual)} ${plural(input.sales_actual, "venta", "ventas")}. Si mantienes la meta, la ruta se recalcula desde hoy: faltan ${formatCount(missing)} ${plural(missing, "venta", "ventas")} ${daysLeftPhrase(input.days_left)} (${formatRate(rate)} al día). Si la cambias, lo recorrido se conserva.`;
+  return `Llevas ${formatMillions(input.actual_cents, input.currency)} y ${formatInteger(input.sales_actual)} ${plural(input.sales_actual, "venta", "ventas")}. Si mantienes la meta, la ruta se recalcula desde hoy: faltan ${formatInteger(missing)} ${plural(missing, "venta", "ventas")} ${daysLeftPhrase(input.days_left)} (${formatRate(rate, 1)} al día). Si la cambias, lo recorrido se conserva.`;
 }
 
 /**
  * La línea de semilla del estado vacío: la historia si la hay, si no el nicho.
  * Con historia y sin sugerencia del servidor, solo cuenta lo vendido.
  */
-export function seedLine(seed: GoalSeedDTO, currency: string): string {
+export function seedLine(seed: GoalSeedDTO | null, currency: string): string | null {
+  if (seed === null) return null;
   if (seed.source !== "benchmark" && seed.last_month_revenue_cents !== null) {
     const base = `El mes pasado vendiste ${formatMoney(seed.last_month_revenue_cents, currency)}.`;
     if (seed.suggested_target_cents === null || seed.last_month_revenue_cents <= 0) return base;
@@ -152,7 +155,10 @@ export function routeTitle(month: string): string {
 /** Confirmación al guardar la meta. */
 export const GOAL_SAVED_MESSAGE = "Meta puesta. Empezamos a medir el camino.";
 
-/** El estado vacío de «Axi propone» mientras no haya nada que acelerar. */
+/** F3: las propuestas aún no se cargan (llegan con `GET /commercial/proposals`, F6). */
+export const PROPOSALS_COMING_MESSAGE = "Las acciones que Axi propone llegan pronto.";
+
+/** El estado vacío de «Axi propone» mientras no haya nada que acelerar (F6). */
 export const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";
 
 /** El mismo hueco, en el estado «aprendiendo». */
