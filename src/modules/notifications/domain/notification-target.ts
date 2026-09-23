@@ -17,6 +17,15 @@ const FAMILY: Record<string, TargetResolver> = {
     typeof d.conversation_id === "string" ? `/workspace/inbox/${d.conversation_id}` : null,
   // F11: el detalle abre como rail (ruta interceptada) sobre el panel
   "order.": (d) => (typeof d.order_id === "string" ? `/orders/${d.order_id}` : "/orders"),
+  // F8 Cobros: «no se pudo generar el contrato» se arregla desde el pedido
+  // (Reintentar / Regenerar); un documento sin pedido vive en la ficha del
+  // contacto. Sin ninguno de los dos no hay adónde ir.
+  "document.": (d) =>
+    typeof d.order_id === "string"
+      ? `/orders/${d.order_id}`
+      : typeof d.contact_id === "string"
+        ? `/crm/contacts/${d.contact_id}`
+        : null,
   // CRM F0: deals → rail del board; tareas → bandeja; imports → historial.
   "crm.deal_": (d) =>
     typeof d.deal_id === "string" ? `/crm/pipeline/deal/${d.deal_id}` : "/crm/pipeline",

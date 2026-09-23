@@ -319,6 +319,31 @@ export type OrderPaymentVerifiedEvent = OrderRealtimeSummary & {
 export type OrderUpdatedEvent = OrderRealtimeSummary;
 
 // ---------------------------------------------------------------------------
+// Documentos (F8 Cobros) — el PDF de un documento quedó archivado o su render
+// falló. Los publica la API al consumir `document_events` (el worker no tiene
+// bus). El WS AVISA, no sincroniza: ids, número y estado; el rail vuelve a
+// pedir la lista. Room company_{id}, namespace /inbox.
+// Payload espejo de axi-server documents/infrastructure/queue/document_events.processor.ts
+// ---------------------------------------------------------------------------
+
+export type DocumentLifecycleEvent = {
+  company_id: string;
+  document_id: string;
+  type_code: string | null;
+  /** Etiqueta del tipo («Contrato»): quien escucha no conoce el catálogo. */
+  type_label: string;
+  number: string | null;
+  status: "rendered" | "failed";
+  contact_id: string | null;
+  order_id: string | null;
+  payment_id: string | null;
+  error_code: string | null;
+};
+
+export type DocumentIssuedEvent = DocumentLifecycleEvent & { status: "rendered" };
+export type DocumentFailedEvent = DocumentLifecycleEvent & { status: "failed" };
+
+// ---------------------------------------------------------------------------
 // CRM (F0) — deals/actividades/imports en vivo. Rooms company_{id} (+
 // conversation_{id} si el deal nació de una conversación). `crm.task_due` NO
 // viaja por WS: llega solo como notification.created (campanita).
@@ -863,6 +888,8 @@ export type InboxServerEvents = {
   "order.payment_reported": (payload: OrderPaymentReportedEvent) => void;
   "order.payment_verified": (payload: OrderPaymentVerifiedEvent) => void;
   "order.updated": (payload: OrderUpdatedEvent) => void;
+  "document.issued": (payload: DocumentIssuedEvent) => void;
+  "document.failed": (payload: DocumentFailedEvent) => void;
   "crm.deal_created": (payload: CrmDealCreatedEvent) => void;
   "crm.deal_updated": (payload: CrmDealUpdatedEvent) => void;
   "crm.deal_stage_changed": (payload: CrmDealStageChangedEvent) => void;

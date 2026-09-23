@@ -19,10 +19,12 @@ import {
   listAssignableUsers,
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
+import { listOrders, type OrderDTO } from "@/modules/orders/public";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
+import { ContactOrdersDocumentsCard } from "@/modules/crm/ui/components/contact-detail/ContactOrdersDocumentsCard";
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
 import { TagsEditor } from "@/modules/crm/ui/components/contact-detail/TagsEditor";
@@ -33,6 +35,8 @@ type ContactBundle = {
   profile: ContactProfileDTO;
   tags: ContactTagDTO[];
   deals: DealDTO[];
+  /** F8 Cobros: pedidos del contacto para la card «Pedidos y documentos». */
+  orders: OrderDTO[];
   users: Array<{ id: string; name: string }>;
 };
 
@@ -56,11 +60,13 @@ export default function Contact360Page({
 
   const load = useCallback(async () => {
     try {
-      const [contact, profile, tags, dealsPage, users] = await Promise.all([
+      const [contact, profile, tags, dealsPage, ordersPage, users] = await Promise.all([
         getContact(contactId),
         getContactProfile(contactId),
         getContactTags(contactId),
         listDeals({ contact_id: contactId, page_size: 25 }),
+        // Sin permiso de pedidos la card sale vacía, no la página entera
+        listOrders({ contact_id: contactId, page_size: 10 }).catch(() => ({ data: [] })),
         listAssignableUsers().catch(() => []),
       ]);
       setBundle({
@@ -68,6 +74,7 @@ export default function Contact360Page({
         profile,
         tags,
         deals: dealsPage.data,
+        orders: ordersPage.data,
         users: users.filter((user) => user.status === "active"),
       });
     } catch (err) {
@@ -112,6 +119,8 @@ export default function Contact360Page({
             deals={bundle.deals}
             contact={{ id: contactId, label: contactDisplayName(bundle.contact) }}
           />
+          {/* F8 Cobros: los pedidos con saldo y el papel archivado a nombre de la persona */}
+          <ContactOrdersDocumentsCard contactId={contactId} orders={bundle.orders} />
         </div>
       </div>
 

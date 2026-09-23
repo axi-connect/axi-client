@@ -27,6 +27,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
 import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
+import { DocumentsList } from "@/modules/documents/public";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
   describeDelivery,
@@ -345,6 +346,14 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                   ))
                 )}
               </section>
+
+              {/* F8 Cobros: el papel de la reserva. La lista se gatea sola (función
+                  `documents` + permiso de lectura): sin ellos no pinta nada. */}
+              <DocumentsList
+                subject={{ kind: "order", id: order.id }}
+                subjectLabel={`la reserva ${orderNumberLabel(order.order_number)}`}
+                subjectUpdatedAt={order.updated_at}
+              />
 
               {/* Actividad */}
               <section className="space-y-3">

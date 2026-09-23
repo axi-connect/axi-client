@@ -38,15 +38,42 @@ export const documentSettingsSchema = z.object({
       z.string().trim().toUpperCase().regex(PREFIX, "1 a 6 letras o números"),
     ]),
   ),
+  /**
+   * F8: «siguiente número» por tipo. Solo se manda lo que cambió y solo se
+   * puede editar con el contador virgen (el servidor responde 409 si no).
+   */
+  start_at: z.record(
+    z.string(),
+    z.union([
+      z.literal(""),
+      z
+        .string()
+        .trim()
+        .regex(/^[1-9]\d{0,6}$/, "Un entero desde 1"),
+    ]),
+  ),
 });
 
 export type DocumentSettingsFormValues = z.infer<typeof documentSettingsSchema>;
+
+const issuable = (types: readonly DocumentTypeView[]) =>
+  types.filter((type) => type.issuable);
+
+function nextOf(dto: DocumentsSettingsDTO, code: string) {
+  return dto.numbering.next[code as keyof typeof dto.numbering.next];
+}
 
 export function fromSettingsDto(
   dto: DocumentsSettingsDTO,
   types: readonly DocumentTypeView[],
 ): DocumentSettingsFormValues {
   return {
+    start_at: Object.fromEntries(
+      issuable(types).map((type) => [
+        type.code,
+        String(nextOf(dto, type.code)?.next_value ?? 1),
+      ]),
+    ),
     legal_name: dto.issuer.legal_name ?? "",
     tax_id_label: dto.issuer.tax_id_label,
     address: dto.issuer.address ?? "",
@@ -67,10 +94,26 @@ export function fromSettingsDto(
   };
 }
 
-/** El PUT es de sección: lo vacío viaja como null y cae a la ficha de Mi empresa. */
+/**
+ * El PUT es de sección: lo vacío viaja como null y cae a la ficha de Mi
+ * empresa. `start_at` viaja SOLO con lo que cambió respecto al contador que el
+ * servidor enseñó: mandar los valores sin tocar sería pedir mover contadores
+ * que ya empezaron y ganarse un 409 por nada.
+ */
 export function toSettingsPayload(
   values: DocumentSettingsFormValues,
+  current?: DocumentsSettingsDTO,
 ): UpdateDocumentsSettingsDTO {
+  const startAt = Object.fromEntries(
+    Object.entries(values.start_at)
+      .filter(([code, raw]) => {
+        if (raw === "") return false;
+        const next = current === undefined ? undefined : nextOf(current, code);
+        if (next?.started === true) return false;
+        return next === undefined || Number(raw) !== next.next_value;
+      })
+      .map(([code, raw]) => [code, Number(raw)]),
+  ) as NonNullable<UpdateDocumentsSettingsDTO["numbering"]["start_at"]>;
   const orNull = (value: string) => (value.trim() === "" ? null : value.trim());
   const prefixes = Object.fromEntries(
     Object.entries(values.prefixes)
@@ -87,7 +130,10 @@ export function toSettingsPayload(
       email: orNull(values.email),
       footer_note: orNull(values.footer_note),
     },
-    numbering: { prefixes },
+    numbering: {
+      prefixes,
+      ...(Object.keys(startAt).length > 0 ? { start_at: startAt } : {}),
+    },
   };
 }
 
@@ -100,8 +146,10 @@ export function buildDocumentSettingsFields(input: {
   types: readonly DocumentTypeView[];
   defaults: DocumentsSettingsDTO["company_defaults"];
   prefixDefaults: DocumentsSettingsDTO["prefix_defaults"];
+  /** F8: dónde está cada consecutivo; con `started` el campo se bloquea y lo dice. */
+  next?: DocumentsSettingsDTO["numbering"]["next"];
 }): FieldConfig<DocumentSettingsFormValues>[] {
-  const { types, defaults, prefixDefaults } = input;
+  const { types, defaults, prefixDefaults, next } = input;
   const issuer: FieldConfig<DocumentSettingsFormValues>[] = [
     createInputField("legal_name", {
       label: "Razón social",
@@ -152,5 +200,29 @@ export function buildDocumentSettingsFields(input: {
         inputProps: { className: "font-mono uppercase", maxLength: 6 },
       }),
     );
-  return [...issuer, ...prefixes];
+  // F8: el «siguiente número» va al lado de su prefijo, tipo por tipo.
+  const startAt = issuable(types).map((type) => {
+    const state = next?.[type.code as keyof typeof next];
+    const started = state?.started === true;
+    const prefix =
+      prefixDefaults[type.code as keyof typeof prefixDefaults] ??
+      type.default_prefix;
+    return createInputField(`start_at.${type.code}` as `start_at.${string}`, {
+      label: `${type.label} · siguiente número`,
+      description: started
+        ? `Ya salió el primero: el siguiente será ${prefix}-…-${String(state?.next_value ?? 1).padStart(4, "0")}. La numeración no se mueve.`
+        : `Para continuar una numeración que ya llevabas. Saldrá como ${prefix}-2026-${String(state?.next_value ?? 1).padStart(4, "0")}.`,
+      isDisabled: () => started,
+      inputProps: {
+        className: "font-mono",
+        inputMode: "numeric",
+        maxLength: 7,
+      },
+    });
+  });
+  const numbering = prefixes.flatMap((prefixField, index) => {
+    const startField = startAt[index];
+    return startField === undefined ? [prefixField] : [prefixField, startField];
+  });
+  return [...issuer, ...numbering];
 }

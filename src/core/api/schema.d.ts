@@ -4564,6 +4564,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_list_v1"];
+        put?: never;
+        post: operations["DocumentsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_fileUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsController_regenerate_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsController_retry_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geo/search": {
         parameters: {
             query?: never;
@@ -13782,6 +13862,11 @@ export interface components {
                 code: string;
                 label: string;
                 issuable: boolean;
+                /** @enum {string} */
+                issue_subject: "order" | "payment";
+                /** @enum {string} */
+                issue_policy: "once" | "many";
+                regenerable: boolean;
                 default_prefix: string;
                 data_domains: string[];
                 allowed_blocks: ("heading" | "paragraph" | "clauses" | "key_values" | "parties" | "line_items_table" | "totals" | "schedule_table" | "payment_summary" | "signatures" | "image" | "legal_notice" | "page_footer" | "divider" | "spacer")[];
@@ -14608,6 +14693,12 @@ export interface components {
                 prefixes: {
                     [key: string]: string;
                 };
+                next: {
+                    [key: string]: {
+                        next_value: number;
+                        started: boolean;
+                    };
+                };
             };
             auto_issue: {
                 contract_on_confirm: boolean;
@@ -14652,7 +14743,125 @@ export interface components {
                 prefixes: {
                     [key: string]: string;
                 };
+                start_at?: {
+                    [key: string]: number;
+                };
             };
+        };
+        IssueDocumentDto: {
+            /** @enum {string} */
+            type_code: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+            subject: {
+                /** @enum {string} */
+                kind: "order" | "payment";
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        IssueDocumentResultDto: {
+            document: {
+                id: string;
+                type_code: string;
+                type_label: string;
+                /** @enum {string} */
+                status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                number: string;
+                contact_id: string | null;
+                order_id: string | null;
+                payment_id: string | null;
+                /** @enum {string} */
+                template_source: "system" | "tenant";
+                template_version_id: string | null;
+                size_bytes: number | null;
+                page_count: number | null;
+                /** Format: date-time */
+                rendered_at: string | null;
+                error_code: string | null;
+                attempts: number;
+                /** @enum {string} */
+                issued_by: "user" | "system";
+                issued_by_user_id: string | null;
+                regenerated_from_id: string | null;
+                /** Format: date-time */
+                superseded_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            };
+            deduplicated: boolean;
+        };
+        DocumentsListDto: {
+            data: {
+                id: string;
+                type_code: string;
+                type_label: string;
+                /** @enum {string} */
+                status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                number: string;
+                contact_id: string | null;
+                order_id: string | null;
+                payment_id: string | null;
+                /** @enum {string} */
+                template_source: "system" | "tenant";
+                template_version_id: string | null;
+                size_bytes: number | null;
+                page_count: number | null;
+                /** Format: date-time */
+                rendered_at: string | null;
+                error_code: string | null;
+                attempts: number;
+                /** @enum {string} */
+                issued_by: "user" | "system";
+                issued_by_user_id: string | null;
+                regenerated_from_id: string | null;
+                /** Format: date-time */
+                superseded_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        DocumentDto: {
+            id: string;
+            type_code: string;
+            type_label: string;
+            /** @enum {string} */
+            status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+            number: string;
+            contact_id: string | null;
+            order_id: string | null;
+            payment_id: string | null;
+            /** @enum {string} */
+            template_source: "system" | "tenant";
+            template_version_id: string | null;
+            size_bytes: number | null;
+            page_count: number | null;
+            /** Format: date-time */
+            rendered_at: string | null;
+            error_code: string | null;
+            attempts: number;
+            /** @enum {string} */
+            issued_by: "user" | "system";
+            issued_by_user_id: string | null;
+            regenerated_from_id: string | null;
+            /** Format: date-time */
+            superseded_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        DocumentFileUrlDto: {
+            /** Format: uri */
+            url: string;
+            expires_in_seconds: number;
         };
         GeoSearchResultsDto: {
             items: {
@@ -27281,6 +27490,139 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentsSettingsDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_list_v1: {
+        parameters: {
+            query?: {
+                subject_kind?: "order" | "payment" | "contact";
+                subject_id?: string;
+                type_code?: "contract" | "quote" | "proposal" | "receipt" | "statement" | "cuenta_cobro" | "commercial_invoice";
+                status?: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentsListDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueDocumentDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueDocumentResultDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_fileUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentFileUrlDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_regenerate_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueDocumentResultDto"];
+                };
+            };
+        };
+    };
+    DocumentsController_retry_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto"];
                 };
             };
         };

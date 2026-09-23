@@ -6,10 +6,10 @@
  * replica por proceso.
  *
  * Consumidores hoy: Mi empresa › Documentos (`/settings/company/documentos`),
- * que monta `DocumentsTab`. En F8 se añaden `DocumentsList`,
- * `IssueDocumentMenu` y `SendDocumentDialog`, que reciben un `subject
- * {kind, id}` genérico — la misma forma que `DocumentSubjectRef` en el
- * servidor — para que el primer consumidor no imponga su vocabulario.
+ * que monta `DocumentsTab`; el rail del pedido y la ficha del contacto (F8),
+ * que montan `DocumentsList` con un `subject {kind, id}` genérico — la misma
+ * forma que `DocumentSubjectRef` en el servidor — para que el primer consumidor
+ * no imponga su vocabulario. `SendDocumentDialog` llega en F9.
  */
 export {
   WHEN_PATH_LABELS,
@@ -45,3 +45,33 @@ export {
 export { DocumentKindTabs } from "./ui/components/templates/DocumentKindTabs";
 export { DocumentSettingsForm } from "./ui/forms/DocumentSettingsForm";
 export { DocumentsTab } from "./ui/DocumentsTab";
+
+// ───────────────────────── Documentos emitidos (F8) ─────────────────────────
+export {
+  DOCUMENT_STATUS_LABELS,
+  MAX_RENDER_ROUNDS,
+  canRetry,
+  documentStatusTone,
+  isDocumentInFlight,
+  isOutdated,
+  issueOptions,
+  sortDocuments,
+  type DocumentDTO,
+  type DocumentStatus,
+  type DocumentSubject,
+  type IssueSubject,
+} from "./domain/document";
+export {
+  getDocument,
+  getDocumentFileUrl,
+  issueDocument,
+  listDocuments,
+  regenerateDocument,
+  retryDocument,
+} from "./infrastructure/services/documents-service.adapter";
+export { openDocumentFile } from "./infrastructure/lib/open-document-file";
+export { useDocuments } from "./infrastructure/hooks/use-documents";
+export { useDocumentsSocket } from "./infrastructure/realtime/use-documents-socket";
+export { DocumentsList } from "./ui/components/list/DocumentsList";
+export { IssueDocumentMenu } from "./ui/components/list/IssueDocumentMenu";
+export { PaperMark } from "./ui/components/list/PaperMark";

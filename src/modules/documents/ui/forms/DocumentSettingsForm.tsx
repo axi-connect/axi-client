@@ -41,8 +41,14 @@ export function DocumentSettingsForm({
         types,
         defaults: settings.company_defaults,
         prefixDefaults: settings.prefix_defaults,
+        next: settings.numbering.next,
       }),
-    [types, settings.company_defaults, settings.prefix_defaults],
+    [
+      types,
+      settings.company_defaults,
+      settings.prefix_defaults,
+      settings.numbering.next,
+    ],
   );
   const defaults = useMemo(
     () => fromSettingsDto(settings, types),
@@ -67,7 +73,7 @@ export function DocumentSettingsForm({
         onSubmit={async (values, form) => {
           try {
             const saved = await updateDocumentsSettings(
-              toSettingsPayload(values),
+              toSettingsPayload(values, settings),
             );
             onSaved(saved);
             showAlert({
@@ -102,7 +108,10 @@ export function DocumentSettingsForm({
           no reinician la cuenta
         </strong>
         : el siguiente número sigue la que ya llevas y lo que ya salió conserva
-        el suyo.
+        el suyo. El «siguiente número» solo se puede fijar{" "}
+        <strong className="font-medium text-foreground">antes</strong> de emitir
+        el primero de cada tipo: después, el consecutivo ya es un hecho y se
+        bloquea.
       </p>
     </div>
   );

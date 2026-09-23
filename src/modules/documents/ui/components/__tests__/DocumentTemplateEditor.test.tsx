@@ -43,6 +43,9 @@ const type: DocumentTypeView = {
   code: "contract",
   label: "Contrato",
   issuable: true,
+  issue_subject: "order",
+  issue_policy: "once",
+  regenerable: true,
   default_prefix: "CTR",
   data_domains: ["document", "issuer", "counterparty", "commerce"],
   allowed_blocks: [
@@ -343,7 +346,9 @@ describe("DocumentTemplateEditor", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Añadir bloque" }));
-    expect(screen.getByRole("button", { name: "Añadir Párrafo" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Añadir Párrafo" }),
+    ).toBeEnabled();
     expect(
       screen.getByRole("button", { name: "Añadir Plan de pagos" }),
     ).toBeDisabled();
