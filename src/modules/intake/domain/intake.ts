@@ -145,6 +145,27 @@ export interface IntakeSummary {
   applied: boolean;
   you_do: { label: string; value: string; where: string }[];
   to_activate: { step: ActivationStep; label: string; where: string }[];
+  /**
+   * La meta del mes y lo que implica (método comercial F7). `null` si no hay
+   * meta ni la entrevista la recogió; antes de aplicar es una previsualización
+   * con lo confirmado. Opcional: un servidor anterior a F7 no lo manda.
+   * Espejo de `Schemas["IntakeSessionViewDto"]["summary"]["goal"]` (este
+   * dominio se escribe a mano, como el resto del contrato de Alba).
+   */
+  goal?: IntakeGoalSummary | null;
+}
+
+export interface IntakeGoalSummary {
+  target_cents: number;
+  currency: string;
+  /** «octubre» */
+  month_label: string;
+  /** `null` mientras el plan no tenga ticket. */
+  needed_sales: number | null;
+  avg_ticket_cents: number | null;
+  last_month_revenue_cents: number | null;
+  /** Variación entera frente al mes pasado («36»); `null` sin mes pasado. */
+  delta_pct: number | null;
 }
 
 export interface IntakeSessionView {

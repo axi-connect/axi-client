@@ -1,20 +1,10 @@
 import { dayKeyToUtcNoon, type DayKey } from "@/core/lib/business-time";
-import { formatMoney } from "@/core/lib/format";
 
 /**
- * Dinero grande con un decimal: «$ 11,1 M». Por debajo del millón, la cifra
- * completa. Es la forma de las cabeceras; en las filas y en la meta exacta se
- * usa `formatMoney` («$ 30.000.000»), porque ahí la cifra se compara.
+ * «$ 11,1 M». Promovido a `core/lib/format` (lo usa también el resumen de
+ * Alba, F7); se re-exporta para no tocar a los consumidores del slice.
  */
-export function formatMillions(cents: number, currency = "COP"): string {
-  if (!Number.isFinite(cents)) return "";
-  const units = cents / 100;
-  if (Math.abs(units) < 1_000_000) return formatMoney(cents, currency);
-  const millions = units / 1_000_000;
-  const digits = millions.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
-  const symbol = currency === "COP" ? "$" : currency === "USD" ? "US$" : currency;
-  return `${symbol} ${digits} M`;
-}
+export { formatMillions } from "@/core/lib/format";
 
 /** Un ritmo por día: «1,35», «1,6», «2». Hasta `digits` decimales (2), sin ceros de relleno. */
 export function formatRate(value: number, digits = 2): string {

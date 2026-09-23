@@ -42,8 +42,9 @@ const KIND_TONE: Record<ProposalKind, string> = {
   segment: "text-info border-info/40",
   agent_tuning: "text-info border-info/40",
   insight: "text-muted-foreground border-border",
-  // Coral: habla el progreso hacia la meta, no la IA ni una alarma.
-  goal_pace: "text-brand border-brand/40",
+  // Filete coral: habla el progreso hacia la meta, no la IA ni una alarma. El
+  // TEXTO no va en coral: #e65759 sobre blanco da ~3,4:1 y no pasa AA.
+  goal_pace: "text-foreground border-brand/50",
 };
 
 interface ProposalCardProps {
