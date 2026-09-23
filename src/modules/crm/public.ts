@@ -100,3 +100,10 @@ export {
   listSegments,
   listTags,
 } from "./infrastructure/services/segments-service.adapter";
+
+/**
+ * Tipos semánticos de etapa del recorrido (F4 del método comercial):
+ * etiquetas y orden. `analytics` los usa para nombrar y ordenar el «Recorrido
+ * del pipeline» de Conversión con el mismo vocabulario que el editor.
+ */
+export { STAGE_KIND_LABELS, STAGE_KIND_ORDER, type SemanticStageKind } from "./domain/journey";
