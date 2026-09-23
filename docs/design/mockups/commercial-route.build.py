@@ -72,7 +72,7 @@ EXTRA_CSS = r"""
 .hero .big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .hero .big b{font-family:var(--font-heading);font-size:46px;line-height:1;letter-spacing:-.025em;font-weight:700;font-variant-numeric:tabular-nums}
 .hero .big span{color:var(--muted-foreground);font-size:15px;font-variant-numeric:tabular-nums}
-.hero .from{font-size:12.5px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:-10px}
+.hero .from{font-size:12.5px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:-10px;font-variant-numeric:tabular-nums}
 .hero .line{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14.5px;line-height:1.45}
 /* la ruta: SVG solo con trazos; las etiquetas van en HTML fuera del SVG para que no escalen (M3) */
 .route-wrap{position:relative;display:flex;flex-direction:column;gap:2px}
@@ -87,7 +87,7 @@ EXTRA_CSS = r"""
 .route-lbls{position:relative;height:18px;font-size:12px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .route-lbls span{position:absolute;top:0;white-space:nowrap;transform:translateX(-50%)}
 .route-lbls span.lbl{color:var(--foreground);font-weight:500}
-.route-lbls span.start{transform:none} .route-lbls span.end{transform:translateX(-100%)}
+.route-lbls span.end{transform:translateX(-100%)}
 .pace{border-left:2px solid var(--axi-brand);padding:2px 0 2px 14px;display:flex;flex-direction:column;gap:2px;width:fit-content;text-decoration:none;color:inherit;border-radius:0 8px 8px 0}
 .pace:hover .nums .ic{color:var(--foreground)}
 .pace .ey{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600}
@@ -119,7 +119,7 @@ EXTRA_CSS = r"""
 .ar .t{font-size:15px;font-weight:500}
 .ar .hl{color:var(--axi-violet);font-weight:500;font-size:13.5px;font-variant-numeric:tabular-nums}
 .ar.settled .v,.ar.settled .s{color:var(--muted-foreground)}
-.ar .exp{font-size:12px;color:var(--muted-foreground)}
+.ar .exp{font-size:12px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .badge.ai{background:var(--secondary);color:var(--foreground)} .badge.ai .ic{color:var(--axi-violet)}
 
 /* editor de meta */
@@ -148,7 +148,7 @@ details.sup[open] summary{border-bottom:1px solid var(--border-soft)}
 .trend .exp{stroke:var(--muted-foreground);stroke-width:2;fill:none;stroke-dasharray:4 5}
 .trend .act{stroke:var(--axi-brand);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .trend .fill{fill:var(--axi-brand);opacity:.08}
-.trend text{font-family:var(--font-body);font-size:10.5px;fill:var(--muted-foreground)}
+.trend text{font-family:var(--font-body);font-size:10.5px;fill:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .trend .end{fill:var(--axi-brand);stroke:var(--background);stroke-width:2}
 .legend{display:flex;gap:16px;font-size:12px;color:var(--muted-foreground)}
 .legend i{display:inline-block;width:14px;height:0;border-top:2px solid var(--axi-brand);vertical-align:middle;margin-right:6px}
@@ -262,7 +262,7 @@ def gl(title: str, rows: str, icon: str = "", right: str = "", cls: str = "") ->
     return f'<section class="gl {cls}">{h}{rows}</section>'
 
 
-def gr(k: str, v: str, s: str = "", right: str = "", link: bool = False, cls: str = "") -> str:
+def gr(k: str, v: str, s: str = "", right: str = "", link: bool = False) -> str:
     """Fila de ficha. Con link=True es un <a> si no lleva botones dentro; si los lleva (Corregir, Pausar…),
     un <div role="link" tabindex="0">, porque un <button> dentro de un <a> no es HTML válido (M16)."""
     r = f'<div class="r">{right}</div>' if right else ""
@@ -270,10 +270,10 @@ def gr(k: str, v: str, s: str = "", right: str = "", link: bool = False, cls: st
     kk = f'<div class="k">{k}</div>' if k else ""
     inner = f'{kk}<div class="v">{v}</div>{ss}{r}'
     if link and "<button" not in right:
-        return f'<a href="#" class="gr link {cls}">{inner}</a>'
+        return f'<a href="#" class="gr link">{inner}</a>'
     if link:
-        return f'<div class="gr link {cls}" role="link" tabindex="0">{inner}</div>'
-    return f'<div class="gr {cls}">{inner}</div>'
+        return f'<div class="gr link" role="link" tabindex="0">{inner}</div>'
+    return f'<div class="gr">{inner}</div>'
 
 
 def rule(pct: float, soft: bool = False) -> str:
@@ -439,7 +439,7 @@ def kr_list(mode: str | None) -> str:
 # acciones propuestas (regla: una propuesta pendiente por semana y meta; vence el sábado)
 REACT = dict(title="Reactivar 38 cotizaciones sin respuesta", n=38, reply=0.16, buy=0.33)
 REACT_EST = round(REACT["n"] * REACT["reply"] * REACT["buy"])                    # 2
-REACT_COVER = math.ceil(REACT_EST / (SALES - SCEN["behind"]["kr"]["sales"]) * 100)  # 13 %
+REACT_COVER = int(REACT_EST / (SALES - SCEN["behind"]["kr"]["sales"]) * 100 + 0.5)  # 13 % (2 de 16 = 12,5: redondeo normal, mitad hacia arriba)
 CONFIRM = dict(title="Confirmar por llamada las 14 citas de la semana", n=14, noshow=0.25)
 CONFIRM_EST = round(CONFIRM["n"] * CONFIRM["noshow"] * R["appt"])               # 1
 assert (REACT_EST, REACT_COVER, CONFIRM_EST) == (2, 13, 1)
@@ -555,6 +555,7 @@ def view_no_goal() -> str:
 
 
 def view_goal_editor(mid_month=False) -> str:
+    fx = "mid" if mid_month else "new"  # el editor se pinta dos veces (vistas 2 y 16): ids distintos
     implies = "".join([
         gr("Ventas necesarias", str(SALES), f'{cop(TARGET)} ÷ ticket {cop(TICKET)} = 42,9 → {SALES} · {src("history")} · 61 ventas en 90 días'),
         gr("Cotizaciones", str(QUOTES), f'{SALES} ÷ 38 % (58 de 152 cotizaciones se vendieron en 60 días) · {src("history")}'),
@@ -565,12 +566,12 @@ def view_goal_editor(mid_month=False) -> str:
     ])
     sup = f"""<details class="sup"><summary>Ajustar supuestos {ic("chevron-down", size=16)}</summary>
       <div class="cad" style="padding:6px 18px 12px">
-        <div class="f"><span class="k">Ticket promedio</span>{K.input("700.000", cls="adorn", icon="badge-dollar-sign")}</div>
-        <div class="f"><span class="k">Cotización → venta</span>{K.input("38 %")}</div>
-        <div class="f"><span class="k">Cita agendada → venta</span>{K.input("35 %")}</div>
-        <div class="f"><span class="k">Contactado → cotiza</span>{K.input("52 %")}</div>
-        <div class="f"><span class="k">Llamadas contestadas</span>{K.input("62 %")}</div>
-        <div class="f"><span class="k">Contactos por llamada</span>{K.input("30 %")}</div>
+        <div class="f"><span class="k">Ticket promedio</span>{K.input("700.000", cls="adorn", icon="badge-dollar-sign", fid=f"sup-ticket-{fx}")}</div>
+        <div class="f"><span class="k">Cotización → venta</span>{K.input("38 %", fid=f"sup-quote-{fx}")}</div>
+        <div class="f"><span class="k">Cita agendada → venta</span>{K.input("35 %", fid=f"sup-appt-{fx}")}</div>
+        <div class="f"><span class="k">Contactado → cotiza</span>{K.input("52 %", fid=f"sup-contacted-{fx}")}</div>
+        <div class="f"><span class="k">Llamadas contestadas</span>{K.input("62 %", fid=f"sup-answered-{fx}")}</div>
+        <div class="f"><span class="k">Contactos por llamada</span>{K.input("30 %", fid=f"sup-call-share-{fx}")}</div>
       </div>
       <p class="muted small" style="padding:0 18px 12px">Lo que cambies aquí pasa a decir «lo dijiste tú». Cuando tu historia alcance muestra, te avisamos si conviene volver al dato real.</p>
     </details>"""
@@ -578,7 +579,7 @@ def view_goal_editor(mid_month=False) -> str:
     if mid_month:
         need = SALES - SCEN["behind"]["kr"]["sales"]
         mid = K.notice("info", f"Llevas <b class=\"tnum\">{copm(SCEN['behind']['actual'])}</b> y {SCEN['behind']['kr']['sales']} ventas. Si mantienes la meta, la ruta se recalcula desde hoy: "
-                       f"faltan {need} ventas en los {LEFT} días hábiles que quedan ({dec(need / LEFT)} al día). Si la cambias, lo recorrido se conserva.", icon="route")
+                       f"faltan {need} ventas en los {LEFT} días hábiles que quedan ({dec(need / LEFT)} al día → {math.ceil(need / LEFT)} ventas al día). Si la cambias, la ruta se recalcula desde hoy y lo recorrido se conserva.", icon="route")
     return f"""<div class="page" style="max-width:720px">
       {K.crumb("Comercial", "Meta")}
       <div class="header"><div><h1>{"¿Cambias la meta de septiembre?" if mid_month else "¿Cuánto quieres vender en septiembre?"}</h1><p class="lead">El mes pasado: <b class="tnum" style="font-weight:500;color:var(--foreground)">$ 22.100.000</b> · 31 ventas · ticket $ 713.000</p></div></div>
@@ -603,7 +604,8 @@ def trend_svg() -> str:
     def x(d): return pad + (W - 2 * pad) * d / DAYS
     def y(v): return H - pad - (H - 2 * pad) * v / SALES
     exp_pts = f"{x(0):.0f},{y(0):.0f} {x(DAYS):.0f},{y(SALES):.0f}"
-    actual = [0, 1, 2, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 17, 18, 20, 21, 23, 25, 27]
+    actual = [0, 1, 2, 2, 4, 5, 6, 8, 9, 10, 12, 13, 15, 17, 19, 21, 22, 23, 24, 26, 27]  # S4 (días 18–20): 23 → 27 = 4 ventas, como el PaceLine
+    assert actual[17] == 23 and actual[DAY] == SCEN["behind"]["kr"]["sales"] and actual[DAY] - actual[17] == SCEN["behind"]["week"][0]
     act_pts = " ".join(f"{x(i):.0f},{y(v):.0f}" for i, v in enumerate(actual))
     fill = f"{x(0):.0f},{y(0):.0f} {act_pts} {x(DAY):.0f},{y(0):.0f}"
     grid = "".join(f'<line class="grid" x1="{pad}" x2="{W - pad}" y1="{y(v):.0f}" y2="{y(v):.0f}"/><text x="{pad - 6}" y="{y(v) + 4:.0f}" text-anchor="end">{v}</text>' for v in (0, 14, 29, SALES))
@@ -679,7 +681,7 @@ def action_body() -> str:
 
 
 def view_action_sheet() -> str:
-    foot = f'<span>Rechazar guarda el motivo y axi no vuelve a proponerlo esta semana.</span><div class="acts">{btn("Rechazar", "", "ghost sm")}{btn("Aprobar", "check", "sm")}</div>'
+    foot = f'<span>Rechazar guarda el motivo y Axi no vuelve a proponerlo esta semana.</span><div class="acts">{btn("Rechazar", "", "ghost sm")}{btn("Aprobar", "check", "sm")}</div>'
     return f'{view_route("behind")}{sheet("Acción propuesta", action_head(), action_body(), foot)}'
 
 
@@ -688,7 +690,7 @@ def view_action_reject() -> str:
     menu = f'<div class="menu" role="listbox" aria-label="Motivo del rechazo"><div class="mh">¿Por qué no?</div>' + "".join(
         f'<button role="option" aria-selected="{"true" if i == 0 else "false"}">{ic("pen-line" if r.endswith("…") else "circle", size=13)}{r}</button>' for i, r in enumerate(reasons)) + "</div>"
     rej = btn("Rechazar", "", "outline sm", 'aria-expanded="true" aria-haspopup="listbox"')
-    foot = f'<span>El motivo queda guardado y axi no vuelve a proponerlo esta semana.</span><div class="acts">{menu}{rej}{btn("Aprobar", "check", "sm", "disabled")}</div>'
+    foot = f'<span>El motivo queda guardado y Axi no vuelve a proponerlo esta semana.</span><div class="acts">{menu}{rej}{btn("Aprobar", "check", "sm", "disabled")}</div>'
     return f'{view_route("behind")}{sheet("Acción propuesta", action_head(), action_body(), foot)}'
 
 
@@ -722,11 +724,12 @@ def view_journey_settings() -> str:
       <div class="k">Propuesta</div>
       <div class="v"><span class="kind">{ic("file-text", size=14)}Propuesta{ic("chevron-down", size=13)}</span><span class="muted small" style="font-weight:400">El cliente ya tiene una cotización en la mano.</span></div>
       <div class="cad" style="grid-column:1 / -1">
-        <div class="f"><span class="k">Intentos</span>{K.input("4")}</div>
-        <div class="f"><span class="k">Espera entre intentos</span>{K.select("2 días")}</div>
-        <div class="f"><span class="k">Canal</span>{K.select("Mensaje", icon="message-circle")}</div>
-        <div class="f"><span class="k">Tiempo máximo en la etapa</span>{K.select("10 días")}</div>
-        <div class="f" style="grid-column:1 / -1"><span class="k">Al agotarse los intentos</span>{K.select("Marcar la oportunidad como perdida")}</div>
+        <div class="f"><span class="k">Intentos</span>{K.input("4", fid="cad-attempts")}</div>
+        <div class="f"><span class="k">Espera entre intentos</span>{K.select("2 días", fid="cad-wait")}</div>
+        <div class="f"><span class="k">Canal</span>{K.select("Mensaje", icon="message-circle", fid="cad-channel")}</div>
+        <div class="f"><span class="k">Tiempo máximo en la etapa</span>{K.select("10 días", fid="cad-max")}</div>
+        <div class="f" style="grid-column:1 / -1"><span class="k">Al agotarse los intentos</span>{K.select("Marcar la oportunidad como perdida", fid="cad-exhausted")}</div>
+        <div class="f" style="grid-column:1 / -1"><span><span class="k" style="display:block">Se mueve sola</span><span class="muted small">Apagado: solo una persona o el agente la mueven.</span></span>{K.switch(True, label="Se mueve sola con sus eventos")}</div>
       </div>
       <div class="moves" style="grid-column:1 / -1">{ic("zap", size=13)}La mueven solos: <b>cotización enviada</b> · <b>cita cumplida</b>. El agente también puede moverla si el cliente lo pide o lo descarta.</div>
     </div>"""
@@ -735,9 +738,10 @@ def view_journey_settings() -> str:
         stage("Contactado", "Contactado", "message-circle", "3 intentos · espera 24 h · mensaje · máx. 5 días · al agotarse: marcar perdida"),
         stage("Cita agendada", "Agenda", "calendar-days", "1 intento · espera 24 h · llamada y luego mensaje · máx. 7 días · al agotarse: pasar a una persona"),
         expanded,
+        stage("Negociación", "Negociación", "handshake", "3 intentos · espera 48 h · llamada y luego mensaje · máx. 7 días · al agotarse: pasar a una persona"),
         stage("Pago confirmado", "Compromiso", "badge-check", "1 intento · espera 48 h · mensaje · máx. 3 días · al agotarse: pasar a una persona"),
         stage("En tratamiento", "Entrega", "heart-handshake", "", final=True),
-        stage("Reagendar", "Personalizada", "circle-dashed", "No se mueve sola ni entra en las tasas del recorrido", badge("Sin tipo: no se mueve sola", "warn")),
+        stage("Reagendar", "Personalizada", "circle-dashed", "No se mueve sola ni entra en las tasas del recorrido", badge("No se mueve sola", "warn")),
     ])
     template = gr("Plantilla", NICHE, "6 etapas con cadencia · tu tipo de negocio", btn("Cambiar", "", "ghost xs hov"), link=True)
     descs = ["Pedido rápido · 2 intentos · 2 h", "Carrito · cotización · 3 intentos · 24 h", "Reserva · anticipo · 3 intentos · 48 h",
@@ -765,17 +769,18 @@ def view_contact_360() -> str:
         act = f'<span class="act">{action}</span>' if action else ""
         return f'<div class="tli {cls}"><div class="dc"><i>{ic(icon, size=13)}</i></div><div><div class="tt">{title}</div><div class="td">{desc}</div></div><div class="when"><span>{when}</span>{act}</div></div>'
     journey = gl("Recorrido", "".join([
-        gr("Etapa", f'Propuesta {badge("Propuesta", "")}', "Oportunidad «Plan facial completo» · $ 1.240.000"),
-        gr("En la etapa", "hoy", "máx. 10 días · vence el 3 oct"),
-        gr("La movió", "el agente Sofía", "«Pidió la cotización del tratamiento completo»", btn("Deshacer", "rotate-ccw", "ghost xs hov")),
-        gr("Cadencia", "intento 1 de 4", "próximo el 25 sep 10:00 · WhatsApp · espera 2 días", btn("Pausar cadencia", "pause", "ghost xs hov")),
+        gr("Etapa", f'Negociación {badge("Negociación", "")}', "Oportunidad «Plan facial completo» · $ 1.240.000"),
+        gr("En la etapa", "hoy", "máx. 7 días · vence el 30 sep"),
+        gr("La movió", "el agente Sofía", "«Quiere cerrar el plan completo; pide facilidades de pago»", btn("Deshacer", "rotate-ccw", "ghost xs hov")),
+        gr("Cadencia", "intento 1 de 3", "próximo el 25 sep 10:00 · llamada y luego mensaje · espera 48 h", btn("Pausar cadencia", "pause", "ghost xs hov")),
     ]), icon="route")
     score = gl("Puntaje", gr("55 / 100", f'{rule(55)}', "Interesada · evaluando · sin compromiso aún"))
     timeline = f"""<section class="card">
       <div class="card-head"><div><h2>Todo lo que pasó</h2></div><div class="right">{seg_filter(["Todo", "Recorrido", "Mensajes", "Citas"], "Todo", "Filtro del historial")}</div></div>
       <div class="tl">
-        {tli("route", f'Pasó a <b>Propuesta</b> {badge("Agente IA", "ai", icon="sparkles")}', "«Pidió la cotización del tratamiento completo» · desde Cita agendada", "hoy 10:42", "violet", btn("Deshacer", "rotate-ccw", "ghost xs"))}
-        {tli("file-text", "Cotización enviada · $ 1.240.000", "Plan facial completo · 3 sesiones · por Sofía", "hoy 10:41", "brand")}
+        {tli("route", f'Pasó a <b>Negociación</b> {badge("Agente IA", "ai", icon="sparkles")}', "«Quiere cerrar el plan completo; pide facilidades de pago» · desde Propuesta", "hoy 10:42", "violet", btn("Deshacer", "rotate-ccw", "ghost xs"))}
+        {tli("file-text", "Cotización enviada · $ 1.240.000", "Plan facial completo · 3 sesiones · por Sofía · ya estaba en Propuesta: no la mueve", "hoy 10:41", "brand")}
+        {tli("route", "Pasó a <b>Propuesta</b>", "Regla: cita cumplida · desde Cita agendada", "ayer 16:31", "", btn("Deshacer", "rotate-ccw", "ghost xs"))}
         {tli("calendar-check", "Asistió a la cita", "Valoración · sede Chapinero · 40 min", "ayer 16:30")}
         {tli("phone", "Llamada contestada · 3 min", "Recordatorio de la cita · confirmó", "21 sep")}
         {tli("route", "Pasó a <b>Cita agendada</b>", "Regla: cita agendada · desde Contactado", "19 sep", "", btn("Deshacer", "rotate-ccw", "ghost xs"))}
@@ -796,27 +801,32 @@ def view_contact_360() -> str:
 
 
 def view_analytics() -> str:
-    # 30 días: 380 conversaciones · 133 contactados · 71 cotizadas · 77 citas agendadas · 61 asistieron · 27 ventas · $ 18.940.000
+    # 30 días = el mes en curso (día hábil 20: 520 conversaciones · 180 contactados · 71 cotizadas · 78 citas · 48 llamadas
+    # contestadas · 27 ventas · $ 18,94 M) + los 7 últimos días de agosto. Todo ≥ que el mes, y cada tasa sale de sus conteos.
+    A = dict(convos=640, intent=400, contacted=214, quoted=87, appts=95, attended=75, sales=33, revenue=22_900_000, calls=84, answered=52, ans_appt=23, delivered=32)
+    assert A["appts"] > 78 and A["contacted"] > 180 and A["convos"] > 520 and A["answered"] > 48 and A["sales"] > 27
+    pc = lambda a, b: f"{a / b * 100:.0f} %"  # noqa: E731
     tabs = [("Conversión", "trending-up"), ("Calidad", "badge-check"), ("Alertas", "bell")]
     kpis = "".join(f'<div class="kpi"><div class="k">{k}</div><div class="v">{v}</div><div class="d">{d}</div></div>' for k, v, d in [
-        ("Ventas pagadas", copm(18_940_000), "27 pedidos · 30 días"), ("Tasa de cierre", "7,1 %", "27 de 380 conversaciones"), ("Contención", "74 %", "sin humano"), ("Escalamiento", "12 %", "3 % por fallo de la IA")])
-    fun = "".join(f'<div class="row"><span>{n}</span><div class="bar {"star" if star else ""}"><i style="width:{w}%"></i></div><span class="n">{v}</span></div>' for n, w, v, star in [
-        ("Conversaciones", 100, "380", False), ("Con intención", 62, "236", False), ("Citas agendadas", 20, "77", False), ("Cotizadas", 19, "71", False), ("Ventas pagadas", 7, "27", True)])
+        ("Ventas pagadas", copm(A["revenue"]), f"{A['sales']} pedidos · 30 días"), ("Tasa de cierre", dec(A["sales"] / A["convos"] * 100) + " %", f"{A['sales']} de {A['convos']} conversaciones"),
+        ("Contención", "74 %", "sin humano"), ("Escalamiento", "12 %", "3 % por fallo de la IA")])
+    fun = "".join(f'<div class="row"><span>{n}</span><div class="bar {"star" if star else ""}"><i style="width:{v / A["convos"] * 100:.0f}%"></i></div><span class="n">{v}</span></div>' for n, v, star in [
+        ("Conversaciones", A["convos"], False), ("Con intención", A["intent"], False), ("Citas agendadas", A["appts"], False), ("Cotizadas", A["quoted"], False), ("Ventas pagadas", A["sales"], True)])
     rates = gl("Tasas vivas · 30 días", "".join([
-        gr("Llamadas → contestadas", "64 %", "9 de 14 llamadas · muestra corta (mín. 15): la ruta usa el supuesto 62 %", rule(64, soft=True)),
-        gr("Contestadas → cita agendada", "44 %", "4 de 9 contestadas", rule(44, soft=True)),
-        gr("Cita agendada → asistió", "79 %", "61 de 77 citas · 16 no asistieron", rule(79, soft=True)),
-        gr("Cita agendada → venta", "35 %", "27 de 77 citas · la tasa que usa la ruta", rule(35)),
-        gr("Asistió → venta", "44 %", "27 de 61 visitas · la etapa que más pesa", rule(44, soft=True)),
-        gr("Valor por cita agendada", cop(246_000), f"{cop(18_940_000)} ÷ 77 citas agendadas"),
-        gr("Valor por visita", cop(310_000), f"{cop(18_940_000)} ÷ 61 personas que asistieron"),
+        gr("Llamadas → contestadas", pc(A["answered"], A["calls"]), f"{A['answered']} de {A['calls']} llamadas · la ruta se trazó el 1 sep con el supuesto (62 %): coincide", rule(A["answered"] / A["calls"] * 100, soft=True)),
+        gr("Contestadas → cita agendada", pc(A["ans_appt"], A["answered"]), f"{A['ans_appt']} de {A['answered']} contestadas", rule(A["ans_appt"] / A["answered"] * 100, soft=True)),
+        gr("Cita agendada → asistió", pc(A["attended"], A["appts"]), f"{A['attended']} de {A['appts']} citas · {A['appts'] - A['attended']} no asistieron", rule(A["attended"] / A["appts"] * 100, soft=True)),
+        gr("Cita agendada → venta", pc(A["sales"], A["appts"]), f"{A['sales']} de {A['appts']} citas · la tasa que usa la ruta", rule(A["sales"] / A["appts"] * 100)),
+        gr("Asistió → venta", pc(A["sales"], A["attended"]), f"{A['sales']} de {A['attended']} visitas · la etapa que más pesa", rule(A["sales"] / A["attended"] * 100, soft=True)),
+        gr("Valor por cita agendada", cop(int(round(A["revenue"] / A["appts"], -3))), f"{cop(A['revenue'])} ÷ {A['appts']} citas agendadas"),
+        gr("Valor por visita", cop(int(round(A["revenue"] / A["attended"], -3))), f"{cop(A['revenue'])} ÷ {A['attended']} personas que asistieron"),
     ]))
     flow = gl("Recorrido del pipeline · 30 días", "".join([
-        gr("Consulta → Contactado", "35 % avanza", "133 de 380 · 1,2 días en promedio", rule(35, soft=True)),
-        gr("Contactado → Cita agendada", "58 %", "77 de 133 · 2,1 días", rule(58, soft=True)),
-        gr("Cita agendada → Propuesta", "79 %", "61 de 77 · 4,4 días", rule(79, soft=True)),
-        gr("Propuesta → Pago confirmado", "44 %", "27 de 61 · 5,8 días · 9 vencidas", rule(44)),
-        gr("Pago → En tratamiento", "96 %", "26 de 27 · 1,2 días", rule(96, soft=True)),
+        gr("Consulta → Contactado", pc(A["contacted"], A["convos"]) + " avanza", f"{A['contacted']} de {A['convos']} · 1,2 días en promedio", rule(A["contacted"] / A["convos"] * 100, soft=True)),
+        gr("Contactado → Cita agendada", pc(A["appts"], A["contacted"]), f"{A['appts']} de {A['contacted']} · 2,1 días", rule(A["appts"] / A["contacted"] * 100, soft=True)),
+        gr("Cita agendada → Propuesta", pc(A["attended"], A["appts"]), f"{A['attended']} de {A['appts']} · 4,4 días", rule(A["attended"] / A["appts"] * 100, soft=True)),
+        gr("Propuesta → Pago confirmado", pc(A["sales"], A["attended"]), f"{A['sales']} de {A['attended']} · 5,8 días · 9 vencidas", rule(A["sales"] / A["attended"] * 100)),
+        gr("Pago → En tratamiento", pc(A["delivered"], A["sales"]), f"{A['delivered']} de {A['sales']} · 1,2 días", rule(A["delivered"] / A["sales"] * 100, soft=True)),
     ]), right=f'<a href="#" style="letter-spacing:0;text-transform:none;font-weight:500;display:inline-flex;gap:4px;align-items:center;text-decoration:none">Ajustar el recorrido {ic("arrow-right", size=13)}</a>')
     return f"""<div class="page">
       {K.crumb("Analítica")}
@@ -840,7 +850,7 @@ def view_dashboard() -> str:
     without = f"""<section class="gpb" aria-label="Sin meta">
       <div class="v" style="grid-column:1 / -1"><a href="#" style="font-weight:500;text-decoration:none;display:inline-flex;gap:6px;align-items:center">{ic("route", size=16)}Ponle una meta al mes y te trazamos el camino {ic("arrow-right", size=14)}</a></div>
     </section>"""
-    tiles = "".join(f'<div class="tile"><div class="k">{k}</div><div class="v">{v}</div></div>' for k, v in [("Ventas hoy", "$ 1.400.000"), ("Conversaciones abiertas", "23"), ("Pedidos por confirmar", "4")])
+    tiles = "".join(f'<div class="tile"><div class="k">{k}</div><div class="v">{v}</div></div>' for k, v in [("Ventas hoy", cop(TICKET)), ("Conversaciones abiertas", "23"), ("Pedidos por confirmar", "4")])
     return f"""<div class="page">
       {K.crumb("Panel")}
       <div class="header"><div><h1>Buenos días, Camila</h1><p class="lead">Clínica Dermalux · miércoles 23 de septiembre</p></div></div>
@@ -857,7 +867,7 @@ def view_blocked() -> str:
       <section class="card"><div class="empty page-empty">
         <div class="eic">{ic("route", size=30)}</div>
         <h3>Comercial no está en tu plan</h3>
-        <p>Tus agentes siguen atendiendo y vendiendo. Activa Comercial para trazar la ruta del mes y que axi te proponga cómo llegar.</p>
+        <p>Tus agentes siguen atendiendo y vendiendo. Activa Comercial para trazar la ruta del mes y que Axi te proponga cómo llegar.</p>
         <div class="acts">{btn("Ver planes", "arrow-right", "outline sm")}</div>
       </div></section>
       <div class="mk-in">{ic("info", size=14)}<span>Detrás: el servidor responde <span class="mono">403 entitlements/capability_not_granted · crm</span>; la UI no muestra el código. Decisión abierta: en v1 la capacidad es la del CRM (todo plan con CRM lo tiene). Esta pantalla solo la ve un tenant sin CRM. Si Comercial se vende aparte, cambia la capacidad y este copy.</span></div>
@@ -921,7 +931,7 @@ def doc_method() -> str:
       <h2>Un ejemplo con números</h2>
       <p>Clínica Dermalux quiere vender <b class="tnum">{cop(TARGET)}</b> en septiembre. Este es el plan que axi le traza, cifra por cifra, con la procedencia de cada una:</p>
       {example}
-      <div class="callout"><b>Cada paso redondea hacia arriba</b> (⌈ ⌉ es el techo): mejor un paso de más que uno de menos. Y la cascada se propaga: las {QUOTES} cotizaciones salen de las {SALES} ventas ya redondeadas, los {CONTACTED} contactados de las {APPTS} citas, y así hasta las {CONVOS} conversaciones. Lo mismo al repartir por día: «faltan 16 ventas en 6 días» son 2,7 al día, y la ruta dice <b>3 ventas al día</b>.</div>
+      <div class="callout"><b>Cada necesidad redondea hacia arriba</b> (⌈ ⌉ es el techo): mejor un paso de más que uno de menos. Lo <b>esperado a la fecha</b> no es una necesidad y redondea al entero más cercano (43 × 20/26 = 33,1 → 33). Y la cascada se propaga: las {QUOTES} cotizaciones salen de las {SALES} ventas ya redondeadas, los {CONTACTED} contactados de las {APPTS} citas, y así hasta las {CONVOS} conversaciones. Lo mismo al repartir por día: «faltan 16 ventas en 6 días» son 2,7 al día, y la ruta dice <b>3 ventas al día</b>.</div>
       <div class="callout"><b>Cada cifra dice de dónde sale.</b> Hay tres procedencias, de más a menos fuerte: <b>tu historia</b> (lo que tu negocio hizo de verdad), <b>lo dijiste tú</b> (lo que declaraste a Alba o en el editor) y <b>supuesto para tu tipo de negocio</b> (un punto de partida mientras no hay datos). Una cifra derivada hereda la procedencia más débil de sus insumos, y un supuesto se retira solo en cuanto tu historia alcanza muestra. No hay mezclas: es explicable.</div>
 
       <h2>Ventanas, muestras y cuándo se retira un supuesto</h2>
@@ -930,7 +940,7 @@ def doc_method() -> str:
       <h2>El ritmo</h2>
       <ul>
         <li><b>Días hábiles según tu horario</b> de atención (sin horario: lunes a sábado). Septiembre 2026 tiene {DAYS}; hoy, 23 de septiembre, es el día hábil {DAY}. Festivos: no en la primera versión, y lo decimos.</li>
-        <li><b>Dónde deberías ir hoy</b> = meta × (días hábiles transcurridos ÷ totales) = {DAY} de {DAYS} = 76,9 %; en ventas, ⌈{SALES} × 76,9 %⌉ = {EXP_SALES}. El marcador hueco de la ruta.</li>
+        <li><b>Dónde deberías ir hoy</b> = meta × (días hábiles transcurridos ÷ totales) = {DAY} de {DAYS} = 76,9 %; en ventas, {SALES} × 76,9 % = 33,1 → <b>{EXP_SALES}</b> (lo esperado a la fecha redondea al entero más cercano; el techo es solo para las necesidades). El marcador hueco de la ruta.</li>
         <li><b>Estado del ritmo</b>: adelantado por encima del 110 % de lo esperado · al ritmo entre 90 y 110 · ritmo bajo por debajo del 90 · atrasado por debajo del 80. Con menos de 3 días hábiles, «aprendiendo tu ritmo»: sin proyección ni acciones.</li>
         <li><b>Proyección al cierre</b> = lo recorrido ÷ días transcurridos × días totales. La prolongación punteada. Con 27 ventas al día 20: 27 ÷ 20 × 26 = 35 ventas (81 %).</li>
         <li><b>Qué falta</b>: lo que queda, dividido en los días hábiles restantes y redondeado hacia arriba, en ventas, citas y contactos. «3 ventas al día en los 6 días que quedan».</li>
@@ -1021,12 +1031,12 @@ def doc_journey() -> str:
       </ul>
 
       <h2>La cadencia por etapa</h2>
-      <p>Hoy el seguimiento del agente tiene una política global (8 intentos, 72 horas, espera de 48 horas). Pasa a ser <b>por etapa</b> y con exactamente cinco campos, los que el modelo guarda: <b>intentos</b>, <b>espera</b> entre intentos (horas o días), <b>canal</b> (mensaje · llamada · llamada y luego mensaje), <b>tiempo máximo</b> en la etapa (días) y <b>qué hacer al agotarse</b> (marcar perdida · dejar enfriar · pasar a una persona). Los recordatorios de una cita (24 h y 2 h antes) no son cadencia: los manda Agenda. La cadencia de la etapa gobierna los seguimientos que el agente programa: cuando se agota, deja de insistir y lo dice.</p>
+      <p>Hoy el seguimiento del agente tiene una política global (8 intentos, 72 horas, espera de 48 horas). Pasa a ser <b>por etapa</b>, con los seis campos que el modelo guarda: <b>tipo</b> de etapa, <b>intentos</b>, <b>espera</b> entre intentos (horas o días), <b>canal</b> (mensaje · llamada · llamada y luego mensaje), <b>tiempo máximo</b> en la etapa (días; hoy «días de enfriamiento») y <b>qué hacer al agotarse</b> (dejar enfriar · marcar perdida · pasar a una persona). Además, un interruptor <b>«Se mueve sola»</b> por etapa: apagado, solo una persona o el agente la mueven. Los recordatorios de una cita (24 h y 2 h antes) no son cadencia: los manda Agenda. La cadencia de la etapa gobierna los seguimientos que el agente programa: cuando se agota, deja de insistir y lo dice.</p>
       {cadences}
 
       <h2>La ficha del contacto cuenta todo</h2>
       <ul>
-        <li><b>Recorrido</b> arriba: etapa actual, días en la etapa frente al máximo, quién la movió y por qué, cadencia en curso («intento 1 de 4 · próximo el 25 sep 10:00»), con Deshacer y Pausar cadencia al pasar el ratón o al enfocar con el teclado.</li>
+        <li><b>Recorrido</b> arriba: etapa actual, días en la etapa frente al máximo, quién la movió y por qué, cadencia en curso («intento 1 de 3 · próximo el 25 sep 10:00»), con Deshacer y Pausar cadencia al pasar el ratón o al enfocar con el teclado.</li>
         <li><b>Historial</b> con las entradas nuevas: cambios de etapa (con actor y razón) y cambios de ciclo de vida (prospecto → lead → cliente), que hoy no se guardan en ninguna parte.</li>
         <li>Lo que ya existe se queda: mensajes, pedidos, citas, llamadas, notas, datos capturados.</li>
       </ul>
@@ -1073,7 +1083,7 @@ def doc_brand() -> str:
         <li>Celebrar con sobriedad: «Meta cumplida con 4 días de sobra. Lo que venga ahora es camino extra.» Sin emojis en la herramienta de trabajo.</li>
         <li>Cuando no sabemos, lo decimos con calma: «Estamos aprendiendo tu ritmo».</li>
         <li>Axi propone en voz baja y en violeta; el dueño decide. «Axi propone», no «Recomendación del sistema». El violeta solo vive ahí: el resto de la ruta es coral y neutros.</li>
-        <li>La marca en prosa va en minúscula («axi traza la ruta»); en mayúscula solo al abrir frase o como sujeto de una acción («Axi propone»). Los millones siempre con un decimal: «$ 11,1 M», «$ 3,7 M».</li>
+        <li>En la interfaz, siempre <b>«Axi»</b> (DESIGN §2.4): «Axi propone», «Axi no vuelve a proponerlo». La minúscula vive solo en el lema («axi vende progreso») y en la prosa de marca de estos documentos. Los millones siempre con un decimal: «$ 11,1 M», «$ 3,7 M».</li>
       </ol>
       {voice}
 
@@ -1107,7 +1117,7 @@ def doc_decisions() -> str:
         ["Ganado y Perdido", "Siguen siendo el estado de la oportunidad, no etapas del recorrido.", "—"],
         ["Ticket promedio", "Jamás se supone. Sin ticket, el plan queda «incompleto» y se pide.", "—"],
         ["Propuestas", "Van a la misma bandeja «Por decidir» de Axel, con su origen «comercial». Una pendiente por semana y meta; aprobar y cambiar la meta piden permiso de administrador.", "—"],
-        ["Redondeo", "Cada paso de la cascada y el reparto por día redondean hacia arriba.", "—"],
+        ["Redondeo", "Dos casos y una regla cada uno: las necesidades (cascada y reparto por día) redondean hacia arriba (techo); lo esperado a la fecha redondea al entero más cercano (43 × 20/26 = 33,1 → 33).", "—"],
     ], ["Tema", "Lo que decidí", "Pregunta"])
     phases = T([
         ["F0", "Este documento + mockup", "Visual y método aprobados"],
@@ -1152,7 +1162,7 @@ def shell(body: str) -> str:
 
 VIEWS = [(k, label, shell(body), note) for k, label, body, note in [
     ("metodo", "Método", doc_method(), "El método comercial explicado: el Waze en cinco pasos, un ejemplo con números (techo en cada paso), procedencia de cada cifra, ventanas y muestras, el ritmo, los OKR derivados, las acciones y los supuestos por tipo de negocio."),
-    ("recorrido", "Recorrido", doc_journey(), "Qué hay detrás del recorrido del cliente: tipos de etapa, qué la mueve sola, el criterio del agente con sus salvaguardas, la cadencia por etapa (cinco campos) y las plantillas por tipo de negocio."),
+    ("recorrido", "Recorrido", doc_journey(), "Qué hay detrás del recorrido del cliente: tipos de etapa, qué la mueve sola, el criterio del agente con sus salvaguardas, la cadencia por etapa (seis campos guardados) y las plantillas por tipo de negocio."),
     ("marca", "Marca", doc_brand(), "Borrador del posicionamiento «axi vende progreso», qué cambia en cada documento y las reglas de voz que el módulo estrena."),
     ("decisiones", "Decisiones", doc_decisions(), "Las nueve decisiones del dueño, las mías para confirmar, las preguntas abiertas y las fases."),
     ("sin-meta", "1 · Sin meta", view_no_goal(), "/comercial sin meta: un glifo, una frase y un botón. Debajo, una sola línea con la semilla: con historia propone una cifra alcanzable; sin historia, lo típico del tipo de negocio."),
@@ -1163,14 +1173,14 @@ VIEWS = [(k, label, shell(body), note) for k, label, body, note in [
     ("aprendiendo", "6 · Aprendiendo", view_learning(), "Meta puesta ayer: 1 día hábil de datos, sin marcador de «hoy» ni proyección, badge neutro, aviso de cuándo habrá proyección; las cifras dicen «supuesto para tu tipo de negocio»."),
     ("kr-detalle", "7 · Detalle de un resultado", view_kr_sheet(), "Hoja lateral de «Ventas cerradas» sobre la vista de ritmo bajo: la única gráfica del módulo (real vs esperado, el esperado en gris punteado), «El camino» con cada cuenta, «De dónde sale» (con Corregir al pasar el ratón o enfocar) y el mix sugerido. La hoja re-renderiza la vista de fondo: es un mockup."),
     ("accion", "8 · Acción propuesta", view_action_sheet(), "Hoja lateral de una acción: por qué ahora (con procedencia y la cuenta de la estimación), qué va a pasar exactamente si apruebas (quién, a quién, cuándo, canal, costo) y el par Aprobar / Rechazar."),
-    ("recorrido-settings", "9 · Recorrido (CRM)", view_journey_settings(), "CRM › Configuración › Recorrido: plantilla por tipo de negocio (los once del alta), explicador, y la lista de etapas con tipo semántico y cadencia de cinco campos; una etapa expandida y lo que la mueve sola."),
-    ("contacto-360", "10 · Contacto 360", view_contact_360(), "La ficha del contacto con la tarjeta «Recorrido» (etapa movida hoy, máximo y vencimiento, quién la movió y por qué, cadencia en curso; Deshacer y Pausar cadencia al pasar el ratón o enfocar) y el historial con las entradas nuevas de etapa y ciclo de vida."),
+    ("recorrido-settings", "9 · Recorrido (CRM)", view_journey_settings(), "CRM › Configuración › Recorrido: plantilla por tipo de negocio (los once del alta), explicador, y la lista de etapas con tipo semántico y cadencia (seis campos guardados más el interruptor «Se mueve sola»); una etapa expandida y lo que la mueve sola."),
+    ("contacto-360", "10 · Contacto 360", view_contact_360(), "La ficha del contacto con la tarjeta «Recorrido» (la regla «cita cumplida» la pasó ayer a Propuesta y el agente la movió hoy a Negociación; máximo y vencimiento, quién la movió y por qué, cadencia en curso; Deshacer y Pausar cadencia al pasar el ratón o enfocar) y el historial con las entradas nuevas de etapa y ciclo de vida."),
     ("analytics", "11 · Analítica", view_analytics(), "Analítica › Conversión: debajo del embudo existente, dos listas nuevas: las tasas vivas (llamadas → contestadas → citas → asistió → ventas, cada una con su divisor; valor por cita y por visita) y el recorrido del pipeline por tipo de etapa."),
     ("dashboard", "12 · Panel", view_dashboard(), "El bloque «Tu meta de septiembre» del Panel, con y sin meta. Una franja, la ruta compacta, la procedencia y el enlace a la ruta."),
     ("bloqueado", "13 · Bloqueado", view_blocked(), "Un negocio sin la capacidad: estado vacío sólido con salida a planes, sin códigos de error en la UI. Decisión abierta sobre si Comercial se vende aparte."),
-    ("accion-rechazar", "14 · Acción: rechazar", view_action_reject(), "La misma hoja con el desplegable de motivos abierto sobre «Rechazar»: cuatro motivos escritos como los diría el dueño; el motivo se guarda y axi no vuelve a proponerlo esta semana."),
+    ("accion-rechazar", "14 · Acción: rechazar", view_action_reject(), "La misma hoja con el desplegable de motivos abierto sobre «Rechazar»: cuatro motivos escritos como los diría el dueño; el motivo se guarda y Axi no vuelve a proponerlo esta semana."),
     ("accion-resultado", "15 · Acción: resultado", view_action_result(), "La hoja tras aprobar, con el resultado parcial: 36 entran en seguimiento mañana a las 9:00, 2 quedaron fuera por pedir no recibir mensajes; salida a Tareas."),
-    ("meta-mitad", "16 · Meta a mitad de mes", view_goal_editor(mid_month=True), "El editor cuando ya hay meta y recorrido: aviso con lo que llevas y cómo se recalcula la ruta desde hoy; lo recorrido se conserva."),
+    ("meta-mitad", "16 · Meta a mitad de mes", view_goal_editor(mid_month=True), "El editor cuando ya hay meta y recorrido: aviso con lo que llevas y el mismo 2,7 → 3 ventas al día del hero; si la cambias, la ruta se recalcula desde hoy y lo recorrido se conserva."),
     ("sin-permiso", "17 · Sin permiso de aprobar", view_route("behind", can_approve=False), "La vista de ritmo bajo para un operador sin permiso: sin «Aprobar» ni «Cambiar meta», solo «Ver», y una línea que dice a quién pedirlo."),
 ]]
 
