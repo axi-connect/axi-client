@@ -3,7 +3,8 @@ import { resetCommercialStore, useCommercialStore } from "@/modules/commercial/i
 import { CommercialView } from "../CommercialView";
 import { goalResponse, pace, plan } from "./fixtures";
 
-const mockEntitlements = jest.fn(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
+type Ent = { entitlements: null; loaded: boolean; hasCapability: (code: string) => boolean };
+const mockEntitlements = jest.fn<Ent, []>(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
 jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => mockEntitlements() }));
 const permissions = new Set(["commercial:read", "commercial:manage"]);
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: (code: string) => permissions.has(code) }) }));

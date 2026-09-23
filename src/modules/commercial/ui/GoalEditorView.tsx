@@ -9,8 +9,8 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { CommercialPlanDTO, FigureDTO, GoalInputDTO, PlanRateDTO } from "@/modules/commercial/domain/commercial";
-import { GOAL_SAVED_MESSAGE } from "@/modules/commercial/domain/copy";
-import { formatCount, formatMillions, formatPct, monthLabel } from "@/modules/commercial/domain/format";
+import { GOAL_SAVED_MESSAGE, midMonthLine } from "@/modules/commercial/domain/copy";
+import { formatCount, formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { toIsoDate } from "@/modules/commercial/domain/weeks";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
@@ -150,8 +150,13 @@ export function GoalEditorView() {
 
       {midMonth && pace.data !== null ? (
         <Callout tone="info" icon={Route} className="text-[13px]">
-          Llevas <b className="font-semibold text-foreground">{formatMillions(pace.data.actual_revenue_cents, currency)}</b>. La ruta se
-          recalcula desde hoy con los {formatCount(pace.data.business_days_left)} días hábiles que quedan.
+          {midMonthLine({
+            currency,
+            actual_cents: pace.data.actual_revenue_cents,
+            sales_actual: pace.data.key_results.find((kr) => kr.key === "sales")?.actual ?? 0,
+            sales_target: pace.data.key_results.find((kr) => kr.key === "sales")?.target ?? 0,
+            days_left: pace.data.business_days_left,
+          })}
         </Callout>
       ) : null}
 

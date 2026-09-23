@@ -2,6 +2,8 @@ import type { GoalSeedDTO } from "../commercial";
 import {
   daysLeftPhrase,
   goalLead,
+  learningLine,
+  midMonthLine,
   missingLine,
   paceHeadline,
   projectionLine,
@@ -27,7 +29,7 @@ const base: PaceHeadlineInput = {
 describe("paceHeadline", () => {
   it("ritmo bajo: qué falta y cuánto por día, redondeado hacia arriba", () => {
     // 16 ventas en 6 días = 2,67 → «3 ventas al día»
-    expect(paceHeadline(base)).toBe("Para llegar faltan $ 11,1 M: 3 ventas al día en los 6 días que quedan.");
+    expect(paceHeadline(base)).toBe("Para llegar faltan $ 11,1 M: 3 ventas al día en los 6 días hábiles que quedan.");
     expect(paceHeadline({ ...base, status: "at_risk" })).toBe(paceHeadline(base));
   });
 
@@ -40,7 +42,7 @@ describe("paceHeadline", () => {
   it("adelantado: la ventaja y el cierre proyectado", () => {
     expect(
       paceHeadline({ ...base, status: "ahead", actual_cents: 2_677_000_000, projected_cents: 3_480_000_000 }),
-    ).toBe("Vas $ 3,7 M por delante. Si sigues así cierras en $ 34,8 M.");
+    ).toBe("Vas $ 3,7 M por delante de lo esperado ($ 23,1 M). Si sigues así cierras en $ 34,8 M.");
   });
 
   it("cumplida: los días de sobra, sin celebrar de más", () => {
@@ -74,8 +76,8 @@ describe("salesPerDay / daysLeftPhrase", () => {
   });
 
   it("los días que quedan", () => {
-    expect(daysLeftPhrase(6)).toBe("en los 6 días que quedan");
-    expect(daysLeftPhrase(1)).toBe("en el día que queda");
+    expect(daysLeftPhrase(6)).toBe("en los 6 días hábiles que quedan");
+    expect(daysLeftPhrase(1)).toBe("en el día hábil que queda");
     expect(daysLeftPhrase(0)).toBe("hoy");
   });
 });
@@ -123,9 +125,26 @@ describe("seedLine", () => {
 
   it("sin historia: lo típico del nicho", () => {
     expect(seedLine({ ...seed, source: "benchmark", last_month_revenue_cents: null }, "COP")).toBe(
-      "Aún no tenemos tu historia: te proponemos empezar con lo típico de clínicas estéticas.",
+      "Aún no tenemos tu historia: te proponemos empezar con lo típico de «clínicas estéticas».",
     );
     expect(seedLine({ ...seed, source: "benchmark", niche_label: null }, "COP")).toContain("tu tipo de negocio");
+  });
+});
+
+describe("learningLine / midMonthLine", () => {
+  it("cuánto llevamos y los dos hitos", () => {
+    expect(learningLine(1)).toBe(
+      "Llevas 1 día hábil de datos; con 3 empezamos a proyectar, y a los 30 días tus tasas reales reemplazan los supuestos por tipo de negocio.",
+    );
+    expect(learningLine(0)).toMatch(/^Aún no hay un día hábil de datos;/);
+  });
+
+  it("a mitad de mes: lo recorrido se conserva", () => {
+    expect(
+      midMonthLine({ currency: "COP", actual_cents: 1_894_000_000, sales_actual: 27, sales_target: 43, days_left: 6 }),
+    ).toBe(
+      "Llevas $ 18,9 M y 27 ventas. Si mantienes la meta, la ruta se recalcula desde hoy: faltan 16 ventas en los 6 días hábiles que quedan (2,67 al día). Si la cambias, lo recorrido se conserva.",
+    );
   });
 });
 

@@ -135,7 +135,7 @@ export function CommercialView() {
       ) : (
         <>
           <RouteHero pace={pace.data} plan={plan.data} />
-          {learning ? <LearningNotice /> : <PaceLine series={pace.data.series} today={today} />}
+          {learning ? <LearningNotice daysElapsed={pace.data.business_days_elapsed} /> : <PaceLine series={pace.data.series} today={today} />}
           <KeyResultList pace={pace.data} plan={plan.data} learning={learning} />
           <ActionList proposals={[]} learning={learning} />
         </>

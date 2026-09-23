@@ -17,11 +17,11 @@ export function salesPerDay(rate: number): string {
   return n === 1 ? "1 venta al día" : `${formatCount(n)} ventas al día`;
 }
 
-/** «en los 6 días que quedan» · «en el día que queda» · «hoy». */
+/** «en los 6 días hábiles que quedan» · «en el día hábil que queda» · «hoy». */
 export function daysLeftPhrase(days: number): string {
   if (days <= 0) return "hoy";
-  if (days === 1) return "en el día que queda";
-  return `en los ${formatCount(days)} días que quedan`;
+  if (days === 1) return "en el día hábil que queda";
+  return `en los ${formatCount(days)} días hábiles que quedan`;
 }
 
 function plural(n: number, one: string, many: string): string {
@@ -60,7 +60,7 @@ export function paceHeadline(input: PaceHeadlineInput): string {
     case "ahead": {
       const ahead = Math.max(0, input.actual_cents - input.expected_cents);
       const projected = input.projected_cents ?? input.actual_cents;
-      return `Vas ${formatMillions(ahead, currency)} por delante. Si sigues así cierras en ${formatMillions(projected, currency)}.`;
+      return `Vas ${formatMillions(ahead, currency)} por delante de lo esperado (${formatMillions(input.expected_cents, currency)}). Si sigues así cierras en ${formatMillions(projected, currency)}.`;
     }
     case "achieved": {
       const d = Math.max(0, input.days_left);
@@ -97,9 +97,27 @@ export function rateLine(actualRate: number, expectedRate: number, source: Sourc
   return `Ritmo ${formatRate(actualRate)} al día · esperado ${formatRate(expectedRate)} · ${sourceLabel(source, nicheLabel)}`;
 }
 
-/** El aviso del estado «aprendiendo», con los dos hitos del método. */
-export function learningLine(): string {
-  return "Con 3 días hábiles de datos empezamos a proyectar; a los 30 días tus tasas reales reemplazan los supuestos por tipo de negocio.";
+/** El aviso del estado «aprendiendo»: cuánto llevamos y los dos hitos del método. */
+export function learningLine(daysElapsed: number): string {
+  const d = Math.max(0, daysElapsed);
+  const so_far = d === 0 ? "Aún no hay un día hábil de datos" : `Llevas ${formatCount(d)} ${plural(d, "día hábil", "días hábiles")} de datos`;
+  return `${so_far}; con 3 empezamos a proyectar, y a los 30 días tus tasas reales reemplazan los supuestos por tipo de negocio.`;
+}
+
+/**
+ * El aviso de mitad de mes en el editor: lo recorrido se conserva y la ruta
+ * se recalcula desde hoy. Dice qué falta con la meta actual antes de tocarla.
+ */
+export function midMonthLine(input: {
+  currency: string;
+  actual_cents: number;
+  sales_actual: number;
+  sales_target: number;
+  days_left: number;
+}): string {
+  const { missing } = gap(input.sales_actual, input.sales_target);
+  const rate = dailyRateNeeded(missing, input.days_left);
+  return `Llevas ${formatMillions(input.actual_cents, input.currency)} y ${formatCount(input.sales_actual)} ${plural(input.sales_actual, "venta", "ventas")}. Si mantienes la meta, la ruta se recalcula desde hoy: faltan ${formatCount(missing)} ${plural(missing, "venta", "ventas")} ${daysLeftPhrase(input.days_left)} (${formatRate(rate)} al día). Si la cambias, lo recorrido se conserva.`;
 }
 
 /**
@@ -114,7 +132,7 @@ export function seedLine(seed: GoalSeedDTO, currency: string): string {
     const liftLabel = lift > 0 ? ` (+${String(lift)} %)` : "";
     return `${base} Una meta de ${formatMoney(seed.suggested_target_cents, currency)}${liftLabel} es alcanzable con tu ritmo.`;
   }
-  const niche = seed.niche_label ?? "tu tipo de negocio";
+  const niche = seed.niche_label === null ? "tu tipo de negocio" : `«${seed.niche_label}»`;
   return `Aún no tenemos tu historia: te proponemos empezar con lo típico de ${niche}.`;
 }
 

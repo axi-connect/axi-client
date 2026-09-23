@@ -3,7 +3,8 @@ import { resetCommercialStore, useCommercialStore } from "@/modules/commercial/i
 import { GoalProgressBlock } from "../GoalProgressBlock";
 import { goalResponse, pace } from "../../__tests__/fixtures";
 
-const mockEntitlements = jest.fn(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
+type Ent = { entitlements: null; loaded: boolean; hasCapability: (code: string) => boolean };
+const mockEntitlements = jest.fn<Ent, []>(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
 jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => mockEntitlements() }));
 const mockPermission = jest.fn(() => true);
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: () => mockPermission() }) }));

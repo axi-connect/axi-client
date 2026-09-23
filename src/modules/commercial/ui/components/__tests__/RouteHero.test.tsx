@@ -14,7 +14,7 @@ describe("RouteHero", () => {
     render(<RouteHero pace={pace} plan={plan} />);
     expect(screen.getByRole("img", { name: "Ruta del mes: 63 % recorrido, 77 % esperado a hoy, proyección 82 %" })).toBeInTheDocument();
     expect(screen.getByText("cierre ≈ $ 24,6 M · 82 %")).toBeInTheDocument();
-    expect(screen.getByText("Para llegar faltan $ 11,1 M: 3 ventas al día en los 6 días que quedan.")).toBeInTheDocument();
+    expect(screen.getByText("Para llegar faltan $ 11,1 M: 3 ventas al día en los 6 días hábiles que quedan.")).toBeInTheDocument();
     expect(screen.getByText("Atrasado")).toBeInTheDocument();
   });
 

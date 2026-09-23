@@ -3,11 +3,11 @@ import { Hourglass } from "lucide-react";
 import { learningLine } from "@/modules/commercial/domain/copy";
 import { Callout } from "@/shared/components/ui/callout";
 
-/** El aviso del estado «aprendiendo»: los dos hitos del método, sin dramatizar. */
-export function LearningNotice() {
+/** El aviso del estado «aprendiendo»: cuánto llevamos y los dos hitos del método, sin dramatizar. */
+export function LearningNotice({ daysElapsed }: { daysElapsed: number }) {
   return (
     <Callout tone="info" icon={Hourglass} className="text-[13px]">
-      <b className="font-semibold text-foreground">Estamos aprendiendo tu ritmo.</b> {learningLine()}
+      <b className="font-semibold text-foreground">Estamos aprendiendo tu ritmo.</b> {learningLine(daysElapsed)}
     </Callout>
   );
 }

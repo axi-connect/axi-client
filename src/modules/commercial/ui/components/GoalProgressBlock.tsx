@@ -7,7 +7,7 @@ import { ArrowRight, Route } from "lucide-react";
 import { formatMoney } from "@/core/lib/format";
 import { formatCount, formatMillions, formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { PACE_BADGES } from "@/modules/commercial/domain/labels";
-import { expectedPct, progressPct } from "@/modules/commercial/domain/pace";
+import { expectedPct, gap, progressPct } from "@/modules/commercial/domain/pace";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
@@ -84,7 +84,12 @@ export function GoalProgressBlock() {
       </div>
       <p className="flex flex-wrap items-baseline gap-x-2 text-[14.5px]">
         <b className="font-semibold tabular-nums">{formatMillions(p.actual_revenue_cents, p.currency)}</b>
-        <span className="text-muted-foreground">de {formatMoney(p.target_revenue_cents, p.currency)}</span>
+        <span className="text-muted-foreground">
+          de {formatMoney(p.target_revenue_cents, p.currency)}
+          {gap(p.actual_revenue_cents, p.target_revenue_cents).missing > 0
+            ? ` · faltan ${formatMillions(gap(p.actual_revenue_cents, p.target_revenue_cents).missing, p.currency)}`
+            : ""}
+        </span>
         <StatusBadge status={p.status} map={PACE_BADGES} appearance="dot" />
       </p>
       <RouteLine compact done={done / 100} expected={expected} projected={projected} className="mt-1" />
