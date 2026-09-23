@@ -85,7 +85,7 @@ La firma visual de Axi Connect es el **gradiente tricolor** del isotipo:
 
 - **Gradiente completo** (coral → ámbar → violeta): reservado para momentos hero — landing, onboarding, empty states destacados, texto de marca (`.text-brand-gradient`).
 - **Gradiente corto** (coral → violeta): CTA especiales y detalles decorativos (bordes de avatar de IA, barras de progreso de marca).
-- Prohibido usar gradientes de colores ajenos a la paleta (los `from-pink-400`, `from-teal-400`… de `gradients.ts` actual son deuda a migrar).
+- Prohibido usar gradientes de colores ajenos a la paleta (los `from-pink-400`, `from-teal-400`… del antiguo `gradients.ts` ya se retiraron).
 
 ### 3.3 Neutros
 
@@ -131,7 +131,8 @@ Escala de grises cálido-neutra (base zinc), definida por tokens semánticos (ve
 
 El glass es el material de las **superficies flotantes** — lo que está *encima* del contenido:
 
-- ✅ Header privado, sidebar, modales, sheets, popovers, dropdowns, command palette, alerts flotantes.
+- ✅ Header privado, sidebar, modales, sheets, popovers, dropdowns, command palette.
+- ⚫ **Excepción: los avisos flotantes** son tinta invertida, no glass — una píldora oscura en claro y clara en oscuro, como la Dynamic Island (DESIGN-SYSTEM §5.2 y §9.4).
 - ❌ Superficies de contenido: tablas, formularios, cards de datos, paneles del inbox → **sólidas siempre** (legibilidad ante todo).
 
 Receta exacta (blur, saturación, borde interior, fallback sin `backdrop-filter`) en DESIGN-SYSTEM §5.

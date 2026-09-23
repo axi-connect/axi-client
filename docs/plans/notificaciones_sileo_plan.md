@@ -1,6 +1,6 @@
 # Notificaciones con sileo — plan
 
-> Rama `feat/sileo-notifications` (cliente). Estado: **F0 entregada; D1–D5 aprobadas por el dueño el 2026-09-23**, con un ajuste de espaciado de la píldora compacta pedido antes de aprobar la F0.
+> Rama `feat/sileo-notifications` (cliente). Estado: **F0 aprobada; F1, F2 y F4 construidas 2026-09-23**. F3 (`notify.promise` en pantallas concretas) queda a la espera de la lista del dueño; la API ya existe.
 > Mockup: `docs/design/mockups/notificaciones-sileo.html` (build `notificaciones-sileo.build.py`,
 > adaptador `notificaciones-sileo.adapter.js`), con sileo 0.1.5 real incrustado.
 
@@ -61,9 +61,8 @@ banner, para que ningún módulo vuelva a inventar el suyo. Aprovechar para corr
   sileo usa (0,3,0) e inyecta su CSS después del nuestro. El relleno llega como atributo SVG:
   `rect[data-sileo-pill|body]{fill:var(--toast-fill)}` para que siga al tema con avisos abiertos.
   Regla `no-restricted-imports` para `sileo` fuera de `core/notifications`. `framer-motion ^12.34`.
-- **F2 — Migración de los 13 sitios**: 10 páginas de `FloatingAlert` → `showAlert`; 3
-  `StatusAlert` en línea → `Alert`. Borrar `floating-alert.tsx` y la variante flotante de
-  `notice.tsx`. `LAYERS.alert` pasa a documentar el viewport de sileo.
+- **F2 — Migración** (resultó más larga que lo medido: la cadena `setAlert` del `FloatingAlert` baja por props a 17 formularios y secciones de catálogo, roles y usuarios, así que son 27 archivos): 10 páginas de `FloatingAlert` → `showAlert` y `variant` → `tone` en toda la cadena; 3
+  `StatusAlert` en línea → `Alert`. Borrar `floating-alert.tsx` y `notice.tsx` (se quedó sin consumidores). `LAYERS.alert` pasa a documentar el viewport de sileo.
 - **F3 — `notify.promise`** en los «Guardar» que tardan (opt-in, lista a acordar).
 - **F4 — Design System**: aplicar §9.4 y las 12 correcciones que muestra la vista 4 del mockup.
 
