@@ -13052,6 +13052,33 @@ export interface components {
                 quote_to_sale_rate: number | null;
                 value_per_meeting_cents: number | null;
                 value_per_visit_cents: number | null;
+                rate_samples: {
+                    call_answer: {
+                        numerator: number;
+                        denominator: number;
+                        capped: boolean;
+                    } | null;
+                    answered_to_meeting: {
+                        numerator: number;
+                        denominator: number;
+                        capped: boolean;
+                    } | null;
+                    meeting_show: {
+                        numerator: number;
+                        denominator: number;
+                        capped: boolean;
+                    } | null;
+                    meeting_to_sale: {
+                        numerator: number;
+                        denominator: number;
+                        capped: boolean;
+                    } | null;
+                    quote_to_sale: {
+                        numerator: number;
+                        denominator: number;
+                        capped: boolean;
+                    } | null;
+                };
                 samples: {
                     calls_placed: number;
                     calls_answered: number;
@@ -16517,6 +16544,8 @@ export interface components {
                 estimated_sales: number | null;
                 covers_pct: number | null;
                 basis: string | null;
+                /** @enum {string|null} */
+                estimate_source: "history" | "declared" | "benchmark" | null;
             }[];
         };
         CommercialProposalDetailDto: {
@@ -16547,6 +16576,8 @@ export interface components {
                 estimated_sales: number | null;
                 covers_pct: number | null;
                 basis: string | null;
+                /** @enum {string|null} */
+                estimate_source: "history" | "declared" | "benchmark" | null;
             };
         };
         NotificationsListDto: {
