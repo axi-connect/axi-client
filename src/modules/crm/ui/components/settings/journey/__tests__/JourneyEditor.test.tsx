@@ -1,7 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { HttpError } from "@/core/api/problem";
-import type { JourneyDTO, JourneyStageDTO } from "@/modules/crm/domain/journey";
-import { JourneyEditor } from "../JourneyEditor";
+import type { JourneyDTO, JourneyStageDTO, PutJourneyDTO } from "@/modules/crm/domain/journey";
+import { JourneyEditor, saveErrorTitle } from "../JourneyEditor";
 
 const getJourney = jest.fn();
 const putJourney = jest.fn();
@@ -80,6 +80,35 @@ function journey(over: Partial<JourneyDTO> = {}): JourneyDTO {
   };
 }
 
+/** El servidor devuelve lo que recibió (lista parcial): así se ve qué fusiona el editor. */
+function echo(dto: PutJourneyDTO): JourneyDTO {
+  return {
+    ...journey(),
+    stages: dto.stages.map((sent) => ({ ...journey().stages.find((s) => s.stage_id === sent.stage_id)!, ...sent })),
+  };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+function sentStage(call: number): PutJourneyDTO["stages"][number] {
+  const body = putJourney.mock.calls[call][0] as PutJourneyDTO;
+  expect(body.stages).toHaveLength(1);
+  return body.stages[0];
+}
+
+async function pickKind(stageName: string, optionName: string) {
+  fireEvent.keyDown(screen.getByLabelText(`Tipo de la etapa ${stageName}`), { key: "ArrowDown" });
+  fireEvent.keyDown(await screen.findByRole("option", { name: optionName }), { key: "Enter" });
+}
+
 beforeEach(() => {
   getJourney.mockReset();
   putJourney.mockReset();
@@ -93,59 +122,156 @@ describe("JourneyEditor", () => {
     render(<JourneyEditor />);
 
     expect(await screen.findByText("Consulta")).toBeInTheDocument();
-    expect(screen.getByText("2 intentos · cada 4 h · Mensaje · máx. 2 días · luego dejar enfriar")).toBeInTheDocument();
+    expect(screen.getByText("2 intentos · cada 4 h · mensaje · máx. 2 días · al agotarse: dejar enfriar")).toBeInTheDocument();
     expect(
-      screen.getByText("4 intentos · cada 2 días · Mensaje · máx. 10 días · luego marcar perdida"),
+      screen.getByText("4 intentos · cada 2 días · mensaje · máx. 10 días · al agotarse: marcar perdida"),
     ).toBeInTheDocument();
     expect(screen.getByText("No se mueve sola")).toBeInTheDocument();
-    // La plantilla aplicada, con el nombre del catálogo de nichos del cliente.
     expect(screen.getByText("Salud, belleza y citas")).toBeInTheDocument();
   });
 
-  it("la fila expandida enseña qué la mueve sola y «Se mueve sola» escribe auto_advance con un PUT completo", async () => {
+  it("«Se mueve sola» manda SOLO su etapa y fusiona solo esa en la respuesta", async () => {
     getJourney.mockResolvedValue(journey());
-    putJourney.mockImplementation((dto: { stages: JourneyStageDTO[] }) =>
-      Promise.resolve({ ...journey(), stages: journey().stages.map((s) => ({ ...s, ...dto.stages.find((p) => p.stage_id === s.stage_id) })) }),
-    );
+    putJourney.mockImplementation((dto: PutJourneyDTO) => Promise.resolve(echo(dto)));
     render(<JourneyEditor />);
 
     fireEvent.click(await screen.findByRole("button", { name: /Propuesta/ }));
     expect(screen.getByText("cotización enviada")).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole("switch"));
+
     await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(1));
-    const body = putJourney.mock.calls[0][0] as { stages: Array<{ stage_id: string; auto_advance: boolean; stage_kind: string }> };
-    expect(body.stages).toHaveLength(3);
-    expect(body.stages.find((s) => s.stage_id === "s2")?.auto_advance).toBe(false);
-    expect(body.stages.find((s) => s.stage_id === "s1")?.stage_kind).toBe("new");
+    expect(sentStage(0)).toMatchObject({ stage_id: "s2", auto_advance: false, stage_kind: "proposal" });
     await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success" })));
+    // Las otras etapas siguen intactas aunque el servidor no las devolviera.
+    expect(screen.getByText("Consulta")).toBeInTheDocument();
+    expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
   });
 
-  it("«Activar cadencia» nace con la cadencia por defecto y el número guarda al salir", async () => {
+  it("dos guardados concurrentes en etapas distintas: A responde tarde tras B y los dos quedan", async () => {
     getJourney.mockResolvedValue(journey());
-    putJourney.mockImplementation((dto: { stages: JourneyStageDTO[] }) =>
-      Promise.resolve({ ...journey(), stages: dto.stages.map((p, i) => ({ ...journey().stages[i], ...p })) }),
-    );
+    const late = deferred<JourneyDTO>();
+    putJourney
+      .mockImplementationOnce(() => late.promise) // A: s2
+      .mockImplementationOnce((dto: PutJourneyDTO) => Promise.resolve(echo(dto))); // B: s3
+    render(<JourneyEditor />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Propuesta/ }));
+    fireEvent.click(screen.getByRole("switch")); // A en vuelo
+    fireEvent.click(screen.getByRole("button", { name: /Reagendar/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Activar cadencia" })); // B
+    await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(2));
+    expect(sentStage(0).stage_id).toBe("s2");
+    expect(sentStage(1).stage_id).toBe("s3");
+    // B ya se aplicó: la etapa 3 tiene cadencia mientras A sigue en vuelo.
+    expect(await screen.findByLabelText("Intentos")).toBeInTheDocument();
+
+    await act(async () => {
+      late.resolve(echo({ stages: [sentStage(0)] }));
+      await late.promise;
+    });
+
+    // Los dos cambios están: s3 conserva la cadencia y s2 quedó apagada.
+    expect(screen.getByLabelText("Intentos")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
+    expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("mientras una etapa guarda, sus controles se bloquean y los de las otras no (busy por etapa)", async () => {
+    getJourney.mockResolvedValue(journey());
+    const late = deferred<JourneyDTO>();
+    putJourney.mockImplementationOnce(() => late.promise);
+    render(<JourneyEditor />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Propuesta/ }));
+    fireEvent.click(screen.getByRole("switch"));
+    await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(1));
+    // El segundo clic sobre la misma etapa no dispara otro PUT: está en vuelo.
+    expect(screen.getByRole("switch")).toBeDisabled();
+    fireEvent.click(screen.getByRole("switch"));
+    expect(putJourney).toHaveBeenCalledTimes(1);
+
+    // La etapa vecina sigue editable.
+    fireEvent.click(screen.getByRole("button", { name: /Reagendar/ }));
+    expect(screen.getByRole("button", { name: "Activar cadencia" })).toBeEnabled();
+
+    await act(async () => {
+      late.resolve(echo({ stages: [sentStage(0)] }));
+      await late.promise;
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
+    expect(screen.getByRole("switch")).toBeEnabled();
+    expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("«Activar cadencia» nace con la cadencia por defecto; el número guarda al salir y no admite 0", async () => {
+    getJourney.mockResolvedValue(journey());
+    putJourney.mockImplementation((dto: PutJourneyDTO) => Promise.resolve(echo(dto)));
     render(<JourneyEditor />);
 
     fireEvent.click(await screen.findByRole("button", { name: /Reagendar/ }));
     fireEvent.click(screen.getByRole("button", { name: "Activar cadencia" }));
     await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(1));
-    const first = putJourney.mock.calls[0][0] as { stages: Array<{ stage_id: string; cadence: unknown }> };
-    expect(first.stages.find((s) => s.stage_id === "s3")?.cadence).toEqual({
+    expect(sentStage(0).cadence).toEqual({
       max_attempts: 3,
       wait_hours: 24,
       channel: "message",
       exhausted_action: "let_cool",
     });
 
-    const attempts = await screen.findByLabelText(/Intentos/);
+    const attempts = await screen.findByLabelText("Intentos");
+    fireEvent.change(attempts, { target: { value: "0" } });
+    fireEvent.blur(attempts);
+    // Fuera de rango: el error se dice y no se guarda nada.
+    expect(screen.getByRole("alert")).toHaveTextContent("Escribe un número entero entre 1 y 20");
+    expect(attempts).toHaveAttribute("aria-invalid", "true");
+    expect(putJourney).toHaveBeenCalledTimes(1);
+
     fireEvent.change(attempts, { target: { value: "5" } });
     expect(putJourney).toHaveBeenCalledTimes(1); // teclear no guarda
     fireEvent.blur(attempts);
     await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(2));
-    const second = putJourney.mock.calls[1][0] as { stages: Array<{ stage_id: string; cadence: { max_attempts: number } | null }> };
-    expect(second.stages.find((s) => s.stage_id === "s3")?.cadence?.max_attempts).toBe(5);
+    expect(sentStage(1).cadence?.max_attempts).toBe(5);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("Personalizada ↔ tipo: al darle tipo se enciende «Se mueve sola», al volver se apaga", async () => {
+    getJourney.mockResolvedValue(journey());
+    putJourney.mockImplementation((dto: PutJourneyDTO) => Promise.resolve(echo(dto)));
+    render(<JourneyEditor />);
+    await screen.findByText("Reagendar");
+
+    await pickKind("Reagendar", "Cita");
+    await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(1));
+    expect(sentStage(0)).toMatchObject({ stage_id: "s3", stage_kind: "meeting", auto_advance: true });
+
+    await pickKind("Reagendar", "Personalizada");
+    await waitFor(() => expect(putJourney).toHaveBeenCalledTimes(2));
+    expect(sentStage(1)).toMatchObject({ stage_id: "s3", stage_kind: "custom", auto_advance: false });
+  });
+
+  it("un tipo ya usado por otra etapa se ofrece deshabilitado", async () => {
+    getJourney.mockResolvedValue(journey());
+    render(<JourneyEditor />);
+    await screen.findByText("Reagendar");
+
+    fireEvent.keyDown(screen.getByLabelText("Tipo de la etapa Reagendar"), { key: "ArrowDown" });
+    const taken = await screen.findByRole("option", { name: /Propuesta · ya usado/ });
+    expect(taken).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("409 de tipo repetido: nombra el tipo intentado y la etapa vuelve a como estaba", async () => {
+    getJourney.mockResolvedValue(journey());
+    putJourney.mockRejectedValue(new HttpError({ status: 409, code: "crm/stage_kind_taken", message: "" }));
+    render(<JourneyEditor />);
+    await screen.findByText("Reagendar");
+
+    await pickKind("Reagendar", "Cita");
+    await waitFor(() =>
+      expect(showAlert).toHaveBeenCalledWith(
+        expect.objectContaining({ tone: "error", title: "Ya hay una etapa de tipo Cita; elige otro tipo" }),
+      ),
+    );
+    expect(screen.getByLabelText("Tipo de la etapa Reagendar")).toHaveTextContent("Personalizada");
   });
 
   it("si el servidor rechaza, vuelve al estado anterior y lo dice sin código crudo", async () => {
@@ -166,7 +292,7 @@ describe("JourneyEditor", () => {
     expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "true");
   });
 
-  it("el selector de plantillas pinta las del servidor (también las que el cliente no conoce), el nicho del tenant primero, y aplicar avisa sin borrar nada", async () => {
+  it("el selector de plantillas: las del servidor, el nicho del tenant primero, foco itinerante; aplicar avisa", async () => {
     getJourney.mockResolvedValue(journey());
     applyJourneyTemplate.mockResolvedValue(journey({ template_code: "software_saas" }));
     render(<JourneyEditor />);
@@ -176,6 +302,12 @@ describe("JourneyEditor", () => {
     expect(radios).toHaveLength(3);
     expect(radios[0]).toHaveTextContent("Salud, belleza y citas");
     expect(radios[0]).toHaveTextContent("tu tipo de negocio");
+    // Roving tabindex: Tab entra por el marcado y las flechas recorren.
+    expect(radios[0]).toHaveAttribute("tabindex", "0");
+    expect(radios[1]).toHaveAttribute("tabindex", "-1");
+    fireEvent.keyDown(radios[0], { key: "ArrowDown" });
+    expect(screen.getAllByRole("radio")[1]).toHaveAttribute("aria-checked", "true");
+    expect(screen.getAllByRole("radio")[1]).toHaveAttribute("tabindex", "0");
     expect(screen.getByText("No borra etapas ni oportunidades.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: /Software y servicios digitales/ }));
@@ -186,6 +318,21 @@ describe("JourneyEditor", () => {
         expect.objectContaining({ title: "Plantilla aplicada: Software y servicios digitales" }),
       ),
     );
+    await waitFor(() => expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument());
+  });
+
+  it("si aplicar la plantilla falla, el selector se queda abierto con la elección puesta", async () => {
+    getJourney.mockResolvedValue(journey());
+    applyJourneyTemplate.mockRejectedValue(new Error("boom"));
+    render(<JourneyEditor />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Cambiar" }));
+    fireEvent.click(screen.getByRole("radio", { name: /Restaurantes/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Aplicar plantilla" }));
+
+    await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })));
+    expect(screen.getByRole("radiogroup")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Restaurantes/ })).toHaveAttribute("aria-checked", "true");
   });
 
   it("un error al cargar se dice con reintento", async () => {
@@ -197,5 +344,18 @@ describe("JourneyEditor", () => {
     expect(await screen.findByText("No tienes permiso para realizar esta acción")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
     expect(await screen.findByText("Consulta")).toBeInTheDocument();
+  });
+});
+
+describe("saveErrorTitle", () => {
+  it("tipo repetido con y sin tipo intentado; otro 409 pide recargar; el resto va por errorMessage", () => {
+    const taken = new HttpError({ status: 409, code: "crm/stage_kind_taken", message: "" });
+    expect(saveErrorTitle(taken, "proposal")).toBe("Ya hay una etapa de tipo Propuesta; elige otro tipo");
+    expect(saveErrorTitle(taken)).toBe("Ya hay una etapa con ese tipo; elige otro tipo");
+    expect(saveErrorTitle(new HttpError({ status: 409, code: "crm/stage_in_use", message: "" }))).toBe(
+      "No se pudo guardar: el recorrido cambió mientras editabas. Recarga la página",
+    );
+    expect(saveErrorTitle(new Error("boom"))).toBe("boom");
+    expect(saveErrorTitle(undefined)).toBe("No se pudo guardar el recorrido");
   });
 });

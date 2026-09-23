@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Zap } from "lucide-react";
 
-import { cn } from "@/core/lib/utils";
 import { Input } from "@/shared/components/ui/input";
 import {
   Select,
@@ -30,24 +29,36 @@ import {
 
 export type StagePatch = Partial<Pick<PutJourneyStageDTO, "cadence" | "rotting_days" | "auto_advance">>;
 
-/** Una fila etiqueta → control de la ficha expandida. */
+/**
+ * Una fila etiqueta → control de la ficha expandida. El hint va FUERA del
+ * `<label>` (con su propio id para `aria-describedby`): un label largo se lee
+ * entero cada vez que el control toma el foco.
+ */
 function FieldRow({
   label,
   hint,
+  hintId,
   htmlFor,
   children,
 }: {
   label: string;
   hint?: string;
+  hintId?: string;
   htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="grouped-row flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 px-4 py-2.5">
-      <label htmlFor={htmlFor} className="min-w-0 text-sm">
-        <span className="block">{label}</span>
-        {hint !== undefined && <span className="block text-xs text-muted-foreground">{hint}</span>}
-      </label>
+      <div className="min-w-0 text-sm">
+        <label htmlFor={htmlFor} className="block">
+          {label}
+        </label>
+        {hint !== undefined && (
+          <p id={hintId} className="text-xs text-muted-foreground">
+            {hint}
+          </p>
+        )}
+      </div>
       <div className="w-full sm:w-56">{children}</div>
     </div>
   );
@@ -55,7 +66,8 @@ function FieldRow({
 
 /**
  * Campo numérico que guarda AL SALIR (blur o Enter), no en cada tecla: cada
- * cambio es un PUT del recorrido entero y teclear «12» no puede disparar dos.
+ * cambio es un PUT y teclear «12» no puede disparar dos. Un valor fuera de
+ * rango no se descarta en silencio: se queda en el campo con el error debajo.
  */
 function NumberField({
   id,
@@ -65,6 +77,7 @@ function NumberField({
   placeholder,
   allowEmpty,
   disabled,
+  describedBy,
   onCommit,
 }: {
   id: string;
@@ -75,52 +88,68 @@ function NumberField({
   /** Vacío = «sin valor» (null); si no, vacío vuelve al valor anterior. */
   allowEmpty: boolean;
   disabled: boolean;
+  describedBy?: string;
   onCommit: (next: number | null) => void;
 }) {
   const [draft, setDraft] = useState(value === null ? "" : String(value));
+  const [error, setError] = useState<string | null>(null);
+  const errorId = `${id}-error`;
   useEffect(() => {
     setDraft(value === null ? "" : String(value));
+    setError(null);
   }, [value]);
 
   function commit(): void {
     const trimmed = draft.trim();
     if (trimmed === "") {
       if (allowEmpty) {
+        setError(null);
         if (value !== null) onCommit(null);
       } else {
         setDraft(value === null ? "" : String(value));
+        setError(null);
       }
       return;
     }
     const parsed = Number(trimmed);
     if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-      setDraft(value === null ? "" : String(value));
+      setError(`Escribe un número entero entre ${String(min)} y ${String(max)}`);
       return;
     }
+    setError(null);
     if (parsed !== value) onCommit(parsed);
   }
 
   return (
-    <Input
-      id={id}
-      type="number"
-      inputMode="numeric"
-      min={min}
-      max={max}
-      step={1}
-      value={draft}
-      placeholder={placeholder}
-      disabled={disabled}
-      className="h-8 tabular-nums"
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={commit}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          event.currentTarget.blur();
-        }
-      }}
-    />
+    <div>
+      <Input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        step={1}
+        value={draft}
+        placeholder={placeholder}
+        disabled={disabled}
+        aria-invalid={error !== null || undefined}
+        aria-describedby={[describedBy, error === null ? undefined : errorId].filter(Boolean).join(" ") || undefined}
+        className="h-8 tabular-nums"
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.currentTarget.blur();
+          }
+        }}
+      />
+      {error !== null && (
+        <p id={errorId} role="alert" className="mt-1 text-xs text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -141,9 +170,16 @@ export function JourneyCadenceFields({
 }) {
   const cadence = stage.cadence;
   const id = (field: string) => `journey-${stage.stage_id}-${field}`;
-  const waitOptions = cadence !== null && !CADENCE_WAIT_OPTIONS.includes(cadence.wait_hours)
-    ? [...CADENCE_WAIT_OPTIONS, cadence.wait_hours].sort((a, b) => a - b)
-    : CADENCE_WAIT_OPTIONS;
+  const waitOptions =
+    cadence !== null && !CADENCE_WAIT_OPTIONS.includes(cadence.wait_hours)
+      ? [...CADENCE_WAIT_OPTIONS, cadence.wait_hours].sort((a, b) => a - b)
+      : CADENCE_WAIT_OPTIONS;
+  const autoHint =
+    stage.stage_kind === "custom"
+      ? "Una etapa personalizada no tiene reglas que la muevan."
+      : stage.auto_advance
+        ? "Sus eventos la mueven; el agente también puede."
+        : "Apagado: solo una persona o el agente la mueven.";
 
   return (
     <div className="border-t border-border/70 bg-foreground/[0.02]">
@@ -168,7 +204,12 @@ export function JourneyCadenceFields({
         </div>
       ) : (
         <>
-          <FieldRow label="Intentos" htmlFor={id("attempts")} hint="Cuántas veces insistimos antes de parar.">
+          <FieldRow
+            label="Intentos"
+            htmlFor={id("attempts")}
+            hint="Cuántas veces insistimos antes de parar."
+            hintId={id("attempts-hint")}
+          >
             <NumberField
               id={id("attempts")}
               value={cadence.max_attempts}
@@ -176,6 +217,7 @@ export function JourneyCadenceFields({
               max={20}
               allowEmpty={false}
               disabled={busy}
+              describedBy={id("attempts-hint")}
               onCommit={(next) => {
                 if (next !== null) onPatch({ cadence: { ...cadence, max_attempts: next } });
               }}
@@ -205,9 +247,7 @@ export function JourneyCadenceFields({
             <Select
               value={cadence.channel}
               disabled={busy}
-              onValueChange={(value) =>
-                onPatch({ cadence: { ...cadence, channel: value as CadenceChannel } })
-              }
+              onValueChange={(value) => onPatch({ cadence: { ...cadence, channel: value as CadenceChannel } })}
             >
               <SelectTrigger size="sm" className="w-full" aria-label="Canal">
                 <SelectValue />
@@ -228,6 +268,7 @@ export function JourneyCadenceFields({
         label="Tiempo máximo en la etapa"
         htmlFor={id("rotting")}
         hint="En días. Pasado ese tiempo la oportunidad se marca como estancada."
+        hintId={id("rotting-hint")}
       >
         <NumberField
           id={id("rotting")}
@@ -237,6 +278,7 @@ export function JourneyCadenceFields({
           placeholder="Sin máximo"
           allowEmpty
           disabled={busy}
+          describedBy={id("rotting-hint")}
           onCommit={(next) => onPatch({ rotting_days: next })}
         />
       </FieldRow>
@@ -264,29 +306,20 @@ export function JourneyCadenceFields({
         </FieldRow>
       )}
 
-      <FieldRow
-        label="Se mueve sola"
-        htmlFor={id("auto")}
-        hint={
-          stage.stage_kind === "custom"
-            ? "Una etapa personalizada no tiene reglas que la muevan."
-            : stage.auto_advance
-              ? "Sus eventos la mueven; el agente también puede."
-              : "Apagado: solo una persona o el agente la mueven."
-        }
-      >
+      <FieldRow label="Se mueve sola" htmlFor={id("auto")} hint={autoHint} hintId={id("auto-hint")}>
         <div className="flex justify-end">
           <Switch
             id={id("auto")}
             checked={stage.auto_advance}
             disabled={busy || stage.stage_kind === "custom"}
+            aria-describedby={id("auto-hint")}
             onCheckedChange={(checked) => onPatch({ auto_advance: checked })}
           />
         </div>
       </FieldRow>
 
       <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-2.5">
-        <p className={cn("flex items-start gap-1.5 text-xs text-muted-foreground")}>
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <Zap className="mt-0.5 size-3.5 shrink-0" aria-hidden />
           <span>
             {stage.stage_kind === "custom" ? (

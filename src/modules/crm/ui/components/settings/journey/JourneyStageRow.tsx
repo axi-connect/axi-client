@@ -53,12 +53,14 @@ export function JourneyStageRow({
   const panelId = `journey-stage-${stage.stage_id}`;
 
   return (
-    <li className={cn("grouped-row group", expanded && "bg-foreground/[0.02]")}>
+    <li className={cn("grouped-row reveal-group", expanded && "bg-foreground/[0.02]")}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 md:flex-nowrap">
         <button
           type="button"
           aria-expanded={expanded}
-          aria-controls={panelId}
+          // Solo cuando el panel existe: apuntar a un id que no está en el DOM
+          // es un error de a11y (aria-controls debe referenciar algo).
+          {...(expanded ? { "aria-controls": panelId } : {})}
           onClick={onToggle}
           className="min-w-0 flex-1 basis-full rounded-lg text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none md:basis-auto"
         >

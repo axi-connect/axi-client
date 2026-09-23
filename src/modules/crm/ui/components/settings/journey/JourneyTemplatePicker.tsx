@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Check } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
@@ -37,9 +37,10 @@ export function templateName(template: Pick<JourneyTemplateDTO, "niche_code" | "
 
 /**
  * La fila «Plantilla → {nicho}» con «Cambiar» al pasar el ratón, que abre el
- * selector EN LÍNEA (una lista de radios, el nicho del tenant primero). No es
- * un modal: elegir plantilla es parte de la misma página y se ve el resultado
- * justo debajo, en la lista de etapas.
+ * selector EN LÍNEA (un radiogroup con foco itinerante: Tab entra una vez y las
+ * flechas recorren, como pide WAI-ARIA para radios). No es un modal: elegir
+ * plantilla es parte de la misma página y se ve el resultado justo debajo.
+ * Si aplicar falla, el selector se queda abierto con la elección puesta.
  */
 export function JourneyTemplatePicker({
   templates,
@@ -57,10 +58,12 @@ export function JourneyTemplatePicker({
   /** Cuántas etapas del pipeline tienen cadencia hoy (línea secundaria). */
   stagesWithCadence: number;
   busy: boolean;
+  /** Rechaza si no se pudo aplicar: el selector no se cierra. */
   onApply: (nicheCode: string) => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const radiosRef = useRef<Array<HTMLButtonElement | null>>([]);
 
   const ordered = useMemo(() => {
     const rest = templates.filter((template) => template.niche_code !== tenantNiche);
@@ -70,6 +73,7 @@ export function JourneyTemplatePicker({
 
   const current = templates.find((template) => template.niche_code === currentCode) ?? null;
   const choice = selected ?? currentCode ?? tenantNiche ?? ordered[0]?.niche_code ?? null;
+  const choiceIndex = Math.max(0, ordered.findIndex((template) => template.niche_code === choice));
 
   const secondary =
     current === null
@@ -78,10 +82,29 @@ export function JourneyTemplatePicker({
           current.niche_code === tenantNiche ? " · tu tipo de negocio" : ""
         }`;
 
+  function close(): void {
+    setOpen(false);
+    setSelected(null);
+  }
+
+  function moveFocus(from: number, key: string): void {
+    const last = ordered.length - 1;
+    let next = from;
+    if (key === "ArrowDown" || key === "ArrowRight") next = from === last ? 0 : from + 1;
+    else if (key === "ArrowUp" || key === "ArrowLeft") next = from === 0 ? last : from - 1;
+    else if (key === "Home") next = 0;
+    else if (key === "End") next = last;
+    else return;
+    const target = ordered[next];
+    if (target === undefined) return;
+    setSelected(target.niche_code);
+    radiosRef.current[next]?.focus();
+  }
+
   return (
     <section className="rounded-2xl border border-border bg-background">
       <ul className="grouped-list">
-        <li className="grouped-row group">
+        <li className="grouped-row reveal-group">
           <div className="flex items-center gap-3 px-4 py-3 md:hover:bg-foreground/[0.03]">
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted-foreground">Plantilla</p>
@@ -97,8 +120,8 @@ export function JourneyTemplatePicker({
                 size="sm"
                 className="hover-reveal shrink-0 rounded-full text-xs"
                 aria-expanded={open}
-                aria-controls="journey-template-picker"
-                onClick={() => setOpen((prev) => !prev)}
+                {...(open ? { "aria-controls": "journey-template-picker" } : {})}
+                onClick={() => (open ? close() : setOpen(true))}
               >
                 {open ? "Cerrar" : "Cambiar"}
               </Button>
@@ -114,16 +137,26 @@ export function JourneyTemplatePicker({
             aria-label="Plantillas por tipo de negocio"
             className="grid gap-2 sm:grid-cols-2"
           >
-            {ordered.map((template) => {
-              const checked = template.niche_code === choice;
+            {ordered.map((template, index) => {
+              const checked = index === choiceIndex;
               return (
                 <button
                   key={template.niche_code}
+                  ref={(node) => {
+                    radiosRef.current[index] = node;
+                  }}
                   type="button"
                   role="radio"
                   aria-checked={checked}
+                  tabIndex={checked ? 0 : -1}
                   disabled={busy}
                   onClick={() => setSelected(template.niche_code)}
+                  onKeyDown={(event) => {
+                    if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Home", "End"].includes(event.key)) {
+                      event.preventDefault();
+                      moveFocus(index, event.key);
+                    }
+                  }}
                   className={cn(
                     "flex flex-col gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50",
                     checked
@@ -160,25 +193,13 @@ export function JourneyTemplatePicker({
               disabled={busy || choice === null}
               onClick={() => {
                 if (choice === null) return;
-                void onApply(choice).then(() => {
-                  setOpen(false);
-                  setSelected(null);
-                });
+                // Si falla, el editor ya avisó: aquí solo NO se cierra.
+                onApply(choice).then(close, () => undefined);
               }}
             >
               Aplicar plantilla
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="rounded-full"
-              disabled={busy}
-              onClick={() => {
-                setOpen(false);
-                setSelected(null);
-              }}
-            >
+            <Button type="button" variant="ghost" size="sm" className="rounded-full" disabled={busy} onClick={close}>
               Cancelar
             </Button>
           </div>

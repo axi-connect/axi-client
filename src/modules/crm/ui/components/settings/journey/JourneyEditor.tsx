@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Info } from "lucide-react";
 
 import { isHttpError } from "@/core/api/problem";
@@ -12,6 +12,7 @@ import { Callout } from "@/shared/components/ui/callout";
 import { useMyCompany } from "@/modules/companies/public";
 import {
   STAGE_KIND_LABELS,
+  autoAdvanceAfterKindChange,
   type JourneyDTO,
   type JourneyStageDTO,
   type PutJourneyStageDTO,
@@ -38,35 +39,75 @@ function toPut(stage: JourneyStageDTO): PutJourneyStageDTO {
 }
 
 /**
+ * Qué decir cuando el servidor rechaza un guardado. El 409 de tipo repetido
+ * nombra el tipo que se intentó; otro 409 (el pipeline cambió por debajo) pide
+ * recargar; el resto va por `errorMessage` (nunca un código crudo).
+ */
+export function saveErrorTitle(err: unknown, attemptedKind?: StageKind): string {
+  if (isHttpError(err) && err.is("crm/stage_kind_taken")) {
+    return attemptedKind === undefined
+      ? "Ya hay una etapa con ese tipo; elige otro tipo"
+      : `Ya hay una etapa de tipo ${STAGE_KIND_LABELS[attemptedKind]}; elige otro tipo`;
+  }
+  if (isHttpError(err) && err.status === 409) {
+    return "No se pudo guardar: el recorrido cambió mientras editabas. Recarga la página";
+  }
+  return errorMessage(err, "No se pudo guardar el recorrido");
+}
+
+/**
  * `/crm/settings/recorrido`: el recorrido del cliente. Plantilla por tipo de
  * negocio, explicador, y la lista de etapas con tipo semántico y cadencia.
  *
- * Guarda al salir de cada campo con un PUT del recorrido entero (es una lista
- * corta y así el servidor valida la unicidad del tipo de una vez). El cambio
- * se pinta optimista y, si el servidor lo rechaza, vuelve al estado anterior
- * con el motivo en una alerta — el 409 de tipo repetido dice cuál.
+ * Cada campo guarda al salir con un PUT de SOLO su etapa (el servidor acepta
+ * la lista parcial). El estado vive en un ref que se actualiza en la misma
+ * llamada que el `setState`, así dos guardados seguidos —blur y clic— leen
+ * siempre lo último. Por etapa: un contador de secuencia que descarta la
+ * respuesta vieja si llegó otra después, una foto previa a la que volver si
+ * el servidor rechaza, y su propio `busy`; guardar la etapa A no congela la B.
  */
 export function JourneyEditor() {
   const { showAlert } = useAlert();
   const { company } = useMyCompany();
   const [journey, setJourney] = useState<JourneyDTO | null>(null);
+  const journeyRef = useRef<JourneyDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busyStage, setBusyStage] = useState<string | null>(null);
+  const [busyStages, setBusyStages] = useState<ReadonlySet<string>>(new Set());
   const [applying, setApplying] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const seqRef = useRef(new Map<string, number>());
+  const snapshotRef = useRef(new Map<string, JourneyStageDTO>());
+
+  /** Ref y estado a la vez: quien guarde después lee lo que acaba de cambiar. */
+  const commit = useCallback((next: JourneyDTO | null) => {
+    journeyRef.current = next;
+    setJourney(next);
+  }, []);
+
+  const replaceStage = useCallback(
+    (stage: JourneyStageDTO) => {
+      const current = journeyRef.current;
+      if (current === null) return;
+      commit({
+        ...current,
+        stages: current.stages.map((item) => (item.stage_id === stage.stage_id ? stage : item)),
+      });
+    },
+    [commit],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setJourney(await getJourney());
+      commit(await getJourney());
     } catch (err) {
       setError(errorMessage(err, "No se pudo cargar el recorrido"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [commit]);
 
   useEffect(() => {
     void load();
@@ -81,67 +122,75 @@ export function JourneyEditor() {
   }, [journey]);
 
   const save = useCallback(
-    async (next: JourneyStageDTO[], attempted: { stage_id: string; kind?: StageKind }) => {
-      if (journey === null) return;
-      const previous = journey;
-      setBusyStage(attempted.stage_id);
-      setJourney({ ...journey, stages: next });
-      try {
-        const saved = await putJourney({ stages: next.map(toPut) });
-        setJourney(saved);
-        showAlert({ tone: "success", title: "Recorrido guardado", autoCloseMs: 1800, open: true });
-      } catch (err) {
-        setJourney(previous);
-        const kindTaken = isHttpError(err) && err.is("crm/stage_kind_taken");
-        showAlert({
-          tone: "error",
-          title: kindTaken
-            ? `Ya hay una etapa de tipo ${
-                attempted.kind === undefined ? "ese" : STAGE_KIND_LABELS[attempted.kind]
-              }; elige otro tipo`
-            : errorMessage(err, "No se pudo guardar el recorrido"),
-          open: true,
+    (next: JourneyStageDTO, attemptedKind?: StageKind) => {
+      const id = next.stage_id;
+      const previous = journeyRef.current?.stages.find((stage) => stage.stage_id === id);
+      // La foto es la de ANTES del primer guardado en vuelo: si el segundo
+      // falla, se vuelve a lo que el servidor tenía, no a un intento a medias.
+      if (previous !== undefined && !snapshotRef.current.has(id)) snapshotRef.current.set(id, previous);
+      const seq = (seqRef.current.get(id) ?? 0) + 1;
+      seqRef.current.set(id, seq);
+      replaceStage(next);
+      setBusyStages((prev) => new Set(prev).add(id));
+
+      const isLatest = () => seqRef.current.get(id) === seq;
+      putJourney({ stages: [toPut(next)] })
+        .then((saved) => {
+          if (!isLatest()) return;
+          const fresh = saved.stages.find((stage) => stage.stage_id === id);
+          if (fresh !== undefined) replaceStage(fresh);
+          snapshotRef.current.delete(id);
+          showAlert({ tone: "success", title: "Recorrido guardado", autoCloseMs: 1800, open: true });
+        })
+        .catch((err: unknown) => {
+          if (!isLatest()) return;
+          const snapshot = snapshotRef.current.get(id);
+          snapshotRef.current.delete(id);
+          if (snapshot !== undefined) replaceStage(snapshot);
+          showAlert({ tone: "error", title: saveErrorTitle(err, attemptedKind), open: true });
+        })
+        .finally(() => {
+          if (!isLatest()) return;
+          setBusyStages((prev) => {
+            const nextSet = new Set(prev);
+            nextSet.delete(id);
+            return nextSet;
+          });
         });
-      } finally {
-        setBusyStage(null);
-      }
     },
-    [journey, showAlert],
+    [replaceStage, showAlert],
   );
 
   const patchStage = (stageId: string, patch: StagePatch) => {
-    if (journey === null) return;
-    const next = journey.stages.map((stage) =>
-      stage.stage_id === stageId ? { ...stage, ...patch } : stage,
-    );
-    void save(next, { stage_id: stageId });
+    const current = journeyRef.current?.stages.find((stage) => stage.stage_id === stageId);
+    if (current === undefined) return;
+    save({ ...current, ...patch });
   };
 
   const changeKind = (stageId: string, kind: StageKind) => {
-    if (journey === null) return;
-    const current = journey.stages.find((stage) => stage.stage_id === stageId);
+    const current = journeyRef.current?.stages.find((stage) => stage.stage_id === stageId);
     if (current === undefined || current.stage_kind === kind) return;
-    const next = journey.stages.map((stage) =>
-      stage.stage_id === stageId
-        ? // Personalizada no tiene reglas: se apaga el avance para que la
-          // ficha no prometa lo que no pasa.
-          { ...stage, stage_kind: kind, auto_advance: kind === "custom" ? false : stage.auto_advance }
-        : stage,
+    save(
+      {
+        ...current,
+        stage_kind: kind,
+        auto_advance: autoAdvanceAfterKindChange(current.stage_kind, kind, current.auto_advance),
+      },
+      kind,
     );
-    void save(next, { stage_id: stageId, kind });
   };
 
   const applyTemplate = async (nicheCode: string) => {
-    if (journey === null) return;
     setApplying(true);
     try {
       const saved = await applyJourneyTemplate(nicheCode);
-      setJourney(saved);
+      commit(saved);
       const applied = saved.templates.find((template) => template.niche_code === nicheCode);
+      const withCadence = saved.stages.filter((stage) => stage.cadence !== null).length;
       showAlert({
         tone: "success",
         title: `Plantilla aplicada${applied === undefined ? "" : `: ${templateName(applied)}`}`,
-        description: `${String(saved.stages.filter((stage) => stage.cadence !== null).length)} etapas con cadencia. Las etapas y las oportunidades siguen donde estaban.`,
+        description: `${String(withCadence)} ${withCadence === 1 ? "etapa" : "etapas"} con cadencia. Las etapas y las oportunidades siguen donde estaban.`,
         open: true,
       });
     } catch (err) {
@@ -185,8 +234,8 @@ export function JourneyEditor() {
         currentCode={journey.template_code}
         tenantNiche={company?.niche_code ?? null}
         stagesWithCadence={stages.filter((stage) => stage.cadence !== null).length}
-        busy={applying || busyStage !== null}
-        onApply={(code) => applyTemplate(code).catch(() => undefined)}
+        busy={applying || busyStages.size > 0}
+        onApply={applyTemplate}
       />
 
       <section className="rounded-2xl border border-border bg-background">
@@ -208,7 +257,7 @@ export function JourneyEditor() {
                 stage={stage}
                 takenKinds={takenKinds}
                 expanded={expanded === stage.stage_id}
-                busy={busyStage === stage.stage_id || applying}
+                busy={busyStages.has(stage.stage_id) || applying}
                 onToggle={() => setExpanded((prev) => (prev === stage.stage_id ? null : stage.stage_id))}
                 onPatch={(patch) => patchStage(stage.stage_id, patch)}
                 onKindChange={(kind) => changeKind(stage.stage_id, kind)}
