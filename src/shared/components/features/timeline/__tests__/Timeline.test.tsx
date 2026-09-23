@@ -55,6 +55,24 @@ describe("Timeline", () => {
     render(<Timeline items={[item({ id: "a", badge: <AiBadge /> })]} />);
     expect(screen.getByText("IA")).toBeInTheDocument();
   });
+
+  it("pinta la acción a la derecha como `hover-reveal` dentro de la entrada `group`", () => {
+    render(
+      <Timeline
+        items={[item({ id: "a", action: <button type="button">Deshacer</button> })]}
+      />,
+    );
+    const action = screen.getByRole("button", { name: "Deshacer" });
+    // `.hover-reveal` solo se esconde bajo `@media (hover: hover)` y vuelve
+    // con el hover o el foco de su `.group`: en táctil queda siempre a la vista.
+    expect(action.parentElement?.className).toContain("hover-reveal");
+    expect(screen.getByRole("listitem").className).toContain("group");
+  });
+
+  it("sin acción no deja el hueco", () => {
+    render(<Timeline items={[item({ id: "a" })]} />);
+    expect(screen.getByRole("listitem").querySelector(".hover-reveal")).toBeNull();
+  });
 });
 
 describe("TimelineSkeleton", () => {
