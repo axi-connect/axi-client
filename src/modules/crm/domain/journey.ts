@@ -68,11 +68,6 @@ export const STAGE_KIND_ORDER: readonly SemanticStageKind[] = [
   "fulfillment",
 ];
 
-/** Kinds finales: lo que viene después ya no es vender. */
-export function isFinalKind(kind: StageKind): boolean {
-  return kind === "commitment" || kind === "fulfillment";
-}
-
 export const CADENCE_CHANNELS = ["message", "call", "call_then_message"] as const;
 export type CadenceChannel = (typeof CADENCE_CHANNELS)[number];
 
@@ -162,6 +157,11 @@ export type JourneyActorType = "user" | "ai_agent" | "system";
 
 export interface ContactJourneyDTO {
   deal: { id: string; title: string; value_cents: number | null; ai_moves_paused: boolean } | null;
+  /**
+   * `true` con `deal: null` cuando el contacto tiene VARIAS oportunidades
+   * abiertas: no hay un recorrido que seguir desde la ficha (P7 del plan).
+   */
+  ambiguous: boolean;
   stage: {
     name: string;
     stage_kind: StageKind;
@@ -169,6 +169,7 @@ export interface ContactJourneyDTO {
     days_in_stage: number;
     rotting_days: number | null;
   } | null;
+  /** El último `stage_changed` NO revertido; null si no hubo o ya se deshizo. */
   last_move: {
     event_id: string;
     actor_type: JourneyActorType;
@@ -176,6 +177,8 @@ export interface ContactJourneyDTO {
     reason: string | null;
     rule_code: string | null;
     at: string;
+    /** El servidor dice si aceptará el revert; sin el campo se decide por `rule_code`. */
+    revertible?: boolean;
   } | null;
   cadence: {
     attempts_used: number;
@@ -184,6 +187,18 @@ export interface ContactJourneyDTO {
     channel: CadenceChannel;
     enrollment_id: string | null;
   } | null;
+}
+
+/**
+ * Qué pasa con «Se mueve sola» al cambiar el tipo de una etapa: Personalizada
+ * no tiene reglas, así que se apaga; al volver a un tipo con reglas se vuelve
+ * a encender (ida y vuelta sin dejar la etapa muda); entre dos tipos con
+ * reglas se respeta lo que el negocio había decidido.
+ */
+export function autoAdvanceAfterKindChange(from: StageKind, to: StageKind, current: boolean): boolean {
+  if (to === "custom") return false;
+  if (from === "custom") return true;
+  return current;
 }
 
 /* ───────────────────────────── Badges ───────────────────────────────────── */
@@ -207,7 +222,7 @@ export const JOURNEY_BADGES: StatusMap = {
  * (P16) y `paid` (P3).
  */
 export const JOURNEY_RULE_LABELS: Record<string, string> = {
-  first_reply: "primera respuesta",
+  first_reply: "primera respuesta del cliente",
   call_answered: "llamada contestada",
   appointment_booked: "cita agendada",
   quoted: "cotización enviada",
@@ -233,7 +248,7 @@ export const LIFECYCLE_SOURCE_LABELS: Record<string, string> = {
   "order.status_changed": "pago verificado",
   "crm.deal_won": "oportunidad ganada",
   "crm.deal_created": "oportunidad abierta",
-  "ai.turn_completed": "primera respuesta",
+  "ai.turn_completed": "primera respuesta del cliente",
   "calls.call_finished": "llamada contestada",
   "scheduling.appointment_booked": "cita agendada",
   "scheduling.appointment_completed": "cita completada",
@@ -245,8 +260,35 @@ export function lifecycleSourceLabel(event: string | null | undefined): string |
   return LIFECYCLE_SOURCE_LABELS[event] ?? null;
 }
 
-/** Evento DOM con el que la ficha, la card y el historial se avisan un cambio. */
+/**
+ * Movimientos que el servidor NO deshace: el pago verificado fija la etapa
+ * junto al `won` (P3) y una etapa borrada ya no tiene a dónde volver (P16).
+ */
+export const NON_REVERTIBLE_RULES: readonly string[] = ["paid", "stage_deleted"];
+
+/**
+ * ¿Ofrecer «Deshacer» sobre este movimiento? Manda el servidor si lo dice
+ * (`revertible`); si calla, se decide por la regla que lo movió.
+ */
+export function isRevertibleMove(move: {
+  rule_code?: string | null;
+  revertible?: boolean | null;
+}): boolean {
+  if (move.revertible === false) return false;
+  if (move.revertible === true) return true;
+  return !(move.rule_code !== null && move.rule_code !== undefined && NON_REVERTIBLE_RULES.includes(move.rule_code));
+}
+
+/**
+ * Evento DOM con el que la ficha, la card y el historial se avisan un cambio
+ * del recorrido de UN contacto (`detail: JourneyChangedDetail`): quien escucha
+ * filtra por `contactId` y no recarga la ficha de otro.
+ */
 export const JOURNEY_CHANGED_EVENT = "crm:journey:changed";
+export interface JourneyChangedDetail {
+  contactId: string;
+  dealId: string | null;
+}
 
 /* ───────────────────────────── Formato ──────────────────────────────────── */
 
@@ -270,8 +312,8 @@ export function attemptsLabel(count: number): string {
 
 /**
  * La línea que resume la cadencia de una etapa en la lista del editor:
- * «4 intentos · cada 2 días · Mensaje · máx. 10 días · luego marcar perdida».
- * Sin cadencia: «Sin cadencia» (+ «· máx. N días» si hay tiempo máximo).
+ * «4 intentos · cada 2 días · mensaje · máx. 10 días · al agotarse: marcar
+ * perdida». Sin cadencia: «Sin cadencia» (+ «· máx. N días» si hay máximo).
  */
 export function cadenceSummary(
   stage: Pick<JourneyStageDTO, "cadence" | "rotting_days">,
@@ -283,14 +325,14 @@ export function cadenceSummary(
     parts.push(
       attemptsLabel(stage.cadence.max_attempts),
       waitLabel(stage.cadence.wait_hours),
-      CADENCE_CHANNEL_LABELS[stage.cadence.channel],
+      CADENCE_CHANNEL_LABELS[stage.cadence.channel].toLowerCase(),
     );
   }
   if (stage.rotting_days !== null) {
     parts.push(`máx. ${String(stage.rotting_days)} ${stage.rotting_days === 1 ? "día" : "días"}`);
   }
   if (stage.cadence !== null) {
-    parts.push(`luego ${EXHAUSTED_ACTION_LABELS[stage.cadence.exhausted_action].toLowerCase()}`);
+    parts.push(`al agotarse: ${EXHAUSTED_ACTION_LABELS[stage.cadence.exhausted_action].toLowerCase()}`);
   }
   return parts.join(" · ");
 }

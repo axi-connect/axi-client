@@ -9,7 +9,8 @@ import {
   STAGE_KIND_ORDER,
   cadenceSummary,
   daysInStageLabel,
-  isFinalKind,
+  autoAdvanceAfterKindChange,
+  isRevertibleMove,
   journeyRuleLabel,
   lifecycleSourceLabel,
   moverLabel,
@@ -47,8 +48,12 @@ describe("catálogo de kinds", () => {
     expect(STAGE_KINDS).not.toContain("lost");
   });
 
-  it("solo compromiso y entrega son finales", () => {
-    expect(STAGE_KINDS.filter(isFinalKind)).toEqual(["commitment", "fulfillment"]);
+  it("Personalizada apaga «Se mueve sola» y volver a un tipo lo enciende: ida y vuelta", () => {
+    expect(autoAdvanceAfterKindChange("proposal", "custom", true)).toBe(false);
+    expect(autoAdvanceAfterKindChange("custom", "proposal", false)).toBe(true);
+    // Entre dos tipos con reglas manda lo que el negocio había decidido.
+    expect(autoAdvanceAfterKindChange("proposal", "meeting", false)).toBe(false);
+    expect(autoAdvanceAfterKindChange("proposal", "meeting", true)).toBe(true);
   });
 
   it("canales y acciones al agotarse tienen label", () => {
@@ -60,7 +65,7 @@ describe("catálogo de kinds", () => {
 describe("cadenceSummary", () => {
   it("la línea completa: intentos · espera · canal · máximo · luego", () => {
     expect(cadenceSummary(stage())).toBe(
-      "4 intentos · cada 2 días · Mensaje · máx. 10 días · luego marcar perdida",
+      "4 intentos · cada 2 días · mensaje · máx. 10 días · al agotarse: marcar perdida",
     );
   });
 
@@ -72,7 +77,7 @@ describe("cadenceSummary", () => {
           rotting_days: null,
         }),
       ),
-    ).toBe("1 intento · cada 4 h · Llamada y luego mensaje · luego pasar a una persona");
+    ).toBe("1 intento · cada 4 h · llamada y luego mensaje · al agotarse: pasar a una persona");
   });
 
   it("sin cadencia dice «Sin cadencia» y conserva el tiempo máximo", () => {
@@ -123,7 +128,18 @@ describe("la ficha del contacto", () => {
     expect(lifecycleSourceLabel(null)).toBeNull();
   });
 
+  it("«Deshacer» se ofrece salvo pago verificado, etapa borrada o veto explícito del servidor", () => {
+    expect(isRevertibleMove({ rule_code: null })).toBe(true);
+    expect(isRevertibleMove({ rule_code: "appointment_booked" })).toBe(true);
+    expect(isRevertibleMove({ rule_code: "paid" })).toBe(false);
+    expect(isRevertibleMove({ rule_code: "stage_deleted" })).toBe(false);
+    expect(isRevertibleMove({ rule_code: null, revertible: false })).toBe(false);
+    // Si el servidor lo afirma, manda él aunque la regla diga lo contrario.
+    expect(isRevertibleMove({ rule_code: "paid", revertible: true })).toBe(true);
+  });
+
   it("las reglas se cuentan en español y un código desconocido no se rompe", () => {
+    expect(journeyRuleLabel("first_reply")).toBe("primera respuesta del cliente");
     expect(journeyRuleLabel("appointment_booked")).toBe("cita agendada");
     expect(journeyRuleLabel("something_new")).toBe("something new");
     expect(journeyRuleLabel(null)).toBeNull();

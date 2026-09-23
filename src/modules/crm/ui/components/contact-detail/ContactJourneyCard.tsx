@@ -13,24 +13,26 @@ import { Button } from "@/shared/components/ui/button";
 import {
   CADENCE_CHANNEL_LABELS,
   JOURNEY_BADGES,
-  JOURNEY_CHANGED_EVENT,
   STAGE_KIND_BADGES,
   daysInStageLabel,
+  isRevertibleMove,
   journeyRuleLabel,
   moverLabel,
   stageDeadline,
   type ContactJourneyDTO,
 } from "@/modules/crm/domain/journey";
+import { useRevertStageChange } from "@/modules/crm/infrastructure/hooks/use-revert-stage-change";
+import { emitJourneyChanged, subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
 import {
   getContactJourney,
   resumeAiMoves,
-  revertStageChange,
 } from "@/modules/crm/infrastructure/services/journey-service.adapter";
 
 /**
  * Una fila de la ficha: etiqueta → valor, una línea secundaria y, si la hay,
  * UNA acción a la derecha que aparece al pasar el ratón o al enfocar
- * (`hover-reveal`; en táctil siempre). El texto y el botón son hermanos.
+ * (`hover-reveal` dentro del `reveal-group`; en táctil siempre). El texto y el
+ * botón son hermanos, nunca uno dentro del otro.
  */
 function Row({
   label,
@@ -44,7 +46,7 @@ function Row({
   action?: React.ReactNode;
 }) {
   return (
-    <li className="grouped-row group">
+    <li className="grouped-row reveal-group">
       <div className="flex items-center gap-3 px-4 py-2.5 md:hover:bg-foreground/[0.03]">
         <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-foreground">{label}</p>
@@ -55,9 +57,7 @@ function Row({
             <p className="text-xs text-muted-foreground tabular-nums">{secondary}</p>
           )}
         </div>
-        {action !== undefined && action !== null && (
-          <div className="hover-reveal shrink-0">{action}</div>
-        )}
+        {action !== undefined && action !== null && <div className="hover-reveal shrink-0">{action}</div>}
       </div>
     </li>
   );
@@ -72,9 +72,10 @@ type State =
 /**
  * «Recorrido» del Contacto 360 (`GET /crm/contacts/:id/journey`): en qué
  * etapa está su oportunidad abierta, cuánto lleva ahí, quién la movió (con
- * «Deshacer») y la cadencia en curso. Sin oportunidad, una frase. Si el
- * servidor responde 404 o 403 la card no se pinta: el recorrido todavía no
- * existe para ese tenant o ese rol, y una card vacía no cuenta nada.
+ * «Deshacer» si el movimiento se puede deshacer) y la cadencia en curso. Sin
+ * oportunidad, una frase; con varias abiertas (`ambiguous`), otra que manda a
+ * Pipeline. Si el servidor responde 404 o 403 la card no se pinta: el
+ * recorrido todavía no existe para ese tenant o ese rol.
  *
  * «Pausar cadencia» no existe todavía como endpoint: se anota como deuda y
  * no se pinta un botón que no haga nada.
@@ -87,9 +88,10 @@ export function ContactJourneyCard({
   /** `crm:manage`: quien puede deshacer un movimiento. */
   canManage: boolean;
 }) {
-  const { showAlert, showModal, closeModal } = useAlert();
+  const { showAlert } = useAlert();
+  const { revert, busy: reverting } = useRevertStageChange();
   const [state, setState] = useState<State>({ kind: "loading" });
-  const [busy, setBusy] = useState(false);
+  const [resuming, setResuming] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -105,53 +107,22 @@ export function ContactJourneyCard({
 
   useEffect(() => {
     void load();
-    const onChanged = () => void load();
-    window.addEventListener(JOURNEY_CHANGED_EVENT, onChanged);
-    return () => window.removeEventListener(JOURNEY_CHANGED_EVENT, onChanged);
-  }, [load]);
+    return subscribeJourneyChanged(contactId, () => void load());
+  }, [contactId, load]);
 
   if (state.kind === "hidden") return null;
 
-  const revert = (dealId: string, eventId: string, stageName: string, byAi: boolean) => {
-    showModal({
-      title: `¿Deshacer el paso a ${stageName}?`,
-      description: byAi
-        ? "La oportunidad vuelve a la etapa anterior y queda en el historial. Los movimientos del agente sobre esta oportunidad quedan en pausa hasta que los reanudes."
-        : "La oportunidad vuelve a la etapa anterior y queda en el historial.",
-      actions: [
-        { label: "Cancelar", variant: "outline" },
-        {
-          label: "Deshacer",
-          variant: "destructive",
-          onClick: () => {
-            closeModal();
-            setBusy(true);
-            revertStageChange(dealId, eventId)
-              .then(() => {
-                showAlert({ tone: "success", title: "Movimiento deshecho", autoCloseMs: 2000, open: true });
-                window.dispatchEvent(new CustomEvent(JOURNEY_CHANGED_EVENT));
-              })
-              .catch((err: unknown) => {
-                showAlert({ tone: "error", title: errorMessage(err, "No se pudo deshacer"), open: true });
-              })
-              .finally(() => setBusy(false));
-          },
-        },
-      ],
-    });
-  };
-
   const resume = (dealId: string) => {
-    setBusy(true);
+    setResuming(true);
     resumeAiMoves(dealId)
       .then(() => {
         showAlert({ tone: "success", title: "El agente vuelve a mover la oportunidad", autoCloseMs: 2000, open: true });
-        window.dispatchEvent(new CustomEvent(JOURNEY_CHANGED_EVENT));
+        emitJourneyChanged({ contactId, dealId });
       })
       .catch((err: unknown) => {
         showAlert({ tone: "error", title: errorMessage(err, "No se pudo reanudar"), open: true });
       })
-      .finally(() => setBusy(false));
+      .finally(() => setResuming(false));
   };
 
   return (
@@ -175,7 +146,9 @@ export function ContactJourneyCard({
         </div>
       ) : state.data.deal === null || state.data.stage === null ? (
         <p className="mt-3 text-sm text-muted-foreground">
-          Sin recorrido activo. Se abre solo al detectar intención o al crear una oportunidad.
+          {state.data.ambiguous
+            ? "Tiene varias oportunidades abiertas: el recorrido se sigue desde cada una en Pipeline."
+            : "Sin recorrido activo. Se abre solo al detectar intención o al crear una oportunidad."}
         </p>
       ) : (
         <JourneyRows
@@ -183,8 +156,17 @@ export function ContactJourneyCard({
           deal={state.data.deal}
           stage={state.data.stage}
           canManage={canManage}
-          busy={busy}
-          onRevert={revert}
+          busy={reverting || resuming}
+          onRevert={(move) =>
+            revert({
+              contactId,
+              dealId: state.data.deal?.id ?? "",
+              eventId: move.event_id,
+              toStageName: state.data.stage?.name ?? "la etapa",
+              fromStageName: null,
+              byAi: move.actor_type === "ai_agent",
+            })
+          }
           onResume={resume}
         />
       )}
@@ -206,13 +188,16 @@ function JourneyRows({
   stage: NonNullable<ContactJourneyDTO["stage"]>;
   canManage: boolean;
   busy: boolean;
-  onRevert: (dealId: string, eventId: string, stageName: string, byAi: boolean) => void;
+  onRevert: (move: NonNullable<ContactJourneyDTO["last_move"]>) => void;
   onResume: (dealId: string) => void;
 }) {
   const deadline = stageDeadline(stage.entered_at, stage.rotting_days);
   const move = data.last_move;
   const cadence = data.cadence;
   const ruleLabel = move === null ? null : journeyRuleLabel(move.rule_code);
+  // El servidor manda en `last_move` el último cambio NO deshecho; si además
+  // dice `revertible:false` (o la regla es pago/etapa borrada) no hay Deshacer.
+  const canRevert = canManage && move !== null && isRevertibleMove(move);
 
   return (
     <ul className="grouped-list -mx-4 mt-2 md:-mx-6">
@@ -254,14 +239,14 @@ function JourneyRows({
             </>
           }
           action={
-            canManage ? (
+            canRevert ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 className="rounded-full text-xs"
                 disabled={busy}
-                onClick={() => onRevert(deal.id, move.event_id, stage.name, move.actor_type === "ai_agent")}
+                onClick={() => onRevert(move)}
               >
                 Deshacer
               </Button>

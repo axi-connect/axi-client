@@ -19,6 +19,7 @@ import {
   listAssignableUsers,
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
+import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
@@ -90,8 +91,14 @@ export default function Contact360Page({
     // El modal de edición (@form) notifica al guardar: se recarga el hub.
     const onSave = () => void load();
     window.addEventListener("crm:contacts:save:success", onSave);
-    return () => window.removeEventListener("crm:contacts:save:success", onSave);
-  }, [load]);
+    // Deshacer o reanudar un movimiento (F4) cambia la etapa de un deal: la
+    // lista «Oportunidades» se recarga con el resto del hub.
+    const unsubscribeJourney = subscribeJourneyChanged(contactId, () => void load());
+    return () => {
+      window.removeEventListener("crm:contacts:save:success", onSave);
+      unsubscribeJourney();
+    };
+  }, [contactId, load]);
 
   if (!bundle) {
     return (

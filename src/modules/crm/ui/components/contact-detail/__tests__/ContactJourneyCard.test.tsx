@@ -12,7 +12,7 @@ jest.mock("@/modules/crm/infrastructure/services/journey-service.adapter", () =>
   resumeAiMoves: (...args: unknown[]) => resumeAiMoves(...args),
 }));
 
-type ModalAction = { label: string; onClick?: () => void };
+type ModalAction = { label: string; onClick?: () => void; variant?: string };
 let lastModal: { title?: string; description?: string; actions?: ModalAction[] } | null = null;
 const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
@@ -28,6 +28,7 @@ jest.mock("@/core/providers/alert-provider", () => ({
 function journey(over: Partial<ContactJourneyDTO> = {}): ContactJourneyDTO {
   return {
     deal: { id: "d1", title: "Plan facial completo", value_cents: 124_000_000, ai_moves_paused: false },
+    ambiguous: false,
     stage: {
       name: "Propuesta",
       stage_kind: "proposal",
@@ -89,6 +90,34 @@ describe("ContactJourneyCard", () => {
     ).toBeInTheDocument();
   });
 
+  it("con varias oportunidades abiertas manda a Pipeline en vez de elegir una", async () => {
+    getContactJourney.mockResolvedValue(
+      journey({ deal: null, stage: null, last_move: null, cadence: null, ambiguous: true }),
+    );
+    render(<ContactJourneyCard contactId="c1" canManage />);
+
+    expect(
+      await screen.findByText("Tiene varias oportunidades abiertas: el recorrido se sigue desde cada una en Pipeline."),
+    ).toBeInTheDocument();
+  });
+
+  it("sin Deshacer cuando el servidor lo veta o la regla fue el pago verificado", async () => {
+    getContactJourney.mockResolvedValue(
+      journey({ last_move: { ...journey().last_move!, revertible: false } }),
+    );
+    const { unmount } = render(<ContactJourneyCard contactId="c1" canManage />);
+    await screen.findByText("el agente Sofía");
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+    unmount();
+
+    getContactJourney.mockResolvedValue(
+      journey({ last_move: { ...journey().last_move!, actor_type: "system", reason: null, rule_code: "paid" } }),
+    );
+    render(<ContactJourneyCard contactId="c1" canManage />);
+    expect(await screen.findByText(/regla: pago verificado/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+  });
+
   it("con 404 o 403 no pinta nada: el recorrido no existe para ese tenant o ese rol", async () => {
     getContactJourney.mockRejectedValue(new HttpError({ status: 404, code: "resource/not_found", message: "" }));
     const { container } = render(<ContactJourneyCard contactId="c1" canManage />);
@@ -112,6 +141,11 @@ describe("ContactJourneyCard", () => {
     unmount();
 
     revertStageChange.mockResolvedValue(undefined);
+    // Tras deshacer, el servidor ya no devuelve ese movimiento en last_move.
+    getContactJourney.mockReset();
+    getContactJourney
+      .mockResolvedValueOnce(journey())
+      .mockResolvedValue(journey({ last_move: null, deal: { ...journey().deal!, ai_moves_paused: true } }));
     const changed = jest.fn();
     window.addEventListener("crm:journey:changed", changed);
     render(<ContactJourneyCard contactId="c1" canManage />);
@@ -120,12 +154,18 @@ describe("ContactJourneyCard", () => {
     expect(lastModal?.title).toBe("¿Deshacer el paso a Propuesta?");
     // Lo movió la IA: el aviso dice que sus movimientos quedan en pausa.
     expect(lastModal?.description).toMatch(/quedan en pausa/);
+    // Deshacer no es destructivo: acción con la variante por defecto.
+    expect(lastModal?.actions?.find((action) => action.label === "Deshacer")).not.toHaveProperty("variant");
     lastModal?.actions?.find((action) => action.label === "Deshacer")?.onClick?.();
 
     await waitFor(() => expect(revertStageChange).toHaveBeenCalledWith("d1", "ev1"));
     await waitFor(() => expect(changed).toHaveBeenCalled());
-    // El evento recarga la card.
+    expect((changed.mock.calls[0][0] as CustomEvent).detail).toEqual({ contactId: "c1", dealId: "d1" });
+    // El evento recarga la card: ya no hay «La movió» ni Deshacer, y la IA quedó en pausa.
     await waitFor(() => expect(getContactJourney.mock.calls.length).toBeGreaterThanOrEqual(2));
+    await waitFor(() => expect(screen.queryByText("el agente Sofía")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
+    expect(screen.getByText("Movimientos de la IA en pausa")).toBeInTheDocument();
     window.removeEventListener("crm:journey:changed", changed);
   });
 

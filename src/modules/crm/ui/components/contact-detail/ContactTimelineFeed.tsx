@@ -13,7 +13,6 @@ import {
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { relativeTime } from "@/core/lib/relative-time";
-import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import {
   AiBadge,
@@ -30,14 +29,15 @@ import {
 } from "@/modules/crm/domain/contact";
 import { CONTACT_STAGE_LABELS, type ContactLifecycleStage } from "@/modules/crm/domain/enums";
 import {
-  JOURNEY_CHANGED_EVENT,
   STAGE_KIND_LABELS,
+  isRevertibleMove,
   journeyRuleLabel,
   lifecycleSourceLabel,
   type StageKind,
 } from "@/modules/crm/domain/journey";
+import { useRevertStageChange } from "@/modules/crm/infrastructure/hooks/use-revert-stage-change";
+import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
 import { getContactTimeline } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
-import { revertStageChange } from "@/modules/crm/infrastructure/services/journey-service.adapter";
 
 /**
  * Historial 360 multi-fuente del contacto (`GET /crm/contacts/:id/timeline`):
@@ -187,7 +187,7 @@ export function ContactTimelineFeed({
   header?: React.ReactNode;
   className?: string;
 }) {
-  const { showAlert, showModal, closeModal } = useAlert();
+  const { revert, busy: reverting } = useRevertStageChange();
   const [enabled, setEnabled] = useState<TimelineSource[]>([...TIMELINE_SOURCES]);
   const [entries, setEntries] = useState<TimelineEntryDTO[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -225,39 +225,12 @@ export function ContactTimelineFeed({
     void load(enabled);
   }, [enabled, load, version]);
 
-  // Un «Deshacer» desde la card «Recorrido» (o desde aquí) cambia el historial.
-  useEffect(() => {
-    const onChanged = () => void load(enabled);
-    window.addEventListener(JOURNEY_CHANGED_EVENT, onChanged);
-    return () => window.removeEventListener(JOURNEY_CHANGED_EVENT, onChanged);
-  }, [enabled, load]);
-
-  const revert = (dealId: string, eventId: string, stageName: string, byAi: boolean) => {
-    showModal({
-      title: `¿Deshacer el paso a ${stageName}?`,
-      description: byAi
-        ? "La oportunidad vuelve a la etapa anterior y queda en el historial. Los movimientos del agente sobre esta oportunidad quedan en pausa hasta que los reanudes."
-        : "La oportunidad vuelve a la etapa anterior y queda en el historial.",
-      actions: [
-        { label: "Cancelar", variant: "outline" },
-        {
-          label: "Deshacer",
-          variant: "destructive",
-          onClick: () => {
-            closeModal();
-            revertStageChange(dealId, eventId)
-              .then(() => {
-                showAlert({ tone: "success", title: "Movimiento deshecho", autoCloseMs: 2000, open: true });
-                window.dispatchEvent(new CustomEvent(JOURNEY_CHANGED_EVENT));
-              })
-              .catch((err: unknown) => {
-                showAlert({ tone: "error", title: errorMessage(err, "No se pudo deshacer"), open: true });
-              });
-          },
-        },
-      ],
-    });
-  };
+  // Un «Deshacer» desde la card «Recorrido» (o desde aquí) cambia el historial
+  // de ESTE contacto; el de otro contacto no recarga nada.
+  useEffect(
+    () => subscribeJourneyChanged(contactId, () => void load(enabled)),
+    [contactId, enabled, load],
+  );
 
   const toggleSource = (source: TimelineSource) => {
     setEntries([]);
@@ -278,6 +251,21 @@ export function ContactTimelineFeed({
       .map((entry) => (entry.type === "deal_stage_reverted" ? str(entry.payload?.reverted_event_id) : null))
       .filter((id): id is string => id !== null),
   );
+  // Una oportunidad ganada o perdida no se mueve: el servidor rechazaría el
+  // revert. Las entradas vienen de más nueva a más vieja, así que el PRIMER
+  // won/lost/reopened que se ve de cada deal es su estado actual.
+  const closedDealIds = new Set<string>();
+  const seenStatus = new Set<string>();
+  for (const entry of entries) {
+    const dealId = str(entry.payload?.deal_id);
+    if (dealId === null || seenStatus.has(dealId)) continue;
+    if (entry.type === "deal_won" || entry.type === "deal_lost") {
+      seenStatus.add(dealId);
+      closedDealIds.add(dealId);
+    } else if (entry.type === "deal_reopened") {
+      seenStatus.add(dealId);
+    }
+  }
 
   /* Estructura uniforme entidad + novedad: `title` en bold y `subtitle` en
      secundario — misma forma para toda fuente (contrato D4 del backend). Las
@@ -291,8 +279,14 @@ export function ContactTimelineFeed({
       canRevert &&
       entry.type === "deal_stage_changed" &&
       dealId !== null &&
-      !revertedIds.has(eventId);
+      !revertedIds.has(eventId) &&
+      !closedDealIds.has(dealId) &&
+      isRevertibleMove({
+        rule_code: str(payload.rule_code),
+        revertible: typeof payload.revertible === "boolean" ? payload.revertible : null,
+      });
     const toName = stageLabel(payload.to_stage_name, payload.to_kind);
+    const fromName = stageLabel(payload.from_stage_name, payload.from_kind);
     return {
       id: `${entry.source}-${entry.id}`,
       icon: journey?.icon ?? SOURCE_VISUAL[entry.source].icon,
@@ -312,7 +306,17 @@ export function ContactTimelineFeed({
           variant="ghost"
           size="sm"
           className="h-7 rounded-full text-xs"
-          onClick={() => revert(dealId, eventId, toName ?? "la etapa", payload.actor_type === "ai_agent")}
+          disabled={reverting}
+          onClick={() =>
+            revert({
+              contactId,
+              dealId,
+              eventId,
+              toStageName: toName ?? "la etapa",
+              fromStageName: fromName,
+              byAi: payload.actor_type === "ai_agent",
+            })
+          }
         >
           Deshacer
         </Button>

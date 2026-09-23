@@ -13,13 +13,13 @@ jest.mock("@/modules/crm/infrastructure/services/journey-service.adapter", () =>
 }));
 
 type ModalAction = { label: string; onClick?: () => void };
-let lastModal: { title?: string; actions?: ModalAction[] } | null = null;
+let lastModal: { title?: string; description?: string; actions?: ModalAction[] } | null = null;
 const showAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({
     showAlert,
     closeModal: jest.fn(),
-    showModal: (config: { title?: string; actions?: ModalAction[] }) => {
+    showModal: (config: { title?: string; description?: string; actions?: ModalAction[] }) => {
       lastModal = config;
     },
   }),
@@ -266,6 +266,36 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
     expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
   });
 
+  it("sin Deshacer si la regla fue el pago o una etapa borrada, si el servidor lo veta, o si la oportunidad ya cerró", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        entry({ id: "won", source: "deals", type: "deal_won", title: "Oportunidad · Cerrada", payload: { deal_id: "closed" } }),
+        stageChanged({ deal_id: "closed" }, "on-closed"),
+        stageChanged({ rule_code: "paid" }, "paid"),
+        stageChanged({ rule_code: "stage_deleted" }, "deleted"),
+        stageChanged({ revertible: false }, "vetoed"),
+        stageChanged({ rule_code: "appointment_booked" }, "ok"),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(6));
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
+  it("una oportunidad reabierta después de cerrar vuelve a admitir Deshacer", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        entry({ id: "re", source: "deals", type: "deal_reopened", title: "Oportunidad · X", payload: { deal_id: "d1" } }),
+        entry({ id: "lost", source: "deals", type: "deal_lost", title: "Oportunidad · X", payload: { deal_id: "d1" } }),
+        stageChanged({}, "sc"),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(3));
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
   it("deshacer confirma en un modal, llama al servidor y avisa al resto de la ficha", async () => {
     getContactTimeline.mockResolvedValue(
       page([stageChanged({ actor_type: "ai_agent", reason: "Pidió cotización" })]),
@@ -277,10 +307,17 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
     expect(lastModal?.title).toBe("¿Deshacer el paso a Propuesta?");
-    lastModal?.actions?.find((action) => action.label === "Deshacer")?.onClick?.();
+    // La copia dice a dónde vuelve.
+    expect(lastModal?.description).toMatch(/vuelve a Cita agendada/);
+    const action = lastModal?.actions?.find((entry) => entry.label === "Deshacer");
+    action?.onClick?.();
+    // Doble clic: la segunda pulsación no vuelve a llamar al servidor.
+    action?.onClick?.();
 
     await waitFor(() => expect(revertStageChange).toHaveBeenCalledWith("d1", "ev1"));
+    expect(revertStageChange).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(changed).toHaveBeenCalled());
+    expect((changed.mock.calls[0][0] as CustomEvent).detail).toEqual({ contactId: "c1", dealId: "d1" });
     // El aviso recarga el historial desde la primera página.
     await waitFor(() => expect(getContactTimeline.mock.calls.length).toBeGreaterThanOrEqual(2));
     window.removeEventListener("crm:journey:changed", changed);

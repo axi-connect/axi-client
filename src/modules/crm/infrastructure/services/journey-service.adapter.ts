@@ -5,10 +5,11 @@ import type { ContactJourneyDTO, JourneyDTO, PutJourneyDTO } from "@/modules/crm
 /**
  * Adapter HTTP del recorrido del cliente (F4 «Método comercial»).
  *
- * `GET/PUT /crm/journey` y `apply-template` piden `crm:manage`; la ficha del
- * contacto (`/crm/contacts/:id/journey`) `crm:read`; deshacer un movimiento
- * `crm:manage` (es una escritura sobre la oportunidad con rastro auditado); y
- * reanudar la IA es el PATCH normal del deal (`crm:read`).
+ * Leer el recorrido (`GET /crm/journey`) y la ficha del contacto
+ * (`/crm/contacts/:id/journey`) piden `crm:read`; escribirlo (`PUT`,
+ * `apply-template`) y deshacer un movimiento piden `crm:manage` (es una
+ * escritura sobre el pipeline o la oportunidad con rastro auditado); reanudar
+ * la IA es el PATCH normal del deal (`crm:read`).
  */
 
 /** Etapas del pipeline por defecto con tipo, cadencia y las plantillas por nicho. */
@@ -16,7 +17,10 @@ export function getJourney(): Promise<JourneyDTO> {
   return http.get<JourneyDTO>("/crm/journey");
 }
 
-/** 409 `crm/stage_kind_taken` si dos etapas piden el mismo tipo (salvo «Personalizada»). */
+/**
+ * Acepta una lista PARCIAL de etapas: el editor manda solo la que cambió.
+ * 409 `crm/stage_kind_taken` si dos etapas piden el mismo tipo (salvo «Personalizada»).
+ */
 export function putJourney(dto: PutJourneyDTO): Promise<JourneyDTO> {
   return http.put<JourneyDTO>("/crm/journey", dto);
 }
