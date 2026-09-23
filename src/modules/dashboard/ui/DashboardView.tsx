@@ -16,6 +16,7 @@ import { UsagePanel } from "@/modules/dashboard/ui/components/UsagePanel";
 import { ConversationsFlowCard } from "@/modules/dashboard/ui/components/ConversationsFlowCard";
 import { NewCustomersCard } from "@/modules/dashboard/ui/components/NewCustomersCard";
 import { TopProductsCard } from "@/modules/dashboard/ui/components/TopProductsCard";
+import { GoalProgressBlock } from "@/modules/commercial/public";
 import { OnboardingResumeBanner } from "@/modules/onboarding/public";
 import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 
@@ -66,6 +67,8 @@ export function DashboardView() {
     <div className="space-y-6">
       {/* Configuración pendiente: informa y enlaza, nunca bloquea (onboarding_self_service_plan.md §5.3). */}
       <OnboardingResumeBanner />
+      {/* La meta del mes: franja autosuficiente; sin capacidad, permiso o meta que mostrar no pinta nada. */}
+      <GoalProgressBlock />
       <DashboardBanner period={period} onPeriodChange={changePeriod} />
 
       {perms.orders && <SalesTiles section={sales} />}
