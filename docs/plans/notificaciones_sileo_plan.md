@@ -57,6 +57,9 @@ banner, para que ningún módulo vuelva a inventar el suyo. Aprovechar para corr
   `[data-sileo-header]{padding-inline:14px 4px}`: el filtro «gooey» se come ~6 px del extremo
   (medido: con los 8 px de sileo el icono quedaba a 2 px del borde y a 0 px en la curva, y el
   título a 21 px por la derecha); con 14/4 el icono queda concéntrico a 8 px y el título a ~16 px.
+  El cuerpo al 72 % necesita `[data-sileo-viewport][data-theme] [data-sileo-description]` (0,4,0):
+  sileo usa (0,3,0) e inyecta su CSS después del nuestro. El relleno llega como atributo SVG:
+  `rect[data-sileo-pill|body]{fill:var(--toast-fill)}` para que siga al tema con avisos abiertos.
   Regla `no-restricted-imports` para `sileo` fuera de `core/notifications`. `framer-motion ^12.34`.
 - **F2 — Migración de los 13 sitios**: 10 páginas de `FloatingAlert` → `showAlert`; 3
   `StatusAlert` en línea → `Alert`. Borrar `floating-alert.tsx` y la variante flotante de
