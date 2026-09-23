@@ -20,6 +20,7 @@ import {
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
 import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
+import { useJourneyRealtime } from "@/modules/crm/infrastructure/realtime/use-journey-realtime";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
@@ -85,6 +86,10 @@ export default function Contact360Page({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactId]);
+
+  // Un paso de etapa de ESTE contacto (el agente, una regla u otra pestaña)
+  // avisa por WS y se reemite como `crm:journey:changed` (F8).
+  useJourneyRealtime(contactId);
 
   useEffect(() => {
     void load();
