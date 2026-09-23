@@ -24,6 +24,9 @@ const KIND_LABELS: Record<ProposalKind, string> = {
   segment: "Segmento",
   agent_tuning: "Cómo vende tu agente",
   insight: "Hallazgo",
+  // La propuesta por desvío de la meta (método comercial, F6): vive en la
+  // misma tabla y también se ve en /cmo si el tenant tiene Axel.
+  goal_pace: "Ritmo de la meta",
 };
 
 export function proposalKindLabel(kind: ProposalKind | string): string {
@@ -125,6 +128,8 @@ export function proposalSourceLabel(source: string): string {
       return "Lo vi y te avisé";
     case "chat":
       return "De lo que me pediste";
+    case "commercial":
+      return "De tu meta del mes";
     default:
       return source;
   }
@@ -154,6 +159,8 @@ const ARTIFACT_LABELS: Record<string, string> = {
   template: "Mensaje",
   segment: "Segmento",
   agent_playbook: "Guion de ventas",
+  agent_task_bulk_spec: "Lote de seguimiento",
+  sequence_enrollment_spec: "Secuencia",
 };
 
 export function artifactLabel(type: string): string {

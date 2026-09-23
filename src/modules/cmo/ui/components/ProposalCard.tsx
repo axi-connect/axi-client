@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, Check, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Tag, Users } from "lucide-react";
+import { ArrowRight, Bot, Check, Clock, Flame, Lightbulb, Megaphone, RefreshCw, Route, Tag, Users } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { ProposalDTO, ProposalKind } from "@/modules/cmo/domain/cmo";
+import { commercialProposalHref, isCommercialProposal } from "@/modules/commercial/public";
 import {
   expiryLabel,
   isUrgent,
@@ -20,6 +21,7 @@ const KIND_ICONS: Record<ProposalKind, typeof Flame> = {
   segment: Users,
   agent_tuning: Bot,
   insight: Lightbulb,
+  goal_pace: Route,
 };
 
 /**
@@ -40,6 +42,8 @@ const KIND_TONE: Record<ProposalKind, string> = {
   segment: "text-info border-info/40",
   agent_tuning: "text-info border-info/40",
   insight: "text-muted-foreground border-border",
+  // Coral: habla el progreso hacia la meta, no la IA ni una alarma.
+  goal_pace: "text-brand border-brand/40",
 };
 
 interface ProposalCardProps {
@@ -55,6 +59,13 @@ interface ProposalCardProps {
    * se apaga solo a las tres vueltas (`.axel-comet-card--new` en globals.css).
    */
   fresh?: boolean;
+  /**
+   * A dónde lleva «Revisar». Por defecto, el detalle de Axel; una propuesta del
+   * método comercial (`source: "commercial"`) se decide en
+   * `/comercial/acciones/:id`, con su «Qué va a pasar» y sus permisos
+   * (`commercial:approve`), así que ahí enlaza sin que el llamador lo diga.
+   */
+  href?: string;
 }
 
 /**
@@ -67,7 +78,9 @@ interface ProposalCardProps {
  * El vencimiento se pinta con color de alarma solo dentro de las 48 horas. Si
  * todo urgiera, nada urgiría: es el mismo principio del tope de propuestas.
  */
-export function ProposalCard({ proposal, compact = false, fresh = false }: ProposalCardProps) {
+export function ProposalCard({ proposal, compact = false, fresh = false, href }: ProposalCardProps) {
+  const target =
+    href ?? (isCommercialProposal(proposal) ? commercialProposalHref(proposal.id) : `/cmo/proposals/${proposal.id}`);
   const Icon = KIND_ICONS[proposal.kind] ?? Lightbulb;
   const expiry = expiryLabel(proposal.expires_at);
   const urgent = isUrgent(proposal.expires_at);
@@ -79,7 +92,7 @@ export function ProposalCard({ proposal, compact = false, fresh = false }: Propo
   if (compact) {
     return (
       <Link
-        href={`/cmo/proposals/${proposal.id}`}
+        href={target}
         className={cn(
           "flex items-center gap-2.5 rounded-md border border-border bg-secondary/40 px-3 py-2.5",
           "transition-colors hover:border-accent-violet/30 hover:bg-accent-violet/5",
@@ -177,7 +190,7 @@ export function ProposalCard({ proposal, compact = false, fresh = false }: Propo
 
       <div className="flex items-center gap-2.5">
         <Link
-          href={`/cmo/proposals/${proposal.id}`}
+          href={target}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold",
             settled
