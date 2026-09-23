@@ -6,7 +6,7 @@ import { Modal } from "@/shared/components/ui/modal";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { DataTable, type DataTableRef } from "@/shared/components/features/data-table";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import type { CatalogRow } from "@/modules/catalog/domain/catalog";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { CatalogForm } from "@/modules/catalog/ui/forms/CatalogForm";
@@ -26,23 +26,18 @@ export default function CatalogsPage() {
 
   const [rows, setRows] = useState<CatalogRow[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
   const [formDefaults, setFormDefaults] = useState<(Partial<CatalogFormValues> & { id?: string }) | null>(null);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
-  const setAlert = (cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg);
-    setAlertOpen(true);
-  };
+  const { showAlert } = useAlert();
 
   const load = useCallback(async () => {
     try {
       const { rows: fetched } = await fetchCatalogs();
       setRows(fetched);
     } catch {
-      setAlert({ variant: "destructive", title: "No se pudieron cargar los catálogos" });
+      showAlert({ tone: "error", title: "No se pudieron cargar los catálogos" });
     }
-  }, []);
+  }, [showAlert]);
 
   useEffect(() => {
     void load();
@@ -56,12 +51,12 @@ export default function CatalogsPage() {
 
   useEffect(() => {
     const onDeleteSuccess = () => {
-      setAlert({ variant: "success", title: "Catálogo eliminado correctamente" });
+      showAlert({ tone: "success", title: "Catálogo eliminado correctamente" });
       void refresh();
     };
     const onError = (e: Event) => {
       const detail = (e as CustomEvent).detail as { message?: string };
-      setAlert({ variant: "destructive", title: detail?.message || "No se pudo completar la acción" });
+      showAlert({ tone: "error", title: detail?.message || "No se pudo completar la acción" });
     };
     const onEditOpen = (e: Event) => {
       const { defaults } = (e as CustomEvent).detail as {
@@ -79,7 +74,7 @@ export default function CatalogsPage() {
       window.removeEventListener("catalogs:error", onError);
       window.removeEventListener("catalogs:edit:open", onEditOpen);
     };
-  }, [refresh]);
+  }, [refresh, showAlert]);
 
   const isEdit = Boolean(formDefaults?.id);
 
@@ -115,16 +110,6 @@ export default function CatalogsPage() {
         />
       </div>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
 
       <Modal
         open={modalOpen}
@@ -149,7 +134,7 @@ export default function CatalogsPage() {
       >
         <CatalogForm
           host={{
-            setAlert,
+            setAlert: showAlert,
             closeModal: () => setModalOpen(false),
             defaultValues: formDefaults,
             refresh,

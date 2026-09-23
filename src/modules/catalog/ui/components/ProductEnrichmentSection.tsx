@@ -26,12 +26,9 @@ import {
   regenerateProductEnrichment,
   updateProductEnrichment,
 } from "@/modules/catalog/infrastructure/services/product-enrichment-service.adapter";
+import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = {
-  variant: "default" | "destructive" | "success";
-  title: string;
-  description?: string;
-};
+type AlertConfig = AppAlert;
 
 /**
  * Sección «Búsqueda con IA» del detalle del producto (plan catalog_enrichment,
@@ -138,7 +135,7 @@ export function ProductEnrichmentSection({
       }));
       setDirty(false);
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo pedir la generación") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo pedir la generación") });
     } finally {
       setBusy(null);
     }
@@ -154,9 +151,9 @@ export function ProductEnrichmentSection({
         attributes: compactAttributes(attributes),
       });
       await refetch();
-      setAlert?.({ variant: "success", title: "Metadatos guardados", description: "El automático ya no los pisa." });
+      setAlert?.({ tone: "success", title: "Metadatos guardados", description: "El automático ya no los pisa." });
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudieron guardar los metadatos") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudieron guardar los metadatos") });
     } finally {
       setBusy(null);
     }
@@ -169,14 +166,14 @@ export function ProductEnrichmentSection({
       await updateProductEnrichment(product.id, { status: disable ? "disabled" : "ready" });
       await refetch();
       setAlert?.({
-        variant: "success",
+        tone: "success",
         title: disable ? "Metadatos desactivados para este producto" : "Metadatos activados",
         description: disable
           ? "El agente vuelve a usar la descripción de la ficha."
           : "El agente usa de nuevo la descripción generada.",
       });
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo cambiar el estado") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo cambiar el estado") });
     } finally {
       setBusy(null);
     }
@@ -189,9 +186,9 @@ export function ProductEnrichmentSection({
       await applySuggestedCategory(product.id);
       await onCategoryApplied();
       await refetch();
-      setAlert?.({ variant: "success", title: "Categoría aplicada" });
+      setAlert?.({ tone: "success", title: "Categoría aplicada" });
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo aplicar la categoría") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo aplicar la categoría") });
     } finally {
       setBusy(null);
     }

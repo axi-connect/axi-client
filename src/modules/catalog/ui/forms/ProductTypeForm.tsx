@@ -16,6 +16,7 @@ import {
   toUpdateProductTypeDTO,
   type ProductTypeFormValues,
 } from "./config/product-type.config";
+import type { AppAlert } from "@/core/notifications";
 
 export type ProductTypeFormProps = {
   /** Presente en edición; ausente en creación. */
@@ -23,7 +24,7 @@ export type ProductTypeFormProps = {
   defaultValues?: Partial<ProductTypeFormValues>;
   submitLabel?: string;
   onSaved?: (productType: ProductTypeDTO) => void | Promise<void>;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 };
 
 export function ProductTypeForm({
@@ -44,14 +45,14 @@ export function ProductTypeForm({
         ? await updateProductType(productTypeId, toUpdateProductTypeDTO(values))
         : await createProductType(toCreateProductTypeDTO(values));
       setAlert?.({
-        variant: "success",
+        tone: "success",
         title: isEdit ? "Tipo de producto actualizado" : "Tipo de producto creado",
       });
       await onSaved?.(saved);
     } catch (err) {
       if (applyServerValidation(err, form)) return;
       setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: errorMessage(err, isEdit ? "No se pudo actualizar el tipo" : "No se pudo crear el tipo"),
       });
     }

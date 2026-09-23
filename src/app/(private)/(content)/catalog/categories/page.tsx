@@ -8,7 +8,7 @@ import { Modal } from "@/shared/components/ui/modal";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
 import { TreeView, type TreeNode } from "@/shared/components/features/tree-view";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import {
   CATEGORY_ORIGIN_LABELS,
@@ -61,17 +61,12 @@ export default function CategoriesPage() {
 
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
   const [formDefaults, setFormDefaults] = useState<(Partial<CategoryFormValues> & { id?: string }) | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; hide: boolean } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [seeding, setSeeding] = useState(false);
 
-  const setAlert = (cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg);
-    setAlertOpen(true);
-  };
+  const { showAlert } = useAlert();
 
   const flat = useMemo(() => flattenCategoryTree(categoryTree), [categoryTree]);
   const depthById = useMemo(() => new Map(flat.map((item) => [item.id, item.depth])), [flat]);
@@ -128,8 +123,8 @@ export default function CategoriesPage() {
       setSeeding(true);
       const result = await ensurePlatformTaxonomy();
       const touched = result.created + result.adopted + result.updated;
-      setAlert({
-        variant: "success",
+      showAlert({
+        tone: "success",
         title: touched === 0 ? "La taxonomía ya estaba al día" : "Taxonomía actualizada",
         description:
           touched === 0
@@ -138,7 +133,7 @@ export default function CategoriesPage() {
       });
       await fetchCategoryTree();
     } catch (err) {
-      setAlert({ variant: "destructive", title: errorMessage(err, "No se pudo actualizar la taxonomía") });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo actualizar la taxonomía") });
     } finally {
       setSeeding(false);
     }
@@ -149,8 +144,8 @@ export default function CategoriesPage() {
     try {
       setDeleting(true);
       await deleteCategory(deleteTarget.id);
-      setAlert({
-        variant: "success",
+      showAlert({
+        tone: "success",
         title: deleteTarget.hide ? "Categoría oculta" : "Categoría eliminada correctamente",
         description: deleteTarget.hide
           ? "El agente ya no la ofrece y sus productos vuelven a la clasificación automática."
@@ -159,7 +154,7 @@ export default function CategoriesPage() {
       setDeleteTarget(null);
       await fetchCategoryTree();
     } catch (err) {
-      setAlert({ variant: "destructive", title: errorMessage(err, "No se pudo eliminar la categoría") });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar la categoría") });
     } finally {
       setDeleting(false);
     }
@@ -328,16 +323,6 @@ export default function CategoriesPage() {
         )}
       </div>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
 
       <Modal
         open={Boolean(deleteTarget)}
@@ -390,7 +375,7 @@ export default function CategoriesPage() {
       >
         <CategoryForm
           host={{
-            setAlert,
+            setAlert: showAlert,
             parents: parentOptions,
             closeModal: () => setModalOpen(false),
             defaultValues: formDefaults,

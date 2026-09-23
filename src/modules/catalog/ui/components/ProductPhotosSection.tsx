@@ -28,10 +28,11 @@ import {
 import { useProductImagesPolling } from "@/modules/catalog/infrastructure/hooks/use-product-images-polling";
 import { PhotoLightbox } from "./photos/PhotoLightbox";
 import { SortablePhotoGallery } from "./photos/SortablePhotoGallery";
+import type { AppAlert } from "@/core/notifications";
 
 const BANNER_DISMISSED_KEY = "axi.catalog.photos_banner_dismissed";
 
-type AlertConfig = { variant: "default" | "destructive" | "success"; title: string; description?: string };
+type AlertConfig = AppAlert;
 
 /**
  * Sección "Fotos" del detalle (F16): galería del producto (comodín para
@@ -102,7 +103,7 @@ export function ProductPhotosSection({
       });
     } catch (err) {
       onSaved({ ...product, images: prevImages });
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo guardar el orden") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo guardar el orden") });
     }
   };
 
@@ -114,7 +115,7 @@ export function ProductPhotosSection({
       setToDelete(null);
       await refetch();
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo borrar la foto") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo borrar la foto") });
     } finally {
       setDeleting(false);
     }
@@ -131,7 +132,7 @@ export function ProductPhotosSection({
       }
       await refetch();
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo reintentar el import") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo reintentar el import") });
     }
   };
 

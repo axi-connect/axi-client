@@ -104,7 +104,7 @@ export function AnalyticsView() {
     [replaceParams],
   );
 
-  // Tiempo real: alertas en vivo (floating-alert + badge) y evaluaciones
+  // Tiempo real: alertas en vivo (aviso vía showAlert + badge) y evaluaciones
   // completadas (aviso si es crítica; el Sheet/lista los maneja QualityTab).
   useAnalyticsRealtime({
     enabled: canRead,

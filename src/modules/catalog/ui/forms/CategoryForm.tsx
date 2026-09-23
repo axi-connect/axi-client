@@ -16,6 +16,7 @@ import {
   type CategoryFormValues,
   type ParentOption,
 } from "./config/category.config";
+import type { AppAlert } from "@/core/notifications";
 
 export type CategoryFormHost = {
   closeModal?: () => void;
@@ -23,7 +24,7 @@ export type CategoryFormHost = {
   /** Opciones de padre ya filtradas (sin el propio subárbol al editar). */
   parents?: ParentOption[];
   defaultValues?: (Partial<CategoryFormValues> & { id?: string }) | null;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 };
 
 export function CategoryForm({ host }: { host?: CategoryFormHost }) {
@@ -34,17 +35,17 @@ export function CategoryForm({ host }: { host?: CategoryFormHost }) {
       const id = host?.defaultValues?.id;
       if (id) {
         await updateCategory(id, toUpdateCategoryDTO(values));
-        host?.setAlert?.({ variant: "success", title: "Categoría actualizada correctamente" });
+        host?.setAlert?.({ tone: "success", title: "Categoría actualizada correctamente" });
       } else {
         await createCategory(toCreateCategoryDTO(values));
-        host?.setAlert?.({ variant: "success", title: "Categoría creada correctamente" });
+        host?.setAlert?.({ tone: "success", title: "Categoría creada correctamente" });
       }
       await host?.refresh?.();
       host?.closeModal?.();
     } catch (err) {
       if (applyServerValidation(err, form)) return;
       host?.setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: errorMessage(err, isEdit ? "No se pudo actualizar la categoría" : "No se pudo crear la categoría"),
       });
     }

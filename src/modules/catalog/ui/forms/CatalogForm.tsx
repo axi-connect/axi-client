@@ -15,12 +15,13 @@ import {
   toUpdateCatalogDTO,
   type CatalogFormValues,
 } from "./config/catalog.config";
+import type { AppAlert } from "@/core/notifications";
 
 export type CatalogFormHost = {
   closeModal?: () => void;
   refresh?: () => Promise<void> | void;
   defaultValues?: (Partial<CatalogFormValues> & { id?: string }) | null;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 };
 
 export function CatalogForm({ host }: { host?: CatalogFormHost }) {
@@ -31,17 +32,17 @@ export function CatalogForm({ host }: { host?: CatalogFormHost }) {
       const id = host?.defaultValues?.id;
       if (id) {
         await updateCatalog(id, toUpdateCatalogDTO(values));
-        host?.setAlert?.({ variant: "success", title: "Catálogo actualizado correctamente" });
+        host?.setAlert?.({ tone: "success", title: "Catálogo actualizado correctamente" });
       } else {
         await createCatalog(toCreateCatalogDTO(values));
-        host?.setAlert?.({ variant: "success", title: "Catálogo creado correctamente" });
+        host?.setAlert?.({ tone: "success", title: "Catálogo creado correctamente" });
       }
       await host?.refresh?.();
       host?.closeModal?.();
     } catch (err) {
       if (applyServerValidation(err, form)) return;
       host?.setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: errorMessage(err, isEdit ? "No se pudo actualizar el catálogo" : "No se pudo crear el catálogo"),
       });
     }

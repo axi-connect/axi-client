@@ -15,13 +15,14 @@ import {
   userFormSchema,
   type UserFormValues,
 } from "./config/user.config"
+import type { AppAlert } from "@/core/notifications"
 
 export type UserFormHost = {
   closeModal?: () => void
   formMode?: "create" | "edit"
   refresh?: () => Promise<void> | void
   defaultValues?: (Partial<UserFormValues> & { id?: string }) | null
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void
+  setAlert?: (alert: AppAlert) => void
 }
 
 export function UserForm({ host }: { host?: UserFormHost }) {
@@ -48,17 +49,17 @@ export function UserForm({ host }: { host?: UserFormHost }) {
       const id = host?.defaultValues?.id
       if (id) {
         await updateUser(id, toUpdateUserDTO(values))
-        host?.setAlert?.({ variant: "success", title: "Usuario actualizado correctamente" })
+        host?.setAlert?.({ tone: "success", title: "Usuario actualizado correctamente" })
       } else {
         await createUser(toCreateUserDTO(values))
-        host?.setAlert?.({ variant: "success", title: "Usuario creado correctamente" })
+        host?.setAlert?.({ tone: "success", title: "Usuario creado correctamente" })
       }
       await host?.refresh?.()
       host?.closeModal?.()
     } catch (err) {
       if (applyServerValidation(err, form)) return
       host?.setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: errorMessage(err, isEdit ? "No se pudo actualizar el usuario" : "No se pudo crear el usuario"),
       })
     }

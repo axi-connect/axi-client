@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { DataTable } from "@/shared/components/features/data-table";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import { GlassGlyph } from "@/shared/components/ui/glyphs";
 import type { ProductTypeRow } from "@/modules/catalog/domain/product-type";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
@@ -26,24 +26,19 @@ export default function ProductTypesPage() {
 
   const [rows, setRows] = useState<ProductTypeRow[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
-  const setAlert = (cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg);
-    setAlertOpen(true);
-  };
+  const { showAlert } = useAlert();
 
   const load = useCallback(async () => {
     try {
       const { rows: fetched } = await fetchProductTypes();
       setRows(fetched);
     } catch {
-      setAlert({ variant: "destructive", title: "No se pudieron cargar los tipos de producto" });
+      showAlert({ tone: "error", title: "No se pudieron cargar los tipos de producto" });
     } finally {
       setLoaded(true);
     }
-  }, []);
+  }, [showAlert]);
 
   useEffect(() => {
     void load();
@@ -51,13 +46,13 @@ export default function ProductTypesPage() {
 
   useEffect(() => {
     const onDeleteSuccess = () => {
-      setAlert({ variant: "success", title: "Tipo de producto eliminado" });
+      showAlert({ tone: "success", title: "Tipo de producto eliminado" });
       void load();
       void refreshReference();
     };
     const onError = (e: Event) => {
       const detail = (e as CustomEvent).detail as { message?: string };
-      setAlert({ variant: "destructive", title: detail?.message || "No se pudo completar la acción" });
+      showAlert({ tone: "error", title: detail?.message || "No se pudo completar la acción" });
     };
     window.addEventListener("product-types:delete:success", onDeleteSuccess);
     window.addEventListener("product-types:error", onError);
@@ -65,7 +60,7 @@ export default function ProductTypesPage() {
       window.removeEventListener("product-types:delete:success", onDeleteSuccess);
       window.removeEventListener("product-types:error", onError);
     };
-  }, [load, refreshReference]);
+  }, [load, refreshReference, showAlert]);
 
   const isEmpty = loaded && rows.length === 0;
 
@@ -109,16 +104,6 @@ export default function ProductTypesPage() {
         )}
       </div>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   );
 }

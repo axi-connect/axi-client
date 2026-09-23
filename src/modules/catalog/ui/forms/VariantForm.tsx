@@ -14,6 +14,7 @@ import {
 } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { AttributeValueInput } from "@/modules/catalog/ui/components/AttributeValueInput";
 import { PriceInput } from "@/modules/catalog/ui/components/PriceInput";
+import type { AppAlert } from "@/core/notifications";
 
 type VariantAttributeMap = Record<string, string | number | boolean>;
 
@@ -40,7 +41,7 @@ export function VariantForm({
   currency: string;
   onSaved: () => void | Promise<void>;
   onCancel: () => void;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const isEdit = Boolean(variant);
   const [sku, setSku] = useState(variant?.sku ?? "");
@@ -109,11 +110,11 @@ export function VariantForm({
       } else {
         await createVariant(productId, dto);
       }
-      setAlert?.({ variant: "success", title: isEdit ? "Variante actualizada" : "Variante creada" });
+      setAlert?.({ tone: "success", title: isEdit ? "Variante actualizada" : "Variante creada" });
       await onSaved();
     } catch (err) {
       setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: errorMessage(err, isEdit ? "No se pudo actualizar la variante" : "No se pudo crear la variante"),
       });
     } finally {

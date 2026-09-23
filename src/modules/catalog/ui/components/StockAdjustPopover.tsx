@@ -10,6 +10,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import type { ProductVariantDTO, StockDTO } from "@/modules/catalog/domain/product";
 import { adjustVariantStock } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
+import type { AppAlert } from "@/core/notifications";
 
 /**
  * Ajuste de inventario de una variante (requiere permiso `catalog:stock`).
@@ -23,7 +24,7 @@ export function StockAdjustPopover({
 }: {
   variant: ProductVariantDTO;
   onAdjusted: (variantId: string, stock: StockDTO) => void;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [op, setOp] = useState<"set" | "increment">("set");
@@ -36,16 +37,16 @@ export function StockAdjustPopover({
   const apply = async () => {
     const parsedQuantity = Number(quantity);
     if (quantity.trim() === "" || !Number.isInteger(parsedQuantity)) {
-      setAlert?.({ variant: "destructive", title: "Indica una cantidad entera" });
+      setAlert?.({ tone: "error", title: "Indica una cantidad entera" });
       return;
     }
     if (op === "set" && parsedQuantity < 0) {
-      setAlert?.({ variant: "destructive", title: "Al fijar, la cantidad debe ser ≥ 0" });
+      setAlert?.({ tone: "error", title: "Al fijar, la cantidad debe ser ≥ 0" });
       return;
     }
     const parsedThreshold = threshold.trim() === "" ? undefined : Number(threshold);
     if (parsedThreshold !== undefined && (!Number.isInteger(parsedThreshold) || parsedThreshold < 0)) {
-      setAlert?.({ variant: "destructive", title: "El umbral debe ser un entero ≥ 0" });
+      setAlert?.({ tone: "error", title: "El umbral debe ser un entero ≥ 0" });
       return;
     }
 
@@ -57,11 +58,11 @@ export function StockAdjustPopover({
         ...(parsedThreshold !== undefined ? { out_of_stock_threshold: parsedThreshold } : {}),
       });
       onAdjusted(variant.id, stock);
-      setAlert?.({ variant: "success", title: "Stock actualizado" });
+      setAlert?.({ tone: "success", title: "Stock actualizado" });
       setOpen(false);
       setQuantity("");
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo ajustar el stock") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo ajustar el stock") });
     } finally {
       setSubmitting(false);
     }

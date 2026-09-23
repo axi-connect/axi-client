@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, type Path } from "react-hook-form";
 import { arrayMove } from "@dnd-kit/sortable";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useIsMobile } from "@/core/hooks/use-mobile";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
-import { StatusAlert } from "@/shared/components/ui/notice";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import {
   effectiveFields,
@@ -401,13 +401,11 @@ export function FormsSection() {
       />
 
       {readOnly && (
-        <StatusAlert
-          tone="info"
-          dismissible={false}
-          compact
-          title="Solo lectura"
-          description="Pídele a un administrador el permiso para configurar estos datos."
-        />
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertTitle>Solo lectura</AlertTitle>
+          <AlertDescription>Pídele a un administrador el permiso para configurar estos datos.</AlertDescription>
+        </Alert>
       )}
 
       <FlowToolbar

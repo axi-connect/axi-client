@@ -23,8 +23,9 @@ import { cn } from "@/core/lib/utils";
 import type { ProductImageDTO } from "@/modules/catalog/domain/product";
 import { PhotoTile } from "./PhotoTile";
 import { PhotoUploader } from "./PhotoUploader";
+import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = { variant: "default" | "destructive" | "success"; title: string; description?: string };
+type AlertConfig = AppAlert;
 
 /**
  * Galería de UN contenedor (producto o una variante) con drag&drop de

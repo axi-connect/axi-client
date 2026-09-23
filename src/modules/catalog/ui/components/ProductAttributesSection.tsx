@@ -9,6 +9,7 @@ import type { ProductTypeAttributeDTO, ProductTypeDTO } from "@/modules/catalog/
 import type { ProductDTO } from "@/modules/catalog/domain/product";
 import { setProductAttributeValues } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { AttributeValueInput } from "./AttributeValueInput";
+import type { AppAlert } from "@/core/notifications";
 
 type AttributeValueMap = Record<string, string | number | boolean>;
 
@@ -39,7 +40,7 @@ export function ProductAttributesSection({
   /** true cuando se llega desde crear con atributos requeridos pendientes. */
   highlightRequired?: boolean;
   onSaved: (updated: ProductDTO) => void;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const [values, setValues] = useState<AttributeValueMap>(() => initialValues(product));
   const [saving, setSaving] = useState(false);
@@ -78,7 +79,7 @@ export function ProductAttributesSection({
   const save = async () => {
     if (missingRequired.length > 0) {
       setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: `Completa los atributos requeridos: ${missingRequired.join(", ")}`,
       });
       return;
@@ -86,10 +87,10 @@ export function ProductAttributesSection({
     try {
       setSaving(true);
       const updated = await setProductAttributeValues(product.id, { values });
-      setAlert?.({ variant: "success", title: "Atributos guardados correctamente" });
+      setAlert?.({ tone: "success", title: "Atributos guardados correctamente" });
       onSaved(updated);
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudieron guardar los atributos") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudieron guardar los atributos") });
     } finally {
       setSaving(false);
     }
