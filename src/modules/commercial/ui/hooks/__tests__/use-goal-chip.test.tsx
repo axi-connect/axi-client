@@ -28,7 +28,7 @@ describe("useGoalChip", () => {
       pace: { status: "ready", data: pace, error: null },
     });
     const { result } = renderHook(() => useGoalChip());
-    expect(result.current).toEqual({ pct: 63, label: "Meta · 63 %", href: "/comercial" });
+    expect(result.current).toEqual({ pct: 63, href: "/comercial" });
   });
 
   it("sin meta: null (el briefing no pinta chip)", () => {

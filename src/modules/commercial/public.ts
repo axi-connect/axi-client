@@ -8,6 +8,8 @@
  *    `/comercial/acciones/:id` (`isCommercialProposal`, `commercialProposalHref`)
  *    y el briefing pinta el chip «Meta · N %» (`useGoalChip`, autosuficiente:
  *    `null` sin meta, permiso o capacidad).
+ *  - `analytics`: «Tasas vivas» marca la tasa que usa la ruta con
+ *    `useRouteRates` (autosuficiente: lee `plan.inputs`; `null` sin plan).
  *
  * Solo se publica lo que tiene consumidor. `commercial` NO importa de `crm`:
  * enlaza por href.
@@ -15,3 +17,4 @@
 export { GoalProgressBlock } from "./ui/components/GoalProgressBlock";
 export { commercialProposalHref, isCommercialProposal } from "./domain/proposals";
 export { useGoalChip, type GoalChip } from "./ui/hooks/use-goal-chip";
+export { useRouteRates, type RouteRateKey } from "./ui/hooks/use-route-rates";

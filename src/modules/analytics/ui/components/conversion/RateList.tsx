@@ -1,21 +1,13 @@
 import { cn } from "@/core/lib/utils";
+import type { RateRow } from "@/modules/analytics/domain/live-rates";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-
-export interface RateListRow {
-  key: string;
-  label: string;
-  value: string;
-  secondary: string;
-  pct: number | null;
-  primary?: boolean;
-}
 
 /**
  * La lista de las dos tarjetas del método comercial en Conversión: etiqueta →
  * cifra, el divisor en la línea secundaria y una regla fina a la derecha (el
  * único indicador de la fila). Ficha, no tabla.
  */
-export function RateList({ rows, label }: { rows: readonly RateListRow[]; label: string }) {
+export function RateList({ rows, label }: { rows: readonly RateRow[]; label: string }) {
   return (
     <ul aria-label={label} className="divide-y divide-border">
       {rows.map((row) => (

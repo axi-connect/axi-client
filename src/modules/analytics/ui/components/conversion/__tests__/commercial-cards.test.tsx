@@ -7,6 +7,8 @@ import { StageRatesCard } from "../StageRatesCard";
 
 const permissions = new Set<string>();
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: (code: string) => permissions.has(code) }) }));
+let mockRouteRates: ReadonlySet<string> | null = new Set(["quote_to_sale"]);
+jest.mock("@/modules/commercial/public", () => ({ useRouteRates: () => mockRouteRates }));
 
 const LIVE: FunnelLiveRates = {
   call_answer_rate: 61.9,
@@ -16,6 +18,13 @@ const LIVE: FunnelLiveRates = {
   quote_to_sale_rate: 37.9,
   value_per_meeting_cents: 24_105_263_00,
   value_per_visit_cents: 30_533_333_00,
+  rate_samples: {
+    call_answer: { numerator: 52, denominator: 84, capped: false },
+    answered_to_meeting: { numerator: 23, denominator: 52, capped: false },
+    meeting_show: { numerator: 75, denominator: 95, capped: false },
+    meeting_to_sale: { numerator: 26, denominator: 75, capped: false },
+    quote_to_sale: { numerator: 33, denominator: 87, capped: false },
+  },
   samples: {
     calls_placed: 84,
     calls_answered: 52,
@@ -48,19 +57,58 @@ function funnel(patch: Partial<FunnelDTO> = {}): FunnelDTO {
 
 const ready = (data: FunnelDTO): Section<FunnelDTO> => ({ status: "ready", data, error: null });
 
+beforeEach(() => {
+  mockRouteRates = new Set(["quote_to_sale"]);
+});
+
 describe("StageRatesCard", () => {
-  it("cada tasa con su divisor; la de la ruta marcada", () => {
+  it("cada tasa con SU muestra («X de N»); la de la ruta marcada por el plan", () => {
     render(<StageRatesCard section={ready(funnel())} onRetry={jest.fn()} />);
     expect(screen.getByRole("heading", { name: "Tasas vivas · 30 días" })).toBeInTheDocument();
     const list = screen.getByRole("list", { name: "Tasas vivas" });
     expect(within(list).getByText("61,9 %")).toBeInTheDocument();
     expect(within(list).getByText("52 de 84 llamadas")).toBeInTheDocument();
+    // C2: la muestra de ESTA tasa (citas sobre contestadas), no las citas agendadas de otra cosa.
+    expect(within(list).getByText("23 de 52 contestadas")).toBeInTheDocument();
     expect(within(list).getByText("75 de 95 citas · 20 no asistieron")).toBeInTheDocument();
-    // Asistió → venta sale de los mismos conteos: 33 ÷ 75.
     expect(within(list).getByText("Asistió → venta")).toBeInTheDocument();
-    expect(within(list).getByText("44 %")).toBeInTheDocument();
-    expect(within(list).getByText(/la tasa que usa la ruta/)).toBeInTheDocument();
+    expect(within(list).getByText("26 de 75 personas que asistieron")).toBeInTheDocument();
+    expect(within(list).getByText("33 de 87 cotizaciones · la tasa que usa la ruta")).toBeInTheDocument();
+    expect(within(list).getAllByText(/la tasa que usa la ruta/)).toHaveLength(1);
     expect(within(list).getByText("Valor por visita")).toBeInTheDocument();
+    // C3: ya no se calcula en el cliente una «Asistió → venta» aparte.
+    expect(within(list).getAllByText("Asistió → venta")).toHaveLength(1);
+  });
+
+  it("sin la muestra por tasa (servidor viejo) dice solo el divisor, nunca «X de N» inventado (C2)", () => {
+    const legacy: Partial<FunnelLiveRates> = { ...LIVE };
+    delete legacy.rate_samples;
+    render(<StageRatesCard section={ready(funnel({ live_rates: legacy as FunnelLiveRates }))} onRetry={jest.fn()} />);
+    const list = screen.getByRole("list", { name: "Tasas vivas" });
+    expect(within(list).getByText("sobre 52 contestadas")).toBeInTheDocument();
+    expect(within(list).getByText("sobre 84 llamadas")).toBeInTheDocument();
+  });
+
+  it("una tasa > 100 % o topada por el servidor no se pinta (C3)", () => {
+    const odd: FunnelLiveRates = {
+      ...LIVE,
+      quote_to_sale_rate: 100,
+      meeting_show_rate: 112.5,
+      rate_samples: { ...LIVE.rate_samples, quote_to_sale: { numerator: 50, denominator: 45, capped: true } },
+    };
+    render(<StageRatesCard section={ready(funnel({ live_rates: odd }))} onRetry={jest.fn()} />);
+    expect(screen.queryByText("Cotización → venta")).toBeNull();
+    expect(screen.queryByText("Cita agendada → asistió")).toBeNull();
+    expect(screen.getByText("Llamadas → contestadas")).toBeInTheDocument();
+  });
+
+  it("la marca de la ruta sale del plan: cita → venta si el plan la usa, ninguna sin plan (C11)", () => {
+    mockRouteRates = new Set(["quote_to_sale", "meeting_to_sale"]);
+    const { rerender } = render(<StageRatesCard section={ready(funnel())} onRetry={jest.fn()} />);
+    expect(screen.getByText("26 de 75 personas que asistieron · la tasa que usa la ruta")).toBeInTheDocument();
+    mockRouteRates = null;
+    rerender(<StageRatesCard section={ready(funnel({ period: "7d" }))} onRetry={jest.fn()} />);
+    expect(screen.queryByText(/la tasa que usa la ruta/)).toBeNull();
   });
 
   it("una fila sin muestra NO se pinta (ni 0 % ni —)", () => {
@@ -73,7 +121,7 @@ describe("StageRatesCard", () => {
     render(<StageRatesCard section={ready(funnel({ live_rates: noCalls }))} onRetry={jest.fn()} />);
     expect(screen.queryByText("Llamadas → contestadas")).toBeNull();
     expect(screen.queryByText("Contestadas → cita agendada")).toBeNull();
-    expect(screen.getByText("Cita agendada → venta")).toBeInTheDocument();
+    expect(screen.getByText("Asistió → venta")).toBeInTheDocument();
   });
 
   it("sin nada medido, una frase; cargando, skeleton", () => {

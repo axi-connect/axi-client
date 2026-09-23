@@ -68,9 +68,7 @@ export type CommercialProposalDetailDTO = Schemas["CommercialProposalDetailDto"]
  * `readOutreach` (`domain/proposals.ts`).
  */
 export type CommercialProposalDTO = CommercialProposalListDTO["data"][number];
-export type CommercialProposalKind = CommercialProposalDTO["kind"];
 export type CommercialProposalStatus = CommercialProposalDTO["status"];
-export type CommercialProposalEvidenceDTO = CommercialProposalDTO["evidence"][number];
 /** Lo aplicado y lo fallido por separado; `applied[].detail` es el parcial en palabras. */
 export type CommercialApprovalResultDTO = Schemas["ApprovalResultDto"];
 export type RejectCommercialProposalDTO = Schemas["RejectProposalDto"];

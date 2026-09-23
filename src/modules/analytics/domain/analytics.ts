@@ -36,11 +36,11 @@ export type FunnelGroup = NonNullable<FunnelDTO["groups"]>[number];
 export type FunnelGroupBy = "agent" | "channel" | "intention";
 /**
  * «Tasas vivas» (método comercial F7): % 0–100 con un decimal, `null` sin
- * muestra (la fila se omite); `samples` son los divisores. `null` entero si no
- * se midió nada en el período.
+ * muestra (la fila se omite); `rate_samples` trae numerador y denominador de
+ * CADA tasa y `samples` los contadores en crudo. `null` entero si no se midió
+ * nada en el período.
  */
 export type FunnelLiveRates = NonNullable<FunnelDTO["live_rates"]>;
-export type FunnelLiveSamples = FunnelLiveRates["samples"];
 /**
  * «Recorrido del pipeline» (F7): una fila por tipo semántico de etapa, con el
  * nombre del tenant. `conversion_pct` es FLUJO del período (avanzaron ÷

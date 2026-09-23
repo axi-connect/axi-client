@@ -10,8 +10,6 @@ import { useEntitlements } from "@/shared/auth/entitlements.hooks";
 export interface GoalChip {
   /** Camino recorrido de la meta del mes, 0–100 entero (nunca negativo). */
   pct: number;
-  /** «Meta · 41 %». */
-  label: string;
   href: "/comercial";
 }
 
@@ -39,5 +37,5 @@ export function useGoalChip(): GoalChip | null {
 
   if (!enabled || blocker !== null || goal.data?.goal == null || pace.data === null) return null;
   const pct = Math.round(progressPct(pace.data.actual_revenue_cents, pace.data.target_revenue_cents));
-  return { pct, label: `Meta · ${String(pct)} %`, href: "/comercial" };
+  return { pct, href: "/comercial" };
 }
