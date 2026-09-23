@@ -65,6 +65,7 @@ src/app/                       # convenciones de Next (se auto-conectan al <head
 - Nombre visible: **Axi Connect** (dos palabras, capitalización de título). Abreviación aceptada en contextos internos de UI ya contextualizados: **Axi**.
 - Nombre técnico (repos, paquetes, código): `axi-connect`, `axi-client`, `axi-server`.
 - Nunca: "AXI", "axiconnect", "Axi-Connect".
+- **Minúscula solo en el lema y en la prosa de marca** («axi vende progreso», «axi propone»): ahí la marca habla en primera persona. En títulos, UI y documentación técnica sigue siendo **Axi Connect** / **Axi**.
 
 ---
 
@@ -185,10 +186,10 @@ Presets y duraciones exactas en DESIGN-SYSTEM §6.
 Reglas que nacen con el módulo Comercial y valen para todo texto que hable de metas, cifras o resultados (posicionamiento «axi vende progreso», `docs/business/knowledge-base.md` §20.0). Cada regla lleva un ejemplo: así sí / así no.
 
 1. **La meta se persigue.** Se dice «faltan», «llegas», «recorrido», «camino». Nunca «déficit», «incumplimiento», «por debajo del objetivo».
-   - Así sí: «Para llegar faltan $ 11 M: 3 ventas al día en los 6 días que quedan.»
+   - Así sí: «Para llegar faltan $ 11,1 M: 16 ventas en 6 días hábiles, 3 al día.»
    - Así no: «Estás por debajo del objetivo mensual.»
 2. **Cifra + camino + siguiente paso, siempre juntos.** Una cifra sola es un regaño o una vanidad.
-   - Así sí: «Vas al ritmo. Mantén 2 ventas al día y llegas.»
+   - Así sí: «Vas al ritmo. Con 2 ventas al día llegas (faltan 10 en 6 días).»
    - Así no: «Ventas del mes: 18.»
 3. **Sin porcentajes negativos.** Se cuenta lo recorrido y lo que falta, no el hueco.
    - Así sí: «18 de 42 · faltan 24.»
@@ -200,7 +201,7 @@ Reglas que nacen con el módulo Comercial y valen para todo texto que hable de m
    - Así sí: «Meta cumplida con 4 días de sobra. Lo que venga ahora es camino extra.»
    - Así no: «¡Felicitaciones! ¡Estás rompiendo récords! 🚀»
 6. **Cuando no sabemos, lo decimos con calma.** Sin culpar a los datos ni al usuario; se dice qué falta y cuándo habrá respuesta.
-   - Así sí: «Estamos aprendiendo tu ritmo. En 5 días tendrás proyección y acciones.»
+   - Así sí: «Estamos aprendiendo tu ritmo. En 2 días tendrás proyección y acciones.»
    - Así no: «Datos insuficientes para el cálculo.»
 7. **Axi propone en voz baja; el dueño decide.** Las propuestas van en violeta, firmadas «Axi propone», con su porqué y lo que va a pasar si se aprueba. Nada sale sin aprobación.
    - Así sí: «Axi propone: retomar 14 cotizaciones frías mañana a las 9:00.» → Aprobar · Rechazar
