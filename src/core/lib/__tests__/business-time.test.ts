@@ -13,7 +13,7 @@ import {
   weekDays,
   weekStartKey,
   weekdayOfKey,
-} from "../business-time";
+} from "@/core/lib/business-time";
 
 /**
  * Bogotá no tiene DST, pero el código no debe asumir offset fijo: los casos

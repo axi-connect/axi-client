@@ -32,27 +32,16 @@ export type PlanRateDTO = NonNullable<PlanInputsDTO["quote_to_sale"]>;
 export type PlanFiguresDTO = CommercialPlanDTO["figures"];
 /** Una cifra con su procedencia y la base que la explica («history_90d n=61»). */
 export type FigureDTO = PlanFiguresDTO["needed_sales"];
-export type PlanPacingDTO = CommercialPlanDTO["pacing"];
-export type ProductMixRowDTO = CommercialPlanDTO["product_mix"][number];
-/** `incomplete` = falta el ticket promedio: las cifras llegan en 0 con `basis: "incomplete"`. */
-export type PlanStatus = CommercialPlanDTO["status"];
 
 /**
  * `GET /commercial/pace?granularity=day|week`. Nunca calcula en caliente: lee
  * rollup + plan. Sin meta responde 404 `commercial/goal_not_found`: el store
- * solo lo pide cuando hay meta.
+ * solo lo pide cuando hay meta. Los puntos de `series` son ACUMULADOS desde el
+ * primer día del periodo, no el valor del día.
  */
 export type CommercialPaceDTO = Schemas["PaceDto"];
 export type PaceKeyResultDTO = CommercialPaceDTO["key_results"][number];
-/**
- * Un punto de la serie del mes. **Las cifras son ACUMULADAS** desde el primer
- * día del periodo (`sales += orders_paid` día a día), no el valor del día: el
- * valor de una semana es el último punto de la semana menos el último punto
- * anterior a su lunes.
- */
-export type PacePointDTO = CommercialPaceDTO["series"][number];
 export type PaceGranularity = CommercialPaceDTO["granularity"];
-export type DataSufficiency = CommercialPaceDTO["data_sufficiency"];
 
 /** De dónde sale una cifra. Cada número del módulo lleva la suya (D7). */
 export type SourceKind = FigureDTO["source"];
