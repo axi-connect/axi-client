@@ -23,6 +23,12 @@ export type AreaSeries = {
  * Gráfico de área con relleno de gradiente de marca. Altura fija vía
  * `ResponsiveContainer` (sin scroll anidado). Anima solo bajo motion normal
  * (`prefers-reduced-motion` desactiva la animación de entrada).
+ *
+ * Vivía en `modules/dashboard/ui/components/charts/` y lo consumía `analytics`
+ * por ruta profunda (arquitectura §3.3 regla 5). Es el único gráfico de serie
+ * del panel —dashboard, analytics y la tendencia de un resultado clave de
+ * `commercial` (F6)—, así que su sitio es `shared`. Los consumidores lo cargan
+ * con `next/dynamic` (`ssr: false`): recharts no entra en el bundle inicial.
  */
 export function AreaTrend({
   data,
