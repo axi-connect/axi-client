@@ -244,8 +244,10 @@ export function ContactTimelineFeed({
     );
   };
 
-  // Un `stage_changed` ya deshecho no ofrece «Deshacer» otra vez: el
-  // `stage_reverted` que lo deshizo apunta a él con `reverted_event_id`.
+  // Manda `payload.revertible` del servidor (solo el último movimiento no
+  // deshecho de un deal abierto lo lleva en true). Lo de abajo es RESPALDO
+  // para entradas sin el campo: un `stage_changed` ya deshecho (lo apunta un
+  // `stage_reverted` con `reverted_event_id`) o de un deal cerrado no se ofrece.
   const revertedIds = new Set(
     entries
       .map((entry) => (entry.type === "deal_stage_reverted" ? str(entry.payload?.reverted_event_id) : null))
@@ -275,16 +277,16 @@ export function ContactTimelineFeed({
     const payload = entry.payload ?? {};
     const dealId = str(payload.deal_id);
     const eventId = str(payload.event_id) ?? entry.id;
+    const serverSays = typeof payload.revertible === "boolean" ? payload.revertible : null;
     const revertible =
       canRevert &&
       entry.type === "deal_stage_changed" &&
       dealId !== null &&
-      !revertedIds.has(eventId) &&
-      !closedDealIds.has(dealId) &&
-      isRevertibleMove({
-        rule_code: str(payload.rule_code),
-        revertible: typeof payload.revertible === "boolean" ? payload.revertible : null,
-      });
+      (serverSays !== null
+        ? serverSays
+        : !revertedIds.has(eventId) &&
+          !closedDealIds.has(dealId) &&
+          isRevertibleMove({ rule_code: str(payload.rule_code) }));
     const toName = stageLabel(payload.to_stage_name, payload.to_kind);
     const fromName = stageLabel(payload.from_stage_name, payload.from_kind);
     return {

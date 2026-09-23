@@ -283,6 +283,18 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
     expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
   });
 
+  it("si el servidor manda `revertible`, manda él: sin heurísticas propias", async () => {
+    getContactTimeline.mockResolvedValue(
+      page([
+        stageChanged({ revertible: true, rule_code: "paid" }, "server-yes"),
+        stageChanged({ revertible: false, rule_code: "appointment_booked" }, "server-no"),
+      ]),
+    );
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    await waitFor(() => expect(screen.getAllByRole("listitem")).toHaveLength(2));
+    expect(screen.getAllByRole("button", { name: "Deshacer" })).toHaveLength(1);
+  });
+
   it("una oportunidad reabierta después de cerrar vuelve a admitir Deshacer", async () => {
     getContactTimeline.mockResolvedValue(
       page([

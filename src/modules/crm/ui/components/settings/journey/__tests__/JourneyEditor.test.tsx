@@ -321,6 +321,19 @@ describe("JourneyEditor", () => {
     await waitFor(() => expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument());
   });
 
+  it("si ni la plantilla aplicada ni el nicho están en la lista, nada viene marcado y «Aplicar» espera", async () => {
+    getJourney.mockResolvedValue(
+      journey({ template_code: "retail_tech", templates: journey().templates.filter((t) => t.niche_code !== "health_beauty") }),
+    );
+    render(<JourneyEditor />);
+    fireEvent.click(await screen.findByRole("button", { name: "Cambiar" }));
+    for (const radio of screen.getAllByRole("radio")) expect(radio).toHaveAttribute("aria-checked", "false");
+    expect(screen.getAllByRole("radio")[0]).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("button", { name: "Aplicar plantilla" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("radio", { name: /Restaurantes/ }));
+    expect(screen.getByRole("button", { name: "Aplicar plantilla" })).toBeEnabled();
+  });
+
   it("si aplicar la plantilla falla, el selector se queda abierto con la elección puesta", async () => {
     getJourney.mockResolvedValue(journey());
     applyJourneyTemplate.mockRejectedValue(new Error("boom"));

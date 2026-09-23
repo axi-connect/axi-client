@@ -125,13 +125,13 @@ Pipeline.» 404/403 → no se pinta. Tests en `__tests__/ContactJourneyCard.test
   {etapa}» (+ «razón»). `deal_stage_reverted` → «Se deshizo el paso a {etapa}».
   `lifecycle` → «Prospecto → Lead (pedido creado)». El nombre de la etapa sale de
   `payload.to_stage_name` y cae al label del kind.
-- **Deshacer** (`canRevert`, lo pasa `ContactTimeline` con `crm:manage`) solo en
-  `deal_stage_changed` con `deal_id` que además: no figure como
-  `reverted_event_id` de un `deal_stage_reverted` cargado; no sea de una
-  oportunidad ganada/perdida (el primer `deal_won`/`deal_lost`/`deal_reopened`
-  visto por deal —la lista va de nueva a vieja— es su estado); pase
-  `isRevertibleMove` (`rule_code` ≠ `paid`/`stage_deleted`, `payload.revertible`
-  ≠ false). Usa `useRevertStageChange`; el feed escucha el evento del contacto.
+- **Deshacer** (`canRevert`, lo pasa `ContactTimeline` con `crm:manage`) en
+  `deal_stage_changed` con `deal_id` cuando `payload.revertible` es true. Si el
+  campo falta (respaldo): que no figure como `reverted_event_id` de un
+  `deal_stage_reverted` cargado, que el deal no esté ganado/perdido (el primer
+  `deal_won`/`deal_lost`/`deal_reopened` visto por deal —la lista va de nueva a
+  vieja— es su estado ACTUAL) y que `rule_code` no sea `paid`/`stage_deleted`.
+  Usa `useRevertStageChange`; el feed escucha el evento del contacto.
 - Tests en `__tests__/ContactTimelineFeed.test.tsx` (bloque «recorrido (F4)»).
 
 ### Compartido
@@ -158,11 +158,16 @@ exhaustividad.
 ## Deuda
 - **«Pausar cadencia» no se pinta**: no existe endpoint. Cuando llegue, la fila
   «Cadencia» de `ContactJourneyCard.tsx` gana la acción (`hover-reveal`).
-- **Deshacer en el historial y el estado del deal** (`ContactTimelineFeed.tsx`,
-  cálculo de `closedDealIds`): se deduce de los eventos cargados en la página;
-  si el `deal_won` quedó en una página posterior, el botón se pinta y el
-  servidor responde 409 `crm/stage_change_not_revertible` (se muestra el
-  mensaje). Se cierra cuando el payload traiga `revertible`.
+- **Deshacer confía en el servidor**: la card y el historial obedecen a
+  `revertible` (el servidor lo pone en true SOLO en el último movimiento no
+  deshecho de un deal abierto, tanto en `last_move` como en
+  `payload.revertible` del timeline). Las heurísticas de
+  `ContactTimelineFeed.tsx` (`revertedIds`, `closedDealIds`, `paid` /
+  `stage_deleted` vía `isRevertibleMove`) son solo RESPALDO para entradas sin
+  el campo; se pueden borrar cuando todo el historial en producción lo lleve.
+- **«vuelve a {etapa}» en la card** (`ContactJourneyCard.tsx`,
+  `lastMoveFromStageName`): lee `last_move.from_stage_name` con tolerancia
+  porque aún no está en `schema.d.ts`; al regenerarlo, quitar el cast.
 - `templateName` prefiere el nombre del catálogo del cliente (`NICHES`, 9
   nichos) y cae al `name` del servidor para `software_saas` y `retail_tech`;
   no se tocó `onboarding/domain/niches.ts`.

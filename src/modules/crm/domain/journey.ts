@@ -18,7 +18,6 @@ export type JourneyStageDTO = JourneyDTO["stages"][number];
 /** `null` en la etapa = no gobierna el seguimiento. */
 export type JourneyCadenceDTO = NonNullable<JourneyStageDTO["cadence"]>;
 export type JourneyTemplateDTO = JourneyDTO["templates"][number];
-export type JourneyTemplateStageDTO = JourneyTemplateDTO["stages"][number];
 /** El PUT acepta una lista PARCIAL: el editor manda solo la etapa que cambió. */
 export type PutJourneyDTO = Schemas["UpdateJourneyDto"];
 export type PutJourneyStageDTO = PutJourneyDTO["stages"][number];

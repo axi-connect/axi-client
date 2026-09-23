@@ -16,7 +16,7 @@ import { nicheByCode } from "@/modules/onboarding/public";
  * Una línea por plantilla: sus primeras etapas y la cadencia más exigente.
  * «Cita · Asistió · Tratamiento · 4 intentos · 2 días».
  */
-export function templateSummary(template: JourneyTemplateDTO): string {
+function templateSummary(template: JourneyTemplateDTO): string {
   const names = template.stages.slice(0, 3).map((stage) => stage.name);
   const cadence = template.stages
     .map((stage) => stage.cadence)
@@ -72,8 +72,12 @@ export function JourneyTemplatePicker({
   }, [templates, tenantNiche]);
 
   const current = templates.find((template) => template.niche_code === currentCode) ?? null;
-  const choice = selected ?? currentCode ?? tenantNiche ?? ordered[0]?.niche_code ?? null;
-  const choiceIndex = Math.max(0, ordered.findIndex((template) => template.niche_code === choice));
+  // Sin elección válida (la plantilla aplicada ya no se ofrece y el nicho del
+  // tenant tampoco) no se marca nada: «Aplicar» queda deshabilitado.
+  const known = (code: string | null) =>
+    code !== null && ordered.some((template) => template.niche_code === code) ? code : null;
+  const choice = known(selected) ?? known(currentCode) ?? known(tenantNiche);
+  const choiceIndex = ordered.findIndex((template) => template.niche_code === choice);
 
   const secondary =
     current === null
@@ -148,7 +152,8 @@ export function JourneyTemplatePicker({
                   type="button"
                   role="radio"
                   aria-checked={checked}
-                  tabIndex={checked ? 0 : -1}
+                  // Sin marcado, el primero recibe el Tab (roving tabindex).
+                  tabIndex={checked || (choiceIndex === -1 && index === 0) ? 0 : -1}
                   disabled={busy}
                   onClick={() => setSelected(template.niche_code)}
                   onKeyDown={(event) => {

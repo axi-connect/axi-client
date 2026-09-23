@@ -77,9 +77,16 @@ describe("ContactJourneyCard", () => {
     expect(screen.getByText("el agente Sofía")).toBeInTheDocument();
     expect(screen.getByText(/«Pidió la cotización del tratamiento completo»/)).toBeInTheDocument();
     expect(screen.getByText("intento 1 de 4")).toBeInTheDocument();
-    expect(screen.getByText(/próximo el .* · Mensaje/)).toBeInTheDocument();
+    expect(screen.getByText(/próximo el .* · mensaje/)).toBeInTheDocument();
     // La pausa de la cadencia no tiene endpoint todavía: no se pinta un botón hueco.
     expect(screen.queryByRole("button", { name: /Pausar/ })).not.toBeInTheDocument();
+  });
+
+  it("sin from_stage_name el modal dice «a la etapa anterior»", async () => {
+    getContactJourney.mockResolvedValue(journey());
+    render(<ContactJourneyCard contactId="c1" canManage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
+    expect(lastModal?.description).toMatch(/vuelve a la etapa anterior/);
   });
 
   it("sin oportunidad abierta, una frase", async () => {
@@ -145,19 +152,37 @@ describe("ContactJourneyCard", () => {
     unmount();
 
     revertStageChange.mockResolvedValue(undefined);
-    // Tras deshacer, el servidor ya no devuelve ese movimiento en last_move.
+    // Forma REAL tras deshacer: last_move pasa a ser el movimiento ANTERIOR,
+    // marcado revertible:false (solo el último no deshecho se deshace).
     getContactJourney.mockReset();
     getContactJourney
-      .mockResolvedValueOnce(journey())
-      .mockResolvedValue(journey({ last_move: null, deal: { ...journey().deal!, ai_moves_paused: true } }));
+      .mockResolvedValueOnce(
+        journey({ last_move: { ...journey().last_move!, from_stage_name: "Cita agendada" } as never }),
+      )
+      .mockResolvedValue(
+        journey({
+          stage: { ...journey().stage!, name: "Cita agendada", stage_kind: "meeting" },
+          deal: { ...journey().deal!, ai_moves_paused: true },
+          last_move: {
+            event_id: "ev0",
+            actor_type: "system",
+            actor_name: null,
+            reason: null,
+            rule_code: "appointment_booked",
+            at: new Date().toISOString(),
+            revertible: false,
+          },
+        }),
+      );
     const changed = jest.fn();
     window.addEventListener("crm:journey:changed", changed);
     render(<ContactJourneyCard contactId="c1" canManage />);
     fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
 
     expect(lastModal?.title).toBe("¿Deshacer el paso a Propuesta?");
-    // Lo movió la IA: el aviso dice que sus movimientos quedan en pausa.
+    // Lo movió la IA: el aviso dice que sus movimientos quedan en pausa, y a dónde vuelve.
     expect(lastModal?.description).toMatch(/quedan en pausa/);
+    expect(lastModal?.description).toMatch(/vuelve a Cita agendada/);
     // Deshacer no es destructivo: acción con la variante por defecto.
     expect(lastModal?.actions?.find((action) => action.label === "Deshacer")).not.toHaveProperty("variant");
     lastModal?.actions?.find((action) => action.label === "Deshacer")?.onClick?.();
@@ -165,9 +190,11 @@ describe("ContactJourneyCard", () => {
     await waitFor(() => expect(revertStageChange).toHaveBeenCalledWith("d1", "ev1"));
     await waitFor(() => expect(changed).toHaveBeenCalled());
     expect((changed.mock.calls[0][0] as CustomEvent).detail).toEqual({ contactId: "c1", dealId: "d1" });
-    // El evento recarga la card: ya no hay «La movió» ni Deshacer, y la IA quedó en pausa.
+    // El evento recarga la card: «La movió» es ahora la regla anterior, sin
+    // Deshacer (revertible:false), y la IA quedó en pausa.
     await waitFor(() => expect(getContactJourney.mock.calls.length).toBeGreaterThanOrEqual(2));
-    await waitFor(() => expect(screen.queryByText("el agente Sofía")).not.toBeInTheDocument());
+    expect(await screen.findByText("una regla")).toBeInTheDocument();
+    expect(screen.getByText(/regla: cita agendada/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
     expect(screen.getByText("Movimientos de la IA en pausa")).toBeInTheDocument();
     window.removeEventListener("crm:journey:changed", changed);
