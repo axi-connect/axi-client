@@ -1,10 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Calendar, ListChecks, MessageCircle, ShoppingCart, Target } from "lucide-react";
+import {
+  Calendar,
+  ListChecks,
+  MessageCircle,
+  Route,
+  ShoppingCart,
+  Target,
+  UserRound,
+} from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { relativeTime } from "@/core/lib/relative-time";
+import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import {
   AiBadge,
@@ -19,7 +28,16 @@ import {
   type TimelineEntryDTO,
   type TimelineSource,
 } from "@/modules/crm/domain/contact";
+import { CONTACT_STAGE_LABELS, type ContactLifecycleStage } from "@/modules/crm/domain/enums";
+import {
+  JOURNEY_CHANGED_EVENT,
+  STAGE_KIND_LABELS,
+  journeyRuleLabel,
+  lifecycleSourceLabel,
+  type StageKind,
+} from "@/modules/crm/domain/journey";
 import { getContactTimeline } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
+import { revertStageChange } from "@/modules/crm/infrastructure/services/journey-service.adapter";
 
 /**
  * Historial 360 multi-fuente del contacto (`GET /crm/contacts/:id/timeline`):
@@ -42,6 +60,7 @@ const SOURCE_VISUAL: Record<
   orders: { icon: ShoppingCart, tone: "success" },
   conversations: { icon: MessageCircle, tone: "neutral" },
   appointments: { icon: Calendar, tone: "warning" },
+  lifecycle: { icon: UserRound, tone: "neutral" },
 };
 
 /** Entidad del evento; el backend garantiza title salvo shapes legacy. */
@@ -55,10 +74,105 @@ function isAiEntry(entry: TimelineEntryDTO): boolean {
   return byType === "ai_agent";
 }
 
+function str(value: unknown): string | null {
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+function isStageKind(value: unknown): value is StageKind {
+  return typeof value === "string" && value in STAGE_KIND_LABELS;
+}
+
+function isLifecycleStage(value: unknown): value is ContactLifecycleStage {
+  return typeof value === "string" && value in CONTACT_STAGE_LABELS;
+}
+
+/** El nombre de la etapa destino, o su tipo si el servidor no mandó el nombre. */
+function stageLabel(name: unknown, kind: unknown): string | null {
+  return str(name) ?? (isStageKind(kind) ? STAGE_KIND_LABELS[kind] : null);
+}
+
+/**
+ * Las entradas del RECORRIDO se cuentan en primera persona del embudo («Pasó
+ * a Propuesta — agente IA · «razón»»), no como «Oportunidad · X — Cambio de
+ * etapa»: quien lee el historial quiere saber a dónde fue y quién la llevó.
+ * El resto de fuentes conserva el `title — subtitle` del servidor.
+ */
+function journeyItem(
+  entry: TimelineEntryDTO,
+): Pick<TimelineItem, "icon" | "tone" | "title" | "description"> | null {
+  const payload = entry.payload ?? {};
+  if (entry.source === "lifecycle") {
+    const from = isLifecycleStage(payload.from_stage) ? CONTACT_STAGE_LABELS[payload.from_stage] : null;
+    const to = isLifecycleStage(payload.to_stage) ? CONTACT_STAGE_LABELS[payload.to_stage] : null;
+    if (to === null) return null;
+    const why = str(payload.reason) ?? lifecycleSourceLabel(str(payload.source_event));
+    return {
+      icon: UserRound,
+      tone: "neutral",
+      title: (
+        <>
+          <span className="font-medium">
+            {from === null ? to : `${from} → ${to}`}
+          </span>
+          {why !== null && <span className="text-muted-foreground"> ({why})</span>}
+        </>
+      ),
+    };
+  }
+  if (entry.source !== "deals") return null;
+
+  if (entry.type === "deal_stage_changed") {
+    const to = stageLabel(payload.to_stage_name, payload.to_kind);
+    if (to === null) return null;
+    const reason = str(payload.reason);
+    const rule = journeyRuleLabel(str(payload.rule_code));
+    const actor = payload.actor_type;
+    const who =
+      actor === "ai_agent"
+        ? `agente IA${reason === null ? "" : ` · «${reason}»`}`
+        : actor === "system"
+          ? rule === null
+            ? "regla automática"
+            : `regla: ${rule}`
+          : reason === null
+            ? null
+            : `«${reason}»`;
+    return {
+      icon: Route,
+      // Violeta solo cuando la movió la IA: es su color, no el del recorrido.
+      tone: actor === "ai_agent" ? "violet" : "neutral",
+      title: (
+        <>
+          <span className="font-medium">Pasó a {to}</span>
+          {who !== null && <span className="text-muted-foreground"> — {who}</span>}
+        </>
+      ),
+      description: entryTitle(entry),
+    };
+  }
+
+  if (entry.type === "deal_stage_reverted") {
+    // El paso deshecho iba HACIA la etapa de la que ahora vuelve (`from`).
+    const undone = stageLabel(payload.from_stage_name, payload.from_kind);
+    return {
+      icon: Route,
+      tone: "neutral",
+      title: (
+        <span className="font-medium">
+          {undone === null ? "Se deshizo un cambio de etapa" : `Se deshizo el paso a ${undone}`}
+        </span>
+      ),
+      description: entryTitle(entry),
+    };
+  }
+  return null;
+}
+
 export function ContactTimelineFeed({
   contactId,
   version = 0,
   compact = false,
+  canRevert = false,
   header,
   className,
 }: {
@@ -67,10 +181,13 @@ export function ContactTimelineFeed({
   version?: number;
   /** Rail estrecho: chips en fila con scroll horizontal en vez de envolver. */
   compact?: boolean;
+  /** `crm:manage`: pinta «Deshacer» en los cambios de etapa aún no deshechos. */
+  canRevert?: boolean;
   /** Contenido a la izquierda de los chips (título, acciones) en vistas de página. */
   header?: React.ReactNode;
   className?: string;
 }) {
+  const { showAlert, showModal, closeModal } = useAlert();
   const [enabled, setEnabled] = useState<TimelineSource[]>([...TIMELINE_SOURCES]);
   const [entries, setEntries] = useState<TimelineEntryDTO[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -108,6 +225,40 @@ export function ContactTimelineFeed({
     void load(enabled);
   }, [enabled, load, version]);
 
+  // Un «Deshacer» desde la card «Recorrido» (o desde aquí) cambia el historial.
+  useEffect(() => {
+    const onChanged = () => void load(enabled);
+    window.addEventListener(JOURNEY_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(JOURNEY_CHANGED_EVENT, onChanged);
+  }, [enabled, load]);
+
+  const revert = (dealId: string, eventId: string, stageName: string, byAi: boolean) => {
+    showModal({
+      title: `¿Deshacer el paso a ${stageName}?`,
+      description: byAi
+        ? "La oportunidad vuelve a la etapa anterior y queda en el historial. Los movimientos del agente sobre esta oportunidad quedan en pausa hasta que los reanudes."
+        : "La oportunidad vuelve a la etapa anterior y queda en el historial.",
+      actions: [
+        { label: "Cancelar", variant: "outline" },
+        {
+          label: "Deshacer",
+          variant: "destructive",
+          onClick: () => {
+            closeModal();
+            revertStageChange(dealId, eventId)
+              .then(() => {
+                showAlert({ tone: "success", title: "Movimiento deshecho", autoCloseMs: 2000, open: true });
+                window.dispatchEvent(new CustomEvent(JOURNEY_CHANGED_EVENT));
+              })
+              .catch((err: unknown) => {
+                showAlert({ tone: "error", title: errorMessage(err, "No se pudo deshacer"), open: true });
+              });
+          },
+        },
+      ],
+    });
+  };
+
   const toggleSource = (source: TimelineSource) => {
     setEntries([]);
     setCursor(null);
@@ -120,21 +271,54 @@ export function ContactTimelineFeed({
     );
   };
 
+  // Un `stage_changed` ya deshecho no ofrece «Deshacer» otra vez: el
+  // `stage_reverted` que lo deshizo apunta a él con `reverted_event_id`.
+  const revertedIds = new Set(
+    entries
+      .map((entry) => (entry.type === "deal_stage_reverted" ? str(entry.payload?.reverted_event_id) : null))
+      .filter((id): id is string => id !== null),
+  );
+
   /* Estructura uniforme entidad + novedad: `title` en bold y `subtitle` en
-     secundario — misma forma para toda fuente (contrato D4 del backend). */
-  const timelineItems: TimelineItem[] = entries.map((entry) => ({
-    id: `${entry.source}-${entry.id}`,
-    icon: SOURCE_VISUAL[entry.source].icon,
-    tone: SOURCE_VISUAL[entry.source].tone,
-    title: (
-      <>
-        <span className="font-medium">{entryTitle(entry)}</span>
-        {entry.subtitle && <span className="text-muted-foreground"> — {entry.subtitle}</span>}
-      </>
-    ),
-    meta: `${TIMELINE_SOURCE_LABELS[entry.source]} · ${relativeTime(entry.occurred_at)}`,
-    badge: isAiEntry(entry) ? <AiBadge /> : undefined,
-  }));
+     secundario — misma forma para toda fuente (contrato D4 del backend). Las
+     entradas del recorrido se cuentan a su manera (`journeyItem`). */
+  const timelineItems: TimelineItem[] = entries.map((entry) => {
+    const journey = journeyItem(entry);
+    const payload = entry.payload ?? {};
+    const dealId = str(payload.deal_id);
+    const eventId = str(payload.event_id) ?? entry.id;
+    const revertible =
+      canRevert &&
+      entry.type === "deal_stage_changed" &&
+      dealId !== null &&
+      !revertedIds.has(eventId);
+    const toName = stageLabel(payload.to_stage_name, payload.to_kind);
+    return {
+      id: `${entry.source}-${entry.id}`,
+      icon: journey?.icon ?? SOURCE_VISUAL[entry.source].icon,
+      tone: journey?.tone ?? SOURCE_VISUAL[entry.source].tone,
+      title: journey?.title ?? (
+        <>
+          <span className="font-medium">{entryTitle(entry)}</span>
+          {entry.subtitle && <span className="text-muted-foreground"> — {entry.subtitle}</span>}
+        </>
+      ),
+      description: journey?.description,
+      meta: `${TIMELINE_SOURCE_LABELS[entry.source]} · ${relativeTime(entry.occurred_at)}`,
+      badge: isAiEntry(entry) ? <AiBadge /> : undefined,
+      action: revertible ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 rounded-full text-xs"
+          onClick={() => revert(dealId, eventId, toName ?? "la etapa", payload.actor_type === "ai_agent")}
+        >
+          Deshacer
+        </Button>
+      ) : undefined,
+    };
+  });
 
   return (
     <div className={className}>

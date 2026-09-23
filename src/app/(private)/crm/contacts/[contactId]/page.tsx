@@ -23,6 +23,7 @@ import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/Conta
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
+import { ContactJourneyCard } from "@/modules/crm/ui/components/contact-detail/ContactJourneyCard";
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
 import { TagsEditor } from "@/modules/crm/ui/components/contact-detail/TagsEditor";
@@ -52,6 +53,9 @@ export default function Contact360Page({
   const { hasPermission } = useAuth();
   // F2: «Programar seguimiento» solo para quien puede armar la automatización.
   const canAutomate = hasPermission("crm:automate");
+  // Recorrido (F4 comercial): deshacer un cambio de etapa escribe sobre la
+  // oportunidad con rastro auditado; pide el permiso de configurar el CRM.
+  const canManage = hasPermission("crm:manage");
   const [bundle, setBundle] = useState<ContactBundle | null>(null);
 
   const load = useCallback(async () => {
@@ -103,6 +107,8 @@ export default function Contact360Page({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
+          {/* Recorrido (F4): la etapa viva de su oportunidad, sobre el score. */}
+          <ContactJourneyCard contactId={contactId} canManage={canManage} />
           <ScorePanel profile={bundle.profile} />
           <CopilotPanel contactId={contactId} />
         </div>
@@ -120,6 +126,7 @@ export default function Contact360Page({
 
       <ContactTimeline
         contactId={contactId}
+        canRevert={canManage}
         createActivityHref={`/crm/tasks/create?contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`}
         {...(canAutomate
           ? {
