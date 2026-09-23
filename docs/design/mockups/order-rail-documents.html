@@ -244,82 +244,129 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 
 
 /* ── Página del pedido: contenido + rail (idioma de F3) ─────────────────── */
-.split{display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:100%}
-.content{padding:26px 30px 40px;display:flex;flex-direction:column;gap:22px}
-.page-head h1{font-size:25px;letter-spacing:-.02em;font-family:var(--font-body);font-weight:600}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 420px;min-height:100%}
+.content{padding:28px 34px 40px;display:flex;flex-direction:column;gap:24px}
+.page-head h1{font-size:26px;letter-spacing:-.02em;font-family:var(--font-body);font-weight:600}
 .page-head .sub{font-size:13.5px;color:var(--muted-foreground);margin-top:3px}
 .section-title{font-size:15px;font-weight:600;letter-spacing:-.01em}
-.section-sub{font-size:13px;color:var(--muted-foreground);margin-top:2px;max-width:60ch}
-.sheet{width:400px;border-left:1px solid var(--border);background:var(--background);display:flex;flex-direction:column;min-height:100%;position:relative}
-.sheet-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 24px 0}
+.section-sub{font-size:13px;color:var(--muted-foreground);margin-top:2px;max-width:60ch;line-height:1.55}
+.sheet{width:420px;border-left:1px solid var(--border);background:var(--background);display:flex;flex-direction:column;min-height:100%;position:relative}
+.sheet-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 26px 0}
 .sheet-top .id{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground);letter-spacing:.01em}
-.sheet-top .who{font-size:16px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
-.sheet-top .where{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
-.sheet-body{padding:0 24px 24px;display:flex;flex-direction:column;gap:22px}
-.headline{padding-top:18px}
+.sheet-top .who{font-size:17px;font-weight:600;letter-spacing:-.012em;margin-top:2px}
+.sheet-top .where{font-size:12.5px;color:var(--muted-foreground);margin-top:2px}
+.sheet-body{padding:0 26px 26px;display:flex;flex-direction:column;gap:24px}
+.headline{padding-top:20px}
 .headline .lede{font-size:13px;color:var(--muted-foreground)}
 .headline .amount{font-family:var(--font-heading);font-size:40px;line-height:1.05;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin-top:4px}
 .headline .of{font-size:13px;color:var(--muted-foreground);margin-top:6px;font-variant-numeric:tabular-nums}
 .headline .of b{color:var(--foreground);font-weight:500}
 .meter{height:6px;border-radius:999px;margin-top:14px;overflow:hidden;background:linear-gradient(90deg,var(--axi-brand) 0 30%,var(--background) 30% 30.5%,var(--secondary) 30.5% 100%)}
 
-/* ── Lista agrupada (una superficie, separadores hacia dentro) ─────────── */
-.group{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--background)}
-.ghead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 4px}
-.ghead .t{font-size:12.5px;color:var(--muted-foreground)}
-.ghead .btn.xs{height:26px;padding:0 9px;font-size:12px;border-radius:9px}
+/* ── Sección: título en mayúsculas pequeñas como el rail real ──────────── */
+.rsec{display:flex;flex-direction:column;gap:10px}
+.rsec-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px}
+.rsec-h h3{font-family:var(--font-body);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);font-weight:600}
+.rsec-h .btn.xs{height:28px;padding:0 11px;font-size:12.5px;border-radius:999px}
+.rsec-h .btn.xs.outline{border-color:var(--border)}
+
+/* ── Lista agrupada ────────────────────────────────────────────────────── */
+.group{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--background)}
 .row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 16px;position:relative}
 .row + .row::before{content:"";position:absolute;left:56px;right:0;top:0;height:1px;background:var(--border-soft)}
 .row .dot{width:8px;height:8px;border-radius:50%;justify-self:center}
-.row .dot.ok{background:var(--axi-success)} .row .dot.wait{background:var(--axi-warning)} .row .dot.off{background:var(--border)}
+.row .dot.ok{background:var(--axi-success)} .row .dot.off{background:var(--border)}
 .row .t{font-size:14px;font-weight:500}
 .row .m{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
 .row .v{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;text-align:right}
 .row .v small{display:block;font-size:11.5px;font-weight:400;color:var(--muted-foreground);margin-top:1px}
 
-/* ── Documentos: la fila es el asiento ─────────────────────────────────── */
-.doc{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;position:relative}
-.doc + .doc::before{content:"";position:absolute;left:62px;right:0;top:0;height:1px;background:var(--border-soft)}
-.doc .ty{width:34px;height:34px;border-radius:10px;background:var(--secondary);display:grid;place-items:center;color:var(--muted-foreground)}
-.doc .num{font-family:var(--font-mono);font-size:12.5px;font-weight:500;letter-spacing:.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.doc .num .kind{font-family:var(--font-body);font-size:13.5px;font-weight:500;letter-spacing:0}
-.doc .m{font-size:12.5px;color:var(--muted-foreground);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.doc .m .st{display:inline-flex;align-items:center;gap:5px}
-.doc .m .st i{width:7px;height:7px;border-radius:50%;background:var(--muted-foreground);opacity:.5;display:inline-block}
-.doc .m .st.ok i{background:var(--axi-success);opacity:1}
-.doc .m .st.busy i{background:var(--axi-info);opacity:1;animation:pulse 1.4s ease-in-out infinite}
-.doc .m .st.bad i{background:var(--axi-destructive);opacity:1}
-.doc .m .st.old i{background:var(--axi-warning);opacity:1}
-.doc .m .sep{opacity:.5}
-.doc .acts{display:flex;gap:2px}
-.doc .acts .btn.xs{height:28px;padding:0 9px;font-size:12.5px;color:var(--muted-foreground);border-radius:9px}
-.doc .acts .btn.xs.primary{color:var(--foreground);font-weight:500}
-.doc .acts .btn.icon.xs{width:28px;padding:0}
-.doc.busy .ty{color:var(--axi-info)}
-.doc.bad .ty{background:color-mix(in srgb, var(--axi-destructive) 12%, var(--background));color:var(--axi-destructive)}
-.doc.dim{opacity:.62}
-.doc .why{grid-column:2 / -1;font-size:12.5px;color:var(--muted-foreground);line-height:1.5;margin-top:-4px;padding-bottom:2px}
-.doc .why b{color:var(--foreground);font-weight:500}
-.gfoot{padding:10px 16px 12px;font-size:12px;color:var(--muted-foreground);line-height:1.5;border-top:1px solid var(--border-soft)}
-.gfoot b{color:var(--foreground);font-weight:500}
-.gvoid{display:flex;align-items:center;gap:12px;padding:14px 16px 16px}
-.gvoid .vic{width:38px;height:38px;border-radius:12px;background:var(--secondary);display:grid;place-items:center;color:var(--muted-foreground);flex:none}
-.gvoid .t{font-size:13.5px;font-weight:500}
-.gvoid .s{font-size:12.5px;color:var(--muted-foreground);margin-top:1px;line-height:1.45}
+/* ── El papelito: blanco también en oscuro, con la línea del tipo ──────── */
+.paper{width:30px;height:38px;background:#fff;border:1px solid #e4e4e7;border-radius:3px;position:relative;box-shadow:0 1px 2px rgb(0 0 0/.08),0 4px 10px rgb(0 0 0/.08);flex:none;overflow:hidden}
+.paper::before{content:"";position:absolute;left:5px;right:5px;top:6px;height:2px;background:var(--pa,#e65759);border-radius:1px}
+.paper::after{content:"";position:absolute;left:5px;right:9px;top:12px;height:18px;background:repeating-linear-gradient(#e4e4e7 0 1.5px,transparent 1.5px 4.5px)}
+.paper.busy::after{background:repeating-linear-gradient(#f1f1f3 0 1.5px,transparent 1.5px 4.5px)}
+.paper.busy .fill{position:absolute;left:5px;right:9px;top:12px;height:0;overflow:hidden;background:repeating-linear-gradient(#e4e4e7 0 1.5px,transparent 1.5px 4.5px);animation:fillpaper 2.4s ease-in-out infinite}
+@keyframes fillpaper{0%{height:0}70%{height:18px}100%{height:18px}}
+.paper.bad::before{background:var(--axi-destructive)}
+.paper.bad .x{position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-radius:7px 0 3px 0;background:var(--axi-destructive);color:#fff;display:grid;place-items:center}
+.paper.gone{opacity:.55;transform:rotate(-3deg)}
+.paper.empty::before,.paper.empty::after{opacity:.35}
 
-/* ── El menú «Emitir»: solo lo que se emite a mano ─────────────────────── */
-.menu{position:absolute;right:24px;width:300px;border:1px solid var(--border);border-radius:14px;background:var(--background);box-shadow:var(--shadow-overlay);padding:6px;z-index:6}
-.menu .mh{font-size:11.5px;color:var(--muted-foreground);padding:8px 10px 4px;font-weight:500;letter-spacing:.02em}
-.mi{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 10px;border-radius:10px}
+/* ── La fila del documento ─────────────────────────────────────────────── */
+.doc{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:14px;align-items:center;padding:13px 16px;position:relative}
+.doc + .doc::before{content:"";position:absolute;left:60px;right:0;top:0;height:1px;background:var(--border-soft)}
+.doc .t{font-size:14.5px;font-weight:500;display:flex;align-items:center;gap:8px;letter-spacing:-.005em}
+.doc .t .chk{color:var(--axi-success);display:inline-flex}
+.doc .m{font-size:12.5px;color:var(--muted-foreground);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.doc .m .num{font-family:var(--font-mono);font-size:12px;letter-spacing:.01em;color:var(--foreground);opacity:.8}
+.doc .m .sep{opacity:.45}
+.doc .m .st{display:inline-flex;align-items:center;gap:5px;font-weight:500}
+.doc .m .st.busy{color:var(--axi-info)} .doc .m .st.bad{color:var(--axi-destructive)} .doc .m .st.old{color:var(--axi-warning)}
+.doc .acts{display:flex;gap:2px;align-items:center}
+.doc .acts .btn.xs{height:30px;padding:0 11px;font-size:13px;border-radius:999px;color:var(--foreground)}
+.doc .acts .btn.icon.xs{width:30px;padding:0;color:var(--muted-foreground)}
+.doc .acts .btn.xs.outline{border-color:var(--border)}
+.doc.dim .t,.doc.dim .m{opacity:.6}
+.doc .why{grid-column:2 / -1;display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--muted-foreground);line-height:1.5;margin-top:2px}
+.doc .why .ic{flex:none;margin-top:2px}
+.doc .why.old .ic{color:var(--axi-warning)} .doc .why.bad .ic{color:var(--axi-destructive)}
+.doc .why b{color:var(--foreground);font-weight:500}
+.doc .why .btn.xs{height:26px;padding:0 9px;font-size:12px;border-radius:999px;margin-left:auto;flex:none}
+.doc .prog{grid-column:1 / -1;height:2px;border-radius:2px;background:var(--secondary);overflow:hidden;margin:2px 0 -4px}
+.doc .prog i{display:block;height:100%;width:40%;background:var(--axi-info);border-radius:2px;animation:slide 1.6s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.gfoot{padding:11px 16px 13px;font-size:12px;color:var(--muted-foreground);line-height:1.5;border-top:1px solid var(--border-soft)}
+.gfoot b{color:var(--foreground);font-weight:500}
+.gvoid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;padding:18px 18px 20px}
+.gvoid .stack{position:relative;width:44px;height:52px}
+.gvoid .stack .paper{position:absolute;left:0;top:6px}
+.gvoid .stack .paper:nth-child(2){left:8px;top:0;transform:rotate(4deg)}
+.gvoid .t{font-size:14.5px;font-weight:500;letter-spacing:-.005em}
+.gvoid .s{font-size:12.5px;color:var(--muted-foreground);margin-top:3px;line-height:1.5}
+.gvoid .s b{color:var(--foreground);font-weight:500}
+
+/* ── Menú «…» de la fila y popover «Emitir» ────────────────────────────── */
+.pop{position:absolute;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb, var(--background) 92%, transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow-overlay);padding:8px;z-index:6}
+.pop .ph{font-size:11.5px;color:var(--muted-foreground);padding:8px 12px 6px;font-weight:500;letter-spacing:.02em}
+.mi{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:12px;width:100%;text-align:left}
 .mi:hover{background:var(--secondary)}
-.mi .ty{width:30px;height:30px;border-radius:9px;background:var(--secondary);display:grid;place-items:center;color:var(--muted-foreground)}
-.mi .t{font-size:13.5px;font-weight:500}
-.mi .d{font-size:12px;color:var(--muted-foreground);line-height:1.4;margin-top:1px}
-.mi .d .mono{font-size:11.5px}
-.mi.done .ty{color:var(--axi-success)}
-.mi .go{font-size:12px;color:var(--muted-foreground);white-space:nowrap}
-.menu .msep{height:1px;background:var(--border-soft);margin:6px 4px}
-.menu .mnote{font-size:11.5px;color:var(--muted-foreground);padding:6px 10px 8px;line-height:1.45}
+.mi .t{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.mi .d{font-size:12.5px;color:var(--muted-foreground);line-height:1.45;margin-top:1px}
+.mi .num{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.mi .num .ic{opacity:.6}
+.mi.done .t .chk{color:var(--axi-success);display:inline-flex}
+.mi.done .num{color:var(--foreground)}
+.pop .msep{height:1px;background:var(--border-soft);margin:6px 8px}
+.pop .mnote{font-size:12px;color:var(--muted-foreground);padding:6px 12px 8px;line-height:1.5}
+.pop .mnote b{color:var(--foreground);font-weight:500}
+.kmenu{width:236px;padding:6px}
+.kmenu .mi{grid-template-columns:18px minmax(0,1fr);padding:9px 12px}
+.kmenu .mi .ic{color:var(--muted-foreground)}
+.kmenu .mi.off{opacity:.5}
+.kmenu .mi .d{font-size:11.5px}
+
+/* ── Aviso discreto (glass) ────────────────────────────────────────────── */
+.toast{width:360px;grid-template-columns:30px 1fr auto;align-items:center;border-radius:18px}
+.toast .paper{width:24px;height:30px}
+.toast b{font-size:13.5px} .toast small{display:block;margin-top:1px}
+.toast .btn.xs{height:28px;border-radius:999px;padding:0 11px;font-size:12.5px}
+.toast.warn .ic{color:var(--axi-warning)}
+
+/* ── El momento: tres recortes del rail, uno al lado del otro ──────────── */
+.flow{display:grid;grid-template-columns:repeat(3,420px);gap:56px;padding:40px 60px;justify-content:center;align-items:start}
+.flow .step{display:flex;flex-direction:column;gap:14px}
+.flow .cap{display:flex;gap:12px;align-items:flex-start}
+.flow .cap .n{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:12.5px;font-weight:600;flex:none}
+.flow .cap .t{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.flow .cap .s{font-size:13px;color:var(--muted-foreground);margin-top:2px;line-height:1.55}
+.flow .crop{border:1px solid var(--border);border-radius:22px;background:var(--background);padding:22px 22px 26px;display:flex;flex-direction:column;gap:20px;position:relative;box-shadow:var(--shadow-float)}
+.flow .crop .headline{padding-top:0}
+.flow .crop .headline .amount{font-size:32px}
+.flow .arrow{position:absolute;right:-44px;top:50%;transform:translateY(-50%);color:var(--muted-foreground)}
+.flow .toast{position:static;width:auto;margin-top:2px}
+.flow-note{font-size:13px;color:var(--muted-foreground);text-align:center;padding:0 60px 40px;max-width:900px;margin:0 auto;line-height:1.6}
+.flow-note b{color:var(--foreground);font-weight:500}
 
 /* ── Contenido del pedido (F3, resumido) ───────────────────────────────── */
 .acts-list{display:flex;flex-direction:column}
@@ -332,16 +379,13 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .origin{font-size:12px;color:var(--muted-foreground);line-height:1.5}
 .origin b{color:var(--foreground);font-weight:500;font-variant-numeric:tabular-nums}
 
-/* ── La campanita (fallo) ──────────────────────────────────────────────── */
-.toast.warn .ic{color:var(--axi-warning)}
-
 /* ── Ficha del contacto (360) ──────────────────────────────────────────── */
 .wrap{max-width:1200px;margin:0 auto;padding:28px 32px 72px;display:flex;flex-direction:column;gap:18px}
 .crumbs{font-size:13px;color:var(--muted-foreground);display:flex;gap:8px;align-items:center}
 .crumbs b{color:var(--foreground);font-weight:500}
 .c360{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .c360 .col{display:flex;flex-direction:column;gap:16px}
-.card{border:1px solid var(--border);border-radius:16px;background:var(--background);padding:20px 24px}
+.card{border:1px solid var(--border);border-radius:18px;background:var(--background);padding:22px 24px}
 .card h3{font-family:var(--font-body);font-size:16px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
 .card h3 .n{font-size:14px;font-weight:400;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .card .chead{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -351,19 +395,23 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .who .sub{font-size:13px;color:var(--muted-foreground);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .fl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 12px;font-size:13.5px;margin-top:16px}
 .fl dt{color:var(--muted-foreground)} .fl dd{margin:0;font-weight:500}
-.ord{padding:12px 0;position:relative}
+.ord{padding:14px 0;position:relative}
 .ord + .ord::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--border-soft)}
 .ord .oh{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
-.ord .oh .t{font-size:14px;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ord .oh .t{font-size:14.5px;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap;letter-spacing:-.005em}
 .ord .oh .t .id{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground);font-weight:400}
-.ord .oh .s{font-size:12.5px;color:var(--muted-foreground);margin-top:1px;font-variant-numeric:tabular-nums}
+.ord .oh .s{font-size:12.5px;color:var(--muted-foreground);margin-top:2px;font-variant-numeric:tabular-nums}
 .ord .oh .s b{color:var(--foreground);font-weight:500}
-.ord .docs{margin:10px 0 0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.ord .docs .doc{padding:9px 12px;grid-template-columns:28px minmax(0,1fr) auto}
-.ord .docs .doc + .doc::before{left:52px}
-.ord .docs .doc .ty{width:28px;height:28px;border-radius:8px}
+.ord .mini{height:4px;border-radius:999px;margin-top:10px;background:linear-gradient(90deg,var(--axi-brand) 0 var(--p,30%),var(--secondary) var(--p,30%) 100%)}
+.ord .mini.full{background:var(--axi-success)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:9px;height:40px;padding:0 12px 0 8px;border:1px solid var(--border);border-radius:12px;background:var(--background);font-size:13px;font-weight:500;text-decoration:none}
+.chip:hover{background:var(--secondary)}
+.chip .paper{width:20px;height:26px;border-radius:2px}
+.chip .paper::before{top:4px;left:3px;right:3px} .chip .paper::after{top:8px;left:3px;right:6px;height:12px}
+.chip .num{font-family:var(--font-mono);font-size:11.5px;color:var(--muted-foreground);font-weight:400}
+.chip.ghost{border-style:dashed;color:var(--muted-foreground);font-weight:400}
 .deal{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;position:relative}
-.deal + .deal::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--border-soft)}
 .deal .t{font-size:14px;font-weight:500} .deal .s{font-size:12.5px;color:var(--muted-foreground);margin-top:1px}
 .deal .v{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px}
 
@@ -371,44 +419,49 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 .setwrap{max-width:1360px;margin:0 auto;padding:40px 40px 80px;display:flex;flex-direction:column;gap:26px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .topbar .ttl{font-size:19px;font-weight:600;letter-spacing:-.015em}
-.two{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:34px;align-items:start}
+.two{display:grid;grid-template-columns:minmax(0,600px) minmax(0,1fr);gap:34px;align-items:start}
 .set-title{font-size:13px;color:var(--muted-foreground);padding:0 4px 9px;font-weight:500;display:flex;align-items:center;gap:8px}
 .set-title .n{margin-left:auto;font-variant-numeric:tabular-nums}
 .set-note{font-size:12.5px;color:var(--muted-foreground);padding:10px 4px 0;line-height:1.55;max-width:64ch}
 .set-note b{color:var(--foreground);font-weight:500}
-.set{border:1px solid var(--border);border-radius:16px;background:var(--background);overflow:hidden}
-.nh{display:grid;grid-template-columns:minmax(0,1fr) 84px 130px 150px;gap:12px;padding:10px 17px 6px;font-size:11.5px;color:var(--muted-foreground);letter-spacing:.02em}
+.set{border:1px solid var(--border);border-radius:18px;background:var(--background);overflow:hidden}
+.nh{display:grid;grid-template-columns:minmax(0,1fr) 84px 130px 170px;gap:12px;padding:12px 18px 6px;font-size:11.5px;color:var(--muted-foreground);letter-spacing:.02em}
 .nh span:not(:first-child){text-align:right}
-.pfx{display:grid;grid-template-columns:minmax(0,1fr) 84px 130px 150px;gap:12px;align-items:center;padding:10px 17px;position:relative;font-size:14px}
-.pfx + .pfx::before{content:"";position:absolute;left:17px;right:0;top:0;height:1px;background:var(--border-soft)}
+.pfx{display:grid;grid-template-columns:minmax(0,1fr) 84px 130px 170px;gap:12px;align-items:center;padding:11px 18px;position:relative;font-size:14px}
+.pfx + .pfx::before{content:"";position:absolute;left:18px;right:0;top:0;height:1px;background:var(--border-soft)}
+.pfx .k{display:flex;align-items:center;gap:12px}
+.pfx .k .paper{width:22px;height:28px;border-radius:2px} .pfx .k .paper::before{top:4px;left:3px;right:3px} .pfx .k .paper::after{top:8px;left:3px;right:6px;height:13px}
 .pfx .input{height:34px;font-family:var(--font-mono);font-size:12.5px}
 .pfx .input.pre{text-transform:uppercase}
 .pfx .input.num{text-align:right;justify-content:flex-end}
 .pfx .input.readonly{background:var(--secondary);color:var(--muted-foreground);border-color:transparent}
 .pfx .ex{font-family:var(--font-mono);font-size:12.5px;color:var(--muted-foreground);text-align:right}
 .pfx .ex b{color:var(--foreground);font-weight:500}
-.pfx .lock{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground);white-space:nowrap}
+.pfx .lock{display:inline-flex;justify-self:end;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground);white-space:nowrap;height:26px;padding:0 10px;border-radius:999px;background:var(--secondary)}
 .pfx.off{opacity:.55}
 .savebar{display:flex;justify-content:flex-end;gap:8px;padding-top:6px}
-.side-note{border:1px solid var(--border);border-radius:16px;padding:18px 20px;font-size:13.5px;line-height:1.6;color:var(--muted-foreground);position:sticky;top:24px}
+.side-note{border:1px solid var(--border);border-radius:18px;padding:20px 22px;font-size:13.5px;line-height:1.6;color:var(--muted-foreground);position:sticky;top:24px}
 .side-note h4{font-family:var(--font-body);font-size:14px;font-weight:600;letter-spacing:0;color:var(--foreground);margin-bottom:6px;display:flex;gap:8px;align-items:center}
 .side-note b{color:var(--foreground);font-weight:500}
 .side-note .ex{font-family:var(--font-mono);font-size:12.5px;background:var(--secondary);border-radius:6px;padding:1px 6px;color:var(--foreground)}
 
-/* ── Móvil: el rail es un sheet ────────────────────────────────────────── */
-.mobile{width:390px;min-height:844px;margin:0 auto;background:var(--background);display:flex;flex-direction:column;position:relative;border:1px solid var(--border);border-radius:32px;overflow:hidden}
-.mobile .m-top{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 10px}
+/* ── Móvil: el rail es un sheet, «Emitir» es una hoja de acciones ──────── */
+.mobile{width:390px;min-height:844px;margin:0 auto;background:var(--background);display:flex;flex-direction:column;position:relative;border:1px solid var(--border);border-radius:34px;overflow:hidden}
+.mobile .m-top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px}
 .mobile .m-top .id{font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground)}
-.mobile .m-top .who{font-size:16px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
-.mobile .m-body{padding:0 16px 24px;display:flex;flex-direction:column;gap:16px}
+.mobile .m-top .who{font-size:17px;font-weight:600;letter-spacing:-.012em;margin-top:2px}
+.mobile .m-body{padding:0 16px 24px;display:flex;flex-direction:column;gap:18px}
 .mobile .headline .amount{font-size:34px}
 .mobile .doc{padding:12px 14px;grid-template-columns:30px minmax(0,1fr) auto}
 .mobile .doc + .doc::before{left:58px}
-.mobile .doc .ty{width:30px;height:30px}
-.mobile .doc .acts .btn.xs{padding:0 7px}
-.mobile .btn.block{width:100%;height:44px;border-radius:14px;font-size:14.5px}
+.mobile .doc .acts .btn.xs{padding:0 9px}
+.mobile .btn.block{width:100%;height:46px;border-radius:14px;font-size:14.5px}
 .grab{width:36px;height:4px;border-radius:999px;background:var(--border);margin:10px auto 0}
-.stack-24{display:flex;flex-direction:column;gap:24px}
+.asheet{position:absolute;left:0;right:0;bottom:0;background:color-mix(in srgb, var(--background) 94%, transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--border);border-radius:28px 28px 0 0;padding:10px 12px 22px;box-shadow:var(--shadow-overlay);z-index:6}
+.asheet .ph{font-size:12px;color:var(--muted-foreground);text-align:center;padding:8px 0 10px;font-weight:500}
+.asheet .mi{padding:12px 12px}
+.asheet .cancel{margin-top:8px;width:100%;height:46px;border-radius:14px}
+.scrim{position:absolute;inset:0;background:var(--scrim);z-index:5}
 
 </style>
 </head>
@@ -416,10 +469,10 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
 <div class="mk-bar">
   <span class="mk-tag">Mockup F0 · no es producto</span>
   <span>Cobros · F8 «Render PDF, emisión manual y archivo»</span>
-  <div class="mk-views" role="group" aria-label="Vistas del mockup"><button class="mk-view" data-view="pedido" aria-pressed="false">1 · En el pedido</button><button class="mk-view" data-view="emitir" aria-pressed="false">2 · Emitir</button><button class="mk-view" data-view="estados" aria-pressed="false">3 · Estados</button><button class="mk-view" data-view="vacio" aria-pressed="false">4 · Sin papeles</button><button class="mk-view" data-view="solo-ver" aria-pressed="false">5 · Solo ver</button><button class="mk-view" data-view="oscuro" aria-pressed="false">6 · Oscuro</button><button class="mk-view" data-view="contacto" aria-pressed="false">7 · Ficha del contacto</button><button class="mk-view" data-view="numeracion" aria-pressed="false">8 · Siguiente número</button><button class="mk-view" data-view="movil" aria-pressed="false">9 · Móvil</button><button class="mk-theme" id="theme">Tema</button></div>
+  <div class="mk-views" role="group" aria-label="Vistas del mockup"><button class="mk-view" data-view="pedido" aria-pressed="false">1 · En el pedido</button><button class="mk-view" data-view="momento" aria-pressed="false">2 · El momento</button><button class="mk-view" data-view="emitir" aria-pressed="false">3 · Emitir y «…»</button><button class="mk-view" data-view="acciones" aria-pressed="false">3b · Menú de la fila</button><button class="mk-view" data-view="estados" aria-pressed="false">4 · Estados</button><button class="mk-view" data-view="vacio" aria-pressed="false">5 · Sin papeles</button><button class="mk-view" data-view="solo-ver" aria-pressed="false">6 · Solo ver</button><button class="mk-view" data-view="oscuro" aria-pressed="false">7 · Oscuro</button><button class="mk-view" data-view="contacto" aria-pressed="false">8 · Ficha del contacto</button><button class="mk-view" data-view="numeracion" aria-pressed="false">9 · Siguiente número</button><button class="mk-view" data-view="movil" aria-pressed="false">10 · Móvil</button><button class="mk-theme" id="theme">Tema</button></div>
   <span class="mk-note" id="mk-note"></span>
 </div>
-<section class="view" data-view="pedido" data-note="El rail del pedido gana la sección Documentos, después de Pagos. Cada fila es un asiento: tipo, número en mono, cuándo salió y estado con punto; «Ver» abre el PDF con una URL firmada fresca. «Emitir» es la única acción coral de la sección." hidden><div class="split" style="position:relative;min-height:1000px">
+<section class="view" data-view="pedido" data-note="El rail gana la sección Documentos después de Pagos. Cada fila lleva un papelito blanco con la línea de su tipo (blanco también en oscuro, como la hoja de F7), el nombre del papel, y debajo su número en mono, cuándo salió y cuántas páginas. Una fila, una acción: «Ver» abre el PDF con URL firmada fresca; lo demás vive en «…»." hidden><div class="split" style="position:relative;min-height:1000px">
       <div class="content">
         <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
         <section>
@@ -431,7 +484,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
     </section>
         <section>
       <p class="section-title">Actividad</p>
-      <p class="section-sub">Los papeles NO escriben en el timeline del pedido en F8: viven en su sección. Aquí sigue el dinero.</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
       <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
     </section>
       </div>
@@ -447,295 +500,417 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
       <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
     </div>
-        <div class="group">
-      <div class="ghead"><span class="t">Pagos</span><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
-      <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
-    </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
       
     </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0001</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>17 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+      <span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+      <div><p class="t">Cuenta de cobro<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CC-2026-0001</span><span class="sep">·</span>17 sep</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
       
     </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-      <div><p class="num"><span class="kind">Estado de cuenta</span>EDC-2026-0003</p><p class="m"><span class="st busy"><i></i>Generando…</span><span class="sep">·</span>hoy, 9:12</p></div>
+      <span class="paper busy" style="--pa:#2563eb" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Estado de cuenta</p><p class="m"><span class="num">EDC-2026-0003</span><span class="sep">·</span>hoy, 9:12<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
       <div class="acts"></div>
-      
-    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia, aquí se dice.</p></div>
+      <div class="prog"><i></i></div>
+    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia después, aquí se dice.</p></div></section>
         <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
       </div>
       
     </aside>
-      
-    </div></section><section class="view" data-view="emitir" data-note="El menú ofrece SOLO lo que se emite a mano en F8. El contrato ya existe y lo dice con su número (uno por reserva): la idempotencia del servidor, contada antes del clic. Estado de cuenta y cuenta de cobro anuncian el número que saldrá." hidden><div class="split" style="position:relative;min-height:1000px">
-      <div class="content">
-        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
-        <section>
-      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
-      <div class="group" style="margin-top:12px">
-        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
-        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
-      </div>
-    </section>
-        <section>
-      <p class="section-title">Actividad</p>
-      <p class="section-sub">Los papeles NO escriben en el timeline del pedido en F8: viven en su sección. Aquí sigue el dinero.</p>
-      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
-    </section>
-      </div>
-      <aside class="sheet" aria-label="Pedido JX-0042">
-      <div class="sheet-top">
-        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
-        <span class="badge warn"><span class="dot"></span>Abonado</span>
-      </div>
-      <div class="sheet-body">
-        <div class="headline">
+    </div></section><section class="view" data-view="momento" data-note="La experiencia es la transición, no la lista: emitir desde el popover (que dice qué saldrá y con qué número) → la fila aparece al instante con su consecutivo mientras el papelito se rellena → cambia a lista sola, sin recargar, con un aviso discreto que ofrece «Ver». Sin pantalla de generación ni modal." hidden><div class="flow">
+      <div class="step"><div class="cap"><span class="n">1</span><div><p class="t">Emitir</p><p class="s">El popover dice qué va a salir y con qué número. Un clic; no hay formulario.</p></div></div><div class="crop"><div class="headline">
       <p class="lede">Falta por cobrar</p>
       <p class="amount">$ 15.192.205</p>
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
       <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
-    </div>
-        <div class="group">
-      <div class="ghead"><span class="t">Pagos</span><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
-      <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
-    </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span><button class="btn outline xs" aria-haspopup="menu" aria-expanded="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-      
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0001</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>17 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-      
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-      <div><p class="num"><span class="kind">Estado de cuenta</span>EDC-2026-0003</p><p class="m"><span class="st busy"><i></i>Generando…</span><span class="sep">·</span>hoy, 9:12</p></div>
-      <div class="acts"></div>
-      
-    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia, aquí se dice.</p></div>
-        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
-      </div>
-      <div class="menu" role="menu" aria-label="Emitir documento" style="top:396px">
-      <p class="mh">Emitir para JX-0042</p>
-      <button class="mi done" role="menuitem"><span class="ty"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-        <span><span class="t">Contrato</span><span class="d">Ya emitido · <span class="mono">CTR-2026-0120</span> · uno por reserva</span></span><span class="go">Ver en la lista</span></button>
-      <button class="mi" role="menuitem"><span class="ty"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-        <span><span class="t">Estado de cuenta</span><span class="d">Foto de hoy: total, cobrado, cuotas y saldo</span></span><span class="go">EDC-2026-0004</span></button>
-      <button class="mi" role="menuitem"><span class="ty"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-        <span><span class="t">Cuenta de cobro</span><span class="d">Por el saldo de $ 15.192.205 · la 2.ª de este pedido</span></span><span class="go">CC-2026-0002</span></button>
-      <div class="msep"></div>
-      <p class="mnote">El <b>recibo</b> no se emite a mano: sale solo con cada pago verificado (F9). El PDF tarda unos segundos; la fila avisa cuando está.</p>
-    </div>
-    </aside>
-      
-    </div></section><section class="view" data-view="estados" data-note="Generando late en azul; el fallo dice el motivo y ofrece Reintentar con el MISMO número (tres fallos → regenerar); «Desactualizado» es un dato en ámbar, no una alarma, y la acción honesta depende del tipo: el contrato se regenera con los mismos datos congelados. El reemplazado queda atenuado pero archivado." hidden><div class="split" style="position:relative;min-height:1000px">
-      <div class="content">
-        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
-        <section>
-      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
-      <div class="group" style="margin-top:12px">
-        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
-        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
-      </div>
-    </section>
-        <section>
-      <p class="section-title">Actividad</p>
-      <p class="section-sub">Los papeles NO escriben en el timeline del pedido en F8: viven en su sección. Aquí sigue el dinero.</p>
-      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
-    </section>
-      </div>
-      <aside class="sheet" aria-label="Pedido JX-0042">
-      <div class="sheet-top">
-        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
-        <span class="badge warn"><span class="dot"></span>Abonado</span>
-      </div>
-      <div class="sheet-body">
-        <div class="headline">
-      <p class="lede">Falta por cobrar</p>
-      <p class="amount">$ 15.192.205</p>
-      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
-    </div>
-        <div class="group">
-      <div class="ghead"><span class="t">Pagos</span><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
-      <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
-    </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-      <div><p class="num"><span class="kind">Estado de cuenta</span>EDC-2026-0003</p><p class="m"><span class="st busy"><i></i>Generando…</span><span class="sep">·</span>hoy, 9:12</p></div>
-      <div class="acts"></div>
-      
-    </div><div class="doc bad">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0002</p><p class="m"><span class="st bad"><i></i>No se pudo generar</span><span class="sep">·</span>hoy, 9:10</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reintentar</button></div>
-      <p class="why">Chromium no respondió a tiempo (<b>render_timeout</b>). Reintentar vuelve a generar el <b>mismo número</b>; tras tres intentos, la opción es regenerar.</p>
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st old"><i></i>Desactualizado</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-      <p class="why">La fecha de salida cambió el 19 sep, después de este contrato. Regenerar repite el papel con <b>los mismos datos</b>; el contrato es uno por reserva.</p>
-    </div><div class="doc dim">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0118</p><p class="m"><span class="st"><i></i>Reemplazado</span><span class="sep">·</span>16 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button></div>
-      <p class="why">Reemplazado por CTR-2026-0120. Sigue archivado: pudo haberse enviado.</p>
-    </div></div>
-        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
-      </div>
-      
-    </aside>
-      <div class="toast warn" role="status" style="bottom:auto;top:24px"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-      <div><b>No se pudo generar cuenta de cobro CC-2026-0002</b><small>El PDF no salió. Reintenta o regenera el documento desde el pedido.</small></div></div>
-    </div></section><section class="view" data-view="vacio" data-note="El vacío no es un error: es una invitación. Dice qué se puede emitir ya y qué llegará solo (el recibo, con cada pago)." hidden><div class="split" style="position:relative;min-height:1000px">
-      <div class="content">
-        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
-        <section>
-      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
-      <div class="group" style="margin-top:12px">
-        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
-        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
-      </div>
-    </section>
-        <section>
-      <p class="section-title">Actividad</p>
-      <p class="section-sub">Los papeles NO escriben en el timeline del pedido en F8: viven en su sección. Aquí sigue el dinero.</p>
-      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
-    </section>
-      </div>
-      <aside class="sheet" aria-label="Pedido JX-0042">
-      <div class="sheet-top">
-        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
-        <span class="badge warn"><span class="dot"></span>Abonado</span>
-      </div>
-      <div class="sheet-body">
-        <div class="headline">
-      <p class="lede">Falta por cobrar</p>
-      <p class="amount">$ 15.192.205</p>
-      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
-    </div>
-        <div class="group">
-      <div class="ghead"><span class="t">Pagos</span><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
-      <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
-    </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="gvoid"><span class="vic"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>
+    </div><section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="gvoid"><span class="stack"><span class="paper empty" style="--pa:#7c3aed" aria-hidden="true"></span><span class="paper empty" style="--pa:#e65759" aria-hidden="true"></span></span>
           <div><p class="t">Todavía no hay papeles de esta reserva</p>
-          <p class="s">El contrato se emite cuando quieras; el recibo llegará solo con cada pago.</p></div></div></div>
-        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
-      </div>
-      
-    </aside>
-      
-    </div></section><section class="view" data-view="solo-ver" data-note="Sin `documents:manage` (el operador) la sección existe igual: puede abrir y enviar los papeles, pero no emitir ni regenerar — el pie explica por qué. Nada se pinta deshabilitado: lo que no se puede, no está." hidden><div class="split" style="position:relative;min-height:1000px">
-      <div class="content">
-        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
-        <section>
-      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
-      <div class="group" style="margin-top:12px">
-        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
-        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
-      </div>
-    </section>
-        <section>
-      <p class="section-title">Actividad</p>
-      <p class="section-sub">Los papeles NO escriben en el timeline del pedido en F8: viven en su sección. Aquí sigue el dinero.</p>
-      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
-    </section>
-      </div>
-      <aside class="sheet" aria-label="Pedido JX-0042">
-      <div class="sheet-top">
-        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
-        <span class="badge warn"><span class="dot"></span>Abonado</span>
-      </div>
-      <div class="sheet-body">
-        <div class="headline">
+          <p class="s">Emite el <b>contrato</b> cuando quieras. El <b>recibo</b> llegará solo con cada pago verificado.</p></div></div></div></section><div class="pop" role="menu" aria-label="Emitir documento" style="position:static;width:auto;margin-top:-6px">
+      <p class="ph">Emitir para la reserva JX-0042</p>
+      <button class="mi done" role="menuitem"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+        <span><span class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></span><span class="d">Ya emitido · uno por reserva</span></span><span class="num">CTR-2026-0120</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#2563eb" aria-hidden="true"></span>
+        <span><span class="t">Estado de cuenta</span><span class="d">Total, cobrado, cuotas y saldo a hoy</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>EDC-2026-0004</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+        <span><span class="t">Cuenta de cobro</span><span class="d">Por el saldo de $ 15.192.205</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>CC-2026-0002</span></button>
+      <div class="msep"></div>
+      <p class="mnote">El <b>recibo</b> no se emite a mano: sale solo con cada pago verificado. El PDF tarda unos segundos; la fila avisa cuando está.</p>
+    </div><span class="arrow"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></div></div>
+      <div class="step"><div class="cap"><span class="n">2</span><div><p class="t">Generando</p><p class="s">La fila aparece al instante con su número; el papelito se rellena mientras el servidor pinta el PDF (segundos).</p></div></div><div class="crop"><div class="headline">
       <p class="lede">Falta por cobrar</p>
       <p class="amount">$ 15.192.205</p>
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
       <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
-    </div>
-        <div class="group">
-      <div class="ghead"><span class="t">Pagos</span><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
-      <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
-    </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span></div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button></div>
-      
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0001</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>17 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button></div>
-      
-    </div><p class="gfoot">Puedes abrir y enviar los papeles. Emitir uno nuevo es de <b>supervisión</b>: gasta un consecutivo.</p></div>
-        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
-      </div>
-      
-    </aside>
-      
-    </div></section><section class="view" data-view="oscuro" data-note="Mismos tokens; los puntos de estado son el color, nunca el fondo de la fila." hidden><div class="split" style="position:relative;min-height:1000px">
-      <div class="content">
-        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
-        <section>
-      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
-      <div class="group" style="margin-top:12px">
-        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
-        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
-      </div>
-    </section>
-        <section>
-      <p class="section-title">Actividad</p>
-      <p class="section-sub">Los papeles NO escriben en el timeline del pedido en F8: viven en su sección. Aquí sigue el dinero.</p>
-      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
-    </section>
-      </div>
-      <aside class="sheet" aria-label="Pedido JX-0042">
-      <div class="sheet-top">
-        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
-        <span class="badge warn"><span class="dot"></span>Abonado</span>
-      </div>
-      <div class="sheet-body">
-        <div class="headline">
-      <p class="lede">Falta por cobrar</p>
-      <p class="amount">$ 15.192.205</p>
-      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
-      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
-    </div>
-        <div class="group">
-      <div class="ghead"><span class="t">Pagos</span><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
-      <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
-    </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-      
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0001</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>17 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-      
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-      <div><p class="num"><span class="kind">Estado de cuenta</span>EDC-2026-0003</p><p class="m"><span class="st busy"><i></i>Generando…</span><span class="sep">·</span>hoy, 9:12</p></div>
+    </div><section class="rsec" aria-label="Documentos"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div>
+      <div class="group"><div class="doc ">
+      <span class="paper busy" style="--pa:#e65759" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Contrato</p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>ahora<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
       <div class="acts"></div>
+      <div class="prog"><i></i></div>
+    </div></div></section>
+      <p class="origin">El número ya es suyo: se asignó al emitir, antes de que exista el PDF. Si algo falla, el papel conserva su consecutivo.</p><span class="arrow"><svg class="ic " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></div></div>
+      <div class="step"><div class="cap"><span class="n">3</span><div><p class="t">Listo</p><p class="s">La fila cambia sola —sin recargar— y un aviso discreto ofrece «Ver». Enviárselo a Laura llega con la fase de envíos.</p></div></div><div class="crop"><div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div><section class="rsec" aria-label="Documentos"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div>
+      <div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>ahora<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
       
-    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia, aquí se dice.</p></div>
+    </div></div></section>
+      <div class="toast ok" role="status" style="position:static"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><b>Contrato CTR-2026-0120 listo</b><small>2 páginas · con los datos de hoy</small></div><button class="btn outline xs" >Ver</button></div></div></div>
+    </div>
+    <p class="flow-note">Lo que <b>no</b> pasa: no hay pantalla de generación, ni barra modal, ni «descargando…». El PDF se abre con una URL firmada de cinco minutos, fresca en cada clic, así que un enlace copiado no sirve mañana.</p></section><section class="view" data-view="emitir" data-note="El popover ofrece SOLO lo que se emite a mano en F8. El contrato ya existe y lo dice con su número —uno por reserva—: la idempotencia del servidor, contada antes del clic. Estado de cuenta y cuenta de cobro anuncian el número que tomarán." hidden><div class="split" style="position:relative;min-height:1000px">
+      <div class="content">
+        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
+        <section>
+      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
+      <div class="group" style="margin-top:12px">
+        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
+        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
+      </div>
+    </section>
+        <section>
+      <p class="section-title">Actividad</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
+      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
+    </section>
+      </div>
+      <aside class="sheet" aria-label="Pedido JX-0042">
+      <div class="sheet-top">
+        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
+        <span class="badge warn"><span class="dot"></span>Abonado</span>
+      </div>
+      <div class="sheet-body">
+        <div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      
+    </div><div class="doc ">
+      <span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+      <div><p class="t">Cuenta de cobro<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CC-2026-0001</span><span class="sep">·</span>17 sep</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      
+    </div><div class="doc ">
+      <span class="paper busy" style="--pa:#2563eb" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Estado de cuenta</p><p class="m"><span class="num">EDC-2026-0003</span><span class="sep">·</span>hoy, 9:12<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
+      <div class="acts"></div>
+      <div class="prog"><i></i></div>
+    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia después, aquí se dice.</p></div></section>
+        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
+      </div>
+      <div class="pop" role="menu" aria-label="Emitir documento" style="top:396px;right:26px;width:340px">
+      <p class="ph">Emitir para la reserva JX-0042</p>
+      <button class="mi done" role="menuitem"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+        <span><span class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></span><span class="d">Ya emitido · uno por reserva</span></span><span class="num">CTR-2026-0120</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#2563eb" aria-hidden="true"></span>
+        <span><span class="t">Estado de cuenta</span><span class="d">Total, cobrado, cuotas y saldo a hoy</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>EDC-2026-0004</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+        <span><span class="t">Cuenta de cobro</span><span class="d">Por el saldo de $ 15.192.205</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>CC-2026-0002</span></button>
+      <div class="msep"></div>
+      <p class="mnote">El <b>recibo</b> no se emite a mano: sale solo con cada pago verificado. El PDF tarda unos segundos; la fila avisa cuando está.</p>
+    </div>
+    </aside>
+    </div></section><section class="view" data-view="acciones" data-note="Todo lo que no es «Ver» cabe en «…»: regenerar (mismos datos, número nuevo), copiar el número y —cuando llegue F9— enviar. Lo que aún no existe se muestra atenuado con su razón, no desaparece." hidden><div class="split" style="position:relative;min-height:1000px">
+      <div class="content">
+        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
+        <section>
+      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
+      <div class="group" style="margin-top:12px">
+        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
+        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
+      </div>
+    </section>
+        <section>
+      <p class="section-title">Actividad</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
+      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
+    </section>
+      </div>
+      <aside class="sheet" aria-label="Pedido JX-0042">
+      <div class="sheet-top">
+        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
+        <span class="badge warn"><span class="dot"></span>Abonado</span>
+      </div>
+      <div class="sheet-body">
+        <div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      
+    </div><div class="doc ">
+      <span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+      <div><p class="t">Cuenta de cobro<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CC-2026-0001</span><span class="sep">·</span>17 sep</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      
+    </div><div class="doc ">
+      <span class="paper busy" style="--pa:#2563eb" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Estado de cuenta</p><p class="m"><span class="num">EDC-2026-0003</span><span class="sep">·</span>hoy, 9:12<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
+      <div class="acts"></div>
+      <div class="prog"><i></i></div>
+    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia después, aquí se dice.</p></div><div class="pop kmenu" role="menu" aria-label="Acciones del contrato" style="right:0;top:104px">
+      <button class="mi" role="menuitem"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span><span class="t">Regenerar</span><span class="d">Mismos datos, número nuevo</span></span></button>
+      <button class="mi" role="menuitem"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span><span class="t">Copiar número</span><span class="d">CTR-2026-0120</span></span></button>
+      <div class="msep"></div>
+      <button class="mi off" role="menuitem"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg><span><span class="t">Enviar a Laura</span><span class="d">Llega con la fase de envíos</span></span></button>
+    </div></section>
         <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
       </div>
       
     </aside>
+    </div></section><section class="view" data-view="estados" data-note="Generando: barra fina que avanza bajo la fila y el papelito rellenándose. Fallido: el papelito marcado, una frase con el motivo y «Reintentar» (mismo número; tres rondas → regenerar). Desactualizado: el hecho en ámbar —qué cambió y cuándo— y la acción honesta para ese tipo. Reemplazado: atenuado, pero archivado." hidden><div class="split" style="position:relative;min-height:1000px">
+      <div class="content">
+        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
+        <section>
+      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
+      <div class="group" style="margin-top:12px">
+        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
+        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
+      </div>
+    </section>
+        <section>
+      <p class="section-title">Actividad</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
+      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
+    </section>
+      </div>
+      <aside class="sheet" aria-label="Pedido JX-0042">
+      <div class="sheet-top">
+        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
+        <span class="badge warn"><span class="dot"></span>Abonado</span>
+      </div>
+      <div class="sheet-body">
+        <div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="doc ">
+      <span class="paper busy" style="--pa:#2563eb" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Estado de cuenta</p><p class="m"><span class="num">EDC-2026-0003</span><span class="sep">·</span>hoy, 9:12<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
+      <div class="acts"></div>
+      <div class="prog"><i></i></div>
+    </div><div class="doc ">
+      <span class="paper bad" style="--pa:#7c3aed" aria-hidden="true"><span class="x"><svg class="ic " width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>
+      <div><p class="t">Cuenta de cobro</p><p class="m"><span class="num">CC-2026-0002</span><span class="sep">·</span>hoy, 9:10<span class="sep">·</span><span class="st bad">No se pudo generar</span></p></div>
+      <div class="acts"></div>
+      <div class="why bad"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span>El generador no respondió a tiempo. Reintentar vuelve a producir <b>el mismo número</b>; tras tres intentos, la salida es regenerar.</span><button class="btn outline xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reintentar</button></div>
+    </div><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato</p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.<span class="sep">·</span><span class="st old">Desactualizado</span></p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      <div class="why old"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span>La salida cambió al <b>21 de marzo</b> el 19 sep, después de este contrato. Regenerar repite el papel con los mismos datos: el contrato es <b>uno por reserva</b>.</span></div>
+    </div><div class="doc dim">
+      <span class="paper gone" style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato</p><p class="m"><span class="num">CTR-2026-0118</span><span class="sep">·</span>16 sep<span class="sep">·</span><span class="st">Reemplazado</span></p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button></div>
+      <div class="why gone"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg><span>Reemplazado por CTR-2026-0120. Sigue archivado: pudo haberse enviado.</span></div>
+    </div></div></section>
+        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
+      </div>
+      <div class="toast warn" role="status" style="position:absolute;left:26px;right:26px;bottom:22px;width:auto;grid-template-columns:20px 1fr"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div><b>No se pudo generar cuenta de cobro CC-2026-0002</b><small>Reintenta desde el pedido; el número se conserva.</small></div></div>
+    </aside>
+    </div></section><section class="view" data-view="vacio" data-note="El vacío es una invitación: dos papelitos en blanco, qué se puede emitir ya y qué llegará solo (el recibo, con cada pago)." hidden><div class="split" style="position:relative;min-height:1000px">
+      <div class="content">
+        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
+        <section>
+      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
+      <div class="group" style="margin-top:12px">
+        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
+        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
+      </div>
+    </section>
+        <section>
+      <p class="section-title">Actividad</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
+      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
+    </section>
+      </div>
+      <aside class="sheet" aria-label="Pedido JX-0042">
+      <div class="sheet-top">
+        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
+        <span class="badge warn"><span class="dot"></span>Abonado</span>
+      </div>
+      <div class="sheet-body">
+        <div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="false"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="gvoid"><span class="stack"><span class="paper empty" style="--pa:#7c3aed" aria-hidden="true"></span><span class="paper empty" style="--pa:#e65759" aria-hidden="true"></span></span>
+          <div><p class="t">Todavía no hay papeles de esta reserva</p>
+          <p class="s">Emite el <b>contrato</b> cuando quieras. El <b>recibo</b> llegará solo con cada pago verificado.</p></div></div></div></section>
+        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
+      </div>
       
-    </div></section><section class="view" data-view="contacto" data-note="La card «Pedidos y documentos» del 360 monta la MISMA lista de documentos filtrada por contacto, agrupada por pedido y con el saldo delante. Un papel se archiva a nombre de la persona y sobrevive al pedido." hidden><div class="wrap">
+    </aside>
+    </div></section><section class="view" data-view="solo-ver" data-note="Sin `documents:manage` (el operador) la sección existe igual: abre y envía, pero no emite ni regenera — el pie dice por qué. Nada se pinta deshabilitado: lo que no se puede, no está." hidden><div class="split" style="position:relative;min-height:1000px">
+      <div class="content">
+        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
+        <section>
+      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
+      <div class="group" style="margin-top:12px">
+        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
+        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
+      </div>
+    </section>
+        <section>
+      <p class="section-title">Actividad</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
+      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
+    </section>
+      </div>
+      <aside class="sheet" aria-label="Pedido JX-0042">
+      <div class="sheet-top">
+        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
+        <span class="badge warn"><span class="dot"></span>Abonado</span>
+      </div>
+      <div class="sheet-body">
+        <div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3></div><div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button></div>
+      
+    </div><div class="doc ">
+      <span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+      <div><p class="t">Cuenta de cobro<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CC-2026-0001</span><span class="sep">·</span>17 sep</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button></div>
+      
+    </div><p class="gfoot">Puedes abrir y enviar los papeles. Emitir uno nuevo es de <b>supervisión</b>: gasta un consecutivo.</p></div></section>
+        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
+      </div>
+      
+    </aside>
+    </div></section><section class="view" data-view="oscuro" data-note="Mismos tokens; el papel sigue blanco y los estados son color de texto, nunca fondo de fila." hidden><div class="split" style="position:relative;min-height:1000px">
+      <div class="content">
+        <div class="page-head"><h1>Pedido JX-0042</h1><p class="sub">Laura Gómez · llegó por WhatsApp el 16 de septiembre</p></div>
+        <section>
+      <p class="section-title">Expedición Cocuy · salida del 14 de marzo</p>
+      <div class="group" style="margin-top:12px">
+        <div class="row"><span class="dot off"></span><div><p class="t">2 cupos · Cocuy, 5 días</p><p class="m">US$ 3.500 por persona</p></div><p class="v">$ 21.703.150<small>US$ 7.000</small></p></div>
+        <div class="row"><span class="dot off"></span><div><p class="t">Total del pedido</p><p class="m">Sin descuentos ni envío</p></div><p class="v">$ 21.703.150</p></div>
+      </div>
+    </section>
+        <section>
+      <p class="section-title">Actividad</p>
+      <p class="section-sub">Los papeles no escriben en el timeline del pedido: viven en su sección, con su número. Aquí sigue el dinero.</p>
+      <div class="acts-list" style="margin-top:12px"><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pago verificado</p><p class="m">$ 6.510.945 · quedaron $ 15.192.205</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div><p class="t">Total fijado en pesos</p><p class="m">US$ 7.000 a 3.100,45 (Superfinanciera)</p></div><time>16 sep, 10:24</time></div><div class="act"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><div><p class="t">Pedido confirmado</p><p class="m">2 cupos reservados para el 14 de marzo</p></div><time>16 sep, 10:18</time></div></div>
+    </section>
+      </div>
+      <aside class="sheet" aria-label="Pedido JX-0042">
+      <div class="sheet-top">
+        <div><p class="id">JX-0042</p><p class="who">Laura Gómez</p><p class="where">Expedición Cocuy · 2 cupos · sale el 14 mar</p></div>
+        <span class="badge warn"><span class="dot"></span>Abonado</span>
+      </div>
+      <div class="sheet-body">
+        <div class="headline">
+      <p class="lede">Falta por cobrar</p>
+      <p class="amount">$ 15.192.205</p>
+      <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
+      <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
+    </div>
+        <section class="rsec" aria-label="Pagos">
+      <div class="rsec-h"><h3>Pagos</h3><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button></div>
+      <div class="group">
+        <div class="row"><span class="dot ok"></span><div><p class="t">Bancolombia</p><p class="m">16 sep · verificado por Isabel</p></div><p class="v">$ 6.510.945</p></div>
+      </div>
+    </section>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      
+    </div><div class="doc ">
+      <span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+      <div><p class="t">Cuenta de cobro<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CC-2026-0001</span><span class="sep">·</span>17 sep</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+      
+    </div><div class="doc ">
+      <span class="paper busy" style="--pa:#2563eb" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Estado de cuenta</p><p class="m"><span class="num">EDC-2026-0003</span><span class="sep">·</span>hoy, 9:12<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
+      <div class="acts"></div>
+      <div class="prog"><i></i></div>
+    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia después, aquí se dice.</p></div></section>
+        <p class="origin">Cotizado en <b>US$ 7.000</b>. El total quedó fijo el 16 de septiembre a <b>3.100,45</b> por dólar.</p>
+      </div>
+      <div class="pop" role="menu" aria-label="Emitir documento" style="top:396px;right:26px;width:340px">
+      <p class="ph">Emitir para la reserva JX-0042</p>
+      <button class="mi done" role="menuitem"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+        <span><span class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></span><span class="d">Ya emitido · uno por reserva</span></span><span class="num">CTR-2026-0120</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#2563eb" aria-hidden="true"></span>
+        <span><span class="t">Estado de cuenta</span><span class="d">Total, cobrado, cuotas y saldo a hoy</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>EDC-2026-0004</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+        <span><span class="t">Cuenta de cobro</span><span class="d">Por el saldo de $ 15.192.205</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>CC-2026-0002</span></button>
+      <div class="msep"></div>
+      <p class="mnote">El <b>recibo</b> no se emite a mano: sale solo con cada pago verificado. El PDF tarda unos segundos; la fila avisa cuando está.</p>
+    </div>
+    </aside>
+    </div></section><section class="view" data-view="contacto" data-note="La card «Pedidos y documentos» del 360: cada pedido con su barra de cobro y sus papeles como fichas con el papelito. Es la misma lista de documentos filtrada por persona: un papel se archiva a su nombre y sobrevive al pedido." hidden><div class="wrap">
       <p class="crumbs">CRM <span>›</span> Contactos <span>›</span> <b>Laura Gómez</b></p>
       <div class="c360">
         <div class="col">
@@ -753,30 +928,21 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
             <div class="chead"><h3>Pedidos y documentos <span class="n">(2)</span></h3><span class="small muted">Con saldo primero</span></div>
             <div style="margin-top:6px">
               <div class="ord">
-          <div class="oh"><div><p class="t"><span class="id">JX-0042</span>Expedición Cocuy<span class="badge warn"><span class="dot"></span>Abonado</span></p><p class="s">Falta <b>$ 15.192.205</b> de $ 21.703.150 · sale el 14 mar</p></div><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Abrir</button></div>
-          <div class="docs"><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>16 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button></div>
-      
-    </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0001</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>17 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button></div>
-      
-    </div></div>
+          <div class="oh"><div><p class="t"><span class="id">JX-0042</span>Expedición Cocuy<span class="badge warn"><span class="dot"></span>Abonado</span></p><p class="s">Falta <b>$ 15.192.205</b> de $ 21.703.150 · sale el 14 mar</p></div><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Abrir pedido</button></div>
+          <div class="mini" style="--p:30%"></div>
+          <div class="chips"><a class="chip" href="#"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span><span>Contrato<span class="num"> CTR-2026-0120</span></span></a><a class="chip" href="#"><span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span><span>Cuenta de cobro<span class="num"> CC-2026-0001</span></span></a></div>
         </div>
               <div class="ord">
-          <div class="oh"><div><p class="t"><span class="id">JX-0031</span>Expedición Egipto<span class="badge ok"><span class="dot"></span>Pagado</span></p><p class="s">Falta <b>$ 0</b> de $ 14.200.000 · viajó el 2 may</p></div><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Abrir</button></div>
-          <div class="docs"><div class="gvoid" style="padding:10px 12px"><span class="vic" style="width:30px;height:30px;border-radius:9px"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span>
-      <div><p class="t" style="font-size:13px">Sin papeles todavía</p><p class="s">Se emiten desde el pedido.</p></div></div></div>
+          <div class="oh"><div><p class="t"><span class="id">JX-0031</span>Expedición Egipto<span class="badge ok"><span class="dot"></span>Pagado</span></p><p class="s"><b>Pagado</b> · $ 14.200.000 · viajó el 2 may</p></div><button class="btn ghost xs" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Abrir pedido</button></div>
+          <div class="mini full" style="--p:100%"></div>
+          <div class="chips"><span class="chip ghost"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Sin papeles · se emiten desde el pedido</span></div>
         </div>
             </div>
-            <p class="gfoot" style="border-top:0;padding:14px 0 0">Es la <b>misma lista</b> que ve el pedido, filtrada por contacto: un papel se archiva a nombre de la persona y sobrevive al pedido.</p>
+            <p class="gfoot" style="border-top:0;padding:14px 0 0">Es la <b>misma lista</b> que ve el pedido, filtrada por persona: un papel se archiva a su nombre y sobrevive al pedido.</p>
           </section>
         </div>
       </div>
-    </div></section><section class="view" data-view="numeracion" data-note="Mi empresa › Documentos gana la columna «Siguiente nº»: editable solo con el contador virgen; en cuanto salió el primero de un tipo, se bloquea y lo dice. El servidor responde 409 y no guarda nada a medias." hidden><div class="setwrap">
+    </div></section><section class="view" data-view="numeracion" data-note="Mi empresa › Documentos gana la columna «Siguiente nº»: editable solo con el contador virgen; en cuanto salió el primero de un tipo, se bloquea y lo dice en su fila. El servidor rechaza entero y no guarda nada a medias." hidden><div class="setwrap">
       <div class="topbar"><p class="ttl">Mi empresa</p><span class="small muted">JuanitoXpeditions · agencia de expediciones</span></div>
       <nav class="seg " aria-label="Ajustes de la empresa"><ul style="display:contents;margin:0;padding:0;list-style:none"><a href="#" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>General</a><a href="#" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>Sucursales</a><a href="#" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="15" cy="12" r="3"/><rect width="20" height="14" x="2" y="5" rx="7"/></svg>Funciones</a><a href="#" aria-current=page><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>Documentos</a></ul></nav>
       <div class="two">
@@ -784,7 +950,7 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
           <p class="set-title"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>Numeración<span class="n">por tipo, sin reinicio anual</span></p>
           <div class="set">
             <div class="nh"><span>Tipo</span><span>Prefijo</span><span>Siguiente nº</span><span>Saldrá como</span></div>
-            <div class="pfx"><span>Contrato</span><div class="input  pre" id="" role="textbox" aria-readonly="true"><span>CTR</span></div><div class="input  num readonly" id="" role="textbox" aria-readonly="true"><span>121</span></div><span class="lock"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ya salió el primero</span></div><div class="pfx"><span>Cotización</span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>COT</span></div><div class="input  num" id="" role="textbox" aria-readonly="true"><span>1</span></div><span class="ex">COT-2026-<b>0001</b></span></div><div class="pfx"><span>Propuesta</span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>PRO</span></div><div class="input  num" id="" role="textbox" aria-readonly="true"><span>1</span></div><span class="ex">PRO-2026-<b>0001</b></span></div><div class="pfx"><span>Recibo de pago</span><div class="input  pre" id="" role="textbox" aria-readonly="true"><span>REC</span></div><div class="input  num readonly" id="" role="textbox" aria-readonly="true"><span>113</span></div><span class="lock"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ya salió el primero</span></div><div class="pfx"><span>Estado de cuenta</span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>EDC</span></div><div class="input  num" id="" role="textbox" aria-readonly="true"><span>40</span></div><span class="ex">EDC-2026-<b>0040</b></span></div><div class="pfx"><span>Cuenta de cobro</span><div class="input  pre" id="" role="textbox" aria-readonly="true"><span>CC</span></div><div class="input  num readonly" id="" role="textbox" aria-readonly="true"><span>3</span></div><span class="lock"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ya salió el primero</span></div><div class="pfx off"><span>Factura / documento comercial<div class="small muted">Todavía no se emite: sin conexión fiscal</div></span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>FAC</span></div><span class="ex">—</span><span class="ex">—</span></div>
+            <div class="pfx"><span class="k"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span><span>Contrato</span></span><div class="input  pre" id="" role="textbox" aria-readonly="true"><span>CTR</span></div><div class="input  num readonly" id="" role="textbox" aria-readonly="true"><span>121</span></div><span class="lock"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ya salió el primero</span></div><div class="pfx"><span class="k"><span class="paper " style="--pa:#f0a431" aria-hidden="true"></span><span>Cotización</span></span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>COT</span></div><div class="input  num" id="" role="textbox" aria-readonly="true"><span>1</span></div><span class="ex">COT-2026-<b>0001</b></span></div><div class="pfx"><span class="k"><span class="paper " style="--pa:#0891b2" aria-hidden="true"></span><span>Propuesta</span></span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>PRO</span></div><div class="input  num" id="" role="textbox" aria-readonly="true"><span>1</span></div><span class="ex">PRO-2026-<b>0001</b></span></div><div class="pfx"><span class="k"><span class="paper " style="--pa:#16a34a" aria-hidden="true"></span><span>Recibo</span></span><div class="input  pre" id="" role="textbox" aria-readonly="true"><span>REC</span></div><div class="input  num readonly" id="" role="textbox" aria-readonly="true"><span>113</span></div><span class="lock"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ya salió el primero</span></div><div class="pfx"><span class="k"><span class="paper " style="--pa:#2563eb" aria-hidden="true"></span><span>Estado de cuenta</span></span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>EDC</span></div><div class="input  num" id="" role="textbox" aria-readonly="true"><span>40</span></div><span class="ex">EDC-2026-<b>0040</b></span></div><div class="pfx"><span class="k"><span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span><span>Cuenta de cobro</span></span><div class="input  pre" id="" role="textbox" aria-readonly="true"><span>CC</span></div><div class="input  num readonly" id="" role="textbox" aria-readonly="true"><span>3</span></div><span class="lock"><svg class="ic " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ya salió el primero</span></div><div class="pfx off"><span class="k"><span class="paper " style="--pa:#71717a" aria-hidden="true"></span><span>Factura / documento comercial<div class="small muted">Todavía no se emite: sin conexión fiscal</div></span></span><div class="input ph pre" id="" role="textbox" aria-readonly="true"><span>FAC</span></div><span class="ex">—</span><span class="ex">—</span></div>
           </div>
           <p class="set-note">Si ya llevabas una numeración en papel, escribe aquí <b>el siguiente número</b> que toca y Axi continúa desde ahí.
             Solo se puede fijar <b>antes</b> de emitir el primero de cada tipo: después, el consecutivo ya es un hecho y se bloquea.</p>
@@ -792,12 +958,12 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
         </div>
         <aside class="side-note">
           <h4><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Por qué se bloquea</h4>
-          Un contrato con el número de otro no se arregla después. Por eso el estado de cuenta puede empezar en <span class="ex">EDC-2026-0040</span> hoy,
+          Un contrato con el número de otro no se arregla después. Por eso el estado de cuenta puede empezar hoy en <span class="ex">EDC-2026-0040</span>,
           pero el contrato —que ya salió como <span class="ex">CTR-2026-0120</span>— seguirá en <span class="ex">0121</span> aunque cambies el prefijo.
-          <br><br>El servidor responde <b>409</b> si algo ya empezó, y no guarda nada a medias.
+          <br><br>Si algo ya empezó, no se guarda nada a medias: el servidor lo rechaza entero y la pantalla lo dice en la fila.
         </aside>
       </div>
-    </div></section><section class="view" data-view="movil" data-note="En el móvil el rail es un sheet; la sección Documentos y su menú caben en el ancho sin recortar acciones (las de icono llevan aria-label)." hidden><div class="mobile">
+    </div></section><section class="view" data-view="movil" data-note="En el móvil el rail es un sheet y «Emitir» es una hoja de acciones desde abajo, con las mismas tres opciones y el contrato ya emitido dicho igual." hidden><div class="mobile">
       <div class="grab"></div>
       <div class="m-top"><div><p class="id">JX-0042</p><p class="who">Laura Gómez</p></div><button class="btn ghost icon sm" aria-label="Cerrar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
       <div class="m-body">
@@ -807,34 +973,31 @@ td .t{font-weight:500} td .d{font-size:12px;color:var(--muted-foreground);displa
       <p class="of">de $ 21.703.150 · <b>30 %</b> cobrado</p>
       <div class="meter" role="img" aria-label="Cobrado el 30 por ciento"></div>
     </div>
-        <div class="group" style="position:relative"><div class="ghead"><span class="t">Documentos</span><button class="btn outline xs" aria-haspopup="menu" aria-expanded="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-      <div><p class="num"><span class="kind">Contrato</span>CTR-2026-0120</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+        <section class="rsec" aria-label="Documentos" style="position:relative"><div class="rsec-h"><h3>Documentos</h3><button class="btn outline xs" aria-haspopup="menu" aria-expanded="true"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Emitir</button></div><div class="group"><div class="doc ">
+      <span class="paper " style="--pa:#e65759" aria-hidden="true"></span>
+      <div><p class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CTR-2026-0120</span><span class="sep">·</span>16 sep<span class="sep">·</span>2 págs.</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
       
     </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-      <div><p class="num"><span class="kind">Cuenta de cobro</span>CC-2026-0001</p><p class="m"><span class="st ok"><i></i>Listo</span><span class="sep">·</span>17 sep</p></div>
-      <div class="acts"><button class="btn ghost xs primary" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Ver</button><button class="btn ghost xs icon" aria-label="Regenerar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+      <span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span>
+      <div><p class="t">Cuenta de cobro<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></p><p class="m"><span class="num">CC-2026-0001</span><span class="sep">·</span>17 sep</p></div>
+      <div class="acts"><button class="btn outline xs" >Ver</button><button class="btn ghost xs icon" aria-label="Más acciones"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
       
     </div><div class="doc ">
-      <span class="ty"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-      <div><p class="num"><span class="kind">Estado de cuenta</span>EDC-2026-0003</p><p class="m"><span class="st busy"><i></i>Generando…</span><span class="sep">·</span>hoy, 9:12</p></div>
+      <span class="paper busy" style="--pa:#2563eb" aria-hidden="true"><span class="fill"></span></span>
+      <div><p class="t">Estado de cuenta</p><p class="m"><span class="num">EDC-2026-0003</span><span class="sep">·</span>hoy, 9:12<span class="sep">·</span><span class="st busy">Generando…</span></p></div>
       <div class="acts"></div>
-      
-    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia, aquí se dice.</p></div>
+      <div class="prog"><i></i></div>
+    </div><p class="gfoot">Cada papel sale con los datos del pedido <b>de ese día</b>. Si el pedido cambia después, aquí se dice.</p></div></section>
         <button class="btn outline block" ><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Registrar pago</button>
       </div>
-      <div class="menu" role="menu" aria-label="Emitir documento" style="top:330px">
-      <p class="mh">Emitir para JX-0042</p>
-      <button class="mi done" role="menuitem"><span class="ty"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 5-2.414-2.414A2 2 0 0 0 14.172 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/><path d="M21.378 12.626a1 1 0 0 0-3.004-3.004l-4.01 4.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/><path d="M8 18h1"/></svg></span>
-        <span><span class="t">Contrato</span><span class="d">Ya emitido · <span class="mono">CTR-2026-0120</span> · uno por reserva</span></span><span class="go">Ver en la lista</span></button>
-      <button class="mi" role="menuitem"><span class="ty"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 12h11"/><path d="M10 18h11"/><path d="M10 6h11"/><path d="M4 10h2"/><path d="M4 6h1v4"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></span>
-        <span><span class="t">Estado de cuenta</span><span class="d">Foto de hoy: total, cobrado, cuotas y saldo</span></span><span class="go">EDC-2026-0004</span></button>
-      <button class="mi" role="menuitem"><span class="ty"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v3.072"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m6.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.88.001l-1.846.85a.5.5 0 0 1-.693-.593l1.29-4.88"/><circle cx="5" cy="14" r="3"/></svg></span>
-        <span><span class="t">Cuenta de cobro</span><span class="d">Por el saldo de $ 15.192.205 · la 2.ª de este pedido</span></span><span class="go">CC-2026-0002</span></button>
-      <div class="msep"></div>
-      <p class="mnote">El <b>recibo</b> no se emite a mano: sale solo con cada pago verificado (F9). El PDF tarda unos segundos; la fila avisa cuando está.</p>
+      <div class="scrim"></div>
+      <div class="asheet" role="menu" aria-label="Emitir documento">
+      <p class="ph">Emitir para la reserva JX-0042</p>
+      <button class="mi done" role="menuitem"><span class="paper " style="--pa:#e65759" aria-hidden="true"></span><span><span class="t">Contrato<span class="chk"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span></span><span class="d">Ya emitido · uno por reserva</span></span><span class="num">CTR-2026-0120</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#2563eb" aria-hidden="true"></span><span><span class="t">Estado de cuenta</span><span class="d">Total, cobrado, cuotas y saldo a hoy</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>EDC-0004</span></button>
+      <button class="mi" role="menuitem"><span class="paper " style="--pa:#7c3aed" aria-hidden="true"></span><span><span class="t">Cuenta de cobro</span><span class="d">Por el saldo de $ 15.192.205</span></span><span class="num"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>CC-0002</span></button>
+      <button class="btn outline cancel" >Cancelar</button>
     </div>
     </div></section>
 <script>
