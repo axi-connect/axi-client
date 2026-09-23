@@ -160,7 +160,7 @@ export function TenantDatabaseView({ tenantId }: { tenantId: string }) {
             </p>
 
             {database.status === "error" && database.last_error && (
-              <Alert variant="destructive" className="border-destructive/30">
+              <Alert variant="destructive">
                 <OctagonAlert aria-hidden="true" className="size-4" />
                 <AlertTitle>La provisión falló</AlertTitle>
                 <AlertDescription>
@@ -170,8 +170,8 @@ export function TenantDatabaseView({ tenantId }: { tenantId: string }) {
             )}
 
             {busy && pollDegraded && (
-              <Alert className="border-info/30 bg-info/5">
-                <Info aria-hidden="true" className="size-4 text-info" />
+              <Alert variant="info">
+                <Info aria-hidden="true" />
                 <AlertTitle>Sigue en curso</AlertTitle>
                 <AlertDescription>
                   El proceso lleva más de 10 minutos; el estado se re-consulta cada 15 segundos.

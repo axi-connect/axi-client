@@ -22,6 +22,7 @@ import {
 } from "@/shared/components/ui/select";
 import { useAgentsHealthQuery } from "../../../../../infrastructure/api/hooks/use-analytics";
 import { TenantSelect } from "../../../../components/TenantSelect";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 type TargetStepProps = {
   companyId: string | null;
@@ -66,10 +67,10 @@ export function TargetStep({ companyId, agentId, onChange, onNext }: TargetStepP
         ) : agentsQuery.isPending ? (
           <Skeleton className="h-9 w-full rounded-xl" />
         ) : agents.length === 0 ? (
-          <p className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
-            <Bot aria-hidden="true" className="size-4 shrink-0" />
-            Este tenant no tiene agentes activos: activa uno antes de lanzar la ejecución.
-          </p>
+          <Alert variant="warning">
+            <Bot aria-hidden="true" />
+            <AlertDescription>Este tenant no tiene agentes activos: activa uno antes de lanzar la ejecución.</AlertDescription>
+          </Alert>
         ) : (
           <Select value={agentId ?? ""} onValueChange={(value) => onChange({ companyId, agentId: value })}>
             <SelectTrigger className="w-full" aria-label="Agente objetivo">

@@ -215,8 +215,8 @@ export function TenantPlanView({ tenantId }: { tenantId: string }) {
         size="xl"
       >
         <div className="space-y-4 p-4">
-          <Alert className="border-warning/30 bg-warning/5">
-            <TriangleAlert aria-hidden="true" className="size-4 text-warning" />
+          <Alert variant="warning">
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Se reemplaza el set completo</AlertTitle>
             <AlertDescription>
               Lo que guardes aquí sustituye TODOS los límites vigentes (incluidos los sembrados por el plan).

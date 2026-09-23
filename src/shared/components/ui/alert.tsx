@@ -9,9 +9,11 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-card text-card-foreground",
+        // El rojo sí se queda en el texto: #DC2626 da 4.8:1 sobre la tarjeta
+        // (pasa AA). El borde tintado lo repetían a mano cuatro copias de
+        // /platform (`border-destructive/30`); ahora es de la variante.
         destructive:
-          "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
-        success: "text-success bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-success/90",
+          "border-destructive/30 text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
         // Receta AA-segura (DESIGN-SYSTEM §2.2 y §10): la superficie y el borde
         // llevan el tinte del tono y el ICONO lleva el color; el texto se queda
         // en `foreground`/`muted-foreground`. Teñir el texto es lo que hacían
@@ -21,6 +23,10 @@ const alertVariants = cva(
           "border-warning/40 bg-warning/8 text-foreground dark:bg-warning/10 [&>svg]:text-warning",
         info:
           "border-info/40 bg-info/8 text-foreground dark:bg-info/10 [&>svg]:text-info",
+        // Misma receta: el verde de éxito (#16A34A) sobre blanco da 3.3:1 y no
+        // pasa AA como texto, así que el color va solo en el icono.
+        success:
+          "border-success/40 bg-success/8 text-foreground dark:bg-success/10 [&>svg]:text-success",
       },
     },
     defaultVariants: {

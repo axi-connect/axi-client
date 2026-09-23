@@ -522,6 +522,16 @@ páginas) y tres avisos «en línea» que en realidad flotaban. Mockup aprobado:
 | **Confirmación** | Hace falta una **decisión** antes de seguir: eliminar, descartar, desconectar. Bloquea | `useAlert().showModal` |
 | **Banner** | Un estado de la **cuenta** que afecta a todo el panel: prueba, pago pendiente. Persistente, bajo el header | banners del shell |
 
+**El aviso en línea es siempre `Alert`, con su variante; nunca una caja teñida a
+mano.** `info`, `warning` y `success` siguen la receta AA: tinte en borde y
+superficie, color **solo en el icono**, texto en `foreground`. `destructive`
+deja el rojo en el texto (4,8:1, pasa) y trae su borde tintado. `default` es la
+nota neutra. El icono va como primer hijo, sin clases: la variante le da tamaño
+y color. Hasta 2026-09-23 había 22 copias a mano solo en `/platform`
+(`border-warning/30 bg-warning/5`, `text-warning` sobre ámbar a 3:1…); se
+retiraron todas. Un tinte que no existe como variante (el violeta de una nota de
+voz) no justifica una copia: la nota es `info`.
+
 **Implementación.** El aviso es la píldora de [sileo](https://sileo.aaryan.design/docs)
 (0.1.5, versión fijada). Ningún módulo importa `sileo` — lo impide
 `no-restricted-imports` en `eslint.config.mjs` —: todo pasa por
@@ -616,4 +626,5 @@ duraciones a 0. Se descarta deslizando. Poppins 600 a 13 px en la píldora,
 - [ ] ¿Animaciones con presets §6 y `prefers-reduced-motion`?
 - [ ] ¿Iconos lucide (salvo logos de terceros)?
 - [ ] ¿Destructivo usa `destructive`, nunca el coral?
+- [ ] ¿Los avisos en línea son `<Alert variant=…>` y no un `<p>`/`<div>` con `border-*/30 bg-*/5`?
 - [ ] ¿Los avisos pasan por `showAlert`/`notify` y no por un componente propio? ¿El título cabe en la píldora (≤ 34 caracteres) y el detalle va en `description` (§9.4)?

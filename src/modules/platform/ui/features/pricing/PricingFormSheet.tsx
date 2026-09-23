@@ -241,8 +241,8 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
     >
       <div className="space-y-4 p-4">
         {unit === "characters" && (
-          <Alert className="border-accent-violet/30 bg-accent-violet/5">
-            <Mic aria-hidden="true" className="size-4 text-accent-violet" />
+          <Alert variant="info">
+            <Mic aria-hidden="true" />
             <AlertTitle>Tarifa por caracteres (voz)</AlertTitle>
             <AlertDescription>
               El costo va en <strong>Entrada</strong>; salida y caché no aplican en síntesis de voz.
@@ -251,8 +251,8 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
         )}
 
         {isEditing ? (
-          <Alert className="border-info/30 bg-info/5">
-            <Info aria-hidden="true" className="size-4 text-info" />
+          <Alert variant="info">
+            <Info aria-hidden="true" />
             <AlertTitle>Versionado por vigencia</AlertTitle>
             <AlertDescription>
               Para cambiar precios desde una fecha: cierra esta tarifa con «Vigente hasta» y crea una
@@ -260,8 +260,8 @@ export function PricingFormSheet({ open, onOpenChange, rate }: PricingFormSheetP
             </AlertDescription>
           </Alert>
         ) : (
-          <Alert className="border-warning/30 bg-warning/5">
-            <TriangleAlert aria-hidden="true" className="size-4 text-warning" />
+          <Alert variant="warning">
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Es un upsert</AlertTitle>
             <AlertDescription>
               Si ya existe una tarifa con el mismo proveedor + modelo + fecha de vigencia, se
