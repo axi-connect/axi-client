@@ -111,3 +111,21 @@ describe("los nueve avisos de facturación (B9 encendió los cuatro que faltaban
     expect(notificationTarget("billing.source_expiring", {})).toBe("/billing");
   });
 });
+
+describe("método comercial (F8)", () => {
+  it("los avisos del ritmo abren la ruta del mes", () => {
+    expect(notificationTarget("commercial.pace_behind", { missing_cents: 100, proposal_spec: null })).toBe("/comercial");
+    expect(notificationTarget("commercial.pace_recovered", {})).toBe("/comercial");
+  });
+
+  it("«el agente movió…» abre la ficha del contacto, no el deal", () => {
+    // El payload es el del evento de dominio (`crm.deal_stage_changed` con
+    // `actor_type: ai_agent`): trae `contact_id` y `deal_id`.
+    expect(
+      notificationTarget("crm.deal_stage_changed_by_agent", { contact_id: "c-7", deal_id: "d-3", actor_type: "ai_agent" }),
+    ).toBe("/crm/contacts/c-7");
+    expect(notificationTarget("crm.deal_stage_changed_by_agent", { deal_id: "d-3" })).toBe("/crm/pipeline/deal/d-3");
+    // El resto de `crm.deal_*` sigue abriendo el deal.
+    expect(notificationTarget("crm.deal_stalled", { deal_id: "d-3", contact_id: "c-7" })).toBe("/crm/pipeline/deal/d-3");
+  });
+});
