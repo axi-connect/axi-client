@@ -155,11 +155,20 @@ export function routeTitle(month: string): string {
 /** Confirmación al guardar la meta. */
 export const GOAL_SAVED_MESSAGE = "Meta puesta. Empezamos a medir el camino.";
 
-/** F3: las propuestas aún no se cargan (llegan con `GET /commercial/proposals`, F6). */
-export const PROPOSALS_COMING_MESSAGE = "Las acciones que Axi propone llegan pronto.";
-
 /** El estado vacío de «Axi propone» mientras no haya nada que acelerar (F6). */
 export const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";
 
 /** El mismo hueco, en el estado «aprendiendo». */
 export const LEARNING_PROPOSALS_MESSAGE = "Cuando conozcamos tu ritmo, te proponemos acciones.";
+
+/** Sin `commercial:approve`: la lista y el detalle son de solo lectura. */
+export const NO_APPROVE_PERMISSION_MESSAGE = "Pídele a un administrador que apruebe o cambie la meta.";
+
+/** Rechazar: lo que pasa con el motivo (pie del detalle). */
+export const REJECT_NOTE = "Rechazar guarda el motivo y Axi no vuelve a proponerlo esta semana.";
+
+/** Rechazada: la confirmación. */
+export const REJECTED_MESSAGE = "Anotado. Axi no vuelve a proponerlo esta semana.";
+
+/** «Después» de aprobar: dónde se ve el avance. */
+export const AFTER_APPROVAL_NOTE = "Verás el avance en Ventas cerradas y en Tareas. Nada se envía sin tu aprobación.";

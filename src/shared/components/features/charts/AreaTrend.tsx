@@ -17,6 +17,10 @@ export type AreaSeries = {
   key: string;
   label: string;
   color?: string;
+  /** Línea punteada (la referencia «esperado» frente a lo real). */
+  dashed?: boolean;
+  /** `false` = solo el trazo, sin relleno de gradiente. */
+  fill?: boolean;
 };
 
 /**
@@ -38,7 +42,8 @@ export function AreaTrend({
   formatY,
   height = 180,
 }: {
-  data: Array<Record<string, number | string>>;
+  /** `null` = sin dato en ese punto (el trazo se corta, no cae a cero). */
+  data: Array<Record<string, number | string | null>>;
   series: AreaSeries[];
   xKey: string;
   formatX?: (value: string) => string;
@@ -103,7 +108,8 @@ export function AreaTrend({
             name={entry.label}
             stroke={entry.color ?? CHART_COLORS.brand}
             strokeWidth={2}
-            fill={`url(#${gradientId}-${index})`}
+            strokeDasharray={entry.dashed === true ? "4 4" : undefined}
+            fill={entry.fill === false ? "none" : `url(#${gradientId}-${index})`}
             isAnimationActive={!reduced}
           />
         ))}

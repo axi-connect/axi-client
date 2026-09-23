@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
 import { Lock, Pencil, RotateCcw } from "lucide-react";
 
+import { errorMessage } from "@/core/lib/error-messages";
+import { useAlert } from "@/core/providers/alert-provider";
 import { goalLead, routeTitle } from "@/modules/commercial/domain/copy";
+import { keyResultHref } from "@/modules/commercial/domain/key-result";
+import { commercialProposalHref } from "@/modules/commercial/domain/proposals";
 import { monthLabel } from "@/modules/commercial/domain/format";
 import { isLearning } from "@/modules/commercial/domain/pace";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
@@ -42,9 +47,15 @@ export function CommercialView() {
   const blocker = useCommercialStore((state) => state.blocker);
   const load = useCommercialStore((state) => state.load);
   const reloadPace = useCommercialStore((state) => state.reloadPace);
+  const proposals = useCommercialStore((state) => state.proposals);
+  const loadProposals = useCommercialStore((state) => state.loadProposals);
+  const approveProposal = useCommercialStore((state) => state.approveProposal);
+  const router = useRouter();
+  const { showAlert } = useAlert();
 
   const canRead = hasPermission("commercial:read");
   const canManage = hasPermission("commercial:manage");
+  const canApprove = hasPermission("commercial:approve");
   const enabled = !loaded || hasCapability("crm");
 
   // Solo la primera vez: guardar la meta ya recarga plan y ritmo, y el Panel
@@ -52,6 +63,27 @@ export function CommercialView() {
   useEffect(() => {
     if (enabled && canRead && goal.status === "idle") void load();
   }, [enabled, canRead, goal.status, load]);
+
+  // «Axi propone» se pide con meta y una vez por montaje: aprobar o rechazar
+  // actualiza la lista en el store, y al volver de otra pantalla puede haber
+  // propuestas nuevas (hasta F8 no llegan por WS).
+  const hasGoal = goal.data?.goal != null;
+  useEffect(() => {
+    if (enabled && canRead && hasGoal) void loadProposals();
+  }, [enabled, canRead, hasGoal, loadProposals]);
+
+  // Aprobar desde la lista abre el detalle, que pinta lo que quedó.
+  const onApprove = useCallback(
+    async (id: string) => {
+      try {
+        await approveProposal(id);
+        router.push(commercialProposalHref(id));
+      } catch (error: unknown) {
+        showAlert({ tone: "error", title: errorMessage(error) });
+      }
+    },
+    [approveProposal, router, showAlert],
+  );
 
   if (!canRead) {
     return (
@@ -139,9 +171,20 @@ export function CommercialView() {
       ) : (
         <>
           <RouteHero pace={pace.data} plan={plan.data} />
-          {learning ? <LearningNotice daysElapsed={pace.data.business_days_elapsed} /> : <PaceLine pace={pace.data} />}
-          <KeyResultList pace={pace.data} plan={plan.data} learning={learning} />
-          <ActionList learning={learning} />
+          {learning ? (
+            <LearningNotice daysElapsed={pace.data.business_days_elapsed} />
+          ) : (
+            <PaceLine pace={pace.data} href={keyResultHref("sales")} />
+          )}
+          <KeyResultList pace={pace.data} plan={plan.data} learning={learning} detailHref={keyResultHref} />
+          <ActionList
+            learning={learning}
+            proposals={proposals.data ?? undefined}
+            error={proposals.status === "error" ? proposals.error : null}
+            onRetry={() => void loadProposals()}
+            canApprove={canApprove}
+            onApprove={onApprove}
+          />
         </>
       )}
     </div>

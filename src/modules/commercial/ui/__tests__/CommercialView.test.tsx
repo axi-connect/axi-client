@@ -1,7 +1,7 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { resetCommercialStore, useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { CommercialView } from "../CommercialView";
-import { goalResponse, pace, plan } from "./fixtures";
+import { goalResponse, pace, plan, proposal } from "./fixtures";
 
 type Ent = { entitlements: null; loaded: boolean; hasCapability: (code: string) => boolean };
 const mockEntitlements = jest.fn<Ent, []>(() => ({ entitlements: null, loaded: true, hasCapability: () => true }));
@@ -9,17 +9,27 @@ jest.mock("@/shared/auth/entitlements.hooks", () => ({ useEntitlements: () => mo
 jest.mock("@/modules/companies/public", () => ({ useMyCompany: () => ({ company: { currency: "COP" } }) }));
 const permissions = new Set(["commercial:read", "commercial:manage"]);
 jest.mock("@/shared/auth/auth.hooks", () => ({ useAuth: () => ({ hasPermission: (code: string) => permissions.has(code) }) }));
+const mockPush = jest.fn();
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush, back: jest.fn(), replace: jest.fn() }) }));
+const mockShowAlert = jest.fn();
+jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: mockShowAlert }) }));
 jest.mock("framer-motion", () => ({ useReducedMotion: () => true, animate: () => ({ stop: () => {} }) }));
 
 const load = jest.fn().mockResolvedValue(undefined);
+const loadProposals = jest.fn().mockResolvedValue(undefined);
+const approveProposal = jest.fn().mockResolvedValue({ applied: [], failed: [] });
 
 afterEach(cleanup);
 beforeEach(() => {
   resetCommercialStore();
   load.mockClear();
+  loadProposals.mockClear();
+  approveProposal.mockClear();
+  mockPush.mockClear();
   permissions.add("commercial:read");
+  permissions.add("commercial:approve");
   mockEntitlements.mockReturnValue({ entitlements: null, loaded: true, hasCapability: () => true });
-  useCommercialStore.setState({ load });
+  useCommercialStore.setState({ load, loadProposals, approveProposal });
 });
 
 describe("CommercialView", () => {
@@ -61,11 +71,12 @@ describe("CommercialView", () => {
     expect(screen.getByText(/El mes pasado vendiste/)).toBeInTheDocument();
   });
 
-  it("con meta: cabecera con procedencia, hero, ritmo, resultados y «Axi propone» vacío", () => {
+  it("con meta: cabecera con procedencia, hero, ritmo, resultados y «Axi propone» al día", () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
       pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [], error: null },
     });
     render(<CommercialView />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Tu ruta de septiembre");
@@ -73,13 +84,48 @@ describe("CommercialView", () => {
     expect(screen.getByRole("link", { name: /cambiar meta/i })).toHaveAttribute("href", "/comercial/meta");
     expect(screen.getByRole("region", { name: "La ruta del mes" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Resultados clave" })).toBeInTheDocument();
-    // F3 no carga propuestas: con ritmo bajo «Estás al día» sería mentira.
-    expect(screen.getByText("Las acciones que Axi propone llegan pronto.")).toBeInTheDocument();
-    expect(screen.queryByText(/Estás al día/)).toBeNull();
-    // Nada enlaza a páginas que aún no existen.
-    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/comercial/meta"]);
-    // Ya había datos: no se vuelve a cargar al montar.
+    // Lista vacía DE VERDAD (F6): ahora sí «Estás al día».
+    expect(screen.getByText(/Estás al día/)).toBeInTheDocument();
+    // Las filas y el ritmo abren su detalle.
+    const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
+    expect(hrefs).toContain("/comercial/resultados/sales");
+    expect(hrefs).toContain("/comercial/resultados/avg_ticket");
+    expect(hrefs).toContain("/comercial/resultados/calls");
+    // Ya había datos: no se vuelve a cargar la meta; las propuestas sí se piden.
     expect(load).not.toHaveBeenCalled();
+    expect(loadProposals).toHaveBeenCalledTimes(1);
+  });
+
+  it("con propuestas: la pendiente enlaza a su detalle y «Aprobar» aprueba y lo abre", async () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [proposal], error: null },
+    });
+    render(<CommercialView />);
+    const actions = screen.getByRole("region", { name: "Axi propone" });
+    expect(within(actions).getByRole("link", { name: proposal.title })).toHaveAttribute("href", `/comercial/acciones/${proposal.id}`);
+    expect(within(actions).getByText("+2 ventas estimadas · cubre el 20 % de lo que falta para volver al ritmo")).toBeInTheDocument();
+    fireEvent.click(within(actions).getByRole("button", { name: /Aprobar/ }));
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith(`/comercial/acciones/${proposal.id}`);
+    });
+    expect(approveProposal).toHaveBeenCalledWith(proposal.id);
+  });
+
+  it("sin permiso de aprobar: la fila enlaza, sin botón, y dice a quién pedírselo", () => {
+    permissions.delete("commercial:approve");
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: pace, error: null },
+      proposals: { status: "ready", data: [proposal], error: null },
+    });
+    render(<CommercialView />);
+    const actions = screen.getByRole("region", { name: "Axi propone" });
+    expect(within(actions).queryByRole("button", { name: /Aprobar/ })).toBeNull();
+    expect(within(actions).getByText(/Pídele a un administrador que apruebe/)).toBeInTheDocument();
   });
 
   it("carga una sola vez, solo si la sección está en idle", () => {

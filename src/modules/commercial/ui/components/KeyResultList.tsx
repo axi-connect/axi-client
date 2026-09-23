@@ -20,8 +20,8 @@ export type KeyResultDetailHref = (key: KeyResultKey | "avg_ticket") => string;
  * «Ventas» y no como fila propia.
  *
  * En «aprendiendo» las filas no afirman ritmo: solo camino recorrido y de
- * dónde sale la meta de cada una. `detailHref` llega en F6 con las páginas de
- * detalle; sin él las filas no enlazan.
+ * dónde sale la meta de cada una. Con `detailHref` cada fila abre su detalle
+ * (`/comercial/resultados/[key]`, hoja interceptada).
  */
 export function KeyResultList({
   pace,
