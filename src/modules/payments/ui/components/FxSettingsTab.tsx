@@ -64,9 +64,9 @@ export function FxSettingsTab() {
       const saved = await saveFxSettings(next);
       const latest = await getLatestFxRate();
       setState({ kind: "ready", settings: saved, latest });
-      showAlert({ tone: "success", title: "Ajustes de moneda guardados", autoCloseMs: 4000 });
+      showAlert({ tone: "success", title: "Ajustes de moneda guardados" });
     } catch (error) {
-      showAlert({ tone: "error", title: errorMessage(error, "No se pudieron guardar los ajustes") });
+      showAlert({ tone: "error", title: "No se pudo guardar", description: errorMessage(error) });
     } finally {
       setSaving(false);
     }

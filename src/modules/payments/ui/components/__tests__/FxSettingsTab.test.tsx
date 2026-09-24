@@ -12,8 +12,10 @@ jest.mock("@/modules/payments/infrastructure/services/fx-service.adapter", () =>
   saveFxSettings: (next: FxSettingsDTO) => mockSave(next),
 }));
 
-jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: jest.fn() }) }));
+const mockShowAlert = jest.fn();
+jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: mockShowAlert }) }));
 
+import { expectAlertContract } from "@/core/notifications/testing";
 import { FxSettingsTab } from "@/modules/payments/ui/components/FxSettingsTab";
 
 const settings: FxSettingsDTO = {
@@ -166,5 +168,29 @@ describe("FxSettingsTab", () => {
         show_indicative_quotes: true,
       });
     });
+  });
+
+  it("§9.4: al fallar el guardado, el título es fijo y el mensaje del servidor va al cuerpo; al guardar, sin autoCloseMs", async () => {
+    mockSave.mockRejectedValueOnce(
+      new HttpError({
+        status: 422,
+        code: "fx/qa_probe",
+        message: "El ajuste supera el máximo",
+        problem: { type: "about:blank", title: "Error", status: 422, code: "fx/qa_probe", detail: "El ajuste supera el máximo" },
+      }),
+    );
+    render(<FxSettingsTab />);
+    (await screen.findByRole("button", { name: /Guardar cambios/ })).click();
+    await waitFor(() => expect(mockShowAlert).toHaveBeenCalledTimes(1));
+    const failure = mockShowAlert.mock.calls[0]?.[0] as { title: string; description: string };
+    expect(failure.title).toBe("No se pudo guardar");
+    expect(failure.description).toBe("El ajuste supera el máximo");
+    expectAlertContract(failure, { serverMessage: "El ajuste supera el máximo" });
+
+    mockSave.mockResolvedValueOnce(settings);
+    screen.getByRole("button", { name: /Guardar cambios/ }).click();
+    await waitFor(() => expect(mockShowAlert).toHaveBeenCalledTimes(2));
+    expect(mockShowAlert.mock.calls[1]?.[0]).toEqual({ tone: "success", title: "Ajustes de moneda guardados" });
+    expectAlertContract(mockShowAlert.mock.calls[1]?.[0]);
   });
 });
