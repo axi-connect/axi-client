@@ -53,7 +53,11 @@ export function CommercialView() {
   const loadProposals = useCommercialStore((state) => state.loadProposals);
   const approveProposal = useCommercialStore((state) => state.approveProposal);
   const approvals = useCommercialStore((state) => state.approvals);
-  const resultIds = useMemo(() => new Set(Object.keys(approvals)), [approvals]);
+  // Solo las aprobadas de verdad ofrecen «Ver qué quedó» (V3).
+  const resultIds = useMemo(
+    () => new Set(Object.entries(approvals).filter(([, result]) => result.status === "approved").map(([id]) => id)),
+    [approvals],
+  );
   const router = useRouter();
   const { showAlert } = useAlert();
 

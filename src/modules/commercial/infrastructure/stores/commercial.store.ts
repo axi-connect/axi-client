@@ -340,7 +340,13 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
         const rows = applyDecisions(pending);
         const seen = new Set(rows.map((row) => row.id));
         const settled = approvedThisPeriod(applyDecisions(approved), periodStart).filter((row) => !seen.has(row.id));
-        set({ proposals: ready([...rows, ...settled]) });
+        const stillPending = new Set(rows.filter((row) => row.status === "pending").map((row) => row.id));
+        set((state) => ({
+          proposals: ready([...rows, ...settled]),
+          // Un resultado «nada se aplicó» solo vale mientras la fila siga
+          // pendiente: si otra persona la aprobó o rechazó, ese fallo es viejo (V3).
+          approvals: dropStalePending(state.approvals, (id) => stillPending.has(id)),
+        }));
       } catch (error: unknown) {
         if (seq.proposals !== mine) return;
         set((state) => ({ proposals: failed(state.proposals, errorMessage(error)) }));
@@ -366,6 +372,8 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
         throw error;
       }
       set((state) => ({
+        // El «no se pudo» de un intento anterior ya no describe nada (V3).
+        approvals: omit(state.approvals, id),
         decisions: { ...state.decisions, [id]: { status: "rejected", decided_at: new Date().toISOString() } },
         proposals:
           state.proposals.data === null
@@ -376,6 +384,21 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     },
   };
 });
+
+function omit<T>(record: Record<string, T>, key: string): Record<string, T> {
+  if (!(key in record)) return record;
+  return Object.fromEntries(Object.entries(record).filter(([id]) => id !== key));
+}
+
+/** Quita los resultados `pending` de las filas que ya no están pendientes. */
+function dropStalePending(
+  approvals: Record<string, CommercialApprovalResultDTO>,
+  isPending: (id: string) => boolean,
+): Record<string, CommercialApprovalResultDTO> {
+  const entries = Object.entries(approvals);
+  const kept = entries.filter(([id, result]) => result.status !== "pending" || isPending(id));
+  return kept.length === entries.length ? approvals : Object.fromEntries(kept);
+}
 
 function patchProposal(
   section: Section<CommercialProposalDTO[]>,

@@ -64,7 +64,7 @@ export function useActionDetail(proposalId: string, proposal: CommercialProposal
   const access = useApproveAccess();
   const approve = useCommercialStore((state) => state.approveProposal);
   const reject = useCommercialStore((state) => state.rejectProposal);
-  const result = useCommercialStore((state) => state.approvals[proposalId] ?? null);
+  const stored = useCommercialStore((state) => state.approvals[proposalId] ?? null);
   const decision = useCommercialStore((state) => state.decisions[proposalId] ?? null);
 
   const [busy, setBusy] = useState(false);
@@ -73,6 +73,8 @@ export function useActionDetail(proposalId: string, proposal: CommercialProposal
   const [custom, setCustom] = useState("");
 
   const status = decision?.status ?? proposal?.status ?? "pending";
+  // Un «nada se aplicó» solo se pinta mientras siga por decidir (V3).
+  const result = stored !== null && stored.status === "pending" && status !== "pending" ? null : stored;
   const decidedAt = decision?.decided_at ?? proposal?.decided_at ?? null;
   const { canApprove, readOnlyMessage } = access;
   const plans = proposal === null ? [] : readOutreach(proposal.artifacts, proposal.created_at);

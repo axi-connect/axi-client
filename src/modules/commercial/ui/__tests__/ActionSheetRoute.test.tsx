@@ -159,6 +159,23 @@ describe("ActionSheetRoute / ActionDetail", () => {
     expect(screen.getByRole("button", { name: /^Aprobar$/ })).toBeEnabled();
   });
 
+  it("un «pending» viejo no se pinta junto a «Rechazada» (V3)", async () => {
+    useCommercialStore.setState({
+      approvals: {
+        [proposal.id]: {
+          applied: [],
+          failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" }],
+          status: "pending",
+        },
+      },
+      decisions: { [proposal.id]: { status: "rejected", decided_at: new Date().toISOString() } },
+    });
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    expect(await screen.findByText("Anotado. Axi no vuelve a proponerlo esta semana.")).toBeInTheDocument();
+    expect(screen.queryByText("No se pudo: Lote.")).toBeNull();
+    expect(screen.queryByText(/sigue por decidir/)).toBeNull();
+  });
+
   it("404 = ya no está (no un error de red)", async () => {
     mockGetProposal.mockRejectedValue(new HttpError({ status: 404, code: "cmo/proposal_not_found", message: "no" }));
     render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);

@@ -476,6 +476,43 @@ describe("propuestas", () => {
     expect(useCommercialStore.getState().proposals.data?.[0].status).toBe("approved");
   });
 
+  it("aprobar → pending → rechazar: el fallo viejo se borra (V3)", async () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: withGoal, error: null },
+      proposals: { status: "ready", data: [proposalRow("p1")], error: null },
+    });
+    mockPost.mockResolvedValueOnce({ applied: [], failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "crm_ai" }], status: "pending" });
+    await useCommercialStore.getState().approveProposal("p1");
+    expect(useCommercialStore.getState().approvals.p1?.status).toBe("pending");
+
+    mockPost.mockResolvedValueOnce({ directive_created: false });
+    await useCommercialStore.getState().rejectProposal("p1", undefined);
+
+    expect(useCommercialStore.getState().approvals.p1).toBeUndefined();
+  });
+
+  it("recargar la lista borra el «pending» de una fila que otra persona ya decidió (V3)", async () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: withGoal, error: null },
+      approvals: {
+        p1: { applied: [], failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "crm_ai" }], status: "pending" },
+        p2: { applied: [], failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "crm_ai" }], status: "pending" },
+        p3: { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "3 programados" }], failed: [], status: "approved" },
+      },
+    });
+    serveProposals(
+      { pending: [proposalRow("p2")], approved: [proposalRow("p1", { status: "approved", decided_at: "2026-09-22T12:00:00.000Z" })] },
+      {},
+    );
+
+    await useCommercialStore.getState().loadProposals();
+
+    const { approvals } = useCommercialStore.getState();
+    expect(approvals.p1).toBeUndefined();
+    expect(approvals.p2?.status).toBe("pending");
+    expect(approvals.p3?.status).toBe("approved");
+  });
+
   it("una carga que salió antes de aprobar no resucita la fila pendiente", async () => {
     useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
     let release: (value: unknown) => void = () => {};
