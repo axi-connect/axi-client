@@ -64,8 +64,10 @@ export function PaymentReviewDialog({
   const currency = order?.currency ?? payment?.currency ?? "COP";
   const balance = order?.balance_cents ?? 0;
 
-  // El pago suele traer su monto (lo dijo quien lo reportó); si no, se propone
-  // el saldo, que es el caso común de quien cobra de una.
+  // El pago suele traer su monto (lo dijo quien lo reportó). Si NO lo trae, no
+  // se propone nada: precargar el saldo convertía un monto mal escrito al
+  // reportar en un «Pagado» sin rastro (QA real F3); el operador escribe la
+  // cifra que ve en el banco, y «Usar el saldo completo» sigue a un clic.
   //
   // El efecto se ancla al PAGO, no al saldo: el saldo se repinta en vivo cuando
   // otro operador verifica un pago del mismo pedido, y tenerlo en las
@@ -75,7 +77,7 @@ export function PaymentReviewDialog({
   const paymentId = payment?.id ?? null;
   useEffect(() => {
     if (paymentId === null) return;
-    setAmountCents(payment?.amount_cents ?? balance);
+    setAmountCents(payment?.amount_cents ?? null);
     setAcceptOverpayment(false);
     setTouched(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- el saldo se lee al abrir, no re-suscribe
@@ -87,7 +89,10 @@ export function PaymentReviewDialog({
   const missing = verifying && amount <= 0;
   const excess = Math.max(0, amount - balance);
   const willBePaid = amount >= balance;
-  const blocked = missing || (excess > 0 && !acceptOverpayment);
+  // Solo VERIFICAR es una decisión de dinero: rechazar un reporte mayor que el
+  // saldo no puede quedarse mudo porque «sobra» (QA real F3).
+  const blocked = verifying && (missing || (excess > 0 && !acceptOverpayment));
+  const unreported = payment.amount_cents === null;
 
   async function submit() {
     if (review === null) return;
@@ -162,6 +167,11 @@ export function PaymentReviewDialog({
                   setTouched(true);
                 }}
               />
+              {unreported && amountCents === null && !(touched && missing) ? (
+                <p className="text-sm text-warning">
+                  El cliente no indicó monto: escribe el que ves en el banco.
+                </p>
+              ) : null}
               {touched && missing ? (
                 <p className="text-sm text-destructive">
                   Escribe cuánto estás verificando. De esa cifra sale el saldo del cliente.

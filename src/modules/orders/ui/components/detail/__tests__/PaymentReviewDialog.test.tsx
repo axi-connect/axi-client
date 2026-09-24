@@ -63,10 +63,14 @@ function open(props: Partial<Parameters<typeof PaymentReviewDialog>[0]> = {}) {
 describe("PaymentReviewDialog (F3: verificar es decidir, no rellenar)", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("propone el saldo cuando el pago no trae monto y verifica con él", async () => {
+  it("QA F3-C: un pago SIN cifra no precarga el saldo: lo dice, bloquea, y «Usar el saldo completo» sigue a un clic", async () => {
     open();
 
-    expect(screen.getByRole("button", { name: /Verificar \$/ })).toBeEnabled();
+    expect(screen.getByText(/El cliente no indicó monto/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Verificar \$/ })).toBeDisabled();
+    expect(screen.queryByText(/El pedido queda/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Usar el saldo completo" }));
+    expect(screen.queryByText(/El cliente no indicó monto/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Verificar \$/ }));
 
     await waitFor(() => {
@@ -76,6 +80,13 @@ describe("PaymentReviewDialog (F3: verificar es decidir, no rellenar)", () => {
         expect.objectContaining({ action: "verify", amount_cents: TOTAL }),
       );
     });
+  });
+
+  it("un pago CON cifra sí la precarga, sin el aviso de «no indicó monto»", () => {
+    open({ review: { payment: payment({ amount_cents: 400_000 }), action: "verify" } });
+
+    expect(screen.queryByText(/El cliente no indicó monto/)).toBeNull();
+    expect(screen.getByRole("button", { name: /Verificar \$\s?4\.000/ })).toBeEnabled();
   });
 
   it("enseña en qué queda el pedido ANTES de confirmar", () => {
@@ -174,5 +185,30 @@ describe("PaymentReviewDialog (F3: verificar es decidir, no rellenar)", () => {
 
     expect(screen.queryByLabelText("Monto verificado")).toBeNull();
     expect(screen.getByRole("button", { name: "Rechazar pago" })).toBeEnabled();
+  });
+
+  it("QA F3-D: rechazar un reporte MAYOR que el saldo sí llega al servidor (el sobrepago solo bloquea verificar)", async () => {
+    open({
+      review: { payment: payment({ amount_cents: TOTAL * 3 }), action: "reject" },
+      order: order({ paid_cents: TOTAL / 2, balance_cents: TOTAL / 2 }),
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Rechazar pago" }));
+    await waitFor(() => {
+      expect(mockReview).toHaveBeenCalledWith(
+        "ord-1",
+        "pay-1",
+        expect.objectContaining({ action: "reject" }),
+      );
+    });
+    expect(mockReview.mock.calls[0][2]).not.toHaveProperty("amount_cents");
+    // Y verificar ese mismo reporte sigue exigiendo aceptar el sobrepago
+    mockReview.mockClear();
+    open({
+      review: { payment: payment({ id: "pay-2", amount_cents: TOTAL * 3 }), action: "verify" },
+      order: order({ paid_cents: TOTAL / 2, balance_cents: TOTAL / 2 }),
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Verificar \$/ }));
+    expect(mockReview).not.toHaveBeenCalled();
   });
 });

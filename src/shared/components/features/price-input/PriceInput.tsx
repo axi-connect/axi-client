@@ -25,10 +25,17 @@ export function PriceInput({
   disabled,
   className,
   "aria-invalid": ariaInvalid,
+  onInvalidChange,
 }: {
   id?: string;
   value: number | null;
   onChange: (cents: number | null) => void;
+  /**
+   * `true` mientras lo escrito NO se entiende como dinero («1.000.000abc»).
+   * `onChange` recibe null tanto para vacío como para inválido; quien deba
+   * frenar el envío ante un monto ilegible distingue aquí los dos casos.
+   */
+  onInvalidChange?: (invalid: boolean) => void;
   currency?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -64,11 +71,15 @@ export function PriceInput({
         onChange={(e) => {
           const raw = e.target.value;
           setText(raw);
-          onChange(raw.trim() === "" ? null : parseMoneyToCents(raw));
+          const cents = raw.trim() === "" ? null : parseMoneyToCents(raw);
+          onChange(cents);
+          onInvalidChange?.(raw.trim() !== "" && cents === null);
         }}
         onBlur={() => {
           setFocused(false);
+          // El texto vuelve a reflejar `value`: lo ilegible se borra, y deja de serlo.
           setText(centsToInputText(value, currency));
+          onInvalidChange?.(false);
         }}
       />
     </div>
