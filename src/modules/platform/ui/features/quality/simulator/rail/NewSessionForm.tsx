@@ -24,7 +24,7 @@ import {
 } from "../../../../../domain/quality-sessions";
 import { useCreateSession } from "../../../../../infrastructure/api/hooks/use-quality-sessions";
 import { TenantSelect } from "../../../../components/TenantSelect";
-import { AgentSelect } from "../AgentSelect";
+import { AgentSelect } from "../../shared/AgentSelect";
 
 type NewSessionFormProps = {
   /** Preselección («Nueva sesión igual» desde una sesión terminada). */

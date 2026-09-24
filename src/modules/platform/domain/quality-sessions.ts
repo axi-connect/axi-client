@@ -30,10 +30,6 @@ export const SESSION_IDLE_TIMEOUT_MIN = 30;
 
 // ─── Estado ──────────────────────────────────────────────────────────────────
 
-export function isSessionActive(session: Pick<SessionSummary, "status">): boolean {
-  return session.status === "active";
-}
-
 /** ¿El operador puede escribir? Activa y no escalada ni cerrada por el agente. */
 export function canOperatorSend(session: Pick<SessionDetail, "status" | "agent_state">): boolean {
   return session.status === "active" && session.agent_state !== "closed";
@@ -106,9 +102,25 @@ export function lastTappableMessageId(transcript: readonly SessionMessage[]): st
   return last.interactive && last.interactive.options.length > 0 ? last.id : null;
 }
 
-/** Id del último mensaje conocido, para pedir solo el delta (`?after=`). */
+/** Prefijo de las burbujas optimistas (aún sin id del servidor). */
+export const OPTIMISTIC_ID_PREFIX = "pending-";
+
+export function isOptimisticMessage(message: Pick<SessionMessage, "id">): boolean {
+  return message.id.startsWith(OPTIMISTIC_ID_PREFIX);
+}
+
+/**
+ * Id del último mensaje PERSISTIDO conocido, para pedir solo el delta
+ * (`?after=`). Las burbujas optimistas no cuentan: su id no existe en el
+ * servidor (B1 de la auditoría: mandarlo daba 400 en cada poll y el chat
+ * se congelaba tras el primer envío).
+ */
 export function lastMessageId(transcript: readonly SessionMessage[]): string | undefined {
-  return transcript.at(-1)?.id;
+  for (let index = transcript.length - 1; index >= 0; index -= 1) {
+    const message = transcript[index];
+    if (message && !isOptimisticMessage(message)) return message.id;
+  }
+  return undefined;
 }
 
 /** Fusiona un delta del transcript en el estado conocido (sin duplicar por id). */

@@ -142,6 +142,33 @@ describe("useSendSessionMessage", () => {
     expect(last?.status).toBe("queued");
   });
 
+  it("B1: el poll siguiente al envío optimista pide after = último id PERSISTIDO y trae la respuesta", async () => {
+    const reply = { ...MESSAGE, id: "0199-0003", direction: "outbound", sender_type: "ai_agent", agent_id: "ag-1", body: "¡Hola!" };
+    const persistedOperator = { ...MESSAGE, id: "0199-0002", provider_message_id: "sim-in:2", body: "quiero tenis" };
+    mockedClient.GET.mockResolvedValueOnce({ data: DETAIL } as never).mockResolvedValue({
+      data: { ...DETAIL, transcript_mode: "delta", transcript: [persistedOperator, reply] },
+    } as never);
+    const { wrapper, queryClient } = createWrapper();
+    const detail = renderHook(() => useSessionQuery("s-1"), { wrapper });
+    await waitFor(() => expect(detail.result.current.isSuccess).toBe(true));
+    const send = renderHook(() => useSendSessionMessage("s-1"), { wrapper });
+    await act(async () => {
+      await send.result.current.mutateAsync({ kind: "text", body: "quiero tenis" });
+    });
+    // La caché ya tiene la burbuja pending-… al final
+    const before = queryClient.getQueryData<typeof DETAIL>(platformKeys.quality.sessions.detail("s-1"));
+    expect(before?.transcript.at(-1)?.id).toBe("pending-sim-in:2");
+
+    const refetched = await act(() => detail.result.current.refetch());
+    // NUNCA `after=pending-…` (el server valida uuid y respondía 400)
+    expect(mockedClient.GET).toHaveBeenLastCalledWith("/api/v1/platform/quality/sessions/{id}", {
+      params: { path: { id: "s-1" }, query: { after: "0199-0001" } },
+    });
+    // La persistida y la respuesta del agente llegan; la optimista se deduplica al pintar
+    const ids = dedupeOptimistic(refetched.data?.transcript ?? []).map((message) => message.id);
+    expect(ids).toEqual(["0199-0001", "0199-0002", "0199-0003"]);
+  });
+
   it("dedupeOptimistic descarta la burbuja provisional cuando llega la persistida", () => {
     const pending = { ...MESSAGE, id: "pending-sim-in:2", provider_message_id: "sim-in:2", status: "queued" };
     const persisted = { ...MESSAGE, id: "0199-0002", provider_message_id: "sim-in:2" };

@@ -10,7 +10,7 @@
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { TenantSelect } from "../../../../components/TenantSelect";
-import { AgentSelect } from "../../simulator/AgentSelect";
+import { AgentSelect } from "../../shared/AgentSelect";
 
 type TargetStepProps = {
   companyId: string | null;

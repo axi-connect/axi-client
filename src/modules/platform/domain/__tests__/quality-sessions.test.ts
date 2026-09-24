@@ -3,6 +3,7 @@ import {
   describeSessionError,
   formatLatency,
   formatUsd,
+  lastMessageId,
   lastTappableMessageId,
   mergeTranscript,
   sessionStatusKey,
@@ -75,6 +76,12 @@ describe("toques", () => {
 });
 
 describe("transcript incremental", () => {
+  it("lastMessageId salta las burbujas optimistas (su id no existe en el servidor)", () => {
+    expect(lastMessageId([])).toBeUndefined();
+    expect(lastMessageId([message({ id: "1" }), message({ id: "pending-sim-in:9" })])).toBe("1");
+    expect(lastMessageId([message({ id: "pending-sim-in:9" })])).toBeUndefined();
+  });
+
   it("fusiona el delta sin duplicar ids y conserva el orden", () => {
     const known = [message({ id: "1" }), message({ id: "2" })];
     const merged = mergeTranscript(known, [message({ id: "2" }), message({ id: "3" })]);

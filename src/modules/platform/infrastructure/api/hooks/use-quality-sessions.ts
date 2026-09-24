@@ -16,7 +16,16 @@
  */
 import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { lastMessageId, mergeTranscript, type CreateSessionDTO, type SendSessionMessageDTO, type SessionDetail, type SessionMessage } from "../../../domain/quality-sessions";
+import {
+  isOptimisticMessage,
+  lastMessageId,
+  mergeTranscript,
+  OPTIMISTIC_ID_PREFIX,
+  type CreateSessionDTO,
+  type SendSessionMessageDTO,
+  type SessionDetail,
+  type SessionMessage,
+} from "../../../domain/quality-sessions";
 import { sessionPollInterval } from "../../../domain/polling";
 import { usePlatformAuth } from "../../auth/platform-auth.context";
 import { platformClient } from "../platform-client";
@@ -155,7 +164,7 @@ export function useSendSessionMessage(id: string) {
         if (!known) return known;
         const optimistic: SessionMessage = {
           // El id definitivo llega con el polling; uno provisional ordena al final
-          id: `pending-${accepted.provider_message_id}`,
+          id: `${OPTIMISTIC_ID_PREFIX}${accepted.provider_message_id}`,
           direction: "inbound",
           sender_type: "contact",
           agent_id: null,
@@ -181,12 +190,10 @@ export function useSendSessionMessage(id: string) {
 /** Reconcilia las burbujas optimistas con las persistidas (mismo provider_message_id). */
 export function dedupeOptimistic(transcript: readonly SessionMessage[]): SessionMessage[] {
   const persisted = new Set(
-    transcript
-      .filter((message) => !message.id.startsWith("pending-"))
-      .map((message) => message.provider_message_id),
+    transcript.filter((message) => !isOptimisticMessage(message)).map((message) => message.provider_message_id),
   );
   return transcript.filter(
-    (message) => !message.id.startsWith("pending-") || !persisted.has(message.provider_message_id),
+    (message) => !isOptimisticMessage(message) || !persisted.has(message.provider_message_id),
   );
 }
 
