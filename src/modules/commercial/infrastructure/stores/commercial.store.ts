@@ -12,7 +12,7 @@ import type {
   GoalResponseDTO,
   RejectCommercialProposalResultDTO,
 } from "@/modules/commercial/domain/commercial";
-import { approvedThisPeriod } from "@/modules/commercial/domain/proposals";
+import { approvalTookEffect, approvedThisPeriod } from "@/modules/commercial/domain/proposals";
 import {
   approveProposal as approveProposalApi,
   getGoal,
@@ -243,6 +243,12 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     } catch (error: unknown) {
       if (isStaleDecision(error)) void get().loadProposals();
       throw error;
+    }
+    if (!approvalTookEffect(result)) {
+      // Nada se encendió: el servidor la deja pendiente (Q5). Se guarda el
+      // resultado para pintar los fallos, pero la fila sigue «Por decidir».
+      set((state) => ({ approvals: { ...state.approvals, [id]: result } }));
+      return result;
     }
     const decidedAt = new Date().toISOString();
     set((state) => ({

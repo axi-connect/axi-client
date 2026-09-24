@@ -140,6 +140,23 @@ describe("ActionSheetRoute / ActionDetail", () => {
     expect(screen.getByText("Aprobada")).toBeInTheDocument();
   });
 
+  it("nada aplicado: pinta el fallo, no dice «Aprobada» y deja «Aprobar» para reintentar (Q5)", async () => {
+    useCommercialStore.setState({
+      approvals: {
+        [proposal.id]: {
+          applied: [],
+          failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" }],
+        },
+      },
+    });
+    render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
+    expect(await screen.findByText("No se pudo: Lote.")).toBeInTheDocument();
+    expect(screen.getByText(/Tu plan no incluye CRM con IA, así que el agente no pudo empezar/)).toBeInTheDocument();
+    expect(screen.getByText(/La propuesta sigue por decidir/)).toBeInTheDocument();
+    expect(screen.queryByText("Aprobada")).toBeNull();
+    expect(screen.getByRole("button", { name: /^Aprobar$/ })).toBeEnabled();
+  });
+
   it("404 = ya no está (no un error de red)", async () => {
     mockGetProposal.mockRejectedValue(new HttpError({ status: 404, code: "cmo/proposal_not_found", message: "no" }));
     render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);

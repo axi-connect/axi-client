@@ -178,10 +178,14 @@ export const NO_CRM_AI_MESSAGE = "Tu plan no incluye CRM con IA: el agente no pu
 
 /**
  * Se aprobó sin `crm_ai` (las capacidades no cargaron y el botón se mostró):
- * el servidor aprueba y devuelve el artefacto como fallido (Y2). La línea dice
- * por qué en vez del mensaje técnico.
+ * el servidor devuelve el artefacto como fallido (Y2) y, si nada se aplicó,
+ * deja la propuesta pendiente (Q5). La línea dice por qué en vez del mensaje
+ * técnico.
  */
 export const CRM_AI_MISSING_FAILED = "Tu plan no incluye CRM con IA, así que el agente no pudo empezar. Pídele a un administrador que lo active.";
+
+/** Nada se aplicó al aprobar: la propuesta sigue por decidir y se puede reintentar (Q5). */
+export const NOTHING_APPLIED_NOTE = "La propuesta sigue por decidir: cuando lo resuelvas, vuelve a aprobarla.";
 
 /** «Después» de aprobar: dónde se ve el avance. */
 export const AFTER_APPROVAL_NOTE = "Verás el avance en Ventas cerradas y en Tareas. Nada se envía sin tu aprobación.";

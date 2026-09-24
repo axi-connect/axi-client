@@ -250,6 +250,17 @@ export function approvalLines(result: CommercialApprovalResultDTO, plans: readon
   return [...applied, ...failed];
 }
 
+/**
+ * ¿La aprobación encendió algo? Si NINGÚN artefacto se aplicó y alguno falló
+ * (p. ej. el plan no incluye `crm_ai`), el servidor deja la propuesta
+ * PENDIENTE y responde 200 con `applied: []` (Q5): no se pinta como
+ * «Aprobada» y «Aprobar» sigue disponible para reintentar. Sin artefactos
+ * (nada que encender) la aprobación sí cuenta.
+ */
+export function approvalTookEffect(result: CommercialApprovalResultDTO): boolean {
+  return result.applied.length > 0 || result.failed.length === 0;
+}
+
 /** Cuánto queda para decidir: el vencimiento en palabras de calendario local. */
 export function expiryPhrase(expiresAt: string | null, now: Date = new Date()): string | null {
   if (expiresAt === null) return null;

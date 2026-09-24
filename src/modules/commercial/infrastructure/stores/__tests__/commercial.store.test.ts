@@ -450,6 +450,31 @@ describe("propuestas", () => {
     expect(mockGet).toHaveBeenCalledWith("/commercial/pace", { granularity: "day" }, undefined);
   });
 
+  it("si nada se aplicó, la propuesta sigue pendiente y se puede volver a aprobar (Q5)", async () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: withGoal, error: null },
+      proposals: { status: "ready", data: [proposalRow("p1")], error: null },
+    });
+    const failedOnly = {
+      applied: [],
+      failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" }],
+    };
+    mockPost.mockResolvedValue(failedOnly);
+
+    await expect(useCommercialStore.getState().approveProposal("p1")).resolves.toEqual(failedOnly);
+
+    const state = useCommercialStore.getState();
+    expect(state.approvals.p1).toEqual(failedOnly);
+    expect(state.decisions.p1).toBeUndefined();
+    expect(state.proposals.data?.[0].status).toBe("pending");
+    // Reintentar: un segundo POST (no se reusa la promesa ya resuelta).
+    mockPost.mockResolvedValue({ applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados" }], failed: [] });
+    serveProposals({}, { "/commercial/plan": {}, "/commercial/pace": {} });
+    await useCommercialStore.getState().approveProposal("p1");
+    expect(mockPost).toHaveBeenCalledTimes(2);
+    expect(useCommercialStore.getState().proposals.data?.[0].status).toBe("approved");
+  });
+
   it("una carga que salió antes de aprobar no resucita la fila pendiente", async () => {
     useCommercialStore.setState({ goal: { status: "ready", data: withGoal, error: null } });
     let release: (value: unknown) => void = () => {};

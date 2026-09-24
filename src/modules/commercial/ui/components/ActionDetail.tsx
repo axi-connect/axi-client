@@ -9,9 +9,10 @@ import { formatInteger } from "@/core/lib/commercial-units";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { CommercialApprovalResultDTO, CommercialProposalDTO, SourceKind } from "@/modules/commercial/domain/commercial";
-import { AFTER_APPROVAL_NOTE, AFTER_APPROVED_NOTE, REJECTED_MESSAGE, REJECT_NOTE } from "@/modules/commercial/domain/copy";
+import { AFTER_APPROVAL_NOTE, AFTER_APPROVED_NOTE, NOTHING_APPLIED_NOTE, REJECTED_MESSAGE, REJECT_NOTE } from "@/modules/commercial/domain/copy";
 import {
   approvalLines,
+  approvalTookEffect,
   approvedOnPhrase,
   expiryPhrase,
   MIN_REJECT_REASON,
@@ -395,6 +396,7 @@ function ApprovalOutcome({ result, plans }: { result: CommercialApprovalResultDT
       {lines.map((line, index) => (
         <Notice key={`${line.title}-${String(index)}`} tone={line.tone} title={line.title} detail={line.detail} />
       ))}
+      {approvalTookEffect(result) ? null : <p className="text-[12.5px] text-muted-foreground">{NOTHING_APPLIED_NOTE}</p>}
     </div>
   );
 }
