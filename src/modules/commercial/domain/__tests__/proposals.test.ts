@@ -70,6 +70,7 @@ describe("readOutreachDetail y approvalLines", () => {
       {
         applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "36 programados · 2 omitidos: 2 baja comercial" }],
         failed: [{ type: "campaign", label: "Campaña", reason: "la plantilla sigue en revisión" }],
+        status: "approved",
       },
       plans,
       new Date("2026-09-23T23:30:00.000Z"),
@@ -86,6 +87,7 @@ describe("readOutreachDetail y approvalLines", () => {
         failed: [
           { type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" },
         ],
+        status: "pending",
       },
       [],
     );
@@ -97,7 +99,7 @@ describe("readOutreachDetail y approvalLines", () => {
     expect(readOutreachDetail("20 programados · 1 omitidos: 1 baja comercial")).toEqual({ created: 20, skipped: 1, reasons: "1 baja comercial" });
     expect(readOutreachDetail("1 programado · 1 omitido: 1 baja comercial")).toEqual({ created: 1, skipped: 1, reasons: "1 baja comercial" });
     const [line] = approvalLines(
-      { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "20 programados · 1 omitidos: 1 baja comercial" }], failed: [] },
+      { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "20 programados · 1 omitidos: 1 baja comercial" }], failed: [], status: "approved" },
       [],
     );
     expect(line.detail).toBe("1 quedó fuera (1 baja comercial).");
@@ -105,13 +107,13 @@ describe("readOutreachDetail y approvalLines", () => {
     expect(outreachDetailText("20 programados · 2 omitidos")).toBe("20 programados · 2 omitidos");
     expect(outreachDetailText("11 omitidos")).toBe("11 omitidos");
     // Lo que no se entiende se pinta crudo, pero con la concordancia bien.
-    expect(approvalLines({ applied: [{ type: "x", id: null, label: "Algo", detail: "1 omitidos por el horario" }], failed: [] }, [])[0].detail).toBe(
+    expect(approvalLines({ applied: [{ type: "x", id: null, label: "Algo", detail: "1 omitidos por el horario" }], failed: [], status: "approved" }, [])[0].detail).toBe(
       "1 omitido por el horario",
     );
   });
 
   it("un detalle que no se entiende se pinta crudo", () => {
-    expect(approvalLines({ applied: [{ type: "x", id: null, label: "Algo", detail: "raro" }], failed: [] }, [])).toEqual([
+    expect(approvalLines({ applied: [{ type: "x", id: null, label: "Algo", detail: "raro" }], failed: [], status: "approved" }, [])).toEqual([
       { tone: "ok", title: "Listo. Algo.", detail: "raro" },
     ]);
   });

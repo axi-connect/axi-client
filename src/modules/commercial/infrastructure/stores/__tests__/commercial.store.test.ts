@@ -436,7 +436,7 @@ describe("propuestas", () => {
       goal: { status: "ready", data: withGoal, error: null },
       proposals: { status: "ready", data: [proposalRow("p1")], error: null },
     });
-    const result = { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados" }], failed: [] };
+    const result = { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados" }], failed: [], status: "approved" };
     mockPost.mockResolvedValue(result);
     serveProposals({}, { "/commercial/plan": { status: "ready" }, "/commercial/pace": { status: "on_track" } });
 
@@ -458,6 +458,7 @@ describe("propuestas", () => {
     const failedOnly = {
       applied: [],
       failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" }],
+      status: "pending",
     };
     mockPost.mockResolvedValue(failedOnly);
 
@@ -468,7 +469,7 @@ describe("propuestas", () => {
     expect(state.decisions.p1).toBeUndefined();
     expect(state.proposals.data?.[0].status).toBe("pending");
     // Reintentar: un segundo POST (no se reusa la promesa ya resuelta).
-    mockPost.mockResolvedValue({ applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados" }], failed: [] });
+    mockPost.mockResolvedValue({ applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados" }], failed: [], status: "approved" });
     serveProposals({}, { "/commercial/plan": {}, "/commercial/pace": {} });
     await useCommercialStore.getState().approveProposal("p1");
     expect(mockPost).toHaveBeenCalledTimes(2);
@@ -483,7 +484,7 @@ describe("propuestas", () => {
       { "/commercial/plan": {}, "/commercial/pace": {} },
     );
     const loading = useCommercialStore.getState().loadProposals();
-    mockPost.mockResolvedValue({ applied: [], failed: [] });
+    mockPost.mockResolvedValue({ applied: [], failed: [], status: "approved" });
     await useCommercialStore.getState().approveProposal("p1");
     release({ data: [proposalRow("p1")] });
     await loading;
@@ -537,7 +538,7 @@ describe("propuestas", () => {
     const first = useCommercialStore.getState().approveProposal("p1");
     const second = useCommercialStore.getState().approveProposal("p1");
     expect(second).toBe(first);
-    release({ applied: [], failed: [] });
+    release({ applied: [], failed: [], status: "approved" });
     await Promise.all([first, second]);
 
     expect(mockPost).toHaveBeenCalledTimes(1);

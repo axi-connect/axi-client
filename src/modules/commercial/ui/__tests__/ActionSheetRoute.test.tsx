@@ -59,6 +59,7 @@ beforeEach(() => {
     const result = {
       applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "10 programados · 2 omitidos: 2 baja comercial" }],
       failed: [],
+      status: "approved" as const,
     };
     useCommercialStore.setState((state) => ({
       approvals: { ...state.approvals, [id]: result },
@@ -132,7 +133,7 @@ describe("ActionSheetRoute / ActionDetail", () => {
 
   it("aprobada desde la lista: el detalle ya trae el resultado del store", async () => {
     useCommercialStore.setState({
-      approvals: { [proposal.id]: { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "36 programados" }], failed: [] } },
+      approvals: { [proposal.id]: { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "36 programados" }], failed: [], status: "approved" } },
       decisions: { [proposal.id]: { status: "approved", decided_at: new Date().toISOString() } },
     });
     render(<ActionSheetRoute proposalId={proposal.id} closeBehavior="back" />);
@@ -146,6 +147,7 @@ describe("ActionSheetRoute / ActionDetail", () => {
         [proposal.id]: {
           applied: [],
           failed: [{ type: "agent_task_bulk_spec", label: "Lote", reason: "Tu plan no incluye el agente de seguimiento del CRM (crm_ai)" }],
+          status: "pending",
         },
       },
     });

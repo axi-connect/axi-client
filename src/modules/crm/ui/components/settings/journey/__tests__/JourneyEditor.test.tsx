@@ -36,6 +36,7 @@ function journey(over: Partial<JourneyDTO> = {}): JourneyDTO {
   return {
     pipeline_id: "p1",
     template_code: "health_beauty",
+    switches: { rules_enabled: false, ai_stage_moves_enabled: false },
     stages: [
       stage({
         stage_id: "s1",
@@ -142,7 +143,8 @@ describe("JourneyEditor", () => {
   });
 
   it("sin el campo `switches` (servidor viejo) se lee como apagado (Q8)", async () => {
-    getJourney.mockResolvedValue(journey());
+    const { switches: _omitted, ...legacy } = journey();
+    getJourney.mockResolvedValue(legacy as JourneyDTO);
     render(<JourneyEditor />);
     expect(await screen.findByText(/El avance automático está apagado para tu negocio/)).toBeInTheDocument();
   });

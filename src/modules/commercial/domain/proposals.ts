@@ -263,14 +263,14 @@ export function approvalLines(result: CommercialApprovalResultDTO, plans: readon
 }
 
 /**
- * ¿La aprobación encendió algo? Si NINGÚN artefacto se aplicó y alguno falló
- * (p. ej. el plan no incluye `crm_ai`), el servidor deja la propuesta
- * PENDIENTE y responde 200 con `applied: []` (Q5): no se pinta como
- * «Aprobada» y «Aprobar» sigue disponible para reintentar. Sin artefactos
- * (nada que encender) la aprobación sí cuenta.
+ * ¿La aprobación encendió algo? Lo decide el SERVIDOR (Q5): si ninguna acción
+ * se encendió (p. ej. el plan no incluye `crm_ai`; una plantilla o un segmento
+ * no cuentan como encendido), deja la propuesta PENDIENTE y responde 200 con
+ * `status: 'pending'` y `failed[]`: no se pinta como «Aprobada» y «Aprobar»
+ * sigue disponible para reintentar.
  */
 export function approvalTookEffect(result: CommercialApprovalResultDTO): boolean {
-  return result.applied.length > 0 || result.failed.length === 0;
+  return result.status === "approved";
 }
 
 /** Cuánto queda para decidir: el vencimiento en palabras de calendario local. */

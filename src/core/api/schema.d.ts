@@ -12155,6 +12155,10 @@ export interface components {
             /** Format: uuid */
             pipeline_id: string;
             template_code: string | null;
+            switches: {
+                rules_enabled: boolean;
+                ai_stage_moves_enabled: boolean;
+            };
             stages: {
                 /** Format: uuid */
                 stage_id: string;
@@ -16515,6 +16519,8 @@ export interface components {
                 label: string;
                 reason: string;
             }[];
+            /** @enum {string} */
+            status: "approved" | "pending";
         };
         CommercialProposalListDto: {
             data: {

@@ -18,7 +18,7 @@ jest.mock("framer-motion", () => ({ useReducedMotion: () => true, animate: () =>
 
 const load = jest.fn().mockResolvedValue(undefined);
 const loadProposals = jest.fn().mockResolvedValue(undefined);
-const approveProposal = jest.fn().mockResolvedValue({ applied: [], failed: [] });
+const approveProposal = jest.fn().mockResolvedValue({ applied: [], failed: [], status: "approved" });
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -163,7 +163,7 @@ describe("CommercialView", () => {
       plan: { status: "ready", data: plan, error: null },
       pace: { status: "ready", data: pace, error: null },
       proposals: { status: "ready", data: [approved, here], error: null },
-      approvals: { a2: { applied: [], failed: [] } },
+      approvals: { a2: { applied: [], failed: [], status: "approved" } },
     });
     render(<CommercialView />);
     const [first, second] = within(screen.getByRole("region", { name: "Axi propone" })).getAllByRole("listitem");

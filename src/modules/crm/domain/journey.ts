@@ -13,20 +13,8 @@ import type { StatusMap } from "@/shared/components/features/status-badge";
 
 /* ───────────────────────────── Wire types ───────────────────────────────── */
 
-/**
- * TEMPORAL-Q8: los dos interruptores del recorrido que el servidor añade a
- * `GET /crm/journey` (solo lectura: se cambian en `/crm/journey/settings`).
- * Tipado a mano hasta que el coordinador regenere `schema.d.ts`; entonces se
- * borra esta interfaz y el `&` de `JourneyDTO`, y queda `Schemas["JourneyDto"]`.
- * Opcional: un servidor que aún no lo manda se lee como APAGADO.
- */
-export interface JourneySwitchesDTO {
-  rules_enabled: boolean;
-  ai_stage_moves_enabled: boolean;
-}
-
-/** TEMPORAL-Q8: `& { switches? }` hasta regenerar el contrato. */
-export type JourneyDTO = Schemas["JourneyDto"] & { switches?: JourneySwitchesDTO };
+/** `switches` (Q8): los dos interruptores del recorrido, solo lectura. */
+export type JourneyDTO = Schemas["JourneyDto"];
 export type JourneyStageDTO = JourneyDTO["stages"][number];
 /** `null` en la etapa = no gobierna el seguimiento. */
 export type JourneyCadenceDTO = NonNullable<JourneyStageDTO["cadence"]>;
@@ -157,7 +145,7 @@ export interface JourneySwitches {
  * sin el campo (un servidor anterior a Q8) se leen apagados: prometer que
  * algo se mueve solo cuando no se mueve es justo el defecto que se corrige.
  */
-export function readJourneySwitches(journey: Pick<JourneyDTO, "switches"> | null | undefined): JourneySwitches {
+export function readJourneySwitches(journey: { switches?: JourneyDTO["switches"] } | null | undefined): JourneySwitches {
   const switches = journey?.switches;
   return { rules: switches?.rules_enabled === true, ai: switches?.ai_stage_moves_enabled === true };
 }
