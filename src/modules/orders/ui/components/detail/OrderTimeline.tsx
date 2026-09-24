@@ -80,6 +80,10 @@ function visualFor(event: OrderEventDTO, currency: string): EventVisual {
       const amount = typeof payload.amount_cents === "number" ? payload.amount_cents : null;
       const reported =
         typeof payload.reported_amount_cents === "number" ? payload.reported_amount_cents : null;
+      // El cliente pudo reportar en OTRA moneda (US$ 500 en un pedido que el
+      // verify congeló a COP): el payload la trae; los eventos viejos, no.
+      const reportedCurrency =
+        typeof payload.reported_currency === "string" ? payload.reported_currency : currency;
       const label =
         amount === null
           ? `Pago verificado por ${actorName(event)}`
@@ -90,7 +94,7 @@ function visualFor(event: OrderEventDTO, currency: string): EventVisual {
         tone: "success",
         detail:
           reported !== null && reported !== amount
-            ? `El cliente había reportado ${formatMoney(reported, currency)}.`
+            ? `El cliente había reportado ${formatMoney(reported, reportedCurrency)}.`
             : undefined,
       };
     }

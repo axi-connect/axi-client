@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 
 import type { OrderEventDTO } from "@/modules/orders/domain/order";
 import { OrderTimeline } from "@/modules/orders/ui/components/detail/OrderTimeline";
@@ -54,6 +54,43 @@ describe("OrderTimeline · pago verificado", () => {
     // La nota del operador sigue ahí, detrás de la corrección
     expect(corrected).toHaveTextContent(/«consignación verificada»/);
     expect(screen.getAllByText(/había reportado/)).toHaveLength(1);
+  });
+
+  it("si el cliente reportó en OTRA moneda (US$ 500 en un pedido congelado a COP), el rastro la conserva", () => {
+    // Hallazgo del auditor sobre a487d72: con la moneda del pedido, «US$ 500»
+    // salía como «$ 500». El payload trae `reported_currency` desde el verify.
+    render(
+      <OrderTimeline
+        events={[
+          event({
+            payload: {
+              amount_cents: 160000000,
+              reported_amount_cents: 50000,
+              reported_currency: "USD",
+            },
+          }),
+        ]}
+        currency="COP"
+      />,
+    );
+    expect(screen.getByText(/1\.600\.000 verificados/)).toBeInTheDocument();
+    const trace = screen.getByText(/había reportado/);
+    expect(trace).toHaveTextContent(/US\$\s?500/);
+    // Sin la moneda en el payload (eventos viejos) cae a la del pedido: los dos signos
+    cleanup();
+    render(
+      <OrderTimeline
+        events={[
+          event({
+            payload: { amount_cents: 160000000, reported_amount_cents: 50000 },
+          }),
+        ]}
+        currency="COP"
+      />,
+    );
+    const legacy = screen.getByText(/había reportado/);
+    expect(legacy).not.toHaveTextContent(/US\$/);
+    expect(legacy).toHaveTextContent(/\$\s?500\./);
   });
 
   it("un evento viejo sin monto en el payload sigue leyéndose como antes", () => {
