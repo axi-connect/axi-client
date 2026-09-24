@@ -64,6 +64,12 @@ Mide el p95 en el entorno de QA (`http://localhost:3101`, pide la medición a `a
 convertir nada: por debajo de 1 s se queda como está. Nunca «Guardando» + «Guardado» como dos avisos.
 Emitir un documento **no** es candidato: la fila ya lleva su barra de progreso y el WS la cierra.
 
+> **Medido (2026-09-24, `audit-agent`, 20 guardados por endpoint en una instancia desechable):**
+> `PUT /fx/settings` p50 18 ms · p95 21 ms; `PUT /collections/settings` (PaymentPolicyTab y RemindersTab)
+> p50 20 ms · p95 34 ms; `PUT /documents/settings` p50 99 ms · p95 257 ms; `PUT /document-templates/contract`
+> p50 34 ms · p95 40 ms. Todo muy por debajo de 1 s incluso con la latencia de producción:
+> **ninguna pantalla de Cobros va a `notify.promise`.** Se queda `showAlert` al terminar.
+
 **R6 · Estados que duran = `<Alert variant>` en línea; nunca un aviso, nunca una caja teñida a mano.**
 - `SendDocumentDialog.tsx:448` — la función local `Notice` (`bg-secondary/60`, icono teñido) → `Alert`
   (`ok→success`, `info→info`, `warn→warning`), conservando el enlace «Configurar plantilla».

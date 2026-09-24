@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { useEffect, useState } from "react";
 import { CircleCheck, LoaderCircle, TriangleAlert } from "lucide-react";
 
@@ -169,9 +170,13 @@ export function PaymentReviewDialog({
                 }}
               />
               {unreported && amountCents === null && !(touched && missing) ? (
-                <p className="text-sm text-warning">
-                  El cliente no indicó monto: escribe el que ves en el banco.
-                </p>
+                // §9.4: un estado que dura mientras falte la cifra es `Alert`, no texto ámbar (≈3:1).
+                <Alert variant="warning">
+                  <TriangleAlert aria-hidden="true" />
+                  <AlertDescription>
+                    <span>El cliente no indicó monto: escribe el que ves en el banco.</span>
+                  </AlertDescription>
+                </Alert>
               ) : null}
               {touched && missing ? (
                 <p className="text-sm text-destructive">

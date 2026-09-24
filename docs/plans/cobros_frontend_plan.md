@@ -19,7 +19,7 @@
 
 **Sidebar** (lo decide el seed `rbac_ui_module` del backend con el nuevo `feature_code`; el cliente solo resuelve paths):
 
-- Grupo **Ventas**: Pedidos `/orders` · **Cartera `/orders/receivables`** (feature `collections`, `collections:read`) · Catálogo · Envíos · **Pagos `/settings/payments`** (renombra «Métodos de pago»; `payment_methods:read`).
+- Grupo **Ventas**: Pedidos `/orders` · **Cartera `/receivables`** (feature `collections`, `collections:read`) · Catálogo · Envíos · **Pagos `/settings/payments`** (renombra «Métodos de pago»; `payment_methods:read`).
 - **Mi empresa** `/settings/company`: General (+ «Tipo de negocio») · Sucursales · **Funciones** `/settings/company/funciones`.
 - Documentos **no** tienen ítem propio: viven en el pedido, el contacto y el rail del inbox; su editor es una pestaña del hub Pagos.
 - `core/config/routes.ts`: quitar el alias `/settings/sales`; `next.config.ts`: redirect 308 `/settings/company/pagos → /settings/payments` (URL compartida hoy).
@@ -28,7 +28,7 @@
 
 **Hub Pagos** `src/app/(private)/(content)/settings/payments/{layout,page,loading}.tsx` + sub-rutas reales `plan/`, `moneda/`, `documentos/` (patrón `CompanySettingsLayout` + `NavTabs`): **Medios** (mueve `PaymentMethodsTab`) · **Plan de pagos** (feature `payment_plans`) · **Recordatorios** (feature `collections`, F5) · **Moneda y TRM** (`fx_quotes`) · **Documentos** (`documents`; `SegmentedControl` Contrato · Recibo · Estado de cuenta · Cuenta de cobro + ajustes de emisión/envío). Las pestañas se filtran con `useFeatures` y esperan a `loaded` (nunca pintar-y-quitar).
 
-**Cartera** en `/orders/receivables` dentro de `src/app/(private)/orders/`: hereda `OrdersLayout` y su slot `@sheet`, así que una fila abre el mismo rail `/orders/[orderId]` interceptado (segmento estático gana al dinámico).
+**Cartera** en `/receivables` (de primer nivel a propósito, decisión de la implementación de F4; el plan decía `/orders/receivables` y la QA lo señaló): una fila abre el rail del pedido `/orders/[orderId]`.
 
 ## 3. Slices a crear / extender
 
@@ -101,7 +101,7 @@ Genérico extraído de `marketing/ui/components/MessageTemplateField.tsx` (`{val
 `context-rail/registry.tsx`: `ContextPanelDef` gana `feature?: string`; entrada `{id: 'orders', label: 'Pedidos y cobros', icon: ShoppingCart, permission: 'orders:read', feature: 'payment_plans', Panel: OrdersPanel}`; `panels/OrdersPanel.tsx` (pedido activo: saldo, próxima cuota, dual money, `PaymentPlanBlock` compacto, `DocumentsList` con enviar; consume solo barrels). El rail filtra por `useFeatures`.
 
 ### Transversales
-`core/realtime/events.ts` (`InboxServerEvents`): `order.payment_verified`, `order.currency_frozen`, `collections.plan_updated | installment_paid | installment_overdue | reminder_updated`, `document.issued | failed | delivery_updated`. `notifications/domain/notification-target.ts`: familias `"collections."` → `/orders/{order_id}` o `/orders/receivables`; `"document."` → `/orders/{order_id}` o `/crm/contacts/{contact_id}`. `core/lib/format.ts::formatMoneyApprox(cents, currency, approx?: {currency, rate})` → `"US$ 3.500 ≈ $ 10.851.575"` (puro; la tasa siempre viene del snapshot del pedido, nunca de una global). `docs/architecture.md` §3.3: registrar los barrels nuevos (`orders`, `documents`, `collections`) y las ampliaciones (`onboarding`, `companies`).
+`core/realtime/events.ts` (`InboxServerEvents`): `order.payment_verified`, `order.currency_frozen`, `collections.plan_updated | installment_paid | installment_overdue | reminder_updated`, `document.issued | failed | delivery_updated`. `notifications/domain/notification-target.ts`: familias `"collections."` → `/orders/{order_id}` o `/receivables`; `"document."` → `/orders/{order_id}` o `/crm/contacts/{contact_id}`. `core/lib/format.ts::formatMoneyApprox(cents, currency, approx?: {currency, rate})` → `"US$ 3.500 ≈ $ 10.851.575"` (puro; la tasa siempre viene del snapshot del pedido, nunca de una global). `docs/architecture.md` §3.3: registrar los barrels nuevos (`orders`, `documents`, `collections`) y las ampliaciones (`onboarding`, `companies`).
 
 ## 4. Mockups de Fase 0 (`docs/design/mockups/`, convención `<name>.build.py` + `.html` + `.lucide.json`)
 
@@ -150,7 +150,7 @@ Light/dark, estados (cargando, vacío, error, 403 de capacidad/feature), móvil.
 - **La pestaña existe cuando existe su pantalla** (`PLAN_TAB_READY`, `DOCUMENTS_TAB_READY` en `PaymentsHubNav`, y `SELECTABLE_ATTRIBUTE_TYPES` en catalog). Misma disciplina en los dos sitios: ofrecer algo cuyo destino aún no funciona es el «paso 2 sin el 3» que bloqueó F2. Se quitan al entrar F4 y F7.
 - **Una función bloqueada se explica, no desaparece.** `detail()` devuelve `source` y `blocked_by`, y de ahí sale el texto. Al llegar F4, la pestaña de Cobranza con `blocked_by: {kind:'feature', code:'payment_plans'}` debe decir de qué depende en vez de esfumarse: desaparecer sin motivo es lo que deja al dueño sin saber por qué no tiene cobros.
 - Vista previa de documento **server-side** (el layout HTML/CSS de impresión es del servidor; espejar solo la whitelist evita divergencias). Sin «Descargar PDF de prueba» en v1.
-- Cartera en `/orders/receivables`, no de primer nivel.
+- Cartera en `/receivables` (corregido 2026-09-24: el plan decía `/orders/receivables`, la página vive de primer nivel).
 - Sin librería de drag-and-drop para las cláusulas (subir/bajar).
 - Descarga de PDF por URL presignada en pestaña nueva, no fetch-blob.
 

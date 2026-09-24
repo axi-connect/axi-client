@@ -134,6 +134,12 @@ export function ReportPaymentDialog({
                 <p role="alert" className="text-xs text-destructive">
                   No entendí el monto. Escríbelo como 1.000.000 o 1000000.
                 </p>
+              ) : amountCents !== null && amountCents > 0 ? (
+                // Lo que se va a registrar, en la moneda del pedido: en USD, «350.00»
+                // se lee como 35.000 (el punto es de miles) y aquí se ve ANTES de enviar.
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  = {formatMoney(amountCents, order.currency)}
+                </p>
               ) : (
                 <p className="text-xs text-muted-foreground">Vacío si el cliente no dijo cuánto.</p>
               )}

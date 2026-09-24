@@ -87,10 +87,11 @@ describe("ReportPaymentDialog", () => {
     fireEvent.click(button);
     await Promise.resolve();
     expect(mockReport).not.toHaveBeenCalled();
-    // Al salir del campo, lo ilegible se borra y deja de bloquear
+    // Al salir del campo, lo ilegible se QUEDA con su error: no se pierde lo escrito
     fireEvent.blur(screen.getByLabelText("Monto"));
-    expect(screen.queryByRole("alert")).toBeNull();
-    expect(screen.getByRole("button", { name: "Registrar pago" })).toBeEnabled();
+    expect(screen.getByLabelText("Monto")).toHaveValue("un millón");
+    expect(screen.getByRole("alert")).toHaveTextContent(/No entendí el monto/);
+    expect(screen.getByRole("button", { name: "Registrar pago" })).toBeDisabled();
     // Vacío sí se puede: el cliente no dijo cuánto, y el monto viaja ausente
     fireEvent.focus(screen.getByLabelText("Monto"));
     fireEvent.change(screen.getByLabelText("Monto"), { target: { value: "" } });
@@ -98,6 +99,16 @@ describe("ReportPaymentDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Registrar pago" }));
     await waitFor(() => expect(mockReport).toHaveBeenCalledTimes(1));
     expect(mockReport.mock.calls[0][1].amount_cents).toBeUndefined();
+  });
+
+  it("la cifra interpretada se ve debajo ANTES de enviar: en USD, «350.00» es US$ 35.000, no 350", async () => {
+    await open(order({ currency: "USD", total_cents: 350_00, balance_cents: 350_00 }));
+    const amount = screen.getByLabelText("Monto");
+    fireEvent.focus(amount);
+    fireEvent.change(amount, { target: { value: "350.00" } });
+    expect(screen.getByText(/^= US\$\s?35\.000/)).toBeInTheDocument();
+    fireEvent.change(amount, { target: { value: "350" } });
+    expect(screen.getByText(/^= US\$\s?350\b/)).toBeInTheDocument();
   });
 
   it("B · propone el SALDO, no el total: tras un abono de 400.000 sobre 1.000.000 propone 600.000", async () => {

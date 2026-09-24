@@ -44,11 +44,15 @@ export function PriceInput({
 }) {
   const [text, setText] = useState(() => centsToInputText(value, currency));
   const [focused, setFocused] = useState(false);
+  // Lo escrito no se entiende como dinero: se conserva con su error hasta que
+  // la persona lo corrija, en vez de borrarse en silencio (QA real F3).
+  const [invalid, setInvalid] = useState(false);
 
-  // Sincroniza cambios externos (reset del form, carga async) sin pisar el tecleo.
+  // Sincroniza cambios externos (reset del form, carga async) sin pisar el
+  // tecleo ni un texto ilegible que la persona todavía tiene que arreglar.
   useEffect(() => {
-    if (!focused) setText(centsToInputText(value, currency));
-  }, [value, currency, focused]);
+    if (!focused && !invalid) setText(centsToInputText(value, currency));
+  }, [value, currency, focused, invalid]);
 
   return (
     <div className={cn("relative", className)}>
@@ -72,14 +76,18 @@ export function PriceInput({
           const raw = e.target.value;
           setText(raw);
           const cents = raw.trim() === "" ? null : parseMoneyToCents(raw);
+          const isInvalid = raw.trim() !== "" && cents === null;
+          setInvalid(isInvalid);
           onChange(cents);
-          onInvalidChange?.(raw.trim() !== "" && cents === null);
+          onInvalidChange?.(isInvalid);
         }}
         onBlur={() => {
           setFocused(false);
-          // El texto vuelve a reflejar `value`: lo ilegible se borra, y deja de serlo.
-          setText(centsToInputText(value, currency));
-          onInvalidChange?.(false);
+          // Lo ilegible NO se borra al salir: quien escribió «un millón» lo ve
+          // con su error hasta que lo corrija, en vez de perderlo sin aviso y
+          // quedarse con el envío habilitado sin monto (QA real F3). Lo que sí
+          // se entiende se normaliza al formato de la moneda.
+          if (!invalid) setText(centsToInputText(value, currency));
         }}
       />
     </div>
