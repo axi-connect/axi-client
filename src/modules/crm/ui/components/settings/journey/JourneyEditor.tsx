@@ -13,6 +13,7 @@ import { useMyCompany } from "@/modules/companies/public";
 import {
   STAGE_KIND_LABELS,
   autoAdvanceAfterKindChange,
+  readJourneySwitches,
   type JourneyDTO,
   type JourneyStageDTO,
   type PutJourneyStageDTO,
@@ -184,7 +185,9 @@ export function JourneyEditor() {
     setApplying(true);
     try {
       const saved = await applyJourneyTemplate(nicheCode);
-      commit(saved);
+      // Los interruptores son de solo lectura y los da el GET: si la respuesta
+      // de la plantilla no los trae, se conservan los que había (Q8).
+      commit({ ...saved, switches: saved.switches ?? journeyRef.current?.switches });
       const applied = saved.templates.find((template) => template.niche_code === nicheCode);
       const withCadence = saved.stages.filter((stage) => stage.cadence !== null).length;
       showAlert({
@@ -217,6 +220,7 @@ export function JourneyEditor() {
   if (journey === null) return null;
 
   const stages = [...journey.stages].sort((a, b) => a.position - b.position);
+  const switches = readJourneySwitches(journey);
 
   return (
     <div className="space-y-4">
@@ -227,7 +231,7 @@ export function JourneyEditor() {
         </p>
       </div>
 
-      <JourneyExplainer />
+      <JourneyExplainer switches={switches} />
 
       <JourneyTemplatePicker
         templates={journey.templates}
@@ -255,6 +259,7 @@ export function JourneyEditor() {
               <JourneyStageRow
                 key={stage.stage_id}
                 stage={stage}
+                switches={switches}
                 takenKinds={takenKinds}
                 expanded={expanded === stage.stage_id}
                 busy={busyStages.has(stage.stage_id) || applying}

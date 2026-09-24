@@ -130,6 +130,41 @@ describe("JourneyEditor", () => {
     expect(screen.getByText("Salud, belleza y citas")).toBeInTheDocument();
   });
 
+  it("con los interruptores apagados (como nacen) no promete que nada se mueva solo (Q8)", async () => {
+    getJourney.mockResolvedValue(journey({ switches: { rules_enabled: false, ai_stage_moves_enabled: false } }));
+    render(<JourneyEditor />);
+
+    expect(await screen.findByText(/El avance automático está apagado para tu negocio: las etapas no se mueven solas todavía\./)).toBeInTheDocument();
+    expect(screen.queryByText(/Cada etapa se mueve sola/)).toBeNull();
+    expect(screen.queryByText(/El agente también puede/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
+    expect(screen.getByText("El avance automático está apagado para tu negocio; hoy solo una persona la mueve.")).toBeInTheDocument();
+  });
+
+  it("sin el campo `switches` (servidor viejo) se lee como apagado (Q8)", async () => {
+    getJourney.mockResolvedValue(journey());
+    render(<JourneyEditor />);
+    expect(await screen.findByText(/El avance automático está apagado para tu negocio/)).toBeInTheDocument();
+  });
+
+  it("reglas encendidas y agente apagado: se mueve con sus eventos, pero el agente no mueve (Q8)", async () => {
+    getJourney.mockResolvedValue(journey({ switches: { rules_enabled: true, ai_stage_moves_enabled: false } }));
+    render(<JourneyEditor />);
+
+    expect(await screen.findByText(/Cada etapa se mueve sola con sus eventos/)).toBeInTheDocument();
+    expect(screen.getByText(/El agente no mueve etapas en tu negocio/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
+    expect(screen.getByText("Sus eventos la mueven.")).toBeInTheDocument();
+  });
+
+  it("los dos encendidos: el texto de siempre, con el agente", async () => {
+    getJourney.mockResolvedValue(journey({ switches: { rules_enabled: true, ai_stage_moves_enabled: true } }));
+    render(<JourneyEditor />);
+    expect(await screen.findByText("El agente también puede moverla por su criterio.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
+    expect(screen.getByText("Sus eventos la mueven; el agente también puede.")).toBeInTheDocument();
+  });
+
   it("«Se mueve sola» manda SOLO su etapa y fusiona solo esa en la respuesta", async () => {
     getJourney.mockResolvedValue(journey());
     putJourney.mockImplementation((dto: PutJourneyDTO) => Promise.resolve(echo(dto)));

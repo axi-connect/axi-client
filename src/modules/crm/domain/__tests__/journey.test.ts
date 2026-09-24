@@ -10,6 +10,9 @@ import {
   cadenceSummary,
   daysInStageLabel,
   autoAdvanceAfterKindChange,
+  autoAdvanceHint,
+  journeyExplainerText,
+  readJourneySwitches,
   isRevertibleMove,
   journeyRuleLabel,
   lifecycleSourceLabel,
@@ -143,5 +146,41 @@ describe("la ficha del contacto", () => {
     expect(journeyRuleLabel("appointment_booked")).toBe("cita agendada");
     expect(journeyRuleLabel("something_new")).toBe("something new");
     expect(journeyRuleLabel(null)).toBeNull();
+  });
+});
+
+describe("interruptores del recorrido (Q8)", () => {
+  const off = { rules: false, ai: false };
+  const all = { rules: true, ai: true };
+
+  it("sin el campo o con valores no booleanos, apagado", () => {
+    expect(readJourneySwitches(undefined)).toEqual(off);
+    expect(readJourneySwitches({})).toEqual(off);
+    expect(readJourneySwitches({ switches: { rules_enabled: true, ai_stage_moves_enabled: false } })).toEqual({ rules: true, ai: false });
+  });
+
+  it("el explicador no promete lo apagado", () => {
+    const none = journeyExplainerText(off);
+    expect(`${none.lead} ${none.tail}`).toMatch(/avance automático está apagado/);
+    expect(`${none.lead} ${none.tail}`).not.toMatch(/agente/);
+    const rulesOnly = journeyExplainerText({ rules: true, ai: false });
+    expect(rulesOnly.emphasis).toBeNull();
+    expect(rulesOnly.tail).toMatch(/El agente no mueve etapas/);
+    const aiOnly = journeyExplainerText({ rules: false, ai: true });
+    expect(aiOnly.lead).toMatch(/apagado/);
+    expect(aiOnly.emphasis).toMatch(/agente sí puede/);
+    expect(journeyExplainerText(all).emphasis).toBe("El agente también puede moverla por su criterio.");
+  });
+
+  it("la pista de «Se mueve sola» por etapa", () => {
+    const on = { stage_kind: "proposal" as const, auto_advance: true };
+    const manual = { stage_kind: "proposal" as const, auto_advance: false };
+    expect(autoAdvanceHint({ stage_kind: "custom", auto_advance: false }, all)).toMatch(/personalizada/);
+    expect(autoAdvanceHint(on, all)).toBe("Sus eventos la mueven; el agente también puede.");
+    expect(autoAdvanceHint(on, { rules: true, ai: false })).toBe("Sus eventos la mueven.");
+    expect(autoAdvanceHint(on, off)).toBe("El avance automático está apagado para tu negocio; hoy solo una persona la mueve.");
+    expect(autoAdvanceHint(on, { rules: false, ai: true })).toMatch(/solo una persona o el agente/);
+    expect(autoAdvanceHint(manual, off)).toBe("Apagado: solo una persona la mueve.");
+    expect(autoAdvanceHint(manual, all)).toBe("Apagado: solo una persona o el agente la mueven.");
   });
 });

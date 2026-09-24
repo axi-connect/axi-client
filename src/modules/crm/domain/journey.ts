@@ -13,7 +13,20 @@ import type { StatusMap } from "@/shared/components/features/status-badge";
 
 /* ───────────────────────────── Wire types ───────────────────────────────── */
 
-export type JourneyDTO = Schemas["JourneyDto"];
+/**
+ * TEMPORAL-Q8: los dos interruptores del recorrido que el servidor añade a
+ * `GET /crm/journey` (solo lectura: se cambian en `/crm/journey/settings`).
+ * Tipado a mano hasta que el coordinador regenere `schema.d.ts`; entonces se
+ * borra esta interfaz y el `&` de `JourneyDTO`, y queda `Schemas["JourneyDto"]`.
+ * Opcional: un servidor que aún no lo manda se lee como APAGADO.
+ */
+export interface JourneySwitchesDTO {
+  rules_enabled: boolean;
+  ai_stage_moves_enabled: boolean;
+}
+
+/** TEMPORAL-Q8: `& { switches? }` hasta regenerar el contrato. */
+export type JourneyDTO = Schemas["JourneyDto"] & { switches?: JourneySwitchesDTO };
 export type JourneyStageDTO = JourneyDTO["stages"][number];
 /** `null` en la etapa = no gobierna el seguimiento. */
 export type JourneyCadenceDTO = NonNullable<JourneyStageDTO["cadence"]>;
@@ -127,6 +140,70 @@ export function autoAdvanceAfterKindChange(from: StageKind, to: StageKind, curre
   if (to === "custom") return false;
   if (from === "custom") return true;
   return current;
+}
+
+/* ───────────────────────────── Interruptores ────────────────────────────── */
+
+/** Qué mueve de verdad las etapas en este negocio (Q8). */
+export interface JourneySwitches {
+  /** Las reglas por evento (cita agendada, cotización enviada…). */
+  rules: boolean;
+  /** El agente de IA puede mover etapas por su criterio. */
+  ai: boolean;
+}
+
+/**
+ * Los interruptores del recorrido. Nacen APAGADOS en el servidor, así que
+ * sin el campo (un servidor anterior a Q8) se leen apagados: prometer que
+ * algo se mueve solo cuando no se mueve es justo el defecto que se corrige.
+ */
+export function readJourneySwitches(journey: Pick<JourneyDTO, "switches"> | null | undefined): JourneySwitches {
+  const switches = journey?.switches;
+  return { rules: switches?.rules_enabled === true, ai: switches?.ai_stage_moves_enabled === true };
+}
+
+/**
+ * El explicador de arriba del recorrido, según lo que esté encendido. Nunca
+ * promete un movimiento que no ocurre: con las reglas apagadas lo dice; con
+ * el agente apagado no lo nombra como quien mueve. `emphasis` va en negrita.
+ */
+export function journeyExplainerText(switches: JourneySwitches): { lead: string; emphasis: string | null; tail: string } {
+  const trail = "Todo queda en el historial del contacto y se puede deshacer con un clic.";
+  if (switches.rules && switches.ai) {
+    return {
+      lead: "Cada etapa se mueve sola con sus eventos (una cita agendada, una cotización enviada).",
+      emphasis: "El agente también puede moverla por su criterio.",
+      tail: trail,
+    };
+  }
+  if (switches.rules) {
+    return {
+      lead: "Cada etapa se mueve sola con sus eventos (una cita agendada, una cotización enviada).",
+      emphasis: null,
+      tail: `El agente no mueve etapas en tu negocio. ${trail}`,
+    };
+  }
+  if (switches.ai) {
+    return {
+      lead: "El avance automático está apagado para tu negocio: las etapas no se mueven solas con sus eventos todavía.",
+      emphasis: "El agente sí puede moverlas por su criterio.",
+      tail: trail,
+    };
+  }
+  return {
+    lead: "El avance automático está apagado para tu negocio: las etapas no se mueven solas todavía.",
+    emphasis: null,
+    tail: "Por ahora solo una persona las mueve. Lo que definas aquí (tipos y cadencias) queda listo para cuando se encienda.",
+  };
+}
+
+/** La pista de «Se mueve sola» en la ficha de una etapa, sin prometer lo apagado. */
+export function autoAdvanceHint(stage: Pick<JourneyStageDTO, "stage_kind" | "auto_advance">, switches: JourneySwitches): string {
+  if (stage.stage_kind === "custom") return "Una etapa personalizada no tiene reglas que la muevan.";
+  const who = switches.ai ? "solo una persona o el agente la mueven" : "solo una persona la mueve";
+  if (!stage.auto_advance) return `Apagado: ${who}.`;
+  if (!switches.rules) return `El avance automático está apagado para tu negocio; hoy ${who}.`;
+  return switches.ai ? "Sus eventos la mueven; el agente también puede." : "Sus eventos la mueven.";
 }
 
 /* ───────────────────────────── Badges ───────────────────────────────────── */

@@ -18,6 +18,7 @@ import {
   STAGE_KIND_ORDER,
   cadenceSummary,
   type JourneyStageDTO,
+  type JourneySwitches,
   type StageKind,
 } from "@/modules/crm/domain/journey";
 import { JourneyCadenceFields, type StagePatch } from "./JourneyCadenceFields";
@@ -33,6 +34,7 @@ const KIND_OPTIONS: readonly StageKind[] = [...STAGE_KIND_ORDER, "custom"];
  */
 export function JourneyStageRow({
   stage,
+  switches,
   takenKinds,
   expanded,
   busy,
@@ -41,6 +43,7 @@ export function JourneyStageRow({
   onKindChange,
 }: {
   stage: JourneyStageDTO;
+  switches: JourneySwitches;
   /** Kinds que ya usa OTRA etapa del pipeline: se ofrecen deshabilitados. */
   takenKinds: ReadonlySet<StageKind>;
   expanded: boolean;
@@ -117,7 +120,7 @@ export function JourneyStageRow({
       {expanded && (
         <div id={panelId}>
           <p className="px-4 pb-2.5 text-xs text-muted-foreground">{STAGE_KIND_HINTS[stage.stage_kind]}</p>
-          <JourneyCadenceFields stage={stage} busy={busy} onPatch={onPatch} />
+          <JourneyCadenceFields stage={stage} switches={switches} busy={busy} onPatch={onPatch} />
         </div>
       )}
     </li>

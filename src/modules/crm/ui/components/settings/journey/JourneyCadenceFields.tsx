@@ -20,10 +20,12 @@ import {
   DEFAULT_CADENCE,
   EXHAUSTED_ACTIONS,
   EXHAUSTED_ACTION_LABELS,
+  autoAdvanceHint,
   waitOptionLabel,
   type CadenceChannel,
   type ExhaustedAction,
   type JourneyStageDTO,
+  type JourneySwitches,
   type PutJourneyStageDTO,
 } from "@/modules/crm/domain/journey";
 
@@ -161,10 +163,13 @@ function NumberField({
  */
 export function JourneyCadenceFields({
   stage,
+  switches,
   busy,
   onPatch,
 }: {
   stage: JourneyStageDTO;
+  /** Lo que de verdad mueve etapas en el negocio (Q8): la pista no promete lo apagado. */
+  switches: JourneySwitches;
   busy: boolean;
   onPatch: (patch: StagePatch) => void;
 }) {
@@ -174,12 +179,7 @@ export function JourneyCadenceFields({
     cadence !== null && !CADENCE_WAIT_OPTIONS.includes(cadence.wait_hours)
       ? [...CADENCE_WAIT_OPTIONS, cadence.wait_hours].sort((a, b) => a - b)
       : CADENCE_WAIT_OPTIONS;
-  const autoHint =
-    stage.stage_kind === "custom"
-      ? "Una etapa personalizada no tiene reglas que la muevan."
-      : stage.auto_advance
-        ? "Sus eventos la mueven; el agente también puede."
-        : "Apagado: solo una persona o el agente la mueven.";
+  const autoHint = autoAdvanceHint(stage, switches);
 
   return (
     <div className="border-t border-border/70 bg-foreground/[0.02]">
