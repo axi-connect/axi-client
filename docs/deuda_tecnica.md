@@ -21,3 +21,6 @@ No bloquean; quedan fuera para no reabrir el build certificado.
 - **El test de contraste lee `globals.css` por búsqueda de texto**: frágil si se mueven los tokens.
 - **Enlace duplicado** «Ver en Tareas/Secuencias» en la fila y en el pie del detalle de acción.
 - **Q18 (QA 2026-09-23) · dos «citas» en /analytics con criterios distintos.** «Contestadas → cita · 2 de 5» (`live_rates`, por fecha del hecho) y «Rama de citas · Citas agendadas 0» (embudo por conversación del período) cuentan universos distintos a propósito. Falta el rótulo que lo diga («de las conversaciones del período» frente a «todas las citas») en `src/modules/analytics/ui/components/conversion/`.
+- **N2 (auditoría tanda QA) · el reintento stale no se reprograma al cambiar de vista** (`commercial/ui/CommercialView.tsx`): /comercial, acciones/[id] y resultados/[key] montan CommercialView; el unmount cancela el reintento y la instancia nueva no recarga (goal ya está ready). Arreglo: al montar, reprogramar si `pace.data?.stale`.
+- **N3 · sin reanudación en `visibilitychange`**: un timer que vence con la pestaña oculta gasta un intento.
+- **N4 · comentario desfasado** en `RouteLine.tsx:120` («solo UNA semana cede su etiqueta»).
