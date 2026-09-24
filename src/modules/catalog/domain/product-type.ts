@@ -68,3 +68,18 @@ export type ProductTypeRow = {
   variant_axes_count: number;
   created_at: string;
 };
+
+/**
+ * El ejemplo del nombre de una variante, hablado en el idioma de SUS ejes: si
+ * un eje es una fecha (la salida de una expedición), «Roja · M» no dice nada
+ * (QA real F1–F2). Sin ejes o sin fecha, el ejemplo de siempre.
+ */
+export function variantNamePlaceholder(
+  axes: readonly Pick<ProductTypeAttributeDTO, "type" | "scope">[],
+): string {
+  const variantAxes = axes.filter((axis) => axis.scope === "variant");
+  if (variantAxes.some((axis) => axis.type === "date")) {
+    return "Salida del 14 de marzo (opcional)";
+  }
+  return "Roja · M (opcional)";
+}

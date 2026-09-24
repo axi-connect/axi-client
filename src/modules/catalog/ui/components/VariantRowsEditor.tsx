@@ -1,5 +1,6 @@
 "use client";
 
+import { variantNamePlaceholder } from "@/modules/catalog/domain/product-type";
 import { Plus, Star, Trash2 } from "lucide-react";
 import type { FieldErrors } from "react-hook-form";
 import { Button } from "@/shared/components/ui/button";
@@ -127,7 +128,7 @@ export function VariantRowsEditor({
                     id={`variant-${index}-name`}
                     value={row.name ?? ""}
                     maxLength={120}
-                    placeholder="Roja · M (opcional)"
+                    placeholder={variantNamePlaceholder(axes)}
                     onChange={(e) => patchRow(index, { name: e.target.value })}
                   />
                 </div>

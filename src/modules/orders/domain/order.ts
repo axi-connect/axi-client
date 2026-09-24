@@ -3,6 +3,7 @@
  * Fuente del contrato REST: Schemas["OrderDto"] (schema.d.ts generado).
  * Los eventos WS viven en core/realtime/events.ts (core no importa de modules).
  */
+import { formatShortDate } from "@/core/lib/format";
 import type { Schemas } from "@/core/api/types";
 import type { OrderRealtimeSummary, OrderStatus } from "@/core/realtime/events";
 
@@ -250,4 +251,13 @@ function isRedactedAddress(address: Record<string, unknown>): boolean {
 function provinceName(code: string): string {
   const separator = code.indexOf("-");
   return separator === -1 ? code : code.slice(separator + 1);
+}
+
+/**
+ * La etiqueta de la variante como se lee: cuando la variante ES una fecha (una
+ * salida de expedición, D3), «2026-10-01» se escribe «01 de oct de 2026» como
+ * el resto de la pantalla (QA real F3). Cualquier otra etiqueta, tal cual.
+ */
+export function variantLabelText(label: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(label.trim()) ? formatShortDate(label.trim()) : label;
 }

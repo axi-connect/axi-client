@@ -35,6 +35,7 @@ import {
   externalChargeDelta,
   formatMoney,
   mapOrderToRow,
+  variantLabelText,
   orderNumberLabel,
   SHIPPING_STATE_LABELS,
   type ConversationUsageDTO,
@@ -215,7 +216,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                           {item.quantity}× {item.product_name}
                         </p>
                         {item.variant_label !== null ? (
-                          <p className="truncate text-xs text-muted-foreground">{item.variant_label}</p>
+                          <p className="truncate text-xs text-muted-foreground">{variantLabelText(item.variant_label)}</p>
                         ) : null}
                       </div>
                       <p className="shrink-0 text-sm font-medium tabular-nums">
