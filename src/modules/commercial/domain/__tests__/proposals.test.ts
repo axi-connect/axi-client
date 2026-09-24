@@ -6,6 +6,7 @@ import {
   commercialProposalHref,
   expiryPhrase,
   isCommercialProposal,
+  outreachDetailText,
   proposalHeadline,
   readOutreach,
   readOutreachDetail,
@@ -90,6 +91,23 @@ describe("readOutreachDetail y approvalLines", () => {
     );
     expect(line).toEqual({ tone: "warn", title: "No se pudo: Lote.", detail: CRM_AI_MISSING_FAILED });
     expect(line.detail).not.toMatch(/crm_ai/);
+  });
+
+  it("«1 omitidos» se lee en singular; 2 o más, en plural (Q11)", () => {
+    expect(readOutreachDetail("20 programados · 1 omitidos: 1 baja comercial")).toEqual({ created: 20, skipped: 1, reasons: "1 baja comercial" });
+    expect(readOutreachDetail("1 programado · 1 omitido: 1 baja comercial")).toEqual({ created: 1, skipped: 1, reasons: "1 baja comercial" });
+    const [line] = approvalLines(
+      { applied: [{ type: "agent_task_bulk_spec", id: "b1", label: "Lote", detail: "20 programados · 1 omitidos: 1 baja comercial" }], failed: [] },
+      [],
+    );
+    expect(line.detail).toBe("1 quedó fuera (1 baja comercial).");
+    expect(outreachDetailText("1 programados · 1 omitidos, y 3 inscritos")).toBe("1 programado · 1 omitido, y 3 inscritos");
+    expect(outreachDetailText("20 programados · 2 omitidos")).toBe("20 programados · 2 omitidos");
+    expect(outreachDetailText("11 omitidos")).toBe("11 omitidos");
+    // Lo que no se entiende se pinta crudo, pero con la concordancia bien.
+    expect(approvalLines({ applied: [{ type: "x", id: null, label: "Algo", detail: "1 omitidos por el horario" }], failed: [] }, [])[0].detail).toBe(
+      "1 omitido por el horario",
+    );
   });
 
   it("un detalle que no se entiende se pinta crudo", () => {

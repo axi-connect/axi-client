@@ -208,9 +208,21 @@ export function approvedOnPhrase(decidedAt: string | null): string {
  */
 export function readOutreachDetail(detail: string | undefined): { created: number; skipped: number; reasons: string | null } | null {
   if (detail === undefined) return null;
-  const match = /^(\d+) (?:programados|inscritos)(?: · (\d+) omitidos: (.+))?$/.exec(detail.trim());
+  // Singular y plural: el servidor dice hoy «1 omitidos» y puede corregirlo (Q11).
+  const match = /^(\d+) (?:programados?|inscritos?)(?: · (\d+) omitidos?: (.+))?$/.exec(detail.trim());
   if (match === null) return null;
   return { created: Number(match[1]), skipped: match[2] === undefined ? 0 : Number(match[2]), reasons: match[3] ?? null };
+}
+
+/**
+ * El parcial del servidor dicho tal cual, pero con la concordancia bien:
+ * «1 programados · 1 omitidos» → «1 programado · 1 omitido» (Q11). Solo toca
+ * esas tres palabras detrás de un número; el resto es prosa del servidor.
+ */
+export function outreachDetailText(detail: string): string {
+  return detail.replace(/\b(\d+) (programad|inscrit|omitid)os\b/g, (whole, count: string, stem: string) =>
+    count === "1" ? `1 ${stem}o` : whole,
+  );
 }
 
 export interface ApprovalLine {
@@ -228,7 +240,7 @@ export function approvalLines(result: CommercialApprovalResultDTO, plans: readon
   const applied = result.applied.map((item): ApprovalLine => {
     const parsed = readOutreachDetail(item.detail);
     if (parsed === null) {
-      return { tone: "ok", title: `Listo. ${item.label}.`, detail: item.detail ?? null };
+      return { tone: "ok", title: `Listo. ${item.label}.`, detail: item.detail === undefined ? null : outreachDetailText(item.detail) };
     }
     const who = parsed.created === 1 ? "1 contacto entra" : `${formatInteger(parsed.created)} contactos entran`;
     const plan = plans.find((candidate) => candidate.type === item.type);
