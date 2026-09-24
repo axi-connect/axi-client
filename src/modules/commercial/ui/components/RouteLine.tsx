@@ -35,6 +35,17 @@ interface RouteLineProps {
 
 const PAD_PCT = 1.2;
 
+/**
+ * Distancia mínima (en % de la línea) entre «hoy» y la etiqueta de otra
+ * semana: una semana corta (agosto de 2026 acaba con S6 = lunes 31) deja su
+ * etiqueta pegada a «hoy» y a 375 px se montan (V7).
+ */
+export const TODAY_LABEL_CLEARANCE_PCT = 6;
+
+function crowdsToday(week: WeekTick, expected: number | null): boolean {
+  return expected !== null && Math.abs(week.mid_pct - expected * 100) < TODAY_LABEL_CLEARANCE_PCT;
+}
+
 /** ¿Cae «hoy» (0–1) en esta semana? El borde final cuenta como de la semana. */
 function isWeekOf(week: WeekTick, at: number): boolean {
   const pct = at * 100;
@@ -205,7 +216,7 @@ function RouteLineBase({
           bajo el marcador hueco (arriba chocaría con la proyección). */}
       {!compact
         ? weeks
-            .filter((_week, index) => index !== todayWeek)
+            .filter((week, index) => index !== todayWeek && !crowdsToday(week, expected))
             .map((week) => (
               <span
                 key={week.label}

@@ -10,6 +10,7 @@ jest.mock("framer-motion", () => ({
   animate: (...args: unknown[]) => mockAnimate(...(args as [])),
 }));
 
+import { weekTicks } from "@/modules/commercial/domain/weeks";
 import { ROUTE_TRACK_MIX_PCT, RouteLine } from "../RouteLine";
 
 /** Contraste WCAG entre dos colores sRGB (0–255). */
@@ -125,6 +126,29 @@ describe("RouteLine · etiquetas sin pisar la línea (Q9)", () => {
 
   it("con «hoy» justo en un borde, solo una semana cede su etiqueta", () => {
     render(<RouteLine done={0.3} expected={0.4} weeks={weeks} progress={1} />);
+    expect(screen.queryByText("S2")).toBeNull();
+    expect(screen.getByText("S3")).toBeInTheDocument();
+  });
+});
+
+describe("RouteLine · «hoy» junto a una semana corta (V7)", () => {
+  // Agosto de 2026 con lunes a sábado: S1 = sábado 1 y S6 = lunes 31, de un día cada una.
+  const august = weekTicks("2026-08-01", "2026-08-31", [1, 2, 3, 4, 5, 6]);
+
+  it("la semana corta de al lado también cede su etiqueta", () => {
+    expect(august.map((week) => week.label)).toEqual(["S1", "S2", "S3", "S4", "S5", "S6"]);
+    // Viernes 28: 24 de 26 días hábiles.
+    render(<RouteLine done={0.8} expected={24 / 26} weeks={august} progress={1} />);
+    expect(screen.getByText("hoy")).toBeInTheDocument();
+    expect(screen.queryByText("S5")).toBeNull();
+    expect(screen.queryByText("S6")).toBeNull();
+    for (const label of ["S1", "S2", "S3", "S4"]) expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it("al principio del mes, igual con S1", () => {
+    // Lunes 3: 2 de 26 días hábiles.
+    render(<RouteLine done={0.05} expected={2 / 26} weeks={august} progress={1} />);
+    expect(screen.queryByText("S1")).toBeNull();
     expect(screen.queryByText("S2")).toBeNull();
     expect(screen.getByText("S3")).toBeInTheDocument();
   });
