@@ -7,6 +7,7 @@ import {
   contractIssueOf,
   documentSettingsSchema,
   fromSettingsDto,
+  numberingExample,
   toSettingsPayload,
 } from "@/modules/documents/ui/forms/config/document-settings.config";
 
@@ -83,9 +84,7 @@ describe("«Siguiente número» (F8) en el formulario de ajustes", () => {
       (field) => field.name === "start_at.statement",
     );
     expect(contract?.isDisabled?.({} as never)).toBe(true);
-    expect(String(contract?.description)).toMatch(/Ya salió el primero/);
     expect(statement?.isDisabled?.({} as never)).toBe(false);
-    expect(String(statement?.description)).toMatch(/EDC-2026-0001/);
     // El «siguiente número» va al lado de su prefijo, tipo por tipo
     const names = fields.map((field) => String(field.name));
     expect(names.indexOf("start_at.contract")).toBe(
@@ -218,5 +217,39 @@ describe("Emisión y envío automáticos (F9) en el formulario de ajustes", () =
       hsm_language: "espanol",
     });
     expect(badLanguage.success).toBe(false);
+  });
+});
+
+describe("QA F7: la ayuda de «siguiente número» compone con el prefijo del formulario", () => {
+  it("usa el prefijo escrito (en mayúsculas) y el número elegido; vacío cae al de fábrica", () => {
+    const base = {
+      fallbackPrefix: "CTR",
+      started: false,
+      nextValue: 1,
+      year: 2026,
+    };
+    expect(numberingExample({ ...base, prefix: "jx", startAt: "100" })).toBe(
+      "JX-2026-0100",
+    );
+    expect(numberingExample({ ...base, prefix: "", startAt: "100" })).toBe(
+      "CTR-2026-0100",
+    );
+    // Un número a medio escribir o inválido no inventa: se queda con el del servidor
+    expect(numberingExample({ ...base, prefix: "JX", startAt: "abc" })).toBe(
+      "JX-2026-0001",
+    );
+  });
+
+  it("con el contador empezado el número es el del servidor aunque se escriba otro", () => {
+    expect(
+      numberingExample({
+        prefix: "JX",
+        fallbackPrefix: "CTR",
+        startAt: "999",
+        started: true,
+        nextValue: 121,
+        year: 2026,
+      }),
+    ).toBe("JX-2026-0121");
   });
 });

@@ -183,7 +183,7 @@ export function DocumentsTab() {
         <p className="mt-1 max-w-[70ch] text-sm text-muted-foreground">
           El papel que tu negocio le da a sus clientes: contratos, cotizaciones,
           recibos, estados de cuenta y cuentas de cobro. Lo que escribas aquí se
-          rellena con los datos reales al emitir; la hoja de la derecha es
+          rellena con los datos reales al emitir; la hoja de vista previa es
           exactamente lo que va a salir.
         </p>
       </div>

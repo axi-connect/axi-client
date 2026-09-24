@@ -339,9 +339,16 @@ export function buildDocumentSettingsFields(input: {
       type.default_prefix;
     return createInputField(`start_at.${type.code}` as `start_at.${string}`, {
       label: `${type.label} · siguiente número`,
-      description: started
-        ? `Ya salió el primero: el siguiente será ${prefix}-…-${String(state?.next_value ?? 1).padStart(4, "0")}. La numeración no se mueve.`
-        : `Para continuar una numeración que ya llevabas. Saldrá como ${prefix}-2026-${String(state?.next_value ?? 1).padStart(4, "0")}.`,
+      // Compone con lo que HAY en el formulario —el prefijo que se está
+      // escribiendo y el número elegido—, no con el de fábrica (QA real F7).
+      description: (
+        <StartAtHint
+          code={type.code}
+          fallbackPrefix={prefix}
+          started={started}
+          nextValue={state?.next_value ?? 1}
+        />
+      ),
       isDisabled: () => started,
       inputProps: {
         className: "font-mono",
@@ -710,5 +717,62 @@ function HsmCard({
         </p>
       </div>
     </Card>
+  );
+}
+
+/**
+ * «Saldrá como JX-2026-0100»: el prefijo escrito en el formulario (vacío = el
+ * de fábrica), el año en curso y el número elegido. Con el contador ya
+ * empezado, el número es el del servidor y no se mueve.
+ */
+export function numberingExample(input: {
+  prefix: string;
+  fallbackPrefix: string;
+  startAt: string;
+  started: boolean;
+  nextValue: number;
+  year?: number;
+}): string {
+  const prefix =
+    input.prefix.trim() === ""
+      ? input.fallbackPrefix
+      : input.prefix.trim().toUpperCase();
+  const typed = /^[1-9]\d{0,6}$/.test(input.startAt.trim())
+    ? Number(input.startAt.trim())
+    : input.nextValue;
+  const value = input.started ? input.nextValue : typed;
+  return `${prefix}-${String(input.year ?? new Date().getFullYear())}-${String(value).padStart(4, "0")}`;
+}
+
+function StartAtHint({
+  code,
+  fallbackPrefix,
+  started,
+  nextValue,
+}: {
+  code: string;
+  fallbackPrefix: string;
+  started: boolean;
+  nextValue: number;
+}) {
+  const { control } = useFormContext<Values>();
+  const [prefix, startAt] = useWatch({
+    control,
+    name: [`prefixes.${code}`, `start_at.${code}`] as const,
+  }) as [string | undefined, string | undefined];
+  const example = numberingExample({
+    prefix: prefix ?? "",
+    fallbackPrefix,
+    startAt: startAt ?? "",
+    started,
+    nextValue,
+  });
+  return started ? (
+    <>
+      Ya salió el primero: el siguiente será {example}. La numeración no se
+      mueve.
+    </>
+  ) : (
+    <>Para continuar una numeración que ya llevabas. Saldrá como {example}.</>
   );
 }

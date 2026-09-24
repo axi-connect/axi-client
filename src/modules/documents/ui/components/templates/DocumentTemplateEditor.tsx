@@ -233,8 +233,11 @@ export function DocumentTemplateEditor({
         )}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
-        <div className="flex flex-col gap-3">
+      {/* Por debajo de lg la columna es minmax(0,1fr) y no `auto`: con `auto`
+          tomaba el ancho mínimo de su contenido (453 px) y a 390 cortaba el
+          «Guardar plantilla» sin barra ni pista (QA real F7, móvil). */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-3">
           <p className="flex items-center gap-2 px-1 text-xs font-medium text-muted-foreground">
             <Layers aria-hidden="true" className="size-3.5" />
             Los bloques, en el orden en que se imprimen
