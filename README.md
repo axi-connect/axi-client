@@ -1,22 +1,18 @@
-## Axi Connect — CRM + Marketplace de Influencia
+## Axi Connect — vende y progresa por chat
 
-Plataforma moderna que integra CRM, automatización de marketing y un marketplace de influencia para conectar empresas con creadores de contenido de forma ágil, estratégica y medible. Construida con Next.js (App Router), React y TypeScript, y un sistema de diseño modular basado en Tailwind CSS, shadcn/ui y Radix UI.
+axi es la plataforma con la que un negocio vende y progresa por WhatsApp, Instagram y Messenger: agentes de IA que venden con el catálogo real, un equipo humano que toma el control cuando hace falta, un CRM que guarda lo que pasó con cada cliente y una meta del mes que se persigue todos los días (módulo Comercial, en construcción). Construida con Next.js (App Router), React y TypeScript, y un sistema de diseño modular basado en Tailwind CSS, shadcn/ui y Radix UI.
 
-- **Propósito**: potenciar la conexión estratégica entre empresas, creadores y clientes con resultados medibles.
-- **Visión**: ser la plataforma CRM más accesible, intuitiva y adaptable de Latinoamérica, reconocida por integrar tecnología, automatización y experiencia de usuario para acelerar el crecimiento de las empresas; a la vez, liderar la gestión de relaciones comerciales y de influencia en LATAM.
-- **Valores**: innovación, confianza, claridad, agilidad y resultados.
-- **Slogan**: EL FUTURO DEL SERVICIO AL CLIENTE.
+- **Posicionamiento**: axi vende progreso. No vendemos software ni «inteligencia artificial»: vendemos el progreso que se ve en los números de cada mes, y el camino para llegar (`docs/business/knowledge-base.md` §20.0).
+- **Voz**: cercano-profesional, tuteo, frases cortas; cada cifra con su camino y su procedencia (`docs/design/DESIGN.md` §7).
 
 ### Propuesta de valor
-- Un CRM ligero, intuitivo y adaptable al contexto latinoamericano.
-- Integración nativa con canales de comunicación (email, chat, WhatsApp, redes sociales).
-- Data centralizada en tableros fáciles de usar, con inteligencia para priorizar clientes y oportunidades.
-- Modularidad: crece con el negocio, desde el primer usuario hasta equipos completos.
-- UX/UI moderna: no se siente “pesado” como otros CRM.
-- Impulsado por IA: automatización de la atención al cliente en canales digitales a través de agentes y flujos inteligentes.
+- Vender por chat con el catálogo real: el agente de IA cotiza, arma el pedido y comparte los medios de pago; el equipo humano toma el control cuando hace falta.
+- Un CRM que guarda todo lo que pasó con cada cliente y un seguimiento autónomo que no deja enfriar a nadie.
+- Medición con hechos, no con opiniones: cuánto vendió cada conversación, en pesos.
+- Una meta del mes que se persigue todos los días, con el camino que falta a la vista (módulo Comercial, en construcción).
 
 ### Enfoque para PyMEs
-Ofrecemos a pequeñas y medianas empresas una herramienta centralizada para gestionar relaciones, ventas, soporte y marketing, con un diseño moderno, escalable y más efectivo.
+Para el negocio latinoamericano de 1 a 100 personas que ya vende por WhatsApp e Instagram y quiere crecer con método: configurable desde el panel, sin desarrollo a medida.
 
 ## Tabla de contenidos
 - Visión general del stack
@@ -40,8 +36,8 @@ Ofrecemos a pequeñas y medianas empresas una herramienta centralizada para gest
 - **next-themes** para tema claro/oscuro
 - **Iconos**: `lucide-react` y `@heroicons/react`
 - **Gestión de formularios**: `react-hook-form` + `zod`
- - **Automatización**: arquitectura preparada para orquestar flujos omnicanal (email, chat, WhatsApp, redes sociales)
- - **IA**: agentes impulsados por IA para atención al cliente y priorización de oportunidades (capacidad planificada/iterativa)
+ - **Canales**: WhatsApp, Instagram y Messenger, con handoff a operadores humanos
+ - **IA**: agentes que venden con el catálogo real, Axel (dirección de mercadeo) y Alba (puesta en marcha conversacional)
 
 ## Arquitectura de carpetas y rutas
 

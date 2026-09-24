@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/public";
 import { FunnelSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { FunnelBars } from "@/modules/analytics/ui/components/charts/FunnelBars";
 import { SectionError, sectionRefetching } from "./section-states";

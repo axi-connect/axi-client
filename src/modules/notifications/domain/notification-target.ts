@@ -9,6 +9,28 @@ type TargetResolver = (data: Record<string, unknown>) => string | null
 const EXACT: Record<string, TargetResolver> = {
   // F13: alerta de anomalía de analíticas → tab Alertas de la sección.
   "analytics.alert": () => "/analytics?tab=alertas",
+  // Método comercial: «Vas por debajo del ritmo» / «Volviste al ritmo» → la
+  // ruta del mes (la propuesta, si la hay, está en «Axi propone»).
+  "commercial.pace_behind": () => "/comercial",
+  "commercial.pace_recovered": () => "/comercial",
+  // F4: «El agente movió a Ana a Cotización» → la ficha del contacto, donde
+  // están la card «Recorrido» y el «Deshacer». Sin contacto, el pipeline (la
+  // familia `crm.deal_` abriría el deal, pero el aviso habla de la persona).
+  "crm.deal_stage_changed_by_agent": (d) =>
+    typeof d.contact_id === "string"
+      ? `/crm/contacts/${d.contact_id}`
+      : typeof d.deal_id === "string"
+        ? `/crm/pipeline/deal/${d.deal_id}`
+        : "/crm/pipeline",
+  // Recorrido (F4): «La cadencia de Ana se agotó» → su ficha, donde la card
+  // «Recorrido» dice qué pasó y deja reactivar. `crm.journey_` no es familia
+  // `crm.deal_`: sin esta entrada el clic solo la marcaba leída (Y1).
+  "crm.journey_cadence_exhausted": (d) =>
+    typeof d.contact_id === "string"
+      ? `/crm/contacts/${d.contact_id}`
+      : typeof d.deal_id === "string"
+        ? `/crm/pipeline/deal/${d.deal_id}`
+        : "/crm/pipeline",
 }
 
 /** Resolvers por familia (prefijo `familia.`). */

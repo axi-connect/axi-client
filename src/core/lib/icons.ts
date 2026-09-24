@@ -19,6 +19,7 @@ import {
   Plug,
   Puzzle,
   Receipt,
+  Route,
   ScanSearch,
   ScrollText,
   Sparkles,
@@ -66,6 +67,9 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   // Facturación de la licencia (slice billing). El seeder del backend lo pide
   // por este nombre; sin la entrada el ítem del sidebar caería a `Circle`.
   receipt: Receipt,
+  // Comercial: la ruta del mes (slice commercial, F3). El seeder del backend lo
+  // pide por este nombre; sin la entrada el ítem del sidebar caería a `Circle`.
+  route: Route,
   // Reconocimiento de producto (ajustes del tenant). El seeder del backend lo
   // pide por este nombre; sin la entrada el ítem del sidebar caería a `Circle`.
   "scan-search": ScanSearch,

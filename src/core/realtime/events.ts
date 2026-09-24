@@ -341,8 +341,41 @@ export type CrmDealCreatedEvent = CrmDealRealtimeSummary;
 /** PATCH de campos / reopen: kanban y detalle refrescan sin round-trip. */
 export type CrmDealUpdatedEvent = CrmDealRealtimeSummary;
 
-/** POST /crm/deals/:id/move (drag del kanban). */
-export type CrmDealStageChangedEvent = CrmDealRealtimeSummary & { from_stage_id: string };
+/**
+ * Cambio de etapa: el drag del kanban (POST /crm/deals/:id/move) y, desde F4
+ * del método comercial, el recorrido vivo (regla, agente IA o persona). Los
+ * campos del recorrido van opcionales: el cliente no debe romperse con un
+ * emisor que aún no los mande.
+ */
+export type CrmDealStageChangedEvent = CrmDealRealtimeSummary & {
+  from_stage_id: string;
+  to_stage_id?: string;
+  from_kind?: string | null;
+  to_kind?: string | null;
+  reason?: string | null;
+  rule_code?: string | null;
+  actor_type?: "user" | "ai_agent" | "system";
+  actor_user_id?: string | null;
+  /** El `crm_deal_event` del movimiento (lo que «Deshacer» revierte). */
+  event_id?: string;
+  from_stage_name?: string | null;
+  to_stage_name?: string | null;
+  contact_name?: string | null;
+};
+
+/**
+ * F4: se deshizo un cambio de etapa. OJO: el servidor lo publica en su bus
+ * pero HOY no está en `REALTIME_EVENTS` (no viaja por WS); el cliente lo
+ * escucha para cuando lo esté. Mientras, el «Deshacer» local avisa por
+ * `crm:journey:changed` y el `crm.deal_stage_changed` del paso cubre el resto.
+ */
+export type CrmDealStageRevertedEvent = CrmDealRealtimeSummary & {
+  reverted_event_id: string;
+  from_stage_id: string;
+  to_stage_id: string;
+  event_id: string;
+  actor_user_id: string | null;
+};
 
 export type CrmDealWonEvent = CrmDealRealtimeSummary;
 
@@ -631,6 +664,74 @@ export type MarketingPromotionRevertedEvent = {
   simulated: boolean;
 };
 
+// ---------------------------------------------------------------------------
+// Método comercial (F8) — la meta, el plan y el ritmo del mes. Room company.
+// Payloads espejo de axi-server src/modules/commercial/application/commercial_events.ts.
+// El WS AVISA: el cliente re-consulta REST (`/commercial/{goal,plan,pace}`).
+// Importes en centavos como `number`.
+// ---------------------------------------------------------------------------
+
+export type CommercialGoalSnapshot = {
+  target_revenue_cents: number;
+  declared_avg_ticket_cents: number | null;
+  source: "owner" | "intake" | "system";
+};
+
+/** La meta del mes se fijó o cambió (dueño, Alba o sistema). */
+export type CommercialGoalSetEvent = {
+  company_id: string;
+  goal_id: string;
+  /** YYYY-MM-DD del tenant. */
+  period_start: string;
+  period_end: string;
+  currency: string;
+  before: CommercialGoalSnapshot | null;
+  after: CommercialGoalSnapshot;
+  set_by_user_id: string | null;
+};
+
+/** El plan (resultados clave y tasas) se recalculó. */
+export type CommercialPlanRecomputedEvent = {
+  company_id: string;
+  goal_id: string;
+  plan_id: string;
+  valid_from_date: string;
+  status: "ready" | "incomplete";
+  needed_sales: number | null;
+  ticket_source: "history" | "declared" | "benchmark" | null;
+};
+
+/** El ritmo del día (rollup): el hero, el Panel y el chip de Axel refrescan. */
+export type CommercialPaceUpdatedEvent = {
+  company_id: string;
+  goal_id: string;
+  date_local: string;
+  currency: string;
+  status: Schemas["PaceDto"]["status"];
+  target_cents: number;
+  actual_cents: number;
+  expected_cents: number;
+  progress_pct: number;
+};
+
+/**
+ * Por debajo del ritmo esta semana (además, campanita). `proposal_spec` es la
+ * propuesta que cmo persiste; al cliente le basta saber si la hay: la fila
+ * llega por `cmo.proposal_created`.
+ */
+export type CommercialPaceBehindEvent = CommercialPaceUpdatedEvent & {
+  iso_week: string;
+  missing_cents: number;
+  period_label: string;
+  proposal_spec: unknown;
+};
+
+/** Volvió al ritmo (además, campanita). */
+export type CommercialPaceRecoveredEvent = CommercialPaceUpdatedEvent & {
+  iso_week: string;
+  period_label: string;
+};
+
 export type ChannelStatusChangedEvent = {
   channel_id: string;
   company_id: string;
@@ -851,6 +952,7 @@ export type InboxServerEvents = {
   "crm.deal_created": (payload: CrmDealCreatedEvent) => void;
   "crm.deal_updated": (payload: CrmDealUpdatedEvent) => void;
   "crm.deal_stage_changed": (payload: CrmDealStageChangedEvent) => void;
+  "crm.deal_stage_reverted": (payload: CrmDealStageRevertedEvent) => void;
   "crm.deal_won": (payload: CrmDealWonEvent) => void;
   "crm.deal_lost": (payload: CrmDealLostEvent) => void;
   "crm.deal_stalled": (payload: CrmDealStalledEvent) => void;
@@ -890,6 +992,11 @@ export type InboxServerEvents = {
   "cmo.turn_delta": (payload: CmoTurnDeltaEvent) => void;
   "cmo.turn_completed": (payload: CmoTurnCompletedEvent) => void;
   "cmo.turn_failed": (payload: CmoTurnFailedEvent) => void;
+  "commercial.goal_set": (payload: CommercialGoalSetEvent) => void;
+  "commercial.plan_recomputed": (payload: CommercialPlanRecomputedEvent) => void;
+  "commercial.pace_updated": (payload: CommercialPaceUpdatedEvent) => void;
+  "commercial.pace_behind": (payload: CommercialPaceBehindEvent) => void;
+  "commercial.pace_recovered": (payload: CommercialPaceRecoveredEvent) => void;
   "billing.invoice_issued": (payload: BillingInvoiceIssuedEvent) => void;
   "billing.payment_approved": (payload: BillingPaymentApprovedEvent) => void;
   "billing.past_due": (payload: BillingPastDueEvent) => void;

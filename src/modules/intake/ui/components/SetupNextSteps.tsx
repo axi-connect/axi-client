@@ -10,23 +10,27 @@ import {
   MessageCircle,
   Package,
   PenLine,
+  Route,
   Store,
   Zap,
 } from "lucide-react";
 
+import { formatInteger } from "@/core/lib/commercial-units";
+import { formatMillions, formatMoney } from "@/core/lib/format";
 import { cn } from "@/core/lib/utils";
-import type { ActivationStep, IntakeSummary } from "@/modules/intake/domain/intake";
+import type { ActivationStep, IntakeGoalSummary, IntakeSummary } from "@/modules/intake/domain/intake";
 
 /**
  * Lo que queda listo, lo que pone la persona y lo que le falta, bajo el cierre
  * (mockup aprobado por el dueño: `docs/design/mockups/alba-closing-summary.html`).
  *
- * Tres grupos, cada uno la misma lista agrupada de la ficha —etiqueta → valor,
- * una línea secundaria, un solo indicador— y **sin botones en las filas**: la
- * persona no tiene sesión en el panel y el «dónde» es orientación, no
- * navegación. El copy viene del servidor en la misma respuesta que el cierre;
- * aquí solo se decide el orden de los grupos y el color de cada uno. Un grupo
- * vacío no se pinta.
+ * Tres grupos (cuatro con la meta del mes), cada uno la misma lista agrupada
+ * de la ficha —etiqueta → valor, una línea secundaria, un solo indicador— y
+ * **sin botones en las filas**: la persona no tiene sesión en el panel y el
+ * «dónde» es orientación, no navegación. El copy viene del servidor en la
+ * misma respuesta que el cierre (la meta llega en cifras y aquí se dice); aquí
+ * solo se decide el orden de los grupos y el color de cada uno. Un grupo vacío
+ * no se pinta.
  *
  * Es la otra mitad de N2: el cierre dejó de decir «queda configurada de punta
  * a punta» y esto es lo que lo sustituye — la verdad, en tres listas.
@@ -34,6 +38,7 @@ import type { ActivationStep, IntakeSummary } from "@/modules/intake/domain/inta
 export function SetupNextSteps({ summary, className }: { summary: IntakeSummary; className?: string }) {
   const groups = [
     axiGroup(summary),
+    summary.goal == null ? null : goalGroup(summary.goal),
     summary.you_do.length === 0 ? null : (
       <Group key="you" tone="you" icon={Hand} title="Lo pones tú">
         {summary.you_do.map((item) => (
@@ -81,7 +86,33 @@ function axiGroup(summary: IntakeSummary) {
   );
 }
 
-type Tone = "ok" | "you" | "act";
+/**
+ * La meta del mes (método comercial F7), antes de «Lo pones tú»: cuánto quiere
+ * vender, qué implica y contra qué se compara. Coral porque habla el progreso
+ * (el icono; el texto no, que en coral no pasa AA). Sin cifras inventadas: la
+ * fila que el servidor no trae no se pinta, y una meta por debajo del mes
+ * pasado no se dice como porcentaje negativo.
+ */
+function goalGroup(goal: IntakeGoalSummary) {
+  const { currency } = goal;
+  const sales =
+    goal.needed_sales === null
+      ? null
+      : `${formatInteger(goal.needed_sales)}${goal.avg_ticket_cents === null ? "" : ` · ticket ${formatMoney(goal.avg_ticket_cents, currency)}`}`;
+  const before =
+    goal.last_month_revenue_cents === null
+      ? null
+      : `${formatMillions(goal.last_month_revenue_cents, currency)} el mes pasado${goal.delta_pct !== null && goal.delta_pct > 0 ? ` · +${String(goal.delta_pct)} %` : ""}`;
+  return (
+    <Group key="goal" tone="goal" icon={Route} title="Tu meta del mes">
+      <Row tone="goal" icon={Route} label={`Tu meta de ${goal.month_label}`} value={formatMillions(goal.target_cents, currency)} />
+      {sales === null ? null : <Row tone="goal" icon={Route} label="Ventas necesarias" value={sales} />}
+      {before === null ? null : <Row tone="goal" icon={Route} label="Antes" value={before} />}
+    </Group>
+  );
+}
+
+type Tone = "ok" | "goal" | "you" | "act";
 type Icon = ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" }>;
 
 const STEP_ICONS: Record<ActivationStep, Icon> = {
@@ -95,12 +126,14 @@ const STEP_ICONS: Record<ActivationStep, Icon> = {
 
 const EYEBROW: Record<Tone, string> = {
   ok: "text-success",
+  goal: "text-muted-foreground [&>svg]:text-brand",
   you: "text-muted-foreground",
   act: "text-accent-amber",
 };
 
 const INDICATOR: Record<Tone, string> = {
   ok: "bg-success/[0.14] text-success",
+  goal: "bg-brand/[0.12] text-brand",
   you: "bg-accent-violet/[0.12] text-accent-violet",
   act: "bg-accent-amber/[0.16] text-accent-amber",
 };

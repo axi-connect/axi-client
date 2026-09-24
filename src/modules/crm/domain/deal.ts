@@ -66,4 +66,6 @@ export const DEAL_EVENT_LABELS: Record<DealEventDTO["type"], string> = {
   owner_changed: "Cambio de dueño",
   order_attached: "Pedido vinculado",
   stalled: "Estancada",
+  // F4 recorrido: el rastro del «Deshacer» (vuelve a la etapa de origen).
+  stage_reverted: "Cambio de etapa deshecho",
 };

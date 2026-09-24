@@ -19,10 +19,13 @@ import {
   listAssignableUsers,
 } from "@/modules/crm/infrastructure/services/contacts-service.adapter";
 import { listDeals } from "@/modules/crm/infrastructure/services/deals-service.adapter";
+import { subscribeJourneyChanged } from "@/modules/crm/infrastructure/journey-events";
+import { useJourneyRealtime } from "@/modules/crm/infrastructure/realtime/use-journey-realtime";
 import { ContactDataPanel } from "@/modules/crm/ui/components/contact-data/ContactDataPanel";
 import { Contact360Header } from "@/modules/crm/ui/components/contact-detail/Contact360Header";
 import { CopilotPanel } from "@/modules/crm/ui/components/contact-detail/CopilotPanel";
 import { ContactDealsCard } from "@/modules/crm/ui/components/contact-detail/ContactDealsCard";
+import { ContactJourneyCard } from "@/modules/crm/ui/components/contact-detail/ContactJourneyCard";
 import { ContactTimeline } from "@/modules/crm/ui/components/contact-detail/ContactTimeline";
 import { ScorePanel } from "@/modules/crm/ui/components/contact-detail/ScorePanel";
 import { TagsEditor } from "@/modules/crm/ui/components/contact-detail/TagsEditor";
@@ -52,6 +55,9 @@ export default function Contact360Page({
   const { hasPermission } = useAuth();
   // F2: «Programar seguimiento» solo para quien puede armar la automatización.
   const canAutomate = hasPermission("crm:automate");
+  // Recorrido (F4 comercial): deshacer un cambio de etapa escribe sobre la
+  // oportunidad con rastro auditado; pide el permiso de configurar el CRM.
+  const canManage = hasPermission("crm:manage");
   const [bundle, setBundle] = useState<ContactBundle | null>(null);
 
   const load = useCallback(async () => {
@@ -81,13 +87,23 @@ export default function Contact360Page({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactId]);
 
+  // Un paso de etapa de ESTE contacto (el agente, una regla u otra pestaña)
+  // avisa por WS y se reemite como `crm:journey:changed` (F8).
+  useJourneyRealtime(contactId);
+
   useEffect(() => {
     void load();
     // El modal de edición (@form) notifica al guardar: se recarga el hub.
     const onSave = () => void load();
     window.addEventListener("crm:contacts:save:success", onSave);
-    return () => window.removeEventListener("crm:contacts:save:success", onSave);
-  }, [load]);
+    // Deshacer o reanudar un movimiento (F4) cambia la etapa de un deal: la
+    // lista «Oportunidades» se recarga con el resto del hub.
+    const unsubscribeJourney = subscribeJourneyChanged(contactId, () => void load());
+    return () => {
+      window.removeEventListener("crm:contacts:save:success", onSave);
+      unsubscribeJourney();
+    };
+  }, [contactId, load]);
 
   if (!bundle) {
     return (
@@ -103,6 +119,8 @@ export default function Contact360Page({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">
+          {/* Recorrido (F4): la etapa viva de su oportunidad, sobre el score. */}
+          <ContactJourneyCard contactId={contactId} canManage={canManage} />
           <ScorePanel profile={bundle.profile} />
           <CopilotPanel contactId={contactId} />
         </div>
@@ -120,6 +138,7 @@ export default function Contact360Page({
 
       <ContactTimeline
         contactId={contactId}
+        canRevert={canManage}
         createActivityHref={`/crm/tasks/create?contact_id=${contactId}&contact_label=${encodeURIComponent(contactDisplayName(bundle.contact))}`}
         {...(canAutomate
           ? {

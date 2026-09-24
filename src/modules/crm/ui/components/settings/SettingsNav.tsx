@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Filter, KanbanSquare, Layers, Sparkles, Tag, Upload } from "lucide-react";
+import { Filter, KanbanSquare, Layers, Route, Sparkles, Tag, Upload } from "lucide-react";
 
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
@@ -18,6 +18,9 @@ import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
  */
 const NAV_ITEMS: readonly (NavTabItem & { permission: string })[] = [
   { href: "/crm/settings/pipelines", label: "Pipelines", icon: KanbanSquare, permission: "crm:manage" },
+  // F4 «Método comercial»: tipo semántico y cadencia por etapa. Escribe sobre
+  // el pipeline, así que pide el mismo permiso que Pipelines.
+  { href: "/crm/settings/recorrido", label: "Recorrido", icon: Route, permission: "crm:manage" },
   { href: "/crm/settings/tags", label: "Etiquetas", icon: Tag, permission: "crm:manage" },
   { href: "/crm/settings/segments", label: "Segmentos", icon: Filter, permission: "crm:manage" },
   // El import escribe PII de terceros: su permiso es propio (`contacts:import`,

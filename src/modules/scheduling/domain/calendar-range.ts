@@ -6,7 +6,7 @@ import {
   monthMatrix,
   weekDays,
   type DayKey,
-} from "./business-time";
+} from "@/core/lib/business-time";
 
 /**
  * Derivación del rango de fetch por vista. `GET /scheduling/appointments`

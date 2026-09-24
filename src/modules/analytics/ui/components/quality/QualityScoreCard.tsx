@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PERIOD_LABELS, type AnalyticsPeriod } from "@/modules/analytics/domain/analytics";

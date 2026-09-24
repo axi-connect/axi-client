@@ -4,9 +4,9 @@ import dynamic from "next/dynamic";
 import { AudioLines, DollarSign, Mic, Type } from "lucide-react";
 import { salesWhatsAppUrl } from "@/core/config/env";
 import { Badge } from "@/shared/components/ui/badge";
-import { DashboardCard, MetricTile } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard, MetricTile } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
-import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
+import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
 import { ChartSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { SectionError, sectionRefetching } from "./section-states";
 import type { Section } from "@/modules/analytics/infrastructure/stores/analytics.store";
@@ -14,7 +14,7 @@ import type { VoiceUsageView } from "@/modules/analytics/domain/analytics";
 
 // Recharts solo en cliente: fuera del bundle inicial y sin SSR.
 const AreaTrend = dynamic(
-  () => import("@/modules/dashboard/ui/components/charts/AreaTrend").then((m) => m.AreaTrend),
+  () => import("@/shared/components/features/charts/AreaTrend").then((m) => m.AreaTrend),
   { ssr: false, loading: () => <ChartSkeleton /> },
 );
 

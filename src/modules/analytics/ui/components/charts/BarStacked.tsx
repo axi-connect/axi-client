@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AXIS_COLOR, TOOLTIP_STYLE } from "@/modules/dashboard/ui/components/charts/chart-theme";
+import { AXIS_COLOR, TOOLTIP_STYLE } from "@/shared/components/features/charts/chart-theme";
 
 export type StackedRow = {
   key: string;

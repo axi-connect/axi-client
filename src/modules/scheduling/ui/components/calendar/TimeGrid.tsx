@@ -9,7 +9,7 @@ import {
   minutesIntoDay,
   weekdayOfKey,
   type DayKey,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { layoutDayEvents } from "@/modules/scheduling/domain/event-layout";
 import { AppointmentBlock } from "./AppointmentBlock";
 
