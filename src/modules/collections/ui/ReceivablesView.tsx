@@ -30,7 +30,10 @@ import {
   getReceivablesStats,
   listReceivables,
 } from "@/modules/collections/infrastructure/services/collections-service.adapter";
+import { useAuth } from "@/shared/auth/auth.hooks";
+import { PromiseDialog } from "@/modules/collections/ui/components/PromiseDialog";
 import { ReceivableSectionList } from "@/modules/collections/ui/components/ReceivableSectionList";
+import { RescheduleDialog } from "@/modules/collections/ui/components/RescheduleDialog";
 import { SendReminderDialog } from "@/modules/collections/ui/components/SendReminderDialog";
 
 type Filter = "todo" | "viajaron" | "mora";
@@ -64,6 +67,11 @@ export function ReceivablesView() {
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   /** A quién se le está escribiendo a mano; `null` = el diálogo está cerrado. */
   const [writing, setWriting] = useState<ReceivableDTO | null>(null);
+  // F4b: anotar promesa y reprogramar desde «…» de la fila, solo con permiso.
+  const { hasPermission } = useAuth();
+  const canManage = hasPermission("collections:manage");
+  const [promising, setPromising] = useState<ReceivableDTO | null>(null);
+  const [rescheduling, setRescheduling] = useState<ReceivableDTO | null>(null);
   const [error, setError] = useState<{
     blocked: boolean;
     message: string;
@@ -226,7 +234,12 @@ export function ReceivablesView() {
         />
       ) : (
         <>
-          <ReceivableSectionList sections={sections} onWrite={setWriting} />
+          <ReceivableSectionList
+            sections={sections}
+            onWrite={setWriting}
+            onPromise={canManage ? setPromising : undefined}
+            onReschedule={canManage ? setRescheduling : undefined}
+          />
           {rows.length < total ? (
             <div className="mt-6 flex flex-col items-center gap-2">
               <p className="text-[12.5px] text-muted-foreground tabular-nums">
@@ -276,6 +289,28 @@ export function ReceivablesView() {
           // la diferencia entre una pantalla que informa y una que miente
           // hasta que alguien pulse F5.
           onSent={() => void load()}
+        />
+      )}
+      {promising === null ? null : (
+        <PromiseDialog
+          open
+          orderId={promising.order_id}
+          contactName={promising.contact_name}
+          onOpenChange={(open) => {
+            if (!open) setPromising(null);
+          }}
+          onDone={() => void load()}
+        />
+      )}
+      {rescheduling === null ? null : (
+        <RescheduleDialog
+          open
+          orderId={rescheduling.order_id}
+          contactName={rescheduling.contact_name}
+          onOpenChange={(open) => {
+            if (!open) setRescheduling(null);
+          }}
+          onDone={() => void load()}
         />
       )}
     </div>

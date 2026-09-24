@@ -56,6 +56,12 @@ export const API_ERROR_CODES = {
   documentDeliveryInFlight: "documents/delivery_in_flight",
   /** F9 Cobros: el documento no tiene a quién enviarse (sin contacto). */
   documentNoCounterparty: "documents/no_counterparty",
+  /** F4b Cobros: ya hay una promesa de pago viva en ese plan. */
+  promiseExists: "collections/promise_exists",
+  /** F4b Cobros: las cuotas pendientes no suman el saldo. */
+  scheduleMismatch: "collections/schedule_mismatch",
+  /** F4b Cobros: el plan no está activo (saldado, cancelado o en pausa). */
+  planNotActive: "collections/plan_not_active",
   invalidTransition: "conversations/invalid_transition",
   handoffConflict: "conversations/handoff_conflict",
   notFound: "resource/not_found",

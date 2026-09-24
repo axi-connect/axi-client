@@ -1,10 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CalendarClock, Handshake, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  CalendarClock,
+  CircleCheck,
+  Handshake,
+  MessageCircle,
+  StickyNote,
+  TriangleAlert,
+} from "lucide-react";
 
 import { isHttpError } from "@/core/api/problem";
 import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { useAuth } from "@/shared/auth/auth.hooks";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   installmentLabel,
@@ -12,9 +22,25 @@ import {
   type InstallmentDTO,
   type PlanDetailDTO,
 } from "@/modules/collections/domain/payment-plan";
+import {
+  canPromise,
+  canReschedule,
+  promiseCard,
+  promiseHistory,
+  type PromiseTone,
+} from "@/modules/collections/domain/promise";
 import { daysUntil } from "@/modules/collections/domain/receivable";
 import { getPlanByOrder } from "@/modules/collections/infrastructure/services/collections-service.adapter";
+import { PlanNoteDialog } from "./PlanNoteDialog";
+import { PromiseDialog } from "./PromiseDialog";
 import { ReminderHistory } from "./ReminderHistory";
+import { RescheduleDialog } from "./RescheduleDialog";
+import { SendReminderDialog } from "./SendReminderDialog";
+
+const PROMISE_ICON: Record<
+  PromiseTone,
+  React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" }>
+> = { info: Handshake, success: CircleCheck, warning: TriangleAlert };
 
 const DOT_TONE: Record<string, string> = {
   paid: "bg-success",
@@ -33,10 +59,29 @@ const DOT_TONE: Record<string, string> = {
  *
  * Un pedido sin plan no pinta nada. No es un error ni un vacío que explicar:
  * el negocio puede no tener la función, o el pedido puede ser anterior.
+ *
+ * F4b: la promesa de pago como frase con icono en tres estados (viva,
+ * cumplida, rota), su historial bajo las cuotas, la nota del plan al pie y
+ * las acciones —anotar promesa, reprogramar, nota— solo con
+ * `collections:manage`.
  */
-export function PaymentPlanBlock({ orderId }: { orderId: string }) {
+export function PaymentPlanBlock({
+  orderId,
+  contactName = "el cliente",
+}: {
+  orderId: string;
+  /** Para los diálogos: a quién se le anota o se le escribe. */
+  contactName?: string;
+}) {
+  const { hasPermission } = useAuth();
+  const canManage = hasPermission("collections:manage");
   const [plan, setPlan] = useState<PlanDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dialog, setDialog] = useState<
+    "promise" | "reschedule" | "note" | "write" | null
+  >(null);
+  const [reloads, setReloads] = useState(0);
+  const reload = useCallback(() => setReloads((count) => count + 1), []);
 
   useEffect(() => {
     let alive = true;
@@ -63,7 +108,7 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
     return () => {
       alive = false;
     };
-  }, [orderId]);
+  }, [orderId, reloads]);
 
   if (loading) return <Skeleton className="h-40 w-full rounded-2xl" />;
   if (plan === null) return null;
@@ -72,29 +117,71 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
     (installment) =>
       installment.status !== "paid" && installment.status !== "waived",
   );
+  const card = promiseCard(plan);
+  const history = promiseHistory(plan);
+  const note = plan.notes[0] ?? null;
+  const CardIcon = card === null ? Handshake : PROMISE_ICON[card.tone];
 
   return (
     <section aria-label="Plan de pagos" className="flex flex-col gap-4">
-      {plan.active_promise_at !== null ? (
-        <div className="flex items-start gap-3 rounded-[15px] bg-secondary px-4 py-3.5 text-[13px] leading-relaxed">
-          <Handshake
-            aria-hidden="true"
-            className="mt-0.5 size-4 shrink-0 text-info"
-          />
-          <p>
-            <b className="font-medium">
-              Prometió pagar el {formatShortDate(plan.active_promise_at)}.
-            </b>{" "}
-            Los recordatorios quedan en pausa hasta ese día.
-          </p>
-        </div>
-      ) : next !== undefined ? (
+      {next !== undefined && card?.tone !== "info" ? (
         <NextDue installment={next} currency={plan.currency} />
       ) : null}
 
+      {card !== null ? (
+        // §9.4: un estado que dura es Alert en línea; el color va en el icono.
+        <Alert variant={card.tone} className="rounded-[15px]">
+          <CardIcon aria-hidden="true" />
+          <AlertDescription className="text-[13px] leading-relaxed">
+            <span>
+              <b className="font-medium text-foreground">{card.title}</b>{" "}
+              {card.detail}
+            </span>
+            {card.note !== null ? (
+              <span className="text-muted-foreground">
+                <b className="font-medium text-foreground">Nota:</b> {card.note}
+              </span>
+            ) : null}
+            {canManage && card.actions.length > 0 ? (
+              <span className="mt-1 flex flex-wrap gap-2">
+                {card.actions.includes("promise_again") ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-[30px] rounded-full px-3 text-xs"
+                    onClick={() => setDialog("promise")}
+                  >
+                    <Handshake className="size-3.5" /> Anotar otra promesa
+                  </Button>
+                ) : null}
+                {card.actions.includes("write") ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-[30px] rounded-full px-3 text-xs"
+                    onClick={() => setDialog("write")}
+                  >
+                    <MessageCircle className="size-3.5" /> Escribir
+                  </Button>
+                ) : null}
+              </span>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <div className="overflow-hidden rounded-2xl border border-border bg-background">
-        <p className="px-4 pb-0.5 pt-3.5 text-[12.5px] text-muted-foreground">
+        <p className="flex items-baseline justify-between gap-3 px-4 pb-0.5 pt-3.5 text-[12.5px] text-muted-foreground">
           Plan de pagos
+          {canManage && canReschedule(plan) ? (
+            <button
+              type="button"
+              className="font-medium text-foreground"
+              onClick={() => setDialog("reschedule")}
+            >
+              Reprogramar
+            </button>
+          ) : null}
         </p>
         {plan.installments.map((installment) => (
           <InstallmentRow
@@ -104,12 +191,76 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
             currency={plan.currency}
           />
         ))}
+        {history.length > 0 ? (
+          <ul
+            aria-label="Historial de promesas"
+            className="m-0 list-none border-t border-border/60 p-0"
+          >
+            {history.map((line) => {
+              const Icon = PROMISE_ICON[line.tone];
+              return (
+                <li
+                  key={line.id}
+                  className="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 text-[12.5px] text-muted-foreground"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className={`size-3.5 justify-self-center ${
+                      line.tone === "success"
+                        ? "text-success"
+                        : line.tone === "warning"
+                          ? "text-warning"
+                          : "text-info"
+                    }`}
+                  />
+                  <span>{line.text}</span>
+                  <time dateTime={line.at} className="tabular-nums">
+                    {formatShortDate(line.at)}
+                  </time>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+        <div className="grid grid-cols-[18px_minmax(0,1fr)_auto] items-start gap-3 border-t border-border/60 px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+          <StickyNote aria-hidden="true" className="mt-0.5 size-3.5" />
+          <span>
+            {note !== null ? (
+              <>
+                <b className="font-medium text-foreground">Nota del plan:</b>{" "}
+                {note.note}
+              </>
+            ) : (
+              "Sin nota. Lo que el equipo debe saber para cobrar este plan; el cliente no la ve."
+            )}
+          </span>
+          {canManage ? (
+            <button
+              type="button"
+              className="font-medium text-foreground"
+              onClick={() => setDialog("note")}
+            >
+              {note !== null ? "Editar" : "Añadir"}
+            </button>
+          ) : null}
+        </div>
       </div>
+
+      {canManage && canPromise(plan) && card?.tone !== "warning" ? (
+        <Button
+          variant="outline"
+          className="h-11 w-full rounded-[14px]"
+          onClick={() => setDialog("promise")}
+        >
+          <Handshake className="size-4" /> Anotar promesa de pago
+        </Button>
+      ) : null}
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         El plan se creó al confirmar el pedido, con la política del negocio. Las
         cuotas dicen <b className="font-medium text-foreground">cuándo</b>{" "}
-        tocaba cada parte; lo cobrado sale del pedido.
+        tocaba cada parte; lo cobrado sale del pedido. La promesa y la nota son
+        del equipo: el cliente no las ve.
       </p>
 
       <div>
@@ -118,6 +269,49 @@ export function PaymentPlanBlock({ orderId }: { orderId: string }) {
         </p>
         <ReminderHistory planId={plan.id} />
       </div>
+
+      {canManage ? (
+        <>
+          <PromiseDialog
+            orderId={orderId}
+            contactName={contactName}
+            open={dialog === "promise"}
+            onOpenChange={(open) => {
+              if (!open) setDialog(null);
+            }}
+            onDone={reload}
+          />
+          <RescheduleDialog
+            orderId={orderId}
+            contactName={contactName}
+            open={dialog === "reschedule"}
+            onOpenChange={(open) => {
+              if (!open) setDialog(null);
+            }}
+            onDone={reload}
+          />
+          <PlanNoteDialog
+            planId={plan.id}
+            current={note?.note ?? null}
+            open={dialog === "note"}
+            onOpenChange={(open) => {
+              if (!open) setDialog(null);
+            }}
+            onDone={reload}
+          />
+          {dialog === "write" ? (
+            <SendReminderDialog
+              open
+              orderId={orderId}
+              contactName={contactName}
+              onOpenChange={(open) => {
+                if (!open) setDialog(null);
+              }}
+              onSent={reload}
+            />
+          ) : null}
+        </>
+      ) : null}
     </section>
   );
 }

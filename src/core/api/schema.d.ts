@@ -13983,6 +13983,12 @@ export interface components {
                 installments_paid: number;
                 /** Format: date */
                 active_promise_at: string | null;
+                last_promise: {
+                    /** Format: date */
+                    promised_at: string;
+                    /** @enum {string} */
+                    status: "pending" | "kept" | "broken" | "cancelled";
+                } | null;
                 /** Format: uuid */
                 assigned_user_id: string | null;
                 paused: boolean;
@@ -14052,6 +14058,31 @@ export interface components {
                 status: "pending" | "partially_paid" | "paid" | "overdue" | "waived";
                 /** Format: date-time */
                 paid_at: string | null;
+            }[];
+            promises: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date */
+                promised_at: string;
+                amount_cents: number | null;
+                note: string | null;
+                /** @enum {string} */
+                status: "pending" | "kept" | "broken" | "cancelled";
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: uuid */
+                created_by_user_id: string | null;
+            }[];
+            notes: {
+                /** Format: uuid */
+                id: string;
+                note: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: uuid */
+                actor_user_id: string | null;
             }[];
         };
         PlanRemindersDto: {

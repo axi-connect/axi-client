@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
 const mockList = jest.fn<Promise<unknown>, [unknown]>();
 const mockStats = jest.fn<Promise<unknown>, []>();
@@ -17,6 +23,10 @@ jest.mock(
 const mockShowAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert: mockShowAlert }),
+}));
+const mockHasPermission = jest.fn<boolean, [string]>(() => true);
+jest.mock("@/shared/auth/auth.hooks", () => ({
+  useAuth: () => ({ hasPermission: mockHasPermission }),
 }));
 
 import { HttpError } from "@/core/api/problem";
@@ -42,6 +52,7 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   installments_total: 3,
   installments_paid: 1,
   active_promise_at: null,
+  last_promise: null,
   assigned_user_id: null,
   paused: false,
   ...overrides,
@@ -59,7 +70,132 @@ const stats = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockHasPermission.mockImplementation(() => true);
+  });
+
+  it("F4b: la promesa se lee en la fila como texto — viva con la fecha y los avisos en pausa, rota si el día pasó sin pago", async () => {
+    mockList.mockResolvedValue({
+      data: [
+        row({
+          plan_id: "viva",
+          order_id: "viva",
+          contact_name: "Diana Salazar",
+          days_overdue: 6,
+          next_due_at: "2026-09-18",
+          active_promise_at: "2026-09-29",
+          last_promise: { promised_at: "2026-09-29", status: "pending" },
+        }),
+        row({
+          plan_id: "rota",
+          order_id: "rota",
+          contact_name: "Andrés Mejía",
+          days_overdue: 15,
+          next_due_at: "2026-09-09",
+          active_promise_at: null,
+          last_promise: { promised_at: "2026-09-22", status: "broken" },
+        }),
+        row({
+          plan_id: "quieta",
+          order_id: "quieta",
+          contact_name: "Laura Gómez",
+          last_promise: { promised_at: "2026-08-01", status: "kept" },
+        }),
+      ],
+      meta: { total: 3, page: 1, page_size: 100 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+
+    expect(
+      await screen.findByText(
+        /prometió el 29 de sept de 2026 · avisos en pausa/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/no cumplió la promesa del 22 de sept/),
+    ).toBeInTheDocument();
+    // Una promesa cumplida no se dice en la fila: lo que debe es la siguiente cuota
+    expect(screen.queryByText(/cumplió la promesa del 1/)).toBeNull();
+  });
+
+  it("F4b: «…» en la fila ofrece anotar promesa, reprogramar y abrir el pedido, SOLO con collections:manage; con promesa viva no se ofrece anotar otra", async () => {
+    mockList.mockResolvedValue({
+      data: [
+        row({ plan_id: "a", order_id: "a", contact_name: "Diana Salazar" }),
+        row({
+          plan_id: "b",
+          order_id: "b",
+          contact_name: "Marcela Ruiz",
+          active_promise_at: "2026-09-29",
+          last_promise: { promised_at: "2026-09-29", status: "pending" },
+        }),
+      ],
+      meta: { total: 2, page: 1, page_size: 100 },
+    });
+    mockStats.mockResolvedValue(stats());
+    mockPlan.mockResolvedValue({
+      id: "plan-a",
+      order_id: "a",
+      order_number: 42,
+      contact_id: "c1",
+      status: "active",
+      currency: "COP",
+      total_cents: 1_000_000,
+      paid_cents: 300_000,
+      balance_cents: 700_000,
+      deposit_cents: 300_000,
+      service_date: null,
+      final_due_at: null,
+      final_due_source: "fallback",
+      next_due_at: "2026-10-01",
+      active_promise_at: null,
+      assigned_user_id: null,
+      installments: [],
+      promises: [],
+      notes: [],
+    });
+
+    render(<ReceivablesView />);
+    const more = await screen.findAllByRole("button", { name: /Más acciones/ });
+    expect(more).toHaveLength(2);
+    // «Escribir» sigue siendo la única diana visible por fila
+    expect(screen.getAllByRole("button", { name: /Escribir/ })).toHaveLength(2);
+
+    fireEvent.click(more[0]);
+    const items = await screen.findAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      expect.stringContaining("Anotar promesa de pago"),
+      expect.stringContaining("Reprogramar cuotas"),
+      expect.stringContaining("Abrir el pedido"),
+    ]);
+    fireEvent.click(items[0]);
+    expect(
+      await screen.findByRole("heading", { name: /Anotar promesa de pago/ }),
+    ).toBeInTheDocument();
+    expect(mockPlan).toHaveBeenCalledWith("a");
+    fireEvent.keyDown(document.body, { key: "Escape" });
+
+    // Con promesa viva, «anotar otra» no está: lo que no se puede, no se ofrece
+    fireEvent.click(more[1]);
+    const busy = await screen.findAllByRole("menuitem");
+    expect(busy.map((item) => item.textContent)).toEqual([
+      expect.stringContaining("Reprogramar cuotas"),
+      expect.stringContaining("Abrir el pedido"),
+    ]);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+
+    // Sin el permiso, no hay «…»: nada deshabilitado, lo que no se puede no está
+    mockHasPermission.mockImplementation(
+      (code) => code !== "collections:manage",
+    );
+    cleanup();
+    render(<ReceivablesView />);
+    await screen.findAllByRole("button", { name: /Escribir/ });
+    expect(screen.queryByRole("button", { name: /Más acciones/ })).toBeNull();
+  });
 
   it("lo primero es cuánto te deben, y la frase nombra los importes", async () => {
     mockList.mockResolvedValue({

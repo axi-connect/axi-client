@@ -88,6 +88,19 @@ export function recordPromise(
   );
 }
 
+/**
+ * F4b: una nota del plan, para el equipo. El servidor la guarda como evento
+ * (`note_added`): «editar» añade una nueva y la pantalla enseña la última.
+ */
+export function addPlanNote(
+  planId: string,
+  note: string,
+): Promise<{ plan_id: string }> {
+  return http.patch<{ plan_id: string }>(`/collections/plans/${planId}`, {
+    note,
+  });
+}
+
 /** El historial de avisos del plan, los OMITIDOS incluidos (F5). */
 export function getPlanReminders(planId: string): Promise<PlanRemindersDTO> {
   return http.get<PlanRemindersDTO>(`/collections/plans/${planId}/reminders`);

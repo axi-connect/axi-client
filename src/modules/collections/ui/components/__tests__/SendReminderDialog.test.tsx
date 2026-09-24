@@ -35,6 +35,8 @@ function plan(dueAt: string) {
     final_due_source: "fallback",
     next_due_at: dueAt,
     active_promise_at: null,
+    promises: [],
+    notes: [],
     assigned_user_id: null,
     installments: [
       {

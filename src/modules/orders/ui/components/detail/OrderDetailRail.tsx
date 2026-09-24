@@ -197,7 +197,10 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
 
               {/* F4 Cobros: y cuándo tocaba cada parte. Se pinta solo si el
                   pedido tiene plan — sin la función, esta sección no existe. */}
-              <PaymentPlanBlock orderId={order.id} />
+              <PaymentPlanBlock
+                orderId={order.id}
+                contactName={order.contact.full_name ?? "el cliente"}
+              />
 
               {/* Artículos */}
               <section className="rounded-2xl border border-border bg-background p-4">
