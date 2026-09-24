@@ -27,6 +27,10 @@ export {
   type LatestFxRateDTO,
 } from "./domain/fx-settings";
 export { getLatestFxRate } from "./infrastructure/services/fx-service.adapter";
+export {
+  useIndicativeQuote,
+  type IndicativeQuote,
+} from "./infrastructure/hooks/use-indicative-quote";
 export { FxSettingsTab } from "./ui/components/FxSettingsTab";
 export {
   PAYMENTS_FX_PATH,

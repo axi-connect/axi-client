@@ -65,9 +65,13 @@ export function companySettingsTabs(
 export function CompanySettingsNav() {
   const { loaded, hasFeature } = useFeatures();
   return (
+    // Por debajo de md las inactivas se quedan en su icono (`auto`): a 390 px
+    // las cuatro caben sin que «Documentos» quede fuera de vista y sin pista
+    // (QA real F1, móvil). El nombre sigue en el lector de pantalla.
     <NavTabs
       items={companySettingsTabs(hasFeature, loaded)}
       label="Secciones de la empresa"
+      labels="auto"
     />
   );
 }

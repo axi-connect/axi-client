@@ -155,7 +155,10 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
       />
       <aside
         aria-label="Detalle del pedido"
-        className="relative flex h-full w-full max-w-md flex-col overflow-hidden border-l border-border bg-secondary/50 backdrop-blur-none lg:w-[380px] lg:rounded-2xl lg:border"
+        // En móvil es una pantalla, no una superposición: fondo SÓLIDO (con
+        // `bg-secondary/50` se veía la lista de pedidos detrás, QA real F3).
+        // En escritorio convive con el tablero y conserva su tinte.
+        className="relative flex h-full w-full max-w-md flex-col overflow-hidden border-l border-border bg-background backdrop-blur-none lg:w-[380px] lg:rounded-2xl lg:border lg:bg-secondary/50"
       >
         {/* Header */}
         <header className="flex items-start justify-between gap-2 border-b border-border bg-background/80 p-4">

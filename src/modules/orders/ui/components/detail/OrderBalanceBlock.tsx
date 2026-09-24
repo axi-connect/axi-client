@@ -9,6 +9,8 @@ import {
   type OrderDTO,
 } from "@/modules/orders/domain/order";
 import { PaymentMeter } from "@/modules/orders/ui/components/PaymentMeter";
+// El dueño de la tasa es el slice payments: se consume por su barrel (§3.3).
+import { useIndicativeQuote } from "@/modules/payments/public";
 
 /** «Sale en 179 días» dice más que una fecha suelta: es lo que urge el saldo. */
 function serviceCountdown(days: number): string {
@@ -29,6 +31,8 @@ function serviceCountdown(days: number): string {
 export function OrderBalanceBlock({ order }: { order: OrderDTO }) {
   const settled = order.payment_state === "paid";
   const days = daysUntilService(order.service_date);
+  // Solo mientras el total NO está congelado: después manda la tasa del pedido.
+  const quote = useIndicativeQuote(order.currency, order.base === null && !settled);
 
   return (
     <section aria-label="Cobro del pedido" className="rounded-2xl border border-border bg-background p-4">
@@ -71,6 +75,20 @@ export function OrderBalanceBlock({ order }: { order: OrderDTO }) {
             <p className="text-xs text-muted-foreground">{formatShortDate(order.service_date)}</p>
           </div>
         </div>
+      ) : null}
+
+      {order.base === null && quote !== null ? (
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          ≈{" "}
+          <span className="font-medium text-foreground tabular-nums">
+            {formatMoney(Math.round(order.balance_cents * quote.rate), quote.currency)}
+          </span>{" "}
+          a la tasa de hoy (
+          <span className="tabular-nums">
+            {quote.rate.toLocaleString("es-CO", { maximumFractionDigits: 2 })}
+          </span>
+          ). Es indicativo: el total se fija en {quote.currency} al confirmar el pedido.
+        </p>
       ) : null}
 
       {order.base !== null ? (

@@ -49,7 +49,14 @@ function OriginBadge({ feature, nicheCode }: { feature: FeatureDetailDTO; nicheC
   if (feature.source === "tenant") {
     return <StatusDotBadge tone={feature.enabled ? "ok" : "off"}>{feature.enabled ? "Activada por ti" : "Apagada por ti"}</StatusDotBadge>;
   }
-  return <StatusDotBadge tone="off">Apagada</StatusDotBadge>;
+  // `default`: nadie la decidió — ni Axi, ni un tipo de negocio, ni tú. El
+  // interruptor ya dice «Encendida/Apagada»; el chip dice DE DÓNDE sale, que
+  // es lo que faltaba sin tipo de negocio (QA real F1: dos «Apagada» seguidos).
+  return (
+    <StatusDotBadge tone="off">
+      {feature.enabled ? "Encendida de fábrica" : "Apagada de fábrica"}
+    </StatusDotBadge>
+  );
 }
 
 /**
