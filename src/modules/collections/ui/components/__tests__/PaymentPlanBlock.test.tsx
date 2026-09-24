@@ -76,6 +76,7 @@ const plan = (overrides: Partial<PlanDetailDTO> = {}): PlanDetailDTO => ({
   promises: [],
   notes: [],
   collapsed: false,
+  schedule_changed_at: null,
   ...overrides,
 });
 

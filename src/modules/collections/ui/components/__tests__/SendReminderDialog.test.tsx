@@ -38,6 +38,7 @@ function plan(dueAt: string) {
     promises: [],
     notes: [],
     collapsed: false,
+    schedule_changed_at: null,
     assigned_user_id: null,
     installments: [
       {

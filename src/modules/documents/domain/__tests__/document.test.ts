@@ -1,5 +1,6 @@
 import type { DocumentTypeView } from "@/modules/documents/domain/template";
 import {
+  latestChange,
   canRetry,
   DOCUMENT_STATUS_LABELS,
   documentStatusTone,
@@ -146,5 +147,32 @@ describe("documento emitido — lecturas puras", () => {
       doc({ id: "new", created_at: "2026-09-10T00:00:00.000Z" }),
     ]);
     expect(sorted.map((d) => d.id)).toEqual(["new", "old", "gone"]);
+  });
+});
+
+describe("QA F8: latestChange — reprogramar también desactualiza el papel", () => {
+  it("toma la fecha MÁS reciente entre el pedido y la reprogramación; ignora las ausentes", () => {
+    expect(
+      latestChange("2026-09-20T10:00:00.000Z", "2026-09-24T10:00:00.000Z"),
+    ).toBe("2026-09-24T10:00:00.000Z");
+    expect(
+      latestChange("2026-09-24T10:00:00.000Z", "2026-09-20T10:00:00.000Z"),
+    ).toBe("2026-09-24T10:00:00.000Z");
+    expect(latestChange("2026-09-20T10:00:00.000Z", null)).toBe(
+      "2026-09-20T10:00:00.000Z",
+    );
+    expect(latestChange(null, undefined)).toBeNull();
+  });
+
+  it("un contrato emitido ANTES de reprogramar sale desactualizado aunque el pedido no haya cambiado", () => {
+    const paper = {
+      status: "rendered" as const,
+      created_at: "2026-09-22T10:00:00.000Z",
+    };
+    const orderUpdated = "2026-09-21T10:00:00.000Z";
+    expect(isOutdated(paper, orderUpdated)).toBe(false);
+    expect(
+      isOutdated(paper, latestChange(orderUpdated, "2026-09-24T10:00:00.000Z")),
+    ).toBe(true);
   });
 });

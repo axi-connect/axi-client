@@ -27,7 +27,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ShopifyOriginBadge, StatusDotBadge } from "@/shared/components/ui/status-badges";
 import { FieldList } from "@/shared/components/features/field-list";
 import { PaymentPlanBlock } from "@/modules/collections/ui/components/PaymentPlanBlock";
-import { DocumentsList } from "@/modules/documents/public";
+import { DocumentsList, latestChange } from "@/modules/documents/public";
 import { OrderBalanceBlock } from "./OrderBalanceBlock";
 import {
   describeDelivery,
@@ -105,6 +105,8 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
   const [transitionReq, setTransitionReq] = useState<TransitionRequest | null>(null);
   const [reportingPayment, setReportingPayment] = useState(false);
   const [review, setReview] = useState<PaymentReview | null>(null);
+  // F8: cuándo se reprogramó el plan; el contrato lo pinta, así que cuenta para «desactualizado».
+  const [scheduleChangedAt, setScheduleChangedAt] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -205,6 +207,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                 orderId={order.id}
                 contactName={order.contact.full_name ?? "el cliente"}
                 refreshKey={order.updated_at}
+                onLoaded={(plan) => setScheduleChangedAt(plan?.schedule_changed_at ?? null)}
               />
 
               {/* Artículos */}
@@ -361,7 +364,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               <DocumentsList
                 subject={{ kind: "order", id: order.id }}
                 subjectLabel={`la reserva ${orderNumberLabel(order.order_number)}`}
-                subjectUpdatedAt={order.updated_at}
+                subjectUpdatedAt={latestChange(order.updated_at, scheduleChangedAt)}
               />
 
               {/* Actividad */}

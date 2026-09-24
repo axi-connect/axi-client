@@ -121,3 +121,24 @@ export function sortDocuments(
     return b.created_at.localeCompare(a.created_at);
   });
 }
+
+/**
+ * La fecha contra la que se juzga si un papel quedó desactualizado: la MÁS
+ * RECIENTE de las que el papel pinta —el pedido y, si tiene plan, la última
+ * reprogramación de sus cuotas— (QA real F8: reprogramar no tocaba el pedido y
+ * el contrato no se enteraba). `null`/`undefined` se ignoran.
+ */
+export function latestChange(
+  ...dates: readonly (string | null | undefined)[]
+): string | null {
+  let latest: string | null = null;
+  for (const date of dates) {
+    if (!date) continue;
+    if (
+      latest === null ||
+      new Date(date).getTime() > new Date(latest).getTime()
+    )
+      latest = date;
+  }
+  return latest;
+}

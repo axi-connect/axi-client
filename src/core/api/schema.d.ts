@@ -14085,6 +14085,8 @@ export interface components {
                 actor_user_id: string | null;
             }[];
             collapsed: boolean;
+            /** Format: date-time */
+            schedule_changed_at: string | null;
         };
         PlanRemindersDto: {
             data: {

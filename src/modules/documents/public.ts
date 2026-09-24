@@ -56,6 +56,7 @@ export {
   isDocumentInFlight,
   isOutdated,
   issueOptions,
+  latestChange,
   sortDocuments,
   type DocumentDTO,
   type DocumentStatus,

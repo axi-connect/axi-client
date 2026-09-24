@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   CalendarClock,
   CircleCheck,
@@ -72,6 +72,7 @@ export function PaymentPlanBlock({
   orderId,
   contactName = "el cliente",
   refreshKey,
+  onLoaded,
 }: {
   orderId: string;
   /** Para los diálogos: a quién se le anota o se le escribe. */
@@ -82,6 +83,11 @@ export function PaymentPlanBlock({
    * (QA real F5). Con un 404 se reintenta unas veces con espera creciente.
    */
   refreshKey?: string | null;
+  /**
+   * El plan que se acaba de leer (o `null`): el rail lo usa para saber cuándo
+   * se reprogramó y marcar el contrato como desactualizado (QA real F8).
+   */
+  onLoaded?: (plan: PlanDetailDTO | null) => void;
 }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("collections:manage");
@@ -92,6 +98,8 @@ export function PaymentPlanBlock({
   >(null);
   const [reloads, setReloads] = useState(0);
   const reload = useCallback(() => setReloads((count) => count + 1), []);
+  const onLoadedRef = useRef(onLoaded);
+  onLoadedRef.current = onLoaded;
 
   useEffect(() => {
     let alive = true;
@@ -99,11 +107,14 @@ export function PaymentPlanBlock({
     const attempt = (round: number) => {
       getPlanByOrder(orderId)
         .then((result) => {
-          if (alive) setPlan(result);
+          if (!alive) return;
+          setPlan(result);
+          onLoadedRef.current?.(result);
         })
         .catch((error: unknown) => {
           if (!alive) return;
           setPlan(null);
+          onLoadedRef.current?.(null);
           // 404 «sin plan» y 403 «sin la función» son el mismo silencio para el
           // operador: esta sección no existe para este pedido, y explicárselo
           // sería ruido. Cualquier OTRA cosa —un 500, la red caída— también deja
