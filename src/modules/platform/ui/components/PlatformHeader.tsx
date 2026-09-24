@@ -35,6 +35,7 @@ const LABELS: Record<string, string> = {
   suites: "Suites",
   cases: "Casos",
   debugger: "Depurador",
+  simulator: "Simulacro",
 };
 
 /** "new" es ambiguo por segmento: depende de qué colección cuelga. */

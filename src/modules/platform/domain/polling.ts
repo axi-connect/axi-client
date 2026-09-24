@@ -16,6 +16,9 @@ export const DB_POLL_DEGRADE_AFTER_MS = 10 * 60 * 1000;
 export const MIGRATION_POLL_MS = 5_000;
 export const ANALYTICS_POLL_MS = 60_000;
 export const RUN_POLL_MS = 3_000;
+/** Sesión de simulacro: 1,5 s mientras el agente «escribe», 4 s si está quieta. */
+export const SESSION_POLL_FAST_MS = 1_500;
+export const SESSION_POLL_IDLE_MS = 4_000;
 
 /** Analytics y badge de alertas: refresco de 60 s salvo re-login abierto. */
 export function analyticsPollInterval(reloginOpen: boolean): number | false {
@@ -64,4 +67,21 @@ export function casePollInterval(args: {
   const { status, reloginOpen } = args;
   if (!status || isCaseSettled(status) || reloginOpen) return false;
   return RUN_POLL_MS;
+}
+
+/**
+ * Detalle de una sesión de simulacro. Rápido mientras el agente está
+ * pensando (el operador espera la respuesta), lento si la sesión está quieta,
+ * apagado si terminó, con el re-login abierto o con la pestaña oculta
+ * (`document.hidden`): un simulacro abandonado en otra pestaña no pollea.
+ */
+export function sessionPollInterval(args: {
+  status: "active" | "ended" | null | undefined;
+  agentState: "idle" | "thinking" | "escalated" | "closed" | null | undefined;
+  reloginOpen: boolean;
+  hidden?: boolean;
+}): number | false {
+  const { status, agentState, reloginOpen, hidden = false } = args;
+  if (!status || status !== "active" || reloginOpen || hidden) return false;
+  return agentState === "thinking" ? SESSION_POLL_FAST_MS : SESSION_POLL_IDLE_MS;
 }

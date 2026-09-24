@@ -222,6 +222,9 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   "quality/run_not_cancelable": "La ejecución ya terminó: no se puede cancelar",
   "quality/run_not_purgeable": "La ejecución sigue activa: espera a que termine para purgar",
   "quality/spend_cap_exceeded": "El tope de gasto no alcanza para la ejecución estimada",
+  "quality/session_not_active": "La sesión de simulacro ya terminó",
+  "quality/session_limit_reached": "Hay demasiadas sesiones de simulacro abiertas",
+  "quality/session_spend_cap_exceeded": "La sesión alcanzó su tope de gasto",
   // Marketing (campañas, recuperación, promociones y bajas).
   // Los mensajes explican qué hacer, no solo qué falló: el módulo escribe a
   // clientes reales y el operador necesita saber si puede reintentar.

@@ -1,6 +1,6 @@
 # Upgrade del módulo quality — simulacro interactivo, capacidades bajo prueba y método de calidad
 
-> **Estado: APROBADO por el dueño el 2026-09-24** (F0 en curso). Gemelo idéntico en `axi-server/docs/plans/quality_upgrade_plan.md` y `axi-client/docs/plans/quality_upgrade_plan.md`; el mockup F0 vive en `axi-client/docs/design/mockups/quality-upgrade.html` (`quality-upgrade.build.py`). Rama `feat/quality-upgrade` en ambos repos. Gate explícito del dueño entre fases.
+> **Estado: APROBADO por el dueño el 2026-09-24** · F0 certificada · **F1 construida el 2026-09-24** (ver «Estado por fase» al final). Gemelo idéntico en `axi-server/docs/plans/quality_upgrade_plan.md` y `axi-client/docs/plans/quality_upgrade_plan.md`; el mockup F0 vive en `axi-client/docs/design/mockups/quality-upgrade.html` (`quality-upgrade.build.py`). Rama `feat/quality-upgrade` en ambos repos. Gate explícito del dueño entre fases.
 
 
 ## Contexto
@@ -250,3 +250,11 @@ Confirmado sin cambios: `analytics_turn_metric` SÍ se escribe para conversacion
 | O6 | El encabezado decía «BORRADOR». | Estado APROBADO 2026-09-24 en el encabezado del `.md`. |
 
 Criterio de certificación por fase que aplicará la auditora: HEAD fijo y árbol limpio, lista de commits, verjas corridas por mí; ella corre lint por bloques / tsc / `npm test --maxWorkers=2` / diff de OpenAPI / `api:types` en copia detached; 0 violaciones de boundaries, sin código muerto, cada guarda con sus emisores contados, e2e del cierre de fase verde.
+
+## Estado por fase
+
+| Fase | Estado | Notas de implementación |
+|---|---|---|
+| F0 | Certificada por axi-f2 | Mockup + planes gemelos. |
+| F1 | **Construida 2026-09-24, pendiente de certificación y de visual del dueño** | Backend: `QualityRunKind.interactive` (+ migración), `TenantEligibilityService` compartido con `start_run`, `EnsureSimulatorChannelUseCase.ensureExists` (no re-apunta), `CreateSession`/`SendSessionMessage`/`EndSession`, `SessionsQuery` (`?after=` delta, `agent_changed`), traza por Redis (`AgentTraceService` sink cuando `simulated`), `RedisSimTraceReaderAdapter`, sweep `session_sweep` cada 5 min, `GET /platform/tenants/:id/agents`, gasto diario `quality:sim:daily_spend:*`, advisory locks global+tenant en el create. **Hallazgos al construir:** (a) `pg_advisory_xact_lock` devuelve `void` y `$queryRaw` no lo deserializa → `::text` como en `ensure_default_pipeline`; (b) las clases DTO llevan prefijo `Quality…` porque `intake` ya expone `CreateSessionDto`/`SessionDetailDto` y swagger nombra los schemas por la clase (la colisión pisaba el contrato de las entrevistas en silencio); (c) el `schema.d.ts` del cliente se EMPALMA (no se regenera entero): el committeado va por delante de server main (memoria `contrato-cliente-adelantado-a-server-main`). Frontend: tab «Simulacro», `SimulatorView` de tres columnas, `ChatBubble` compartido (lo usa también `TranscriptPanel`), `AgentSelect` (el wizard `TargetStep` migra a él), hooks con polling adaptativo y envío optimista. Fuera de F1 a propósito: composer de medios (F2), «convertir en escenario» (F5). Verjas corridas por el constructor: server `typecheck` + eslint de los 47 archivos tocados + 7 suites unitarias afectadas (57 tests) + e2e `interactive_session` 10/10 (el e2e completo pasó salvo `fx_rates`, dependencia externa preexistente) + `openapi:generate` (diff = 6 rutas, 7 schemas nuevos, `RunsPageDto`/`RunDetailDto` con `kind` ampliado); cliente `tsc` (solo el error preexistente de `ConversationPanel.test.tsx`), eslint de los 27 archivos tocados, 4 suites (31 tests). Pendiente: suite unitaria completa del servidor (en curso al escribir esto), `next build`, visual del dueño. |
+| F2–F5 | Sin empezar | |
