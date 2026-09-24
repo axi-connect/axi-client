@@ -143,7 +143,8 @@ describe("JourneyEditor", () => {
   });
 
   it("sin el campo `switches` (servidor viejo) se lee como apagado (Q8)", async () => {
-    const { switches: _omitted, ...legacy } = journey();
+    const legacy: Partial<JourneyDTO> = journey();
+    delete legacy.switches;
     getJourney.mockResolvedValue(legacy as JourneyDTO);
     render(<JourneyEditor />);
     expect(await screen.findByText(/El avance automático está apagado para tu negocio/)).toBeInTheDocument();
