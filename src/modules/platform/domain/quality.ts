@@ -495,11 +495,6 @@ export function criterionLabel(criterion: SuccessCriterion): string {
   }
 }
 
-/** Familia (grupo del editor) de un criterio; `unknown` no tiene. */
-export function criterionFamily(kind: CriterionKind): CriterionFamily | null {
-  return CRITERION_KINDS.find((entry) => entry.value === kind)?.family ?? null;
-}
-
 /**
  * Heurística de cuantificador anidado (riesgo ReDoS), espejo del denylist del
  * backend: grupo que contiene `+`/`*` seguido de `+`/`*`, p.ej. `(a+)+`.

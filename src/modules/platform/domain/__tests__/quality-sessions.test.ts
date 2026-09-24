@@ -102,12 +102,19 @@ describe("transcript incremental", () => {
     const attachment = { id: "att-1", mime_type: "image/jpeg", filename: "f.jpg", size_bytes: 10, url: "https://x/1" };
     const recognition = { status: "skipped" as const, skip_reason: "disabled", error_reason: null, kind: null, description: null, top_score: null, margin: null, degraded: false, latency_ms: null, candidates: [] };
     const bare = message({ id: "2", content_type: "image", body: null });
-    expect(isSettledMessage(bare)).toBe(false);
-    expect(isSettledMessage({ ...bare, attachments: [attachment] })).toBe(false);
-    expect(isSettledMessage({ ...bare, attachments: [attachment], recognition })).toBe(true);
+    // `now` a 10 s del mensaje: aún dentro de la gracia de N5
+    const at = new Date("2026-09-24T10:00:10.000Z").getTime();
+    expect(isSettledMessage(bare, at)).toBe(false);
+    expect(isSettledMessage({ ...bare, attachments: [attachment] }, at)).toBe(false);
+    expect(isSettledMessage({ ...bare, attachments: [attachment], recognition }, at)).toBe(true);
     const audio = message({ id: "3", content_type: "audio", body: null, attachments: [{ ...attachment, mime_type: "audio/ogg" }] });
-    expect(isSettledMessage(audio)).toBe(false);
-    expect(isSettledMessage({ ...audio, transcription: { status: "done", text: "hola", error_reason: null, audio_seconds: 1, latency_ms: 5 } })).toBe(true);
+    expect(isSettledMessage(audio, at)).toBe(false);
+    expect(isSettledMessage({ ...audio, transcription: { status: "done", text: "hola", error_reason: null, audio_seconds: 1, latency_ms: 5 } }, at)).toBe(true);
+    // N5: con el reconocimiento apagado nunca llega `recognition`; pasado un
+    // minuto con adjunto se da por asentado para no clavar el cursor
+    const old = { ...bare, attachments: [attachment], created_at: "2026-09-24T10:00:00.000Z" };
+    expect(isSettledMessage(old, new Date("2026-09-24T10:00:30.000Z").getTime())).toBe(false);
+    expect(isSettledMessage(old, new Date("2026-09-24T10:01:30.000Z").getTime())).toBe(true);
     // El cursor se queda en el último asentado: cada poll vuelve a traer la foto
     expect(lastMessageId([message({ id: "1" }), bare])).toBe("1");
     expect(lastMessageId([message({ id: "1" }), { ...bare, attachments: [attachment], recognition }])).toBe("2");

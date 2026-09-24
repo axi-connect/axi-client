@@ -180,18 +180,29 @@ export function lastMessageId(transcript: readonly SessionMessage[]): string | u
  * foto ni chip para siempre (B2 de la auditoría). Un medio sin asentar deja el
  * cursor en el mensaje anterior: cada poll lo vuelve a traer hasta que cierre.
  */
-export function isSettledMessage(message: SessionMessage): boolean {
+export function isSettledMessage(message: SessionMessage, now: number = Date.now()): boolean {
   if (isOptimisticMessage(message)) return false;
   if (message.content_type === "image") {
-    return message.attachments.length > 0 && message.recognition !== null;
+    return message.attachments.length > 0 && (message.recognition !== null || isOldEnough(message, now));
   }
   if (message.content_type === "audio") {
-    return message.attachments.length > 0 && message.transcription !== null;
+    return message.attachments.length > 0 && (message.transcription !== null || isOldEnough(message, now));
   }
   if (message.content_type === "video" || message.content_type === "document") {
     return message.attachments.length > 0;
   }
   return true;
+}
+
+/**
+ * N5: con el reconocimiento o el STT apagados en el tenant el mensaje nunca
+ * recibe `recognition`/`transcription`; pasado un minuto con adjunto se da
+ * por asentado para que el cursor no se quede clavado en él.
+ */
+export const MEDIA_SETTLE_GRACE_MS = 60_000;
+
+function isOldEnough(message: Pick<SessionMessage, "created_at">, now: number): boolean {
+  return now - new Date(message.created_at).getTime() > MEDIA_SETTLE_GRACE_MS;
 }
 
 /**
