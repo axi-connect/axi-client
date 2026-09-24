@@ -82,6 +82,7 @@ describe("ProposalDetail", () => {
     approve.mockResolvedValueOnce({
       applied: [{ type: "promotion", id: "p1", label: "15% coral" }],
       failed: [{ type: "campaign", label: "Quincena", reason: "la plantilla de Meta sigue en revisión" }],
+      status: "approved",
     });
     render(<ProposalDetail proposalId="prop-1" />);
 
@@ -89,6 +90,21 @@ describe("ProposalDetail", () => {
     expect(await screen.findByText("Encendido")).toBeVisible();
     expect(screen.getByText("Quedó pendiente")).toBeVisible();
     expect(screen.getByText(/plantilla de Meta sigue en revisión/iu)).toBeVisible();
+  });
+
+  it("nada aplicado (status pending): pinta el fallo y deja «Aprobar» para reintentar (V2)", async () => {
+    getProposal.mockResolvedValueOnce(proposal());
+    approve.mockResolvedValueOnce({
+      applied: [],
+      failed: [{ type: "automation", label: "Rescate", reason: "Tu plan no incluye crm_ai" }],
+      status: "pending",
+    });
+    render(<ProposalDetail proposalId="prop-1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /aprobar y encender/iu }));
+    expect(await screen.findByText("Quedó pendiente")).toBeVisible();
+    expect(screen.getByText(/sigue por decidir/iu)).toBeVisible();
+    expect(screen.getByRole("button", { name: /aprobar y encender/iu })).toBeEnabled();
   });
 
   it("un insight no ofrece «Aprobar»: no hay nada que encender", async () => {

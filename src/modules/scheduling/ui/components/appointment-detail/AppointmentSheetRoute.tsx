@@ -19,7 +19,7 @@ import {
   fmtDayLong,
   fmtTime,
   fmtTimeRange,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { useCompanySchedule } from "@/modules/scheduling/infrastructure/hooks/use-company-schedule";
 import { getAppointment } from "@/modules/scheduling/infrastructure/services/appointments-service.adapter";
 import {

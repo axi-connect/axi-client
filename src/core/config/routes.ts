@@ -79,6 +79,10 @@ export const NAV_PATH_ALIASES: Record<string, string> = {
   // Cobros). El alias se queda hasta que el seed se re-aplique en todos los
   // entornos; con el path nuevo sembrado es identidad y no estorba.
   "/settings/sales": "/settings/payments",
+  // Comercial (F3 del método comercial): la página vive en `/comercial`. Si el
+  // seed del backend emite el path en inglés, este alias lo trae; con el path
+  // en español sembrado es identidad y no estorba.
+  "/commercial": "/comercial",
 };
 
 /**

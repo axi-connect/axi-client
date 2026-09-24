@@ -7,7 +7,7 @@ import { cn } from "@/core/lib/utils";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import type { AvailabilityDTO } from "@/modules/scheduling/domain/availability";
-import { fmtTime, hhmmFromInstant, type DayKey } from "@/modules/scheduling/domain/business-time";
+import { fmtTime, hhmmFromInstant, type DayKey } from "@/core/lib/business-time";
 import { getAvailability } from "@/modules/scheduling/infrastructure/services/availability-service.adapter";
 
 /**

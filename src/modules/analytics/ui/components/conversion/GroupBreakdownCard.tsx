@@ -2,7 +2,7 @@
 
 import { cn } from "@/core/lib/utils";
 import { formatMoney } from "@/core/lib/format";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
 import { Progress } from "@/shared/components/ui/progress";
 import { Skeleton } from "@/shared/components/ui/skeleton";

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
 import { ChartSkeleton } from "@/modules/analytics/ui/AnalyticsSkeletons";
 import { issueLabel } from "@/modules/analytics/domain/labels";

@@ -143,7 +143,9 @@ export function ProposalDetail({ proposalId }: { proposalId: string }) {
     try {
       const outcome = await approve(proposal.id);
       setResult(outcome);
-      setProposal({ ...proposal, status: "approved" });
+      // Si nada se aplicó el servidor la deja PENDIENTE (Q5): se pintan los
+      // fallos y «Aprobar» queda para reintentar.
+      setProposal({ ...proposal, status: outcome.status });
     } catch (error) {
       showAlert({ tone: "error", title: errorMessage(error) });
     } finally {
@@ -501,6 +503,11 @@ function ApprovalOutcome({ result }: { result: ApprovalResultDTO }) {
             </ul>
           </div>
         </div>
+      ) : null}
+      {result.status === "pending" ? (
+        <p className="text-[12.5px] text-muted-foreground">
+          La propuesta sigue por decidir: cuando lo resuelvas, vuelve a aprobarla.
+        </p>
       ) : null}
       {result.applied.length === 0 && result.failed.length === 0 ? (
         <p className="flex items-center gap-2 rounded-md border border-border p-3 text-[12.5px] text-muted-foreground">

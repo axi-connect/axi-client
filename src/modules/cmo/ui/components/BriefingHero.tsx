@@ -1,10 +1,12 @@
 "use client";
 
-import { Clock, Inbox, RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { Clock, Inbox, RotateCcw, Route } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import type { BriefingDTO } from "@/modules/cmo/domain/cmo";
 import { formatHour, toneClasses } from "@/modules/cmo/domain/proposal-labels";
+import { useGoalChip } from "@/modules/commercial/public";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface BriefingHeroProps {
@@ -50,6 +52,9 @@ export function BriefingHero({
   ownerName,
   proposalCount,
 }: BriefingHeroProps) {
+  // La meta del mes, si el tenant la tiene (método comercial, F7): el DTO del
+  // briefing no la trae, así que sale del slice dueño y es `null` sin meta.
+  const goal = useGoalChip();
   return (
     <div className="flex flex-col items-center text-center">
       <p className="text-[13px] text-muted-foreground">{ownerName === null ? "Hola" : `Hola, ${ownerName}`}</p>
@@ -104,6 +109,15 @@ export function BriefingHero({
             ) : (
               <Chip>Hoy no hay nada que proponer.</Chip>
             )}
+            {goal !== null ? (
+              <Link
+                href={goal.href}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-3 py-1 text-[11.5px] text-muted-foreground backdrop-blur transition-colors hover:border-brand/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Route className="size-3.5 text-brand" aria-hidden="true" />
+                Meta · <b className="font-semibold text-foreground tabular-nums">{goal.pct} %</b>
+              </Link>
+            ) : null}
             {briefing.highlights.slice(0, MAX_HIGHLIGHTS).map((highlight) => (
               <Chip key={`${highlight.label}-${highlight.detail}`} className={toneClasses(highlight.tone)}>
                 {highlight.label}

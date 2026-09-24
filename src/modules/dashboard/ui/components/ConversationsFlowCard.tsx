@@ -3,13 +3,13 @@
 import dynamic from "next/dynamic";
 import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
 import { CardEmpty } from "@/shared/components/features/card-empty";
-import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
+import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 import type { ConversationStatsDTO, DashboardPeriod } from "@/modules/dashboard/domain/dashboard";
 
 // Recharts solo en cliente: fuera del bundle inicial y sin SSR.
 const AreaTrend = dynamic(
-  () => import("@/modules/dashboard/ui/components/charts/AreaTrend").then((m) => m.AreaTrend),
+  () => import("@/shared/components/features/charts/AreaTrend").then((m) => m.AreaTrend),
   { ssr: false, loading: () => <div className="h-[180px] animate-pulse rounded-xl bg-secondary" /> },
 );
 
