@@ -39,82 +39,127 @@ VER, MORE, TOTAL, SALDO = F8.VER, F8.MORE, F8.TOTAL, F8.SALDO
 
 EXTRA_CSS = F8.EXTRA_CSS + """
 /* ── Entrega: la tercera línea de la fila, por canal ───────────────────── */
-.doc .dl{grid-column:2 / -1;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted-foreground);line-height:1.5;margin-top:1px}
-.doc .dl .ic{flex:none;opacity:.8}
+.doc .dl{grid-column:2 / -1;display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted-foreground);line-height:1.5;margin-top:2px;font-variant-numeric:tabular-nums}
+.doc .dl .gl{width:18px;height:18px;border-radius:6px;display:grid;place-items:center;background:var(--secondary);color:var(--muted-foreground);flex:none}
+.doc .dl .gl .ic{opacity:1}
 .doc .dl b{color:var(--foreground);font-weight:500}
 .doc .dl.busy{color:var(--axi-info)}
-.doc .dl.busy .pulse{width:7px;height:7px;border-radius:50%;background:var(--axi-info);flex:none;animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.doc .dl.busy .gl{background:color-mix(in srgb, var(--axi-info) 12%, transparent);color:var(--axi-info)}
+.doc .dl .pulse{width:7px;height:7px;border-radius:50%;background:var(--axi-info);flex:none;animation:pulse 1.4s ease-in-out infinite;margin-left:2px}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
 .doc .dl.bad{color:var(--axi-destructive)} .doc .dl.bad b{color:var(--axi-destructive)}
+.doc .dl.bad .gl{background:color-mix(in srgb, var(--axi-destructive) 10%, transparent);color:var(--axi-destructive)}
 .doc .dl.warn{color:var(--axi-warning)} .doc .dl.warn b{color:var(--axi-warning)}
-.doc .dl .btn.xs{height:26px;padding:0 9px;font-size:12px;border-radius:999px;margin-left:auto;flex:none;color:var(--foreground)}
+.doc .dl.warn .gl{background:color-mix(in srgb, var(--axi-warning) 12%, transparent);color:var(--axi-warning)}
+.doc .dl .btn.xs{height:26px;padding:0 10px;font-size:12px;border-radius:999px;margin-left:auto;flex:none;color:var(--foreground)}
 .doc .dl time{white-space:nowrap}
 
-/* ── El diálogo «Enviar» ───────────────────────────────────────────────── */
-.dlg-scrim{position:absolute;inset:0;background:var(--scrim);z-index:20;display:grid;place-items:center;padding:24px}
-.dlg{width:480px;border-radius:22px;border:1px solid var(--border);background:var(--background);box-shadow:var(--shadow-overlay);padding:24px 24px 20px;display:flex;flex-direction:column;gap:18px;position:relative}
-.dlg h2{font-family:var(--font-body);font-size:19px;font-weight:600;letter-spacing:-.012em;display:flex;align-items:center;gap:10px}
-.dlg h2 .paper{width:22px;height:28px} .dlg h2 .paper::before{top:4px;left:3px;right:3px} .dlg h2 .paper::after{top:8px;left:3px;right:6px;height:13px}
-.dlg .sub{font-size:13px;color:var(--muted-foreground);margin-top:4px;line-height:1.5}
-.dlg .sub .num{font-family:var(--font-mono);font-size:12px;color:var(--foreground);opacity:.85}
-.dlg .x{position:absolute;right:14px;top:14px}
+/* ── El diálogo «Enviar»: cristal, una acción, y la vista previa de cómo llega ── */
+.dlg-scrim{position:absolute;inset:0;background:color-mix(in srgb, var(--foreground) 22%, transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:20;display:grid;place-items:center;padding:24px}
+.dlg{width:500px;border-radius:28px;border:1px solid color-mix(in srgb, var(--border) 70%, transparent);background:color-mix(in srgb, var(--background) 88%, transparent);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);box-shadow:0 30px 80px -20px rgb(0 0 0/.35),0 2px 6px rgb(0 0 0/.06);padding:26px 26px 22px;display:flex;flex-direction:column;gap:20px;position:relative}
+.dlg h2{font-family:var(--font-heading);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.1;display:flex;align-items:center;gap:12px}
+.dlg h2 .paper{width:26px;height:33px;border-radius:3px} .dlg h2 .paper::before{top:5px;left:4px;right:4px} .dlg h2 .paper::after{top:10px;left:4px;right:7px;height:15px}
+.dlg .sub{font-size:13.5px;color:var(--muted-foreground);margin-top:6px;line-height:1.5}
+.dlg .sub .num{font-family:var(--font-mono);font-size:12.5px;color:var(--foreground);opacity:.85}
+.dlg .sub b{color:var(--foreground);font-weight:500}
+.dlg .x{position:absolute;right:16px;top:16px;width:30px;height:30px;border-radius:50%;background:var(--secondary);color:var(--muted-foreground)}
+.dlg .x:hover{color:var(--foreground)}
+
+/* Selector: dos tarjetas que se sienten como botones de iOS */
 .chn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ch{border:1px solid var(--border);border-radius:16px;padding:14px 14px 13px;text-align:left;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start;background:var(--background);position:relative;min-height:88px}
-.ch .cic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--secondary);color:var(--foreground)}
+.ch{border:1px solid var(--border);border-radius:18px;padding:14px 14px 13px;text-align:left;display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:start;background:var(--background);position:relative;min-height:90px;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.ch:hover{transform:translateY(-1px);box-shadow:var(--shadow-float)}
+.ch .cic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--secondary);color:var(--foreground)}
 .ch .t{font-size:14.5px;font-weight:600;letter-spacing:-.005em;display:flex;align-items:center;gap:8px}
 .ch .d{font-size:12.5px;color:var(--muted-foreground);margin-top:3px;line-height:1.45}
 .ch .d .mono{font-family:var(--font-mono);font-size:12px;color:var(--foreground);opacity:.85}
-.ch .d.reason{color:var(--muted-foreground)}
-.ch[aria-checked="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground) inset}
-.ch[aria-checked="true"] .cic{background:var(--foreground);color:var(--background)}
-.ch[aria-disabled="true"]{opacity:.62;background:color-mix(in srgb, var(--secondary) 50%, transparent)}
-.ch .mark{position:absolute;right:12px;top:12px;color:var(--foreground)}
+.ch .live{display:inline-flex;align-items:center;gap:5px}
+.ch .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--axi-success)}
+.ch .cold::before{background:var(--axi-warning)}
+.ch[aria-checked="true"]{border-color:var(--axi-brand);box-shadow:0 0 0 1px var(--axi-brand) inset,0 10px 30px -14px color-mix(in srgb, var(--axi-brand) 60%, transparent)}
+.ch[aria-checked="true"] .cic{background:var(--axi-brand);color:var(--axi-on-color)}
+.ch[aria-disabled="true"]{opacity:.6;background:color-mix(in srgb, var(--secondary) 55%, transparent);box-shadow:none;transform:none}
+.ch .mark{position:absolute;right:11px;top:11px;width:20px;height:20px;border-radius:50%;background:var(--axi-brand);color:var(--axi-on-color);display:grid;place-items:center}
 .ch .prev{grid-column:1 / -1;font-size:12px;color:var(--muted-foreground);display:flex;align-items:center;gap:6px;margin-top:-4px}
 .ch .prev .ic{color:var(--axi-success)}
-.dlg .notice{border-radius:14px;padding:12px 14px;font-size:13px}
-.dlg .notice.ok .ic{color:var(--axi-success)}
-.dlg .notice b{color:var(--foreground)}
-.dlg .notice a{color:var(--foreground);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+/* La vista previa: así le llega. Es el elemento memorable del diálogo. */
+.arrive{border-radius:20px;background:var(--secondary);padding:14px 16px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.arrive .cap{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted-foreground);letter-spacing:.01em}
+.arrive .cap b{color:var(--foreground);font-weight:500}
+.arrive .cap .st{display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.arrive .cap .st.ok{color:var(--axi-success)} .arrive .cap .st.warn{color:var(--axi-warning)} .arrive .cap .st.info{color:var(--axi-info)}
+.arrive .cap .st .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.bubble{max-width:330px;border-radius:18px 18px 18px 6px;background:var(--background);box-shadow:0 1px 2px rgb(0 0 0/.06),0 6px 18px -10px rgb(0 0 0/.18);padding:10px 12px 9px;display:flex;flex-direction:column;gap:8px;position:relative}
+.bubble .file{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--secondary)}
+.bubble .file .fn{font-size:13px;font-weight:500;font-family:var(--font-mono);letter-spacing:0}
+.bubble .file .fs{font-size:11.5px;color:var(--muted-foreground);margin-top:1px}
+.bubble .txt{font-size:13.5px;line-height:1.45}
+.bubble .meta{font-size:11px;color:var(--muted-foreground);display:flex;justify-content:flex-end;gap:5px;align-items:center;font-variant-numeric:tabular-nums}
+.bubble .meta .ic{color:var(--axi-info)}
+.bubble.tpl{border:1px dashed var(--border);box-shadow:none;background:transparent}
+.bubble.ghost{opacity:.55;border:1px dashed var(--border);box-shadow:none;background:transparent}
+.bubble.ghost .file{background:transparent;border:1px dashed var(--border)}
+.then{font-size:12px;color:var(--muted-foreground);display:flex;align-items:center;gap:8px;padding-left:6px}
+.then .ic{color:var(--muted-foreground)}
+.mailprev{border-radius:16px;background:var(--background);box-shadow:0 1px 2px rgb(0 0 0/.06),0 6px 18px -10px rgb(0 0 0/.18);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.mailprev .row1{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted-foreground)}
+.mailprev .row1 b{color:var(--foreground);font-weight:600;font-size:13.5px}
+.mailprev .subj{font-size:14px;font-weight:500;letter-spacing:-.005em}
+.mailprev .att{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 10px 0 6px;border-radius:9px;background:var(--secondary);font-size:12.5px;width:fit-content;margin-top:2px}
+.mailprev .att .paper{width:16px;height:20px;border-radius:2px} .mailprev .att .paper::before{top:3px;left:2px;right:2px} .mailprev .att .paper::after{top:6px;left:2px;right:4px;height:9px}
+.mailprev .att .fn{font-family:var(--font-mono);font-size:12px}
+.arrive .cant{display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--muted-foreground)}
+.arrive .cant .ic{color:var(--axi-warning);flex:none;margin-top:2px}
+.arrive .cant b{color:var(--foreground);font-weight:500}
+.arrive .cant a{color:var(--foreground);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.arrive.sending::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,color-mix(in srgb, var(--background) 55%, transparent) 50%,transparent 70%);animation:shimmer 1.6s linear infinite}
+@keyframes shimmer{0%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+
 .other{display:flex;flex-direction:column;gap:8px}
 .other .lnk{font-size:13px;color:var(--foreground);font-weight:500;display:inline-flex;align-items:center;gap:6px;text-decoration:none;width:fit-content}
 .other .lnk .ic{color:var(--muted-foreground)}
-.other .input{height:40px;font-size:14px}
+.other .input{height:44px;font-size:14.5px;border-radius:14px}
 .other .hint{font-size:12px;color:var(--muted-foreground)}
-.dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding-top:2px}
-.dlg-foot .btn{height:40px;border-radius:12px;padding:0 16px}
-.dlg .btn.primary{background:var(--axi-brand);color:var(--axi-on-color)}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding-top:2px;align-items:center}
+.dlg-foot .btn{height:44px;border-radius:999px;padding:0 18px;font-size:14.5px}
+.dlg .btn.primary{background:var(--axi-brand);color:var(--axi-on-color);box-shadow:0 10px 24px -12px color-mix(in srgb, var(--axi-brand) 80%, transparent)}
 .dlg .busyb{opacity:.85}
 .spin{width:14px;height:14px;border-radius:50%;border:2px solid color-mix(in srgb, currentColor 30%, transparent);border-top-color:currentColor;animation:spin .9s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── Móvil: el diálogo es una hoja ─────────────────────────────────────── */
-.mobile .dlg{position:absolute;left:0;right:0;bottom:0;width:auto;border-radius:28px 28px 0 0;padding:14px 16px 22px;z-index:6}
-.mobile .dlg .grab{margin:0 auto 6px}
+.mobile .dlg{position:absolute;left:0;right:0;bottom:0;width:auto;border-radius:30px 30px 0 0;padding:12px 16px 24px;z-index:6;gap:16px}
+.mobile .dlg .grab{margin:0 auto 4px}
 .mobile .chn{grid-template-columns:1fr}
 .mobile .ch{min-height:0}
+.mobile .bubble{max-width:100%}
 .mobile .dlg-foot .btn{flex:1}
 
-/* ── Ajustes: emisión y envío automáticos ──────────────────────────────── */
+/* ── Ajustes: emisión y envío automáticos (lista agrupada, estilo iOS) ─── */
 .autos{display:flex;flex-direction:column;gap:22px}
-.aset{border:1px solid var(--border);border-radius:18px;background:var(--background);overflow:hidden}
-.ah{padding:16px 20px 4px}
-.ah .t{font-size:15px;font-weight:600;letter-spacing:-.01em}
-.ah .s{font-size:12.5px;color:var(--muted-foreground);margin-top:3px;line-height:1.5}
-.rc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 20px 18px}
-.rcard{border:1px solid var(--border);border-radius:14px;padding:14px 14px 13px;text-align:left;display:flex;flex-direction:column;gap:6px;position:relative;background:var(--background)}
-.rcard .t{font-size:14px;font-weight:600;letter-spacing:-.005em;padding-right:22px}
+.aset{border:1px solid var(--border);border-radius:22px;background:var(--background);overflow:hidden;box-shadow:0 1px 2px rgb(0 0 0/.03)}
+.ah{padding:18px 22px 6px}
+.ah .t{font-size:15.5px;font-weight:600;letter-spacing:-.012em}
+.ah .s{font-size:12.5px;color:var(--muted-foreground);margin-top:3px;line-height:1.5;max-width:66ch}
+.rc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 22px 18px}
+.rcard{border:1px solid var(--border);border-radius:16px;padding:14px 14px 13px;text-align:left;display:flex;flex-direction:column;gap:6px;position:relative;background:var(--background);transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.rcard:hover{transform:translateY(-1px);box-shadow:var(--shadow-float)}
+.rcard .t{font-size:14px;font-weight:600;letter-spacing:-.005em;padding-right:24px}
 .rcard .d{font-size:12.5px;color:var(--muted-foreground);line-height:1.45}
-.rcard[aria-checked="true"]{border-color:var(--foreground);box-shadow:0 0 0 1px var(--foreground) inset}
-.rcard .radio{position:absolute;right:12px;top:13px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border)}
-.rcard[aria-checked="true"] .radio{border-color:var(--foreground);background:radial-gradient(circle,var(--foreground) 0 4px,transparent 4.5px)}
-.arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 20px;position:relative}
-.arow + .arow::before{content:"";position:absolute;left:20px;right:0;top:0;height:1px;background:var(--border-soft)}
+.rcard[aria-checked="true"]{border-color:var(--axi-brand);box-shadow:0 0 0 1px var(--axi-brand) inset}
+.rcard .radio{position:absolute;right:12px;top:13px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center}
+.rcard[aria-checked="true"] .radio{border-color:var(--axi-brand);background:var(--axi-brand);color:var(--axi-on-color)}
+.arow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 22px;position:relative}
+.arow + .arow::before{content:"";position:absolute;left:70px;right:0;top:0;height:1px;background:var(--border-soft)}
+.arow .gl{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--secondary);color:var(--foreground)}
 .arow .t{font-size:14px;font-weight:500}
-.arow .d{font-size:12.5px;color:var(--muted-foreground);margin-top:2px;line-height:1.45;max-width:60ch}
-.arow .d.warn{color:var(--axi-warning)}
+.arow .d{font-size:12.5px;color:var(--muted-foreground);margin-top:2px;line-height:1.45;max-width:62ch}
+.arow .d.warn{color:var(--axi-warning);display:flex;gap:6px;align-items:center}
 .arow .d b{color:var(--foreground);font-weight:500}
-.hsm{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:12px;padding:6px 20px 18px}
-.hsm .input{font-family:var(--font-mono);font-size:13px;height:38px}
+.arow .sw{width:44px;height:26px} .arow .sw::after{width:22px;height:22px;top:2px;left:2px} .arow .sw[aria-checked="true"]::after{transform:translateX(18px)}
+.hsm{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:12px;padding:8px 22px 20px}
+.hsm .input{font-family:var(--font-mono);font-size:13px;height:42px;border-radius:12px}
 .hsm .lbl{font-size:12.5px;color:var(--muted-foreground);margin-bottom:6px;display:block}
 .hsm .full{grid-column:1 / -1;font-size:12.5px;color:var(--muted-foreground);line-height:1.55}
 .hsm .full b{color:var(--foreground);font-weight:500}
@@ -122,7 +167,8 @@ EXTRA_CSS = F8.EXTRA_CSS + """
 
 # ----------------------------------------------------------------------------- fila + entrega
 def dline(tone: str, icon: str, text: str, action: str = "") -> str:
-    lead = '<span class="pulse"></span>' if tone == "busy" else ic(icon, size=13)
+    glyph = f'<span class="gl">{ic(icon or ("message-circle" if "WhatsApp" in text else "mail"), size=12)}</span>'
+    lead = glyph + ('<span class="pulse"></span>' if tone == "busy" else "")
     return f'<div class="dl {tone}">{lead}<span>{text}</span>{action}</div>'
 
 
@@ -206,50 +252,78 @@ def order_page(variant: str = "base", can_manage: bool = True, toast: str = "", 
 # ----------------------------------------------------------------------------- el diálogo
 def channel_card(kind: str, title: str, desc: str, checked: bool, disabled: bool = False, prev: str = "", reason: bool = False) -> str:
     icon = "message-circle" if kind == "whatsapp" else "mail"
-    mark = f'<span class="mark">{ic("circle-check", size=16)}</span>' if checked else ""
+    mark = f'<span class="mark">{ic("check", size=12)}</span>' if checked else ""
     p = f'<span class="prev">{ic("circle-check", size=12)}{prev}</span>' if prev else ""
     return f"""<button class="ch" role="radio" aria-checked="{str(checked).lower()}" aria-disabled="{str(disabled).lower()}">
-      <span class="cic">{ic(icon, size=17)}</span>
+      <span class="cic">{ic(icon, size=18)}</span>
       <span><span class="t">{title}</span><span class="d {'reason' if reason else ''}">{desc}</span></span>{mark}{p}
     </button>"""
 
 
+def bubble(kind: str, num: str, caption: str, pages: str = "2 páginas · 184 KB", cls: str = "", meta: str = "10:24") -> str:
+    return f"""<div class="bubble {cls}">
+      <div class="file">{paper(kind)}<div><p class="fn">{num}.pdf</p><p class="fs">{pages}</p></div></div>
+      <p class="txt">{caption}</p>
+      <p class="meta">{meta}{ic("check-check", size=13)}</p>
+    </div>"""
+
+
+def arrive(mode: str, kind: str, num: str) -> str:
+    """La vista previa de cómo le llega el papel: es la promesa del diálogo, dibujada."""
+    caption = f"Hola Laura, aquí está tu {kind.lower()} {num} de la reserva JX-0042."
+    if mode in ("open", "no-email", "sending"):
+        st = '<span class="st ok"><span class="dot"></span>Ventana abierta · escribió hace 3 h</span>'
+        body = bubble(kind, num, caption)
+        return f'<div class="arrive {"sending" if mode == "sending" else ""}"><div class="cap"><b>Así le llega</b> por WhatsApp{st}</div>{body}</div>'
+    if mode == "hsm":
+        st = '<span class="st warn"><span class="dot"></span>Ventana cerrada · no ha escrito en 2 días</span>'
+        tpl = f"""<div class="bubble tpl"><p class="txt">Hola Laura, tu {kind.lower()} de Cocuy Travel ya está listo. Respóndenos y te lo enviamos por aquí.</p><p class="meta">plantilla <b>documento_listo</b></p></div>"""
+        then = f'<p class="then">{ic("corner-down-right", size=14)}Cuando responda, sale el PDF <b>solo</b>:</p>'
+        ghost = bubble(kind, num, caption, cls="ghost", meta="al responder")
+        return f'<div class="arrive"><div class="cap"><b>Así le llega</b> por WhatsApp{st}</div>{tpl}{then}{ghost}</div>'
+    if mode == "no-hsm":
+        st = '<span class="st warn"><span class="dot"></span>Ventana cerrada</span>'
+        cant = f"""<div class="cant">{ic("clock", size=16)}<p>Lleva más de 24 h sin escribir y WhatsApp solo deja salir una <b>plantilla aprobada de Meta</b>. Aún no hay una configurada: <a href="#">configurar plantilla</a> en Mi empresa › Documentos, o mandarlo por correo.</p></div>"""
+        return f'<div class="arrive"><div class="cap"><b>Por WhatsApp no puede salir</b>{st}</div>{cant}</div>'
+    if mode == "other-email":
+        mail = f"""<div class="mailprev">
+          <div class="row1"><b>Cocuy Travel S.A.S.</b><span>para contabilidad@cocuytravel.co</span></div>
+          <p class="subj">Cocuy Travel S.A.S.: tu {kind.lower()} {num}</p>
+          <span class="att">{paper(kind)}<span class="fn">{num}.pdf</span></span>
+        </div>"""
+        return f'<div class="arrive"><div class="cap"><b>Así le llega</b> por correo<span class="st info"><span class="dot"></span>Responde a reservas@cocuytravel.co</span></div>{mail}</div>'
+    return ""
+
+
 def dialog(mode: str = "open", kind: str = "Contrato", num: str = "CTR-2026-0120", mobile: bool = False) -> str:
     """mode: open | no-email | hsm | no-hsm | other-email | sending"""
-    wa_open = channel_card("whatsapp", "WhatsApp", '<span class="mono">+57 ··· 0199</span> · escribió hace 3 h', True)
-    mail_ok = channel_card("email", "Correo", '<span class="mono">la···@example.com</span>', False)
+    wa_open = channel_card("whatsapp", "WhatsApp", '<span class="mono">+57 ··· 0199</span><br><span class="live">Escribió hace 3 h</span>', True)
+    mail_ok = channel_card("email", "Correo", '<span class="mono">la···@example.com</span><br>De su ficha', False)
     mail_none = channel_card("email", "Correo", "No tiene correo en su ficha. Añádelo en el contacto para mandarlo por aquí.", False, True, reason=True)
+    other = ""
     if mode == "no-email":
-        cards, notice, other, primary = wa_open, K.notice("ok", "Escribió hace 3 horas: la ventana de 24 h está abierta y <b>el PDF le llega al chat</b>, con una línea que lo presenta."), "", "Enviar por WhatsApp"
+        cards, primary = wa_open + mail_none, "Enviar por WhatsApp"
     elif mode == "hsm":
-        wa = channel_card("whatsapp", "WhatsApp", '<span class="mono">+57 ··· 0199</span> · no ha escrito en 2 días', True)
-        cards = wa + mail_ok
-        notice = K.notice("info", "Lleva más de 24 h sin escribir, así que WhatsApp no deja mandar el PDF directo. Le llegará la plantilla <b>«documento_listo»</b> y <b>el PDF sale solo cuando responda</b>.")
-        other, primary = "", "Enviar por WhatsApp"
+        wa = channel_card("whatsapp", "WhatsApp", '<span class="mono">+57 ··· 0199</span><br><span class="live cold">No ha escrito en 2 días</span>', True)
+        cards, primary = wa + mail_ok, "Enviar por WhatsApp"
     elif mode == "no-hsm":
-        wa = channel_card("whatsapp", "WhatsApp", "No ha escrito en más de 24 h y no hay una plantilla aprobada configurada.", False, True, reason=True)
-        mail = channel_card("email", "Correo", '<span class="mono">la···@example.com</span>', True)
-        cards = wa + mail
-        notice = K.notice("warn", "Fuera de las 24 h, WhatsApp solo deja salir una <b>plantilla aprobada de Meta</b>. <a href=\"#\">Configurar plantilla</a> en Mi empresa › Documentos, o mandarlo por correo.")
-        other, primary = "", "Enviar por correo"
+        wa = channel_card("whatsapp", "WhatsApp", "Fuera de las 24 h y sin plantilla aprobada configurada.", False, True, reason=True)
+        mail = channel_card("email", "Correo", '<span class="mono">la···@example.com</span><br>De su ficha', True)
+        cards, primary = wa + mail, "Enviar por correo"
     elif mode == "other-email":
-        wa = channel_card("whatsapp", "WhatsApp", '<span class="mono">+57 ··· 0199</span> · escribió hace 3 h', False)
-        mail = channel_card("email", "Correo", '<span class="mono">la···@example.com</span>', True, prev="Ya se envió por correo el 12 sep")
-        cards = wa + mail
-        notice = ""
+        wa = channel_card("whatsapp", "WhatsApp", '<span class="mono">+57 ··· 0199</span><br><span class="live">Escribió hace 3 h</span>', False)
+        mail = channel_card("email", "Correo", '<span class="mono">la···@example.com</span><br>De su ficha', True, prev="Ya se envió por correo el 12 sep")
+        cards, primary = wa + mail, "Enviar por correo"
         other = f"""<div class="other">
           <a class="lnk" href="#" aria-expanded="true">{ic("chevron-down", size=14)}Usar otro correo solo esta vez</a>
           {K.input("contabilidad@cocuytravel.co", "", "", "at-sign")}
           <p class="hint">La ficha del contacto no cambia: este destino es solo para este envío.</p>
         </div>"""
-        primary = "Enviar por correo"
     elif mode == "sending":
-        cards, notice, other, primary = wa_open + mail_ok, K.notice("ok", "Escribió hace 3 horas: la ventana de 24 h está abierta y <b>el PDF le llega al chat</b>."), "", ""
+        cards, primary = wa_open + mail_ok, ""
     else:
-        cards, notice, other, primary = wa_open + mail_ok, K.notice("ok", "Escribió hace 3 horas: la ventana de 24 h está abierta y <b>el PDF le llega al chat</b>, con una línea que lo presenta."), "", "Enviar por WhatsApp"
-    if mode == "no-email":
-        cards = wa_open + mail_none
-    foot_btn = (f'<button class="btn primary busyb" aria-disabled="true"><span class="spin"></span>Enviando…</button>' if mode == "sending"
+        cards, primary = wa_open + mail_ok, "Enviar por WhatsApp"
+    foot_btn = ('<button class="btn primary busyb" aria-disabled="true"><span class="spin"></span>Enviando…</button>' if mode == "sending"
                 else btn(primary, "send", "primary"))
     grab = '<div class="grab"></div>' if mobile else ""
     close = "" if mobile else btn("", "x", "ghost icon sm x", 'aria-label="Cerrar"')
@@ -258,7 +332,7 @@ def dialog(mode: str = "open", kind: str = "Contrato", num: str = "CTR-2026-0120
       <div><h2 id="dlg-t">{paper(kind)}Enviar {kind.lower()}</h2>
         <p class="sub"><span class="num">{num}</span> de la reserva JX-0042 · a <b>Laura Gómez</b></p></div>
       <div class="chn" role="radiogroup" aria-label="Por dónde">{cards}</div>
-      {notice}{other}
+      {arrive(mode, kind, num)}{other}
       <div class="dlg-foot">{btn("Volver", "", "ghost")}{foot_btn}</div>
     </div>"""
 
@@ -269,7 +343,7 @@ def overlay(mode: str) -> str:
 
 def sending_toast() -> str:
     return f"""<div class="toast ok" role="status" style="position:absolute;left:26px;right:26px;bottom:22px;width:auto">{paper("Contrato")}
-      <div><b>Contrato CTR-2026-0120 en camino por WhatsApp</b><small>Te avisamos aquí si no sale.</small></div></div>"""
+      <div><b>Contrato CTR-2026-0120 en camino por WhatsApp</b><small>Te avisamos aquí si no sale.</small></div>{act("Ver chat", "", "outline")}</div>"""
 
 
 # ----------------------------------------------------------------------------- ajustes
@@ -278,11 +352,12 @@ def settings_auto() -> str:
                  "Documentos", "Ajustes de la empresa")
 
     def rcard(t: str, d: str, on: bool) -> str:
-        return f'<button class="rcard" role="radio" aria-checked="{str(on).lower()}"><span class="radio"></span><span class="t">{t}</span><span class="d">{d}</span></button>'
+        mark = ic("check", size=11) if on else ""
+        return f'<button class="rcard" role="radio" aria-checked="{str(on).lower()}"><span class="radio">{mark}</span><span class="t">{t}</span><span class="d">{d}</span></button>'
 
-    def arow(t: str, d: str, on: bool, warn: str = "") -> str:
-        w = f'<p class="d warn">{ic("triangle-alert", size=12)} {warn}</p>' if warn else ""
-        return f'<div class="arow"><div><p class="t">{t}</p><p class="d">{d}</p>{w}</div>{K.switch(on, label=t)}</div>'
+    def arow(t: str, d: str, on: bool, warn: str = "", icon: str = "file-text") -> str:
+        w = f'<p class="d warn">{ic("triangle-alert", size=12)}{warn}</p>' if warn else ""
+        return f'<div class="arow"><span class="gl">{ic(icon, size=16)}</span><div><p class="t">{t}</p><p class="d">{d}</p>{w}</div>{K.switch(on, label=t)}</div>'
 
     issue = f"""<div class="aset">
       <div class="ah"><p class="t">Cuándo se emite el contrato</p><p class="s">Sale con los datos del pedido de ese momento y su consecutivo. Se manda según los interruptores de abajo.</p></div>
@@ -291,14 +366,14 @@ def settings_auto() -> str:
         {rcard("Al confirmar el pedido", "En cuanto el pedido pasa a confirmado, con o sin dinero.", False)}
         {rcard("Al verificar el anticipo", "Con plan de pagos, cuando la cuota del anticipo queda saldada. Sin plan, con el primer pago verificado.", True)}
       </div>
-      {arow("Recibo automático", "Con cada pago verificado sale un recibo a nombre del cliente.", True)}
+      {arow("Recibo automático", "Con cada pago verificado sale un recibo a nombre del cliente.", True, icon="receipt")}
     </div>"""
     send = f"""<div class="aset">
       <div class="ah"><p class="t">Por dónde se manda lo que sale solo</p><p class="s">Aplica a lo que se <b>emite solo</b>. Lo que emites tú se manda desde el pedido, eligiendo el canal.</p></div>
-      {arow("Contrato · WhatsApp", "Al quedar listo, le llega al chat como PDF.", True)}
-      {arow("Contrato · correo", "Solo si el contacto tiene correo en su ficha; si no, la fila del pedido lo dice.", False)}
-      {arow("Recibo · WhatsApp", "Cada recibo, al quedar listo.", True, "Fuera de las 24 h no saldrá el PDF hasta que configures la plantilla de abajo.")}
-      {arow("Recibo · correo", "Solo si el contacto tiene correo en su ficha.", True)}
+      {arow("Contrato · WhatsApp", "Al quedar listo, le llega al chat como PDF.", True, icon="message-circle")}
+      {arow("Contrato · correo", "Solo si el contacto tiene correo en su ficha; si no, la fila del pedido lo dice.", False, icon="mail")}
+      {arow("Recibo · WhatsApp", "Cada recibo, al quedar listo.", True, "Fuera de las 24 h no saldrá el PDF hasta que configures la plantilla de abajo.", icon="message-circle")}
+      {arow("Recibo · correo", "Solo si el contacto tiene correo en su ficha.", True, icon="mail")}
     </div>"""
     hsm = f"""<div class="aset">
       <div class="ah"><p class="t">Plantilla aprobada de respaldo</p><p class="s">WhatsApp solo deja escribir libremente durante 24 h desde el último mensaje del cliente. Pasadas, sale esta plantilla y <b>el PDF cuando responda</b>.</p></div>
@@ -343,23 +418,23 @@ def mobile() -> str:
 
 VIEWS = [
     ("enviar", "1 · Enviar", order_page("base", overlay=overlay("open")),
-     "«…» › Enviar abre el diálogo sobre el rail. Dos tarjetas: WhatsApp (número enmascarado, «escribió hace 3 h») y correo (dirección enmascarada). El aviso bajo el grupo lo escribe el servidor con las mismas fuentes que usará para mandar: la ventana está abierta y el PDF le llega al chat. El botón nombra el canal: «Enviar por WhatsApp»."),
+     "«…» › Enviar abre un diálogo de cristal sobre el rail. Dos tarjetas: WhatsApp (número enmascarado, punto verde «escribió hace 3 h») y correo (dirección de su ficha). Debajo, lo memorable: «Así le llega», la burbuja del chat con el PDF y su presentación, tal como la verá Laura. La escribe el servidor con las mismas fuentes con las que manda. Una sola acción coral que nombra el canal."),
     ("sin-correo", "2 · Sin correo", order_page("base", overlay=overlay("no-email")),
      "La ficha no tiene correo: la tarjeta se deshabilita CON la razón y la salida honesta («añádelo en el contacto»). No hay campo para inventarse una dirección: la ficha es la única dirección de registro."),
     ("hsm", "3 · Fuera de 24 h, con plantilla", order_page("base", overlay=overlay("hsm")),
-     "El cliente lleva días sin escribir. WhatsApp sigue disponible, pero el aviso dice exactamente qué pasará: le llega la plantilla aprobada y el PDF sale solo cuando responda. Es lo que el motor hará; el diálogo no lo suaviza."),
+     "El cliente lleva días sin escribir (punto ámbar). WhatsApp sigue disponible, y la vista previa dibuja exactamente qué pasará: primero la plantilla aprobada (con borde discontinuo), y cuando responda, el PDF atenuado que saldrá solo. Es lo que el motor hará; el diálogo no lo suaviza."),
     ("sin-hsm", "4 · Fuera de 24 h, sin plantilla", order_page("base", overlay=overlay("no-hsm")),
-     "Sin plantilla configurada, WhatsApp no puede: la tarjeta lo dice y el aviso enlaza a configurarla (solo con permiso de plantillas). El correo queda como camino y el botón cambia de nombre."),
+     "Sin plantilla configurada, WhatsApp no puede: la tarjeta lo dice, la vista previa explica por qué y enlaza a configurarla (solo con permiso de plantillas). El correo queda como camino, seleccionado, y el botón cambia de nombre."),
     ("otro-correo", "5 · Otro correo", order_page("base", overlay=overlay("other-email")),
-     "Con correo en la ficha, se puede usar otro «solo esta vez» (contabilidad, un familiar) sin tocar la ficha. La tarjeta recuerda que ya se envió el 12 de septiembre: reenviar es legítimo y se dice."),
+     "Con correo en la ficha, se puede usar otro «solo esta vez» (contabilidad, un familiar) sin tocar la ficha. La vista previa es ahora el sobre: remitente (el emisor del tenant), asunto y adjunto. La tarjeta recuerda que ya se envió el 12 de septiembre: reenviar es legítimo y se dice."),
     ("en-camino", "6 · En camino", order_page("sending", toast=sending_toast()),
-     "Al confirmar, el diálogo se cierra y la fila gana la tercera línea: «Enviando por WhatsApp…» con un punto que late (tono info, sin fondo). El aviso discreto dice a dónde va y que avisaremos si no sale. La fila cambia sola cuando el proveedor confirma."),
+     "Al confirmar, el diálogo se cierra y la fila gana la tercera línea: un glifo del canal en cápsula y «Enviando por WhatsApp…» con un punto que late (tono info, sin fondo). El aviso de cristal dice a dónde va, ofrece «Ver chat» y promete avisar si no sale. La fila cambia sola cuando el proveedor confirma."),
     ("estados", "7 · Estados de entrega", order_page("states"),
      "Una línea por canal, como texto con tono: enviado (gris, con fecha), «salió el aviso» (el HSM; el PDF llega cuando responda), no salió por correo (ámbar, con la razón), no se pudo enviar (rojo, «Reintentar»), no salió por ventana («Enviar por correo» como salida). Un reemplazado que SÍ se envió sigue diciéndolo."),
     ("solo-ver", "7b · Solo ver", order_page("states", can_manage=False),
      "Sin `documents:manage` las líneas existen igual —son hechos— pero sin botones: el pie dice por qué. Nada deshabilitado: lo que no se puede, no está."),
     ("ajustes", "8 · Ajustes", settings_auto(),
-     "Mi empresa › Documentos gana «Emisión y envío automáticos»: cuándo sale el contrato (tres opciones excluyentes; «al verificar el anticipo» explica el caso con plan y sin plan), el recibo automático, los cuatro interruptores de envío (solo para lo que sale solo) con la pista de dependencia con la plantilla, y la plantilla aprobada de respaldo con su regla honesta: sin variables."),
+     "Mi empresa › Documentos gana «Emisión y envío automáticos» como lista agrupada al estilo iOS: cuándo sale el contrato (tres tarjetas excluyentes, la elegida con el check coral; «al verificar el anticipo» explica el caso con plan y sin plan), el recibo automático, los cuatro interruptores de envío (solo para lo que sale solo) con la pista de la plantilla, y la plantilla aprobada de respaldo con su regla honesta: sin variables."),
     ("oscuro", "9 · Oscuro", order_page("base", overlay=overlay("hsm")),
      "Mismos tokens; el papel sigue blanco, las tarjetas se marcan con borde, nunca con fondo de color."),
     ("movil", "10 · Móvil", mobile(),
