@@ -91,7 +91,7 @@ describe("ProductEnrichmentSection", () => {
         attributes: { color: "verde oliva", material: "dril", fit: "relajado" },
       }),
     );
-    expect(setAlert).toHaveBeenCalledWith(expect.objectContaining({ variant: "success" }));
+    expect(setAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success" }));
   });
 
   it("desactivar para este producto: PATCH status disabled", async () => {

@@ -12,7 +12,7 @@ import { usePaginatedList } from "@/shared/api/use-paginated-list";
 import { DataTable } from "@/shared/components/features/data-table";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import BasicPagination from "@/shared/components/ui/pagination";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { flattenCategoryTree } from "@/modules/catalog/domain/category";
 import type { ProductListItemDTO } from "@/modules/catalog/domain/product";
@@ -33,6 +33,7 @@ type ViewMode = "table" | "grid";
  * conmutable tabla ⇄ grid (persistida en localStorage).
  */
 export default function ProductsPage() {
+  const { showAlert } = useAlert();
   const { hasPermission } = useAuth();
   const { catalogs, categoryTree } = useCatalog();
   const canManage = hasPermission("catalog:manage");
@@ -40,8 +41,6 @@ export default function ProductsPage() {
   const [view, setView] = useState<ViewMode>("table");
   const [filters, setFilters] = useState<ProductFiltersValue>({});
   const [gridSearch, setGridSearch] = useState("");
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
   // La vista se restaura tras el mount (evita mismatch de hidratación SSR).
   useEffect(() => {
@@ -93,14 +92,12 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const onDeleteSuccess = () => {
-      setAlertConfig({ variant: "success", title: "Producto eliminado correctamente" });
-      setAlertOpen(true);
+      showAlert({ tone: "success", title: "Producto eliminado correctamente" });
       void refresh();
     };
     const onError = (e: Event) => {
       const detail = (e as CustomEvent).detail as { message?: string };
-      setAlertConfig({ variant: "destructive", title: detail?.message || "No se pudo completar la acción" });
-      setAlertOpen(true);
+      showAlert({ tone: "error", title: detail?.message || "No se pudo completar la acción" });
     };
     window.addEventListener("products:delete:success", onDeleteSuccess);
     window.addEventListener("products:error", onError);
@@ -108,7 +105,7 @@ export default function ProductsPage() {
       window.removeEventListener("products:delete:success", onDeleteSuccess);
       window.removeEventListener("products:error", onError);
     };
-  }, [refresh]);
+  }, [refresh, showAlert]);
 
   const hasFilters = Object.values(filters).some((value) => value !== undefined);
   const isEmpty = !loading && total === 0 && !searchValue && !hasFilters;
@@ -237,16 +234,6 @@ export default function ProductsPage() {
         </div>
       )}
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   );
 }

@@ -10,7 +10,7 @@
  * otra. Se traduce a un mensaje que dice qué hacer, no el código.
  */
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Info, Plus, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, parseMoneyToCents } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -31,6 +31,7 @@ import {
   type OverageMetric,
 } from "../../../domain/billing";
 import { usePublishPrice } from "../../../infrastructure/api/hooks/use-billing";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 /** Fila del editor de excedentes, con los importes como texto hasta el submit. */
 type RateDraft = {
@@ -130,11 +131,12 @@ export function PublishPriceSheet({
       subtitle={planName}
     >
       <div className="flex flex-col gap-5 p-5">
-        <p className="text-muted-foreground border-info/24 bg-info/8 rounded-xl border p-3 text-xs leading-relaxed">
-          Publicar <b>cierra la vigencia anterior</b> y crea una nueva. Las facturas
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertDescription>Publicar <b>cierra la vigencia anterior</b> y crea una nueva. Las facturas
           ya emitidas conservan el precio con el que se vendieron: por eso una tarifa
-          se sucede en vez de editarse.
-        </p>
+          se sucede en vez de editarse.</AlertDescription>
+        </Alert>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>

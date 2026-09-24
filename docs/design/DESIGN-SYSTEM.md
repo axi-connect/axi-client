@@ -26,7 +26,7 @@ Capa 3 — CONSUMO                                   ← clases utilitarias en c
 **Reglas:**
 - Un componente **jamás** escribe un hex, un `rgb()` ni un color Tailwind de paleta cruda (`bg-red-500`, `from-pink-400`). Consume capa 3. **Única excepción:** los SVG del logo (`brand-mark.tsx`, assets de `public/brand/`) conservan sus colores literales — las cintas del isotipo no se recolorean por tema (DESIGN.md §2.2).
 - Un token semántico nuevo se deriva de un primitivo con `color-mix()`; no se inventan valores.
-- No duplicar utilidades que Tailwind v4 ya genera desde `@theme` (las clases manuales `.bg-background`, `.text-foreground`, `.border-border` de la versión actual de `globals.css` son deuda: Tailwind v4 ya las emite desde los tokens `--color-*`).
+- No duplicar utilidades que Tailwind v4 ya genera desde `@theme`: `bg-background`, `text-foreground`, `border-border`… salen de los tokens `--color-*` (las copias manuales que había en `globals.css` ya se retiraron).
 
 ---
 
@@ -42,11 +42,12 @@ Capa 3 — CONSUMO                                   ← clases utilitarias en c
 | `--axi-amber` | `#F0A431` | `#FBBF24` | Cinta ámbar del isotipo |
 | `--axi-success` | `#16A34A` | `#4ADE80` | Funcional |
 | `--axi-warning` | `#D97706` | `#FBBF24` | Funcional (familia del ámbar) |
-| `--axi-destructive` | `#DC2626` | `#F87171` | Funcional — **distinto del coral** (hoy `--color-destructive` apunta a `--axi-brand-2`: deuda a corregir) |
+| `--axi-destructive` | `#DC2626` | `#F87171` | Funcional — **distinto del coral**; `--color-destructive` apunta aquí |
 | `--axi-info` | `#2563EB` | `#60A5FA` | Funcional |
 | `--background` | `#FFFFFF` | `#0A0A0A` | Neutro base |
 | `--foreground` | `#171717` | `#EDEDED` | Neutro base |
 | `--axi-muted` | `#F4F4F5` | `#18181B` | Superficie atenuada |
+| `--toast-*` | tintas profundas | tintas brillantes | Píldora de avisos (§9.4). **Van al revés que el tema** porque la píldora es tinta invertida: en claro es oscura y lleva la paleta brillante |
 
 ### 2.2 Semánticos (capa 2) — mapa de uso
 
@@ -75,7 +76,7 @@ Definidos una sola vez como utilidades en `globals.css` (nunca inline en compone
 .text-brand-gradient    /* texto con gradiente de marca */
 ```
 
-`core/styles/gradients.ts` (colores Tailwind aleatorios) queda **deprecado**: los avatares/decoraciones derivan de estos gradientes de marca o de los tres acentos.
+Los avatares y decoraciones derivan de estos gradientes de marca o de los tres acentos (el antiguo `core/styles/gradients.ts`, con colores Tailwind aleatorios, ya se borró).
 
 **Techo de tinte y sus dos excepciones.** El techo del sistema para teñir una
 superficie es el 14% de `--color-accent`. Lo rompen a propósito dos superficies, y
@@ -103,7 +104,7 @@ Orden fijo para series de gráficos: `brand` → `violet` → `amber` → `info`
 | `--font-sans` / `--font-body` | **Poppins** | **Default de toda la UI y el cuerpo** — decisión de marca confirmada, no se reemplaza |
 | `--font-mono` | Geist Mono | Código, IDs, datos técnicos |
 
-*Deuda menor pendiente (Fase 4): quitar el `!important` del selector global `h1..h6` en favor de una regla normal, y dejar de cargar Geist Sans (solo se usa la Mono).*
+*El selector global `h1..h6` es una regla normal, sin `!important`, para permitir opt-outs; de Geist solo se carga la Mono.*
 
 ### 3.2 Escala tipográfica
 
@@ -135,7 +136,7 @@ Orden fijo para series de gráficos: `brand` → `violet` → `amber` → `info`
 | `--radius-xl` | `20px` | Modales, sheets, superficies flotantes grandes |
 | `--radius-full` | `9999px` | Badges, pills, avatares |
 
-*Estado actual: los primitivos shadcn usan `rounded-md` (6px) y `rounded-lg` (8px) por defecto — se re-mapean estos tokens en `@theme` para que las clases existentes adopten los radios de marca sin tocar cada componente.*
+*Estos tokens están re-mapeados en `@theme`: las clases `rounded-md`/`rounded-lg` de los primitivos shadcn ya adoptan los radios de marca sin tocar cada componente.*
 
 ### 4.2 Espaciado y ancho de contenido
 
@@ -194,7 +195,7 @@ Fuente única: `src/core/styles/layers.ts` (`LAYERS`). **Ningún z-index suelto 
 | `overlay` | 50 | `Dialog`, `Sheet`, `Modal` — overlays de Radix con backdrop propio |
 | `detailSheet` | 60 | Panel del `DetailSheet` (su backdrop se pinta en 59) |
 | `floating` | 70 | Contenido **portalado** a `body`: `Select`, `Popover`, `Tooltip`, `ContextMenu` |
-| `alert` | 9999 | `FloatingAlert` |
+| `alert` | 9999 | Viewport de los avisos (sileo, §9.4). sileo no acepta clase ni estilo: el valor está repetido en `globals.css` (`:root [data-sileo-viewport]`) — si cambia uno, cambia el otro |
 
 `DropdownMenu` queda fuera de la tabla a propósito: es una implementación propia con `absolute`, así que vive dentro del contexto de apilamiento de su contenedor y nunca compite con los overlays.
 
@@ -265,9 +266,11 @@ retiró la `GridCard` que vino con la plantilla del mega-menú).
 | `Popover`, `DropdownMenu`, `Command` | Cards de datos/métricas |
 | La barra del kit de asistente (`AssistantDock`, Axel y Alba) **cuando está acoplada**: sticky sobre el hilo, se vuelve cristal al bajar y transparente en reposo | Las burbujas del hilo del asistente (`AssistantBubble`, `UserBubble`): sólidas, sin borde, con `shadow-float` |
 | La cápsula del compositor del asistente (`AssistantComposer`, receta `.glass`) y las píldoras de arranque: flotan sobre el hilo y el aura cae detrás | La lista agrupada de la pregunta y de la ficha (`.grouped-list`) |
-| `FloatingAlert`, tooltips | Cualquier superficie con texto denso |
+| Tooltips | Cualquier superficie con texto denso |
 
 Regla de legibilidad: el glass solo se posa sobre fondos que controla la app; nunca texto largo sobre glass con contenido moviéndose detrás.
+
+**La única superficie flotante que no es glass: la píldora de avisos (§9.4).** Es una forma SVG que se deforma (el filtro «gooey» de sileo), así que no admite `backdrop-filter` ni borde. Se pinta como **tinta invertida** (`--toast-fill: var(--foreground)`), con el lenguaje de la Dynamic Island: un aviso es un evento, no una superficie donde trabajar.
 
 La tabla habla de **superficies**. Un glifo ilustrado de cristal (`GlassGlyph`, §7) no es una superficie y no está en ninguna de las dos columnas: no lleva `backdrop-filter`, no aloja contenido y nunca hay texto encima.
 
@@ -376,7 +379,7 @@ Reglas:
 ## 8. Tema claro/oscuro
 
 - Estrategia: `next-themes` con `attribute="class"`, `defaultTheme="system"`, `enableSystem` (ya configurado en `ThemeProvider`).
-- **Control de tema** (`ThemeToggle`, a crear en `shared/components/layout/`): toggle de 3 estados (light / dark / system) presente en `PrivateHeader`, footer del `AppSidebar` y `SiteHeader`.
+- **Control de tema** (`ThemeToggle`, `shared/components/layout/theme-toggle.tsx`): toggle de 3 estados (light / dark / system) presente en `PrivateHeader`, footer del `AppSidebar`, `SiteHeader`, `SiteNavMobile` y el header y sidebar de `/platform`.
 - Todo componente nuevo se revisa en ambos temas antes de mergear; los tokens hacen el 95% del trabajo si no hay hex sueltos.
 - Evitar flash de tema: no leer `window`/tema en render de servidor; `suppressHydrationWarning` en `<html>` (ya aplicado).
 - **Re-derivación de tokens por alcance** (`.theme-dark-island`, `.signup-field`): un bloque puede redefinir los tokens semánticos (`--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-input`, `--color-ring`, `--color-primary(-foreground)`, `--color-secondary`, `--color-accent`, `--color-destructive`) **dentro de su propio alcance**, y todo primitivo que viva dentro adopta el material sin variantes ni hex en componentes. Es la forma de pintar un momento de marca (isla oscura de Fundadores, campo coral del registro) sin bifurcar componentes. Reglas: se aplica **una vez**, en el layout de la superficie; `--color-background` no se toca (el cristal se mezcla contra el fondo real y los overlays siguen siendo los de la app); el bloque declara como mucho **un** hex propio (`--sf-fg: #ffffff`, el texto sobre coral) y todo lo demás se deriva con `color-mix`; el bloque `.dark` del mismo alcance devuelve los tokens al tema (`--sf-fg: var(--foreground)`, destructivo al rojo). Cuando la marca cae sobre el campo, el isotipo conserva sus cintas y solo el wordmark toma el color del texto (`.signup-field .text-brand-wordmark`).
@@ -398,7 +401,9 @@ Los primitivos viven en `shared/components/ui/` (shadcn) y los features en `shar
 | Listado con paginación/búsqueda | `DataTable` + `usePaginatedList` |
 | Formulario | `DynamicForm` + `*.config.tsx` (Zod) |
 | Panel de detalle | `DetailSheet` (`fetchDetail`) |
-| Confirmación / alerta | `useAlert()` (`showModal` / `showAlert`) |
+| Aviso de que algo pasó (guardado, error, evento) | `useAlert().showAlert` — o `notify` de `@/core/notifications` para una promesa (§9.4) |
+| Confirmación (una decisión que bloquea) | `useAlert().showModal` |
+| Estado de la vista que dura (solo lectura, pausado, error al cargar) | `Alert` en línea (`shared/components/ui/alert.tsx`) |
 | Selección múltiple | `MultiSelect` |
 | Avatar / logo con fallback | `Avatar` (`shared/components/ui/avatar.tsx`) — inicial sobre `bg-muted` si no hay URL o falla la carga |
 | Icono de canal por `kind` (WhatsApp/Instagram/Messenger) | `ChannelKindIcon` (`channels/public`) — única implementación del mapa kind → logo |
@@ -502,6 +507,101 @@ pestañas.
 
 ---
 
+### 9.4 Avisos y notificaciones — cuatro formas de hablarle al usuario
+
+Cada mensaje tiene **exactamente una** forma. Antes convivían dos avisos
+flotantes (`StatusAlert` vía `showAlert` y un `FloatingAlert` legado en diez
+páginas) y tres avisos «en línea» que en realidad flotaban. Mockup aprobado:
+`docs/design/mockups/notificaciones-sileo.html`; plan:
+`docs/plans/notificaciones_sileo_plan.md`.
+
+| Forma | Cuándo | Componente |
+|---|---|---|
+| **Aviso** (toast) | Algo **pasó** por una acción o un evento, y la persona puede seguir trabajando. Efímero | `useAlert().showAlert` · `notify` |
+| **Aviso en línea** | Un **estado** de la vista que dura lo que dure: solo lectura, pausado, error al cargar. Vive en el flujo, no flota | `Alert` (`ui/alert.tsx`) |
+| **Confirmación** | Hace falta una **decisión** antes de seguir: eliminar, descartar, desconectar. Bloquea | `useAlert().showModal` |
+| **Banner** | Un estado de la **cuenta** que afecta a todo el panel: prueba, pago pendiente. Persistente, bajo el header | banners del shell |
+
+**El aviso en línea es siempre `Alert`, con su variante; nunca una caja teñida a
+mano.** `info`, `warning` y `success` siguen la receta AA: tinte en borde y
+superficie, color **solo en el icono**, texto en `foreground`. `destructive`
+deja el rojo en el texto (4,8:1, pasa) y trae su borde tintado. `default` es la
+nota neutra. El icono va como primer hijo, sin clases: la variante le da tamaño
+y color. Hasta 2026-09-23 había 30 copias a mano solo en `/platform`
+(`border-warning/30 bg-warning/5`, `text-warning` sobre ámbar a 3:1…); se
+retiraron todas. Un tinte que no existe como variante (el violeta de una nota de
+voz) no justifica una copia: la nota es `info`.
+
+**Implementación.** El aviso es la píldora de [sileo](https://sileo.aaryan.design/docs)
+(0.1.5, versión fijada). Ningún módulo importa `sileo` — lo impide
+`no-restricted-imports` en `eslint.config.mjs` —: todo pasa por
+`src/core/notifications/`. `to-options.ts` es la única pieza que decide cómo se
+ve un aviso; los módulos siguen escribiendo `{ tone, title, description }`.
+`notify.promise` es la excepción al contrato de `showAlert`: un guardado que
+tarda más de ~1 s nace en «Guardando…» y se transforma en el resultado, en un
+solo aviso (nunca «Guardando» + «Guardado»).
+
+**Reglas del aviso**
+
+- **Título ≤ 34 caracteres.** Qué pasó, en pasado o en estado: «Contacto
+  guardado», «No se pudo guardar». Sin punto final, mayúscula solo inicial.
+  Un título más largo se parte por «cabeza — cola» o «cabeza: cola» (la cola
+  baja al cuerpo); si no hay cabeza, la píldora toma el título del tono («No se
+  pudo completar», «Listo», «Atención», «Aviso») y el texto entero baja al cuerpo.
+- **El detalle va en `description`**: por qué y qué hacer. El mensaje del
+  servidor (`errorMessage(err)`) es cuerpo, nunca píldora — el adaptador lo
+  resuelve solo para las llamadas que ya lo ponían en el título, pero el código
+  nuevo lo escribe en `description`.
+- **Un botón como mucho**, con verbo concreto («Ver», «Reintentar»). Con botón
+  el aviso no se cierra solo.
+- **Duración por tono**: éxito 4 s · info 5 s · advertencia 7 s · error 8 s ·
+  con botón ∞. El hover pausa. Un `autoCloseMs` explícito manda (mínimo 1 s).
+- **Una ranura, salvo los errores**: un éxito o una info nuevos se transforman
+  sobre el anterior (lo nativo de sileo). Errores y advertencias llevan id propio
+  y se apilan: nunca se pisan. Ese `id` no está en los tipos de sileo; lo fija
+  `core/notifications/__tests__/sileo-contract.test.tsx`.
+- **Nunca para confirmar ni para un estado que dura**: eso es `showModal` o
+  `Alert` en línea.
+- **Nada de avisos por cargar**: un GET que carga la vista no avisa si sale
+  bien; si falla, la vista pinta su estado de error (§9).
+
+**Anatomía y material.** Arriba al centro, 12 px bajo el borde (dentro del
+header de 54 px). Píldora de 40 px de alto y 350 de ancho máximo; icono de 24 px
+concéntrico con el extremo (8 px reales por los cuatro lados); título a ~16 px
+del borde derecho; cuerpo con 16 px de padding. El padding del header es
+14 px / 4 px porque el filtro «gooey» (blur σ 8 + umbral) se come ~6 px del
+extremo y sileo ya suma 10 px a la derecha: compensa, no es arbitrario. Tinta
+invertida (§5.2): oscura en claro, clara en oscuro.
+
+| Tinta (`--toast-*`) | Píldora oscura (tema claro) | Píldora clara (tema oscuro) |
+|---|---|---|
+| Éxito | `#4ADE80` · 10,3:1 | `#166534` · 6,1:1 |
+| Error | `#F87171` · 6,5:1 | `#B91C1C` · 5,5:1 |
+| Advertencia | `#FBBF24` · 10,7:1 | `#92400E` · 6,1:1 |
+| Info | `#60A5FA` · 7,1:1 | `#1D4ED8` · 5,7:1 |
+| Acción (coral) | `#FB7185` · 6,7:1 | `#BE3437` · 4,8:1 |
+| Cuerpo | texto al 72 % · 8,4:1 | texto al 72 % · 6,6:1 |
+
+Los valores por defecto de sileo no pasan AA en la píldora clara (cuerpo al
+50 % = 3,3:1) y el verde y el ámbar de nuestra paleta clara tampoco (2,8:1 y
+2,7:1): por eso las tintas son tokens propios de capa 1.
+
+**Trampas de CSS verificadas.** sileo inyecta su hoja en `<head>` **después**
+de `globals.css`, así que a igual especificidad gana él: cada override lleva al
+menos un selector más (el cuerpo al 72 % necesita `(0,4,0)`). El relleno de la
+píldora llega como atributo SVG `fill`; se fuerza con la propiedad CSS `fill:
+var(--toast-fill)` para que siga al tema al vuelo aunque haya avisos abiertos.
+Los selectores `[data-sileo-*]` solo existen en `globals.css`.
+
+**Accesibilidad y movimiento.** sileo anuncia con `aria-live="polite"` y no
+ofrece `assertive`: un error que exige actuar ya no es un aviso, es una
+confirmación o un aviso en línea. El muelle es CSS (`linear()`, 600 ms), corre
+en el compositor como pide §6, y con `prefers-reduced-motion` sileo pone las
+duraciones a 0. Se descarta deslizando. Poppins 600 a 13 px en la píldora,
+13 px en el cuerpo; nada de Nexa: un aviso no es un titular.
+
+---
+
 ## 10. Accesibilidad (no negociable)
 
 - Contraste AA: 4.5:1 texto, 3:1 texto grande y componentes UI — verificado en light y dark.
@@ -526,3 +626,5 @@ pestañas.
 - [ ] ¿Animaciones con presets §6 y `prefers-reduced-motion`?
 - [ ] ¿Iconos lucide (salvo logos de terceros)?
 - [ ] ¿Destructivo usa `destructive`, nunca el coral?
+- [ ] ¿Los avisos en línea son `<Alert variant=…>` y no un `<p>`/`<div>` con `border-*/30 bg-*/5`?
+- [ ] ¿Los avisos pasan por `showAlert`/`notify` y no por un componente propio? ¿El título cabe en la píldora (≤ 34 caracteres) y el detalle va en `description` (§9.4)?

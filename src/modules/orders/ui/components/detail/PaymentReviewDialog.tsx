@@ -60,7 +60,6 @@ export function PaymentReviewDialog({
       showAlert({
         tone: verifying ? "success" : "info",
         title: verifying ? "Pago verificado: pedido pagado" : "Pago rechazado",
-        open: true,
         autoCloseMs: 3000,
       });
     } catch (err) {
@@ -68,7 +67,6 @@ export function PaymentReviewDialog({
         tone: "error",
         title: "No se pudo completar la verificación",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setSubmitting(false);

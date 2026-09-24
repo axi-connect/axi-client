@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
+import type { AppAlert } from "@/core/notifications";
 
 function VariantStockCell({ variant, isService }: { variant: ProductVariantDTO; isService: boolean }) {
   if (isService) return <span className="text-muted-foreground">—</span>;
@@ -63,7 +64,7 @@ export function VariantsTable({
   canAdjustStock: boolean;
   onRefetch: () => Promise<void>;
   onStockAdjusted: (variantId: string, stock: StockDTO) => void;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const isService = product.kind === "service";
   const [formOpen, setFormOpen] = useState(false);
@@ -89,11 +90,11 @@ export function VariantsTable({
     try {
       setDeleting(true);
       await deleteVariant(deleteTarget.id);
-      setAlert?.({ variant: "success", title: "Variante eliminada" });
+      setAlert?.({ tone: "success", title: "Variante eliminada" });
       setDeleteTarget(null);
       await onRefetch();
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo eliminar la variante") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo eliminar la variante") });
     } finally {
       setDeleting(false);
     }

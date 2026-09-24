@@ -72,13 +72,12 @@ export function ReportPaymentDialog({
       });
       await Promise.all([refreshOrder(order.id), fetchStats()]);
       onOpenChange(false);
-      showAlert({ tone: "success", title: "Pago registrado", open: true, autoCloseMs: 3000 });
+      showAlert({ tone: "success", title: "Pago registrado", autoCloseMs: 3000 });
     } catch (err) {
       showAlert({
         tone: "error",
         title: "No se pudo registrar el pago",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setSubmitting(false);

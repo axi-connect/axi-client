@@ -73,11 +73,10 @@ export function BulkResultSheet({
           cancelled === 0
             ? "El lote quedó cancelado; no quedaba ninguna tarea por salir"
             : `${cancelled} ${cancelled === 1 ? "tarea anulada" : "tareas anuladas"}`,
-        open: true,
       });
       setBulk(await getBulk(bulk.id));
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo cancelar el lote"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo cancelar el lote") });
     } finally {
       setCancelling(false);
     }

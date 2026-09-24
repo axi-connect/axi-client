@@ -83,7 +83,6 @@ export function ReminderForm({
             title: mode.kind === "create" ? "Recordatorio creado" : "Recordatorio actualizado",
             description:
               fresh.next_run_at !== null ? "Quedó programado para su próximo envío." : undefined,
-            open: true,
           });
           onSuccess(fresh);
         } catch (err) {
@@ -105,7 +104,6 @@ export function ReminderForm({
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudo guardar el recordatorio"),
-              open: true,
             });
           }
         }

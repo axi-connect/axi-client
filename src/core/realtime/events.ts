@@ -243,7 +243,7 @@ export type NotificationCreatedEvent = {
 // Analíticas (F13) — namespace /inbox, rooms company_{id} automáticos
 // ---------------------------------------------------------------------------
 
-/** Alerta de anomalía disparada (floating-alert en vivo + badge/banner). */
+/** Alerta de anomalía disparada (aviso en vivo vía showAlert + badge/banner). */
 export type AnalyticsAlertEvent = {
   company_id: string;
   rule: string;

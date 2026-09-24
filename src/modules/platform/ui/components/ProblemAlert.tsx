@@ -7,7 +7,6 @@
  * Una card en error muestra su ProblemAlert inline sin tumbar el resto.
  */
 import { Check, Copy, OctagonAlert } from "lucide-react";
-import { cn } from "@/core/lib/utils";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
@@ -30,7 +29,7 @@ export function ProblemAlert({ error, onRetry, className }: ProblemAlertProps) {
   const traceId = problem?.trace_id;
 
   return (
-    <Alert variant="destructive" className={cn("border-destructive/30", className)}>
+    <Alert variant="destructive" className={className}>
       <OctagonAlert aria-hidden="true" className="size-4" />
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription>

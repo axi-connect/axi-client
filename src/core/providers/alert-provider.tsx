@@ -1,21 +1,12 @@
 "use client"
 
 import { Modal, ModalConfig } from "../../shared/components/ui/modal"
-import { StatusAlert } from "@/shared/components/ui/notice"
+import { notify, NotificationsToaster, type AppAlert } from "@/core/notifications"
 import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from "react"
-
-type Alert = {
-  tone: "success" | "error" | "warning" | "info"
-  title: string
-  description?: string
-  actions?: { label: string; onClick: () => void }[]
-  autoCloseMs?: number
-  open?: boolean
-}
 
 type AlertContextType = {
   closeModal: () => void
-  showAlert: (alert: Alert) => void
+  showAlert: (alert: AppAlert) => void
   showModal: (config: ModalConfig) => void
 }
 
@@ -23,7 +14,6 @@ const AlertContext = createContext<AlertContextType | null>(null)
 
 export function AlertProvider({ children }: { children: ReactNode }) {
   const [modalOpen, setModalOpen] = useState(false)
-  const [alert, setAlert] = useState<Alert | null>(null)
   const [modalConfig, setConfigModal] = useState<ModalConfig | null>(null)
 
   /*
@@ -38,7 +28,12 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     saltaba y la petición se repetía indefinidamente. El efecto estaba bien
     escrito; lo que fallaba era esta identidad inestable, tres capas más arriba.
   */
-  const showAlert = useCallback((a: Alert) => setAlert(a), [])
+  const showAlert = useCallback((a: AppAlert) => {
+    // El aviso lo pinta sileo (core/notifications, DESIGN-SYSTEM §9.4). Antes
+    // era un `setAlert` que REEMPLAZABA: dos avisos seguidos y el primero se
+    // perdía sin leerse. Ahora cada uno tiene su vida y los errores se apilan.
+    notify.fromAlert(a)
+  }, [])
 
   const showModal = useCallback((config: ModalConfig) => {
     setModalOpen(true)
@@ -58,9 +53,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   return (
     <AlertContext.Provider value={value}>
       {children}
-      {alert && (
-        <StatusAlert {...alert} onOpenChange={() => setAlert(null)}/>
-      )}
+      <NotificationsToaster />
       {/*
         SIN cuerpo fijo. El "Esta acción no se puede deshacer. Se eliminarán de
         forma permanente los datos asociados." que vivía aquí se pintaba en

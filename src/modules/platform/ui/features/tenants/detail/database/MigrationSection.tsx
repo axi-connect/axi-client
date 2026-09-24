@@ -198,7 +198,7 @@ export function MigrationSection({ tenantId, tenantName, database }: MigrationSe
       )}
 
       {latest && (latest.status === "failed" || latest.status === "rolled_back") && (
-        <Alert variant="destructive" className="border-destructive/30">
+        <Alert variant="destructive">
           <OctagonAlert aria-hidden="true" className="size-4" />
           <AlertTitle>
             {latest.status === "failed" ? "Migración fallida" : "Migración revertida"}

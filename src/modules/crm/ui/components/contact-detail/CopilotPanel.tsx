@@ -73,10 +73,9 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
           title: err.is("usage/limit_exceeded")
             ? "Límite de IA del plan alcanzado"
             : `Demasiadas consultas de IA. Intenta de nuevo en ${err.retryAfterSeconds ?? 60} s`,
-          open: true,
         });
       } else {
-        showAlert({ tone: "error", title: errorMessage(err, "El copiloto no pudo responder"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "El copiloto no pudo responder") });
       }
     } finally {
       setLoading(null);
@@ -85,7 +84,7 @@ export function CopilotPanel({ contactId }: { contactId: string }) {
 
   const copyDraft = (message: string) => {
     void navigator.clipboard?.writeText(message);
-    showAlert({ tone: "success", title: "Borrador copiado — pégalo en el inbox", open: true });
+    showAlert({ tone: "success", title: "Borrador copiado — pégalo en el inbox" });
   };
 
   return (

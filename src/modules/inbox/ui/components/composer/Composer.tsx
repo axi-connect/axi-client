@@ -147,7 +147,6 @@ export function Composer({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo enviar la nota de voz"),
-        open: true,
       })
     } finally {
       setSendingVoice(false)

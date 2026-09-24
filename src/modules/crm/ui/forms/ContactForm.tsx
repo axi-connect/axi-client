@@ -61,7 +61,6 @@ export function ContactForm({
           showAlert({
             tone: "success",
             title: contact ? "Contacto actualizado" : "Contacto creado",
-            open: true,
           });
           onSuccess();
         } catch (err) {
@@ -76,7 +75,6 @@ export function ContactForm({
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudo guardar el contacto"),
-              open: true,
             });
           }
         }

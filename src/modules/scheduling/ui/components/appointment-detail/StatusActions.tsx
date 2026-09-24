@@ -53,12 +53,11 @@ export function StatusActions({
     try {
       const fresh = await updateAppointment(appointment.id, { status });
       onUpdated(fresh);
-      showAlert({ tone: "success", title: successTitle, open: true });
+      showAlert({ tone: "success", title: successTitle });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo actualizar la cita"),
-        open: true,
       });
     } finally {
       setBusy(null);
@@ -76,12 +75,11 @@ export function StatusActions({
       );
       onUpdated(fresh);
       setCancelOpen(false);
-      showAlert({ tone: "success", title: "Cita cancelada", open: true });
+      showAlert({ tone: "success", title: "Cita cancelada" });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo cancelar la cita"),
-        open: true,
       });
     } finally {
       setBusy(null);

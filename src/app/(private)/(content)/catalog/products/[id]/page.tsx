@@ -9,7 +9,7 @@ import { Modal } from "@/shared/components/ui/modal";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
 import { FormSkeleton } from "@/shared/components/features/loading";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import { flattenCategoryTree } from "@/modules/catalog/domain/category";
 import type { ProductDTO, StockDTO } from "@/modules/catalog/domain/product";
 import type { ProductTypeDTO } from "@/modules/catalog/domain/product-type";
@@ -48,13 +48,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
-  const setAlert = useCallback((cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg);
-    setAlertOpen(true);
-  }, []);
+  const { showAlert } = useAlert();
 
   const load = useCallback(async () => {
     try {
@@ -119,12 +114,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       setToggling(true);
       const updated = await updateProduct(product.id, { is_active: !product.is_active });
       setProduct(updated);
-      setAlert({
-        variant: "success",
+      showAlert({
+        tone: "success",
         title: updated.is_active ? "Producto activado" : "Producto desactivado",
       });
     } catch (err) {
-      setAlert({ variant: "destructive", title: errorMessage(err, "No se pudo cambiar el estado") });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo cambiar el estado") });
     } finally {
       setToggling(false);
     }
@@ -137,7 +132,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       await deleteProduct(product.id);
       router.replace("/catalog/products");
     } catch (err) {
-      setAlert({ variant: "destructive", title: errorMessage(err, "No se pudo eliminar el producto") });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el producto") });
       setDeleting(false);
     }
   };
@@ -221,7 +216,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               // es exactamente el tratamiento del plan (ocultar, no deshabilitar)
               canManage={canManage && !locked.has("name") && !locked.has("price")}
               onSaved={setProduct}
-              setAlert={setAlert}
+              setAlert={showAlert}
             />
           </div>
 
@@ -230,7 +225,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               product={product}
               canManage={canManage && !locked.has("images")}
               onSaved={setProduct}
-              setAlert={setAlert}
+              setAlert={showAlert}
             />
           </div>
 
@@ -241,7 +236,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             canManage={canManage}
             canApplyCategory={canManage && !locked.has("category")}
             onCategoryApplied={load}
-            setAlert={setAlert}
+            setAlert={showAlert}
           />
 
           {productType && (
@@ -252,7 +247,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 canManage={canManage && !governed}
                 highlightRequired={highlightRequired}
                 onSaved={setProduct}
-                setAlert={setAlert}
+                setAlert={showAlert}
               />
             </div>
           )}
@@ -267,7 +262,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               canAdjustStock={canAdjustStock && !locked.has("stock")}
               onRefetch={load}
               onStockAdjusted={handleStockAdjusted}
-              setAlert={setAlert}
+              setAlert={showAlert}
             />
           </div>
         </>
@@ -297,16 +292,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </Modal>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   );
 }

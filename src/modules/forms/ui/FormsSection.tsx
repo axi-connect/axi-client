@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, type Path } from "react-hook-form";
 import { arrayMove } from "@dnd-kit/sortable";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useIsMobile } from "@/core/hooks/use-mobile";
 import { useAlert } from "@/core/providers/alert-provider";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
-import { StatusAlert } from "@/shared/components/ui/notice";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { DetailSheet } from "@/shared/components/features/detail-sheet";
 import {
   effectiveFields,
@@ -254,7 +254,7 @@ export function FormsSection() {
       if (Number.isInteger(firstIndex) && fields[firstIndex] !== undefined) {
         setSelectedKey(fields[firstIndex].key);
       }
-      showAlert({ tone: "error", title: "Revisa los datos marcados", open: true });
+      showAlert({ tone: "error", title: "Revisa los datos marcados" });
       return;
     }
 
@@ -266,11 +266,11 @@ export function FormsSection() {
       // resetField y NO reset: resetear todo el formulario marcaría como limpios
       // los borradores sin guardar de los otros dos flujos.
       form.resetField(flow, { defaultValue: fromDto(persisted) });
-      showAlert({ tone: "success", title: "Listo, tu agente ya pide estos datos", open: true });
+      showAlert({ tone: "success", title: "Listo, tu agente ya pide estos datos" });
     } catch (err) {
       // El borrador se conserva intacto: jamás se descarta lo que el usuario escribió.
       if (!applyIssuesFromServer(err)) {
-        showAlert({ tone: "error", title: errorMessage(err, "No pudimos guardar"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "No pudimos guardar") });
       }
     } finally {
       setSaving(false);
@@ -290,7 +290,7 @@ export function FormsSection() {
       });
       applied = true;
     }
-    if (applied) showAlert({ tone: "error", title: "Revisa los datos marcados", open: true });
+    if (applied) showAlert({ tone: "error", title: "Revisa los datos marcados" });
     return applied;
   };
 
@@ -334,7 +334,7 @@ export function FormsSection() {
               } catch (err) {
                 // 404 = ya no existía (otra pestaña lo borró): converge, no es error.
                 if (!isHttpError(err) || !err.is("forms/not_found")) {
-                  showAlert({ tone: "error", title: errorMessage(err, "No pudimos eliminarlo"), open: true });
+                  showAlert({ tone: "error", title: errorMessage(err, "No pudimos eliminarlo") });
                   return;
                 }
               }
@@ -342,7 +342,7 @@ export function FormsSection() {
               setForms((prev) => (prev === null ? prev : { ...prev, [flow]: draft }));
               form.resetField(flow, { defaultValue: fromDto(draft) });
               setSelectedKey(null);
-              showAlert({ tone: "success", title: "Formulario eliminado", open: true });
+              showAlert({ tone: "success", title: "Formulario eliminado" });
             })();
           },
         },
@@ -401,13 +401,11 @@ export function FormsSection() {
       />
 
       {readOnly && (
-        <StatusAlert
-          tone="info"
-          dismissible={false}
-          compact
-          title="Solo lectura"
-          description="Pídele a un administrador el permiso para configurar estos datos."
-        />
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertTitle>Solo lectura</AlertTitle>
+          <AlertDescription>Pídele a un administrador el permiso para configurar estos datos.</AlertDescription>
+        </Alert>
       )}
 
       <FlowToolbar

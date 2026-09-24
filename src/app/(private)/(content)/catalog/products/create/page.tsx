@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import { ProductForm } from "@/modules/catalog/ui/forms/ProductForm";
 
 /**
@@ -13,9 +12,8 @@ import { ProductForm } from "@/modules/catalog/ui/forms/ProductForm";
  * requeridos ámbito producto, se avisa que faltan por completar allí.
  */
 export default function CreateProductPage() {
+  const { showAlert } = useAlert();
   const router = useRouter();
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
   return (
     <div className="space-y-4">
@@ -35,10 +33,7 @@ export default function CreateProductPage() {
 
       <div className="max-w-4xl rounded-2xl border border-border bg-background p-4 md:p-6">
         <ProductForm
-          setAlert={(cfg) => {
-            setAlertConfig(cfg);
-            setAlertOpen(true);
-          }}
+          setAlert={showAlert}
           onCreated={(created, { pendingRequiredAttributes }) => {
             const params = pendingRequiredAttributes ? "?pending_attributes=1" : "";
             router.replace(`/catalog/products/${created.id}${params}`);
@@ -46,16 +41,6 @@ export default function CreateProductPage() {
         />
       </div>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   );
 }

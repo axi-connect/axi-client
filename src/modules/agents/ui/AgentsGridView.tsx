@@ -35,7 +35,7 @@ export function AgentsGridView() {
     try {
       await deleteAgent(agent.id);
       await fetchAgents();
-      showAlert({ tone: "success", title: "Agente eliminado", open: true });
+      showAlert({ tone: "success", title: "Agente eliminado" });
     } catch (err) {
       showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el agente") });
     } finally {

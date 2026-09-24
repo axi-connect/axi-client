@@ -356,7 +356,6 @@ export function ScheduleFollowUpForm({
           showAlert({
             tone: "success",
             title: editing ? "Seguimiento actualizado" : "Seguimiento programado",
-            open: true,
           });
           onSuccess();
         } catch (err) {
@@ -364,7 +363,6 @@ export function ScheduleFollowUpForm({
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudo programar el seguimiento"),
-              open: true,
             });
           }
         }

@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw } from "lucide-react";
+import { CircleAlert, RotateCcw } from "lucide-react";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { Button } from "@/shared/components/ui/button";
-import { StatusAlert } from "@/shared/components/ui/notice";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import {
   groupSegmentsByDay,
   type AppointmentSegment,
@@ -80,11 +80,11 @@ export function CalendarView() {
   if (company.error !== null) {
     return (
       <div className="p-4 md:p-6">
-        <StatusAlert
-          tone="error"
-          title="No se pudo cargar la empresa"
-          description={company.error}
-        />
+        <Alert variant="destructive">
+          <CircleAlert aria-hidden="true" />
+          <AlertTitle>No se pudo cargar la empresa</AlertTitle>
+          <AlertDescription>{company.error}</AlertDescription>
+        </Alert>
       </div>
     );
   }

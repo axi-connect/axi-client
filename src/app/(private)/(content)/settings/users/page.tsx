@@ -8,7 +8,7 @@ import type { UserRow } from "@/modules/users/domain/user"
 import { UserForm } from "@/modules/users/ui/forms/UserForm"
 import type { UserFormValues } from "@/modules/users/ui/forms/config/user.config"
 import { DataTable, type DataTableRef } from "@/shared/components/features/data-table"
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert"
+import { useAlert } from "@/core/providers/alert-provider"
 import { fetchUsers, userColumns } from "@/modules/users/ui/tables/config/users.config"
 
 /**
@@ -26,22 +26,17 @@ export default function UsersPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [alertOpen, setAlertOpen] = useState(false)
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
   const [formDefaults, setFormDefaults] = useState<(Partial<UserFormValues> & { id?: string }) | null>(null)
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null)
 
-  const setAlert = (cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg)
-    setAlertOpen(true)
-  }
+  const { showAlert } = useAlert()
 
   async function load() {
     try {
       const { rows } = await fetchUsers()
       setAllRows(rows)
     } catch {
-      setAlert({ variant: "destructive", title: "No se pudieron cargar los usuarios" })
+      showAlert({ tone: "error", title: "No se pudieron cargar los usuarios" })
     }
   }
 
@@ -64,12 +59,12 @@ export default function UsersPage() {
 
   useEffect(() => {
     const onMutationSuccess = () => {
-      setAlert({ variant: "success", title: "Usuario eliminado correctamente" })
+      showAlert({ tone: "success", title: "Usuario eliminado correctamente" })
       void load()
     }
     const onError = (e: Event) => {
       const detail = (e as CustomEvent).detail as { message?: string }
-      setAlert({ variant: "destructive", title: detail?.message || "No se pudo completar la acción" })
+      showAlert({ tone: "error", title: detail?.message || "No se pudo completar la acción" })
     }
     const onEditOpen = (e: Event) => {
       const { defaults } = (e as CustomEvent).detail as { defaults: Partial<UserFormValues> & { id: string } }
@@ -125,16 +120,6 @@ export default function UsersPage() {
           }}
         />
 
-        <FloatingAlert
-          open={alertOpen}
-          onOpenChange={setAlertOpen}
-          config={{
-            variant: alertConfig?.variant ?? "default",
-            title: alertConfig?.title ?? "",
-            description: alertConfig?.description,
-            durationMs: 4000,
-          }}
-        />
       </div>
 
       <Modal
@@ -160,7 +145,7 @@ export default function UsersPage() {
         <UserForm
           host={{
             formMode,
-            setAlert,
+            setAlert: showAlert,
             closeModal: () => setModalOpen(false),
             defaultValues: formDefaults,
             refresh: load,

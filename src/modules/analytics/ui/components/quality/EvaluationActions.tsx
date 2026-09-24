@@ -51,12 +51,11 @@ export function EvaluationActions({
         tone: "success",
         title: "Calibración guardada",
         description: "Esto mejora al evaluador.",
-        open: true,
         autoCloseMs: 3000,
       });
       onCalibrated();
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err), open: true });
+      showAlert({ tone: "error", title: errorMessage(err) });
     } finally {
       setSaving(false);
     }
@@ -69,7 +68,7 @@ export function EvaluationActions({
       // 202: sigue "Evaluando…" hasta que llegue el WS con el resultado.
     } catch (err) {
       setReevaluating(false);
-      showAlert({ tone: "error", title: errorMessage(err), open: true });
+      showAlert({ tone: "error", title: errorMessage(err) });
     }
   };
 

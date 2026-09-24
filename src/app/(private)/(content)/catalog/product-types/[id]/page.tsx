@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/shared/auth/auth.hooks";
 import { errorMessage } from "@/core/lib/error-messages";
 import { FormSkeleton } from "@/shared/components/features/loading";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import type { ProductTypeDTO } from "@/modules/catalog/domain/product-type";
 import { getProductTypeById } from "@/modules/catalog/infrastructure/services/product-type-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
@@ -22,13 +22,8 @@ export default function ProductTypeDetailPage({ params }: { params: Promise<{ id
 
   const [productType, setProductType] = useState<ProductTypeDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
-  const setAlert = (cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg);
-    setAlertOpen(true);
-  };
+  const { showAlert } = useAlert();
 
   const load = useCallback(async () => {
     try {
@@ -73,7 +68,7 @@ export default function ProductTypeDetailPage({ params }: { params: Promise<{ id
                 name: productType.name,
                 description: productType.description ?? "",
               }}
-              setAlert={setAlert}
+              setAlert={showAlert}
               onSaved={async (saved) => {
                 setProductType(saved);
                 await fetchProductTypes();
@@ -84,7 +79,7 @@ export default function ProductTypeDetailPage({ params }: { params: Promise<{ id
           <AttributeSetEditor
             productType={productType}
             readOnly={!canManage}
-            setAlert={setAlert}
+            setAlert={showAlert}
             onSaved={async (updated) => {
               setProductType(updated);
               await fetchProductTypes();
@@ -93,16 +88,6 @@ export default function ProductTypeDetailPage({ params }: { params: Promise<{ id
         </>
       )}
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   );
 }

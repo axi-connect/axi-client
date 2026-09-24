@@ -103,7 +103,6 @@ export function AutomationsView() {
         tone: "warning",
         title: "Esa regla ya no está",
         description: "Se eliminó o alguien de tu equipo la cambió.",
-        open: true,
       });
     },
   });
@@ -140,7 +139,6 @@ export function AutomationsView() {
       showAlert({
         tone: "error",
         title: "Elige primero una plantilla de Meta aprobada",
-        open: true,
       });
       return;
     }
@@ -167,7 +165,6 @@ export function AutomationsView() {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo cambiar el estado"),
-                  open: true,
                 });
               }
             })();
@@ -195,12 +192,11 @@ export function AutomationsView() {
                 setAutomations((prev) =>
                   prev ? prev.filter((a) => a.id !== automation.id) : prev,
                 );
-                showAlert({ tone: "success", title: "Regla eliminada", open: true });
+                showAlert({ tone: "success", title: "Regla eliminada" });
               } catch (err) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo eliminar"),
-                  open: true,
                 });
               }
             })();

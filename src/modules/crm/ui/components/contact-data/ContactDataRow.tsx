@@ -249,7 +249,6 @@ export function ContactDataRow({
       showAlert({
         tone: "error",
         title: errorMessage(err, `No se pudo actualizar «${label}»`),
-        open: true,
       });
       return false;
     } finally {

@@ -61,7 +61,7 @@ export function AlertsTab() {
       await ackAlert(alertId);
       removeAlert(alertId);
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err), open: true });
+      showAlert({ tone: "error", title: errorMessage(err) });
       void loadAlerts();
     }
   };

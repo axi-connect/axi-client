@@ -195,7 +195,7 @@ export function PipelinesEditor() {
           : (list.find((p) => p.is_default) ?? list[0])?.id ?? null,
       );
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar los pipelines"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar los pipelines") });
       setPipelines([]);
     }
   };
@@ -215,9 +215,9 @@ export function PipelinesEditor() {
   const run = async (operation: () => Promise<PipelineDTO>, successTitle?: string) => {
     try {
       applyPipeline(await operation());
-      if (successTitle !== undefined) showAlert({ tone: "success", title: successTitle, open: true });
+      if (successTitle !== undefined) showAlert({ tone: "success", title: successTitle });
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar") });
     }
   };
 
@@ -239,7 +239,7 @@ export function PipelinesEditor() {
     reorderStages(selected.id, next)
       .then(applyPipeline)
       .catch((err: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo reordenar"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudo reordenar") });
         void load();
       });
   };
@@ -250,13 +250,13 @@ export function PipelinesEditor() {
       applyPipeline(await deleteStage(selected.id, stage.id, moveTo));
       setStageDelete(null);
       setDeleteTarget(null);
-      showAlert({ tone: "success", title: "Etapa eliminada", open: true });
+      showAlert({ tone: "success", title: "Etapa eliminada" });
     } catch (err) {
       if (isHttpError(err) && err.is("crm/stage_in_use") && moveTo === undefined) {
         setStageDelete({ stage }); // pide destino
         return;
       }
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar la etapa"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar la etapa") });
     }
   };
 
@@ -266,7 +266,7 @@ export function PipelinesEditor() {
       setPipelineDelete(null);
       setDeleteTarget(null);
       closeModal();
-      showAlert({ tone: "success", title: "Pipeline eliminado", open: true });
+      showAlert({ tone: "success", title: "Pipeline eliminado" });
       setSelectedId(null);
       void load();
     } catch (err) {
@@ -275,7 +275,7 @@ export function PipelinesEditor() {
         setPipelineDelete({ pipeline });
         return;
       }
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el pipeline"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar el pipeline") });
     }
   };
 
@@ -323,7 +323,7 @@ export function PipelinesEditor() {
                 setSelectedId(created.id);
               })
               .catch((err: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear el pipeline"), open: true }),
+                showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear el pipeline") }),
               );
           }}
         >

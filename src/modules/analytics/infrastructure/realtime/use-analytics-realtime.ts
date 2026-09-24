@@ -10,7 +10,7 @@ import { useAnalyticsStore } from "@/modules/analytics/infrastructure/stores/ana
 
 /**
  * Tiempo real de Analíticas (namespace `/inbox`, debounce 600 ms):
- * - `analytics.alert` → badge/banner al instante + callback (floating-alert)
+ * - `analytics.alert` → badge/banner al instante + callback (aviso vía showAlert)
  *   + re-fetch debounced de la lista si el tab Alertas ya está cargado.
  * - `analytics.evaluation_completed` → re-fetch debounced de Calidad si está
  *   cargada + callback (Sheet abierto / aviso de evaluación crítica).

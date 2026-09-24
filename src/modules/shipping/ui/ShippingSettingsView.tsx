@@ -88,10 +88,10 @@ export function ShippingSettingsView() {
             action()
               .then(async () => {
                 await load();
-                showAlert({ tone: "success", title: doneTitle, open: true, autoCloseMs: 3000 });
+                showAlert({ tone: "success", title: doneTitle, autoCloseMs: 3000 });
               })
               .catch((error: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar"), open: true }),
+                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar") }),
               )
               .finally(() => closeModal());
           },

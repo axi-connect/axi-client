@@ -49,7 +49,6 @@ export function MetaPinDialog({
       showAlert({
         tone: "success",
         title: "Número activado: ya puedes iniciar conversaciones",
-        open: true,
         autoCloseMs: 4000,
       });
     } catch (err) {

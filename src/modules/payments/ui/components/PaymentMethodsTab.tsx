@@ -79,10 +79,10 @@ export function PaymentMethodsTab() {
                 setState((prev) =>
                   prev.kind === "ready" ? { kind: "ready", methods: prev.methods.filter((m) => m.id !== method.id) } : prev,
                 );
-                showAlert({ tone: "success", title: "Medio de pago eliminado", open: true });
+                showAlert({ tone: "success", title: "Medio de pago eliminado" });
               })
               .catch((error: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar"), open: true }),
+                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar") }),
               )
               .finally(() => closeModal());
           },

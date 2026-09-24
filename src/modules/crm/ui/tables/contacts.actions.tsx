@@ -30,12 +30,11 @@ export function ContactRowActions({ row }: { row: ContactRow }) {
     try {
       await deleteContact(row.id);
       window.dispatchEvent(new CustomEvent("crm:contacts:delete:success"));
-      showAlert({ tone: "success", title: "Contacto eliminado", open: true });
+      showAlert({ tone: "success", title: "Contacto eliminado" });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo eliminar el contacto"),
-        open: true,
       });
     } finally {
       closeModal();

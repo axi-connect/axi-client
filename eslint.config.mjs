@@ -11,6 +11,26 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    // Los avisos pasan por core/notifications (DESIGN-SYSTEM §9.4): ahí viven la
+    // traducción de tono/título/duración y los overrides de accesibilidad. Un
+    // módulo que llame a sileo directo se los salta.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/core/notifications/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "sileo",
+              message: "Usa useAlert().showAlert o notify de @/core/notifications (DESIGN-SYSTEM §9.4).",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -63,7 +63,6 @@ export function PromotionForm({
             showAlert({
               tone: "success",
               title: promotion ? "Promoción actualizada" : "Promoción creada",
-              open: true,
             });
             onSaved(saved);
           } catch (error) {
@@ -73,7 +72,6 @@ export function PromotionForm({
               showAlert({
                 tone: "error",
                 title: errorMessage(error, "No se pudo guardar la promoción"),
-                open: true,
               });
             }
           }

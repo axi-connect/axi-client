@@ -212,7 +212,7 @@ export function ChannelForm({
         // Los valores vuelven a ser los guardados: si no, el formulario queda
         // "sucio" y el siguiente guardado reenvía lo mismo
         form.reset({ ...values, name: updated.name })
-        showAlert({ tone: "success", title: "Canal actualizado", open: true, autoCloseMs: 3500 })
+        showAlert({ tone: "success", title: "Canal actualizado", autoCloseMs: 3500 })
         handleSuccess?.(updated)
       } else {
         const created = await createChannel({
@@ -229,12 +229,12 @@ export function ChannelForm({
         if (values.default_ai_agent_id && values.default_ai_agent_id !== NONE_AGENT) {
           await updateChannel(created.id, { default_ai_agent_id: values.default_ai_agent_id })
         }
-        showAlert({ tone: "success", title: "Canal creado", open: true, autoCloseMs: 3500 })
+        showAlert({ tone: "success", title: "Canal creado", autoCloseMs: 3500 })
         handleSuccess?.(created)
       }
     } catch (err) {
       if (applyServerValidation(err, form)) return
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar el canal"), open: true })
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar el canal") })
     } finally {
       setSubmitting(false)
     }
@@ -251,7 +251,6 @@ export function ChannelForm({
       tone: "error",
       title: "Revisa el formulario antes de guardar",
       description: fields.length > 0 ? `Falta corregir: ${fields.join(", ")}.` : undefined,
-      open: true,
     })
   }
 

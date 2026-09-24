@@ -217,7 +217,6 @@ export function BulkFollowUpModal({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo programar el lote"),
-        open: true,
       });
     } finally {
       setSaving(false);

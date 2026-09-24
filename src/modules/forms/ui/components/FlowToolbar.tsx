@@ -1,11 +1,11 @@
 "use client";
 
 import { Controller, type UseFormReturn } from "react-hook-form";
-import { Ellipsis, MessageSquare, Trash2 } from "lucide-react";
+import { Ellipsis, Info, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
-import { StatusAlert } from "@/shared/components/ui/notice";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,13 +94,11 @@ export function FlowToolbar({
         contraintuitivo, así que se dice explícitamente.
       */}
       {!isActive && (
-        <StatusAlert
-          tone="info"
-          dismissible={false}
-          compact
-          title="Pausado: tu agente puede cerrar sin estos datos"
-          description="Actívalo cuando quieras volver a exigirlos."
-        />
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertTitle>Pausado: tu agente puede cerrar sin estos datos</AlertTitle>
+          <AlertDescription>Actívalo cuando quieras volver a exigirlos.</AlertDescription>
+        </Alert>
       )}
     </div>
   );

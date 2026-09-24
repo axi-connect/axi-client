@@ -62,7 +62,6 @@ export function QuickActionForm({
           showAlert({
             tone: "success",
             title: action ? "Acción actualizada" : "Acción creada",
-            open: true,
           })
           onSuccess()
         } catch (err) {
@@ -70,7 +69,6 @@ export function QuickActionForm({
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudo guardar la acción"),
-              open: true,
             })
           }
         }

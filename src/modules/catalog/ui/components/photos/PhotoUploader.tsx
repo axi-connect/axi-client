@@ -9,8 +9,8 @@ import {
   validateImageFile,
   type ProductImageDTO,
 } from "@/modules/catalog/domain/product";
+import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = { variant: "default" | "destructive" | "success"; title: string; description?: string };
 
 /**
  * Tile de subida (drag&drop + click) para una galería. Valida formato y
@@ -31,7 +31,7 @@ export function PhotoUploader({
   remaining: number;
   disabled: boolean;
   onUploaded: () => void | Promise<void>;
-  setAlert?: (cfg: AlertConfig) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -44,7 +44,7 @@ export function PhotoUploader({
     const files = Array.from(fileList);
     if (files.length > remaining) {
       setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: `Solo quedan ${remaining} ${remaining === 1 ? "espacio" : "espacios"} en esta galería`,
       });
       return;
@@ -54,13 +54,13 @@ export function PhotoUploader({
       for (const file of files) {
         const invalid = validateImageFile(file);
         if (invalid) {
-          setAlert?.({ variant: "destructive", title: invalid, description: file.name });
+          setAlert?.({ tone: "error", title: invalid, description: file.name });
           continue;
         }
         try {
           await uploadFn(file);
         } catch (err) {
-          setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo subir la imagen") });
+          setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo subir la imagen") });
         }
       }
       await onUploaded();

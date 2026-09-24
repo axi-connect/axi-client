@@ -177,7 +177,6 @@ export function CampaignDetailView({ campaignId }: { campaignId: string }) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo completar la acción"),
-                  open: true,
                 });
               }
             })();
@@ -225,7 +224,6 @@ export function CampaignDetailView({ campaignId }: { campaignId: string }) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No pudimos exportar los destinatarios"),
-        open: true,
       });
     } finally {
       setExporting(false);

@@ -20,6 +20,7 @@ import {
   useIntakeBlueprintsQuery,
 } from "../../../infrastructure/api/hooks/use-intake";
 import { IntakeLadder } from "./IntakeLadder";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 
 /**
  * Emitir una entrevista.
@@ -227,12 +228,10 @@ export function NewIntakeSessionSheet({
           </div>
         ) : (
           <div className="space-y-4 px-4 pb-6">
-            <div className="rounded-lg border border-success/30 bg-success/6 p-3">
-              <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                <Check className="size-4 text-success" aria-hidden="true" />
-                Enlace listo
-              </p>
-              <p className="mt-1 text-[12px] text-muted-foreground">
+            <Alert variant="success">
+              <Check aria-hidden="true" />
+              <AlertTitle>Enlace listo</AlertTitle>
+              <AlertDescription>
                 {result.prefill.known + result.prefill.derived === 0
                   ? "La entrevista arranca de cero."
                   : `Arranca sabiendo ${String(result.prefill.known + result.prefill.derived)} datos` +
@@ -250,8 +249,8 @@ export function NewIntakeSessionSheet({
                 {result.prefill.website_failed
                   ? " No pudimos leer su página: puede estar caída o hecha toda en el navegador."
                   : ""}
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
 
             <div className="space-y-1.5">
               <Label className="flex items-center gap-1.5">

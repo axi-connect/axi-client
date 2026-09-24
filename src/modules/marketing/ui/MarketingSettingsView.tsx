@@ -74,19 +74,18 @@ export function MarketingSettingsView() {
     const found = validateMarketingSettings(normalized);
     setErrors(found);
     if (Object.keys(found).length > 0) {
-      showAlert({ tone: "error", title: "Revisa los campos marcados", open: true });
+      showAlert({ tone: "error", title: "Revisa los campos marcados" });
       return;
     }
     setSaving(true);
     try {
       setSettings(await putMarketingSettings(normalized));
       setDirty(false);
-      showAlert({ tone: "success", title: "Configuración guardada", open: true });
+      showAlert({ tone: "success", title: "Configuración guardada" });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo guardar la configuración"),
-        open: true,
       });
     } finally {
       setSaving(false);

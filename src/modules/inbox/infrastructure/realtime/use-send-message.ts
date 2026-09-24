@@ -51,7 +51,7 @@ export function useSendMessage(conversationId: string, commands: InboxCommands, 
             reconcileSent(conversationId, localId, ack.data as UiMessage)
           } else {
             markSendFailed(conversationId, localId)
-            showAlert({ tone: "error", title: ack.error.message || "No se pudo enviar el mensaje", open: true })
+            showAlert({ tone: "error", title: ack.error.message || "No se pudo enviar el mensaje" })
           }
         } else {
           // Fallback REST: 202; la confirmación llega al reconectar el WS.
@@ -60,7 +60,7 @@ export function useSendMessage(conversationId: string, commands: InboxCommands, 
         }
       } catch (err) {
         markSendFailed(conversationId, localId)
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo enviar el mensaje"), open: true })
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudo enviar el mensaje") })
       }
     },
     [conversationId, commands, socketConnected, sendOptimistic, reconcileSent, markSendFailed, showAlert],

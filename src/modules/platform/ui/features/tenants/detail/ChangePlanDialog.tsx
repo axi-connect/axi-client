@@ -109,7 +109,7 @@ export function ChangePlanDialog({
         )}
 
         {dbBlocked && (
-          <Alert variant="destructive" className="border-destructive/30">
+          <Alert variant="destructive">
             <OctagonAlert aria-hidden="true" className="size-4" />
             <AlertTitle>Enterprise requiere una base dedicada activa</AlertTitle>
             <AlertDescription>

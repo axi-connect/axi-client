@@ -47,11 +47,10 @@ export function WinLoseDialog({
       showAlert({
         tone: "success",
         title: isWin ? "Oportunidad ganada 🎉" : "Oportunidad marcada como perdida",
-        open: true,
       });
       onOpenChange(false);
     } else {
-      showAlert({ tone: "error", title: result.message, open: true });
+      showAlert({ tone: "error", title: result.message });
     }
   };
 

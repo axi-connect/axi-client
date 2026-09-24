@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select"
+import type { AppAlert } from "@/core/notifications"
 
 /**
  * Formulario de rol:
@@ -58,7 +59,7 @@ export type RoleFormHost = {
   /** Roles existentes para el selector de clonado (solo creación). */
   roles?: RoleDTO[]
   onSaved?: () => Promise<void> | void
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string }) => void
+  setAlert?: (alert: AppAlert) => void
 }
 
 export function RoleForm({ host }: { host: RoleFormHost }) {
@@ -86,7 +87,7 @@ export function RoleForm({ host }: { host: RoleFormHost }) {
         if (!cancelled) setPermissions(res.data)
       } catch (err) {
         host.setAlert?.({
-          variant: "destructive",
+          tone: "error",
           title: errorMessage(err, "No se pudo cargar el catálogo de permisos"),
         })
       }
@@ -112,7 +113,7 @@ export function RoleForm({ host }: { host: RoleFormHost }) {
     try {
       if (isEdit && host.role) {
         await setRolePermissions(host.role.id, selectedCodes)
-        host.setAlert?.({ variant: "success", title: "Permisos del rol actualizados" })
+        host.setAlert?.({ tone: "success", title: "Permisos del rol actualizados" })
       } else {
         await createRole({
           name: values.name,
@@ -123,13 +124,13 @@ export function RoleForm({ host }: { host: RoleFormHost }) {
             ? { permission_codes: selectedCodes }
             : {}),
         })
-        host.setAlert?.({ variant: "success", title: "Rol creado correctamente" })
+        host.setAlert?.({ tone: "success", title: "Rol creado correctamente" })
       }
       await host.onSaved?.()
     } catch (err) {
       if (applyServerValidation(err, form)) return
       host.setAlert?.({
-        variant: "destructive",
+        tone: "error",
         title: errorMessage(err, isEdit ? "No se pudieron actualizar los permisos" : "No se pudo crear el rol"),
       })
     } finally {

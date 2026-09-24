@@ -65,7 +65,7 @@ export function RateFormSheet({
       else await createShippingRate(zone.id, toCreateRateDTO(values));
       onSaved();
       onOpenChange(false);
-      showAlert({ tone: "success", title: isEditing ? "Tarifa actualizada" : "Tarifa creada", open: true, autoCloseMs: 3000 });
+      showAlert({ tone: "success", title: isEditing ? "Tarifa actualizada" : "Tarifa creada", autoCloseMs: 3000 });
     } catch (error) {
       setErrors({ name: errorMessage(error, "No se pudo guardar la tarifa. Inténtalo de nuevo.") });
     } finally {

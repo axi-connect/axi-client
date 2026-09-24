@@ -39,14 +39,13 @@ export function GeneralTab() {
     try {
       await updateMyCompany(toUpdateCompanyDTO(values))
       await refresh()
-      showAlert({ tone: "success", title: "Empresa actualizada", open: true })
+      showAlert({ tone: "success", title: "Empresa actualizada" })
     } catch (err) {
       if (applyServerValidation(err, form)) return
       showAlert({
         tone: "error",
         title: "No se pudo actualizar la empresa",
         description: errorMessage(err),
-        open: true,
       })
     }
   }
@@ -94,10 +93,10 @@ export function GeneralTab() {
           key={company.updated_at}
           schedules={company.schedules}
           onSaved={() => {
-            showAlert({ tone: "success", title: "Horario actualizado", open: true })
+            showAlert({ tone: "success", title: "Horario actualizado" })
             void refresh()
           }}
-          onError={(message) => showAlert({ tone: "error", title: message, open: true })}
+          onError={(message) => showAlert({ tone: "error", title: message })}
         />
       </section>
     </div>

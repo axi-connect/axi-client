@@ -74,10 +74,10 @@ export function BranchesTab() {
                 setState((prev) =>
                   prev.kind === "ready" ? { kind: "ready", branches: prev.branches.filter((b) => b.id !== branch.id) } : prev,
                 );
-                showAlert({ tone: "success", title: "Sucursal eliminada", open: true });
+                showAlert({ tone: "success", title: "Sucursal eliminada" });
               })
               .catch((error: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar"), open: true }),
+                showAlert({ tone: "error", title: errorMessage(error, "No se pudo eliminar") }),
               )
               .finally(() => closeModal());
           },

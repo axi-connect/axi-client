@@ -9,7 +9,7 @@
  */
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CircleSlash, Trash2 } from "lucide-react";
+import { ArrowLeft, CircleAlert, CircleSlash, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Badge } from "@/shared/components/ui/badge";
@@ -35,6 +35,7 @@ import { aiModeLabel, runKindLabel, runScopeLabel } from "../runs-format";
 import { buildCaseColumns, toCaseRow } from "./cases-table.config";
 import { RunMetricsPanel } from "./RunMetricsPanel";
 import { RunSummaryCards } from "./RunSummaryCards";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 export function RunDetailView({ runId }: { runId: string }) {
   const { showAlert } = useAlert();
@@ -151,9 +152,10 @@ export function RunDetailView({ runId }: { runId: string }) {
         </div>
 
         {run.error && (
-          <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-            {run.error}
-          </p>
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden="true" />
+            <AlertDescription>{run.error}</AlertDescription>
+          </Alert>
         )}
 
         {run.status === "purged" && (

@@ -7,7 +7,7 @@
  * (`reserved_slots + reservadas + activas`), nunca de una constante.
  */
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Info, Plus, TriangleAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatShortDate } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -46,6 +46,7 @@ import {
 } from "../../../infrastructure/api/hooks/use-catalog";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 type RedemptionFilter = "all" | RedemptionStatus;
 
@@ -270,10 +271,11 @@ function PromotionCard({
         <dt className="text-muted-foreground">Reservados</dt>
         <dd className="tabular-nums">{promotion.reserved_slots} cupos apartados fuera del autoservicio</dd>
       </dl>
-      <p className="text-muted-foreground border-warning/30 bg-warning/8 rounded-xl border p-3 text-xs leading-relaxed">
-        La política de congelamiento va en <b>cada redención</b>: quien firmó «congelada» queda en «Sin ajuste»
-        aunque la promoción pase a IPC anual. Cambiarla aquí no toca a los que ya redimieron.
-      </p>
+      <Alert variant="warning">
+        <TriangleAlert aria-hidden="true" />
+        <AlertDescription>La política de congelamiento va en <b>cada redención</b>: quien firmó «congelada» queda en «Sin ajuste»
+        aunque la promoción pase a IPC anual. Cambiarla aquí no toca a los que ya redimieron.</AlertDescription>
+      </Alert>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={onEdit}>
           Editar
@@ -662,9 +664,10 @@ function RedemptionSheet({
           <Label htmlFor="red-note">Nota</Label>
           <Input id="red-note" className="mt-1.5" placeholder="piloto convertido" value={note} onChange={(event) => setNote(event.target.value)} />
         </div>
-        <p className="text-muted-foreground border-info/24 bg-info/8 rounded-xl border p-3 text-xs leading-relaxed">
-          Si la empresa era uno de los cupos reservados a mano, baja «Cupos reservados» en la promoción para no contarla dos veces.
-        </p>
+        <Alert variant="info">
+          <Info aria-hidden="true" />
+          <AlertDescription>Si la empresa era uno de los cupos reservados a mano, baja «Cupos reservados» en la promoción para no contarla dos veces.</AlertDescription>
+        </Alert>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancelar

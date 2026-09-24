@@ -23,8 +23,8 @@ import { cn } from "@/core/lib/utils";
 import type { ProductImageDTO } from "@/modules/catalog/domain/product";
 import { PhotoTile } from "./PhotoTile";
 import { PhotoUploader } from "./PhotoUploader";
+import type { AppAlert } from "@/core/notifications";
 
-type AlertConfig = { variant: "default" | "destructive" | "success"; title: string; description?: string };
 
 /**
  * Galería de UN contenedor (producto o una variante) con drag&drop de
@@ -59,7 +59,7 @@ export function SortablePhotoGallery({
   onDelete: (image: ProductImageDTO) => void;
   onRetryImport?: (image: ProductImageDTO) => void;
   onImageError?: () => void;
-  setAlert?: (cfg: AlertConfig) => void;
+  setAlert?: (alert: AppAlert) => void;
   /** Mensaje cuando la galería está vacía (p.ej. fallback de variante). */
   emptyHint?: React.ReactNode;
   className?: string;
