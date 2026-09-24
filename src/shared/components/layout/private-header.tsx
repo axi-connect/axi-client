@@ -24,6 +24,12 @@ const LABELS: Record<string, string> = {
 	"meta-templates": "Plantillas de Meta",
 	"opt-outs": "Bajas",
 	"new": "Nueva",
+	// Método comercial: /comercial, /comercial/meta, /comercial/acciones/:id,
+	// /comercial/resultados/:key (Q20: salía «comercial» en minúscula).
+	"comercial": "Comercial",
+	"meta": "Meta",
+	"acciones": "Acciones",
+	"resultados": "Resultados",
 }
 
 type PrivateHeaderProps = {
