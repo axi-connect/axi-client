@@ -358,7 +358,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               {/* Actividad */}
               <section className="space-y-3">
                 <SectionTitle>Actividad</SectionTitle>
-                <OrderTimeline events={events} />
+                <OrderTimeline events={events} currency={order.currency} />
               </section>
 
               {/* Detalles */}
