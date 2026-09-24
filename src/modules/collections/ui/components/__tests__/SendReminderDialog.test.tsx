@@ -37,6 +37,7 @@ function plan(dueAt: string) {
     active_promise_at: null,
     promises: [],
     notes: [],
+    collapsed: false,
     assigned_user_id: null,
     installments: [
       {

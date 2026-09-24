@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Lock, MessageCircle, Tag, TriangleAlert } from "lucide-react";
 
 import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -185,13 +186,16 @@ export function FxSettingsForm({
               />
             </div>
             {expiredNotice !== null ? (
-              <p role="status" className="flex items-start gap-2 text-xs text-warning sm:col-span-2">
-                <TriangleAlert aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-                <span>
-                  Tu tasa manual venció el {formatShortDate(expiredNotice)}: hoy se cotiza con la oficial y el
-                  ajuste. Ponle una fecha nueva o apágala.
-                </span>
-              </p>
+              // §9.4: un estado que dura es Alert en línea; el ámbar va al icono, no al texto.
+              <Alert variant="warning" role="status" className="sm:col-span-2">
+                <TriangleAlert aria-hidden="true" />
+                <AlertDescription>
+                  <span>
+                    Tu tasa manual venció el {formatShortDate(expiredNotice)}: hoy se cotiza con la oficial y
+                    el ajuste. Ponle una fecha nueva o apágala.
+                  </span>
+                </AlertDescription>
+              </Alert>
             ) : null}
           </div>
         ) : null}

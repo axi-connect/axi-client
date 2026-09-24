@@ -156,6 +156,7 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
       installments: [],
       promises: [],
       notes: [],
+      collapsed: false,
     });
 
     render(<ReceivablesView />);

@@ -1,5 +1,9 @@
 import type { Schemas } from "@/core/api/types";
 import { relativeTime } from "@/core/lib/relative-time";
+import {
+  lowerFirst,
+  ROUTE_SKIP_REASON_LABELS,
+} from "@/core/lib/route-skip-reasons";
 import type { DocumentDTO } from "./document";
 
 /**
@@ -65,15 +69,22 @@ export type DeliverySkipReason =
   | "contact_not_found";
 
 export const DELIVERY_SKIP_LABELS: Record<DeliverySkipReason, string> = {
-  outside_service_window_no_hsm:
-    "no ha escrito en más de 24 h y no hay plantilla aprobada",
+  // Las razones de RUTA vienen del mapa compartido con los recordatorios
+  // (core/lib/route-skip-reasons), en minúscula porque aquí van tras un «·».
+  outside_service_window_no_hsm: lowerFirst(
+    ROUTE_SKIP_REASON_LABELS.outside_service_window_no_hsm,
+  ),
+  no_channel: lowerFirst(ROUTE_SKIP_REASON_LABELS.no_channel),
+  channel_not_found: lowerFirst(ROUTE_SKIP_REASON_LABELS.channel_not_found),
+  channel_not_connected: lowerFirst(
+    ROUTE_SKIP_REASON_LABELS.channel_not_connected,
+  ),
+  no_contact_identity: lowerFirst(ROUTE_SKIP_REASON_LABELS.no_contact_identity),
+  unsupported_channel_kind: lowerFirst(
+    ROUTE_SKIP_REASON_LABELS.unsupported_channel_kind,
+  ),
+  unsupported_content: lowerFirst(ROUTE_SKIP_REASON_LABELS.unsupported_content),
   contact_without_email: "no tiene correo en su ficha",
-  no_channel: "no tiene un canal de WhatsApp por el que escribirle",
-  channel_not_found: "el canal de WhatsApp ya no existe",
-  channel_not_connected: "el canal de WhatsApp está desconectado",
-  no_contact_identity: "no tiene número en ese canal",
-  unsupported_channel_kind: "el canal del contacto no admite este envío",
-  unsupported_content: "el canal del contacto no permite mandar archivos",
   file_too_large: "el PDF pesa más de lo que el canal admite",
   email_provider_disabled: "el correo saliente no está configurado",
   document_not_rendered: "el PDF no estaba listo",

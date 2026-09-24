@@ -75,6 +75,7 @@ const plan = (overrides: Partial<PlanDetailDTO> = {}): PlanDetailDTO => ({
   ],
   promises: [],
   notes: [],
+  collapsed: false,
   ...overrides,
 });
 
@@ -209,6 +210,64 @@ describe("PaymentPlanBlock · promesas, historial y nota (F4b)", () => {
     expect(
       screen.queryByRole("button", { name: /Anotar promesa de pago/ }),
     ).toBeNull();
+  });
+
+  it("QA F5: un plan colapsado lo dice con la fecha de la salida; uno normal no habla de eso", async () => {
+    mockPlan.mockResolvedValue(
+      plan({
+        collapsed: true,
+        service_date: "2026-10-01",
+        installments: [
+          {
+            id: "i1",
+            seq: 1,
+            kind: "balance",
+            due_at: "2026-09-24",
+            amount_cents: 1_160_000_000,
+            paid_cents: 0,
+            status: "pending",
+            paid_at: null,
+          },
+        ],
+      }),
+    );
+    const { unmount } = render(<PaymentPlanBlock orderId="o1" />);
+    expect(
+      await screen.findByText(
+        /La salida es el 01 de oct de 2026: no hubo tiempo para cuotas\./,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Todo vence en un solo pago, sin anticipo/),
+    ).toBeInTheDocument();
+    unmount();
+    mockPlan.mockResolvedValue(plan());
+    render(<PaymentPlanBlock orderId="o1" />);
+    await screen.findByText(/Plan de pagos/);
+    expect(screen.queryByText(/no hubo tiempo para cuotas/)).toBeNull();
+  });
+
+  it("QA F5: al confirmar, el plan nace en segundo plano: un 404 se reintenta y la sección aparece sin recargar", async () => {
+    jest.useFakeTimers();
+    const { HttpError } = await import("@/core/api/problem");
+    mockPlan
+      .mockRejectedValueOnce(
+        new HttpError({
+          status: 404,
+          code: "collections/plan_not_found",
+          message: "aún no",
+        }),
+      )
+      .mockResolvedValueOnce(plan());
+    const { container } = render(<PaymentPlanBlock orderId="o1" />);
+    await waitFor(() => expect(mockPlan).toHaveBeenCalledTimes(1));
+    // Tras el 404 la sección está en blanco, no rota
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    await jest.advanceTimersByTimeAsync(800);
+    await waitFor(() => expect(mockPlan).toHaveBeenCalledTimes(2));
+    jest.useRealTimers();
+    expect(await screen.findByText(/Plan de pagos/)).toBeInTheDocument();
+    // Y si el pedido cambia (refreshKey), se vuelve a pedir
   });
 
   it("«Anotar promesa de pago» y «Reprogramar» abren sus diálogos", async () => {

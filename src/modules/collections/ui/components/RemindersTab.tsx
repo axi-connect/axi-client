@@ -23,10 +23,10 @@ import {
   REMINDER_TEMPLATE_LABELS,
   REMINDER_VARIABLE_LABELS,
   renderReminderPreview,
-  unknownReminderVariables,
   type CollectionsPolicyDTO,
   type CollectionsSettingsDTO,
   type ReminderTemplateKey,
+  unknownReminderVariables,
 } from "@/modules/collections/domain/reminder";
 import {
   getCollectionsPolicy,
@@ -68,6 +68,21 @@ export function RemindersTab() {
       current === null ? current : { ...current, ...changes },
     );
   }, []);
+
+  // Una variable inventada en CUALQUIER aviso frena el guardado general, no
+  // solo el del diálogo de ese texto: el servidor también responde 422.
+  const brokenTemplates =
+    policy === null
+      ? []
+      : (
+          Object.keys(policy.templates) as (keyof typeof policy.templates)[]
+        ).filter(
+          (which) =>
+            unknownReminderVariables(
+              policy.templates[which].body,
+              policy.available_variables,
+            ).length > 0,
+        );
 
   async function save() {
     if (policy === null) return;
@@ -282,8 +297,32 @@ export function RemindersTab() {
           </div>
         </section>
 
+        {brokenTemplates.length > 0 ? (
+          <Alert variant="warning" className="mt-6">
+            <TriangleAlert aria-hidden="true" />
+            <AlertDescription>
+              <span>
+                No se puede guardar:{" "}
+                {brokenTemplates.length === 1 ? "el aviso" : "los avisos"}{" "}
+                <b className="font-medium text-foreground">
+                  {brokenTemplates
+                    .map((which) =>
+                      REMINDER_TEMPLATE_LABELS[which].toLowerCase(),
+                    )
+                    .join(", ")}
+                </b>{" "}
+                {brokenTemplates.length === 1 ? "usa" : "usan"} variables que el
+                servidor no sabe rellenar y saldrían tal cual en el WhatsApp del
+                cliente.
+              </span>
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <div className="mt-6 flex justify-end">
-          <Button onClick={() => void save()} disabled={saving}>
+          <Button
+            onClick={() => void save()}
+            disabled={saving || brokenTemplates.length > 0}
+          >
             Guardar recordatorios
           </Button>
         </div>

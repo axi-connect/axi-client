@@ -69,6 +69,37 @@ describe("RemindersTab", () => {
     mockShowAlert.mockReset();
   });
 
+  it("QA F5: una variable inventada en cualquier aviso bloquea «Guardar recordatorios» y lo dice; sin ella, guarda", async () => {
+    mockGet.mockResolvedValue(
+      policy({
+        templates: {
+          due_soon: {
+            enabled: true,
+            body: "Hola {{cliente.mascota}}, vence pronto.",
+          },
+          due_today: { enabled: true, body: "Hoy vence tu cuota." },
+          overdue: { enabled: true, body: "Tienes una cuota pendiente." },
+        },
+      }),
+    );
+    const { unmount } = render(<RemindersTab />);
+    const save = await screen.findByRole("button", {
+      name: "Guardar recordatorios",
+    });
+    expect(save).toBeDisabled();
+    expect(screen.getByText(/No se puede guardar/)).toHaveTextContent(
+      /antes de vencer/i,
+    );
+    unmount();
+
+    mockGet.mockResolvedValue(policy());
+    render(<RemindersTab />);
+    expect(
+      await screen.findByRole("button", { name: "Guardar recordatorios" }),
+    ).toBeEnabled();
+    expect(screen.queryByText(/No se puede guardar/)).toBeNull();
+  });
+
   it("avisa de que sin plantilla aprobada la mora no se persigue", async () => {
     mockGet.mockResolvedValue(policy());
     render(<RemindersTab />);

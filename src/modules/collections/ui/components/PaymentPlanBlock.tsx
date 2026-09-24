@@ -65,13 +65,23 @@ const DOT_TONE: Record<string, string> = {
  * las acciones —anotar promesa, reprogramar, nota— solo con
  * `collections:manage`.
  */
+/** Reintentos cuando el plan aún no existe: nace en segundo plano ~0,4 s después de confirmar. */
+const PLAN_RETRY_MS = [800, 1600, 3200];
+
 export function PaymentPlanBlock({
   orderId,
   contactName = "el cliente",
+  refreshKey,
 }: {
   orderId: string;
   /** Para los diálogos: a quién se le anota o se le escribe. */
   contactName?: string;
+  /**
+   * Cambia cuando el pedido cambia (su `updated_at`): al confirmar, el plan
+   * nace en segundo plano y esta sección tiene que aparecer sin recargar
+   * (QA real F5). Con un 404 se reintenta unas veces con espera creciente.
+   */
+  refreshKey?: string | null;
 }) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission("collections:manage");
@@ -85,30 +95,44 @@ export function PaymentPlanBlock({
 
   useEffect(() => {
     let alive = true;
-    getPlanByOrder(orderId)
-      .then((result) => {
-        if (alive) setPlan(result);
-      })
-      .catch((error: unknown) => {
-        if (!alive) return;
-        setPlan(null);
-        // 404 «sin plan» y 403 «sin la función» son el mismo silencio para el
-        // operador: esta sección no existe para este pedido, y explicárselo
-        // sería ruido. Cualquier OTRA cosa —un 500, la red caída— también deja
-        // la sección en blanco, pero al menos deja rastro: si no, el fallo es
-        // invisible para él y para nosotros.
-        const status = isHttpError(error) ? error.status : 0;
-        if (status !== 404 && status !== 403) {
-          console.error("No se pudo cargar el plan de pagos del pedido", error);
-        }
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const attempt = (round: number) => {
+      getPlanByOrder(orderId)
+        .then((result) => {
+          if (alive) setPlan(result);
+        })
+        .catch((error: unknown) => {
+          if (!alive) return;
+          setPlan(null);
+          // 404 «sin plan» y 403 «sin la función» son el mismo silencio para el
+          // operador: esta sección no existe para este pedido, y explicárselo
+          // sería ruido. Cualquier OTRA cosa —un 500, la red caída— también deja
+          // la sección en blanco, pero al menos deja rastro: si no, el fallo es
+          // invisible para él y para nosotros.
+          const status = isHttpError(error) ? error.status : 0;
+          if (status !== 404 && status !== 403) {
+            console.error(
+              "No se pudo cargar el plan de pagos del pedido",
+              error,
+            );
+          }
+          // Un 404 justo tras confirmar suele ser «todavía no»: el plan lo crea
+          // un job en segundo plano. Se vuelve a pedir unas pocas veces.
+          const wait = PLAN_RETRY_MS[round];
+          if (status === 404 && wait !== undefined) {
+            timer = setTimeout(() => attempt(round + 1), wait);
+          }
+        })
+        .finally(() => {
+          if (alive) setLoading(false);
+        });
+    };
+    attempt(0);
     return () => {
       alive = false;
+      if (timer !== null) clearTimeout(timer);
     };
-  }, [orderId, reloads]);
+  }, [orderId, reloads, refreshKey]);
 
   if (loading) return <Skeleton className="h-40 w-full rounded-2xl" />;
   if (plan === null) return null;
@@ -124,6 +148,24 @@ export function PaymentPlanBlock({
 
   return (
     <section aria-label="Plan de pagos" className="flex flex-col gap-4">
+      {plan.collapsed ? (
+        // No hubo tiempo que repartir: se dice, no se disimula (QA real F5).
+        <Alert variant="info" className="rounded-[15px]">
+          <CalendarClock aria-hidden="true" />
+          <AlertDescription className="text-[13px] leading-relaxed">
+            <span>
+              <b className="font-medium text-foreground">
+                {plan.service_date !== null
+                  ? `La salida es el ${formatShortDate(plan.service_date)}: no hubo tiempo para cuotas.`
+                  : "No hubo tiempo para cuotas."}
+              </b>{" "}
+              Todo vence en un solo pago, sin anticipo, aunque la política del
+              negocio reparta en cuotas.
+            </span>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {next !== undefined && card?.tone !== "info" ? (
         <NextDue installment={next} currency={plan.currency} />
       ) : null}
@@ -257,8 +299,10 @@ export function PaymentPlanBlock({
       ) : null}
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        El plan se creó al confirmar el pedido, con la política del negocio. Las
-        cuotas dicen <b className="font-medium text-foreground">cuándo</b>{" "}
+        {plan.collapsed
+          ? "El plan se creó al confirmar el pedido; con la salida encima, la política no tuvo tiempo que repartir. "
+          : "El plan se creó al confirmar el pedido, con la política del negocio. "}
+        Las cuotas dicen <b className="font-medium text-foreground">cuándo</b>{" "}
         tocaba cada parte; lo cobrado sale del pedido. La promesa y la nota son
         del equipo: el cliente no las ve.
       </p>

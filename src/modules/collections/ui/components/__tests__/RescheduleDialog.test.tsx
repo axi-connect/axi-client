@@ -72,6 +72,7 @@ const PLAN: PlanDetailDTO = {
   ],
   promises: [],
   notes: [],
+  collapsed: false,
 };
 
 describe("RescheduleDialog: solo lo pendiente, y la suma cuadra mientras se escribe", () => {

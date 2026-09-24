@@ -79,7 +79,16 @@ export function ReportPaymentDialog({
       });
       await Promise.all([refreshOrder(order.id), fetchStats()]);
       onOpenChange(false);
-      showAlert({ tone: "success", title: "Pago registrado" });
+      // §9.4: el título dice qué pasó; el monto y el medio van al cuerpo.
+      const method = methods.find((one) => one.id === methodId)?.label;
+      showAlert({
+        tone: "success",
+        title: "Pago registrado",
+        description:
+          amountCents !== null && amountCents > 0
+            ? `${formatMoney(amountCents, order.currency)}${method !== undefined ? ` por ${method}` : ""}. Queda por verificar.`
+            : "Sin monto: quien lo verifique escribe la cifra que ve en el banco.",
+      });
     } catch (err) {
       showAlert({
         tone: "error",

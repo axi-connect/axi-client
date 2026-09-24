@@ -90,7 +90,6 @@ export function SendReminderDialog({
           ? {
               tone: "success",
               title: "Recordatorio enviado",
-              autoCloseMs: 3000,
             }
           : {
               tone: "warning",

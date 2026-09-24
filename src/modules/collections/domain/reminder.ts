@@ -9,6 +9,7 @@
  * igual, y una pantalla que las pintara todas como «omitido» tiraría ese
  * trabajo a la basura.
  */
+import { ROUTE_SKIP_REASON_LABELS } from "@/core/lib/route-skip-reasons";
 import type { Schemas } from "@/core/api/types";
 
 export type CollectionsPolicyDTO = Schemas["CollectionsPolicyDto"];
@@ -87,12 +88,15 @@ export function unknownReminderVariables(
   body: string,
   available: readonly string[],
 ): string[] {
-  const found = body.match(/\{\{\s*(\w+)\s*\}\}/g) ?? [];
+  // Patrón ANCHO a propósito: «{{cliente.mascota}}» también es un hueco que el
+  // dueño creyó escribir bien, y con `\w+` no se detectaba (QA real de F5).
   const known = new Set<string>(available);
-  const bad = found
-    .map((hole) => hole.replace(/[{}\s]/g, ""))
-    .filter((name) => !known.has(name));
-  return [...new Set(bad)];
+  const bad: string[] = [];
+  for (const match of body.matchAll(/\{\{\s*([^{}]*?)\s*\}\}/g)) {
+    const name = match[1] ?? "";
+    if (!known.has(name) && !bad.includes(name)) bad.push(name);
+  }
+  return bad;
 }
 
 /**
@@ -104,6 +108,10 @@ export function unknownReminderVariables(
  * la pantalla diga «omitido» y le oculte el motivo.
  */
 export const SKIP_REASON_LABELS: Record<string, string> = {
+  // Las razones de RUTA (sin canal, desconectado…) son las mismas que en la
+  // entrega de documentos: un solo mapa en core, para que «no_channel» no
+  // salga en crudo aquí y traducido allá.
+  ...ROUTE_SKIP_REASON_LABELS,
   feature_disabled: "La cobranza está apagada en este negocio",
   plan_not_active: "El plan ya no está activo",
   installment_not_found: "La cuota ya no existe",
@@ -112,8 +120,6 @@ export const SKIP_REASON_LABELS: Record<string, string> = {
   order_not_found: "El pedido ya no existe",
   stage_not_due: "Ese día ya no tocaba ese aviso",
   template_disabled: "El texto está apagado",
-  outside_service_window_no_hsm:
-    "Fuera de la ventana de 24 h y sin plantilla aprobada",
   contact_without_email: "El cliente no tiene correo",
   email_provider_disabled: "El correo no está configurado",
   email_failed: "El correo no se pudo enviar",

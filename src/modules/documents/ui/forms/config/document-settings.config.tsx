@@ -17,6 +17,7 @@ import {
   createInputField,
 } from "@/shared/components/features/dynamic-form";
 import type { FieldConfig } from "@/shared/components/features/dynamic-form/types";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
 import type {
@@ -456,10 +457,13 @@ function SwitchRow({
           {description}
         </p>
         {warning ? (
-          <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-warning">
-            <TriangleAlert aria-hidden="true" className="size-3 shrink-0" />
-            {warning}
-          </p>
+          // §9.4: la pista de dependencia es un estado que dura → Alert, color solo en el icono.
+          <Alert variant="warning" className="mt-2 py-2">
+            <TriangleAlert aria-hidden="true" />
+            <AlertDescription className="text-[12.5px]">
+              <span>{warning}</span>
+            </AlertDescription>
+          </Alert>
         ) : null}
       </div>
       <Switch checked={checked} onCheckedChange={onChange} aria-label={title} />

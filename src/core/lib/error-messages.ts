@@ -29,6 +29,8 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.promiseExists]: "Ya hay una promesa de pago viva en este plan. Se resuelve pagando o cuando pase su fecha",
   [API_ERROR_CODES.scheduleMismatch]: "Las cuotas pendientes tienen que sumar exactamente el saldo",
   [API_ERROR_CODES.planNotActive]: "El plan de pagos no está activo: no admite promesas ni cambios de calendario",
+  "collections/invalid_template_variables":
+    "Un aviso usa variables que no existen y saldrían tal cual en el mensaje del cliente. Corrígelas antes de guardar",
   "documents/already_superseded": "Este documento fue reemplazado: envía el vigente",
   [API_ERROR_CODES.invalidTransition]: "La conversación no admite esa transición",
   [API_ERROR_CODES.handoffConflict]: "Otro operador tomó la conversación primero",

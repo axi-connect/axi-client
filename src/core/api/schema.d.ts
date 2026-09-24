@@ -14084,6 +14084,7 @@ export interface components {
                 /** Format: uuid */
                 actor_user_id: string | null;
             }[];
+            collapsed: boolean;
         };
         PlanRemindersDto: {
             data: {

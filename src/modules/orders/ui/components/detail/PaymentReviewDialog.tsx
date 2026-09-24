@@ -119,13 +119,15 @@ export function PaymentReviewDialog({
       showAlert({
         tone: verifying ? "success" : "info",
         title: verifying ? (willBePaid ? "Pago verificado" : "Abono verificado") : "Pago rechazado",
-        ...(verifying
-          ? {
-              description: willBePaid
-                ? "El pedido quedó pagado."
-                : `Faltan ${formatMoney(balance - amount, currency)} para completar el pedido.`,
-            }
-          : {}),
+        description: verifying
+          ? willBePaid
+            ? "El pedido quedó pagado."
+            : `Faltan ${formatMoney(balance - amount, currency)} para completar el pedido.`
+          : `${
+              review.payment.amount_cents !== null
+                ? `${formatMoney(review.payment.amount_cents, currency)} reportados. `
+                : ""
+            }${notes.trim() !== "" ? `Motivo: ${notes.trim()}.` : "El pedido vuelve a su estado anterior."}`,
       });
     } catch (err) {
       // El backend revalida el saldo bajo su propio lock: si otro operador

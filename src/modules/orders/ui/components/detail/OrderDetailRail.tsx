@@ -200,6 +200,7 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
               <PaymentPlanBlock
                 orderId={order.id}
                 contactName={order.contact.full_name ?? "el cliente"}
+                refreshKey={order.updated_at}
               />
 
               {/* Artículos */}

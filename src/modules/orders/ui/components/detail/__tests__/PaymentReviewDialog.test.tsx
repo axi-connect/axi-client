@@ -222,7 +222,13 @@ describe("PaymentReviewDialog (F3: verificar es decidir, no rellenar)", () => {
       );
     });
     expect(mockReview.mock.calls[0][2]).not.toHaveProperty("amount_cents");
-    expect(mockShowAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "info", title: "Pago rechazado" }));
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tone: "info",
+        title: "Pago rechazado",
+        description: expect.stringMatching(/^\$\s?30\.000 reportados\. El pedido vuelve a su estado anterior\.$/),
+      }),
+    );
     expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
     // Y verificar ese mismo reporte sigue exigiendo aceptar el sobrepago
     mockReview.mockClear();

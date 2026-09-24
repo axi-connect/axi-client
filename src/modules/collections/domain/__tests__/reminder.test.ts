@@ -92,6 +92,18 @@ describe("relativeDay", () => {
 });
 
 describe("unknownReminderVariables", () => {
+  it("QA F5: un nombre con punto o guion también es un hueco inventado; una válida con espacios, no", () => {
+    expect(
+      unknownReminderVariables(
+        "Hola {{cliente.mascota}} y {{ contact_name }}, {{cliente-nombre}}",
+        ["contact_name", "amount"],
+      ),
+    ).toEqual(["cliente.mascota", "cliente-nombre"]);
+    expect(
+      unknownReminderVariables("{{ amount }} y {{amount}}", ["amount"]),
+    ).toEqual([]);
+  });
+
   // La lista la manda el SERVIDOR: es lo que hace que esta comprobación siga
   // siendo cierta cuando el renderizador cambie. Un espejo copiado a mano
   // bloquearía plantillas válidas o dejaría pasar huecos sin rellenar.

@@ -75,6 +75,7 @@ const plan = (overrides: Partial<PlanDetailDTO> = {}): PlanDetailDTO => ({
   ],
   promises: [],
   notes: [],
+  collapsed: false,
   ...overrides,
 });
 

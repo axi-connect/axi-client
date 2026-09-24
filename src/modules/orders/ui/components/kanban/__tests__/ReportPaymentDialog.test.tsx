@@ -72,7 +72,13 @@ describe("ReportPaymentDialog", () => {
         expect.objectContaining({ amount_cents: 100_000_000 }),
       ),
     );
-    expect(mockShowAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success", title: "Pago registrado" }));
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tone: "success",
+        title: "Pago registrado",
+        description: expect.stringMatching(/^\$\s?1\.000\.000\. Queda por verificar\.$/),
+      }),
+    );
     expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
   });
 

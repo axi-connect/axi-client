@@ -172,7 +172,7 @@ describe("deliveryLine: la tercera línea de la fila, por estado × canal", () =
     expect(window).toMatchObject({
       tone: "warn",
       text: "No salió por WhatsApp",
-      detail: "no ha escrito en más de 24 h y no hay plantilla aprobada",
+      detail: "fuera de la ventana de 24 h y sin plantilla aprobada",
       retry: "email",
     });
     const noEmail = deliveryLine(
