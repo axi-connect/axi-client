@@ -95,3 +95,37 @@ describe("RouteLine · accesibilidad (F8)", () => {
     );
   });
 });
+
+describe("RouteLine · etiquetas sin pisar la línea (Q9)", () => {
+  const weeks = [
+    { label: "S1", days: 5, start_pct: 0, end_pct: 20, mid_pct: 10 },
+    { label: "S2", days: 6, start_pct: 20, end_pct: 40, mid_pct: 30 },
+    { label: "S3", days: 6, start_pct: 40, end_pct: 60, mid_pct: 50 },
+    { label: "S4", days: 6, start_pct: 60, end_pct: 80, mid_pct: 70 },
+    { label: "S5", days: 3, start_pct: 80, end_pct: 100, mid_pct: 90 },
+  ];
+
+  it("la proyección va arriba, anclada a la bandera, aunque el cierre quede lejos de la meta", () => {
+    const { container } = render(
+      <RouteLine done={0.08} expected={0.77} projected={0.11} projectedLabel="cierre ≈ $ 3,3 M · 11 %" weeks={weeks} progress={1} />,
+    );
+    const label = screen.getByText("cierre ≈ $ 3,3 M · 11 %");
+    expect(label).toHaveClass("top-0", "-translate-x-full");
+    expect(label.className).not.toMatch(/top-1\/2/);
+    // Anclada al final del mes (la bandera), no al final punteado.
+    expect(label.style.left).toBe(container.querySelector("line")?.getAttribute("x2"));
+  });
+
+  it("«hoy» va debajo, bajo el marcador, y su semana le cede el sitio", () => {
+    render(<RouteLine done={0.5} expected={0.77} weeks={weeks} progress={1} />);
+    expect(screen.getByText("hoy")).toHaveClass("bottom-0");
+    expect(screen.queryByText("S4")).toBeNull();
+    for (const label of ["S1", "S2", "S3", "S5"]) expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it("con «hoy» justo en un borde, solo una semana cede su etiqueta", () => {
+    render(<RouteLine done={0.3} expected={0.4} weeks={weeks} progress={1} />);
+    expect(screen.queryByText("S2")).toBeNull();
+    expect(screen.getByText("S3")).toBeInTheDocument();
+  });
+});

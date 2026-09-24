@@ -35,6 +35,12 @@ interface RouteLineProps {
 
 const PAD_PCT = 1.2;
 
+/** ¿Cae «hoy» (0–1) en esta semana? El borde final cuenta como de la semana. */
+function isWeekOf(week: WeekTick, at: number): boolean {
+  const pct = at * 100;
+  return pct >= week.start_pct && pct <= week.end_pct;
+}
+
 /**
  * La pista (lo que falta del mes) mezcla el texto con el fondo al 50 %: ≥ 3:1
  * contra el fondo en claro (3,41:1) y en oscuro (4,71:1), el mínimo AA de un
@@ -101,6 +107,8 @@ function RouteLineBase({
   const showProjection = projected !== null && projected > doneClamped;
   const projClamped = showProjection ? Math.min(PROJECTION_MAX, projected) : null;
 
+  // Solo UNA semana cede su etiqueta, aunque «hoy» caiga justo en un borde.
+  const todayWeek = expected === null ? -1 : weeks.findIndex((week) => isWeekOf(week, expected));
   const height = compact ? 28 : 40;
   const y = height / 2;
   const label = [
@@ -119,16 +127,6 @@ function RouteLineBase({
 
   return (
     <div className={cn("relative w-full", compact ? "pt-0" : "pt-5 pb-6", className)}>
-      {/* «hoy» encima del marcador hueco */}
-      {!compact && expected !== null ? (
-        <span
-          aria-hidden
-          className="absolute top-0 -translate-x-1/2 text-[10.5px] text-muted-foreground"
-          style={{ left: track(expected) }}
-        >
-          hoy
-        </span>
-      ) : null}
 
       <svg width="100%" height={height} role="img" aria-label={label} className="block overflow-visible">
         <defs>
@@ -189,33 +187,45 @@ function RouteLineBase({
         </span>
       ) : null}
 
-      {/* Etiqueta de la proyección: a la derecha del final punteado; si no cabe, encima a la izquierda */}
+      {/* Etiqueta de la proyección: SIEMPRE arriba a la derecha, junto a la
+          bandera (como el mockup). Pegada al final punteado caía ENCIMA de la
+          línea y del marcador (Q9). */}
       {!compact && showProjection && projectedLabel !== null ? (
         <span
           aria-hidden
-          className={cn(
-            "absolute text-[11px] font-medium text-foreground whitespace-nowrap",
-            projected < 0.82 ? "top-1/2 -translate-y-1/2 pl-3" : "top-0 -translate-x-full pr-3",
-          )}
-          style={{ left: track(projected < 0.82 ? projClamped ?? 0 : Math.min(1, projected)) }}
+          data-slot="route-projection"
+          className="absolute top-0 -translate-x-full pr-3 text-[11px] leading-4 font-medium text-foreground whitespace-nowrap"
+          style={{ left: track(1) }}
         >
           {projectedLabel}
         </span>
       ) : null}
 
-      {/* S1…S5 debajo de la línea */}
+      {/* S1…S5 debajo de la línea; la semana de hoy cede su sitio a «hoy»,
+          bajo el marcador hueco (arriba chocaría con la proyección). */}
       {!compact
-        ? weeks.map((week) => (
-            <span
-              key={week.label}
-              aria-hidden
-              className="absolute bottom-0 -translate-x-1/2 text-[10.5px] text-muted-foreground"
-              style={{ left: track(week.mid_pct / 100) }}
-            >
-              {week.label}
-            </span>
-          ))
+        ? weeks
+            .filter((_week, index) => index !== todayWeek)
+            .map((week) => (
+              <span
+                key={week.label}
+                aria-hidden
+                className="absolute bottom-0 -translate-x-1/2 text-[10.5px] text-muted-foreground"
+                style={{ left: track(week.mid_pct / 100) }}
+              >
+                {week.label}
+              </span>
+            ))
         : null}
+      {!compact && expected !== null ? (
+        <span
+          aria-hidden
+          className="absolute bottom-0 -translate-x-1/2 text-[10.5px] font-medium text-foreground"
+          style={{ left: track(expected) }}
+        >
+          hoy
+        </span>
+      ) : null}
     </div>
   );
 }
