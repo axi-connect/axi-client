@@ -102,14 +102,12 @@ export function SettingsForm({ canManage }: { canManage: boolean }) {
             tone: "success",
             title: "Reglas de agendamiento guardadas",
             description: "Aplican de inmediato al panel y al asistente de IA.",
-            open: true,
           });
         } catch (err) {
           if (!applyServerValidation(err, form)) {
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudieron guardar las reglas"),
-              open: true,
             });
           }
         }

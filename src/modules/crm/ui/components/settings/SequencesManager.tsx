@@ -97,7 +97,7 @@ export function SequencesManager() {
     try {
       setSequences((await listSequences()).data);
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar las secuencias"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar las secuencias") });
       setSequences([]);
     }
   }, [showAlert]);
@@ -110,7 +110,7 @@ export function SequencesManager() {
     if (draft === null) return;
     const problems = validateSequence(draft);
     if (problems.length > 0) {
-      showAlert({ tone: "error", title: problems[0].message, open: true });
+      showAlert({ tone: "error", title: problems[0].message });
       return;
     }
     setSaving(true);
@@ -118,11 +118,11 @@ export function SequencesManager() {
       const body = toUpsertDTO(draft);
       if (draft.id === null) await createSequence(body);
       else await updateSequence(draft.id, body);
-      showAlert({ tone: "success", title: "Secuencia guardada", open: true });
+      showAlert({ tone: "success", title: "Secuencia guardada" });
       setDraft(null);
       await load();
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar la secuencia"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar la secuencia") });
     } finally {
       setSaving(false);
     }
@@ -132,10 +132,10 @@ export function SequencesManager() {
     async (sequence: SequenceDTO) => {
       try {
         await deleteSequence(sequence.id);
-        showAlert({ tone: "success", title: `«${sequence.name}» eliminada`, open: true });
+        showAlert({ tone: "success", title: `«${sequence.name}» eliminada` });
         await load();
       } catch (err) {
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar") });
       }
     },
     [load, showAlert],

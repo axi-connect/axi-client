@@ -89,7 +89,6 @@ export function SchedulingSettingsView() {
                   tone: "success",
                   title: "Horario de atención guardado",
                   description: "Las citas ya agendadas no se mueven.",
-                  open: true,
                 });
                 // El calendario y la IA leen el horario nuevo: invalidar cache
                 // por sesión de /companies/me y recargar esta vista.
@@ -99,7 +98,7 @@ export function SchedulingSettingsView() {
                 void refreshCalendar();
               }}
               onError={(message) =>
-                showAlert({ tone: "error", title: message, open: true })
+                showAlert({ tone: "error", title: message })
               }
             />
           ) : (

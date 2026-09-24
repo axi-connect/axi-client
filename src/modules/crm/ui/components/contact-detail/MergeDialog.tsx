@@ -63,7 +63,6 @@ export function MergeDialog({
         showAlert({
           tone: "error",
           title: errorMessage(err, "No se pudieron cargar los contactos"),
-          open: true,
         });
         onOpenChange(false);
       });
@@ -80,14 +79,13 @@ export function MergeDialog({
     setMerging(true);
     try {
       await mergeContacts(winner.id, loser.id);
-      showAlert({ tone: "success", title: "Contactos fusionados", open: true });
+      showAlert({ tone: "success", title: "Contactos fusionados" });
       onOpenChange(false);
       onMerged(winner.id);
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo completar la fusión"),
-        open: true,
       });
     } finally {
       setMerging(false);

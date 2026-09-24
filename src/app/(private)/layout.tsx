@@ -12,6 +12,10 @@ import { CompanyIdentity } from "@/modules/companies/ui/components/CompanyIdenti
 import { TrialStatusChip } from "@/modules/companies/ui/components/TrialStatusChip";
 import { TrialCountdownBanner } from "@/modules/companies/ui/components/TrialCountdownBanner";
 import { DunningBanner } from "@/modules/billing/ui/DunningBanner";
+import { COMMERCIAL_BREADCRUMBS } from "@/modules/commercial/public";
+
+/** Las migas que conocen los módulos (rutas sin página y segmentos dinámicos). */
+const BREADCRUMBS = [COMMERCIAL_BREADCRUMBS];
 
 /**
  * Precarga del árbol de navegación en el servidor: `http` en server lee la
@@ -83,7 +87,7 @@ export default async function PrivateLayout({
         <div className="sticky top-0 z-40 shrink-0">
           {/* La campana monta el realtime de notificaciones para todo el panel;
               el chip de trial es permanente */}
-          <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} />
+          <PrivateHeader actions={<><TrialStatusChip /><NotificationBell /></>} breadcrumbs={BREADCRUMBS} />
           {/* Últimos 2 días de trial: en flujo, empuja el contenido */}
           <TrialCountdownBanner />
           {/* Pago vencido: avisa con el plazo antes de la suspensión. No

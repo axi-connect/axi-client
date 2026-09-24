@@ -68,13 +68,12 @@ export function OrderNotificationTemplatesForm() {
     try {
       const saved = await updateOrderNotificationSettings(settings);
       setSettings(saved);
-      showAlert({ tone: "success", title: "Plantillas guardadas", open: true, autoCloseMs: 3000 });
+      showAlert({ tone: "success", title: "Plantillas guardadas", autoCloseMs: 3000 });
     } catch (err) {
       showAlert({
         tone: "error",
         title: "No se pudieron guardar las plantillas",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setSaving(false);

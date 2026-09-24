@@ -57,6 +57,22 @@ export function formatMoney(cents: number, currency = "COP"): string {
 }
 
 /**
+ * Dinero grande con un decimal: «$ 11,1 M». Por debajo del millón, la cifra
+ * completa. Es la forma de las cabeceras (la ruta del mes, el resumen de Alba); en
+ * las filas y en la meta exacta se usa `formatMoney` («$ 30.000.000»),
+ * porque ahí la cifra se compara.
+ */
+export function formatMillions(cents: number, currency = "COP"): string {
+  if (!Number.isFinite(cents)) return "";
+  const units = cents / 100;
+  if (Math.abs(units) < 1_000_000) return formatMoney(cents, currency);
+  const millions = units / 1_000_000;
+  const digits = millions.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  const symbol = currency === "COP" ? "$" : currency === "USD" ? "US$" : currency;
+  return `${symbol} ${digits} M`;
+}
+
+/**
  * Equivalente APROXIMADO de un importe en otra moneda, para cotizar antes de
  * confirmar: «US$ 3.500 ≈ $ 11.068.610». El `≈` no es decorativo — hasta que
  * el pedido se confirma la tasa no está congelada y el total puede cambiar,

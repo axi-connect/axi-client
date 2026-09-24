@@ -30,9 +30,9 @@ export function QuickActionRowActions({ row }: { row: QuickActionRow }) {
       await deleteQuickAction(row.id)
       invalidate()
       window.dispatchEvent(new CustomEvent("quick-actions:delete:success"))
-      showAlert({ tone: "success", title: "Acción eliminada", open: true })
+      showAlert({ tone: "success", title: "Acción eliminada" })
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar la acción"), open: true })
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar la acción") })
     } finally {
       closeModal()
     }

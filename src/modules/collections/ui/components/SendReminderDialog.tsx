@@ -90,7 +90,6 @@ export function SendReminderDialog({
           ? {
               tone: "success",
               title: "Recordatorio enviado",
-              open: true,
               autoCloseMs: 3000,
             }
           : {
@@ -98,7 +97,6 @@ export function SendReminderDialog({
               title: "No se envió",
               description:
                 "El servidor decidió no mandarlo. Queda anotado en el historial del plan con su razón.",
-              open: true,
             },
       );
       onSent?.();
@@ -109,7 +107,6 @@ export function SendReminderDialog({
         tone: "error",
         title: "No se pudo enviar",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setSending(false);

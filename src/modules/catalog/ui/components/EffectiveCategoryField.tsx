@@ -24,6 +24,7 @@ import {
   setProductCategory,
 } from "@/modules/catalog/infrastructure/services/product-service.adapter";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
+import type { AppAlert } from "@/core/notifications";
 
 const NONE = "__none__";
 const AUTO = "__auto__";
@@ -46,7 +47,7 @@ export function EffectiveCategoryField({
   product: ProductDTO;
   canManage: boolean;
   onSaved: (updated: ProductDTO) => void;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const { categoryTree } = useCatalog();
   const [busy, setBusy] = useState(false);
@@ -59,9 +60,9 @@ export function EffectiveCategoryField({
     setBusy(true);
     try {
       onSaved(await action());
-      setAlert?.({ variant: "success", title: success });
+      setAlert?.({ tone: "success", title: success });
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo cambiar la categoría") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo cambiar la categoría") });
     } finally {
       setBusy(false);
     }

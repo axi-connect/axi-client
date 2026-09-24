@@ -142,6 +142,18 @@ export default function DetailSheet<Id extends string | number = string | number
 
   const containerRef = React.useRef<HTMLDivElement | null>(null)
 
+  // Devolver el foco a quien abrió el panel. Radix Dialog solo lo devuelve a
+  // su `Dialog.Trigger`, y aquí casi nunca lo hay: el panel se abre desde un
+  // enlace (ruta interceptada) o un botón cualquiera, y al cerrar el foco caía
+  // en <body>. Se recuerda el elemento activo al abrir y, si sigue en el
+  // documento al cerrar (o al desmontarse con un «atrás»), vuelve a él.
+  const returnFocusRef = React.useRef<HTMLElement | null>(null)
+  React.useEffect(() => {
+    if (!open) return
+    const active = document.activeElement
+    returnFocusRef.current = active instanceof HTMLElement && active !== document.body ? active : null
+  }, [open])
+
   const onDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: { offset?: { y: number }, velocity?: { y: number } }) => {
     if (resolvedSide !== "bottom") return
     const dragOffsetY = info.offset?.y ?? 0
@@ -178,6 +190,13 @@ export default function DetailSheet<Id extends string | number = string | number
                 }}
                 onInteractOutside={(e) => {
                   if (!closeOnOverlayClick) e.preventDefault()
+                }}
+                onCloseAutoFocus={(e) => {
+                  const target = returnFocusRef.current
+                  if (target?.isConnected) {
+                    e.preventDefault()
+                    target.focus()
+                  }
                 }}
                 onOpenAutoFocus={(e) => {
                   if (initialFocusRef?.current) {

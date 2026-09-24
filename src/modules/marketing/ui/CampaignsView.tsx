@@ -114,7 +114,6 @@ export function CampaignsView() {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo completar la acción"),
-                  open: true,
                 });
               }
             })();

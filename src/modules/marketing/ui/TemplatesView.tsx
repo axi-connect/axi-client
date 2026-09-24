@@ -71,7 +71,6 @@ export function TemplatesView() {
         tone: "warning",
         title: "Ese mensaje ya no está",
         description: "Se eliminó o alguien de tu equipo lo cambió.",
-        open: true,
       });
     },
   });
@@ -100,12 +99,11 @@ export function TemplatesView() {
               try {
                 await deleteTemplate(template.id);
                 setTemplates((prev) => prev?.filter((t) => t.id !== template.id) ?? prev);
-                showAlert({ tone: "success", title: "Plantilla eliminada", open: true });
+                showAlert({ tone: "success", title: "Plantilla eliminada" });
               } catch (err) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo eliminar"),
-                  open: true,
                 });
               }
             })();
@@ -323,14 +321,12 @@ function TemplateSheet({
       showAlert({
         tone: "success",
         title: template ? "Plantilla actualizada" : "Plantilla creada",
-        open: true,
       });
       onSaved(saved);
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo guardar la plantilla"),
-        open: true,
       });
     } finally {
       setSaving(false);

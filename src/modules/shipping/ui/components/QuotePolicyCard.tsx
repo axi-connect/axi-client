@@ -43,13 +43,12 @@ export function QuotePolicyCard({
         require_address_before_confirm: draft.require_address_before_confirm,
       });
       onSaved(saved);
-      showAlert({ tone: "success", title: "Cotización de envíos guardada", open: true, autoCloseMs: 3000 });
+      showAlert({ tone: "success", title: "Cotización de envíos guardada", autoCloseMs: 3000 });
     } catch (error) {
       showAlert({
         tone: "error",
         title: "No se pudo guardar",
         description: errorMessage(error),
-        open: true,
       });
     } finally {
       setSaving(false);

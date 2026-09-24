@@ -65,12 +65,11 @@ export function useHandoffActions(
     try {
       const ack = await action()
       if (ack.ok) {
-        showAlert({ tone: "success", title: successTitle, open: true, autoCloseMs: 3000 })
+        showAlert({ tone: "success", title: successTitle, autoCloseMs: 3000 })
       } else if (ack.error.code !== API_ERROR_CODES.handoffConflict) {
         showAlert({
           tone: "error",
           title: ack.error.message || "No se pudo completar la acción",
-          open: true,
         })
       } else {
         showAlert({
@@ -78,7 +77,6 @@ export function useHandoffActions(
           title: formatError(
             new HttpError({ status: 409, code: ack.error.code, message: ack.error.message }),
           ),
-          open: true,
         })
       }
     } finally {

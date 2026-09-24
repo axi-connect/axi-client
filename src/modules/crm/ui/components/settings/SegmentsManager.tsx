@@ -52,7 +52,7 @@ function SegmentBuilder({
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      showAlert({ tone: "error", title: "Ponle un nombre al segmento", open: true });
+      showAlert({ tone: "error", title: "Ponle un nombre al segmento" });
       return;
     }
     setSaving(true);
@@ -64,10 +64,10 @@ function SegmentBuilder({
       };
       if (segment !== null) await updateSegment(segment.id, dto);
       else await createSegment(dto);
-      showAlert({ tone: "success", title: segment !== null ? "Segmento actualizado" : "Segmento creado", open: true });
+      showAlert({ tone: "success", title: segment !== null ? "Segmento actualizado" : "Segmento creado" });
       onDone();
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar el segmento"), open: true });
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar el segmento") });
     } finally {
       setSaving(false);
     }
@@ -131,7 +131,6 @@ function SegmentCard({
     showAlert({
       tone: "info",
       title: "Exportación iniciada — esta descarga queda auditada",
-      open: true,
     });
   };
 
@@ -142,7 +141,7 @@ function SegmentCard({
       listSegmentContacts(segment.id, { page: 1, page_size: 5 })
         .then((res) => setPreview({ total: res.meta.total, rows: res.data }))
         .catch((err: unknown) => {
-          showAlert({ tone: "error", title: errorMessage(err, "No se pudo ejecutar el segmento"), open: true });
+          showAlert({ tone: "error", title: errorMessage(err, "No se pudo ejecutar el segmento") });
           setExpanded(false);
         });
     }
@@ -240,7 +239,7 @@ export function SegmentsManager() {
         setTags(tagsRes);
       })
       .catch((err: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar los segmentos"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar los segmentos") });
         setSegments([]);
       });
   };
@@ -265,10 +264,10 @@ export function SegmentsManager() {
             deleteSegment(segment.id)
               .then(() => {
                 setSegments((prev) => prev?.filter((item) => item.id !== segment.id) ?? prev);
-                showAlert({ tone: "success", title: "Segmento eliminado", open: true });
+                showAlert({ tone: "success", title: "Segmento eliminado" });
               })
               .catch((err: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar"), open: true }),
+                showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar") }),
               )
               .finally(() => closeModal());
           },

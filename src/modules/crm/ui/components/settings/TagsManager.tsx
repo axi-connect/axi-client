@@ -38,7 +38,7 @@ function TagRow({
     updateTag(tag.id, dto)
       .then(onSaved)
       .catch((err: unknown) =>
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar la etiqueta"), open: true }),
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudo guardar la etiqueta") }),
       );
   };
 
@@ -88,7 +88,7 @@ export function TagsManager() {
     listTags()
       .then(setTags)
       .catch((err: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar las etiquetas"), open: true });
+        showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar las etiquetas") });
         setTags([]);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,10 +109,10 @@ export function TagsManager() {
             deleteTag(tag.id)
               .then(() => {
                 setTags((prev) => prev?.filter((item) => item.id !== tag.id) ?? prev);
-                showAlert({ tone: "success", title: "Etiqueta eliminada", open: true });
+                showAlert({ tone: "success", title: "Etiqueta eliminada" });
               })
               .catch((err: unknown) =>
-                showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar"), open: true }),
+                showAlert({ tone: "error", title: errorMessage(err, "No se pudo eliminar") }),
               )
               .finally(() => closeModal());
           },
@@ -150,7 +150,7 @@ export function TagsManager() {
               setNewName("");
             })
             .catch((err: unknown) =>
-              showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear la etiqueta"), open: true }),
+              showAlert({ tone: "error", title: errorMessage(err, "No se pudo crear la etiqueta") }),
             );
         }}
       >

@@ -42,7 +42,6 @@ export function TagsEditor({
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudieron guardar las etiquetas"),
-        open: true,
       });
     }
   };

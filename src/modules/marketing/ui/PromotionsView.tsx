@@ -118,7 +118,6 @@ export function PromotionsView() {
         tone: "warning",
         title: "Esa promoción ya no está",
         description: "Se eliminó o alguien de tu equipo la cambió.",
-        open: true,
       });
     },
   });
@@ -180,7 +179,6 @@ export function PromotionsView() {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo cambiar el estado"),
-                  open: true,
                 });
               }
             })();
@@ -206,12 +204,11 @@ export function PromotionsView() {
               try {
                 await deletePromotion(promotion.id);
                 setPromotions((prev) => (prev ? prev.filter((p) => p.id !== promotion.id) : prev));
-                showAlert({ tone: "success", title: "Promoción eliminada", open: true });
+                showAlert({ tone: "success", title: "Promoción eliminada" });
               } catch (err) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo eliminar"),
-                  open: true,
                 });
               }
             })();

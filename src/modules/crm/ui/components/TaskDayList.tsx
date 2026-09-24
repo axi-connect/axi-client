@@ -227,15 +227,15 @@ function TaskRow({
 
   const run = async (action: "complete" | "reopen" | "cancel") => {
     const result = await act(task.id, action);
-    if (!result.ok) showAlert({ tone: "error", title: result.message, open: true });
+    if (!result.ok) showAlert({ tone: "error", title: result.message });
   };
 
   const launch = async () => {
     const result = await runNow(task.id);
     showAlert(
       result.ok
-        ? { tone: "success", title: "Tarea encolada: el agente la ejecutará en breve", open: true }
-        : { tone: "error", title: result.message, open: true },
+        ? { tone: "success", title: "Tarea encolada: el agente la ejecutará en breve" }
+        : { tone: "error", title: result.message },
     );
   };
 

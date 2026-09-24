@@ -19,7 +19,7 @@ import {
   businessDayKey,
   hhmmFromInstant,
   instantFromBusiness,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import {
   buildRrule,
   parseRrule,

@@ -80,7 +80,6 @@ export function RemindersTab() {
         tone: "success",
         title: "Recordatorios guardados",
         description: "Vale también para los pedidos que ya están en marcha.",
-        open: true,
         autoCloseMs: 3000,
       });
     } catch (err) {
@@ -88,7 +87,6 @@ export function RemindersTab() {
         tone: "error",
         title: "No se pudo guardar",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setSaving(false);

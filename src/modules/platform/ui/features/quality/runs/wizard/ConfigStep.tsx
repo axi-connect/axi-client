@@ -36,6 +36,7 @@ import {
   type QaScopeMode,
   type RunConfigValues,
 } from "./run-config";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 type ConfigStepProps = {
   values: RunConfigValues;
@@ -287,14 +288,16 @@ export function ConfigStep({ values, onChange, onBack, onNext }: ConfigStepProps
       )}
 
       {errors.length > 0 && (
-        <ul className="space-y-1 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive" role="alert">
-          {errors.map((error) => (
-            <li key={error} className="flex items-start gap-1.5">
-              <TriangleAlert aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-              {error}
-            </li>
-          ))}
-        </ul>
+        <Alert variant="destructive">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>
+            <ul className="list-disc space-y-1 pl-4">
+              {errors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="flex items-center justify-between border-t border-border pt-4">

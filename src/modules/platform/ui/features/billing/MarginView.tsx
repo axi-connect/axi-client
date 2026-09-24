@@ -13,6 +13,7 @@
  * Aquí no se publica nada: publicar es en Tarifas y pasa por la misma verja
  * (`dry_run` en la hoja de publicación). Ninguna cifra se calcula en el cliente.
  */
+import { CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, parseMoneyToCents } from "@/core/lib/format";
@@ -51,6 +52,7 @@ import { useVolumeTiersQuery } from "../../../infrastructure/api/hooks/use-catal
 import { useMarginSampleQuery, useSimulateMargin } from "../../../infrastructure/api/hooks/use-margin";
 import { usePlansQuery } from "../../../infrastructure/api/hooks/use-plans";
 import { ProblemAlert } from "../../components/ProblemAlert";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 
 type WindowDays = "7" | "30" | "90";
 
@@ -147,10 +149,11 @@ function SampleSection({ data }: { data: MarginSample }) {
         {new Date(cached_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
       </p>
       {parameters.missing.length > 0 ? (
-        <p className="text-warning border-warning/40 bg-warning/8 rounded-xl border p-3 text-xs">
-          Faltan parámetros declarados vigentes: {parameters.missing.join(", ")}. La verja de publicación no correrá
-          hasta que existan (Parámetros).
-        </p>
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>Faltan parámetros declarados vigentes: {parameters.missing.join(", ")}. La verja de publicación no correrá
+          hasta que existan (Parámetros).</AlertDescription>
+        </Alert>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -553,7 +556,10 @@ function Simulator({ parameters, packages }: { parameters: MarginSample["paramet
       </div>
 
       {simulate.isError ? (
-        <p className="text-destructive border-destructive/40 bg-destructive/8 mt-4 rounded-xl border p-3 text-xs">{errorMessage(simulate.error)}</p>
+        <Alert variant="destructive" className="mt-4">
+          <CircleAlert aria-hidden="true" />
+          <AlertDescription>{errorMessage(simulate.error)}</AlertDescription>
+        </Alert>
       ) : null}
       {simulate.data ? <SimulationResult result={simulate.data} /> : null}
     </section>
@@ -626,20 +632,29 @@ function SimulationResult({ result }: { result: MarginSimulation }) {
         {r.failures.length > 0 || r.warnings.length > 0 ? (
           <ul className="flex flex-col gap-2 text-xs">
             {r.failures.map((failure, index) => (
-              <li key={`f-${index}`} className="border-destructive/40 bg-destructive/8 text-destructive rounded-xl border p-2.5">
-                <b className="block font-mono text-[11px]">{GATE_CHECK_LABELS[failure.check] ?? failure.check}</b>
-                {failure.detail}
+              <li key={`f-${index}`}>
+                <Alert variant="destructive">
+                  <CircleAlert aria-hidden="true" />
+                  <AlertTitle className="font-mono text-[11px]">{GATE_CHECK_LABELS[failure.check] ?? failure.check}</AlertTitle>
+                  <AlertDescription>{failure.detail}</AlertDescription>
+                </Alert>
               </li>
             ))}
             {r.warnings.map((warning, index) => (
-              <li key={`w-${index}`} className="border-warning/40 bg-warning/8 text-warning rounded-xl border p-2.5">
-                <b className="block font-mono text-[11px]">{GATE_CHECK_LABELS[warning.check] ?? warning.check}</b>
-                {warning.detail}
+              <li key={`w-${index}`}>
+                <Alert variant="warning">
+                  <TriangleAlert aria-hidden="true" />
+                  <AlertTitle className="font-mono text-[11px]">{GATE_CHECK_LABELS[warning.check] ?? warning.check}</AlertTitle>
+                  <AlertDescription>{warning.detail}</AlertDescription>
+                </Alert>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-success border-success/40 bg-success/10 rounded-xl border p-2.5 text-xs">La verja de margen pasa con esta base.</p>
+          <Alert variant="success">
+            <CircleCheck aria-hidden="true" />
+            <AlertDescription>La verja de margen pasa con esta base.</AlertDescription>
+          </Alert>
         )}
 
         <div>

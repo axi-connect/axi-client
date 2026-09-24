@@ -50,14 +50,14 @@ export function PaymentMethodFormSheet({
         : await createPaymentMethod(toCreatePaymentMethodDTO(values));
       onSaved(saved);
       onOpenChange(false);
-      showAlert({ tone: "success", title: isEditing ? "Medio de pago actualizado" : "Medio de pago creado", open: true });
+      showAlert({ tone: "success", title: isEditing ? "Medio de pago actualizado" : "Medio de pago creado" });
     } catch (error) {
       if (applyServerValidation(error, form)) return;
       if (isHttpError(error) && error.is(PAYMENT_ERROR_CODES.labelTaken)) {
         form.setError("label", { type: "server", message: errorMessage(error) });
         return;
       }
-      showAlert({ tone: "error", title: "No se pudo guardar el medio de pago", description: errorMessage(error), open: true });
+      showAlert({ tone: "error", title: "No se pudo guardar el medio de pago", description: errorMessage(error) });
     }
   }
 

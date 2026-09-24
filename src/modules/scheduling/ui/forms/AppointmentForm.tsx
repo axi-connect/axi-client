@@ -147,7 +147,6 @@ export function AppointmentForm({
               mode.kind === "create"
                 ? "Cita creada"
                 : "Cita reagendada · los recordatorios se regeneran solos",
-            open: true,
           });
           onSuccess(fresh);
         } catch (err) {
@@ -158,7 +157,6 @@ export function AppointmentForm({
               tone: "warning",
               title: "Ese horario acaba de ocuparse",
               description: "La disponibilidad se actualizó: elige otro horario.",
-              open: true,
             });
             return;
           }
@@ -179,7 +177,6 @@ export function AppointmentForm({
                   ? "No se pudo crear la cita"
                   : "No se pudo reagendar la cita",
               ),
-              open: true,
             });
           }
         }

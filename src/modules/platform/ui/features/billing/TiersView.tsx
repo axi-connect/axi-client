@@ -9,7 +9,7 @@
  * tampoco publica: sin celdas con precio no aparece en la landing.
  */
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, TriangleAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney, parseMoneyToCents } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -28,6 +28,7 @@ import {
 } from "../../../infrastructure/api/hooks/use-catalog";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 export function TiersView() {
   const tiers = useVolumeTiersQuery();
@@ -361,10 +362,11 @@ function TierSheet({
           Activo en el catálogo público
         </label>
 
-        <p className="text-muted-foreground border-warning/30 bg-warning/8 rounded-xl border p-3 text-xs leading-relaxed">
-          La landing no publica cifra por encima de 25.000 conversaciones («A la medida»). Crear o
-          activar un tramo no lo publica: hay que derivar sus celdas y publicar una vigencia.
-        </p>
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
+          <AlertDescription>La landing no publica cifra por encima de 25.000 conversaciones («A la medida»). Crear o
+          activar un tramo no lo publica: hay que derivar sus celdas y publicar una vigencia.</AlertDescription>
+        </Alert>
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>

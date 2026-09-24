@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Ban, Check, Copy, Mic, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowRight, Ban, Check, CircleCheck, Copy, Mic, RefreshCw, Sparkles } from "lucide-react";
 
 import { cn } from "@/core/lib/utils";
 import { isHttpError } from "@/core/api/problem";
@@ -25,6 +25,7 @@ import {
   useReissueIntakeLink,
 } from "../../../infrastructure/api/hooks/use-intake";
 import { ProblemAlert } from "../../components/ProblemAlert";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 
 /**
  * La ficha de una entrevista: lo recogido, la conversación y el aplicador.
@@ -251,10 +252,11 @@ function ApplyPanel({ sessionId, applied }: { sessionId: string; applied: boolea
 
   if (applied) {
     return (
-      <p className="rounded-md border border-success/30 bg-success/6 px-3 py-2.5 text-[13px]">
-        Esta entrevista ya se aplicó. Lo que se escribió queda en el recibo de la sesión y en la
-        auditoría de plataforma.
-      </p>
+      <Alert variant="success">
+        <CircleCheck aria-hidden="true" />
+        <AlertDescription>Esta entrevista ya se aplicó. Lo que se escribió queda en el recibo de la sesión y en la
+        auditoría de plataforma.</AlertDescription>
+      </Alert>
     );
   }
 

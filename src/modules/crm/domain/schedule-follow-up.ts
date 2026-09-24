@@ -10,7 +10,7 @@ import {
   todayKey,
   weekdayOfKey,
   type DayKey,
-} from "@/modules/scheduling/public";
+} from "@/core/lib/business-time";
 import { isQuietHour } from "./agent-task-settings";
 
 /**

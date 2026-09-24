@@ -17,7 +17,7 @@ import {
   businessDayKey,
   fmtDayMonth,
   fmtTime,
-} from "@/modules/scheduling/domain/business-time";
+} from "@/core/lib/business-time";
 import { describeRrule } from "@/modules/scheduling/domain/recurrence";
 import {
   isAutomaticReminder,
@@ -100,13 +100,11 @@ export function RemindersView() {
       showAlert({
         tone: "success",
         title: fresh.is_active ? "Recordatorio activado" : "Recordatorio pausado",
-        open: true,
       });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo actualizar el recordatorio"),
-        open: true,
       });
     } finally {
       setTogglingId(null);
@@ -120,12 +118,11 @@ export function RemindersView() {
       await deleteReminder(target.id);
       removeReminder(target.id);
       setDeleting(null);
-      showAlert({ tone: "success", title: "Recordatorio eliminado", open: true });
+      showAlert({ tone: "success", title: "Recordatorio eliminado" });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo eliminar el recordatorio"),
-        open: true,
       });
     }
   };

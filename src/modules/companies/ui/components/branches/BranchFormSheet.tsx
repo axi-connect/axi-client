@@ -61,14 +61,14 @@ export function BranchFormSheet({
       }
       onSaved();
       onOpenChange(false);
-      showAlert({ tone: "success", title: isEditing ? "Sucursal actualizada" : "Sucursal creada", open: true });
+      showAlert({ tone: "success", title: isEditing ? "Sucursal actualizada" : "Sucursal creada" });
     } catch (error) {
       if (applyServerValidation(error, form)) return;
       if (isHttpError(error) && error.is(BRANCH_ERROR_CODES.nameTaken)) {
         form.setError("name", { type: "server", message: errorMessage(error) });
         return;
       }
-      showAlert({ tone: "error", title: "No se pudo guardar la sucursal", description: errorMessage(error), open: true });
+      showAlert({ tone: "error", title: "No se pudo guardar la sucursal", description: errorMessage(error) });
     }
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Layers, RotateCcw } from "lucide-react";
+import { CircleAlert, Layers, RotateCcw, TriangleAlert } from "lucide-react";
 
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
@@ -15,7 +15,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { StatusAlert } from "@/shared/components/ui/notice";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/shared/components/ui/alert";
 import { StatusBadge } from "@/shared/components/features/status-badge/StatusBadge";
 import {
   appendBlock,
@@ -244,25 +248,24 @@ export function DocumentTemplateEditor({
           </div>
 
           {unknown.length > 0 && (
-            <StatusAlert
-              tone="warning"
-              compact
-              elevated={false}
-              title={
-                unknown.length === 1
+            <Alert variant="warning">
+              <TriangleAlert aria-hidden="true" />
+              <AlertTitle>
+                {unknown.length === 1
                   ? `{{${unknown[0] ?? ""}}} no existe en ${type.label.toLowerCase()}`
-                  : `Estas variables no existen en ${type.label.toLowerCase()}: ${unknown.map((name) => `{{${name}}}`).join(" ")}`
-              }
-              description="La vista previa espera hasta que la corrijas; las variables disponibles están bajo cada texto."
-            />
+                  : `Estas variables no existen en ${type.label.toLowerCase()}: ${unknown.map((name) => `{{${name}}}`).join(" ")}`}
+              </AlertTitle>
+              <AlertDescription>
+                La vista previa espera hasta que la corrijas; las variables
+                disponibles están bajo cada texto.
+              </AlertDescription>
+            </Alert>
           )}
           {serverError !== null && (
-            <StatusAlert
-              tone="error"
-              compact
-              elevated={false}
-              title={serverError}
-            />
+            <Alert variant="destructive">
+              <CircleAlert aria-hidden="true" />
+              <AlertTitle>{serverError}</AlertTitle>
+            </Alert>
           )}
 
           <p className="px-1 text-xs leading-relaxed text-muted-foreground">

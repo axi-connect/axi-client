@@ -197,10 +197,9 @@ export function CallsSettingsView() {
                   tone: "success",
                   title: "Configuración de llamadas guardada",
                   description: "Aplica de inmediato a las llamadas nuevas.",
-                  open: true,
                 });
               } catch (err) {
-                showAlert({ tone: "error", title: errorMessage(err), open: true });
+                showAlert({ tone: "error", title: errorMessage(err) });
               }
             }}
           />

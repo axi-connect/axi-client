@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import type { AppAlert } from "@/core/notifications";
 
 /**
  * Sección "Información" del detalle: ficha base editable con guardado
@@ -52,7 +53,7 @@ export function ProductBaseSection({
   product: ProductDTO;
   canManage: boolean;
   onSaved: (updated: ProductDTO) => void;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 }) {
   const { productTypes } = useCatalog();
   const [submitting, setSubmitting] = useState(false);
@@ -77,11 +78,11 @@ export function ProductBaseSection({
     setSubmitting(true);
     try {
       const updated = await updateProduct(product.id, toUpdateProductDTO(values));
-      setAlert?.({ variant: "success", title: "Producto actualizado correctamente" });
+      setAlert?.({ tone: "success", title: "Producto actualizado correctamente" });
       onSaved(updated);
     } catch (err) {
       if (applyServerValidation(err, form)) return;
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo actualizar el producto") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo actualizar el producto") });
     } finally {
       setSubmitting(false);
     }

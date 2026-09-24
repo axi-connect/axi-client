@@ -33,7 +33,7 @@ export function ResourceUploader({
 
   const handleFiles = async (files: FileList) => {
     if (assets.length + files.length > MAX_ASSETS) {
-      showAlert({ tone: "error", title: `Máximo ${MAX_ASSETS} archivos por acción`, open: true })
+      showAlert({ tone: "error", title: `Máximo ${MAX_ASSETS} archivos por acción` })
       return
     }
     setUploading(true)
@@ -44,7 +44,7 @@ export function ResourceUploader({
       }
       onChange([...assets, ...uploaded])
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo subir el archivo"), open: true })
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudo subir el archivo") })
     } finally {
       setUploading(false)
     }

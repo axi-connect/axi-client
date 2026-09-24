@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert";
+import { useAlert } from "@/core/providers/alert-provider";
 import { useCatalog } from "@/modules/catalog/infrastructure/stores/catalog.context";
 import { ProductTypeForm } from "@/modules/catalog/ui/forms/ProductTypeForm";
 
@@ -13,10 +12,9 @@ import { ProductTypeForm } from "@/modules/catalog/ui/forms/ProductTypeForm";
  * tras crear se redirige al detalle, donde vive el editor del set.
  */
 export default function CreateProductTypePage() {
+  const { showAlert } = useAlert();
   const router = useRouter();
   const { fetchProductTypes } = useCatalog();
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null);
 
   return (
     <div className="space-y-4">
@@ -36,10 +34,7 @@ export default function CreateProductTypePage() {
 
       <div className="max-w-2xl rounded-2xl border border-border bg-background p-4 md:p-6">
         <ProductTypeForm
-          setAlert={(cfg) => {
-            setAlertConfig(cfg);
-            setAlertOpen(true);
-          }}
+          setAlert={showAlert}
           onSaved={async (created) => {
             await fetchProductTypes();
             router.replace(`/catalog/product-types/${created.id}`);
@@ -47,16 +42,6 @@ export default function CreateProductTypePage() {
         />
       </div>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   );
 }

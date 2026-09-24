@@ -121,7 +121,6 @@ export function ReceivablesView() {
         tone: "error",
         title: "No se pudo traer el resto de la cartera",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setLoadingMore(false);

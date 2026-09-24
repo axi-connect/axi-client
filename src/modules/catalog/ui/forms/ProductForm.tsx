@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import type { AppAlert } from "@/core/notifications";
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -54,7 +55,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 
 export type ProductFormProps = {
   onCreated: (product: ProductDTO, opts: { pendingRequiredAttributes: boolean }) => void | Promise<void>;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
 };
 
 /**
@@ -99,7 +100,7 @@ export function ProductForm({ onCreated, setAlert }: ProductFormProps) {
       await onCreated(created, { pendingRequiredAttributes });
     } catch (err) {
       if (applyServerValidation(err, form)) return;
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudo crear el producto") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudo crear el producto") });
     } finally {
       setSubmitting(false);
     }

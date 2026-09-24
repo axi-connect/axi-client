@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import type { AppAlert } from "@/core/notifications";
 
 /** Fila editable del set (la posición es el índice del array). */
 type EditableAttribute = AttributeDefinitionDTO & {
@@ -82,7 +83,7 @@ export function AttributeSetEditor({
 }: {
   productType: ProductTypeDTO;
   onSaved?: (updated: ProductTypeDTO) => void | Promise<void>;
-  setAlert?: (cfg: { variant: "default" | "destructive" | "success"; title: string; description?: string }) => void;
+  setAlert?: (alert: AppAlert) => void;
   readOnly?: boolean;
 }) {
   const [rows, setRows] = useState<EditableAttribute[]>(() => fromDto(productType));
@@ -131,7 +132,7 @@ export function AttributeSetEditor({
   const save = async () => {
     const problem = validate(rows);
     if (problem) {
-      setAlert?.({ variant: "destructive", title: problem });
+      setAlert?.({ tone: "error", title: problem });
       return;
     }
     try {
@@ -148,10 +149,10 @@ export function AttributeSetEditor({
         })),
       });
       setRows(fromDto(updated));
-      setAlert?.({ variant: "success", title: "Atributos guardados correctamente" });
+      setAlert?.({ tone: "success", title: "Atributos guardados correctamente" });
       await onSaved?.(updated);
     } catch (err) {
-      setAlert?.({ variant: "destructive", title: errorMessage(err, "No se pudieron guardar los atributos") });
+      setAlert?.({ tone: "error", title: errorMessage(err, "No se pudieron guardar los atributos") });
     } finally {
       setSaving(false);
       setConfirmOpen(false);

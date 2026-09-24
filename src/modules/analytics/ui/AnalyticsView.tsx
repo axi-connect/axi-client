@@ -104,7 +104,7 @@ export function AnalyticsView() {
     [replaceParams],
   );
 
-  // Tiempo real: alertas en vivo (floating-alert + badge) y evaluaciones
+  // Tiempo real: alertas en vivo (aviso vía showAlert + badge) y evaluaciones
   // completadas (aviso si es crítica; el Sheet/lista los maneja QualityTab).
   useAnalyticsRealtime({
     enabled: canRead,
@@ -112,7 +112,6 @@ export function AnalyticsView() {
       showAlert({
         tone: "error",
         title: `Nueva alerta: ${alertRuleLabel(payload.rule)}`,
-        open: true,
         actions: [{ label: "Ver", onClick: () => goToTabRef("alertas") }],
       });
     },
@@ -126,7 +125,6 @@ export function AnalyticsView() {
         title: `Nueva evaluación crítica${
           payload.overall_score !== null ? ` (${Math.round(payload.overall_score)}/100)` : ""
         }`,
-        open: true,
         actions: [{ label: "Ver", onClick: () => goToTabRef("calidad") }],
       });
     },

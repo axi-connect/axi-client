@@ -114,7 +114,6 @@ export function ActivityForm({
           showAlert({
             tone: "success",
             title: taskSavedTitle(values.kind, agentBranch, editing),
-            open: true,
           });
           onSuccess();
         } catch (err) {
@@ -122,7 +121,6 @@ export function ActivityForm({
             showAlert({
               tone: "error",
               title: errorMessage(err, "No se pudo guardar la actividad"),
-              open: true,
             });
           }
         }

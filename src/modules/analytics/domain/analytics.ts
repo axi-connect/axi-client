@@ -34,6 +34,20 @@ export type FunnelStages = FunnelDTO["stages"];
 export type FunnelRates = FunnelDTO["rates"];
 export type FunnelGroup = NonNullable<FunnelDTO["groups"]>[number];
 export type FunnelGroupBy = "agent" | "channel" | "intention";
+/**
+ * «Tasas vivas» (método comercial F7): % 0–100 con un decimal, `null` sin
+ * muestra (la fila se omite); `rate_samples` trae numerador y denominador de
+ * CADA tasa y `samples` los contadores en crudo. `null` entero si no se midió
+ * nada en el período.
+ */
+export type FunnelLiveRates = NonNullable<FunnelDTO["live_rates"]>;
+/**
+ * «Recorrido del pipeline» (F7): una fila por tipo semántico de etapa, con el
+ * nombre del tenant. `conversion_pct` es FLUJO del período (avanzaron ÷
+ * entraron, topado en 100), no una probabilidad por oportunidad.
+ */
+export type FunnelPipeline = NonNullable<FunnelDTO["pipeline"]>;
+export type FunnelPipelineStage = FunnelPipeline["stages"][number];
 
 /** Desempeño por agente — GET /analytics/agent-performance (`analytics:read`). */
 export type AgentPerformanceDTO = Schemas["AgentPerformanceDto"];

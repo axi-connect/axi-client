@@ -68,8 +68,8 @@ export function PlansView() {
         </Button>
       </header>
 
-      <Alert className="border-info/30 bg-info/5">
-        <Info aria-hidden="true" className="size-4 text-info" />
+      <Alert variant="info">
+        <Info aria-hidden="true" />
         <AlertTitle>Los límites por defecto no se re-siembran</AlertTitle>
         <AlertDescription>
           Cambiarlos NO afecta a los tenants ya suscritos: re-aplica reasignando el plan desde cada

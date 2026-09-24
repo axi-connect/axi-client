@@ -59,7 +59,6 @@ export function ReconnectChannelDialog({
           : isPage
             ? "Conectaste otra página, así que creamos un canal nuevo"
             : "Conectaste un número distinto, así que creamos un canal nuevo",
-      open: true,
       autoCloseMs: 5000,
     });
   };
@@ -126,12 +125,11 @@ function RotateTokenFallback({ channelId }: { channelId: string }) {
       const updated = await updateChannelCredentials(channelId, token.trim());
       upsertChannel(updated);
       setToken("");
-      showAlert({ tone: "success", title: "Credenciales reemplazadas", open: true, autoCloseMs: 3500 });
+      showAlert({ tone: "success", title: "Credenciales reemplazadas", autoCloseMs: 3500 });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudieron reemplazar las credenciales"),
-        open: true,
       });
     } finally {
       setSaving(false);

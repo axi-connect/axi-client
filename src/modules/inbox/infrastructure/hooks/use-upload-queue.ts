@@ -62,7 +62,6 @@ export function useUploadQueue(conversationId: string): UploadQueue {
           showAlert({
             tone: "error",
             title: errorMessage(err, "No se pudo subir el archivo"),
-            open: true,
           })
         })
         .finally(() => {
@@ -80,7 +79,6 @@ export function useUploadQueue(conversationId: string): UploadQueue {
           showAlert({
             tone: "error",
             title: `Tipo de archivo no soportado: ${file.name}`,
-            open: true,
           })
           continue
         }
@@ -88,7 +86,6 @@ export function useUploadQueue(conversationId: string): UploadQueue {
           showAlert({
             tone: "error",
             title: `${file.name} supera el máximo de ${formatBytes(MAX_UPLOAD_BYTES[kind])}`,
-            open: true,
           })
           continue
         }

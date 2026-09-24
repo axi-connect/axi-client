@@ -29,7 +29,6 @@ export default function CrmContactsInterceptUpdate({
         showAlert({
           tone: "error",
           title: errorMessage(err, "No se pudo cargar el contacto"),
-          open: true,
         });
         router.back();
       });

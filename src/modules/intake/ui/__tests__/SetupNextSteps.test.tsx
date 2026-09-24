@@ -57,6 +57,59 @@ describe("SetupNextSteps", () => {
     expect(container.querySelector("[data-testid='next-steps']")).toBeNull();
   });
 
+  it("con la meta del mes: su grupo va ANTES de «Lo pones tú», con lo que implica y el antes", () => {
+    render(
+      <SetupNextSteps
+        summary={{
+          ...FULL,
+          goal: {
+            target_cents: 3_000_000_000,
+            currency: "COP",
+            month_label: "octubre",
+            needed_sales: 43,
+            avg_ticket_cents: 70_000_000,
+            last_month_revenue_cents: 2_200_000_000,
+            delta_pct: 36,
+          },
+        }}
+      />,
+    );
+    const groups = screen.getAllByRole("region").map((region) => region.getAttribute("aria-label"));
+    expect(groups).toEqual(["Lo deja aplicado axi", "Tu meta del mes", "Lo pones tú", "Para que atienda de verdad"]);
+    const goal = screen.getByRole("region", { name: "Tu meta del mes" });
+    expect(within(goal).getByText("Tu meta de octubre")).toBeInTheDocument();
+    expect(within(goal).getByText("$ 30 M")).toBeInTheDocument();
+    expect(within(goal).getByText(/^43 · ticket \$\s700\.000$/)).toBeInTheDocument();
+    expect(within(goal).getByText("$ 22 M el mes pasado · +36 %")).toBeInTheDocument();
+  });
+
+  it("sin meta (null o un servidor sin el campo) no hay grupo; sin ticket ni mes pasado, solo la meta", () => {
+    const { rerender } = render(<SetupNextSteps summary={{ ...FULL, goal: null }} />);
+    expect(screen.queryByRole("region", { name: "Tu meta del mes" })).toBeNull();
+    rerender(<SetupNextSteps summary={FULL} />);
+    expect(screen.queryByRole("region", { name: "Tu meta del mes" })).toBeNull();
+    rerender(
+      <SetupNextSteps
+        summary={{
+          ...FULL,
+          goal: {
+            target_cents: 1_800_000_000,
+            currency: "COP",
+            month_label: "octubre",
+            needed_sales: null,
+            avg_ticket_cents: null,
+            last_month_revenue_cents: 2_000_000_000,
+            delta_pct: -10,
+          },
+        }}
+      />,
+    );
+    const goal = screen.getByRole("region", { name: "Tu meta del mes" });
+    expect(within(goal).queryByText("Ventas necesarias")).toBeNull();
+    // Una meta por debajo del mes pasado no se dice como «−10 %».
+    expect(within(goal).getByText("$ 20 M el mes pasado")).toBeInTheDocument();
+  });
+
   it("SetupDone lo enseña bajo el cierre y sigue sin él cuando la sesión no lo trae", () => {
     const { rerender } = render(
       <SetupDone closing="Listo." summary={FULL} companyName="Savage" assistantName="Alba" onReview={jest.fn()} />,

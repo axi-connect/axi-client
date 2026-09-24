@@ -120,7 +120,6 @@ export default function CrmContactsPage() {
     showAlert({
       tone: "info",
       title: "Exportación iniciada — esta descarga queda auditada",
-      open: true,
     });
   };
 

@@ -28,7 +28,6 @@ export default function QuickActionsInterceptUpdate({
         showAlert({
           tone: "error",
           title: errorMessage(err, "No se pudo cargar la acción"),
-          open: true,
         })
         router.back()
       })

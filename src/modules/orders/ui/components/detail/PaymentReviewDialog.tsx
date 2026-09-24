@@ -116,7 +116,6 @@ export function PaymentReviewDialog({
             ? "Pago verificado: pedido cobrado"
             : `Abono verificado: faltan ${formatMoney(balance - amount, currency)}`
           : "Pago rechazado",
-        open: true,
         autoCloseMs: 3000,
       });
     } catch (err) {
@@ -131,7 +130,6 @@ export function PaymentReviewDialog({
         description: stale
           ? "Otro pago se verificó antes que este. Cierra y vuelve a abrirlo para ver el saldo real."
           : errorMessage(err),
-        open: true,
       });
     } finally {
       setSubmitting(false);

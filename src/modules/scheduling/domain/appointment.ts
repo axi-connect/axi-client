@@ -1,5 +1,5 @@
 import type { Schemas } from "@/core/api/types";
-import { splitAppointmentByDay, type DayKey, type DaySegment } from "./business-time";
+import { splitAppointmentByDay, type DayKey, type DaySegment } from "@/core/lib/business-time";
 
 /**
  * Contratos del slice scheduling — entidad Cita (`/scheduling/appointments`).

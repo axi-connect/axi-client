@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
 import { CardEmpty } from "@/shared/components/features/card-empty";
-import { CHART_COLORS } from "@/modules/dashboard/ui/components/charts/chart-theme";
+import { CHART_COLORS } from "@/shared/components/features/charts/chart-theme";
 import {
   CONTACT_STAGE_LABELS,
   type ContactStatsDTO,
@@ -12,7 +12,7 @@ import {
 import type { Section } from "@/modules/dashboard/infrastructure/stores/dashboard.store";
 
 const AreaTrend = dynamic(
-  () => import("@/modules/dashboard/ui/components/charts/AreaTrend").then((m) => m.AreaTrend),
+  () => import("@/shared/components/features/charts/AreaTrend").then((m) => m.AreaTrend),
   { ssr: false, loading: () => <div className="h-[140px] animate-pulse rounded-xl bg-secondary" /> },
 );
 

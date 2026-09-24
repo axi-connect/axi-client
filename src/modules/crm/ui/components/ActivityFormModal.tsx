@@ -80,7 +80,6 @@ export function ActivityFormModal({
         showAlert({
           tone: "error",
           title: errorMessage(err, "No se pudo cargar la tarea"),
-          open: true,
         });
       }
     })();

@@ -21,7 +21,12 @@ export const LAYERS = {
    * context-menu. Por encima de TODOS los overlays anteriores.
    */
   floating: 70,
-  /** `FloatingAlert`: notificaciones, siempre lo último visible. */
+  /**
+   * Viewport de los avisos (sileo, `core/notifications`): siempre lo último
+   * visible. No lo consume ningún componente: sileo no acepta clase ni estilo,
+   * así que el valor está repetido en `globals.css` (`:root [data-sileo-viewport]`).
+   * Si cambia aquí, cambia allí.
+   */
   alert: 9999,
 } as const
 

@@ -6,7 +6,7 @@ import { cn } from "@/core/lib/utils";
 import { relativeTime } from "@/core/lib/relative-time";
 import { errorMessage } from "@/core/lib/error-messages";
 import { usePaginatedList } from "@/shared/api/use-paginated-list";
-import { DashboardCard } from "@/modules/dashboard/ui/components/MetricTile";
+import { DashboardCard } from "@/modules/dashboard/public";
 import { CardEmpty } from "@/shared/components/features/card-empty";
 import BasicPagination from "@/shared/components/ui/pagination";
 import { Skeleton } from "@/shared/components/ui/skeleton";

@@ -155,8 +155,8 @@ export function TenantBillingView({ tenantId }: { tenantId: string }) {
   return (
     <div className="space-y-5">
       {emailMissing ? (
-        <Alert className="border-warning/30 bg-warning/8">
-          <TriangleAlert aria-hidden="true" className="text-warning size-4" />
+        <Alert variant="warning">
+          <TriangleAlert aria-hidden="true" />
           <AlertTitle>El correo de cobro está vacío</AlertTitle>
           <AlertDescription>
             Mientras esté en blanco <b>no sale ningún aviso</b>: ni de vencimiento, ni

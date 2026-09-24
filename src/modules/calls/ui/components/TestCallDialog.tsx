@@ -46,13 +46,12 @@ export function TestCallDialog({
         tone: "success",
         title: "Llamada en cola",
         description: "Aparecerá en el monitoreo al conectar. Consume minutos del plan.",
-        open: true,
       });
       onOpenChange(false);
       setTo("");
       setObjective("");
     } catch (error) {
-      showAlert({ tone: "error", title: errorMessage(error), open: true });
+      showAlert({ tone: "error", title: errorMessage(error) });
     } finally {
       setSubmitting(false);
     }

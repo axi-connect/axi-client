@@ -111,14 +111,12 @@ export function ChannelDetailView({ channelId }: { channelId: string }) {
               showAlert({
                 tone: "success",
                 title: "Canal desconectado",
-                open: true,
                 autoCloseMs: 3500,
               });
             } catch (err) {
               showAlert({
                 tone: "error",
                 title: errorMessage(err, "No se pudo desconectar el canal"),
-                open: true,
               });
             }
           },

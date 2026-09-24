@@ -75,7 +75,7 @@ export function AgentTaskSettingsView() {
     const found = validateAgentTaskSettings(settings);
     setErrors(found);
     if (Object.keys(found).length > 0) {
-      showAlert({ tone: "error", title: "Revisa los campos marcados", open: true });
+      showAlert({ tone: "error", title: "Revisa los campos marcados" });
       return;
     }
     setSaving(true);
@@ -84,12 +84,11 @@ export function AgentTaskSettingsView() {
       setSettings(fresh);
       setSaved(fresh);
       setDirty(false);
-      showAlert({ tone: "success", title: "Configuración guardada", open: true });
+      showAlert({ tone: "success", title: "Configuración guardada" });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo guardar la configuración"),
-        open: true,
       });
     } finally {
       setSaving(false);
@@ -115,13 +114,11 @@ export function AgentTaskSettingsView() {
           : dirty
             ? "Se apagó. Tus cambios sin guardar siguen en pantalla."
             : "Se apagó: el agente no ejecutará ninguna tarea",
-        open: true,
       });
     } catch (err) {
       showAlert({
         tone: "error",
         title: errorMessage(err, "No se pudo cambiar el interruptor"),
-        open: true,
       });
     } finally {
       setToggling(false);

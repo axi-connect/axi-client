@@ -74,12 +74,11 @@ export function OptOutsView() {
               try {
                 await revokeOptOut(optOut.id);
                 await refresh();
-                showAlert({ tone: "success", title: "Baja revocada", open: true });
+                showAlert({ tone: "success", title: "Baja revocada" });
               } catch (err) {
                 showAlert({
                   tone: "error",
                   title: errorMessage(err, "No se pudo revocar la baja"),
-                  open: true,
                 });
               }
             })();

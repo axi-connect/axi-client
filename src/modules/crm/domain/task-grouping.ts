@@ -4,7 +4,7 @@ import {
   diffDays,
   todayKey,
   type DayKey,
-} from "@/modules/scheduling/public";
+} from "@/core/lib/business-time";
 
 import { isOverdue, type ActivityDTO } from "./activity";
 import { isAgentTask } from "./task-execution";

@@ -86,7 +86,6 @@ export function PaymentPolicyTab() {
       showAlert({
         tone: "success",
         title: "Política guardada",
-        open: true,
         autoCloseMs: 3000,
       });
     } catch (err) {
@@ -94,7 +93,6 @@ export function PaymentPolicyTab() {
         tone: "error",
         title: "No se pudo guardar",
         description: errorMessage(err),
-        open: true,
       });
     } finally {
       setSaving(false);

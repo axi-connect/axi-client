@@ -55,7 +55,7 @@ export function CallDetailView({ callId }: { callId: string }) {
       getCallSession(callId)
         .then(setCall)
         .catch((error: unknown) => {
-          showAlert({ tone: "error", title: errorMessage(error), open: true });
+          showAlert({ tone: "error", title: errorMessage(error) });
           if (options.initial) router.replace("/calls/history");
         });
     },

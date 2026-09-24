@@ -50,6 +50,18 @@
   --logo-osm: #7ebc6f;
   --logo-maps: #4285f4;
   --logo-serp: #8b5cf6;
+
+  /* Avisos (píldora de sileo, DESIGN-SYSTEM §9.4). La píldora es TINTA
+     INVERTIDA: oscura en claro y clara en oscuro, así que sus tintas de estado
+     son las del tema contrario, afinadas para pasar AA (≥ 4.5:1) sobre ella. */
+  --toast-fill: var(--foreground);
+  --toast-ink: var(--background);
+  --toast-success: #4ade80;
+  --toast-error: #f87171;
+  --toast-warning: #fbbf24;
+  --toast-info: #60a5fa;
+  --toast-action: #fb7185;
+  --toast-loading: #a1a1aa;
 }
 
 .dark {
@@ -69,6 +81,15 @@
 
   /* En dark los colores de estado son claros: el texto encima va oscuro */
   --axi-on-color: #0a0a0a;
+
+  /* Píldora clara (#ededed): tintas profundas. Las de la paleta clara no
+     llegan: verde 2.8:1, ámbar 2.7:1. */
+  --toast-success: #166534;
+  --toast-error: #b91c1c;
+  --toast-warning: #92400e;
+  --toast-info: #1d4ed8;
+  --toast-action: #be3437;
+  --toast-loading: #52525b;
 
   /* Acento con más presencia para contraste en dark */
   --color-accent: color-mix(in srgb, var(--axi-brand) 42%, var(--background));
@@ -453,6 +474,64 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 /* Fallback: sin backdrop-filter el fondo translúcido no es legible */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass, .glass-overlay, .glass-menu { background-color: var(--color-background); }
+}
+
+/* ----------------------------------------------------------------------------
+   AVISOS — la píldora de sileo (DESIGN-SYSTEM §9.4). Único sitio del proyecto
+   con selectores [data-sileo-*]; el componente vive en core/notifications.
+
+   sileo inyecta su CSS en <head> DESPUÉS de este archivo, así que a igual
+   especificidad gana él: cada regla de aquí lleva al menos un selector más.
+   ---------------------------------------------------------------------------- */
+:root [data-sileo-viewport] {
+  /* LAYERS.alert (core/styles/layers.ts): por encima de modales y sheets.
+     sileo trae z-index 50, que empata con los overlays de Radix. */
+  z-index: 9999;
+  font-family: var(--font-body);
+  --sileo-state-success: var(--toast-success);
+  --sileo-state-error: var(--toast-error);
+  --sileo-state-warning: var(--toast-warning);
+  --sileo-state-info: var(--toast-info);
+  --sileo-state-action: var(--toast-action);
+  --sileo-state-loading: var(--toast-loading);
+}
+/* El relleno llega como atributo SVG (fill="#…"): una propiedad CSS le gana y
+   así sigue al tema al vuelo, también con avisos abiertos. */
+[data-sileo-svg] rect[data-sileo-pill],
+[data-sileo-svg] rect[data-sileo-body] {
+  fill: var(--toast-fill);
+}
+[data-sileo-svg] {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.1)) drop-shadow(0 10px 28px rgb(0 0 0 / 0.16));
+}
+/* El filtro «gooey» (blur σ 8 + umbral) se come ~6 px del extremo: con los 8 px
+   de sileo el icono quedaba a 2 px del borde y tocaba la curva. 14 px = 8 px
+   reales, concéntrico. A la derecha sileo ya suma 10 px: con 4 el título queda
+   a ~16 px. sileo mide este padding con getComputedStyle y ajusta el ancho. */
+[data-sileo-viewport] [data-sileo-header] {
+  padding-inline: 14px 4px;
+}
+/* Español: mayúscula solo inicial (sileo capitaliza cada palabra). */
+[data-sileo-title].axi-toast-title {
+  text-transform: none;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+/* sileo pinta el cuerpo al 50 % con (0,3,0): 3.3:1 en la píldora clara, sin
+   AA. Al 72 % da 8.4:1 y 6.6:1; hace falta (0,4,0) para ganar. */
+[data-sileo-viewport][data-theme] [data-sileo-description].axi-toast-description {
+  color: color-mix(in srgb, var(--toast-ink) 72%, transparent);
+  font-size: 13px;
+  line-height: 1.45;
+}
+[data-sileo-button].axi-toast-button {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+[data-sileo-button].axi-toast-button:focus-visible {
+  outline: 2px solid var(--sileo-btn-color);
+  outline-offset: 2px;
 }
 
 
@@ -2078,6 +2157,26 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   right: 0;
   height: 1px;
   background: color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+
+/* Acción de una fila que aparece al pasar el ratón o al enfocar algo dentro
+   de su `.reveal-group` («Deshacer», «Cambiar»). Solo se esconde donde HAY
+   ratón: en táctil no existe el hover y esconderla la dejaría inalcanzable.
+   Es una clase propia y no `.group` de Tailwind a propósito: `.group` la
+   lleva media app y cualquier ancestro con ella dispararía la acción. La
+   fila es el `.reveal-group` más cercano; no se anidan. */
+@media (hover: hover) {
+  .reveal-group .hover-reveal {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .reveal-group:hover .hover-reveal,
+  .reveal-group:focus-within .hover-reveal,
+  .hover-reveal:focus-visible,
+  .hover-reveal[aria-expanded="true"],
+  .hover-reveal:has([aria-expanded="true"]) {
+    opacity: 1;
+  }
 }
 
 /* «Está escribiendo»: tres puntos. Indicador ligado a un turno del servidor

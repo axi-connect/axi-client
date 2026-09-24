@@ -9,7 +9,7 @@ import { errorMessage } from "@/core/lib/error-messages"
 import { RoleForm } from "@/modules/rbac/ui/forms/RoleForm"
 import type { RoleDTO } from "@/modules/rbac/domain/role"
 import { listRoles } from "@/modules/rbac/infrastructure/services/rbac-service.adapter"
-import { FloatingAlert, type FloatingAlertConfig } from "@/shared/components/ui/floating-alert"
+import { useAlert } from "@/core/providers/alert-provider"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 
 /**
@@ -21,13 +21,8 @@ export default function RolesPage() {
   const [roles, setRoles] = useState<RoleDTO[] | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState<RoleDTO | null>(null)
-  const [alertOpen, setAlertOpen] = useState(false)
-  const [alertConfig, setAlertConfig] = useState<FloatingAlertConfig | null>(null)
 
-  const setAlert = useCallback((cfg: FloatingAlertConfig) => {
-    setAlertConfig(cfg)
-    setAlertOpen(true)
-  }, [])
+  const { showAlert } = useAlert()
 
   const load = useCallback(async () => {
     try {
@@ -35,9 +30,9 @@ export default function RolesPage() {
       setRoles(res.data)
     } catch (err) {
       setRoles([])
-      setAlert({ variant: "destructive", title: errorMessage(err, "No se pudieron cargar los roles") })
+      showAlert({ tone: "error", title: errorMessage(err, "No se pudieron cargar los roles") })
     }
-  }, [setAlert])
+  }, [showAlert])
 
   useEffect(() => { void load() }, [load])
 
@@ -126,7 +121,7 @@ export default function RolesPage() {
           host={{
             role: selectedRole,
             roles: roles ?? [],
-            setAlert,
+            setAlert: showAlert,
             onSaved: async () => {
               setModalOpen(false)
               await load()
@@ -135,16 +130,6 @@ export default function RolesPage() {
         />
       </Modal>
 
-      <FloatingAlert
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        config={{
-          variant: alertConfig?.variant ?? "default",
-          title: alertConfig?.title ?? "",
-          description: alertConfig?.description,
-          durationMs: 4000,
-        }}
-      />
     </div>
   )
 }

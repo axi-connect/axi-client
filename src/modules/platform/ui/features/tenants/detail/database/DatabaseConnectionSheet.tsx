@@ -157,8 +157,8 @@ export function DatabaseConnectionSheet({
     >
       <div className="space-y-4 p-4">
         {database && (
-          <Alert className="border-warning/30 bg-warning/5">
-            <TriangleAlert aria-hidden="true" className="size-4 text-warning" />
+          <Alert variant="warning">
+            <TriangleAlert aria-hidden="true" />
             <AlertTitle>Editar devuelve el estado a pending</AlertTitle>
             <AlertDescription>Tendrás que revalidar y reprovisionar la base.</AlertDescription>
           </Alert>

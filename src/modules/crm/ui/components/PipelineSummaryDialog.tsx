@@ -34,10 +34,9 @@ export function PipelineSummaryDialog({
             title: err.is("usage/limit_exceeded")
               ? "Límite de IA del plan alcanzado"
               : `Demasiadas consultas de IA. Intenta de nuevo en ${err.retryAfterSeconds ?? 60} s`,
-            open: true,
           });
         } else {
-          showAlert({ tone: "error", title: errorMessage(err, "El copiloto no pudo responder"), open: true });
+          showAlert({ tone: "error", title: errorMessage(err, "El copiloto no pudo responder") });
         }
         onOpenChange(false);
       });
