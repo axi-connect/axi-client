@@ -25,6 +25,15 @@ import {
   type RunKind,
 } from "../../../../../domain/quality-runs";
 import { MAX_SUITE_SCENARIOS } from "../../../../../domain/quality";
+import {
+  DEFAULT_PROBE_SPEND_CAP_USD,
+  PROBE_DEFAULT_K,
+  PROBE_K_MAX,
+  PROBE_MAX_ITEMS,
+  PROBE_SPEND_CAP_MAX,
+  probePaysLlm,
+  type DatasetKind,
+} from "../../../../../domain/quality-datasets";
 
 export type QaScopeMode = "suite" | "scenarios";
 
@@ -41,6 +50,13 @@ export type RunConfigValues = {
   turnsPerConversation: number;
   mockLatencyMs: number;
   spendCapUsd: number;
+  // Probe (F4)
+  probeKind: DatasetKind;
+  datasetId: string | null;
+  k: number;
+  /** null = todos los etiquetados (hasta 300) */
+  limitItems: number | null;
+  probeSpendCapUsd: number;
 };
 
 export const defaultRunConfigValues: RunConfigValues = {
@@ -54,6 +70,11 @@ export const defaultRunConfigValues: RunConfigValues = {
   turnsPerConversation: 3,
   mockLatencyMs: DEFAULT_MOCK_LATENCY_MS,
   spendCapUsd: DEFAULT_SPEND_CAP_USD,
+  probeKind: "catalog_search",
+  datasetId: null,
+  k: PROBE_DEFAULT_K,
+  limitItems: null,
+  probeSpendCapUsd: DEFAULT_PROBE_SPEND_CAP_USD,
 };
 
 function isInt(value: number): boolean {
@@ -72,6 +93,20 @@ export function configOccupancySeconds(values: RunConfigValues): number {
 /** Reglas espejo del backend; lista de mensajes (vacía = configuración válida). */
 export function validateRunConfig(values: RunConfigValues): string[] {
   const errors: string[] = [];
+
+  if (values.kind === "probe") {
+    if (!values.datasetId) errors.push("Elige el dataset a probar (con ítems etiquetados)");
+    if (!isInt(values.k) || values.k < 1 || values.k > PROBE_K_MAX) {
+      errors.push(`k debe ser un entero entre 1 y ${PROBE_K_MAX}`);
+    }
+    if (values.limitItems !== null && (!isInt(values.limitItems) || values.limitItems < 1 || values.limitItems > PROBE_MAX_ITEMS)) {
+      errors.push(`El límite de ítems debe estar entre 1 y ${PROBE_MAX_ITEMS}`);
+    }
+    if (probePaysLlm(values.probeKind) && (!(values.probeSpendCapUsd > 0) || values.probeSpendCapUsd > PROBE_SPEND_CAP_MAX)) {
+      errors.push(`Reconocimiento e intención pagan LLM por ítem: tope de gasto entre 0 y ${PROBE_SPEND_CAP_MAX} USD`);
+    }
+    return errors;
+  }
 
   if (values.kind === "qa") {
     if (values.qaMode === "suite" && !values.suiteId) {
@@ -121,15 +156,27 @@ export function validateRunConfig(values: RunConfigValues): string[] {
 /** Arma el body del POST /runs (solo viajan los campos del kind elegido). */
 export function buildCreateRunDTO(args: {
   companyId: string;
-  agentId: string;
+  /** null solo en probe (no tiene agente objetivo) */
+  agentId: string | null;
   config: RunConfigValues;
 }): CreateRunDTO {
   const { companyId, agentId, config } = args;
+  if (config.kind === "probe") {
+    return {
+      company_id: companyId,
+      kind: "probe",
+      probe_kind: config.probeKind,
+      dataset_id: config.datasetId ?? "",
+      k: config.k,
+      ...(config.limitItems === null ? {} : { limit_items: config.limitItems }),
+      ...(probePaysLlm(config.probeKind) ? { spend_cap_usd: config.probeSpendCapUsd } : {}),
+    };
+  }
   if (config.kind === "qa") {
     return {
       company_id: companyId,
       kind: "qa",
-      agent_id: agentId,
+      agent_id: agentId ?? "",
       ...(config.qaMode === "suite"
         ? { suite_id: config.suiteId! }
         : { scenario_ids: config.scenarioIds }),
@@ -139,7 +186,7 @@ export function buildCreateRunDTO(args: {
   return {
     company_id: companyId,
     kind: "stress",
-    agent_id: agentId,
+    agent_id: agentId ?? "",
     ai_mode: config.aiMode,
     conversations: config.conversations,
     turns_per_conversation: config.turnsPerConversation,

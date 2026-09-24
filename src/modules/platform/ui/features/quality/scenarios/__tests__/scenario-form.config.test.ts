@@ -17,6 +17,7 @@ const VALID: ScenarioFormValues = {
   max_turns: 12,
   tags: "ventas, retención, ventas",
   success_criteria: [{ kind: "order_created", min_items: 2 }],
+  attachments: [],
 };
 
 describe("parseTagsInput", () => {
@@ -96,6 +97,7 @@ describe("scenarioToFormValues", () => {
       success_criteria: [{ kind: "escalated" }, { kind: "future_kind" }],
       criteria_version: 2,
       customer_name: null,
+      attachments: [],
       is_system: false,
       cloned_from_id: null,
       status: "active",

@@ -21,12 +21,19 @@ import {
   DynamicForm,
   type FieldConfig,
 } from "@/shared/components/features/dynamic-form";
-import { parseSuccessCriteria, type Scenario, type SuccessCriterion } from "../../../../domain/quality";
+import {
+  parseScenarioAttachments,
+  parseSuccessCriteria,
+  type Scenario,
+  type ScenarioAttachment,
+  type SuccessCriterion,
+} from "../../../../domain/quality";
 import {
   useCreateScenario,
   useUpdateScenario,
 } from "../../../../infrastructure/api/hooks/use-quality-scenarios";
 import { StatusBadge } from "../../../components/StatusBadge";
+import { AttachmentsEditor } from "./AttachmentsEditor";
 import { CriteriaEditor } from "./CriteriaEditor";
 import { CriteriaList } from "./CriteriaList";
 import {
@@ -140,6 +147,20 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone 
       {
         label: "Criterios de éxito *",
         description: "El case aprueba solo si TODOS los criterios pasan (1–20).",
+        colSpan: { base: 1, md: 2 },
+      },
+    ),
+    createCustomField<ScenarioFormValues>(
+      "attachments",
+      ({ value, setValue }) => (
+        <AttachmentsEditor
+          value={(value as ScenarioAttachment[]) ?? []}
+          onChange={(next) => setValue("attachments", next)}
+        />
+      ),
+      {
+        label: "Fotos que envía el cliente",
+        description: "Ítems etiquetados de un dataset de reconocimiento del tenant (los escenarios «requiere-imagen» no arrancan sin una).",
         colSpan: { base: 1, md: 2 },
       },
     ),
@@ -258,6 +279,21 @@ function ScenarioReadView({
       {scenario.customer_name && (
         <ReadBlock label="Nombre del contacto simulado">
           <p className="rounded-xl bg-muted/50 p-3 font-mono text-xs">{scenario.customer_name}</p>
+        </ReadBlock>
+      )}
+
+      {parseScenarioAttachments(scenario.attachments).length > 0 && (
+        <ReadBlock label="Fotos que envía el cliente">
+          <ul className="space-y-1 text-sm">
+            {parseScenarioAttachments(scenario.attachments).map((attachment) => (
+              <li key={attachment.dataset_item_id} className="flex items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                <span>{attachment.label}</span>
+                <span className="text-xs text-muted-foreground">
+                  {attachment.when === "first_turn" ? "con el primer mensaje" : "cuando el simulador decida"}
+                </span>
+              </li>
+            ))}
+          </ul>
         </ReadBlock>
       )}
 

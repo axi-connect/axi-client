@@ -38,7 +38,7 @@ export function TargetStep({ companyId, agentId, onChange, onNext }: TargetStepP
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="run-agent">Agente objetivo *</Label>
+        <Label htmlFor="run-agent">Agente objetivo (QA y estrés)</Label>
         <AgentSelect
           companyId={companyId}
           value={agentId}
@@ -46,12 +46,13 @@ export function TargetStep({ companyId, agentId, onChange, onNext }: TargetStepP
           placeholder="Elige el agente a evaluar"
         />
         <p className="text-xs text-muted-foreground">
-          Solo agentes activos; los clones internos de QA quedan excluidos.
+          Solo agentes activos; los clones internos de QA quedan excluidos. Un probe (capacidad contra dataset) no
+          necesita agente: puedes seguir sin elegirlo.
         </p>
       </div>
 
       <div className="flex justify-end border-t border-border pt-4">
-        <Button onClick={onNext} disabled={!companyId || !agentId}>
+        <Button onClick={onNext} disabled={!companyId}>
           Siguiente
         </Button>
       </div>

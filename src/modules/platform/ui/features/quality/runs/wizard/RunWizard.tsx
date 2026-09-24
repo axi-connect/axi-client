@@ -12,7 +12,7 @@
  *  · 422 spend_cap_exceeded → cifras del estimado; `no_pricing` sugiere mock.
  */
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -23,6 +23,8 @@ import {
 import { useAgentsHealthQuery } from "../../../../../infrastructure/api/hooks/use-analytics";
 import { useCreateRun } from "../../../../../infrastructure/api/hooks/use-quality-runs";
 import { useSuitesQuery } from "../../../../../infrastructure/api/hooks/use-quality-suites";
+import { useDatasetsQuery } from "../../../../../infrastructure/api/hooks/use-quality-datasets";
+import { DATASET_KINDS, type DatasetKind } from "../../../../../domain/quality-datasets";
 import { useTenantsQuery } from "../../../../../infrastructure/api/hooks/use-tenants";
 import { StepIndicator } from "@/shared/components/ui/step-indicator";
 import { ConfigStep } from "./ConfigStep";
@@ -31,6 +33,16 @@ import { buildCreateRunDTO, defaultRunConfigValues, type RunConfigValues } from 
 import { TargetStep } from "./TargetStep";
 
 const STEPS = ["Objetivo", "Configuración", "Revisión"] as const;
+
+/** F4: `?kind=probe&company_id=…&dataset_id=…&probe_kind=…` desde la lista de datasets. */
+function prefillFromSearch(params: URLSearchParams | null): { companyId: string; datasetId: string; probeKind: DatasetKind } | null {
+  if (!params || params.get("kind") !== "probe") return null;
+  const companyId = params.get("company_id");
+  const datasetId = params.get("dataset_id");
+  const probeKind = params.get("probe_kind");
+  if (!companyId || !datasetId || !DATASET_KINDS.includes(probeKind as DatasetKind)) return null;
+  return { companyId, datasetId, probeKind: probeKind as DatasetKind };
+}
 
 /** Extrae el `details` no tipado del problem (RFC 7807 extendido). */
 function problemDetails(error: unknown): unknown {
@@ -46,11 +58,21 @@ export function RunWizard() {
   const agentsQuery = useAgentsHealthQuery(1);
   const suitesQuery = useSuitesQuery({ status: "active", page: 1, pageSize: 100 });
 
-  const [step, setStep] = useState(0);
-  const [companyId, setCompanyId] = useState<string | null>(null);
+  // F4: «Correr probe» desde un dataset llega con el borrador prellenado
+  const searchParams = useSearchParams();
+  const prefill = useMemo(() => prefillFromSearch(searchParams), [searchParams]);
+  const [step, setStep] = useState(prefill ? 1 : 0);
+  const [companyId, setCompanyId] = useState<string | null>(prefill?.companyId ?? null);
   const [agentId, setAgentId] = useState<string | null>(null);
-  const [config, setConfig] = useState<RunConfigValues>(defaultRunConfigValues);
+  const [config, setConfig] = useState<RunConfigValues>(
+    prefill ? { ...defaultRunConfigValues, kind: "probe", probeKind: prefill.probeKind, datasetId: prefill.datasetId } : defaultRunConfigValues,
+  );
   const [submitError, setSubmitError] = useState<SubmitErrorInfo>(null);
+  const datasetsQuery = useDatasetsQuery({ companyId: companyId ?? undefined, page: 1, pageSize: 100 });
+  const datasetName = useMemo(
+    () => datasetsQuery.data?.data.find((dataset) => dataset.id === config.datasetId)?.name ?? null,
+    [datasetsQuery.data, config.datasetId],
+  );
 
   const companyName = useMemo(
     () => tenantsQuery.data?.data.find((tenant) => tenant.id === companyId)?.name ?? "—",
@@ -66,7 +88,11 @@ export function RunWizard() {
   );
 
   async function submit() {
-    if (!companyId || !agentId) return;
+    if (!companyId) return;
+    if (config.kind !== "probe" && !agentId) {
+      setSubmitError({ message: "Elige el agente objetivo en el paso 1.", suggestMock: false, alreadyActive: false });
+      return;
+    }
     setSubmitError(null);
     try {
       const created = await createRun.mutateAsync(buildCreateRunDTO({ companyId, agentId, config }));
@@ -93,6 +119,13 @@ export function RunWizard() {
           suggestMock: reason === "no_pricing",
           alreadyActive: false,
         });
+        return;
+      }
+      if (
+        isHttpError(error) &&
+        (error.is("quality/dataset_not_labeled") || error.is("quality/dataset_kind_mismatch") || error.is("quality/scenario_needs_attachment"))
+      ) {
+        setSubmitError({ message: errorMessage(error), suggestMock: false, alreadyActive: false });
         return;
       }
       if (isHttpError(error) && error.is("quality/run_already_active")) {
@@ -132,6 +165,7 @@ export function RunWizard() {
         {step === 1 && (
           <ConfigStep
             values={config}
+            companyId={companyId}
             onChange={setConfig}
             onBack={() => setStep(0)}
             onNext={() => {
@@ -146,6 +180,7 @@ export function RunWizard() {
             agentName={agentName}
             values={config}
             suiteName={suiteName}
+            datasetName={datasetName}
             submitError={submitError}
             pending={createRun.isPending}
             onBack={() => setStep(1)}

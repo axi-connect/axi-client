@@ -117,6 +117,22 @@ export const platformKeys = {
     // Simulacro interactivo (upgrade F1): sesiones = runs kind interactive
     // con su propio read-side. El detalle se pollea; la traza se refresca al
     // crecer el transcript.
+    // Datasets etiquetados + probes (upgrade F4)
+    datasets: {
+      all: ["platform", "quality", "datasets"] as const,
+      list: (filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.datasets.all, "list", filters ?? {}] as const,
+      detail: (id: string) => [...platformKeys.quality.datasets.all, id] as const,
+      items: (id: string, filters?: Record<string, unknown>) =>
+        [...platformKeys.quality.datasets.all, id, "items", filters ?? {}] as const,
+    },
+    probeResults: (runId: string, filters?: Record<string, unknown>) =>
+      [...platformKeys.quality.runs.all, runId, "probe-results", filters ?? {}] as const,
+    tenantLookup: {
+      catalog: (companyId: string, q: string) =>
+        ["platform", "quality", "tenants", companyId, "catalog", q] as const,
+      intentions: (companyId: string) => ["platform", "quality", "tenants", companyId, "intentions"] as const,
+    },
     sessions: {
       all: ["platform", "quality", "sessions"] as const,
       list: (filters?: Record<string, unknown>) =>

@@ -6756,6 +6756,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/quality/runs/{id}/probe-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityRunsController_probeResults_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_list_v1"];
+        put?: never;
+        post: operations["QualityDatasetsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["QualityDatasetsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityDatasetsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityDatasetsController_startImport_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_items_v1"];
+        put?: never;
+        post: operations["QualityDatasetsController_addItem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["QualityDatasetsController_removeItem_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityDatasetsController_labelItem_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items/{itemId}/image-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_imageUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/tenants/{companyId}/catalog/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityTenantLookupController_catalogSearch_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/tenants/{companyId}/intentions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityTenantLookupController_intentions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8024,6 +8168,9 @@ export interface components {
                 /** @default [] */
                 tags: string[];
                 customer_name: string | null;
+                attachments: {
+                    [key: string]: unknown;
+                }[];
                 /** Format: uuid */
                 id: string;
                 criteria_version: number;
@@ -8058,6 +8205,9 @@ export interface components {
             /** @default [] */
             tags: string[];
             customer_name: string | null;
+            attachments: {
+                [key: string]: unknown;
+            }[];
             /** Format: uuid */
             id: string;
             criteria_version: number;
@@ -8195,6 +8345,16 @@ export interface components {
             /** @default [] */
             tags: string[];
             customer_name?: string | null;
+            attachments?: {
+                /** Format: uuid */
+                dataset_item_id: string;
+                label: string;
+                /**
+                 * @default first_turn
+                 * @enum {string}
+                 */
+                when: "first_turn" | "sim_decides";
+            }[];
         };
         CloneScenarioDto: {
             code: string;
@@ -8322,6 +8482,16 @@ export interface components {
             /** @default [] */
             tags: string[];
             customer_name?: string | null;
+            attachments?: {
+                /** Format: uuid */
+                dataset_item_id: string;
+                label: string;
+                /**
+                 * @default first_turn
+                 * @enum {string}
+                 */
+                when: "first_turn" | "sim_decides";
+            }[];
             /** @enum {string} */
             status?: "active" | "archived";
         };
@@ -8379,6 +8549,9 @@ export interface components {
                     /** @default [] */
                     tags: string[];
                     customer_name: string | null;
+                    attachments: {
+                        [key: string]: unknown;
+                    }[];
                     /** Format: uuid */
                     id: string;
                     criteria_version: number;
@@ -8417,11 +8590,17 @@ export interface components {
                 company_id: string;
                 company_name: string;
                 /** @enum {string} */
-                kind: "qa" | "stress" | "interactive";
+                kind: "qa" | "stress" | "interactive" | "probe";
                 /** @enum {string} */
                 status: "pending" | "running" | "completed" | "failed" | "canceled" | "purging" | "purged";
                 /** @enum {string|null} */
                 ai_mode: "real" | "mock" | null;
+                dataset: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    kind: string;
+                } | null;
                 params: unknown;
                 cases_total: number;
                 cases_passed: number;
@@ -8463,11 +8642,17 @@ export interface components {
             company_id: string;
             company_name: string;
             /** @enum {string} */
-            kind: "qa" | "stress" | "interactive";
+            kind: "qa" | "stress" | "interactive" | "probe";
             /** @enum {string} */
             status: "pending" | "running" | "completed" | "failed" | "canceled" | "purging" | "purged";
             /** @enum {string|null} */
             ai_mode: "real" | "mock" | null;
+            dataset: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                kind: string;
+            } | null;
             params: unknown;
             cases_total: number;
             cases_passed: number;
@@ -8572,9 +8757,15 @@ export interface components {
             /** Format: uuid */
             company_id: string;
             /** @enum {string} */
-            kind: "qa" | "stress";
+            kind: "qa" | "stress" | "probe";
             /** Format: uuid */
-            agent_id: string;
+            agent_id?: string;
+            /** @enum {string} */
+            probe_kind?: "catalog_search" | "recognition" | "intent";
+            /** Format: uuid */
+            dataset_id?: string;
+            k?: number;
+            limit_items?: number;
             /** Format: uuid */
             suite_id?: string;
             scenario_ids?: string[];
@@ -17329,6 +17520,190 @@ export interface components {
                 }[];
             }[];
         };
+    
+        QualityProbeResultsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                dataset_item_id: string;
+                input: {
+                    [key: string]: unknown;
+                };
+                image_url: string | null;
+                hit: boolean;
+                rank: number | null;
+                returned: unknown;
+                expected: unknown;
+                confidence: string | null;
+                top_score: number | null;
+                margin: number | null;
+                degraded: boolean | null;
+                method: string | null;
+                latency_ms: number;
+                error: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QualityDatasetsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                /** @enum {string} */
+                kind: "catalog_search" | "recognition" | "intent";
+                name: string;
+                description: string | null;
+                /** @enum {string} */
+                status: "active" | "archived";
+                items_count: number;
+                labeled_count: number;
+                last_run: {
+                    /** Format: uuid */
+                    run_id: string;
+                    /** Format: date-time */
+                    finished_at: string | null;
+                    metrics: unknown;
+                } | null;
+                created_by: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QualityDatasetDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            /** @enum {string} */
+            kind: "catalog_search" | "recognition" | "intent";
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "active" | "archived";
+            items_count: number;
+            labeled_count: number;
+            last_run: {
+                /** Format: uuid */
+                run_id: string;
+                /** Format: date-time */
+                finished_at: string | null;
+                metrics: unknown;
+            } | null;
+            created_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateQualityDatasetDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** @enum {string} */
+            kind: "catalog_search" | "recognition" | "intent";
+            name: string;
+            description?: string | null;
+        };
+        UpdateQualityDatasetDto: {
+            name?: string;
+            description?: string | null;
+            /** @enum {string} */
+            status?: "active" | "archived";
+        };
+        ImportQualityDatasetDto: {
+            /** @default 30 */
+            days: number;
+            /** @default 200 */
+            limit: number;
+        };
+        QualityDatasetItemsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "trace" | "turn_metric" | "manual" | "ai";
+                input: {
+                    [key: string]: unknown;
+                };
+                suggested: {
+                    [key: string]: unknown;
+                } | null;
+                expected: {
+                    [key: string]: unknown;
+                } | null;
+                /** @enum {string} */
+                label_status: "unlabeled" | "labeled" | "disputed" | "skipped";
+                labeled_by: string | null;
+                /** Format: date-time */
+                labeled_at: string | null;
+                source_ref: {
+                    [key: string]: unknown;
+                } | null;
+                image_url: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        AddQualityDatasetItemDto: {
+            input: {
+                [key: string]: unknown;
+            };
+            expected?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        LabelQualityDatasetItemDto: {
+            /** @enum {string} */
+            status: "unlabeled" | "labeled" | "disputed" | "skipped";
+            expected?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        QualityDatasetImageUrlDto: {
+            url: string | null;
+        };
+        QualityTenantCatalogSearchDto: {
+            data: {
+                /** Format: uuid */
+                product_id: string;
+                sku: string;
+                name: string;
+                category_path: string | null;
+                price_cents: number;
+                currency: string;
+                has_image: boolean;
+                available: boolean;
+            }[];
+        };
+        QualityTenantIntentionsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                description: string;
+                type: string;
+                is_system: boolean;
+            }[];
+        };
     };
     responses: never;
     parameters: never;
@@ -19497,7 +19872,7 @@ export interface operations {
         parameters: {
             query?: {
                 company_id?: string;
-                kind?: "qa" | "stress" | "interactive";
+                kind?: "qa" | "stress" | "interactive" | "probe";
                 status?: "pending" | "running" | "completed" | "failed" | "canceled" | "purging" | "purged";
                 page?: number;
                 page_size?: number;
@@ -29985,6 +30360,326 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                };
+            };
+        };
+    };
+    QualityRunsController_probeResults_v1: {
+        parameters: {
+            query?: {
+                only_misses?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityProbeResultsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                kind?: "catalog_search" | "recognition" | "intent";
+                status?: "active" | "archived";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQualityDatasetDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQualityDatasetDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_startImport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportQualityDatasetDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_items_v1: {
+        parameters: {
+            query?: {
+                label_status?: "unlabeled" | "labeled" | "disputed" | "skipped";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetItemsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_addItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddQualityDatasetItemDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_labelItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelQualityDatasetItemDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_removeItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_imageUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetImageUrlDto"];
+                };
+            };
+        };
+    };
+    QualityTenantLookupController_catalogSearch_v1: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityTenantCatalogSearchDto"];
+                };
+            };
+        };
+    };
+    QualityTenantLookupController_intentions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityTenantIntentionsDto"];
                 };
             };
         };

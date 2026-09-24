@@ -180,6 +180,11 @@ export type RunParams = {
   turns_per_conversation: number | null;
   mock_latency_ms: number | null;
   spend_cap_usd: number | null;
+  /** F4: solo probe */
+  probe_kind: "catalog_search" | "recognition" | "intent" | null;
+  dataset_id: string | null;
+  k: number | null;
+  limit_items: number | null;
 };
 
 export function parseRunParams(raw: unknown): RunParams {
@@ -191,6 +196,13 @@ export function parseRunParams(raw: unknown): RunParams {
     turns_per_conversation: asNumberOrNull(record.turns_per_conversation),
     mock_latency_ms: asNumberOrNull(record.mock_latency_ms),
     spend_cap_usd: asNumberOrNull(record.spend_cap_usd),
+    probe_kind:
+      record.probe_kind === "catalog_search" || record.probe_kind === "recognition" || record.probe_kind === "intent"
+        ? record.probe_kind
+        : null,
+    dataset_id: typeof record.dataset_id === "string" ? record.dataset_id : null,
+    k: asNumberOrNull(record.k),
+    limit_items: asNumberOrNull(record.limit_items),
   };
 }
 

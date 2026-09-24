@@ -144,6 +144,10 @@ describe("parseRunParams / parseCaseTimings", () => {
       turns_per_conversation: null,
       mock_latency_ms: null,
       spend_cap_usd: null,
+      probe_kind: null,
+      dataset_id: null,
+      k: null,
+      limit_items: null,
     });
     expect(parseRunParams(null).concurrency).toBeNull();
   });

@@ -48,6 +48,32 @@ export const MAX_THRESHOLD_MS = 600_000;
 export const MAX_PRODUCT_CODES = 20;
 export const MAX_SUITE_SCENARIOS = 50;
 export const CUSTOMER_NAME_MAX = 120;
+export const MAX_ATTACHMENTS = 3;
+
+// ─── Adjuntos del escenario (F4) ────────────────────────────────────────────
+
+export type ScenarioAttachment = {
+  dataset_item_id: string;
+  label: string;
+  when: "first_turn" | "sim_decides";
+};
+
+/** Parseo defensivo del Json de `attachments` (entradas ilegibles se descartan). */
+export function parseScenarioAttachments(raw: unknown): ScenarioAttachment[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const record = entry as Record<string, unknown>;
+    if (typeof record.dataset_item_id !== "string" || record.dataset_item_id.length === 0) return [];
+    return [
+      {
+        dataset_item_id: record.dataset_item_id,
+        label: typeof record.label === "string" ? record.label : "foto",
+        when: record.when === "sim_decides" ? ("sim_decides" as const) : ("first_turn" as const),
+      },
+    ];
+  });
+}
 
 // ─── Criterios de éxito (unión discriminada local, criteria_version 2) ──────
 

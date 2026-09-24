@@ -13,6 +13,9 @@ jest.mock("../../../../../infrastructure/api/hooks/use-quality-scenarios", () =>
   useUpdateScenario: () => ({ mutateAsync: updateMutateAsync, isPending: false }),
 }));
 
+// El editor de adjuntos (F4) lee datasets y tenants: fuera del alcance de este test
+jest.mock("../AttachmentsEditor", () => ({ AttachmentsEditor: () => null }));
+
 // El DetailSheet real usa portal + framer-motion; para el form basta el contenido.
 jest.mock("@/shared/components/features/detail-sheet", () => ({
   DetailSheet: ({ open, title, children }: { open: boolean; title?: React.ReactNode; children?: React.ReactNode }) =>
@@ -36,6 +39,7 @@ const SCENARIO: Scenario = {
   success_criteria: [{ kind: "order_created" }],
   criteria_version: 2,
   customer_name: null,
+  attachments: [],
   is_system: false,
   cloned_from_id: null,
   status: "active",

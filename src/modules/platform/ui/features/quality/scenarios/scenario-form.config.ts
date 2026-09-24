@@ -19,6 +19,8 @@ import {
   MAX_TURNS_MIN,
   NAME_MAX,
   NAME_MIN,
+  MAX_ATTACHMENTS,
+  parseScenarioAttachments,
   parseSuccessCriteria,
   PERSONA_MAX,
   PERSONA_MIN,
@@ -27,6 +29,7 @@ import {
   validateCriteriaSet,
   type CreateScenarioDTO,
   type Scenario,
+  type ScenarioAttachment,
   type SuccessCriterion,
   type UpdateScenarioDTO,
 } from "../../../../domain/quality";
@@ -70,6 +73,12 @@ export const scenarioFormSchema = z.object({
       ctx.addIssue({ code: "custom", message });
     }
   }),
+  /** F4: fotos que envía el cliente simulado (≤3, con etiqueta). */
+  attachments: z.array(z.custom<ScenarioAttachment>()).max(MAX_ATTACHMENTS, `Máximo ${MAX_ATTACHMENTS} adjuntos`).superRefine((attachments, ctx) => {
+    if (attachments.some((attachment) => attachment.label.trim().length === 0)) {
+      ctx.addIssue({ code: "custom", message: "Cada adjunto necesita una etiqueta" });
+    }
+  }),
 });
 
 export type ScenarioFormValues = z.infer<typeof scenarioFormSchema>;
@@ -84,6 +93,7 @@ export const defaultScenarioFormValues: ScenarioFormValues = {
   customer_name: "",
   tags: "",
   success_criteria: [],
+  attachments: [],
 };
 
 export function scenarioToFormValues(scenario: Scenario): ScenarioFormValues {
@@ -97,6 +107,7 @@ export function scenarioToFormValues(scenario: Scenario): ScenarioFormValues {
     customer_name: scenario.customer_name ?? "",
     tags: scenario.tags.join(", "),
     success_criteria: parseSuccessCriteria(scenario.success_criteria),
+    attachments: parseScenarioAttachments(scenario.attachments),
   };
 }
 
@@ -120,6 +131,7 @@ export function toCreateScenarioDTO(values: ScenarioFormValues): CreateScenarioD
     ...(values.customer_name?.trim() ? { customer_name: values.customer_name.trim() } : {}),
     tags: parseTagsInput(values.tags),
     success_criteria: toWireCriteria(values.success_criteria),
+    attachments: values.attachments.map((attachment) => ({ ...attachment, label: attachment.label.trim() })),
   };
 }
 
@@ -134,5 +146,6 @@ export function toUpdateScenarioDTO(values: ScenarioFormValues): UpdateScenarioD
     customer_name: values.customer_name?.trim() ? values.customer_name.trim() : null,
     tags: parseTagsInput(values.tags),
     success_criteria: toWireCriteria(values.success_criteria),
+    attachments: values.attachments.map((attachment) => ({ ...attachment, label: attachment.label.trim() })),
   };
 }

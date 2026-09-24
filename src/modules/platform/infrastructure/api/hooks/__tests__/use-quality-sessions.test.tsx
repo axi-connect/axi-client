@@ -131,7 +131,8 @@ describe("useSessionQuery", () => {
 
 describe("useSessionQuery con medios (B2)", () => {
   it("una imagen cuyo adjunto y reconocimiento llegan en polls posteriores termina con url y chip", async () => {
-    const image = { ...MESSAGE, id: "0199-0002", content_type: "image", body: null, provider_message_id: "sim-in:2" };
+    // Recién llegada: dentro de la gracia de N5 (60 s)
+    const image = { ...MESSAGE, id: "0199-0002", content_type: "image", body: null, provider_message_id: "sim-in:2", created_at: new Date().toISOString() };
     const attachment = { id: "att-1", mime_type: "image/jpeg", filename: "f.jpg", size_bytes: 10, url: "https://x/1" };
     const recognition = { status: "skipped", skip_reason: "disabled", error_reason: null, kind: null, description: null, top_score: null, margin: null, degraded: false, latency_ms: null, candidates: [] };
     mockedClient.GET
