@@ -140,6 +140,11 @@ describe("JourneyEditor", () => {
     expect(screen.queryByText(/El agente también puede/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
     expect(screen.getByText("El avance automático está apagado para tu negocio; hoy solo una persona la mueve.")).toBeInTheDocument();
+    // El pie tampoco dice «La mueven solos» ni nombra al agente (V5).
+    const panel = document.getElementById("journey-stage-s2") as HTMLElement;
+    expect(panel).not.toHaveTextContent(/La mueven solos/);
+    expect(panel).not.toHaveTextContent(/agente/);
+    expect(panel).toHaveTextContent(/Con el avance automático encendido la moverían: cotización enviada\. Hoy está apagado para tu negocio\. La mueve una persona\./);
   });
 
   it("sin el campo `switches` (servidor viejo) se lee como apagado (Q8)", async () => {
@@ -158,6 +163,10 @@ describe("JourneyEditor", () => {
     expect(screen.getByText(/El agente no mueve etapas en tu negocio/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Propuesta/ }));
     expect(screen.getByText("Sus eventos la mueven.")).toBeInTheDocument();
+    // Las reglas sí la mueven, pero el pie no promete al agente (V5).
+    const panel = document.getElementById("journey-stage-s2") as HTMLElement;
+    expect(panel).toHaveTextContent(/La mueven solos: cotización enviada\.Quitar cadencia/);
+    expect(panel).not.toHaveTextContent(/agente/);
   });
 
   it("los dos encendidos: el texto de siempre, con el agente", async () => {

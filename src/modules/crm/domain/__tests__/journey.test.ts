@@ -12,6 +12,7 @@ import {
   autoAdvanceAfterKindChange,
   autoAdvanceHint,
   journeyExplainerText,
+  movesOnCopy,
   readJourneySwitches,
   isRevertibleMove,
   journeyRuleLabel,
@@ -182,5 +183,28 @@ describe("interruptores del recorrido (Q8)", () => {
     expect(autoAdvanceHint(on, { rules: false, ai: true })).toMatch(/solo una persona o el agente/);
     expect(autoAdvanceHint(manual, off)).toBe("Apagado: solo una persona la mueve.");
     expect(autoAdvanceHint(manual, all)).toBe("Apagado: solo una persona o el agente la mueven.");
+  });
+});
+
+describe("movesOnCopy (V5)", () => {
+  const stage = { stage_kind: "proposal" as const, auto_advance: true, moves_on: ["cotización enviada"] };
+  const text = (c: ReturnType<typeof movesOnCopy>) => `${c.prefix}${c.rules.join(" · ")}${c.suffix}`;
+
+  it("con las reglas del negocio apagadas habla en condicional", () => {
+    expect(text(movesOnCopy(stage, { rules: false, ai: false }))).toBe(
+      "Con el avance automático encendido la moverían: cotización enviada. Hoy está apagado para tu negocio. La mueve una persona.",
+    );
+  });
+
+  it("con el agente apagado no lo nombra; encendido, sí", () => {
+    expect(text(movesOnCopy(stage, { rules: true, ai: false }))).toBe("La mueven solos: cotización enviada.");
+    expect(text(movesOnCopy(stage, { rules: true, ai: true }))).toMatch(/El agente también puede moverla/);
+    expect(text(movesOnCopy({ ...stage, moves_on: [] }, { rules: true, ai: false }))).toBe("Ninguna regla la mueve sola. La mueve una persona.");
+  });
+
+  it("con «Se mueve sola» apagado en la etapa, tampoco promete", () => {
+    expect(text(movesOnCopy({ ...stage, auto_advance: false }, { rules: true, ai: true }))).toBe(
+      "La moverían: cotización enviada, pero «Se mueve sola» está apagado. La mueven una persona o el agente.",
+    );
   });
 });

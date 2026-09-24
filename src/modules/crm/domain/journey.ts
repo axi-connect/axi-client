@@ -194,6 +194,34 @@ export function autoAdvanceHint(stage: Pick<JourneyStageDTO, "stage_kind" | "aut
   return switches.ai ? "Sus eventos la mueven; el agente también puede." : "Sus eventos la mueven.";
 }
 
+/**
+ * El pie de la ficha de una etapa: qué reglas la mueven de verdad (V5). Las
+ * reglas se pintan en negrita entre `prefix` y `suffix`; con el avance
+ * automático apagado (del negocio o de la etapa) se dicen en condicional, y
+ * con el agente apagado no se le nombra.
+ */
+export function movesOnCopy(
+  stage: Pick<JourneyStageDTO, "stage_kind" | "auto_advance" | "moves_on">,
+  switches: JourneySwitches,
+): { prefix: string; rules: readonly string[]; suffix: string } {
+  if (stage.stage_kind === "custom") {
+    return { prefix: "Una etapa personalizada no se mueve sola ni entra en las tasas del recorrido.", rules: [], suffix: "" };
+  }
+  const who = switches.ai ? "La mueven una persona o el agente." : "La mueve una persona.";
+  if (stage.moves_on.length === 0) return { prefix: `Ninguna regla la mueve sola. ${who}`, rules: [], suffix: "" };
+  if (!switches.rules) {
+    return { prefix: "Con el avance automático encendido la moverían: ", rules: stage.moves_on, suffix: `. Hoy está apagado para tu negocio. ${who}` };
+  }
+  if (!stage.auto_advance) {
+    return { prefix: "La moverían: ", rules: stage.moves_on, suffix: `, pero «Se mueve sola» está apagado. ${who}` };
+  }
+  return {
+    prefix: "La mueven solos: ",
+    rules: stage.moves_on,
+    suffix: switches.ai ? ". El agente también puede moverla si el cliente lo pide o lo descarta." : ".",
+  };
+}
+
 /* ───────────────────────────── Badges ───────────────────────────────────── */
 
 /** El tipo de la etapa como badge NEUTRO (dot): la etapa no es un semáforo. */

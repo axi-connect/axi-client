@@ -21,6 +21,7 @@ import {
   EXHAUSTED_ACTIONS,
   EXHAUSTED_ACTION_LABELS,
   autoAdvanceHint,
+  movesOnCopy,
   waitOptionLabel,
   type CadenceChannel,
   type ExhaustedAction,
@@ -180,6 +181,7 @@ export function JourneyCadenceFields({
       ? [...CADENCE_WAIT_OPTIONS, cadence.wait_hours].sort((a, b) => a - b)
       : CADENCE_WAIT_OPTIONS;
   const autoHint = autoAdvanceHint(stage, switches);
+  const movesOn = movesOnCopy(stage, switches);
 
   return (
     <div className="border-t border-border/70 bg-foreground/[0.02]">
@@ -322,22 +324,14 @@ export function JourneyCadenceFields({
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <Zap className="mt-0.5 size-3.5 shrink-0" aria-hidden />
           <span>
-            {stage.stage_kind === "custom" ? (
-              "Una etapa personalizada no se mueve sola ni entra en las tasas del recorrido."
-            ) : stage.moves_on.length === 0 ? (
-              "Ninguna regla la mueve sola. La mueven una persona o el agente."
-            ) : (
-              <>
-                La mueven solos:{" "}
-                {stage.moves_on.map((rule, index) => (
-                  <span key={rule}>
-                    {index > 0 && " · "}
-                    <b className="font-medium text-foreground">{rule}</b>
-                  </span>
-                ))}
-                . El agente también puede moverla si el cliente lo pide o lo descarta.
-              </>
-            )}
+            {movesOn.prefix}
+            {movesOn.rules.map((rule, index) => (
+              <span key={rule}>
+                {index > 0 && " · "}
+                <b className="font-medium text-foreground">{rule}</b>
+              </span>
+            ))}
+            {movesOn.suffix}
           </span>
         </p>
         {cadence !== null && (
