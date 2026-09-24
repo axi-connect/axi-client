@@ -13973,6 +13973,7 @@ export interface components {
                 total_cents: number;
                 paid_cents: number;
                 balance_cents: number;
+                overdue_cents: number;
                 /** Format: date */
                 next_due_at: string | null;
                 days_overdue: number;

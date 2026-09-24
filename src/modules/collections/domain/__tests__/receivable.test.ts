@@ -27,6 +27,7 @@ const row = (overrides: Partial<ReceivableDTO> = {}): ReceivableDTO =>
     total_cents: 1_000_000,
     paid_cents: 300_000,
     balance_cents: 700_000,
+    overdue_cents: 0,
     next_due_at: null,
     days_overdue: 0,
     bucket: "current",

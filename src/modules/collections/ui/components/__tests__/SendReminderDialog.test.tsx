@@ -28,6 +28,7 @@ function plan(dueAt: string) {
     total_cents: 9_640_000,
     paid_cents: 0,
     balance_cents: 9_640_000,
+    overdue_cents: 0,
     deposit_cents: 0,
     service_date: null,
     final_due_at: null,

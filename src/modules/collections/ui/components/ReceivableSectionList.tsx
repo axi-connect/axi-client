@@ -126,7 +126,19 @@ function Row({
                 : formatShortDate(row.next_due_at)}
             </>
           ) : (
-            due
+            <>
+              {due}
+              {late &&
+              row.overdue_cents > 0 &&
+              row.overdue_cents < row.balance_cents ? (
+                // Lo vencido no siempre es todo lo que debe (QA F4-08): con la
+                // cuota 2 vencida y la 3 en noviembre, aquí va la 2.
+                <span className="text-muted-foreground">
+                  {" · "}
+                  {formatMoney(row.overdue_cents, row.currency)}
+                </span>
+              ) : null}
+            </>
           )}
         </span>
       </span>

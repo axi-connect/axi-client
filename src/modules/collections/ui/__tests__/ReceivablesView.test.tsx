@@ -35,6 +35,7 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   total_cents: 1_000_000,
   paid_cents: 300_000,
   balance_cents: 700_000,
+  overdue_cents: 0,
   next_due_at: null,
   days_overdue: 0,
   bucket: "current",
@@ -105,6 +106,45 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
     expect(headings[1]).toHaveTextContent("En mora");
     // La mora se dice en días, no en un color.
     expect(screen.getByText("Venció hace 47 días")).toBeInTheDocument();
+  });
+
+  it("QA F4-08: la fila dice cuánto de lo que debe está vencido cuando no es todo; si es todo, no lo repite", async () => {
+    mockList.mockResolvedValue({
+      data: [
+        row({
+          plan_id: "bruno",
+          order_id: "bruno",
+          contact_name: "Bruno Díaz",
+          days_overdue: 6,
+          next_due_at: "2026-09-18",
+          balance_cents: 2_056_566_00,
+          overdue_cents: 685_522_00,
+        }),
+        row({
+          plan_id: "todo",
+          order_id: "todo",
+          contact_name: "Camilo Ortiz",
+          days_overdue: 47,
+          next_due_at: "2026-08-01",
+          balance_cents: 8_100_000_00,
+          overdue_cents: 8_100_000_00,
+        }),
+      ],
+      meta: { total: 2, page: 1, page_size: 100 },
+    });
+    mockStats.mockResolvedValue(stats());
+
+    render(<ReceivablesView />);
+
+    // Bruno: el saldo grande y, junto al vencimiento, SOLO lo que falta de la cuota vencida
+    expect(await screen.findByText("$ 2.056.566")).toBeInTheDocument();
+    expect(screen.getByText(/Venció hace 6 días/)).toHaveTextContent(
+      /Venció hace 6 días · \$ 685\.522/,
+    );
+    // Camilo debe todo y todo está vencido: no se repite la cifra
+    expect(screen.getByText(/Venció hace 47 días/)).toHaveTextContent(
+      /^Venció hace 47 días$/,
+    );
   });
 
   it("un plan en pausa sigue en la lista, y lo dice", async () => {
