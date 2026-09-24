@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, MessageCircle, Tag } from "lucide-react";
+import { Lock, MessageCircle, Tag, TriangleAlert } from "lucide-react";
 
+import { formatMoney, formatShortDate } from "@/core/lib/format";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
 import {
+  FX_SAMPLE_CENTS,
+  localToday,
+  manualRateExpired,
   MAX_SPREAD_BPS,
   percentToSpread,
+  sampleQuoteCents,
   spreadToPercent,
   type FxSettingsDTO,
+  type LatestFxRateDTO,
 } from "@/modules/payments/domain/fx-settings";
 
 const SETTLEMENT_CURRENCIES = [
@@ -43,12 +49,18 @@ function Row({ title, hint, control }: { title: string; hint: string; control: R
  */
 export function FxSettingsForm({
   settings,
+  latest,
   saving,
   onSave,
+  today = localToday(),
 }: {
   settings: FxSettingsDTO;
+  /** La tasa que manda HOY: de ella sale el ejemplo, para no contradecir a la tarjeta. */
+  latest: LatestFxRateDTO;
   saving: boolean;
   onSave: (next: FxSettingsDTO) => void;
+  /** YYYY-MM-DD local; inyectable en tests. */
+  today?: string;
 }) {
   const [currency, setCurrency] = useState(settings.settlement_currency);
   const [spread, setSpread] = useState(spreadToPercent(settings.spread_bps));
@@ -57,6 +69,16 @@ export function FxSettingsForm({
   const [manualUntil, setManualUntil] = useState(settings.manual_rate?.valid_until ?? "");
   const [indicative, setIndicative] = useState(settings.show_indicative_quotes);
   const [error, setError] = useState<string | null>(null);
+
+  // La manual guardada venció y sigue tal cual en el formulario: el servidor ya
+  // cotiza con la oficial, y la pantalla tiene que decirlo (QA real, F2).
+  const expiredNotice =
+    manualOn &&
+    manualRateExpired(settings, today) &&
+    manualUntil === settings.manual_rate?.valid_until
+      ? settings.manual_rate.valid_until
+      : null;
+  const sampleCents = sampleQuoteCents(latest);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -158,14 +180,28 @@ export function FxSettingsForm({
                 id="fx-manual-until"
                 type="date"
                 value={manualUntil}
+                aria-invalid={expiredNotice !== null}
                 onChange={(event) => setManualUntil(event.target.value)}
               />
             </div>
+            {expiredNotice !== null ? (
+              <p role="status" className="flex items-start gap-2 text-xs text-warning sm:col-span-2">
+                <TriangleAlert aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+                <span>
+                  Tu tasa manual venció el {formatShortDate(expiredNotice)}: hoy se cotiza con la oficial y el
+                  ajuste. Ponle una fecha nueva o apágala.
+                </span>
+              </p>
+            ) : null}
           </div>
         ) : null}
         <Row
           title="Mostrar el precio en pesos al cotizar"
-          hint="El agente dice «≈ $ 11.068.610 a la TRM de hoy» junto al precio. Indicativo hasta confirmar."
+          hint={
+            sampleCents === null
+              ? "El agente muestra el equivalente en pesos a la tasa del día junto al precio. Indicativo hasta confirmar."
+              : `El agente dice «≈ ${formatMoney(sampleCents, "COP")} a la tasa de hoy» junto al precio de ${formatMoney(FX_SAMPLE_CENTS, "USD")}. Indicativo hasta confirmar.`
+          }
           control={
             <Switch
               checked={indicative}

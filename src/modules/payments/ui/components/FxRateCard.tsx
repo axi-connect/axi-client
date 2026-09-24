@@ -7,15 +7,15 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { StatusDotBadge } from "@/shared/components/ui/status-badges";
 import {
-  FX_SOURCE_LABELS,
   formatRate,
+  FX_SAMPLE_CENTS,
+  FX_SOURCE_LABELS,
   fxNotice,
+  sampleQuoteCents,
   spreadToPercent,
   type LatestFxRateDTO,
 } from "@/modules/payments/domain/fx-settings";
 
-/** Importe de ejemplo: un paquete de US$ 3.500 en centavos. */
-const SAMPLE_CENTS = 350_000;
 
 function Line({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -95,11 +95,11 @@ export function FxRateCard({
           {effective !== null ? (
             <p className="mt-3.5 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-secondary px-3.5 py-3 text-sm">
               <span>
-                Un paquete de <strong className="font-medium tabular-nums">{formatMoney(SAMPLE_CENTS, "USD")}</strong> se
+                Un paquete de <strong className="font-medium tabular-nums">{formatMoney(FX_SAMPLE_CENTS, "USD")}</strong> se
                 cotiza hoy en
               </span>
               <strong className="font-medium tabular-nums">
-                ≈ {formatMoney(Math.round(SAMPLE_CENTS * effective.rate), "COP")}
+                ≈ {formatMoney(sampleQuoteCents(latest) ?? 0, "COP")}
               </strong>
             </p>
           ) : null}

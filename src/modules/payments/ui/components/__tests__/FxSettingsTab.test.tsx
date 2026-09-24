@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { HttpError } from "@/core/api/problem";
 import type { FxSettingsDTO, LatestFxRateDTO } from "@/modules/payments/domain/fx-settings";
@@ -63,6 +63,49 @@ describe("FxSettingsTab", () => {
     expect(await screen.findByText("$ 3.100,45")).toBeInTheDocument();
     expect(screen.getByText("$ 3.162,46")).toBeInTheDocument();
     expect(screen.getByText(/Un paquete de/)).toBeInTheDocument();
+  });
+
+  it("QA F2: el ejemplo del formulario sale de la tasa EFECTIVA, la misma que la tarjeta; sin tasa, no da cifra", async () => {
+    // Con la efectiva del fixture, 3.500 × 3.162,46 = 11.068.610: la misma cifra en las dos columnas.
+    render(<FxSettingsTab />);
+    expect(await screen.findByText(/≈ \$ 11\.068\.610 a la tasa de hoy/)).toBeInTheDocument();
+    expect(screen.getAllByText(/11\.068\.610/)).toHaveLength(2);
+    cleanup();
+    // Otra tasa, otra cifra: el texto no está escrito a mano
+    mockGetLatest.mockResolvedValue({
+      ...latest,
+      effective: { ...latest.effective!, rate: 3329.68 },
+    });
+    render(<FxSettingsTab />);
+    expect(await screen.findByText(/≈ \$ 11\.653\.880 a la tasa de hoy/)).toBeInTheDocument();
+    cleanup();
+    mockGetLatest.mockResolvedValue({ official: null, effective: null });
+    render(<FxSettingsTab />);
+    expect(await screen.findByText(/equivalente en pesos a la tasa del día/)).toBeInTheDocument();
+    expect(screen.queryByText(/a la tasa de hoy»/)).not.toBeInTheDocument();
+  });
+
+  it("QA F2: una tasa manual guardada y VENCIDA lo dice; una vigente, no", async () => {
+    mockGetSettings.mockResolvedValue({
+      ...settings,
+      manual_rate: { rate: 4000, valid_until: "2026-09-01" },
+    });
+    render(<FxSettingsTab />);
+    const notice = await screen.findByText(/Tu tasa manual venció el/);
+    expect(notice).toHaveTextContent(/venció el 01 de sept de 2026/);
+    expect(notice.closest("[role=status]")).not.toBeNull();
+    expect(screen.getByLabelText("Vigente hasta")).toHaveAttribute("aria-invalid", "true");
+    // Al mover la fecha, el aviso se va: ya no describe lo guardado
+    fireEvent.change(screen.getByLabelText("Vigente hasta"), { target: { value: "2099-12-31" } });
+    expect(screen.queryByText(/venció/)).not.toBeInTheDocument();
+    cleanup();
+    mockGetSettings.mockResolvedValue({
+      ...settings,
+      manual_rate: { rate: 4000, valid_until: "2099-12-31" },
+    });
+    render(<FxSettingsTab />);
+    await screen.findByLabelText("Vigente hasta");
+    expect(screen.queryByText(/venció/)).not.toBeInTheDocument();
   });
 
   it("sin la función explica cómo encenderla en vez de romper", async () => {

@@ -60,3 +60,29 @@ export function fxNotice(latest: LatestFxRateDTO): "none" | "empty" | "stale" | 
 export function manualRateActive(settings: FxSettingsDTO, today: string): boolean {
   return settings.manual_rate !== null && settings.manual_rate.valid_until >= today;
 }
+
+/**
+ * Una manual GUARDADA que ya venció: el servidor la ignora y cotiza con la
+ * oficial más el ajuste, pero la pantalla seguía enseñando el interruptor
+ * encendido con su cifra como si mandara (QA real, F2).
+ */
+export function manualRateExpired(settings: FxSettingsDTO, today: string): boolean {
+  return settings.manual_rate !== null && !manualRateActive(settings, today);
+}
+
+/** Importe de ejemplo que comparten la tarjeta y el formulario: un paquete de US$ 3.500. */
+export const FX_SAMPLE_CENTS = 350_000;
+
+/**
+ * El equivalente del ejemplo a la tasa EFECTIVA, o null si no hay tasa. La
+ * tarjeta y el formulario lo calculan igual: dos cifras distintas para el
+ * mismo paquete en la misma pantalla era un hallazgo de la QA.
+ */
+export function sampleQuoteCents(latest: LatestFxRateDTO): number | null {
+  return latest.effective === null ? null : Math.round(FX_SAMPLE_CENTS * latest.effective.rate);
+}
+
+/** La fecha de hoy en el calendario LOCAL, como la escribe el input `date` (YYYY-MM-DD). */
+export function localToday(now: Date = new Date()): string {
+  return now.toLocaleDateString("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
+}

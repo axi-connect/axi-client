@@ -117,7 +117,12 @@ export function FxSettingsTab() {
   return (
     <div className="grid items-start gap-4 lg:grid-cols-2">
       <FxRateCard latest={state.latest} onRefresh={() => void refresh()} refreshing={refreshing} />
-      <FxSettingsForm settings={state.settings} saving={saving} onSave={(next) => void save(next)} />
+      <FxSettingsForm
+        settings={state.settings}
+        latest={state.latest}
+        saving={saving}
+        onSave={(next) => void save(next)}
+      />
     </div>
   );
 }
