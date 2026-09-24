@@ -168,7 +168,7 @@ describe("carrera entre cargas", () => {
     mockGet.mockImplementation((path) =>
       path === "/commercial/goal" ? new Promise((resolve) => { releaseGoal = resolve; }) : Promise.resolve({}),
     );
-    mockPut.mockResolvedValue(goal);
+    mockPut.mockResolvedValue(withGoal);
     const first = useCommercialStore.getState().load();
     await useCommercialStore.getState().saveGoal({ target_revenue_cents: 1 });
     const paceCalls = mockGet.mock.calls.filter(([path]) => path === "/commercial/pace").length;
@@ -189,7 +189,7 @@ describe("carrera entre cargas", () => {
       if (path === "/commercial/goal") return Promise.resolve(withGoal);
       return Promise.resolve({});
     });
-    mockPut.mockResolvedValue(goal);
+    mockPut.mockResolvedValue(withGoal);
 
     await useCommercialStore.getState().saveGoal({ target_revenue_cents: 1 }); // encola pace #1
     const reload = useCommercialStore.getState().load(); // encola pace #2
@@ -251,7 +251,8 @@ describe("saveGoal", () => {
   it("guarda, deja la meta lista y recarga plan y ritmo", async () => {
     serve({ "/commercial/goal": { ...withGoal, goal: null } });
     await useCommercialStore.getState().load();
-    mockPut.mockResolvedValue(goal);
+    // El PUT responde la vista del GET (`{ goal, seed }`), no la meta sola (Q1).
+    mockPut.mockResolvedValue(withGoal);
     serve({ "/commercial/plan": { status: "ready" }, "/commercial/pace": { status: "on_track" } });
 
     const saved = await useCommercialStore.getState().saveGoal({ target_revenue_cents: 3_000_000_000 });
@@ -265,6 +266,22 @@ describe("saveGoal", () => {
     expect(state.goal.data?.seed?.source).toBe("history");
     expect(state.saving).toBe(false);
     expect(mockGet).toHaveBeenCalledWith("/commercial/plan", undefined, undefined);
+  });
+
+  it("desenvuelve `{ goal, seed }` del PUT: la cabecera tiene cifra y fecha sin recargar (Q1)", async () => {
+    const saved45: CommercialGoalDTO = { ...goal, target_revenue_cents: 4_500_000_000, updated_at: "2026-09-23T20:00:00Z" };
+    const seed = { ...withGoal.seed, source: "benchmark" as const, niche_label: "Software y SaaS" };
+    mockPut.mockResolvedValue({ goal: saved45, seed });
+    serve({ "/commercial/plan": { status: "ready" }, "/commercial/pace": { status: "on_track" } });
+
+    const saved = await useCommercialStore.getState().saveGoal({ target_revenue_cents: 4_500_000_000 });
+
+    expect(saved.target_revenue_cents).toBe(4_500_000_000);
+    const data = useCommercialStore.getState().goal.data;
+    expect(data?.goal?.target_revenue_cents).toBe(4_500_000_000);
+    expect(data?.goal?.updated_at).toBe("2026-09-23T20:00:00Z");
+    expect(data?.goal).not.toHaveProperty("goal");
+    expect(data?.seed).toEqual(seed);
   });
 
   it("si falla, lanza al llamador y no toca la meta", async () => {

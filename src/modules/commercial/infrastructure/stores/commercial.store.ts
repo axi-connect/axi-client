@@ -249,10 +249,12 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
     saveGoal: async (input) => {
       set({ saving: true });
       try {
-        const goal = await putGoal(input);
-        // La semilla no se inventa: si no se había cargado, queda `null`.
+        // El PUT devuelve la vista del GET (`{ goal, seed }`), no la meta sola (Q1).
+        const response = await putGoal(input);
+        const goal = response.goal;
+        if (goal === null) throw new Error("El servidor no devolvió la meta guardada.");
         seq.goal += 1;
-        set((state) => ({ goal: ready({ goal, seed: state.goal.data?.seed ?? null }) }));
+        set({ goal: ready({ goal, seed: response.seed }) });
         void loadPaceAndPlan();
         return goal;
       } finally {

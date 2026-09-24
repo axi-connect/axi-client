@@ -1,7 +1,6 @@
 import { http } from "@/core/services/http";
 import type {
   CommercialApprovalResultDTO,
-  CommercialGoalDTO,
   CommercialPaceDTO,
   CommercialProposalDetailDTO,
   CommercialProposalDTO,
@@ -34,9 +33,14 @@ export function getGoal(): Promise<GoalResponseWireDTO> {
   return http.get<GoalResponseWireDTO>("/commercial/goal");
 }
 
-/** Fijar o cambiar la meta del mes en curso (a mitad de mes se recalcula desde hoy). */
-export function putGoal(input: GoalInputDTO): Promise<CommercialGoalDTO> {
-  return http.put<CommercialGoalDTO>("/commercial/goal", input);
+/**
+ * Fijar o cambiar la meta del mes en curso (a mitad de mes se recalcula desde hoy).
+ * Responde la MISMA vista que el GET (`{ goal, seed }`, `GoalResponseDto` en el
+ * contrato), no la meta sola: tratarla como la meta dejaba la cabecera vacía
+ * hasta recargar (Q1).
+ */
+export function putGoal(input: GoalInputDTO): Promise<GoalResponseWireDTO> {
+  return http.put<GoalResponseWireDTO>("/commercial/goal", input);
 }
 
 /** El plan vigente, o `null` si el periodo no tiene meta (200, no 404). */
