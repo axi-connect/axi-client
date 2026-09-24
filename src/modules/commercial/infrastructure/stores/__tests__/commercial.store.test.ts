@@ -248,6 +248,37 @@ describe("ritmo caducado (Q3)", () => {
     expect(paceCalls()).toBe(1 + PACE_STALE_MAX_RETRIES);
   });
 
+  it("con la pestaña oculta no programa el reintento (V4)", async () => {
+    jest.useFakeTimers();
+    const hidden = jest.spyOn(document, "hidden", "get").mockReturnValue(true);
+    mockGet.mockImplementation((path) => {
+      if (path === "/commercial/goal") return Promise.resolve(withGoal);
+      if (path === "/commercial/pace") return Promise.resolve({ status: "behind", stale: true });
+      return Promise.resolve({ status: "ready" });
+    });
+
+    await useCommercialStore.getState().load();
+    await jest.advanceTimersByTimeAsync(PACE_STALE_RETRY_MS * 3);
+
+    expect(paceCalls()).toBe(1);
+    hidden.mockRestore();
+  });
+
+  it("cancelStaleRetry cancela el reintento en vuelo (V4)", async () => {
+    jest.useFakeTimers();
+    mockGet.mockImplementation((path) => {
+      if (path === "/commercial/goal") return Promise.resolve(withGoal);
+      if (path === "/commercial/pace") return Promise.resolve({ status: "behind", stale: true });
+      return Promise.resolve({ status: "ready" });
+    });
+
+    await useCommercialStore.getState().load();
+    useCommercialStore.getState().cancelStaleRetry();
+    await jest.advanceTimersByTimeAsync(PACE_STALE_RETRY_MS * 3);
+
+    expect(paceCalls()).toBe(1);
+  });
+
   it("una recarga por evento sustituye al reintento pendiente (un solo temporizador)", async () => {
     jest.useFakeTimers();
     let stale = true;

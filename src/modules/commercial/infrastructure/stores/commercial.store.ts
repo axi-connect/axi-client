@@ -109,7 +109,10 @@ interface CommercialState {
   approveProposal: (id: string) => Promise<CommercialApprovalResultDTO>;
   /** Rechaza con motivo. Lanza al llamador (409/403 recargan la lista); la fila sale de la lista de pendientes. */
   rejectProposal: (id: string, reason: string | undefined) => Promise<RejectCommercialProposalResultDTO>;
-  /** Cancela el reintento pendiente de un ritmo caducado (Q3) y reinicia su cuenta. */
+  /**
+   * Cancela el reintento pendiente de un ritmo caducado (Q3) y reinicia su
+   * cuenta. Lo llaman al desmontar las pantallas que pintan el ritmo (V4).
+   */
   cancelStaleRetry: () => void;
 }
 
@@ -127,6 +130,10 @@ function blockerFor(error: unknown): CommercialBlocker {
  */
 export function isStaleDecision(error: unknown): boolean {
   return error instanceof HttpError && (error.status === 409 || error.status === 403);
+}
+
+function isHidden(): boolean {
+  return typeof document !== "undefined" && document.hidden;
 }
 
 function isAbort(error: unknown): boolean {
@@ -174,10 +181,13 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
       staleRetries = 0;
       return;
     }
-    if (staleRetries >= PACE_STALE_MAX_RETRIES) return;
+    // Pestaña oculta: nadie mira la ruta; al volver, el evento o la próxima
+    // carga traen lo nuevo (V4).
+    if (staleRetries >= PACE_STALE_MAX_RETRIES || isHidden()) return;
     staleRetries += 1;
     staleTimer = setTimeout(() => {
       staleTimer = null;
+      if (isHidden()) return;
       void get().reloadPace();
     }, PACE_STALE_RETRY_MS);
   }

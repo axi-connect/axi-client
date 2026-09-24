@@ -33,6 +33,7 @@ export function GoalProgressBlock() {
   const pace = useCommercialStore((state) => state.pace);
   const blocker = useCommercialStore((state) => state.blocker);
   const load = useCommercialStore((state) => state.load);
+  const cancelStaleRetry = useCommercialStore((state) => state.cancelStaleRetry);
 
   const canRead = hasPermission("commercial:read");
   const canManage = hasPermission("commercial:manage");
@@ -41,6 +42,9 @@ export function GoalProgressBlock() {
   useEffect(() => {
     if (enabled && goal.status === "idle") void load();
   }, [enabled, goal.status, load]);
+
+  // Al salir del Panel no queda un reintento de ritmo caducado en vuelo (V4).
+  useEffect(() => cancelStaleRetry, [cancelStaleRetry]);
 
   // F8: la franja se mueve sola con `commercial.pace_updated` (y la meta con
   // `goal_set`), sin recargar el Panel.

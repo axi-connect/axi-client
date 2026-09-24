@@ -34,6 +34,15 @@ beforeEach(() => {
 });
 
 describe("CommercialView", () => {
+  it("al desmontar cancela el reintento de un ritmo caducado (V4)", () => {
+    const cancelStaleRetry = jest.fn();
+    useCommercialStore.setState({ cancelStaleRetry });
+    const { unmount } = render(<CommercialView />);
+    expect(cancelStaleRetry).not.toHaveBeenCalled();
+    unmount();
+    expect(cancelStaleRetry).toHaveBeenCalledTimes(1);
+  });
+
   it("mientras las capacidades cargan NO se pinta el bloqueado: se espera", () => {
     mockEntitlements.mockReturnValue({ entitlements: null, loaded: false, hasCapability: () => false });
     render(<CommercialView />);

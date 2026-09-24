@@ -72,6 +72,10 @@ export function CommercialView() {
     if (enabled && canRead && goal.status === "idle") void load();
   }, [enabled, canRead, goal.status, load]);
 
+  // Al salir de la ruta no queda un reintento de ritmo caducado en vuelo (V4).
+  const cancelStaleRetry = useCommercialStore((state) => state.cancelStaleRetry);
+  useEffect(() => cancelStaleRetry, [cancelStaleRetry]);
+
   // Tiempo real (F8): la meta, el plan, el ritmo y «Axi propone» se recargan
   // al avisar el servidor, con debounce y sin romper la secuencia del store.
   useCommercialRealtime({ enabled: enabled && canRead && blocker === null, proposals: true });

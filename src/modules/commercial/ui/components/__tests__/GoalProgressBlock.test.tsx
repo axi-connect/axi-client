@@ -23,6 +23,14 @@ beforeEach(() => {
 });
 
 describe("GoalProgressBlock", () => {
+  it("al desmontar cancela el reintento de un ritmo caducado (V4)", () => {
+    const cancelStaleRetry = jest.fn();
+    useCommercialStore.setState({ cancelStaleRetry });
+    const { unmount } = render(<GoalProgressBlock />);
+    unmount();
+    expect(cancelStaleRetry).toHaveBeenCalledTimes(1);
+  });
+
   it("con meta y ritmo pinta la franja con la cifra y «Ver la ruta»", () => {
     act(() => useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
