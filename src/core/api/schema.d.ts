@@ -15503,6 +15503,7 @@ export interface components {
                 id: string;
                 type_code: string;
                 type_label: string;
+                tracks_subject_changes: boolean;
                 /** @enum {string} */
                 status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
                 number: string;
@@ -15582,6 +15583,7 @@ export interface components {
                 id: string;
                 type_code: string;
                 type_label: string;
+                tracks_subject_changes: boolean;
                 /** @enum {string} */
                 status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
                 number: string;
@@ -15664,6 +15666,7 @@ export interface components {
             id: string;
             type_code: string;
             type_label: string;
+            tracks_subject_changes: boolean;
             /** @enum {string} */
             status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
             number: string;
@@ -15767,6 +15770,7 @@ export interface components {
             id: string;
             type_code: string;
             type_label: string;
+            tracks_subject_changes: boolean;
             /** @enum {string} */
             status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
             number: string;
@@ -15893,6 +15897,7 @@ export interface components {
                 id: string;
                 type_code: string;
                 type_label: string;
+                tracks_subject_changes: boolean;
                 /** @enum {string} */
                 status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
                 number: string;

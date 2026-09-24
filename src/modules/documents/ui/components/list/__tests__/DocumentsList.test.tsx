@@ -56,6 +56,7 @@ function doc(overrides: Partial<DocumentDTO> = {}): DocumentDTO {
     id: "d1",
     type_code: "contract",
     type_label: "Contrato",
+    tracks_subject_changes: true,
     status: "rendered",
     number: "CTR-2026-0120",
     contact_id: "c1",

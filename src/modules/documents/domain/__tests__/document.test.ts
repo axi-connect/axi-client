@@ -17,6 +17,7 @@ function doc(overrides: Partial<DocumentDTO> = {}): DocumentDTO {
     id: "d1",
     type_code: "contract",
     type_label: "Contrato",
+    tracks_subject_changes: true,
     status: "rendered",
     number: "CTR-2026-0120",
     contact_id: "c1",
@@ -174,5 +175,21 @@ describe("QA F8: latestChange — reprogramar también desactualiza el papel", (
     expect(
       isOutdated(paper, latestChange(orderUpdated, "2026-09-24T10:00:00.000Z")),
     ).toBe(true);
+  });
+});
+
+describe("QA F9: un recibo no se desactualiza", () => {
+  it("con tracks_subject_changes=false nunca sale desactualizado; con true, sí", () => {
+    const later = "2026-09-30T10:00:00.000Z";
+    const base = {
+      status: "rendered" as const,
+      created_at: "2026-09-22T10:00:00.000Z",
+    };
+    expect(isOutdated({ ...base, tracks_subject_changes: false }, later)).toBe(
+      false,
+    );
+    expect(isOutdated({ ...base, tracks_subject_changes: true }, later)).toBe(
+      true,
+    );
   });
 });

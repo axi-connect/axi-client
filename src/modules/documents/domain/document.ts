@@ -60,10 +60,14 @@ export function isDocumentInFlight(status: DocumentStatus): boolean {
  * un reemplazado ya no promete nada.
  */
 export function isOutdated(
-  document: Pick<DocumentDTO, "status" | "created_at">,
+  document: Pick<DocumentDTO, "status" | "created_at"> &
+    Partial<Pick<DocumentDTO, "tracks_subject_changes">>,
   subjectUpdatedAt: string | null | undefined,
 ): boolean {
   if (!subjectUpdatedAt || document.status === "superseded") return false;
+  // Un papel que da fe de un hecho puntual (recibo) no se desactualiza porque
+  // el pedido cambie: lo dice el catálogo por el wire (QA real F9).
+  if (document.tracks_subject_changes === false) return false;
   return (
     new Date(subjectUpdatedAt).getTime() >
     new Date(document.created_at).getTime()
