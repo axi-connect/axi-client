@@ -9,7 +9,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { CommercialPlanDTO, FigureDTO, GoalInputDTO, PlanRateDTO } from "@/modules/commercial/domain/commercial";
-import { GOAL_SAVED_MESSAGE, midMonthLine } from "@/modules/commercial/domain/copy";
+import { GOAL_SAVED_MESSAGE, midMonthLine, MISSING_TICKET_FIGURE } from "@/modules/commercial/domain/copy";
 import { formatInteger } from "@/core/lib/commercial-units";
 import { formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
@@ -308,6 +308,7 @@ function rateText(rate: PlanRateDTO | null, subject: string): string | null {
  */
 function ImpliesList({ preview, loading, error, target, currency }: { preview: CommercialPlanDTO | null; loading: boolean; error: string | null; target: number | null; currency: string }) {
   const niche = preview?.benchmark_niche_label ?? null;
+  const incomplete = preview?.status === "incomplete";
   const rows: Array<{ key: string; label: string; figure: FigureDTO | null; approx: boolean; rate: string | null; source: PlanRateDTO | null }> =
     preview === null
       ? []
@@ -344,7 +345,7 @@ function ImpliesList({ preview, loading, error, target, currency }: { preview: C
         </div>
       ) : (
         <>
-          {preview.status === "incomplete" ? (
+          {incomplete ? (
             <div className="px-4 pt-2 pb-1">
               <Callout tone="warn" icon={TriangleAlert}>
                 Falta tu ticket promedio para trazar la ruta: escríbelo en «Ajustar supuestos». El ticket nunca se supone.
@@ -359,23 +360,33 @@ function ImpliesList({ preview, loading, error, target, currency }: { preview: C
           <ul className={`grouped-list rounded-none transition-opacity ${loading || error !== null ? "opacity-60" : ""}`} aria-busy={loading}>
             {rows
               .filter((row) => row.figure !== null)
-              .map((row) => (
-                <li key={row.key} className="grouped-row grid grid-cols-[minmax(0,1fr)] gap-y-px px-4 py-3">
-                  <span className="text-[12px] text-muted-foreground">{row.label}</span>
-                  <span className="text-[15px] font-medium tabular-nums">
-                    {row.approx ? "≈ " : ""}
-                    {formatInteger(row.figure?.value ?? 0)}
-                  </span>
-                  <span className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted-foreground">
-                    {row.rate !== null ? <span>{row.rate}</span> : null}
-                    {row.rate !== null ? <span aria-hidden>·</span> : null}
-                    <SourceMark source={row.figure?.source ?? "benchmark"} nicheLabel={niche} />
-                    {row.source?.sample !== null && row.source?.sample !== undefined && row.source.window_days !== null ? (
-                      <span>· {formatInteger(row.source.sample)} en {row.source.window_days} días</span>
-                    ) : null}
-                  </span>
-                </li>
-              ))}
+              .map((row) =>
+                // Sin ticket toda la cadena cuelga de él: un «0 · según tu
+                // historia» confunde. Se dice qué falta y se deja la tasa (Q16).
+                incomplete ? (
+                  <li key={row.key} className="grouped-row grid grid-cols-[minmax(0,1fr)] gap-y-px px-4 py-3">
+                    <span className="text-[12px] text-muted-foreground">{row.label}</span>
+                    <span className="text-[15px] font-medium text-muted-foreground">{MISSING_TICKET_FIGURE}</span>
+                    {row.key !== "sales" && row.rate !== null ? <span className="text-[12.5px] text-muted-foreground">{row.rate}</span> : null}
+                  </li>
+                ) : (
+                  <li key={row.key} className="grouped-row grid grid-cols-[minmax(0,1fr)] gap-y-px px-4 py-3">
+                    <span className="text-[12px] text-muted-foreground">{row.label}</span>
+                    <span className="text-[15px] font-medium tabular-nums">
+                      {row.approx ? "≈ " : ""}
+                      {formatInteger(row.figure?.value ?? 0)}
+                    </span>
+                    <span className="flex flex-wrap items-center gap-x-1.5 text-[12.5px] text-muted-foreground">
+                      {row.rate !== null ? <span>{row.rate}</span> : null}
+                      {row.rate !== null ? <span aria-hidden>·</span> : null}
+                      <SourceMark source={row.figure?.source ?? "benchmark"} nicheLabel={niche} />
+                      {row.source?.sample !== null && row.source?.sample !== undefined && row.source.window_days !== null ? (
+                        <span>· {formatInteger(row.source.sample)} en {row.source.window_days} días</span>
+                      ) : null}
+                    </span>
+                  </li>
+                ),
+              )}
           </ul>
         </>
       )}

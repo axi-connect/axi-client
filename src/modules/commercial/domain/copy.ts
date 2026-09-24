@@ -152,6 +152,13 @@ export function routeTitle(month: string): string {
   return `Tu ruta de ${month}`;
 }
 
+/**
+ * La cifra de «Lo que implica» con el plan `incomplete`: sin ticket no hay
+ * ventas necesarias y todo lo demás cuelga de ellas. Se dice qué falta en vez
+ * de pintar un 0 con procedencia (Q16).
+ */
+export const MISSING_TICKET_FIGURE = "Falta el ticket";
+
 /** Confirmación al guardar la meta. */
 export const GOAL_SAVED_MESSAGE = "Meta puesta. Empezamos a medir el camino.";
 

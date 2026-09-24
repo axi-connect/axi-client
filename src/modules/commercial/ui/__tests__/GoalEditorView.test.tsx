@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { resetCommercialStore, useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
 import { GoalEditorView } from "../GoalEditorView";
 import { goal, goalResponse, pace, plan } from "./fixtures";
@@ -106,9 +106,35 @@ describe("GoalEditorView", () => {
     useCommercialStore.setState({ preview: { status: "ready", data: { ...plan, status: "incomplete" }, error: null } });
     render(<GoalEditorView />);
     expect(screen.getByText("Ventas necesarias")).toBeInTheDocument();
-    expect(screen.getByText("43")).toBeInTheDocument();
     expect(screen.getByText(/38 % de las cotizaciones se venden/)).toBeInTheDocument();
     expect(screen.getByText(/Falta tu ticket promedio/)).toBeInTheDocument();
+  });
+
+  it("sin ticket, las cifras dicen que falta el ticket: ni ceros ni procedencia (Q16)", () => {
+    withData();
+    const zero = { value: 0, source: "benchmark" as const, basis: null };
+    const incomplete = {
+      ...plan,
+      status: "incomplete" as const,
+      inputs: { ...plan.inputs, avg_ticket_cents: null },
+      figures: Object.fromEntries(Object.entries(plan.figures).map(([key, figure]) => [key, figure === null ? null : { ...figure, ...zero }])) as typeof plan.figures,
+    };
+    useCommercialStore.setState({ preview: { status: "ready", data: incomplete, error: null } });
+    render(<GoalEditorView />);
+    const list = screen.getByRole("region", { name: "Lo que implica" });
+    expect(within(list).getAllByText("Falta el ticket").length).toBeGreaterThan(1);
+    expect(within(list).queryByText(/^≈?\s*0$/)).toBeNull();
+    expect(within(list).queryByText(/supuesto para|según tu historia|lo dijiste tú/)).toBeNull();
+    // La tasa sí es cierta y se deja.
+    expect(within(list).getByText(/38 % de las cotizaciones se venden/)).toBeInTheDocument();
+  });
+
+  it("con ticket, las cifras llevan su valor y su procedencia", () => {
+    withData();
+    useCommercialStore.setState({ preview: { status: "ready", data: plan, error: null } });
+    render(<GoalEditorView />);
+    expect(screen.getByText("43")).toBeInTheDocument();
+    expect(screen.queryByText("Falta el ticket")).toBeNull();
   });
 
   it("si la vista previa falla con cifras viejas, las atenúa y lo dice", () => {
