@@ -356,3 +356,17 @@ export function headlineMetric(kind: DatasetKind, metrics: unknown): { label: st
   void kind;
   return null;
 }
+
+/** M8: «12 nuevos · 3 duplicados · 1 descartado» (null si nunca se importó). */
+export function importSummaryText(lastImport: Dataset["last_import"] | null | undefined): string | null {
+  if (!lastImport) return null;
+  const parts = [
+    `${lastImport.imported} ${lastImport.imported === 1 ? "nuevo" : "nuevos"}`,
+    `${lastImport.duplicated} ${lastImport.duplicated === 1 ? "duplicado" : "duplicados"}`,
+  ];
+  if (lastImport.discarded > 0) {
+    parts.push(`${lastImport.discarded} ${lastImport.discarded === 1 ? "descartado" : "descartados"} (ilegibles o truncados)`);
+  }
+  return parts.join(" · ");
+}
+

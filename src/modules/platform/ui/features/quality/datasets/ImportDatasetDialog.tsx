@@ -50,9 +50,11 @@ type ImportDatasetDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   dataset: DatasetListItem | null;
+  /** M11: quien abre el diálogo pollea el dataset desde este instante. */
+  onStarted?: (startedAt: number) => void;
 };
 
-export function ImportDatasetDialog({ open, onOpenChange, dataset }: ImportDatasetDialogProps) {
+export function ImportDatasetDialog({ open, onOpenChange, dataset, onStarted }: ImportDatasetDialogProps) {
   const { showAlert } = useAlert();
   const importDataset = useImportDataset();
   const [days, setDays] = useState(String(DEFAULT_IMPORT_DAYS));
@@ -74,13 +76,15 @@ export function ImportDatasetDialog({ open, onOpenChange, dataset }: ImportDatas
   async function submit() {
     if (!dataset || !valid) return;
     try {
+      const startedAt = Date.now();
       await importDataset.mutateAsync({ id: dataset.id, body: { days: daysValue, limit: limitValue } });
       showAlert({
         tone: "success",
         title: "Importación en cola",
-        description: "Los ítems aparecen en el dataset en unos segundos; se deduplican con los que ya existen.",
+        description: "El dataset se actualiza solo al terminar y muestra el resumen (nuevos, duplicados, descartados).",
         autoCloseMs: 6000,
       });
+      onStarted?.(startedAt);
       onOpenChange(false);
     } catch (error) {
       showAlert({ tone: "error", title: "No se pudo importar", description: errorMessage(error) });

@@ -55,18 +55,43 @@ export function useDatasetsQuery(filters: DatasetsFilters) {
   });
 }
 
-export function useDatasetQuery(id: string | null) {
+/**
+ * M11: tras lanzar una importación (202) el detalle se pollea cada 2 s hasta
+ * que llega un `last_import` posterior al arranque o pasan 60 s.
+ */
+export function useDatasetQuery(id: string | null, opts?: { importStartedAt?: number | null }) {
+  const queryClient = useQueryClient();
+  const since = opts?.importStartedAt ?? null;
   return useQuery({
     queryKey: platformKeys.quality.datasets.detail(id ?? "none"),
     queryFn: async () => {
       const { data } = await platformClient.GET("/api/v1/platform/quality/datasets/{id}", {
         params: { path: { id: id! } },
       });
-      return data!;
+      const fresh = data!;
+      if (since !== null && importFinishedAfter(fresh.last_import, since)) {
+        // El import terminó: los ítems nuevos se releen
+        void queryClient.invalidateQueries({ queryKey: platformKeys.quality.datasets.items(fresh.id) });
+      }
+      return fresh;
     },
     enabled: id !== null,
-    staleTime: 10_000,
+    staleTime: 2_000,
+    refetchInterval: (query) => {
+      if (since === null) return false;
+      if (Date.now() - since > IMPORT_POLL_WINDOW_MS) return false;
+      return importFinishedAfter(query.state.data?.last_import ?? null, since) ? false : IMPORT_POLL_MS;
+    },
   });
+}
+
+export const IMPORT_POLL_MS = 2_000;
+export const IMPORT_POLL_WINDOW_MS = 60_000;
+
+/** ¿Hay un resumen de importación terminado después de `since`? */
+export function importFinishedAfter(lastImport: { finished_at: string } | null | undefined, since: number): boolean {
+  if (!lastImport) return false;
+  return new Date(lastImport.finished_at).getTime() >= since - 1_000;
 }
 
 export type DatasetItemsFilters = {

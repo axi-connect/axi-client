@@ -2,6 +2,7 @@ import {
   formatRate,
   formatRatio,
   headlineMetric,
+  importSummaryText,
   itemSubtitle,
   itemTitle,
   labelStatusKey,
@@ -102,3 +103,16 @@ describe("métricas del probe", () => {
     expect(probePaysLlm("recognition")).toBe(true);
   });
 });
+
+describe("resumen de importación (M8)", () => {
+  it("nuevos, duplicados y descartados solo si los hay", () => {
+    expect(importSummaryText(null)).toBeNull();
+    expect(importSummaryText({ scanned: 5, imported: 1, duplicated: 3, discarded: 0, finished_at: "2026-09-24T10:00:00.000Z" })).toBe(
+      "1 nuevo · 3 duplicados",
+    );
+    expect(importSummaryText({ scanned: 9, imported: 4, duplicated: 1, discarded: 2, finished_at: "2026-09-24T10:00:00.000Z" })).toBe(
+      "4 nuevos · 1 duplicado · 2 descartados (ilegibles o truncados)",
+    );
+  });
+});
+

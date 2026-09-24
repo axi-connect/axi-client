@@ -17564,6 +17564,14 @@ export interface components {
                 status: "active" | "archived";
                 items_count: number;
                 labeled_count: number;
+                last_import: {
+                    scanned: number;
+                    imported: number;
+                    duplicated: number;
+                    discarded: number;
+                    /** Format: date-time */
+                    finished_at: string;
+                } | null;
                 last_run: {
                     /** Format: uuid */
                     run_id: string;
@@ -17597,6 +17605,14 @@ export interface components {
             status: "active" | "archived";
             items_count: number;
             labeled_count: number;
+            last_import: {
+                scanned: number;
+                imported: number;
+                duplicated: number;
+                discarded: number;
+                /** Format: date-time */
+                finished_at: string;
+            } | null;
             last_run: {
                 /** Format: uuid */
                 run_id: string;

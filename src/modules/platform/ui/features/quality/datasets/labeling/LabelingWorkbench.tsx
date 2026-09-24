@@ -8,6 +8,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Download, Play, Plus } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
@@ -20,6 +21,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import {
   DATASET_KIND_LABELS,
   headlineMetric,
+  importSummaryText,
   type DatasetItem,
   type LabelStatus,
 } from "../../../../../domain/quality-datasets";
@@ -29,6 +31,8 @@ import {
   useDatasetQuery,
   useDeleteDatasetItem,
   useLabelDatasetItem,
+  IMPORT_POLL_WINDOW_MS,
+  importFinishedAfter,
 } from "../../../../../infrastructure/api/hooks/use-quality-datasets";
 import { EmptyState } from "../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
@@ -40,7 +44,12 @@ const PAGE_SIZE = 25;
 
 export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
   const { showAlert } = useAlert();
-  const datasetQuery = useDatasetQuery(datasetId);
+  // `?importing=1` viene de lanzar la importación desde la lista
+  const searchParams = useSearchParams();
+  const [importStartedAt, setImportStartedAt] = useState<number | null>(() =>
+    searchParams?.get("importing") === "1" ? Date.now() - 5_000 : null,
+  );
+  const datasetQuery = useDatasetQuery(datasetId, { importStartedAt });
   const [filter, setFilter] = useState<LabelStatus>("unlabeled");
   const [page, setPage] = useState(1);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -119,6 +128,11 @@ export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
 
   const metric = dataset.last_run ? headlineMetric(dataset.kind, dataset.last_run.metrics) : null;
   const remaining = dataset.items_count - dataset.labeled_count;
+  const importing =
+    importStartedAt !== null &&
+    Date.now() - importStartedAt <= IMPORT_POLL_WINDOW_MS &&
+    !importFinishedAfter(dataset.last_import, importStartedAt);
+  const lastImport = importSummaryText(dataset.last_import);
 
   return (
     <div className="space-y-4">
@@ -133,6 +147,13 @@ export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
             <p className="text-sm text-muted-foreground">
               {dataset.company_name} · {DATASET_KIND_LABELS[dataset.kind]} · {dataset.labeled_count} de {dataset.items_count} etiquetados
               {metric ? ` · último probe ${metric.label} ${metric.value}` : ""}
+            </p>
+            <p className="text-xs text-muted-foreground" aria-live="polite">
+              {importing
+                ? "Importando del tráfico real…"
+                : lastImport && dataset.last_import
+                  ? `Última importación (${new Date(dataset.last_import.finished_at).toLocaleString("es-CO")}): ${lastImport}`
+                  : null}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -215,7 +236,7 @@ export function LabelingWorkbench({ datasetId }: { datasetId: string }) {
         </div>
       )}
 
-      <ImportDatasetDialog open={importOpen} onOpenChange={setImportOpen} dataset={dataset} />
+      <ImportDatasetDialog open={importOpen} onOpenChange={setImportOpen} dataset={dataset} onStarted={setImportStartedAt} />
       <Modal
         open={addOpen}
         onOpenChange={setAddOpen}

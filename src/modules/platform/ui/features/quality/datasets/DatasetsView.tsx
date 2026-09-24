@@ -211,6 +211,10 @@ export function DatasetsView() {
           if (!open) setImporting(null);
         }}
         dataset={importing}
+        // M11: el banco del dataset pollea hasta que llega el resumen
+        onStarted={() => {
+          if (importing) router.push(`/platform/quality/datasets/${importing.id}?importing=1`);
+        }}
       />
       <ConfirmTyped
         open={deleting !== null}
