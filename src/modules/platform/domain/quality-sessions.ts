@@ -28,8 +28,8 @@ export const SESSION_CAP_USD_DEFAULT = 1;
 export const SESSION_CAP_USD_MAX = 20;
 export const PERSONA_NOTE_MAX = 500;
 export const MESSAGE_BODY_MAX = 4000;
-/** Minutos sin mensaje del operador tras los que el server cierra la sesión. */
-export const SESSION_IDLE_TIMEOUT_MIN = 30;
+// QA-2: los plazos de cierre (inactividad, edad máxima) vienen en
+// `session.limits` desde el servidor; no se adivinan aquí.
 
 // ─── Estado ──────────────────────────────────────────────────────────────────
 

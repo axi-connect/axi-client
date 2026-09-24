@@ -156,6 +156,7 @@ export function DebuggerView() {
               />
             ) : (
               <ConversationsList
+                companyId={companyId}
                 conversations={conversations}
                 onDownload={(conversation) => setDownloadTarget(conversation.id)}
               />

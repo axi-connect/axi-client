@@ -149,3 +149,26 @@ export function toUpdateScenarioDTO(values: ScenarioFormValues): UpdateScenarioD
     attachments: values.attachments.map((attachment) => ({ ...attachment, label: attachment.label.trim() })),
   };
 }
+
+/** F5: el borrador «Convertir en escenario» como valores iniciales del form. */
+export function draftToFormValues(draft: {
+  code: string;
+  name: string;
+  persona: string;
+  goal: string;
+  max_turns: number;
+  tags: string[];
+  success_criteria: Record<string, unknown>[];
+}): ScenarioFormValues {
+  return {
+    ...defaultScenarioFormValues,
+    code: draft.code,
+    name: draft.name,
+    persona: draft.persona,
+    goal: draft.goal,
+    max_turns: Math.min(Math.max(draft.max_turns, MAX_TURNS_MIN), MAX_TURNS_MAX),
+    tags: draft.tags.join(", "),
+    success_criteria: parseSuccessCriteria(draft.success_criteria),
+  };
+}
+

@@ -126,6 +126,7 @@ export const platformKeys = {
       items: (id: string, filters?: Record<string, unknown>) =>
         [...platformKeys.quality.datasets.all, id, "items", filters ?? {}] as const,
     },
+    capabilities: (companyId: string) => ["platform", "quality", "capabilities", companyId] as const,
     probeResults: (runId: string, filters?: Record<string, unknown>) =>
       [...platformKeys.quality.runs.all, runId, "probe-results", filters ?? {}] as const,
     tenantLookup: {

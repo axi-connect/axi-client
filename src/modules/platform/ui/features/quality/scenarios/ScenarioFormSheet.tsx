@@ -32,12 +32,15 @@ import {
   useCreateScenario,
   useUpdateScenario,
 } from "../../../../infrastructure/api/hooks/use-quality-scenarios";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { droppedCriterionText, type ScenarioDraft } from "../../../../domain/quality-capabilities";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { AttachmentsEditor } from "./AttachmentsEditor";
 import { CriteriaEditor } from "./CriteriaEditor";
 import { CriteriaList } from "./CriteriaList";
 import {
   defaultScenarioFormValues,
+  draftToFormValues,
   scenarioFormSchema,
   scenarioToFormValues,
   toCreateScenarioDTO,
@@ -55,9 +58,11 @@ type ScenarioFormSheetProps = {
   scenario: Scenario | null;
   /** Abre el diálogo de clonado (footer del modo ver). */
   onClone?: (scenario: Scenario) => void;
+  /** F5: borrador «Convertir en escenario» que prellena el modo crear. */
+  draft?: ScenarioDraft | null;
 };
 
-export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone }: ScenarioFormSheetProps) {
+export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone, draft = null }: ScenarioFormSheetProps) {
   const { showAlert } = useAlert();
   const createScenario = useCreateScenario();
   const updateScenario = useUpdateScenario();
@@ -71,9 +76,14 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone 
   // refetch de la lista, un cambio de `isPending`. Solo un escenario distinto,
   // o una versión más reciente del mismo, debe repoblar el formulario.
   const defaultValues: ScenarioFormValues = useMemo(
-    () => (scenario !== null ? scenarioToFormValues(scenario) : defaultScenarioFormValues),
+    () =>
+      scenario !== null
+        ? scenarioToFormValues(scenario)
+        : draft !== null
+          ? draftToFormValues(draft)
+          : defaultScenarioFormValues,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scenario?.id, scenario?.updated_at],
+    [scenario?.id, scenario?.updated_at, draft],
   );
 
   const fields: FieldConfig<ScenarioFormValues>[] = [
@@ -197,7 +207,9 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone 
       onOpenChange={onOpenChange}
       title={
         mode === "create"
-          ? "Nuevo escenario"
+          ? draft !== null
+            ? "Nuevo escenario desde una conversación"
+            : "Nuevo escenario"
           : `${isViewing ? "Escenario" : "Editar escenario"} · ${scenario?.name ?? ""}`
       }
       subtitle={
@@ -210,6 +222,32 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone 
       size="xl"
     >
       <div className="p-4">
+        {!isViewing && draft !== null && (
+          <div className="mb-4 space-y-2">
+            <Alert variant="info">
+              <AlertDescription>
+                Borrador generado con IA a partir de la conversación {draft.source.conversation_id.slice(0, 8)}… (
+                {draft.source.messages} mensajes · {draft.source.outcome ?? "sin pedido ni cita"}). El transcript se
+                enmascaró antes de enviarlo al modelo; revísalo: nada se guarda hasta que pulses Guardar.
+              </AlertDescription>
+            </Alert>
+            {draft.dropped.length > 0 && (
+              <Alert variant="warning">
+                <AlertDescription>
+                  <p>
+                    {draft.dropped.length === 1 ? "1 criterio sugerido se descartó" : `${draft.dropped.length} criterios sugeridos se descartaron`}{" "}
+                    (puedes añadirlos a mano):
+                  </p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 font-mono text-xs">
+                    {draft.dropped.map((entry, index) => (
+                      <li key={index}>{droppedCriterionText(entry)}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
         {isViewing ? (
           <ScenarioReadView scenario={scenario} onClone={onClone} />
         ) : (

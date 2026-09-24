@@ -13,11 +13,11 @@ import {
   AGENT_STATE_LABELS,
   END_REASON_LABELS,
   formatUsd,
-  SESSION_IDLE_TIMEOUT_MIN,
   spendPercent,
   type SessionDetail,
 } from "../../../../../domain/quality-sessions";
 import { StatusBadge } from "../../../../components/StatusBadge";
+import { ConvertToScenarioButton } from "../../shared/ConvertToScenarioButton";
 
 type SessionStatePanelProps = {
   session: SessionDetail;
@@ -63,7 +63,7 @@ export function SessionStatePanel({ session, onEnd, onPurge, ending }: SessionSt
           <StatTile
             label="Agente"
             value={AGENT_STATE_LABELS[session.agent_state]}
-            hint={active ? `cierre por inactividad a los ${SESSION_IDLE_TIMEOUT_MIN} min` : END_REASON_LABELS[session.ended_reason ?? "operator"]}
+            hint={active ? `cierre por inactividad a los ${session.limits.idle_timeout_min} min · edad máx. ${session.limits.max_age_min} min` : END_REASON_LABELS[session.ended_reason ?? "operator"]}
           />
         </div>
       </section>
@@ -117,6 +117,9 @@ export function SessionStatePanel({ session, onEnd, onPurge, ending }: SessionSt
               Nueva sesión igual
             </Link>
           </Button>
+        )}
+        {!active && !session.purged && session.conversation_id && (
+          <ConvertToScenarioButton companyId={session.company_id} conversationId={session.conversation_id} className="w-full" />
         )}
         {!active && !session.purged && (
           <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive" onClick={onPurge}>

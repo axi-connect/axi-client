@@ -6900,6 +6900,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/quality/scenarios/draft-from-conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityScenariosController_draft_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityCapabilitiesController_get_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8722,6 +8754,8 @@ export interface components {
             started_at: string | null;
             /** Format: date-time */
             finished_at: string | null;
+            /** Format: uuid */
+            company_id: string;
             scenario_goal: string | null;
             timings: unknown;
             transcript: {
@@ -17322,6 +17356,10 @@ export interface components {
             /** Format: uuid */
             conversation_id: string | null;
             external_id: string;
+            limits: {
+                idle_timeout_min: number;
+                max_age_min: number;
+            };
             /** @enum {string} */
             agent_state: "idle" | "thinking" | "escalated" | "closed";
             conversation: {
@@ -17718,6 +17756,59 @@ export interface components {
                 description: string;
                 type: string;
                 is_system: boolean;
+            }[];
+        };
+    
+        DraftQualityScenarioDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** Format: uuid */
+            conversation_id: string;
+        };
+        QualityScenarioDraftDto: {
+            code: string;
+            name: string;
+            persona: string;
+            goal: string;
+            max_turns: number;
+            tags: string[];
+            success_criteria: {
+                [key: string]: unknown;
+            }[];
+            dropped: {
+                criterion: unknown;
+                reason: string;
+            }[];
+            source: {
+                /** Format: uuid */
+                company_id: string;
+                /** Format: uuid */
+                conversation_id: string;
+                messages: number;
+                outcome: string | null;
+            };
+        };
+        QualityCapabilitiesDto: {
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            window_days: number;
+            runs_considered: number;
+            capabilities: {
+                code: string;
+                label: string;
+                description: string;
+                /** @enum {string} */
+                status: "untested" | "pass" | "warn" | "fail";
+                metric_label: string | null;
+                metric_value: number | null;
+                sample_size: number;
+                /** @enum {string|null} */
+                source: "probe" | "checks" | "cases" | null;
+                /** Format: uuid */
+                run_id: string | null;
+                /** Format: date-time */
+                evaluated_at: string | null;
             }[];
         };
     };
@@ -30696,6 +30787,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QualityTenantIntentionsDto"];
+                };
+            };
+        };
+    };
+    QualityScenariosController_draft_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftQualityScenarioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityScenarioDraftDto"];
+                };
+            };
+        };
+    };
+    QualityCapabilitiesController_get_v1: {
+        parameters: {
+            query: {
+                company_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityCapabilitiesDto"];
                 };
             };
         };

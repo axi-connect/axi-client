@@ -4,7 +4,7 @@
  * Tabs de la sección Calidad como SEGMENTOS DE RUTA (spec D11): deep-linking
  * directo y back/forward correcto. Terminología: NUNCA "Corridas".
  */
-import { Bug, ClipboardList, Database, Layers, MessageSquareText, PlayCircle } from "lucide-react";
+import { Bug, ClipboardList, Database, Layers, MessageSquareText, PlayCircle, Radar } from "lucide-react";
 
 import { NavTabs, type NavTabItem } from "@/shared/components/layout/nav-tabs";
 
@@ -18,6 +18,8 @@ const TABS: readonly NavTabItem[] = [
   { href: `${BASE}/suites`, label: "Suites", icon: Layers },
   // Datasets etiquetados + probes (upgrade F4)
   { href: `${BASE}/datasets`, label: "Datasets", icon: Database },
+  // Estado por capacidad del agente (upgrade F5)
+  { href: `${BASE}/capabilities`, label: "Capacidades", icon: Radar },
   { href: `${BASE}/debugger`, label: "Depurador", icon: Bug },
 ];
 

@@ -38,6 +38,7 @@ const DETAIL = {
   purged: false,
   persona_note: null,
   spend: { spent_usd: 0.1, cap_usd: 1, daily_spent_usd: 0.4, daily_cap_usd: 10 },
+  limits: { idle_timeout_min: 30, max_age_min: 240 },
   operator_turns: 1,
   created_by: "u-1",
   created_at: "2026-09-24T10:00:00.000Z",
