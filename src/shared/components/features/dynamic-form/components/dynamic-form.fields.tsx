@@ -115,7 +115,16 @@ export function DynamicCustomField<TValues extends FieldValues>({ config }: { co
               name,
               control,
               value: (values as Record<string, unknown>)?.[String(name)],
-              setValue: setValue as (name: string, value: unknown) => void,
+              // Un campo personalizado que cambia un valor ES una edición del
+              // usuario: marca sucio, tocado y valida. Sin esto el «Guardar» con
+              // verja de sucio no se encendía nunca (QA real F9: los ajustes de
+              // emisión automática no se podían guardar).
+              setValue: ((path: string, next: unknown) =>
+                setValue(path as FieldPath<TValues>, next as never, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true,
+                })) as (name: string, value: unknown) => void,
               getError: (relativePath?: string) => {
                 const fullPath = relativePath ? `${String(name)}.${relativePath}` : String(name)
                 const getByPath = (obj: unknown, path: string): unknown =>
