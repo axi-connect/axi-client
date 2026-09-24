@@ -9,7 +9,7 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
 import type { CommercialPlanDTO, FigureDTO, GoalInputDTO, PlanRateDTO } from "@/modules/commercial/domain/commercial";
-import { GOAL_SAVED_MESSAGE, midMonthLine, MISSING_TICKET_FIGURE } from "@/modules/commercial/domain/copy";
+import { GOAL_SAVED_DETAIL, GOAL_SAVED_TITLE, midMonthLine, MISSING_TICKET_FIGURE } from "@/modules/commercial/domain/copy";
 import { formatInteger } from "@/core/lib/commercial-units";
 import { formatPct, monthLabel } from "@/modules/commercial/domain/format";
 import { useCommercialStore } from "@/modules/commercial/infrastructure/stores/commercial.store";
@@ -128,7 +128,7 @@ export function GoalEditorView() {
     setError(null);
     try {
       await saveGoal(input);
-      showAlert({ tone: "success", title: GOAL_SAVED_MESSAGE, open: true });
+      showAlert({ tone: "success", title: GOAL_SAVED_TITLE, description: GOAL_SAVED_DETAIL });
       router.push("/comercial");
     } catch (err: unknown) {
       setError(errorMessage(err));

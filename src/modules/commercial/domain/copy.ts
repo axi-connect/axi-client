@@ -159,8 +159,9 @@ export function routeTitle(month: string): string {
  */
 export const MISSING_TICKET_FIGURE = "Falta el ticket";
 
-/** Confirmación al guardar la meta. */
-export const GOAL_SAVED_MESSAGE = "Meta puesta. Empezamos a medir el camino.";
+/** Confirmación al guardar la meta: título de píldora (≤ 34, §9.4) y su detalle. */
+export const GOAL_SAVED_TITLE = "Meta puesta";
+export const GOAL_SAVED_DETAIL = "Empezamos a medir el camino.";
 
 /** El estado vacío de «Axi propone» mientras no haya nada que acelerar (F6). */
 const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";

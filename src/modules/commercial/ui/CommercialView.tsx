@@ -95,7 +95,7 @@ export function CommercialView() {
         await approveProposal(id);
         router.push(commercialProposalHref(id));
       } catch (error: unknown) {
-        showAlert({ tone: "error", title: errorMessage(error) });
+        showAlert({ tone: "error", title: "No se pudo aprobar", description: errorMessage(error) });
       }
     },
     [approveProposal, router, showAlert],

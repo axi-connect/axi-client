@@ -130,11 +130,11 @@ export function ContactJourneyCard({
     setResuming(true);
     resumeAiMoves(dealId)
       .then(() => {
-        showAlert({ tone: "success", title: "El agente vuelve a mover la oportunidad", autoCloseMs: 2000, open: true });
+        showAlert({ tone: "success", title: "Agente reactivado", description: "El agente vuelve a mover la oportunidad." });
         emitJourneyChanged({ contactId, dealId });
       })
       .catch((err: unknown) => {
-        showAlert({ tone: "error", title: errorMessage(err, "No se pudo reanudar"), open: true });
+        showAlert({ tone: "error", title: "No se pudo reanudar", description: errorMessage(err, "Inténtalo de nuevo en un momento.") });
       })
       .finally(() => setResuming(false));
   };

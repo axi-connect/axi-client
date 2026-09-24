@@ -69,12 +69,11 @@ export function useRevertStageChange({
                     tone: "success",
                     title: `Movimiento deshecho: vuelve ${back}`,
                     autoCloseMs: 2000,
-                    open: true,
                   });
                   emitJourneyChanged({ contactId: input.contactId, dealId: input.dealId });
                 })
                 .catch((err: unknown) => {
-                  showAlert({ tone: "error", title: errorMessage(err, "No se pudo deshacer"), open: true });
+                  showAlert({ tone: "error", title: "No se pudo deshacer", description: errorMessage(err, "Inténtalo de nuevo en un momento.") });
                 })
                 .finally(() => {
                   busyRef.current = false;

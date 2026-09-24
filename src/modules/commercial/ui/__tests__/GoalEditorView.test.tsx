@@ -152,7 +152,7 @@ describe("GoalEditorView", () => {
     fireEvent.click(screen.getByRole("button", { name: /guardar meta/i }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/comercial"));
     expect(saveGoal).toHaveBeenCalledWith({ target_revenue_cents: 3_000_000_000, declared_avg_ticket_cents: null, declared_close_rate_pct: null });
-    expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ title: "Meta puesta. Empezamos a medir el camino." }));
+    expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ title: "Meta puesta", description: "Empezamos a medir el camino." }));
 
     saveGoal.mockRejectedValueOnce(new Error("La meta no puede ser cero"));
     fireEvent.click(screen.getByRole("button", { name: /guardar meta/i }));

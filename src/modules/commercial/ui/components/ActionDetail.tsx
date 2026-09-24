@@ -86,7 +86,7 @@ export function useActionDetail(proposalId: string, proposal: CommercialProposal
     try {
       await approve(proposalId);
     } catch (error: unknown) {
-      showAlert({ tone: "error", title: errorMessage(error) });
+      showAlert({ tone: "error", title: "No se pudo aprobar", description: errorMessage(error) });
       if (isStaleDecision(error)) onStale?.();
     } finally {
       setBusy(false);
@@ -100,7 +100,7 @@ export function useActionDetail(proposalId: string, proposal: CommercialProposal
       await reject(proposalId, effectiveReason === "" ? undefined : effectiveReason);
       setRejecting(false);
     } catch (error: unknown) {
-      showAlert({ tone: "error", title: errorMessage(error) });
+      showAlert({ tone: "error", title: "No se pudo rechazar", description: errorMessage(error) });
       if (isStaleDecision(error)) {
         setRejecting(false);
         onStale?.();

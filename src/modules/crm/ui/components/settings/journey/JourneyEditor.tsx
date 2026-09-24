@@ -141,14 +141,14 @@ export function JourneyEditor() {
           const fresh = saved.stages.find((stage) => stage.stage_id === id);
           if (fresh !== undefined) replaceStage(fresh);
           snapshotRef.current.delete(id);
-          showAlert({ tone: "success", title: "Recorrido guardado", autoCloseMs: 1800, open: true });
+          showAlert({ tone: "success", title: "Recorrido guardado" });
         })
         .catch((err: unknown) => {
           if (!isLatest()) return;
           const snapshot = snapshotRef.current.get(id);
           snapshotRef.current.delete(id);
           if (snapshot !== undefined) replaceStage(snapshot);
-          showAlert({ tone: "error", title: saveErrorTitle(err, attemptedKind), open: true });
+          showAlert({ tone: "error", title: "No se pudo guardar", description: saveErrorTitle(err, attemptedKind) });
         })
         .finally(() => {
           if (!isLatest()) return;
@@ -194,10 +194,9 @@ export function JourneyEditor() {
         tone: "success",
         title: `Plantilla aplicada${applied === undefined ? "" : `: ${templateName(applied)}`}`,
         description: `${String(withCadence)} ${withCadence === 1 ? "etapa" : "etapas"} con cadencia. Las etapas y las oportunidades siguen donde estaban.`,
-        open: true,
       });
     } catch (err) {
-      showAlert({ tone: "error", title: errorMessage(err, "No se pudo aplicar la plantilla"), open: true });
+      showAlert({ tone: "error", title: "No se pudo aplicar la plantilla", description: errorMessage(err, "Inténtalo de nuevo en un momento.") });
       throw err;
     } finally {
       setApplying(false);

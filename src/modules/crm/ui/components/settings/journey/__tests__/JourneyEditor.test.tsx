@@ -315,7 +315,7 @@ describe("JourneyEditor", () => {
     await pickKind("Reagendar", "Cita");
     await waitFor(() =>
       expect(showAlert).toHaveBeenCalledWith(
-        expect.objectContaining({ tone: "error", title: "Ya hay una etapa de tipo Cita; elige otro tipo" }),
+        expect.objectContaining({ tone: "error", title: "No se pudo guardar", description: "Ya hay una etapa de tipo Cita; elige otro tipo" }),
       ),
     );
     expect(screen.getByLabelText("Tipo de la etapa Reagendar")).toHaveTextContent("Personalizada");
@@ -333,7 +333,7 @@ describe("JourneyEditor", () => {
 
     await waitFor(() =>
       expect(showAlert).toHaveBeenCalledWith(
-        expect.objectContaining({ tone: "error", title: "No tienes permiso para realizar esta acción" }),
+        expect.objectContaining({ tone: "error", title: "No se pudo guardar", description: "No tienes permiso para realizar esta acción" }),
       ),
     );
     expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "true");
