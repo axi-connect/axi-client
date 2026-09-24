@@ -20,3 +20,4 @@ No bloquean; quedan fuera para no reabrir el build certificado.
 - **`DetailSheet` devuelve siempre el foco** a quien lo abrió, también tras clic fuera o al navegar; si quien lo abrió vive en el shell, el `setTimeout` de Radix le roba el foco al autofocus de la página nueva. Afecta a los 69 sheets: acotar a cierre por Escape/botón y comprobar en navegador.
 - **El test de contraste lee `globals.css` por búsqueda de texto**: frágil si se mueven los tokens.
 - **Enlace duplicado** «Ver en Tareas/Secuencias» en la fila y en el pie del detalle de acción.
+- **Q18 (QA 2026-09-23) · dos «citas» en /analytics con criterios distintos.** «Contestadas → cita · 2 de 5» (`live_rates`, por fecha del hecho) y «Rama de citas · Citas agendadas 0» (embudo por conversación del período) cuentan universos distintos a propósito. Falta el rótulo que lo diga («de las conversaciones del período» frente a «todas las citas») en `src/modules/analytics/ui/components/conversion/`.
