@@ -5,6 +5,7 @@ import {
   learningLine,
   midMonthLine,
   missingLine,
+  noProposalsMessage,
   paceHeadline,
   projectionLine,
   rateLine,
@@ -157,5 +158,24 @@ describe("goalLead", () => {
     );
     expect(goalLead(3_000_000_000, "COP", "intake", "2026-09-01")).toContain("la fijaste con Alba el 1 sep");
     expect(goalLead(3_000_000_000, "COP", "system", "2026-09-01")).toContain("la propuso axi el 1 sep");
+  });
+});
+
+describe("noProposalsMessage (Q12)", () => {
+  it("«Estás al día» solo cuando la ruta va bien", () => {
+    for (const status of ["on_track", "ahead", "achieved"] as const) expect(noProposalsMessage(status)).toMatch(/^Estás al día/);
+  });
+
+  it("con ritmo bajo dice que Axi busca y cuándo llegan, sin regaño", () => {
+    for (const status of ["behind", "at_risk"] as const) {
+      const text = noProposalsMessage(status);
+      expect(text).toBe("Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.");
+      expect(text).not.toMatch(/al día\.|atrás|mal|falla/);
+    }
+  });
+
+  it("aprendiendo, el aviso de aprendizaje; sin ritmo, el neutro", () => {
+    expect(noProposalsMessage("insufficient_data")).toMatch(/Cuando conozcamos tu ritmo/);
+    expect(noProposalsMessage(null)).toMatch(/^Estás al día/);
   });
 });

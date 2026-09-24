@@ -187,6 +187,7 @@ export function CommercialView() {
           <KeyResultList pace={pace.data} plan={plan.data} learning={learning} detailHref={keyResultHref} />
           <ActionList
             learning={learning}
+            paceStatus={pace.data.status}
             proposals={proposals.data ?? undefined}
             error={proposals.status === "error" ? proposals.error : null}
             onRetry={() => void loadProposals()}

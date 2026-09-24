@@ -72,7 +72,18 @@ describe("CommercialView", () => {
     expect(screen.getByText(/El mes pasado vendiste/)).toBeInTheDocument();
   });
 
-  it("con meta: cabecera con procedencia, hero, ritmo, resultados y «Axi propone» al día", () => {
+  it("al ritmo y sin propuestas, «Axi propone» sí dice «Estás al día» (Q12)", () => {
+    useCommercialStore.setState({
+      goal: { status: "ready", data: goalResponse, error: null },
+      plan: { status: "ready", data: plan, error: null },
+      pace: { status: "ready", data: { ...pace, status: "on_track" }, error: null },
+      proposals: { status: "ready", data: [], error: null },
+    });
+    render(<CommercialView />);
+    expect(screen.getByText(/Estás al día/)).toBeInTheDocument();
+  });
+
+  it("con meta: cabecera con procedencia, hero, ritmo, resultados y «Axi propone» vacío", () => {
     useCommercialStore.setState({
       goal: { status: "ready", data: goalResponse, error: null },
       plan: { status: "ready", data: plan, error: null },
@@ -85,8 +96,9 @@ describe("CommercialView", () => {
     expect(screen.getByRole("link", { name: /cambiar meta/i })).toHaveAttribute("href", "/comercial/meta");
     expect(screen.getByRole("region", { name: "La ruta del mes" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Resultados clave" })).toBeInTheDocument();
-    // Lista vacía DE VERDAD (F6): ahora sí «Estás al día».
-    expect(screen.getByText(/Estás al día/)).toBeInTheDocument();
+    // Lista vacía DE VERDAD con la ruta en ritmo bajo: «Estás al día» sería falso (Q12).
+    expect(screen.getByText("Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.")).toBeInTheDocument();
+    expect(screen.queryByText(/Estás al día/)).toBeNull();
     // Las filas y el ritmo abren su detalle.
     const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
     expect(hrefs).toContain("/comercial/resultados/sales");

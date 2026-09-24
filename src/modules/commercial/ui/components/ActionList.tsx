@@ -2,8 +2,8 @@
 
 import { RotateCcw } from "lucide-react";
 
-import type { CommercialProposalDTO } from "@/modules/commercial/domain/commercial";
-import { LEARNING_PROPOSALS_MESSAGE, NO_PROPOSALS_MESSAGE } from "@/modules/commercial/domain/copy";
+import type { CommercialProposalDTO, PaceStatus } from "@/modules/commercial/domain/commercial";
+import { LEARNING_PROPOSALS_MESSAGE, noProposalsMessage } from "@/modules/commercial/domain/copy";
 import { commercialProposalHref } from "@/modules/commercial/domain/proposals";
 import { AssistantMark } from "@/shared/components/features/assistant";
 import { Button } from "@/shared/components/ui/button";
@@ -11,11 +11,13 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ActionRow } from "./ActionRow";
 
 export interface ActionListProps {
-  /** `undefined` = cargando (primera vez). Una lista vacía de verdad dice «Estás al día…». */
+  /** `undefined` = cargando (primera vez). Una lista vacía de verdad dice lo que toca según el ritmo. */
   proposals?: readonly CommercialProposalDTO[];
   error?: string | null;
   onRetry?: () => void;
   learning?: boolean;
+  /** El ritmo de la ruta: con ritmo bajo el vacío no dice «Estás al día» (Q12). */
+  paceStatus?: PaceStatus | null;
   canApprove?: boolean;
   /** Sin poder aprobar: a quién pedírselo (permiso o plan sin `crm_ai`). `null` = no se dice nada aún. */
   readOnlyMessage?: string | null;
@@ -38,6 +40,7 @@ export function ActionList({
   error = null,
   onRetry,
   learning = false,
+  paceStatus = null,
   canApprove = false,
   readOnlyMessage = null,
   onApprove,
@@ -71,7 +74,7 @@ export function ActionList({
           </div>
         )
       ) : empty ? (
-        <p className="px-4 pt-2 pb-4 text-[14px] text-muted-foreground">{learning ? LEARNING_PROPOSALS_MESSAGE : NO_PROPOSALS_MESSAGE}</p>
+        <p className="px-4 pt-2 pb-4 text-[14px] text-muted-foreground">{learning ? LEARNING_PROPOSALS_MESSAGE : noProposalsMessage(paceStatus)}</p>
       ) : (
         <ul className="grouped-list rounded-none">
           {proposals.map((proposal) => (

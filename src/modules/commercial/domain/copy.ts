@@ -161,6 +161,27 @@ export const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar 
 /** El mismo hueco, en el estado «aprendiendo». */
 export const LEARNING_PROPOSALS_MESSAGE = "Cuando conozcamos tu ritmo, te proponemos acciones.";
 
+/** El mismo hueco con la ruta en ritmo bajo: «estás al día» sería falso (Q12). */
+export const SEARCHING_PROPOSALS_MESSAGE = "Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.";
+
+/**
+ * El vacío de «Axi propone» según el ritmo: «Estás al día» solo cuando la
+ * ruta va bien (al ritmo, por delante o cumplida); con ritmo bajo dice que
+ * Axi busca y cuándo llegan las propuestas, sin regaño; aprendiendo, que aún
+ * no conocemos el ritmo. Sin ritmo leído, el mensaje neutro de siempre.
+ */
+export function noProposalsMessage(status: PaceStatus | null): string {
+  switch (status) {
+    case "behind":
+    case "at_risk":
+      return SEARCHING_PROPOSALS_MESSAGE;
+    case "insufficient_data":
+      return LEARNING_PROPOSALS_MESSAGE;
+    default:
+      return NO_PROPOSALS_MESSAGE;
+  }
+}
+
 /** Sin `commercial:approve`: la lista y el detalle son de solo lectura. */
 export const NO_APPROVE_PERMISSION_MESSAGE = "Pídele a un administrador que apruebe o cambie la meta.";
 
