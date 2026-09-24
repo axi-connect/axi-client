@@ -11,7 +11,7 @@ import {
 
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { errorMessage } from "@/core/lib/error-messages";
-import { formatMoney } from "@/core/lib/format";
+import { formatMoney, formatMoneyExact } from "@/core/lib/format";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
@@ -92,6 +92,20 @@ export function RescheduleDialog({
     plan?.installments.filter(
       (one) => one.status === "paid" || one.status === "waived",
     ).length ?? 0;
+
+  // La diferencia a la última cuota: cubre los planes que nacieron con
+  // centavos (antes de ed9abd83) y cualquier descuadre pequeño del operador.
+  const lastLine = lines[lines.length - 1];
+  const canAdjustLast =
+    lastLine !== undefined &&
+    check.diff !== 0 &&
+    lastLine.amount_cents + check.diff > 0;
+  function adjustLast() {
+    if (lastLine === undefined) return;
+    update(lines.length - 1, {
+      amount_cents: lastLine.amount_cents + check.diff,
+    });
+  }
 
   function update(index: number, patch: Partial<ScheduleLine>) {
     setLines((current) =>
@@ -236,18 +250,32 @@ export function RescheduleDialog({
                 <AlertDescription>
                   <span className="tabular-nums">
                     {check.diff !== 0 ? (
+                      // Exacto: con centavos de por medio, «Faltan $ 0» sería
+                      // una mentira con el botón bloqueado (QA real F4b).
                       <>
-                        Suman {formatMoney(check.sum, plan?.currency ?? "COP")}{" "}
-                        y el saldo es{" "}
-                        {formatMoney(balance, plan?.currency ?? "COP")}.{" "}
+                        Suman{" "}
+                        {formatMoneyExact(check.sum, plan?.currency ?? "COP")} y
+                        el saldo es{" "}
+                        {formatMoneyExact(balance, plan?.currency ?? "COP")}.{" "}
                         <b className="font-medium">
                           {check.diff > 0 ? "Faltan" : "Sobran"}{" "}
-                          {formatMoney(
+                          {formatMoneyExact(
                             Math.abs(check.diff),
                             plan?.currency ?? "COP",
                           )}
                         </b>
                         .
+                        {canAdjustLast ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2 flex w-fit rounded-full"
+                            onClick={adjustLast}
+                          >
+                            Ajustar la última cuota
+                          </Button>
+                        ) : null}
                       </>
                     ) : (
                       "Cada cuota necesita una fecha y un monto mayor que cero."

@@ -10,7 +10,10 @@ export function formatBytes(bytes: number): string {
     value /= 1024;
     unit += 1;
   }
-  const rounded = value >= 100 || unit === 0 ? Math.round(value) : Math.round(value * 10) / 10;
+  const rounded =
+    value >= 100 || unit === 0
+      ? Math.round(value)
+      : Math.round(value * 10) / 10;
   return `${rounded} ${BYTE_UNITS[unit]}`;
 }
 
@@ -37,7 +40,11 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 export function formatShortDate(iso: string): string {
   const date = new Date(DATE_ONLY.test(iso) ? `${iso}T00:00:00` : iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
+  return date.toLocaleDateString("es-CO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 /**
@@ -57,6 +64,23 @@ export function formatMoney(cents: number, currency = "COP"): string {
 }
 
 /**
+ * Como `formatMoney`, pero NUNCA esconde una fracción: una cifra con centavos
+ * los enseña aunque la moneda sea COP. Para donde la diferencia importa —un
+ * descuadre de 20 centavos no puede leerse «Faltan $ 0» mientras el botón
+ * sigue bloqueado (QA real de F4b)—; en el resto de la pantalla, `formatMoney`.
+ */
+export function formatMoneyExact(cents: number, currency = "COP"): string {
+  if (!Number.isFinite(cents)) return "";
+  if (Math.round(cents) % 100 === 0) return formatMoney(cents, currency);
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
+/**
  * Dinero grande con un decimal: «$ 11,1 M». Por debajo del millón, la cifra
  * completa. Es la forma de las cabeceras (la ruta del mes, el resumen de Alba); en
  * las filas y en la meta exacta se usa `formatMoney` («$ 30.000.000»),
@@ -67,8 +91,12 @@ export function formatMillions(cents: number, currency = "COP"): string {
   const units = cents / 100;
   if (Math.abs(units) < 1_000_000) return formatMoney(cents, currency);
   const millions = units / 1_000_000;
-  const digits = millions.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
-  const symbol = currency === "COP" ? "$" : currency === "USD" ? "US$" : currency;
+  const digits = millions.toLocaleString("es-CO", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  });
+  const symbol =
+    currency === "COP" ? "$" : currency === "USD" ? "US$" : currency;
   return `${symbol} ${digits} M`;
 }
 
@@ -88,7 +116,8 @@ export function formatMoneyApprox(
   from: string,
   to: { currency: string; rate: number | null | undefined },
 ): string | null {
-  if (!Number.isFinite(cents) || to.rate === null || to.rate === undefined) return null;
+  if (!Number.isFinite(cents) || to.rate === null || to.rate === undefined)
+    return null;
   if (!Number.isFinite(to.rate) || to.rate <= 0) return null;
   if (from === to.currency) return formatMoney(cents, from);
   return `≈ ${formatMoney(Math.round(cents * to.rate), to.currency)}`;

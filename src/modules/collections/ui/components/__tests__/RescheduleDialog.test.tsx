@@ -151,6 +151,73 @@ describe("RescheduleDialog: solo lo pendiente, y la suma cuadra mientras se escr
     expectAlertContract(alert);
   });
 
+  it("QA F4b R2-04: un descuadre de 20 centavos dice «$ 0,20», nunca «$ 0», y «Ajustar la última cuota» lo cierra", async () => {
+    // El plan de Bruno: la cuota 2 vale $ 685.522,20 y la 3 $ 1.371.043,80; el saldo es redondo.
+    mockPlan.mockResolvedValue({
+      ...PLAN,
+      balance_cents: 205_656_600,
+      installments: [
+        { ...PLAN.installments[0] },
+        {
+          id: "i2",
+          seq: 2,
+          kind: "installment",
+          due_at: "2026-09-18",
+          amount_cents: 137_104_380,
+          paid_cents: 68_552_160,
+          status: "overdue",
+          paid_at: null,
+        },
+        {
+          id: "i3",
+          seq: 3,
+          kind: "balance",
+          due_at: "2026-11-20",
+          amount_cents: 137_104_380,
+          paid_cents: 0,
+          status: "pending",
+          paid_at: null,
+        },
+      ],
+    });
+    mockReschedule.mockResolvedValue({ plan_id: "plan-1" });
+    render(
+      <RescheduleDialog
+        open
+        orderId="o1"
+        contactName="Bruno Díaz"
+        onOpenChange={jest.fn()}
+      />,
+    );
+    await screen.findByLabelText("Fecha de la cuota 3");
+    // Escribe la cifra que VE en la cuota 2: 685.522 (sin los 20 centavos)
+    const amounts = screen.getAllByRole("textbox");
+    // El campo ya ENSEÑA «685.522» (esconde los 20 centavos): Juanita lo toca
+    // y vuelve a escribir la cifra que ve.
+    expect(amounts[0]).toHaveValue("685.522");
+    fireEvent.focus(amounts[0]);
+    fireEvent.change(amounts[0], { target: { value: "685.52" } });
+    fireEvent.change(amounts[0], { target: { value: "685.522" } });
+    fireEvent.blur(amounts[0]);
+    const missing = await screen.findByText(/Faltan/);
+    expect(missing).toHaveTextContent(/\$\s?0,20/);
+    expect(missing).not.toHaveTextContent(/\$\s?0\.?$/);
+    expect(
+      screen.getByRole("button", { name: "Guardar cuotas" }),
+    ).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ajustar la última cuota" }),
+    );
+    expect(await screen.findByText(/cuadran con el saldo/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cuotas" }));
+    await waitFor(() =>
+      expect(mockReschedule).toHaveBeenCalledWith("plan-1", [
+        { due_at: "2026-09-18", amount_cents: 68_552_200 },
+        { due_at: "2026-11-20", amount_cents: 137_104_400 },
+      ]),
+    );
+  });
+
   it("el 409 del servidor (el saldo cambió mientras tanto) se dice con sus cifras, inline", async () => {
     mockReschedule.mockRejectedValueOnce(
       new HttpError({
