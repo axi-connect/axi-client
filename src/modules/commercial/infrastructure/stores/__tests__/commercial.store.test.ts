@@ -11,7 +11,7 @@ jest.mock("@/core/services/http", () => ({
 
 import { HttpError } from "@/core/api/problem";
 import type { CommercialGoalDTO, CommercialProposalDTO, GoalResponseDTO } from "@/modules/commercial/domain/commercial";
-import { resetCommercialStore, useCommercialStore } from "../commercial.store";
+import { PACE_STALE_MAX_RETRIES, PACE_STALE_RETRY_MS, resetCommercialStore, useCommercialStore } from "../commercial.store";
 
 const goal: CommercialGoalDTO = {
   id: "g1",
@@ -200,6 +200,69 @@ describe("carrera entre cargas", () => {
     await Promise.resolve();
 
     expect(useCommercialStore.getState().pace.data).toEqual({ status: "new" });
+  });
+});
+
+describe("ritmo caducado (Q3)", () => {
+  afterEach(() => {
+    resetCommercialStore();
+    jest.useRealTimers();
+  });
+
+  const paceCalls = () => mockGet.mock.calls.filter(([path]) => path === "/commercial/pace").length;
+
+  it("con `stale: true` vuelve a pedir el ritmo una vez pasado el plazo, y para al llegar fresco", async () => {
+    jest.useFakeTimers();
+    let stale = true;
+    mockGet.mockImplementation((path) => {
+      if (path === "/commercial/goal") return Promise.resolve(withGoal);
+      if (path === "/commercial/pace") return Promise.resolve({ status: "behind", stale });
+      return Promise.resolve({ status: "ready" });
+    });
+
+    await useCommercialStore.getState().load();
+    expect(paceCalls()).toBe(1);
+
+    await jest.advanceTimersByTimeAsync(PACE_STALE_RETRY_MS - 1);
+    expect(paceCalls()).toBe(1);
+    stale = false;
+    await jest.advanceTimersByTimeAsync(1);
+    expect(paceCalls()).toBe(2);
+    expect(useCommercialStore.getState().pace.data?.stale).toBe(false);
+
+    await jest.advanceTimersByTimeAsync(PACE_STALE_RETRY_MS * 5);
+    expect(paceCalls()).toBe(2);
+  });
+
+  it("si sigue caducado, lo intenta unas pocas veces y se detiene: nunca en bucle", async () => {
+    jest.useFakeTimers();
+    mockGet.mockImplementation((path) => {
+      if (path === "/commercial/goal") return Promise.resolve(withGoal);
+      if (path === "/commercial/pace") return Promise.resolve({ status: "behind", stale: true });
+      return Promise.resolve({ status: "ready" });
+    });
+
+    await useCommercialStore.getState().load();
+    await jest.advanceTimersByTimeAsync(PACE_STALE_RETRY_MS * (PACE_STALE_MAX_RETRIES + 5));
+
+    expect(paceCalls()).toBe(1 + PACE_STALE_MAX_RETRIES);
+  });
+
+  it("una recarga por evento sustituye al reintento pendiente (un solo temporizador)", async () => {
+    jest.useFakeTimers();
+    let stale = true;
+    mockGet.mockImplementation((path) => {
+      if (path === "/commercial/goal") return Promise.resolve(withGoal);
+      if (path === "/commercial/pace") return Promise.resolve({ status: "behind", stale });
+      return Promise.resolve({ status: "ready" });
+    });
+
+    await useCommercialStore.getState().load();
+    stale = false;
+    await useCommercialStore.getState().reloadPace(); // p. ej. `commercial.pace_updated`
+    await jest.advanceTimersByTimeAsync(PACE_STALE_RETRY_MS * 2);
+
+    expect(paceCalls()).toBe(2);
   });
 });
 

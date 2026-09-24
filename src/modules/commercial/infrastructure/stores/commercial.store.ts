@@ -46,6 +46,16 @@ const failed = <T,>(prev: Section<T>, error: string): Section<T> => ({ status: "
  */
 export type CommercialBlocker = "no_plan" | null;
 
+/**
+ * `GET /commercial/pace` con `stale: true` = la fila de hoy caducó y el
+ * servidor ya encoló su refresco, pero responde con lo viejo (Q3). Se vuelve a
+ * pedir UNA vez pasado este tiempo, y como mucho `PACE_STALE_MAX_RETRIES`
+ * veces seguidas mientras siga caducada: nunca en bucle. El evento
+ * `commercial.pace_updated` que publica el refresco suele llegar antes.
+ */
+export const PACE_STALE_RETRY_MS = 45_000;
+export const PACE_STALE_MAX_RETRIES = 3;
+
 interface CommercialState {
   goal: Section<GoalResponseDTO>;
   plan: Section<CommercialPlanDTO>;
@@ -99,6 +109,8 @@ interface CommercialState {
   approveProposal: (id: string) => Promise<CommercialApprovalResultDTO>;
   /** Rechaza con motivo. Lanza al llamador (409/403 recargan la lista); la fila sale de la lista de pendientes. */
   rejectProposal: (id: string, reason: string | undefined) => Promise<RejectCommercialProposalResultDTO>;
+  /** Cancela el reintento pendiente de un ritmo caducado (Q3) y reinicia su cuenta. */
+  cancelStaleRetry: () => void;
 }
 
 type ProposalDecision = Pick<CommercialProposalDTO, "status" | "decided_at">;
@@ -150,7 +162,29 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
   /** Aprobaciones en vuelo por id (C9): un doble clic no manda dos POST. */
   const approving = new Map<string, Promise<CommercialApprovalResultDTO>>();
 
+  /** Reintento de un ritmo caducado (Q3): un solo temporizador y una cuenta de intentos seguidos. */
+  let staleTimer: ReturnType<typeof setTimeout> | null = null;
+  let staleRetries = 0;
+  function clearStaleTimer(): void {
+    if (staleTimer !== null) clearTimeout(staleTimer);
+    staleTimer = null;
+  }
+  function onPace(data: CommercialPaceDTO): void {
+    if (!data.stale) {
+      staleRetries = 0;
+      return;
+    }
+    if (staleRetries >= PACE_STALE_MAX_RETRIES) return;
+    staleRetries += 1;
+    staleTimer = setTimeout(() => {
+      staleTimer = null;
+      void get().reloadPace();
+    }, PACE_STALE_RETRY_MS);
+  }
+
   async function loadPaceAndPlan(): Promise<void> {
+    // Una carga nueva (evento, reconexión, guardado) sustituye al reintento pendiente.
+    clearStaleTimer();
     const planSeq = (seq.plan += 1);
     const paceSeq = (seq.pace += 1);
     set((state) => ({ plan: loading(state.plan), pace: loading(state.pace) }));
@@ -165,7 +199,9 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
         }),
       getPace("day")
         .then((data) => {
-          if (seq.pace === paceSeq) set({ pace: ready(data) });
+          if (seq.pace !== paceSeq) return;
+          set({ pace: ready(data) });
+          onPace(data);
         })
         .catch((error: unknown) => {
           if (seq.pace === paceSeq) set((state) => ({ pace: failed(state.pace, errorMessage(error)) }));
@@ -219,6 +255,11 @@ export const useCommercialStore = create<CommercialState>((set, get) => {
   }
 
   return {
+    cancelStaleRetry: () => {
+      clearStaleTimer();
+      staleRetries = 0;
+    },
+
     goal: idle(),
     plan: idle(),
     pace: idle(),
@@ -342,6 +383,7 @@ function patchProposal(
 /** Solo para tests. */
 export function resetCommercialStore(): void {
   useCommercialStore.getState().cancelPreview();
+  useCommercialStore.getState().cancelStaleRetry();
   useCommercialStore.setState({
     goal: idle(),
     plan: idle(),
