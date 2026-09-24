@@ -100,6 +100,13 @@ export function ScenarioFormSheet({ open, onOpenChange, mode, scenario, onClone 
       placeholder: "ventas, retención",
       description: "Separadas por coma (máx. 10).",
     }),
+    createInputField<ScenarioFormValues>("customer_name", {
+      label: "Nombre del contacto simulado",
+      placeholder: "Cliente simulado",
+      autoComplete: "off",
+      description: "Nombre del perfil con el que nace el contacto. Sirve para probar inyección vía el nombre (viaja tal cual).",
+      colSpan: { base: 1, md: 2 },
+    }),
     createInputField<ScenarioFormValues>("description", {
       label: "Descripción",
       inputKind: "textarea",
@@ -247,6 +254,12 @@ function ScenarioReadView({
       <ReadBlock label="Objetivo">
         <p className="whitespace-pre-wrap rounded-xl bg-muted/50 p-3 text-sm">{scenario.goal}</p>
       </ReadBlock>
+
+      {scenario.customer_name && (
+        <ReadBlock label="Nombre del contacto simulado">
+          <p className="rounded-xl bg-muted/50 p-3 font-mono text-xs">{scenario.customer_name}</p>
+        </ReadBlock>
+      )}
 
       <ReadBlock label="Criterios de éxito">
         <CriteriaList criteria={parseSuccessCriteria(scenario.success_criteria)} />

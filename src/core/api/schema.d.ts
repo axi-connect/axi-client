@@ -8023,6 +8023,7 @@ export interface components {
                 }[];
                 /** @default [] */
                 tags: string[];
+                customer_name: string | null;
                 /** Format: uuid */
                 id: string;
                 criteria_version: number;
@@ -8056,6 +8057,7 @@ export interface components {
             }[];
             /** @default [] */
             tags: string[];
+            customer_name: string | null;
             /** Format: uuid */
             id: string;
             criteria_version: number;
@@ -8110,9 +8112,89 @@ export interface components {
                 /** @enum {string} */
                 kind: "max_reply_ms";
                 threshold_ms: number;
+            } | {
+                /** @enum {string} */
+                kind: "contact_field_captured";
+                field: string;
+                pattern?: string;
+            } | {
+                /** @enum {string} */
+                kind: "deal_stage_kind";
+                /** @enum {string} */
+                kind_expected?: "new" | "contacted" | "qualified" | "meeting" | "proposal" | "negotiation" | "commitment" | "fulfillment" | "custom";
+            } | {
+                /** @enum {string} */
+                kind: "media_sent";
+                /** @enum {string} */
+                media: "image" | "document" | "location";
+                /** @default 1 */
+                min: number;
+            } | {
+                /** @enum {string} */
+                kind: "payment_reported";
+            } | {
+                /** @enum {string} */
+                kind: "delivery_set";
+                /** @enum {string} */
+                method?: "shipping" | "pickup";
+            } | {
+                /** @enum {string} */
+                kind: "promotion_applied";
+                code?: string;
+            } | {
+                /** @enum {string} */
+                kind: "recognition_matched";
+                sku: string;
+                /** @default 1 */
+                max_rank: number;
+            } | {
+                /** @enum {string} */
+                kind: "intent_detected";
+                intention_code: string;
+            } | {
+                /** @enum {string} */
+                kind: "turns_to_outcome";
+                max: number;
+                /**
+                 * @default order
+                 * @enum {string}
+                 */
+                outcome: "order" | "appointment";
+            } | {
+                /** @enum {string} */
+                kind: "tool_called";
+                /** @enum {string} */
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                /** @default 1 */
+                min: number;
+            } | {
+                /** @enum {string} */
+                kind: "tool_not_called";
+                /** @enum {string} */
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+            } | {
+                /** @enum {string} */
+                kind: "no_unverified_prices";
+            } | {
+                /** @enum {string} */
+                kind: "no_bot_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "max_greetings";
+                /** @default 1 */
+                max: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_llm_calls_per_turn";
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_cost_usd";
+                usd: number;
             })[];
             /** @default [] */
             tags: string[];
+            customer_name?: string | null;
         };
         CloneScenarioDto: {
             code: string;
@@ -8157,9 +8239,89 @@ export interface components {
                 /** @enum {string} */
                 kind: "max_reply_ms";
                 threshold_ms: number;
+            } | {
+                /** @enum {string} */
+                kind: "contact_field_captured";
+                field: string;
+                pattern?: string;
+            } | {
+                /** @enum {string} */
+                kind: "deal_stage_kind";
+                /** @enum {string} */
+                kind_expected?: "new" | "contacted" | "qualified" | "meeting" | "proposal" | "negotiation" | "commitment" | "fulfillment" | "custom";
+            } | {
+                /** @enum {string} */
+                kind: "media_sent";
+                /** @enum {string} */
+                media: "image" | "document" | "location";
+                /** @default 1 */
+                min: number;
+            } | {
+                /** @enum {string} */
+                kind: "payment_reported";
+            } | {
+                /** @enum {string} */
+                kind: "delivery_set";
+                /** @enum {string} */
+                method?: "shipping" | "pickup";
+            } | {
+                /** @enum {string} */
+                kind: "promotion_applied";
+                code?: string;
+            } | {
+                /** @enum {string} */
+                kind: "recognition_matched";
+                sku: string;
+                /** @default 1 */
+                max_rank: number;
+            } | {
+                /** @enum {string} */
+                kind: "intent_detected";
+                intention_code: string;
+            } | {
+                /** @enum {string} */
+                kind: "turns_to_outcome";
+                max: number;
+                /**
+                 * @default order
+                 * @enum {string}
+                 */
+                outcome: "order" | "appointment";
+            } | {
+                /** @enum {string} */
+                kind: "tool_called";
+                /** @enum {string} */
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+                /** @default 1 */
+                min: number;
+            } | {
+                /** @enum {string} */
+                kind: "tool_not_called";
+                /** @enum {string} */
+                name: "advance_stage" | "apply_promotion" | "book_appointment" | "catalog_lookup" | "close_conversation" | "confirm_appointment" | "create_order" | "get_branches" | "get_business_policies" | "get_order_status" | "get_payment_methods" | "human_handoff" | "log_crm_activity" | "open_deal" | "quote_order" | "report_payment" | "reschedule_appointment" | "save_contact_data" | "schedule_availability" | "schedule_follow_up" | "send_product_images" | "send_resource" | "set_delivery" | "validate_coupon";
+            } | {
+                /** @enum {string} */
+                kind: "no_unverified_prices";
+            } | {
+                /** @enum {string} */
+                kind: "no_bot_phrases";
+            } | {
+                /** @enum {string} */
+                kind: "max_greetings";
+                /** @default 1 */
+                max: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_llm_calls_per_turn";
+                n: number;
+            } | {
+                /** @enum {string} */
+                kind: "max_cost_usd";
+                usd: number;
             })[];
             /** @default [] */
             tags: string[];
+            customer_name?: string | null;
             /** @enum {string} */
             status?: "active" | "archived";
         };
@@ -8216,6 +8378,7 @@ export interface components {
                     }[];
                     /** @default [] */
                     tags: string[];
+                    customer_name: string | null;
                     /** Format: uuid */
                     id: string;
                     criteria_version: number;

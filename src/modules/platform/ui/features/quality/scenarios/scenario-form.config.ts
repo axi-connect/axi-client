@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   CODE_MAX,
   CODE_MIN,
+  CUSTOMER_NAME_MAX,
   DEFAULT_MAX_TURNS,
   DESCRIPTION_MAX,
   GOAL_MAX,
@@ -53,6 +54,8 @@ export const scenarioFormSchema = z.object({
     .int("Debe ser un entero")
     .min(MAX_TURNS_MIN, `Mínimo ${MAX_TURNS_MIN}`)
     .max(MAX_TURNS_MAX, `Máximo ${MAX_TURNS_MAX}`),
+  /** F3: nombre del contacto sintético (inyección vía nombre); vacío = «Cliente simulado». */
+  customer_name: z.string().max(CUSTOMER_NAME_MAX, `Máximo ${CUSTOMER_NAME_MAX} caracteres`).optional(),
   tags: z.string().superRefine((value, ctx) => {
     const tags = parseTagsInput(value);
     if (tags.length > MAX_TAGS) {
@@ -78,6 +81,7 @@ export const defaultScenarioFormValues: ScenarioFormValues = {
   persona: "",
   goal: "",
   max_turns: DEFAULT_MAX_TURNS,
+  customer_name: "",
   tags: "",
   success_criteria: [],
 };
@@ -90,6 +94,7 @@ export function scenarioToFormValues(scenario: Scenario): ScenarioFormValues {
     persona: scenario.persona,
     goal: scenario.goal,
     max_turns: scenario.max_turns,
+    customer_name: scenario.customer_name ?? "",
     tags: scenario.tags.join(", "),
     success_criteria: parseSuccessCriteria(scenario.success_criteria),
   };
@@ -112,6 +117,7 @@ export function toCreateScenarioDTO(values: ScenarioFormValues): CreateScenarioD
     persona: values.persona,
     goal: values.goal,
     max_turns: values.max_turns,
+    ...(values.customer_name?.trim() ? { customer_name: values.customer_name.trim() } : {}),
     tags: parseTagsInput(values.tags),
     success_criteria: toWireCriteria(values.success_criteria),
   };
@@ -125,6 +131,7 @@ export function toUpdateScenarioDTO(values: ScenarioFormValues): UpdateScenarioD
     persona: values.persona,
     goal: values.goal,
     max_turns: values.max_turns,
+    customer_name: values.customer_name?.trim() ? values.customer_name.trim() : null,
     tags: parseTagsInput(values.tags),
     success_criteria: toWireCriteria(values.success_criteria),
   };
