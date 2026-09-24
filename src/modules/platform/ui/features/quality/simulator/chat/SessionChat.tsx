@@ -24,7 +24,11 @@ import {
   type SessionDetail,
   type SessionInteractiveOption,
 } from "../../../../../domain/quality-sessions";
-import { dedupeOptimistic, useSendSessionMessage } from "../../../../../infrastructure/api/hooks/use-quality-sessions";
+import {
+  dedupeOptimistic,
+  useSendSessionMedia,
+  useSendSessionMessage,
+} from "../../../../../infrastructure/api/hooks/use-quality-sessions";
 import { StatusBadge } from "../../../../components/StatusBadge";
 import { Composer } from "./Composer";
 import { SessionTranscript } from "./SessionTranscript";
@@ -37,13 +41,14 @@ type SessionChatProps = {
 
 export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
   const sendMessage = useSendSessionMessage(session.id);
+  const sendMedia = useSendSessionMedia(session.id);
   const [pendingTapId, setPendingTapId] = useState<string | null>(null);
   const transcript = dedupeOptimistic(session.transcript);
   const active = session.status === "active";
   const canSend = canOperatorSend(session);
   const pct = spendPercent(session.spend.spent_usd, session.spend.cap_usd);
 
-  const error = sendMessage.error;
+  const error = sendMessage.error ?? sendMedia.error;
   const problem = isHttpError(error) ? error.problem : null;
   const sendError = error ? describeSessionError(problem) ?? errorMessage(error) : null;
 
@@ -114,10 +119,12 @@ export function SessionChat({ session, onEnd, ending }: SessionChatProps) {
       <Composer
         disabled={!canSend}
         disabledReason={disabledReason}
-        pending={sendMessage.isPending}
+        pending={sendMessage.isPending || sendMedia.isPending}
         capUsd={session.spend.cap_usd}
         dailyCapUsd={session.spend.daily_cap_usd}
         onSend={(body) => sendMessage.mutate({ kind: "text", body })}
+        onSendMedia={(input) => sendMedia.mutate(input)}
+        onSendLocation={(location) => sendMessage.mutate({ kind: "location", location })}
       />
     </section>
   );

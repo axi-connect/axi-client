@@ -4,12 +4,16 @@ import { platformKeys } from "../../query-keys";
 import { platformClient } from "../../platform-client";
 import {
   dedupeOptimistic,
+  useSendSessionMedia,
   useSendSessionMessage,
   useSessionQuery,
   useSessionsQuery,
 } from "../use-quality-sessions";
 
 const MESSAGE = {
+  recognition: null,
+  transcription: null,
+  attachments: [],
   id: "0199-0001",
   direction: "inbound",
   sender_type: "contact",
@@ -59,6 +63,10 @@ jest.mock("../../platform-client", () => ({
 
 jest.mock("../../../auth/platform-auth.context", () => ({
   usePlatformAuth: () => ({ reloginOpen: false }),
+}));
+
+jest.mock("../../../auth/token-storage", () => ({
+  getPlatformToken: () => "tok-1",
 }));
 
 const mockedClient = platformClient as jest.Mocked<typeof platformClient>;
@@ -175,4 +183,37 @@ describe("useSendSessionMessage", () => {
     expect(dedupeOptimistic([MESSAGE, pending] as never).map((m) => m.id)).toEqual(["0199-0001", "pending-sim-in:2"]);
     expect(dedupeOptimistic([MESSAGE, pending, persisted] as never).map((m) => m.id)).toEqual(["0199-0001", "0199-0002"]);
   });
+
+describe("useSendSessionMedia (F2)", () => {
+  it("sube multipart con Bearer y pinta la burbuja optimista de imagen reconciliable por provider_message_id", async () => {
+    const fetchMock = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ provider_message_id: "sim-in:9" }),
+    }));
+    (globalThis as { fetch: unknown }).fetch = fetchMock;
+    const { wrapper, queryClient } = createWrapper();
+    queryClient.setQueryData(platformKeys.quality.sessions.detail("s-1"), DETAIL);
+    const { result } = renderHook(() => useSendSessionMedia("s-1"), { wrapper });
+    const file = new Blob(["png"], { type: "image/png" });
+
+    await act(async () => {
+      await result.current.mutateAsync({ file, filename: "foto.png", caption: "¿este?" });
+    });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toContain("/api/v1/platform/quality/sessions/s-1/media");
+    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok-1");
+    expect(init.body).toBeInstanceOf(FormData);
+    expect((init.body as FormData).get("caption")).toBe("¿este?");
+
+    const cached = queryClient.getQueryData<typeof DETAIL>(platformKeys.quality.sessions.detail("s-1"));
+    const last = cached?.transcript.at(-1);
+    expect(last?.id).toBe("pending-sim-in:9");
+    expect(last?.content_type).toBe("image");
+    expect(last?.provider_message_id).toBe("sim-in:9");
+    expect(cached?.agent_state).toBe("thinking");
+    // Al llegar la persistida con el mismo provider_message_id, la optimista se va
+    const persisted = { ...MESSAGE, id: "0199-0009", content_type: "image", provider_message_id: "sim-in:9" };
+    expect(dedupeOptimistic([...(cached?.transcript ?? []), persisted] as never).map((m) => m.id)).toEqual(["0199-0001", "0199-0009"]);
+  });
+});
 });

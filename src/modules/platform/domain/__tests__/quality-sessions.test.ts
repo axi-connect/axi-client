@@ -6,6 +6,7 @@ import {
   lastMessageId,
   lastTappableMessageId,
   mergeTranscript,
+  recognitionLabel,
   sessionStatusKey,
   sessionStatusLabel,
   spendPercent,
@@ -28,9 +29,23 @@ function message(overrides: Partial<SessionMessage> = {}): SessionMessage {
     interactive: null,
     interactive_reply: null,
     location: null,
+    recognition: null,
+    transcription: null,
+    attachments: [],
     ...overrides,
   };
 }
+
+describe("reconocimiento (F2)", () => {
+  const base = { kind: null, description: null, top_score: null, margin: null, degraded: false, latency_ms: null, error_reason: null, skip_reason: null, candidates: [] };
+  it("omitido/fallido → ámbar con el motivo; done con candidato → ok con la confianza; done sin candidato → off", () => {
+    expect(recognitionLabel({ ...base, status: "skipped", skip_reason: "disabled" })).toEqual({ text: "Reconocimiento apagado en este tenant", tone: "warn" });
+    expect(recognitionLabel({ ...base, status: "failed", error_reason: "timeout" }).tone).toBe("warn");
+    expect(recognitionLabel({ ...base, status: "done", kind: "product", candidates: [{ sku: "A", name: "A", score: 0.9, confidence: "high" }] })).toEqual({ text: "Reconocido · confianza alta", tone: "ok" });
+    expect(recognitionLabel({ ...base, status: "done", kind: "product" })).toEqual({ text: "Sin coincidencia en el catálogo", tone: "off" });
+    expect(recognitionLabel({ ...base, status: "done", kind: "other" }).text).toBe("No es un producto");
+  });
+});
 
 describe("estado de la sesión", () => {
   it("una sesión activa se etiqueta Activa y su chip es running", () => {

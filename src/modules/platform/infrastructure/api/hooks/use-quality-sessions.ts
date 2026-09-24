@@ -16,6 +16,8 @@
  */
 import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { parseHttpError } from "@/core/api/problem";
+import { API_BASE_URL } from "@/core/config/env";
 import {
   isOptimisticMessage,
   lastMessageId,
@@ -28,6 +30,7 @@ import {
 } from "../../../domain/quality-sessions";
 import { sessionPollInterval } from "../../../domain/polling";
 import { usePlatformAuth } from "../../auth/platform-auth.context";
+import { getPlatformToken } from "../../auth/token-storage";
 import { platformClient } from "../platform-client";
 import { platformKeys } from "../query-keys";
 
@@ -179,6 +182,73 @@ export function useSendSessionMessage(id: string) {
               ? { id: body.option_id, title: body.title, source: body.source ?? "button" }
               : null,
           location: body.kind === "location" && body.location ? body.location : null,
+          recognition: null,
+          transcription: null,
+          attachments: [],
+        };
+        return { ...known, agent_state: "thinking", transcript: [...known.transcript, optimistic] };
+      });
+    },
+    onError: () => queryClient.invalidateQueries({ queryKey: key }),
+  });
+}
+
+export type SendSessionMediaInput = {
+  file: Blob;
+  filename: string;
+  caption?: string;
+  /** Nota de voz grabada en el navegador → el server la transcodifica a ogg/opus */
+  voiceNote?: boolean;
+};
+
+/**
+ * Adjunto del operador (F2): imagen o nota de voz. openapi-fetch no sirve para
+ * multipart con el `bodySerializer` por defecto, así que va `fetch` manual con
+ * el MISMO contrato que `platform-client` (misma base, Bearer desde
+ * token-storage, `!ok` → HttpError). Burbuja optimista con el caption o una
+ * etiqueta del tipo; la persistida (con su adjunto presignado y, después, el
+ * reconocimiento o la transcripción) la reemplaza por provider_message_id.
+ */
+export function useSendSessionMedia(id: string) {
+  const queryClient = useQueryClient();
+  const key = platformKeys.quality.sessions.detail(id);
+  return useMutation({
+    mutationFn: async (input: SendSessionMediaInput) => {
+      const form = new FormData();
+      form.append("file", input.file, input.filename);
+      if (input.caption) form.append("caption", input.caption);
+      if (input.voiceNote) form.append("voice_note", "true");
+      const token = getPlatformToken();
+      const response = await fetch(`${API_BASE_URL}/api/v1/platform/quality/sessions/${id}/media`, {
+        method: "POST",
+        cache: "no-store",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      });
+      if (!response.ok) throw await parseHttpError(response);
+      const accepted = (await response.json()) as { provider_message_id: string };
+      return { accepted, input };
+    },
+    onSuccess: ({ accepted, input }) => {
+      queryClient.setQueryData<SessionDetail>(key, (known) => {
+        if (!known) return known;
+        const isImage = !input.voiceNote && input.file.type.startsWith("image/");
+        const optimistic: SessionMessage = {
+          id: `${OPTIMISTIC_ID_PREFIX}${accepted.provider_message_id}`,
+          direction: "inbound",
+          sender_type: "contact",
+          agent_id: null,
+          content_type: isImage ? "image" : "audio",
+          body: input.caption ?? null,
+          provider_message_id: accepted.provider_message_id,
+          status: "queued",
+          created_at: new Date().toISOString(),
+          interactive: null,
+          interactive_reply: null,
+          location: null,
+          recognition: null,
+          transcription: null,
+          attachments: [],
         };
         return { ...known, agent_state: "thinking", transcript: [...known.transcript, optimistic] };
       });

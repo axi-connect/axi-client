@@ -6740,6 +6740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/quality/sessions/{id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_sendMedia_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -17007,6 +17023,40 @@ export interface components {
                     name?: string;
                     address?: string;
                 } | null;
+                recognition: {
+                    /** @enum {string} */
+                    status: "done" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_reason: string | null;
+                    kind: string | null;
+                    description: string | null;
+                    top_score: number | null;
+                    margin: number | null;
+                    degraded: boolean;
+                    latency_ms: number | null;
+                    candidates: {
+                        sku: string;
+                        name: string;
+                        score: number;
+                        confidence: string;
+                    }[];
+                } | null;
+                transcription: {
+                    /** @enum {string} */
+                    status: "done" | "failed";
+                    text: string | null;
+                    error_reason: string | null;
+                    audio_seconds: number | null;
+                    latency_ms: number | null;
+                } | null;
+                attachments: {
+                    /** Format: uuid */
+                    id: string;
+                    filename: string;
+                    mime_type: string;
+                    size_bytes: number;
+                    url: string | null;
+                }[];
             }[];
         };
         QualitySessionTraceDto: {
@@ -29741,6 +29791,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformTenantAgentsDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_sendMedia_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    caption?: string;
+                    /** @default false */
+                    voice_note?: boolean;
+                };
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
                 };
             };
         };

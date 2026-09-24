@@ -17,6 +17,9 @@ export type SessionTraceTurn = Extract<SessionTraceEntry, { kind: "agent_turn" }
 export type CreateSessionDTO = Schemas["CreateQualitySessionDto"];
 export type SendSessionMessageDTO = Schemas["SendQualitySessionMessageDto"];
 export type TenantAgent = Schemas["PlatformTenantAgentsDto"]["data"][number];
+export type SessionAttachment = SessionMessage["attachments"][number];
+export type SessionRecognition = NonNullable<SessionMessage["recognition"]>;
+export type SessionTranscription = NonNullable<SessionMessage["transcription"]>;
 
 // ─── Límites del contrato (quality.config.ts del backend) ────────────────────
 
@@ -76,6 +79,51 @@ export function sessionStatusKey(session: Pick<SessionSummary, "status" | "ended
     default:
       return "canceled";
   }
+}
+
+// ─── Medios (F2) ─────────────────────────────────────────────────────────────
+
+/** Tope del adjunto del operador (coincide con `interactive_media_max_bytes`). */
+export const MEDIA_MAX_BYTES = 5 * 1024 * 1024;
+export const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
+
+export function isImageAttachment(attachment: Pick<SessionAttachment, "mime_type">): boolean {
+  return attachment.mime_type.startsWith("image/");
+}
+
+export function isAudioAttachment(attachment: Pick<SessionAttachment, "mime_type">): boolean {
+  return attachment.mime_type.startsWith("audio/");
+}
+
+const SKIP_REASON_LABELS: Record<string, string> = {
+  disabled: "Reconocimiento apagado en este tenant",
+  quota: "Cuota de reconocimiento agotada",
+  not_image: "El archivo no es una imagen legible",
+  too_large: "Imagen demasiado grande para analizar",
+};
+
+const ERROR_REASON_LABELS: Record<string, string> = {
+  vision_failed: "La visión falló",
+  search_failed: "La búsqueda en el catálogo falló",
+  timeout: "El reconocimiento agotó su tiempo",
+  provider_error: "Error del proveedor de visión",
+};
+
+const CONFIDENCE_LABELS: Record<string, string> = { high: "alta", medium: "media", low: "baja" };
+
+/** Qué decir del reconocimiento de una foto en una línea (chip de la burbuja). */
+export function recognitionLabel(recognition: SessionRecognition): { text: string; tone: "ok" | "warn" | "off" } {
+  if (recognition.status === "skipped") {
+    return { text: SKIP_REASON_LABELS[recognition.skip_reason ?? ""] ?? "Reconocimiento omitido", tone: "warn" };
+  }
+  if (recognition.status === "failed") {
+    return { text: ERROR_REASON_LABELS[recognition.error_reason ?? ""] ?? "Reconocimiento fallido", tone: "warn" };
+  }
+  const top = recognition.candidates[0];
+  if (!top) {
+    return { text: recognition.kind === "product" || recognition.kind === "screenshot_of_post" ? "Sin coincidencia en el catálogo" : "No es un producto", tone: "off" };
+  }
+  return { text: `Reconocido · confianza ${CONFIDENCE_LABELS[top.confidence] ?? top.confidence}`, tone: "ok" };
 }
 
 // ─── Toques ──────────────────────────────────────────────────────────────────

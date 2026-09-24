@@ -12,12 +12,23 @@ import { Check, ChevronRight, MousePointerClick } from "lucide-react";
 import { useAutoScroll } from "@/core/hooks/use-auto-scroll";
 import { cn } from "@/core/lib/utils";
 import {
+  isAudioAttachment,
+  isImageAttachment,
   lastTappableMessageId,
+  recognitionLabel,
   type SessionDetail,
   type SessionInteractiveOption,
   type SessionMessage,
 } from "../../../../../domain/quality-sessions";
-import { bubbleSideFor, ChatBubble, LocationBubble, TypingBubble } from "../../shared/ChatBubble";
+import {
+  bubbleSideFor,
+  ChatBubble,
+  LocationBubble,
+  MediaBubble,
+  RecognitionChip,
+  TranscriptionLine,
+  TypingBubble,
+} from "../../shared/ChatBubble";
 
 type SessionTranscriptProps = {
   session: SessionDetail;
@@ -82,6 +93,35 @@ export function SessionTranscript({ session, transcript, canTap, onTap, pendingT
                 </p>
               )}
               {message.location && <LocationBubble {...message.location} />}
+              {message.attachments.map((attachment) => (
+                <MediaBubble
+                  key={attachment.id}
+                  attachment={attachment}
+                  alt={isImageAttachment(attachment) ? "Imagen enviada" : isAudioAttachment(attachment) ? "Audio enviado" : attachment.filename}
+                />
+              ))}
+              {(message.content_type === "image" || message.content_type === "audio") &&
+                message.attachments.length === 0 &&
+                message.id.startsWith("pending-") && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {message.content_type === "image" ? "Subiendo imagen…" : "Subiendo nota de voz…"}
+                  </p>
+                )}
+              {message.recognition && (
+                <RecognitionChip
+                  label={recognitionLabel(message.recognition).text}
+                  tone={recognitionLabel(message.recognition).tone}
+                  candidates={message.recognition.candidates}
+                  latencyMs={message.recognition.latency_ms}
+                  margin={message.recognition.margin}
+                />
+              )}
+              {message.content_type === "image" && !message.recognition && !message.id.startsWith("pending-") && (
+                <p className="mt-1 text-xs text-muted-foreground">Analizando la imagen…</p>
+              )}
+              {message.transcription && (
+                <TranscriptionLine text={message.transcription.text} failed={message.transcription.status === "failed"} />
+              )}
               {message.interactive && message.interactive.options.length > 0 && (
                 <ul className="mt-2 flex flex-col gap-1.5" aria-label="Opciones del agente">
                   {message.interactive.options.map((option) => {
