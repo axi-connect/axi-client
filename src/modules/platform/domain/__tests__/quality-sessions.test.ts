@@ -3,6 +3,7 @@ import {
   describeSessionError,
   formatLatency,
   formatUsd,
+  isSettledMessage,
   lastMessageId,
   lastTappableMessageId,
   mergeTranscript,
@@ -97,10 +98,32 @@ describe("transcript incremental", () => {
     expect(lastMessageId([message({ id: "pending-sim-in:9" })])).toBeUndefined();
   });
 
-  it("fusiona el delta sin duplicar ids y conserva el orden", () => {
-    const known = [message({ id: "1" }), message({ id: "2" })];
-    const merged = mergeTranscript(known, [message({ id: "2" }), message({ id: "3" })]);
+  it("B2: el cursor no avanza sobre un medio sin asentar (adjunto, reconocimiento o transcripción pendientes)", () => {
+    const attachment = { id: "att-1", mime_type: "image/jpeg", filename: "f.jpg", size_bytes: 10, url: "https://x/1" };
+    const recognition = { status: "skipped" as const, skip_reason: "disabled", error_reason: null, kind: null, description: null, top_score: null, margin: null, degraded: false, latency_ms: null, candidates: [] };
+    const bare = message({ id: "2", content_type: "image", body: null });
+    expect(isSettledMessage(bare)).toBe(false);
+    expect(isSettledMessage({ ...bare, attachments: [attachment] })).toBe(false);
+    expect(isSettledMessage({ ...bare, attachments: [attachment], recognition })).toBe(true);
+    const audio = message({ id: "3", content_type: "audio", body: null, attachments: [{ ...attachment, mime_type: "audio/ogg" }] });
+    expect(isSettledMessage(audio)).toBe(false);
+    expect(isSettledMessage({ ...audio, transcription: { status: "done", text: "hola", error_reason: null, audio_seconds: 1, latency_ms: 5 } })).toBe(true);
+    // El cursor se queda en el último asentado: cada poll vuelve a traer la foto
+    expect(lastMessageId([message({ id: "1" }), bare])).toBe("1");
+    expect(lastMessageId([message({ id: "1" }), { ...bare, attachments: [attachment], recognition }])).toBe("2");
+  });
+
+  it("fusiona el delta sin duplicar ids, conserva el orden y REEMPLAZA lo que vuelve con más datos", () => {
+    const known = [message({ id: "1" }), message({ id: "2", content_type: "image", body: null })];
+    const richer = message({
+      id: "2",
+      content_type: "image",
+      body: null,
+      attachments: [{ id: "att-1", mime_type: "image/jpeg", filename: "f.jpg", size_bytes: 10, url: "https://x/1" }],
+    });
+    const merged = mergeTranscript(known, [richer, message({ id: "3" })]);
     expect(merged.map((m) => m.id)).toEqual(["1", "2", "3"]);
+    expect(merged[1]?.attachments).toHaveLength(1);
     expect(mergeTranscript(known, [])).not.toBe(known);
   });
 });

@@ -166,20 +166,57 @@ export function isOptimisticMessage(message: Pick<SessionMessage, "id">): boolea
 export function lastMessageId(transcript: readonly SessionMessage[]): string | undefined {
   for (let index = transcript.length - 1; index >= 0; index -= 1) {
     const message = transcript[index];
-    if (message && !isOptimisticMessage(message)) return message.id;
+    if (message && isSettledMessage(message)) return message.id;
   }
   return undefined;
 }
 
-/** Fusiona un delta del transcript en el estado conocido (sin duplicar por id). */
+/**
+ * Un mensaje está ASENTADO cuando ya no le va a llegar nada por detrás. Los
+ * medios no lo están al nacer: el adjunto lo crea la ingesta después de
+ * persistir el mensaje, y el reconocimiento / la transcripción los escribe un
+ * job asíncrono sobre el MISMO mensaje. Si el cursor `?after=` avanzara sobre
+ * uno de esos, el delta nunca volvería a traerlo y la burbuja se quedaría sin
+ * foto ni chip para siempre (B2 de la auditoría). Un medio sin asentar deja el
+ * cursor en el mensaje anterior: cada poll lo vuelve a traer hasta que cierre.
+ */
+export function isSettledMessage(message: SessionMessage): boolean {
+  if (isOptimisticMessage(message)) return false;
+  if (message.content_type === "image") {
+    return message.attachments.length > 0 && message.recognition !== null;
+  }
+  if (message.content_type === "audio") {
+    return message.attachments.length > 0 && message.transcription !== null;
+  }
+  if (message.content_type === "video" || message.content_type === "document") {
+    return message.attachments.length > 0;
+  }
+  return true;
+}
+
+/**
+ * Fusiona un delta del transcript en el estado conocido. Un id que ya se
+ * conocía se REEMPLAZA por la versión que llega (trae el adjunto, el
+ * reconocimiento o la URL presignada nueva); los nuevos se anexan en orden.
+ */
 export function mergeTranscript(
   known: readonly SessionMessage[],
   incoming: readonly SessionMessage[],
 ): SessionMessage[] {
   if (incoming.length === 0) return [...known];
+  const replacements = new Map(incoming.map((message) => [message.id, message]));
+  const merged = known.map((message) => replacements.get(message.id) ?? message);
   const seen = new Set(known.map((message) => message.id));
-  return [...known, ...incoming.filter((message) => !seen.has(message.id))];
+  return [...merged, ...incoming.filter((message) => !seen.has(message.id))];
 }
+
+/**
+ * Cada cuánto el poll vuelve a pedir el transcript COMPLETO aunque tenga
+ * cursor: las URL presignadas de los adjuntos duran 5 min en el servidor y
+ * el delta solo trae mensajes nuevos, así que sin esto las fotos viejas se
+ * romperían a los 5 min (B2c).
+ */
+export const FULL_TRANSCRIPT_REFRESH_MS = 4 * 60 * 1000;
 
 // ─── Formato ─────────────────────────────────────────────────────────────────
 

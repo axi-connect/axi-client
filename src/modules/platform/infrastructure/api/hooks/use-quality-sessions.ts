@@ -14,11 +14,12 @@
  * `provider_message_id` que devuelve el 202 y se reconcilia cuando el mensaje
  * persistido llega por el polling.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseHttpError } from "@/core/api/problem";
 import { API_BASE_URL } from "@/core/config/env";
 import {
+  FULL_TRANSCRIPT_REFRESH_MS,
   isOptimisticMessage,
   lastMessageId,
   mergeTranscript,
@@ -94,12 +95,16 @@ export function useSessionQuery(id: string) {
   const { reloginOpen } = usePlatformAuth();
   const hidden = usePageHidden();
   const queryClient = useQueryClient();
+  // Momento de la última lectura COMPLETA: las URL presignadas caducan a los
+  // 5 min y el delta no las renueva (B2c)
+  const lastFullFetchAt = useRef(0);
 
   return useQuery({
     queryKey: platformKeys.quality.sessions.detail(id),
     queryFn: async (): Promise<SessionDetail> => {
       const known = queryClient.getQueryData<SessionDetail>(platformKeys.quality.sessions.detail(id));
-      const after = known ? lastMessageId(known.transcript) : undefined;
+      const stale = Date.now() - lastFullFetchAt.current >= FULL_TRANSCRIPT_REFRESH_MS;
+      const after = known && !stale ? lastMessageId(known.transcript) : undefined;
       const { data } = await platformClient.GET("/api/v1/platform/quality/sessions/{id}", {
         params: { path: { id }, query: after ? { after } : {} },
       });
@@ -107,6 +112,7 @@ export function useSessionQuery(id: string) {
       if (fresh.transcript_mode === "delta" && known) {
         return { ...fresh, transcript: mergeTranscript(known.transcript, fresh.transcript) };
       }
+      lastFullFetchAt.current = Date.now();
       return fresh;
     },
     staleTime: 1_000,

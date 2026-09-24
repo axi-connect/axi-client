@@ -129,6 +129,59 @@ describe("useSessionQuery", () => {
   });
 });
 
+describe("useSessionQuery con medios (B2)", () => {
+  it("una imagen cuyo adjunto y reconocimiento llegan en polls posteriores termina con url y chip", async () => {
+    const image = { ...MESSAGE, id: "0199-0002", content_type: "image", body: null, provider_message_id: "sim-in:2" };
+    const attachment = { id: "att-1", mime_type: "image/jpeg", filename: "f.jpg", size_bytes: 10, url: "https://x/1" };
+    const recognition = { status: "skipped", skip_reason: "disabled", error_reason: null, kind: null, description: null, top_score: null, margin: null, degraded: false, latency_ms: null, candidates: [] };
+    mockedClient.GET
+      // 1) completo: la imagen recién persistida, sin adjunto ni reconocimiento
+      .mockResolvedValueOnce({ data: { ...DETAIL, transcript: [MESSAGE, image] } } as never)
+      // 2) delta desde el ÚLTIMO ASENTADO (el texto): la imagen vuelve con adjunto
+      .mockResolvedValueOnce({ data: { ...DETAIL, transcript_mode: "delta", transcript: [{ ...image, attachments: [attachment] }] } } as never)
+      // 3) y vuelve otra vez con el reconocimiento: ya asentada
+      .mockResolvedValueOnce({ data: { ...DETAIL, transcript_mode: "delta", transcript: [{ ...image, attachments: [attachment], recognition }] } } as never)
+      // 4) desde ahí el cursor avanza a la imagen
+      .mockResolvedValue({ data: { ...DETAIL, transcript_mode: "delta", transcript: [] } } as never);
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSessionQuery("s-1"), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const second = await act(() => result.current.refetch());
+    expect(mockedClient.GET).toHaveBeenLastCalledWith("/api/v1/platform/quality/sessions/{id}", {
+      params: { path: { id: "s-1" }, query: { after: "0199-0001" } },
+    });
+    expect(second.data?.transcript[1]?.attachments[0]?.url).toBe("https://x/1");
+
+    const third = await act(() => result.current.refetch());
+    expect(mockedClient.GET).toHaveBeenLastCalledWith("/api/v1/platform/quality/sessions/{id}", {
+      params: { path: { id: "s-1" }, query: { after: "0199-0001" } },
+    });
+    expect(third.data?.transcript[1]?.recognition?.status).toBe("skipped");
+    expect(third.data?.transcript).toHaveLength(2);
+
+    await act(() => result.current.refetch());
+    expect(mockedClient.GET).toHaveBeenLastCalledWith("/api/v1/platform/quality/sessions/{id}", {
+      params: { path: { id: "s-1" }, query: { after: "0199-0002" } },
+    });
+  });
+
+  it("cada 4 min vuelve a leer el transcript completo para renovar las URL presignadas", async () => {
+    const now = jest.spyOn(Date, "now");
+    now.mockReturnValue(1_000_000);
+    mockedClient.GET.mockResolvedValue({ data: DETAIL } as never);
+    const { wrapper } = createWrapper();
+    const { result } = renderHook(() => useSessionQuery("s-1"), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    now.mockReturnValue(1_000_000 + 4 * 60 * 1000);
+    await act(() => result.current.refetch());
+    expect(mockedClient.GET).toHaveBeenLastCalledWith("/api/v1/platform/quality/sessions/{id}", {
+      params: { path: { id: "s-1" }, query: {} },
+    });
+    now.mockRestore();
+  });
+});
+
 describe("useSendSessionMessage", () => {
   it("pinta la burbuja optimista con el provider_message_id del 202 y pone al agente a pensar", async () => {
     const { wrapper, queryClient } = createWrapper();
