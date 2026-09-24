@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { cn } from "@/core/lib/utils";
@@ -7,6 +9,10 @@ import { useAuth } from "@/shared/auth/auth.hooks";
 import { useFeatures } from "@/shared/auth/features.hooks";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import type {
+  DeliveryChannel,
+  SendDocumentResultDTO,
+} from "@/modules/documents/domain/delivery";
 import {
   isOutdated,
   type DocumentDTO,
@@ -22,6 +28,7 @@ import {
 import { DocumentRow } from "./DocumentRow";
 import { IssueDocumentMenu } from "./IssueDocumentMenu";
 import { PaperMark } from "./PaperMark";
+import { SendDocumentDialog, type SendIntent } from "./SendDocumentDialog";
 
 /**
  * Los documentos de una entidad (F8 Cobros) — la MISMA lista para el rail del
@@ -52,6 +59,8 @@ export function DocumentsList({
   const state = useDocuments(subject, enabled);
   const { types } = useDocumentTypes(enabled && canManage);
   const { showAlert } = useAlert();
+  // F9: qué se está enviando; el diálogo es uno para toda la lista.
+  const [sending, setSending] = useState<SendIntent | null>(null);
 
   if (!enabled || state.error === "gated") return null;
 
@@ -102,6 +111,16 @@ export function DocumentsList({
         title: errorMessage(error, "No se pudo reintentar"),
       });
     }
+  }
+
+  function send(document: DocumentDTO, channel?: DeliveryChannel) {
+    setSending(channel === undefined ? { document } : { document, channel });
+  }
+
+  // 202: el documento vuelve con `last_delivery` puesta; la fila ya dice
+  // «Enviando…». El desenlace llega por WS y `refresh` relee la verdad.
+  function sent(result: SendDocumentResultDTO) {
+    state.upsert(result.document);
   }
 
   return (
@@ -176,11 +195,12 @@ export function DocumentsList({
                     Emite el{" "}
                     <b className="font-medium text-foreground">contrato</b>{" "}
                     cuando quieras. El{" "}
-                    <b className="font-medium text-foreground">recibo</b>{" "}
-                    llegará solo con cada pago verificado.
+                    <b className="font-medium text-foreground">recibo</b> puede
+                    salir solo con cada pago verificado: se enciende en Mi
+                    empresa › Documentos.
                   </>
                 ) : (
-                  "El recibo llegará solo con cada pago verificado."
+                  "El recibo puede salir solo con cada pago verificado."
                 )}
               </p>
             </div>
@@ -198,6 +218,7 @@ export function DocumentsList({
                   onView={view}
                   onRegenerate={regenerate}
                   onRetry={retry}
+                  onSend={canManage ? send : undefined}
                 />
               ))}
             </ul>
@@ -206,19 +227,32 @@ export function DocumentsList({
                 <>
                   Cada papel sale con los datos{" "}
                   <b className="font-medium text-foreground">de ese día</b>. Si
-                  el pedido cambia después, aquí se dice.
+                  el pedido cambia después, aquí se dice. Enviarlo al cliente
+                  está en «…».
                 </>
               ) : (
                 <>
-                  Puedes abrir y compartir los papeles. Emitir uno nuevo es de{" "}
+                  Puedes abrir los papeles. Emitirlos o enviarlos es de{" "}
                   <b className="font-medium text-foreground">supervisión</b>:
-                  gasta un consecutivo.
+                  gasta un consecutivo y le escribe al cliente.
                 </>
               )}
             </p>
           </>
         )}
       </div>
+
+      {canManage ? (
+        <SendDocumentDialog
+          intent={sending}
+          subjectLabel={subjectLabel}
+          onOpenChange={(open) => {
+            if (!open) setSending(null);
+          }}
+          onSent={sent}
+          onInFlight={() => void state.refresh()}
+        />
+      ) : null}
     </section>
   );
 }

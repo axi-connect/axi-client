@@ -1,9 +1,13 @@
 import { render } from "@testing-library/react";
 
-import type { DocumentLifecycleEvent } from "@/core/realtime/events";
+import type {
+  DocumentDeliveryUpdatedEvent,
+  DocumentEventIdentity,
+  DocumentLifecycleEvent,
+} from "@/core/realtime/events";
 import { useDocumentsSocket } from "../use-documents-socket";
 
-type Handler = (payload: DocumentLifecycleEvent) => void;
+type Handler = (payload: DocumentEventIdentity) => void;
 const handlers = new Map<string, Handler>();
 let connected = false;
 
@@ -51,10 +55,45 @@ describe("useDocumentsSocket", () => {
     connected = false;
   });
 
+  const deliveryEvent = (
+    overrides: Partial<DocumentDeliveryUpdatedEvent> = {},
+  ): DocumentDeliveryUpdatedEvent => ({
+    company_id: "co-1",
+    document_id: "d1",
+    type_code: "contract",
+    type_label: "Contrato",
+    number: "CTR-2026-0120",
+    contact_id: "c1",
+    order_id: "o1",
+    payment_id: null,
+    delivery_id: "dl1",
+    channel: "whatsapp",
+    status: "sent",
+    skip_reason: null,
+    error_code: null,
+    content_kind: "document",
+    attempt: 1,
+    requested_by: "user",
+    ...overrides,
+  });
+
+  it("F9: document.delivery_updated recarga SOLO si concierne; el estado no se parchea desde el evento", () => {
+    const onChange = jest.fn();
+    render(<Probe onChange={onChange} />);
+    expect(handlers.has("document.delivery_updated")).toBe(true);
+    handlers.get("document.delivery_updated")?.(deliveryEvent());
+    expect(onChange).toHaveBeenCalledTimes(1);
+    handlers.get("document.delivery_updated")?.(
+      deliveryEvent({ order_id: "otro", status: "failed" }),
+    );
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   it("recarga en document.issued y document.failed SOLO si el evento concierne a la entidad", () => {
     const onChange = jest.fn();
     render(<Probe onChange={onChange} />);
     expect([...handlers.keys()].sort()).toEqual([
+      "document.delivery_updated",
       "document.failed",
       "document.issued",
     ]);

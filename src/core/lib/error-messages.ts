@@ -17,6 +17,15 @@ const MESSAGES_BY_CODE: Record<string, string> = {
   [API_ERROR_CODES.capabilityNotGranted]: "Tu plan no incluye esta función. Puedes ampliarlo desde Facturación",
   [API_ERROR_CODES.usageLimitExceeded]: "Alcanzaste el límite de uso del plan",
   [API_ERROR_CODES.outsideServiceWindow]: "Fuera de la ventana de 24 h de WhatsApp: se requiere plantilla",
+  // Envío de documentos (F9 Cobros). Dicen qué hacer, no qué falló.
+  [API_ERROR_CODES.documentContactWithoutEmail]:
+    "El contacto no tiene correo en su ficha. Añádelo allí o usa otro correo solo esta vez",
+  [API_ERROR_CODES.documentDeliveryInFlight]:
+    "Ese envío ya va en camino. La fila del documento avisa cuando salga",
+  [API_ERROR_CODES.documentNoCounterparty]:
+    "Este documento no tiene un cliente al que enviarse",
+  "documents/not_rendered": "El PDF todavía no está listo: espera a que la fila diga «Listo»",
+  "documents/already_superseded": "Este documento fue reemplazado: envía el vigente",
   [API_ERROR_CODES.invalidTransition]: "La conversación no admite esa transición",
   [API_ERROR_CODES.handoffConflict]: "Otro operador tomó la conversación primero",
   [API_ERROR_CODES.notFound]: "El recurso ya no existe",

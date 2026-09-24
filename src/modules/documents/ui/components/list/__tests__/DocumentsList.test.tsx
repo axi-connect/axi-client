@@ -14,6 +14,8 @@ const mockIssue = jest.fn();
 const mockRegenerate = jest.fn();
 const mockRetry = jest.fn();
 const mockTypes = jest.fn<Promise<{ types: unknown[] }>, []>();
+const mockSendOptions = jest.fn();
+const mockSend = jest.fn();
 jest.mock(
   "@/modules/documents/infrastructure/services/documents-service.adapter",
   () => ({
@@ -23,6 +25,8 @@ jest.mock(
     regenerateDocument: (id: string) => mockRegenerate(id),
     retryDocument: (id: string) => mockRetry(id),
     listDocumentTypes: () => mockTypes(),
+    getDocumentSendOptions: (id: string) => mockSendOptions(id),
+    sendDocument: (...args: unknown[]) => mockSend(...args),
   }),
 );
 const mockHasPermission = jest.fn<boolean, [string]>(() => true);
@@ -69,6 +73,7 @@ function doc(overrides: Partial<DocumentDTO> = {}): DocumentDTO {
     superseded_at: null,
     created_at: "2026-09-16T10:00:00.000Z",
     updated_at: "2026-09-16T10:00:00.000Z",
+    last_delivery: { whatsapp: null, email: null },
     ...overrides,
   };
 }
@@ -142,7 +147,7 @@ describe("DocumentsList", () => {
       await screen.findByText(/Todavía no hay papeles de esta reserva/),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/llegará solo con cada pago verificado/),
+      screen.getByText(/puede salir solo con cada pago verificado/),
     ).toBeInTheDocument();
     expect(
       await screen.findByRole("button", { name: /Emitir/ }),
@@ -163,6 +168,261 @@ describe("DocumentsList", () => {
     expect(screen.getByRole("button", { name: "Ver" })).toBeInTheDocument();
     expect(screen.getByText(/gasta un consecutivo/)).toBeInTheDocument();
     expect(mockTypes).not.toHaveBeenCalled();
+  });
+
+  // ───────────────────────── F9: la entrega ─────────────────────────
+
+  const sentWa = {
+    id: "dl1",
+    channel: "whatsapp" as const,
+    status: "sent" as const,
+    skip_reason: null,
+    error_code: null,
+    content_kind: "document",
+    channel_kind: "whatsapp_cloud",
+    recipient_masked: "+57 ··· 0199",
+    attempt: 1,
+    requested_by: "user" as const,
+    requested_by_user_id: "u1",
+    queued_at: "2026-09-17T15:20:00.000Z",
+    resolved_at: "2026-09-17T15:24:00.000Z",
+    created_at: "2026-09-17T15:20:00.000Z",
+  };
+  const OPTIONS = {
+    contact: { id: "c1", display_name: "Laura Gómez" },
+    whatsapp: {
+      reachable: true,
+      reason: null,
+      window_open: true,
+      last_inbound_at: "2026-09-17T15:00:00.000Z",
+      window_hours: 24,
+      fallback: "none",
+      hsm_name: null,
+      recipient_masked: "+57 ··· 0199",
+    },
+    email: { address_masked: "la···@example.com" },
+  };
+
+  it("F9 «Enviar» va primero en «…» y SOLO con PDF listo: generando, fallido y reemplazado no lo ofrecen", async () => {
+    mockList.mockResolvedValue({
+      data: [
+        doc(),
+        doc({
+          id: "bad",
+          number: "CC-2",
+          status: "failed",
+          type_code: "cuenta_cobro",
+        }),
+        doc({ id: "gone", number: "CTR-0", status: "superseded" }),
+      ],
+      meta: {},
+    });
+    render(<DocumentsList subject={subject} />);
+    await screen.findByText("CTR-2026-0120");
+    // La reemplazada no tiene «…»; la fallida lo tiene (Regenerar, de F8) pero SIN Enviar
+    const more = screen.getAllByRole("button", { name: /Más acciones/ });
+    expect(more.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Más acciones · CTR-2026-0120",
+      "Más acciones · CC-2",
+    ]);
+    fireEvent.click(more[1]);
+    expect(
+      screen.getAllByRole("menuitem").map((item) => item.textContent),
+    ).toEqual([
+      expect.stringContaining("Regenerar"),
+      expect.stringContaining("Copiar número"),
+    ]);
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    fireEvent.click(more[0]);
+    const items = await screen.findAllByRole("menuitem");
+    expect(items[0]).toHaveTextContent("Enviar");
+    expect(items.map((item) => item.textContent)).toEqual([
+      expect.stringContaining("Enviar"),
+      expect.stringContaining("Regenerar"),
+      expect.stringContaining("Copiar número"),
+    ]);
+  });
+
+  it("F9 enviar: el diálogo lee send-options, el 202 pone la fila en «Enviando…» sin releer, y el aviso lo dice", async () => {
+    mockList.mockResolvedValue({ data: [doc()], meta: {} });
+    mockSendOptions.mockResolvedValue(OPTIONS);
+    mockSend.mockResolvedValue({
+      delivery: { ...sentWa, status: "queued", resolved_at: null },
+      document: doc({
+        last_delivery: {
+          whatsapp: { ...sentWa, status: "queued", resolved_at: null },
+          email: null,
+        },
+      }),
+    });
+    render(
+      <DocumentsList subject={subject} subjectLabel="la reserva JX-0042" />,
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /Más acciones/ }),
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: /Enviar/ }));
+    expect(
+      await screen.findByRole("heading", { name: /Enviar contrato/ }),
+    ).toBeInTheDocument();
+    expect(mockSendOptions).toHaveBeenCalledWith("d1");
+    expect(await screen.findByText("Laura Gómez")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "WhatsApp" })).toBeChecked();
+    fireEvent.click(
+      screen.getByRole("button", { name: /Enviar por WhatsApp/ }),
+    );
+    await waitFor(() =>
+      expect(mockSend).toHaveBeenCalledWith("d1", { channel: "whatsapp" }),
+    );
+    expect(
+      await screen.findByText("Enviando por WhatsApp…"),
+    ).toBeInTheDocument();
+    expect(mockList).toHaveBeenCalledTimes(1);
+    expect(showAlert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tone: "success",
+        title: "Contrato CTR-2026-0120 en camino por WhatsApp",
+      }),
+    );
+  });
+
+  it("F9 líneas de entrega: enviado con hora, salió el aviso, no salió con razón, no se pudo con Reintentar que preselecciona el canal", async () => {
+    mockList.mockResolvedValue({
+      data: [
+        doc({
+          last_delivery: {
+            whatsapp: sentWa,
+            email: {
+              ...sentWa,
+              id: "dl2",
+              channel: "email",
+              status: "skipped",
+              skip_reason: "contact_without_email",
+            },
+          },
+        }),
+        doc({
+          id: "r",
+          number: "REC-2026-0113",
+          type_code: "receipt",
+          type_label: "Recibo",
+          last_delivery: {
+            whatsapp: { ...sentWa, id: "dl3", content_kind: "hsm_notice" },
+            email: null,
+          },
+        }),
+        doc({
+          id: "cc",
+          number: "CC-2026-0002",
+          type_code: "cuenta_cobro",
+          type_label: "Cuenta de cobro",
+          last_delivery: {
+            whatsapp: {
+              ...sentWa,
+              id: "dl4",
+              status: "failed",
+              error_code: "provider_failed",
+            },
+            email: null,
+          },
+        }),
+        doc({
+          id: "edc",
+          number: "EDC-2026-0003",
+          type_code: "statement",
+          type_label: "Estado de cuenta",
+          last_delivery: {
+            whatsapp: {
+              ...sentWa,
+              id: "dl5",
+              status: "skipped",
+              skip_reason: "outside_service_window_no_hsm",
+            },
+            email: null,
+          },
+        }),
+      ],
+      meta: {},
+    });
+    mockSendOptions.mockResolvedValue(OPTIONS);
+    render(<DocumentsList subject={subject} />);
+    expect(await screen.findByText("Enviado por WhatsApp")).toBeInTheDocument();
+    expect(screen.getByText("No salió por correo")).toBeInTheDocument();
+    expect(screen.getByText(/no tiene correo en su ficha/)).toBeInTheDocument();
+    expect(screen.getByText("Salió el aviso por WhatsApp")).toBeInTheDocument();
+    expect(
+      screen.getByText(/el PDF llega cuando responda/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("No se pudo enviar por WhatsApp"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/WhatsApp lo rechazó/)).toBeInTheDocument();
+    // La ventana cerrada sin plantilla ofrece el correo como salida
+    fireEvent.click(screen.getByRole("button", { name: /Enviar por correo/ }));
+    expect(
+      await screen.findByRole("heading", { name: /Enviar estado de cuenta/ }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: "Correo" })).toBeChecked(),
+    );
+    expect(mockSendOptions).toHaveBeenCalledWith("edc");
+  });
+
+  it("F9 sin documents:manage: las líneas existen igual, pero sin Reintentar ni Enviar; el pie lo explica", async () => {
+    mockHasPermission.mockImplementation((code) => code !== "documents:manage");
+    mockList.mockResolvedValue({
+      data: [
+        doc({
+          last_delivery: {
+            whatsapp: {
+              ...sentWa,
+              status: "failed",
+              error_code: "provider_failed",
+            },
+            email: null,
+          },
+        }),
+      ],
+      meta: {},
+    });
+    render(<DocumentsList subject={subject} />);
+    expect(
+      await screen.findByText("No se pudo enviar por WhatsApp"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Reintentar/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /Enviar/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/le escribe al cliente/)).toBeInTheDocument();
+  });
+
+  it("F9 un reemplazado que SÍ se envió sigue diciéndolo, sin ofrecer reenviarlo", async () => {
+    mockList.mockResolvedValue({
+      data: [
+        doc({
+          status: "superseded",
+          last_delivery: {
+            whatsapp: {
+              ...sentWa,
+              status: "failed",
+              error_code: "provider_failed",
+            },
+            email: null,
+          },
+        }),
+      ],
+      meta: {},
+    });
+    render(<DocumentsList subject={subject} />);
+    expect(
+      await screen.findByText("No se pudo enviar por WhatsApp"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Reintentar/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/lo enviado, enviado está/)).toBeInTheDocument();
   });
 
   it("«Ver» pide una URL firmada FRESCA al clic y la abre con noopener; nunca guarda la URL", async () => {

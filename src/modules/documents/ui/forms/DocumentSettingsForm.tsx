@@ -12,6 +12,7 @@ import type {
 } from "@/modules/documents/domain/template";
 import { updateDocumentsSettings } from "@/modules/documents/infrastructure/services/documents-service.adapter";
 import {
+  buildAutomationFields,
   buildDocumentSettingsFields,
   documentSettingsSchema,
   fromSettingsDto,
@@ -35,14 +36,18 @@ export function DocumentSettingsForm({
   onSaved: (next: DocumentsSettingsDTO) => void;
 }) {
   const { showAlert } = useAlert();
+  // F9: tras el emisor y la numeración, «Emisión y envío automáticos» en el
+  // MISMO formulario: un solo «Guardar» y una sola verja de sucio.
   const fields = useMemo(
-    () =>
-      buildDocumentSettingsFields({
+    () => [
+      ...buildDocumentSettingsFields({
         types,
         defaults: settings.company_defaults,
         prefixDefaults: settings.prefix_defaults,
         next: settings.numbering.next,
       }),
+      ...buildAutomationFields(),
+    ],
     [
       types,
       settings.company_defaults,
@@ -78,9 +83,9 @@ export function DocumentSettingsForm({
             onSaved(saved);
             showAlert({
               tone: "success",
-              title: "Emisor y numeración guardados",
+              title: "Ajustes de documentos guardados",
               description:
-                "Se aplican a los documentos que se emitan desde ahora.",
+                "Se aplican a los documentos que se emitan desde ahora; lo ya emitido no se reenvía solo.",
               autoCloseMs: 3000,
             });
           } catch (error) {

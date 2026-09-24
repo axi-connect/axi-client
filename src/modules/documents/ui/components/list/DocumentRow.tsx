@@ -6,11 +6,14 @@ import {
   Copy,
   Ellipsis,
   History,
+  Mail,
+  MessageCircle,
   RotateCcw,
+  Send,
   TriangleAlert,
 } from "lucide-react";
 
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDate, formatShortDateTime } from "@/core/lib/format";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -19,6 +22,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+import {
+  canSend,
+  deliveryLines,
+  type DeliveryChannel,
+  type DeliveryLine,
+} from "@/modules/documents/domain/delivery";
 import {
   canRetry,
   DOCUMENT_STATUS_LABELS,
@@ -44,6 +53,11 @@ const FAILURE_REASONS: Record<string, string> = {
  * abre el PDF con URL firmada fresca—; lo demás vive en «…». Los estados se
  * leen sin fondo de color: barra fina al generar, motivo y «Reintentar» al
  * fallar (mismo número), «desactualizado» en ámbar con lo que pasó.
+ *
+ * F9: la ENTREGA es una tercera línea por canal —un hecho, como texto con
+ * tono: por dónde salió y cuándo, o por qué no—. «Enviar» va primero en «…»
+ * (solo con PDF listo y `documents:manage`); un envío que falló ofrece la
+ * salida en la misma línea. Sin permiso las líneas existen igual, sin botones.
  */
 export function DocumentRow({
   document,
@@ -53,6 +67,7 @@ export function DocumentRow({
   onView,
   onRegenerate,
   onRetry,
+  onSend,
 }: {
   document: DocumentDTO;
   outdated: boolean;
@@ -61,6 +76,8 @@ export function DocumentRow({
   onView: (id: string) => Promise<void>;
   onRegenerate: (id: string) => Promise<void>;
   onRetry: (id: string) => Promise<void>;
+  /** Abre el diálogo «Enviar»; con canal cuando viene de la línea de entrega. */
+  onSend?: (document: DocumentDTO, channel?: DeliveryChannel) => void;
 }) {
   const [busy, setBusy] = useState<"view" | "regenerate" | "retry" | null>(
     null,
@@ -68,6 +85,8 @@ export function DocumentRow({
   const tone = documentStatusTone(document.status);
   const inFlight = isDocumentInFlight(document.status);
   const gone = document.status === "superseded";
+  const sendable = canManage && onSend !== undefined && canSend(document);
+  const lines = deliveryLines(document);
 
   async function run(
     action: "view" | "regenerate" | "retry",
@@ -167,6 +186,20 @@ export function DocumentRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-60 rounded-2xl p-1.5">
+              {sendable ? (
+                <DropdownMenuItem
+                  className="flex items-start gap-3 rounded-xl px-3 py-2.5"
+                  onClick={() => onSend(document)}
+                >
+                  <Send className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span>
+                    <span className="block text-sm font-medium">Enviar</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Por WhatsApp o correo, al cliente
+                    </span>
+                  </span>
+                </DropdownMenuItem>
+              ) : null}
               {regenerable ? (
                 <DropdownMenuItem
                   className="flex items-start gap-3 rounded-xl px-3 py-2.5"
@@ -257,10 +290,30 @@ export function DocumentRow({
         </p>
       ) : null}
 
+      {lines.map((line) => (
+        <DeliveryLineRow
+          key={line.channel}
+          line={line}
+          onRetry={
+            sendable && line.retry !== null
+              ? () =>
+                  onSend(
+                    document,
+                    line.retry === "email" ? "email" : line.channel,
+                  )
+              : undefined
+          }
+        />
+      ))}
+
       {gone ? (
         <p className="col-start-2 col-end-4 mt-0.5 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
           <Archive aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-          <span>Reemplazado. Sigue archivado: pudo haberse enviado.</span>
+          <span>
+            {lines.length > 0
+              ? "Reemplazado. Sigue archivado: lo enviado, enviado está."
+              : "Reemplazado. Sigue archivado: pudo haberse enviado."}
+          </span>
         </p>
       ) : null}
 
@@ -274,5 +327,90 @@ export function DocumentRow({
         </div>
       ) : null}
     </li>
+  );
+}
+
+/**
+ * La tercera línea: glifo del canal en cápsula, el hecho y su detalle, la
+ * hora, y —si hay salida— el botón. El tono va en el texto, nunca en el
+ * fondo; mientras sale, un punto late.
+ */
+function DeliveryLineRow({
+  line,
+  onRetry,
+}: {
+  line: DeliveryLine;
+  onRetry?: () => void;
+}) {
+  const Icon = line.channel === "whatsapp" ? MessageCircle : Mail;
+  return (
+    <p
+      className={cn(
+        "col-start-2 col-end-4 mt-0.5 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground tabular-nums",
+        line.tone === "busy" && "text-info",
+        line.tone === "bad" && "text-destructive",
+        line.tone === "warn" && "text-warning",
+      )}
+      data-delivery={`${line.channel}:${line.tone}`}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "grid size-[18px] shrink-0 place-items-center rounded-md bg-secondary",
+          line.tone === "busy" && "bg-info/12",
+          line.tone === "bad" && "bg-destructive/10",
+          line.tone === "warn" && "bg-warning/12",
+        )}
+      >
+        <Icon className="size-3" />
+      </span>
+      {line.tone === "busy" ? (
+        <span
+          aria-hidden="true"
+          className="size-[7px] shrink-0 rounded-full bg-info motion-safe:animate-pulse"
+        />
+      ) : null}
+      <span className="min-w-0 flex-1">
+        <span className={cn(line.tone !== "ok" && "font-medium")}>
+          {line.text}
+        </span>
+        {line.detail !== null ? (
+          <>
+            <span aria-hidden="true" className="opacity-45">
+              {" · "}
+            </span>
+            {line.detail}
+          </>
+        ) : null}
+        {line.at !== null ? (
+          <>
+            <span aria-hidden="true" className="opacity-45">
+              {" · "}
+            </span>
+            <time dateTime={line.at} className="whitespace-nowrap">
+              {formatShortDateTime(line.at)}
+            </time>
+          </>
+        ) : null}
+      </span>
+      {onRetry !== undefined ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-[26px] shrink-0 rounded-full px-2.5 text-xs text-foreground"
+          onClick={onRetry}
+        >
+          {line.retry === "email" ? (
+            <>
+              <Mail className="size-3" /> Enviar por correo
+            </>
+          ) : (
+            <>
+              <RotateCcw className="size-3" /> Reintentar
+            </>
+          )}
+        </Button>
+      ) : null}
+    </p>
   );
 }

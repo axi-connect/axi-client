@@ -50,6 +50,12 @@ export const API_ERROR_CODES = {
   /** F3 Cobros: el pago verificado supera el saldo del pedido. */
   paymentExceedsBalance: "orders/payment_exceeds_balance",
   outsideServiceWindow: "channels/outside_service_window",
+  /** F9 Cobros: enviar por correo un documento cuyo contacto no tiene correo en la ficha. */
+  documentContactWithoutEmail: "documents/contact_without_email",
+  /** F9 Cobros: ya hay un envío en curso por ese canal (doble clic, otro operador). */
+  documentDeliveryInFlight: "documents/delivery_in_flight",
+  /** F9 Cobros: el documento no tiene a quién enviarse (sin contacto). */
+  documentNoCounterparty: "documents/no_counterparty",
   invalidTransition: "conversations/invalid_transition",
   handoffConflict: "conversations/handoff_conflict",
   notFound: "resource/not_found",

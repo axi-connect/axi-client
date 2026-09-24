@@ -9,7 +9,8 @@
  * que monta `DocumentsTab`; el rail del pedido y la ficha del contacto (F8),
  * que montan `DocumentsList` con un `subject {kind, id}` genérico — la misma
  * forma que `DocumentSubjectRef` en el servidor — para que el primer consumidor
- * no imponga su vocabulario. `SendDocumentDialog` llega en F9.
+ * no imponga su vocabulario. `SendDocumentDialog` (F9) lo monta la propia
+ * lista: los consumidores no lo ven, solo la fila que dice por dónde salió.
  */
 export {
   WHEN_PATH_LABELS,
@@ -75,3 +76,28 @@ export { useDocumentsSocket } from "./infrastructure/realtime/use-documents-sock
 export { DocumentsList } from "./ui/components/list/DocumentsList";
 export { IssueDocumentMenu } from "./ui/components/list/IssueDocumentMenu";
 export { PaperMark } from "./ui/components/list/PaperMark";
+
+// ───────────────────────── Entrega (F9) ─────────────────────────
+export {
+  CHANNEL_LABELS,
+  DELIVERY_SKIP_LABELS,
+  DELIVERY_STATUS_LABELS,
+  canSend,
+  deliveryLine,
+  deliveryLines,
+  deliveryTone,
+  emailAvailability,
+  whatsappAvailability,
+  type DeliveryChannel,
+  type DeliveryLine,
+  type DeliveryStatus,
+  type DocumentDeliveryDTO,
+  type DocumentDetailDTO,
+  type DocumentSendOptionsDTO,
+  type SendDocumentResultDTO,
+} from "./domain/delivery";
+export {
+  getDocumentSendOptions,
+  sendDocument,
+} from "./infrastructure/services/documents-service.adapter";
+export { SendDocumentDialog } from "./ui/components/list/SendDocumentDialog";

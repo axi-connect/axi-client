@@ -326,22 +326,44 @@ export type OrderUpdatedEvent = OrderRealtimeSummary;
 // Payload espejo de axi-server documents/infrastructure/queue/document_events.processor.ts
 // ---------------------------------------------------------------------------
 
-export type DocumentLifecycleEvent = {
+/** Lo que TODO evento `document.*` trae para saber si nos concierne: ids de
+ * la entidad emisora y de la persona, número y etiqueta. */
+export type DocumentEventIdentity = {
   company_id: string;
   document_id: string;
   type_code: string | null;
   /** Etiqueta del tipo («Contrato»): quien escucha no conoce el catálogo. */
   type_label: string;
   number: string | null;
-  status: "rendered" | "failed";
   contact_id: string | null;
   order_id: string | null;
   payment_id: string | null;
+};
+
+export type DocumentLifecycleEvent = DocumentEventIdentity & {
+  status: "rendered" | "failed";
   error_code: string | null;
 };
 
 export type DocumentIssuedEvent = DocumentLifecycleEvent & { status: "rendered" };
 export type DocumentFailedEvent = DocumentLifecycleEvent & { status: "failed" };
+
+/**
+ * F9 Cobros: una entrega cambió de estado (`queued → sent | failed | skipped`).
+ * Payload espejo de axi-server documents/application/delivery/delivery_events.ts.
+ * `delivered` no se publica (Meta no lo reporta al bus por coste): no existe aquí.
+ */
+export type DocumentDeliveryUpdatedEvent = DocumentEventIdentity & {
+  delivery_id: string;
+  channel: "whatsapp" | "email";
+  status: "queued" | "sent" | "failed" | "skipped";
+  skip_reason: string | null;
+  error_code: string | null;
+  /** `document` = salió el PDF; `hsm_notice` = salió la plantilla de aviso. */
+  content_kind: string | null;
+  attempt: number;
+  requested_by: "user" | "system";
+};
 
 // ---------------------------------------------------------------------------
 // CRM (F0) — deals/actividades/imports en vivo. Rooms company_{id} (+
@@ -890,6 +912,7 @@ export type InboxServerEvents = {
   "order.updated": (payload: OrderUpdatedEvent) => void;
   "document.issued": (payload: DocumentIssuedEvent) => void;
   "document.failed": (payload: DocumentFailedEvent) => void;
+  "document.delivery_updated": (payload: DocumentDeliveryUpdatedEvent) => void;
   "crm.deal_created": (payload: CrmDealCreatedEvent) => void;
   "crm.deal_updated": (payload: CrmDealUpdatedEvent) => void;
   "crm.deal_stage_changed": (payload: CrmDealStageChangedEvent) => void;

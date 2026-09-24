@@ -87,8 +87,9 @@ export function listDocuments(
   });
 }
 
-export function getDocument(id: string): Promise<DocumentDTO> {
-  return http.get<DocumentDTO>(`/documents/${id}`);
+/** El detalle trae además el historial de entregas (`deliveries[]`). */
+export function getDocument(id: string): Promise<DocumentDetailDTO> {
+  return http.get<DocumentDetailDTO>(`/documents/${id}`);
 }
 
 /** 202: el record nace `queued` con su número; el PDF llega por `document.issued`. */
@@ -115,4 +116,40 @@ export function retryDocument(id: string): Promise<DocumentDTO> {
 /** URL firmada de cinco minutos: se pide al hacer clic, nunca se guarda. */
 export function getDocumentFileUrl(id: string): Promise<DocumentFileUrlDTO> {
   return http.get<DocumentFileUrlDTO>(`/documents/${id}/file`);
+}
+
+// ───────────────────────── Entrega (F9) ─────────────────────────
+
+import type {
+  DocumentDetailDTO,
+  DocumentSendOptionsDTO,
+  SendDocumentDTO,
+  SendDocumentResultDTO,
+} from "@/modules/documents/domain/delivery";
+
+/**
+ * El preflight del diálogo: el servidor lo calcula con las MISMAS fuentes con
+ * las que manda. La señal aborta la petición si el diálogo se cierra antes.
+ */
+export function getDocumentSendOptions(
+  id: string,
+  signal?: AbortSignal,
+): Promise<DocumentSendOptionsDTO> {
+  return http.get<DocumentSendOptionsDTO>(
+    `/documents/${id}/send-options`,
+    undefined,
+    signal ? { signal } : {},
+  );
+}
+
+/**
+ * 202: la entrega nace `queued` y el documento vuelve con su `last_delivery`
+ * ya puesta —la fila dice «Enviando…» sin reconstruir nada. El desenlace
+ * llega por `document.delivery_updated`.
+ */
+export function sendDocument(
+  id: string,
+  body: SendDocumentDTO,
+): Promise<SendDocumentResultDTO> {
+  return http.post<SendDocumentResultDTO>(`/documents/${id}/send`, body);
 }
