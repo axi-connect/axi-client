@@ -4644,6 +4644,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/{id}/send-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsDeliveryController_sendOptions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsDeliveryController_sendDocument_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geo/search": {
         parameters: {
             query?: never;
@@ -14747,6 +14779,25 @@ export interface components {
                     [key: string]: number;
                 };
             };
+            auto_issue?: {
+                contract_on_confirm: boolean;
+                contract_on_deposit_verified: boolean;
+                receipt_on_payment_verified: boolean;
+            };
+            auto_send?: {
+                contract: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+                receipt: {
+                    whatsapp: boolean;
+                    email: boolean;
+                };
+            };
+            hsm_fallback?: {
+                name: string;
+                language: string;
+            } | null;
         };
         IssueDocumentDto: {
             /** @enum {string} */
@@ -14788,6 +14839,52 @@ export interface components {
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
+                last_delivery: {
+                    whatsapp: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                    email: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                };
             };
             deduplicated: boolean;
         };
@@ -14821,12 +14918,161 @@ export interface components {
                 created_at: string;
                 /** Format: date-time */
                 updated_at: string;
+                last_delivery: {
+                    whatsapp: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                    email: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                };
             }[];
             meta: {
                 total: number;
                 page: number;
                 page_size: number;
             };
+        };
+        DocumentDetailDto: {
+            id: string;
+            type_code: string;
+            type_label: string;
+            /** @enum {string} */
+            status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+            number: string;
+            contact_id: string | null;
+            order_id: string | null;
+            payment_id: string | null;
+            /** @enum {string} */
+            template_source: "system" | "tenant";
+            template_version_id: string | null;
+            size_bytes: number | null;
+            page_count: number | null;
+            /** Format: date-time */
+            rendered_at: string | null;
+            error_code: string | null;
+            attempts: number;
+            /** @enum {string} */
+            issued_by: "user" | "system";
+            issued_by_user_id: string | null;
+            regenerated_from_id: string | null;
+            /** Format: date-time */
+            superseded_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            last_delivery: {
+                whatsapp: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+                email: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+            };
+            deliveries: {
+                id: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                content_kind: string | null;
+                channel_kind: string | null;
+                recipient_masked: string | null;
+                attempt: number;
+                /** @enum {string} */
+                requested_by: "user" | "system";
+                requested_by_user_id: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        };
+        DocumentFileUrlDto: {
+            /** Format: uri */
+            url: string;
+            expires_in_seconds: number;
         };
         DocumentDto: {
             id: string;
@@ -14857,11 +15103,201 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+            last_delivery: {
+                whatsapp: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+                email: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                } | null;
+            };
         };
-        DocumentFileUrlDto: {
-            /** Format: uri */
-            url: string;
-            expires_in_seconds: number;
+        DocumentSendOptionsDto: {
+            contact: {
+                id: string;
+                display_name: string;
+            } | null;
+            whatsapp: {
+                reachable: boolean;
+                reason: string | null;
+                window_open: boolean;
+                /** Format: date-time */
+                last_inbound_at: string | null;
+                window_hours: number | null;
+                /** @enum {string} */
+                fallback: "none" | "hsm";
+                hsm_name: string | null;
+                recipient_masked: string | null;
+            };
+            email: {
+                address_masked: string | null;
+            };
+        };
+        SendDocumentDto: {
+            /** @enum {string} */
+            channel: "whatsapp" | "email";
+            /** Format: email */
+            to_email?: string;
+        };
+        SendDocumentResultDto: {
+            delivery: {
+                id: string;
+                /** @enum {string} */
+                channel: "whatsapp" | "email";
+                /** @enum {string} */
+                status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                skip_reason: string | null;
+                error_code: string | null;
+                content_kind: string | null;
+                channel_kind: string | null;
+                recipient_masked: string | null;
+                attempt: number;
+                /** @enum {string} */
+                requested_by: "user" | "system";
+                requested_by_user_id: string | null;
+                /** Format: date-time */
+                queued_at: string | null;
+                /** Format: date-time */
+                resolved_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            };
+            document: {
+                id: string;
+                type_code: string;
+                type_label: string;
+                /** @enum {string} */
+                status: "queued" | "rendering" | "rendered" | "failed" | "superseded";
+                number: string;
+                contact_id: string | null;
+                order_id: string | null;
+                payment_id: string | null;
+                /** @enum {string} */
+                template_source: "system" | "tenant";
+                template_version_id: string | null;
+                size_bytes: number | null;
+                page_count: number | null;
+                /** Format: date-time */
+                rendered_at: string | null;
+                error_code: string | null;
+                attempts: number;
+                /** @enum {string} */
+                issued_by: "user" | "system";
+                issued_by_user_id: string | null;
+                regenerated_from_id: string | null;
+                /** Format: date-time */
+                superseded_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                last_delivery: {
+                    whatsapp: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                    email: {
+                        id: string;
+                        /** @enum {string} */
+                        channel: "whatsapp" | "email";
+                        /** @enum {string} */
+                        status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                        skip_reason: string | null;
+                        error_code: string | null;
+                        content_kind: string | null;
+                        channel_kind: string | null;
+                        recipient_masked: string | null;
+                        attempt: number;
+                        /** @enum {string} */
+                        requested_by: "user" | "system";
+                        requested_by_user_id: string | null;
+                        /** Format: date-time */
+                        queued_at: string | null;
+                        /** Format: date-time */
+                        resolved_at: string | null;
+                        /** Format: date-time */
+                        created_at: string;
+                    } | null;
+                };
+                deliveries: {
+                    id: string;
+                    /** @enum {string} */
+                    channel: "whatsapp" | "email";
+                    /** @enum {string} */
+                    status: "queued" | "sent" | "delivered" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_code: string | null;
+                    content_kind: string | null;
+                    channel_kind: string | null;
+                    recipient_masked: string | null;
+                    attempt: number;
+                    /** @enum {string} */
+                    requested_by: "user" | "system";
+                    requested_by_user_id: string | null;
+                    /** Format: date-time */
+                    queued_at: string | null;
+                    /** Format: date-time */
+                    resolved_at: string | null;
+                    /** Format: date-time */
+                    created_at: string;
+                }[];
+            };
         };
         GeoSearchResultsDto: {
             items: {
@@ -27559,7 +27995,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DocumentDto"];
+                    "application/json": components["schemas"]["DocumentDetailDto"];
                 };
             };
         };
@@ -27623,6 +28059,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentDto"];
+                };
+            };
+        };
+    };
+    DocumentsDeliveryController_sendOptions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentSendOptionsDto"];
+                };
+            };
+        };
+    };
+    DocumentsDeliveryController_sendDocument_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendDocumentDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SendDocumentResultDto"];
                 };
             };
         };
