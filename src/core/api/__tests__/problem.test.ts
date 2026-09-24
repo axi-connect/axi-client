@@ -43,6 +43,26 @@ describe("parseHttpError", () => {
     expect(error.problem?.trace_id).toBe("req-1");
   });
 
+  it("QA-1: conserva la extensión `details` del problema (scope, reason, upgrade_hint)", async () => {
+    const res = fakeResponse({
+      status: 409,
+      body: {
+        type: "about:blank",
+        title: "Demasiadas sesiones",
+        status: 409,
+        code: "quality/session_limit_reached",
+        details: { scope: "tenant", max_open: 2 },
+      },
+    });
+    const error = await parseHttpError(res);
+    expect(error.problem?.details).toEqual({ scope: "tenant", max_open: 2 });
+    // Un `details` que no es objeto no se propaga
+    const bad = await parseHttpError(
+      fakeResponse({ status: 409, body: { title: "x", status: 409, code: "quality/session_limit_reached", details: "texto" } }),
+    );
+    expect(bad.problem?.details).toBeUndefined();
+  });
+
   it("parsea un 401 auth/refresh_reuse_detected", async () => {
     const res = fakeResponse({
       status: 401,

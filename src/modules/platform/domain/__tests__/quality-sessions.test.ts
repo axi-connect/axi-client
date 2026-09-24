@@ -159,6 +159,8 @@ describe("formato y errores", () => {
   it("los 409 del simulacro se explican por code y details", () => {
     expect(describeSessionError({ code: "quality/session_spend_cap_exceeded", details: { reason: "daily_spend_cap" } })).toMatch(/diario/);
     expect(describeSessionError({ code: "quality/session_limit_reached", details: { scope: "tenant" } })).toMatch(/tenant/);
+    // QA-1: el alcance global da otro mensaje
+    expect(describeSessionError({ code: "quality/session_limit_reached", details: { scope: "global" } })).toMatch(/plataforma/);
     expect(describeSessionError({ code: "quality/session_not_active", details: { reason: "closed_by_agent" } })).toMatch(/agente cerró/);
     expect(describeSessionError({ code: "otra/cosa" })).toBeNull();
     expect(describeSessionError(null)).toBeNull();
