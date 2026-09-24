@@ -26,7 +26,14 @@ import { getPlanReminders } from "@/modules/collections/infrastructure/services/
  * decisión del negocio, y pintarlos como errores haría que el operador dejara
  * de mirar los dos.
  */
-export function ReminderHistory({ planId }: { planId: string }) {
+export function ReminderHistory({
+  planId,
+  settled = false,
+}: {
+  planId: string;
+  /** Plan saldado: no hay deuda y no saldrá ningún aviso (QA real F9-04). */
+  settled?: boolean;
+}) {
   const [rows, setRows] = useState<PlanReminderDTO[] | null>(null);
 
   useEffect(() => {
@@ -47,8 +54,9 @@ export function ReminderHistory({ planId }: { planId: string }) {
   if (rows.length === 0) {
     return (
       <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-        Todavía no se le ha escrito por esta deuda. El primer aviso sale solo,
-        según la cadencia de Ajustes › Pagos › Recordatorios.
+        {settled
+          ? "Está al día: no hay nada que recordarle."
+          : "Todavía no se le ha escrito por esta deuda. El primer aviso sale solo, según la cadencia de Ajustes › Pagos › Recordatorios."}
       </p>
     );
   }

@@ -143,6 +143,14 @@ export function ReportPaymentDialog({
                 <p role="alert" className="text-xs text-destructive">
                   No entendí el monto. Escríbelo como 1.000.000 o 1000000.
                 </p>
+              ) : amountCents !== null && order.balance_cents > 0 && amountCents > order.balance_cents ? (
+                // Más que el saldo: se puede reportar (el cliente pagó de más),
+                // pero se dice lo que pasará al verificar (QA real F3).
+                <p className="text-xs text-foreground tabular-nums">
+                  = {formatMoney(amountCents, order.currency)} · son{" "}
+                  {formatMoney(amountCents - order.balance_cents, order.currency)} más que el saldo; al
+                  verificar tendrás que aceptar el sobrepago.
+                </p>
               ) : amountCents !== null && amountCents > 0 ? (
                 // Lo que se va a registrar, en la moneda del pedido: en USD, «350.00»
                 // se lee como 35.000 (el punto es de miles) y aquí se ve ANTES de enviar.

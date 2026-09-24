@@ -117,6 +117,18 @@ describe("ReportPaymentDialog", () => {
     expect(screen.getByText(/^= US\$\s?350\b/)).toBeInTheDocument();
   });
 
+  it("QA F3: un monto MAYOR que el saldo se puede reportar, pero dice cuánto sobra y qué pasará al verificar", async () => {
+    await open(order({ paid_cents: 400_000_00, balance_cents: 600_000_00, payment_state: "partially_paid" }));
+    const amount = screen.getByLabelText("Monto");
+    fireEvent.focus(amount);
+    fireEvent.change(amount, { target: { value: "700.000" } });
+    expect(screen.getByText(/más que el saldo/)).toHaveTextContent(/son \$\s?100\.000 más que el saldo; al verificar tendrás que aceptar el sobrepago/);
+    expect(screen.getByRole("button", { name: "Registrar pago" })).toBeEnabled();
+    // Igual o menor que el saldo: no dice nada de sobrepago
+    fireEvent.change(amount, { target: { value: "600.000" } });
+    expect(screen.queryByText(/más que el saldo/)).toBeNull();
+  });
+
   it("B · propone el SALDO, no el total: tras un abono de 400.000 sobre 1.000.000 propone 600.000", async () => {
     await open(order({ paid_cents: 400_000_00, balance_cents: 600_000_00, payment_state: "partially_paid" }));
     expect(screen.getByText(/saldo \$ 600\.000/)).toBeInTheDocument();

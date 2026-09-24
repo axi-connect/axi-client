@@ -271,6 +271,23 @@ describe("PaymentPlanBlock · promesas, historial y nota (F4b)", () => {
     // Y si el pedido cambia (refreshKey), se vuelve a pedir
   });
 
+  it("QA F9-04: con el plan saldado, el historial vacío dice que está al día, no que «el primer aviso sale solo»", async () => {
+    mockPlan.mockResolvedValue(
+      plan({ status: "settled", balance_cents: 0, paid_cents: 1_160_000_000 }),
+    );
+    const { unmount } = render(<PaymentPlanBlock orderId="o1" />);
+    expect(
+      await screen.findByText("Está al día: no hay nada que recordarle."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/El primer aviso sale solo/)).toBeNull();
+    unmount();
+    mockPlan.mockResolvedValue(plan());
+    render(<PaymentPlanBlock orderId="o1" />);
+    expect(
+      await screen.findByText(/El primer aviso sale solo/),
+    ).toBeInTheDocument();
+  });
+
   it("«Anotar promesa de pago» y «Reprogramar» abren sus diálogos", async () => {
     mockPlan.mockResolvedValue(plan());
     render(<PaymentPlanBlock orderId="o1" contactName="Diana Salazar" />);

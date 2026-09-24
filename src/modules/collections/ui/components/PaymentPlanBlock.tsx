@@ -322,7 +322,10 @@ export function PaymentPlanBlock({
         <p className="px-1 pb-1 text-[12.5px] text-muted-foreground">
           Historial de avisos
         </p>
-        <ReminderHistory planId={plan.id} />
+        <ReminderHistory
+          planId={plan.id}
+          settled={plan.status === "settled" || plan.balance_cents <= 0}
+        />
       </div>
 
       {canManage ? (
