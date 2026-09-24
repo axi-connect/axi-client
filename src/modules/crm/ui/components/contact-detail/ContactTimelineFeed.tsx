@@ -344,7 +344,14 @@ export function ContactTimelineFeed({
   });
 
   return (
-    <div ref={rootRef} tabIndex={-1} role="region" aria-label="Historial del contacto" className={cn("outline-none", className)}>
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      role="region"
+      // Mismo nombre que el título de la sección («Historial», ContactTimeline).
+      aria-label="Historial"
+      className={cn("rounded-lg outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50", className)}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         {header}
         <div

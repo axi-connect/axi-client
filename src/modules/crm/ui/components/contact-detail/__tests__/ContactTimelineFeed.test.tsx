@@ -333,7 +333,7 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
     // El aviso recarga el historial desde la primera página.
     await waitFor(() => expect(getContactTimeline.mock.calls.length).toBeGreaterThanOrEqual(2));
     // Recargado, el foco vuelve al historial, no a <body> (Q15).
-    await waitFor(() => expect(screen.getByRole("region", { name: "Historial del contacto" })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole("region", { name: "Historial" })).toHaveFocus());
     window.removeEventListener("crm:journey:changed", changed);
   });
 
@@ -344,6 +344,6 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
     lastModal?.actions?.find((entry) => entry.label === "Deshacer")?.onClick?.();
     await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })));
-    expect(screen.getByRole("region", { name: "Historial del contacto" })).not.toHaveFocus();
+    expect(screen.getByRole("region", { name: "Historial" })).not.toHaveFocus();
   });
 });

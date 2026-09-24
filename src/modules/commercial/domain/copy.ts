@@ -163,13 +163,13 @@ export const MISSING_TICKET_FIGURE = "Falta el ticket";
 export const GOAL_SAVED_MESSAGE = "Meta puesta. Empezamos a medir el camino.";
 
 /** El estado vacío de «Axi propone» mientras no haya nada que acelerar (F6). */
-export const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";
+const NO_PROPOSALS_MESSAGE = "Estás al día. Cuando algo pueda acelerar la ruta, aquí lo verás.";
 
 /** El mismo hueco, en el estado «aprendiendo». */
 export const LEARNING_PROPOSALS_MESSAGE = "Cuando conozcamos tu ritmo, te proponemos acciones.";
 
 /** El mismo hueco con la ruta en ritmo bajo: «estás al día» sería falso (Q12). */
-export const SEARCHING_PROPOSALS_MESSAGE = "Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.";
+const SEARCHING_PROPOSALS_MESSAGE = "Axi está buscando qué puede acelerar la ruta; las propuestas salen al cerrar el día.";
 
 /**
  * El vacío de «Axi propone» según el ritmo: «Estás al día» solo cuando la

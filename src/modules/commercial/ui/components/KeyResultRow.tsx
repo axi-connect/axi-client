@@ -34,12 +34,14 @@ const ROW = "grid grid-cols-[minmax(0,1fr)] items-center gap-x-4 gap-y-px px-4 p
 
 /**
  * Una fila de la lista de resultados clave, con la forma de la ficha de
- * Contactos: etiqueta pequeña / valor de lectura / línea secundaria, y a la
- * derecha un solo indicador (la regla fina) y el badge si hace falta.
+ * Contactos: etiqueta pequeña / valor de lectura / línea secundaria, y un
+ * solo indicador (la regla fina) con el badge si hace falta: a la derecha
+ * desde `sm`, debajo del texto en estrecho.
  *
  * Con `href` la fila ENTERA es un enlace al detalle (no tiene acciones propias
  * que sacar fuera) y el chevron aparece al pasar el ratón o al enfocar
- * (`.hover-reveal`: en táctil se ve siempre). Sin `href` es una fila estática.
+ * (`.hover-reveal`: en táctil se ve siempre; en estrecho no se pinta). Sin
+ * `href` es una fila estática.
  */
 export function KeyResultRow({ href, label, value, secondary, extra, pct, status = null }: KeyResultRowProps) {
   const badge = status !== null && isOffPace(status) ? status : null;
