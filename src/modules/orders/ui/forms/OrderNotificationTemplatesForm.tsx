@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
+import { useCallback, useEffect, useState } from "react";
+import { LoaderCircle, TriangleAlert } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
@@ -48,11 +49,16 @@ export function OrderNotificationTemplatesForm() {
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoadError(null);
     getOrderNotificationSettings()
       .then(setSettings)
       .catch((err) => setLoadError(errorMessage(err, "No se pudieron cargar las plantillas")));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   function patch(key: TemplateKey, partial: Partial<{ enabled: boolean; body: string }>) {
     setSettings((prev) =>
@@ -68,12 +74,12 @@ export function OrderNotificationTemplatesForm() {
     try {
       const saved = await updateOrderNotificationSettings(settings);
       setSettings(saved);
-      showAlert({ tone: "success", title: "Plantillas guardadas", autoCloseMs: 3000 });
+      showAlert({ tone: "success", title: "Plantillas guardadas" });
     } catch (err) {
       showAlert({
         tone: "error",
-        title: "No se pudieron guardar las plantillas",
-        description: errorMessage(err),
+        title: "No se pudieron guardar",
+        description: `Las plantillas siguen como estaban. ${errorMessage(err)}`,
       });
     } finally {
       setSaving(false);
@@ -81,7 +87,19 @@ export function OrderNotificationTemplatesForm() {
   }
 
   if (loadError !== null) {
-    return <p className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive">{loadError}</p>;
+    // §9.4: un fallo al cargar es un estado de la vista → Alert en línea con salida.
+    return (
+      <Alert variant="destructive">
+        <TriangleAlert aria-hidden="true" />
+        <AlertTitle>No se pudieron cargar las plantillas</AlertTitle>
+        <AlertDescription>
+          <span>{loadError}</span>
+          <Button type="button" variant="outline" size="sm" className="mt-2 w-fit" onClick={load}>
+            Reintentar
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   if (settings === null) {

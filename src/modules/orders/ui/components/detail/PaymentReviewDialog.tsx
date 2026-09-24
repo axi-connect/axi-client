@@ -114,14 +114,17 @@ export function PaymentReviewDialog({
       onOpenChange(false);
       setNotes("");
       onDone();
+      // §9.4: el título dice qué pasó; la cifra va al cuerpo.
       showAlert({
         tone: verifying ? "success" : "info",
-        title: verifying
-          ? willBePaid
-            ? "Pago verificado: pedido cobrado"
-            : `Abono verificado: faltan ${formatMoney(balance - amount, currency)}`
-          : "Pago rechazado",
-        autoCloseMs: 3000,
+        title: verifying ? (willBePaid ? "Pago verificado" : "Abono verificado") : "Pago rechazado",
+        ...(verifying
+          ? {
+              description: willBePaid
+                ? "El pedido quedó pagado."
+                : `Faltan ${formatMoney(balance - amount, currency)} para completar el pedido.`,
+            }
+          : {}),
       });
     } catch (err) {
       // El backend revalida el saldo bajo su propio lock: si otro operador
@@ -129,9 +132,7 @@ export function PaymentReviewDialog({
       const stale = isHttpError(err) && err.is(API_ERROR_CODES.paymentExceedsBalance);
       showAlert({
         tone: "error",
-        title: stale
-          ? "El saldo cambió mientras revisabas"
-          : "No se pudo completar la verificación",
+        title: stale ? "El saldo cambió mientras revisabas" : "No se pudo verificar",
         description: stale
           ? "Otro pago se verificó antes que este. Cierra y vuelve a abrirlo para ver el saldo real."
           : errorMessage(err),

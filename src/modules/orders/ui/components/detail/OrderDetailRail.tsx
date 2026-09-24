@@ -310,8 +310,9 @@ export function OrderDetailRail({ orderId, onClose }: { orderId: string; onClose
                         <span
                           className={cn(
                             "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                            payment.status === "verified" && "bg-success/12 text-success",
-                            payment.status === "reported" && "bg-warning/15 text-warning",
+                            // §10: verde y ámbar como texto no llegan a 4,5:1; el tinte va al fondo
+                            payment.status === "verified" && "bg-success/12 text-foreground",
+                            payment.status === "reported" && "bg-warning/15 text-foreground",
                             payment.status === "rejected" && "bg-destructive/10 text-destructive",
                           )}
                         >

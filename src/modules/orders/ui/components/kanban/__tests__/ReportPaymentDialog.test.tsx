@@ -18,6 +18,7 @@ jest.mock("@/modules/orders/infrastructure/stores/orders.store", () => ({
 const mockShowAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: mockShowAlert }) }));
 
+import { expectAlertContract } from "@/core/notifications/testing";
 import { ReportPaymentDialog } from "@/modules/orders/ui/components/kanban/ReportPaymentDialog";
 
 const order = (overrides: Partial<OrderRow> = {}): OrderRow =>
@@ -71,7 +72,8 @@ describe("ReportPaymentDialog", () => {
         expect.objectContaining({ amount_cents: 100_000_000 }),
       ),
     );
-    expect(mockShowAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success" }));
+    expect(mockShowAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "success", title: "Pago registrado" }));
+    expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
   });
 
   it("A · un monto que no se entiende FRENA el envío con mensaje, en vez de mandarse vacío", async () => {

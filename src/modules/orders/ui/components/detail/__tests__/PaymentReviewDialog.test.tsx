@@ -11,6 +11,7 @@ jest.mock("@/modules/orders/infrastructure/services/order-payments-service.adapt
 const mockShowAlert = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({ useAlert: () => ({ showAlert: mockShowAlert }) }));
 
+import { expectAlertContract } from "@/core/notifications/testing";
 import { PaymentReviewDialog } from "@/modules/orders/ui/components/detail/PaymentReviewDialog";
 
 const TOTAL = 1_000_000;
@@ -80,6 +81,25 @@ describe("PaymentReviewDialog (F3: verificar es decidir, no rellenar)", () => {
         expect.objectContaining({ action: "verify", amount_cents: TOTAL }),
       );
     });
+    // §9.4: qué pasó en el título, la consecuencia en el cuerpo
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ tone: "success", title: "Pago verificado", description: "El pedido quedó pagado." }),
+    );
+    expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
+  });
+
+  it("§9.4: un abono dice «Abono verificado» y cuánto falta va al cuerpo, no al título", async () => {
+    open({ review: { payment: payment({ amount_cents: 400_000 }), action: "verify" } });
+    fireEvent.click(screen.getByRole("button", { name: /Verificar \$/ }));
+    await waitFor(() => expect(mockReview).toHaveBeenCalled());
+    const alert = mockShowAlert.mock.calls[0]?.[0] as { title: string; description: string };
+    expect(alert.title).toBe("Abono verificado");
+    expect(alert.description).toMatch(/^Faltan \$\s?6\.000 para completar el pedido\.$/);
+    expectAlertContract(alert);
+    // La forma vieja («Abono verificado: faltan $ 6.000») no pasaría con cifras reales
+    expect(() =>
+      expectAlertContract({ tone: "success", title: "Abono verificado: faltan $ 12.345.678" }),
+    ).toThrow(/título de/);
   });
 
   it("un pago CON cifra sí la precarga, sin el aviso de «no indicó monto»", () => {
@@ -202,6 +222,8 @@ describe("PaymentReviewDialog (F3: verificar es decidir, no rellenar)", () => {
       );
     });
     expect(mockReview.mock.calls[0][2]).not.toHaveProperty("amount_cents");
+    expect(mockShowAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "info", title: "Pago rechazado" }));
+    expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
     // Y verificar ese mismo reporte sigue exigiendo aceptar el sobrepago
     mockReview.mockClear();
     open({
