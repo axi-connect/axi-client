@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/shared/components/ui/alert";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CircleAlert,
@@ -13,7 +18,6 @@ import {
 import { API_ERROR_CODES, isHttpError } from "@/core/api/problem";
 import { formatMoney } from "@/core/lib/format";
 import { errorMessage } from "@/core/lib/error-messages";
-import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import { EmptyState } from "@/shared/components/features/empty-state";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -49,7 +53,6 @@ const FILTERS: { key: Filter; label: string }[] = [
  * repetir lo que ya está escrito.
  */
 export function ReceivablesView() {
-  const { showAlert } = useAlert();
   const [filter, setFilter] = useState<Filter>("todo");
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<ReceivableDTO[]>([]);
@@ -58,6 +61,7 @@ export function ReceivablesView() {
   const [stats, setStats] = useState<ReceivablesStatsDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   /** A quién se le está escribiendo a mano; `null` = el diálogo está cerrado. */
   const [writing, setWriting] = useState<ReceivableDTO | null>(null);
   const [error, setError] = useState<{
@@ -108,6 +112,7 @@ export function ReceivablesView() {
 
   async function loadMore() {
     setLoadingMore(true);
+    setLoadMoreError(null);
     try {
       const list = await query(page + 1);
       setRows((current) => [...current, ...list.data]);
@@ -115,13 +120,10 @@ export function ReceivablesView() {
       setPage((current) => current + 1);
     } catch (err) {
       // No se traga en silencio: pulsar y que no pase nada es la misma ilusión
-      // de calma que la lista vacía por un fallo de red. El botón sigue ahí
-      // para reintentar, pero el operador sabe por qué no llegó nada.
-      showAlert({
-        tone: "error",
-        title: "No se pudo traer el resto de la cartera",
-        description: errorMessage(err),
-      });
+      // de calma que la lista vacía por un fallo de red. Y no es un aviso que
+      // se va a los 8 s (§9.4): es un ESTADO de la lista —quedó corta— que se
+      // pinta al pie hasta que el reintento lo resuelva.
+      setLoadMoreError(errorMessage(err));
     } finally {
       setLoadingMore(false);
     }
@@ -237,6 +239,19 @@ export function ReceivablesView() {
               >
                 Ver más
               </Button>
+              {loadMoreError !== null ? (
+                <Alert variant="destructive" className="mt-2 max-w-md">
+                  <TriangleAlert aria-hidden="true" />
+                  <AlertTitle>
+                    No se pudo traer el resto de la cartera
+                  </AlertTitle>
+                  <AlertDescription>
+                    <span>
+                      {loadMoreError} La lista muestra solo lo que llegó.
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              ) : null}
             </div>
           ) : null}
         </>

@@ -160,6 +160,44 @@ describe("ReceivablesView (F4: la cartera abre con la respuesta)", () => {
     expect(screen.getByText("Primera")).toBeInTheDocument();
   });
 
+  it("§9.4: si la página siguiente falla, la lista lo dice al pie hasta que el reintento lo resuelva; no es un aviso que se va", async () => {
+    mockList.mockResolvedValueOnce({
+      data: [row({ plan_id: "a", order_id: "a", contact_name: "Primera" })],
+      meta: { total: 2, page: 1, page_size: 50 },
+    });
+    mockStats.mockResolvedValue(stats());
+    render(<ReceivablesView />);
+    expect(await screen.findByText("Mostrando 1 de 2")).toBeInTheDocument();
+
+    mockList.mockRejectedValueOnce(
+      new HttpError({
+        status: 500,
+        code: "internal/error",
+        message: "Se cayó",
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Ver más" }));
+    const alert = await screen.findByText(
+      "No se pudo traer el resto de la cartera",
+    );
+    expect(alert.closest('[role="alert"], [data-slot="alert"]')).not.toBeNull();
+    expect(
+      screen.getByText(/La lista muestra solo lo que llegó/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Primera")).toBeInTheDocument();
+    expect(mockShowAlert).not.toHaveBeenCalled();
+
+    mockList.mockResolvedValueOnce({
+      data: [row({ plan_id: "b", order_id: "b", contact_name: "Segunda" })],
+      meta: { total: 2, page: 2, page_size: 50 },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ver más" }));
+    expect(await screen.findByText("Segunda")).toBeInTheDocument();
+    expect(
+      screen.queryByText("No se pudo traer el resto de la cartera"),
+    ).toBeNull();
+  });
+
   it("un fallo de red NO se disfraza de «no te debe nadie»", async () => {
     // Es el mismo principio del 403, una rama más allá: una lista vacía haría
     // creer que la cartera está limpia.

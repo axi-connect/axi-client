@@ -73,9 +73,13 @@ describe("RemindersTab", () => {
     mockGet.mockResolvedValue(policy());
     render(<RemindersTab />);
 
+    const notice = await screen.findByText(
+      /No hay plantilla aprobada para la mora/i,
+    );
+    // §9.4: un estado que dura es `Alert` en línea, no una caja teñida a mano
     expect(
-      await screen.findByText(/No hay plantilla aprobada para la mora/i),
-    ).toBeInTheDocument();
+      notice.closest('[role="alert"], [data-slot="alert"]'),
+    ).not.toBeNull();
   });
 
   it("con la plantilla aprobada registrada, el aviso desaparece", async () => {

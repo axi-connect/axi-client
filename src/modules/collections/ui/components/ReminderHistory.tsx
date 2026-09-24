@@ -102,8 +102,15 @@ const VISUALS: Record<
   { Icon: typeof CheckCheck; tone: string }
 > = {
   queued: { Icon: Clock, tone: "bg-secondary text-muted-foreground" },
-  sent: { Icon: CheckCheck, tone: "bg-success/15 text-success" },
-  delivered: { Icon: CheckCheck, tone: "bg-success/15 text-success" },
+  // §10: el verde como texto da ~3,3:1; el color va al icono y el texto en foreground.
+  sent: {
+    Icon: CheckCheck,
+    tone: "bg-success/12 text-foreground [&>svg]:text-success",
+  },
+  delivered: {
+    Icon: CheckCheck,
+    tone: "bg-success/12 text-foreground [&>svg]:text-success",
+  },
   failed: { Icon: CircleAlert, tone: "bg-destructive/15 text-destructive" },
   skipped: { Icon: BellOff, tone: "bg-secondary text-muted-foreground" },
 };

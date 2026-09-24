@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/shared/components/ui/alert";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronRight, ShieldCheck, TriangleAlert } from "lucide-react";
 
@@ -80,7 +85,6 @@ export function RemindersTab() {
         tone: "success",
         title: "Recordatorios guardados",
         description: "Vale también para los pedidos que ya están en marcha.",
-        autoCloseMs: 3000,
       });
     } catch (err) {
       showAlert({
@@ -216,21 +220,18 @@ export function RemindersTab() {
           </div>
           {policy.hsm_templates.overdue === undefined &&
           policy.templates.overdue.enabled ? (
-            <div className="mt-3 flex items-start gap-3 rounded-2xl border border-warning/30 bg-warning/5 px-4 py-3.5 text-[13px] leading-relaxed">
-              <TriangleAlert
-                aria-hidden="true"
-                className="mt-0.5 size-[18px] shrink-0 text-warning"
-              />
-              <span>
-                <b className="font-medium">
-                  No hay plantilla aprobada para la mora.
-                </b>{" "}
-                Fuera de la ventana de 24 horas de WhatsApp solo pasa una
-                plantilla que Meta haya aprobado, y quien lleva días sin
-                escribir es justo el que hay que perseguir: sin ella, ese aviso
-                no sale.
-              </span>
-            </div>
+            <Alert variant="warning" className="mt-3 rounded-2xl">
+              <TriangleAlert aria-hidden="true" />
+              <AlertTitle>No hay plantilla aprobada para la mora</AlertTitle>
+              <AlertDescription>
+                <span>
+                  Fuera de la ventana de 24 horas de WhatsApp solo pasa una
+                  plantilla que Meta haya aprobado, y quien lleva días sin
+                  escribir es justo el que hay que perseguir: sin ella, ese
+                  aviso no sale.
+                </span>
+              </AlertDescription>
+            </Alert>
           ) : null}
           <Note>
             Lo que cambies aquí vale{" "}

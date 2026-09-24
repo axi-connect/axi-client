@@ -86,7 +86,6 @@ export function PaymentPolicyTab() {
       showAlert({
         tone: "success",
         title: "Política guardada",
-        autoCloseMs: 3000,
       });
     } catch (err) {
       showAlert({
