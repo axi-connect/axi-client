@@ -25,13 +25,24 @@ export interface RevertStageChangeInput {
  * ref corta el doble clic antes de que React repinte), avisa y emite
  * `crm:journey:changed` del contacto para que las otras piezas recarguen.
  */
-export function useRevertStageChange(): {
+export function useRevertStageChange({
+  onReverted,
+}: {
+  /**
+   * Se llama al deshacer con éxito, ANTES de avisar a las otras piezas. El
+   * botón que abrió el modal desaparece al recargar y el foco caería en
+   * `<body>` (Q15): el llamador lo usa para devolverlo a algo con sentido.
+   */
+  onReverted?: () => void;
+} = {}): {
   revert: (input: RevertStageChangeInput) => void;
   busy: boolean;
 } {
   const { showAlert, showModal, closeModal } = useAlert();
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
+  const onRevertedRef = useRef(onReverted);
+  onRevertedRef.current = onReverted;
 
   const revert = useCallback(
     (input: RevertStageChangeInput) => {
@@ -53,6 +64,7 @@ export function useRevertStageChange(): {
               closeModal();
               revertStageChange(input.dealId, input.eventId)
                 .then(() => {
+                  onRevertedRef.current?.();
                   showAlert({
                     tone: "success",
                     title: `Movimiento deshecho: vuelve ${back}`,

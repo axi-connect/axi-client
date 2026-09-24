@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Route } from "lucide-react";
 
 import { isHttpError } from "@/core/api/problem";
@@ -89,9 +89,23 @@ export function ContactJourneyCard({
   canManage: boolean;
 }) {
   const { showAlert } = useAlert();
-  const { revert, busy: reverting } = useRevertStageChange();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // Tras «Deshacer», el botón desaparece al recargar: el foco vuelve al
+  // encabezado de la card cuando llega el recorrido nuevo, no a `<body>` (Q15).
+  const refocus = useRef(false);
+  const { revert, busy: reverting } = useRevertStageChange({
+    onReverted: () => {
+      refocus.current = true;
+    },
+  });
   const [state, setState] = useState<State>({ kind: "loading" });
   const [resuming, setResuming] = useState(false);
+
+  useEffect(() => {
+    if (!refocus.current || state.kind === "loading") return;
+    refocus.current = false;
+    headingRef.current?.focus();
+  }, [state]);
 
   const load = useCallback(async () => {
     try {
@@ -127,7 +141,7 @@ export function ContactJourneyCard({
 
   return (
     <section className="rounded-2xl border border-border bg-background p-4 md:p-6">
-      <h3 className="flex items-center gap-2 text-base font-semibold">
+      <h3 ref={headingRef} tabIndex={-1} className="flex items-center gap-2 rounded-md text-base font-semibold focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
         <Route className="size-4 text-muted-foreground" aria-hidden />
         Recorrido
       </h3>

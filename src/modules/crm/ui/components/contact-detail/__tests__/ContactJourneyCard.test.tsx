@@ -200,6 +200,9 @@ describe("ContactJourneyCard", () => {
     expect(screen.getByText(/regla: cita agendada/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Deshacer" })).not.toBeInTheDocument();
     expect(screen.getByText("Movimientos de la IA en pausa")).toBeInTheDocument();
+    // El botón que abrió el modal ya no existe: el foco vuelve al encabezado de la card, no a <body> (Q15).
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Recorrido" })).toHaveFocus());
+    expect(document.body).not.toHaveFocus();
     window.removeEventListener("crm:journey:changed", changed);
   });
 

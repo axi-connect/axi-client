@@ -187,7 +187,15 @@ export function ContactTimelineFeed({
   header?: React.ReactNode;
   className?: string;
 }) {
-  const { revert, busy: reverting } = useRevertStageChange();
+  // Tras «Deshacer», el botón desaparece al recargar: el foco vuelve al
+  // historial cuando llega la página nueva, no a `<body>` (Q15).
+  const rootRef = useRef<HTMLDivElement>(null);
+  const refocus = useRef(false);
+  const { revert, busy: reverting } = useRevertStageChange({
+    onReverted: () => {
+      refocus.current = true;
+    },
+  });
   const [enabled, setEnabled] = useState<TimelineSource[]>([...TIMELINE_SOURCES]);
   const [entries, setEntries] = useState<TimelineEntryDTO[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -227,8 +235,17 @@ export function ContactTimelineFeed({
 
   // Un «Deshacer» desde la card «Recorrido» (o desde aquí) cambia el historial
   // de ESTE contacto; el de otro contacto no recarga nada.
+  // Si lo deshizo ESTE historial, el foco vuelve a él al recargar (Q15). La
+  // raíz no se desmonta al recargar, así que basta con esperar a la carga.
   useEffect(
-    () => subscribeJourneyChanged(contactId, () => void load(enabled)),
+    () =>
+      subscribeJourneyChanged(contactId, () => {
+        void load(enabled).then(() => {
+          if (!refocus.current) return;
+          refocus.current = false;
+          rootRef.current?.focus();
+        });
+      }),
     [contactId, enabled, load],
   );
 
@@ -327,7 +344,7 @@ export function ContactTimelineFeed({
   });
 
   return (
-    <div className={className}>
+    <div ref={rootRef} tabIndex={-1} role="region" aria-label="Historial del contacto" className={cn("outline-none", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         {header}
         <div

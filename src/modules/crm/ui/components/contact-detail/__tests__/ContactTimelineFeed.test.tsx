@@ -332,6 +332,18 @@ describe("ContactTimelineFeed — recorrido (F4)", () => {
     expect((changed.mock.calls[0][0] as CustomEvent).detail).toEqual({ contactId: "c1", dealId: "d1" });
     // El aviso recarga el historial desde la primera página.
     await waitFor(() => expect(getContactTimeline.mock.calls.length).toBeGreaterThanOrEqual(2));
+    // Recargado, el foco vuelve al historial, no a <body> (Q15).
+    await waitFor(() => expect(screen.getByRole("region", { name: "Historial del contacto" })).toHaveFocus());
     window.removeEventListener("crm:journey:changed", changed);
+  });
+
+  it("si deshacer falla, el foco no se mueve al historial (el botón sigue ahí)", async () => {
+    getContactTimeline.mockResolvedValue(page([stageChanged({ actor_type: "ai_agent" })]));
+    revertStageChange.mockRejectedValue(new Error("409"));
+    render(<ContactTimelineFeed contactId="c1" canRevert />);
+    fireEvent.click(await screen.findByRole("button", { name: "Deshacer" }));
+    lastModal?.actions?.find((entry) => entry.label === "Deshacer")?.onClick?.();
+    await waitFor(() => expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "error" })));
+    expect(screen.getByRole("region", { name: "Historial del contacto" })).not.toHaveFocus();
   });
 });
