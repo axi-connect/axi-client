@@ -77,7 +77,8 @@ export function DocumentsList({
     } catch (error) {
       showAlert({
         tone: "error",
-        title: errorMessage(error, "No se pudo abrir el PDF"),
+        title: "No se pudo abrir el PDF",
+        description: errorMessage(error),
       });
     }
   }
@@ -89,15 +90,14 @@ export function DocumentsList({
       await state.refresh();
       showAlert({
         tone: "success",
-        title: `${result.document.type_label} ${result.document.number} en camino`,
-        description:
-          "Con los mismos datos del original, que queda como reemplazado.",
-        autoCloseMs: 3000,
+        title: `${result.document.type_label} en camino`,
+        description: `${result.document.number}: con los mismos datos del original, que queda como reemplazado.`,
       });
     } catch (error) {
       showAlert({
         tone: "error",
-        title: errorMessage(error, "No se pudo regenerar"),
+        title: "No se pudo regenerar",
+        description: errorMessage(error),
       });
     }
   }
@@ -108,7 +108,8 @@ export function DocumentsList({
     } catch (error) {
       showAlert({
         tone: "error",
-        title: errorMessage(error, "No se pudo reintentar"),
+        title: "No se pudo reintentar",
+        description: errorMessage(error),
       });
     }
   }

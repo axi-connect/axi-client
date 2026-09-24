@@ -277,8 +277,10 @@ function Tag({
   children: React.ReactNode;
 }) {
   const classes = {
-    info: "bg-info/10 text-info",
-    warn: "bg-warning/15 text-warning",
+    // §10: el tinte va al fondo y al ICONO; el texto se queda en `foreground`
+    // (ámbar e info claros sobre su tinte no llegan a 4,5:1 como texto).
+    info: "bg-info/10 text-foreground [&>svg]:text-info",
+    warn: "bg-warning/12 text-foreground [&>svg]:text-warning",
     neutral: "bg-secondary text-muted-foreground",
     outline: "border border-dashed border-border text-muted-foreground",
   }[tone];

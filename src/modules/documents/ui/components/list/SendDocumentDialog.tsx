@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
@@ -170,11 +171,11 @@ export function SendDocumentDialog({
       });
       onOpenChange(false);
       onSent(result);
+      // §9.4: el título cabe en la píldora; el dato (número, canal) va al cuerpo.
       showAlert({
         tone: "success",
-        title: `${document.type_label} ${document.number} en camino por ${CHANNEL_LABELS[channel]}`,
-        description: "Te avisamos aquí si no sale.",
-        autoCloseMs: 3500,
+        title: `${document.type_label} en camino`,
+        description: `${document.number} por ${CHANNEL_LABELS[channel]}. Te avisamos aquí si no sale.`,
       });
     } catch (error) {
       if (
@@ -193,12 +194,12 @@ export function SendDocumentDialog({
           tone: "info",
           title: "Ya va en camino",
           description: "Alguien lo envió antes. La fila avisa cuando salga.",
-          autoCloseMs: 3500,
         });
       } else {
         showAlert({
           tone: "error",
-          title: errorMessage(error, "No se pudo enviar"),
+          title: "No se pudo enviar",
+          description: errorMessage(error),
         });
       }
     } finally {
@@ -445,6 +446,10 @@ function ChannelCard({
   );
 }
 
+/**
+ * El aviso bajo las tarjetas es un ESTADO que dura mientras el diálogo está
+ * abierto: `Alert` en línea con su variante (§9.4), color solo en el icono.
+ */
 function Notice({
   tone,
   children,
@@ -455,17 +460,14 @@ function Notice({
   const Icon =
     tone === "ok" ? CircleCheck : tone === "warn" ? TriangleAlert : Info;
   return (
-    <p className="flex items-start gap-2.5 rounded-xl bg-secondary/60 px-3.5 py-3 text-[13px] leading-relaxed text-muted-foreground">
-      <Icon
-        aria-hidden="true"
-        className={cn(
-          "mt-0.5 size-4 shrink-0",
-          tone === "ok" && "text-success",
-          tone === "warn" && "text-warning",
-          tone === "info" && "text-info",
-        )}
-      />
-      <span>{children}</span>
-    </p>
+    <Alert
+      variant={tone === "ok" ? "success" : tone === "warn" ? "warning" : "info"}
+      className="rounded-xl"
+    >
+      <Icon aria-hidden="true" />
+      <AlertDescription className="text-[13px] leading-relaxed">
+        <span>{children}</span>
+      </AlertDescription>
+    </Alert>
   );
 }

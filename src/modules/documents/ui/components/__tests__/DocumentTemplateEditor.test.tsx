@@ -26,9 +26,17 @@ jest.mock(
   }),
 );
 const mockShowAlert = jest.fn();
+const mockShowModal = jest.fn();
+const mockCloseModal = jest.fn();
 jest.mock("@/core/providers/alert-provider", () => ({
-  useAlert: () => ({ showAlert: mockShowAlert }),
+  useAlert: () => ({
+    showAlert: mockShowAlert,
+    showModal: mockShowModal,
+    closeModal: mockCloseModal,
+  }),
 }));
+
+import { expectAlertContract } from "@/core/notifications/testing";
 
 import { DocumentTemplateEditor } from "@/modules/documents/ui/components/templates/DocumentTemplateEditor";
 import { PREVIEW_DEBOUNCE_MS } from "@/modules/documents/infrastructure/hooks/use-template-preview";
@@ -331,9 +339,57 @@ describe("DocumentTemplateEditor", () => {
         expect.objectContaining({ version: 1 }),
       ),
     );
+    // §9.4: el título fijo cabe en la píldora; el tipo y la versión van al cuerpo
     expect(mockShowAlert).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Contrato guardado · versión 1" }),
+      expect.objectContaining({
+        tone: "success",
+        title: "Plantilla guardada",
+        description: expect.stringMatching(/^Contrato · versión 1\./),
+      }),
     );
+    expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
+  });
+
+  it("§9.4: «Restablecer» confirma con showModal (no con un Dialog propio) y el aviso cumple el contrato", async () => {
+    mockReset.mockResolvedValue({ ...current, source: "system", version: 3 });
+    render(
+      <DocumentTemplateEditor
+        type={type}
+        catalog={catalog}
+        current={{ ...current, source: "tenant", version: 3 }}
+        onSaved={jest.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Restablecer/ }));
+    expect(mockShowModal).toHaveBeenCalledTimes(1);
+    const config = mockShowModal.mock.calls[0]?.[0] as {
+      title: string;
+      description: string;
+      actions: { label: string; variant?: string; onClick?: () => void }[];
+    };
+    expect(config.title).toBe("Volver al modelo de Axi");
+    expect(config.description).toMatch(
+      /Las 3 versiones que escribiste no se borran/,
+    );
+    expect(config.description).toMatch(/empiezas en la versión 4/);
+    const confirm = config.actions.find(
+      (action) => action.label === "Restablecer",
+    );
+    expect(confirm?.variant).toBe("destructive");
+    confirm?.onClick?.();
+    await waitFor(() => expect(mockReset).toHaveBeenCalledWith("contract"));
+    await waitFor(() => expect(mockCloseModal).toHaveBeenCalled());
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tone: "success",
+        title: "Vuelve el modelo de Axi",
+      }),
+    );
+    expectAlertContract(mockShowAlert.mock.calls[0]?.[0]);
+    // Ningún Dialog propio quedó montado
+    expect(
+      screen.queryByRole("heading", { name: /Volver al modelo de Axi/ }),
+    ).toBeNull();
   });
 
   it("la paleta ofrece solo lo que el tipo admite; lo demás se ve apagado con su razón", () => {

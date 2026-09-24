@@ -8,14 +8,6 @@ import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
 import { Button } from "@/shared/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
-import {
   Alert,
   AlertDescription,
   AlertTitle,
@@ -70,11 +62,10 @@ export function DocumentTemplateEditor({
   /** Para que quien cambia de tipo pueda preguntar antes de perder cambios. */
   dirtyRef?: { current: boolean };
 }) {
-  const { showAlert } = useAlert();
+  const { showAlert, showModal, closeModal } = useAlert();
   const [template, setTemplate] = useState<TemplateDocument>(current.template);
   const [openId, setOpenId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   // Al cambiar la plantilla que manda (otro tipo, o tras guardar/restablecer)
@@ -130,10 +121,8 @@ export function DocumentTemplateEditor({
       onSaved(saved);
       showAlert({
         tone: "success",
-        title: `${type.label} guardado · versión ${String(saved.version)}`,
-        description:
-          "Los documentos que ya salieron conservan la versión con la que se emitieron.",
-        autoCloseMs: 4000,
+        title: "Plantilla guardada",
+        description: `${type.label} · versión ${String(saved.version)}. Los documentos que ya salieron conservan la versión con la que se emitieron.`,
       });
     } catch (error) {
       if (isHttpError(error) && error.is(API_ERROR_CODES.featureDisabled)) {
@@ -151,23 +140,50 @@ export function DocumentTemplateEditor({
     try {
       const restored = await resetDocumentTemplate(type.code);
       onSaved(restored);
-      setResetOpen(false);
+      closeModal();
       showAlert({
         tone: "success",
         title: "Vuelve el modelo de Axi",
         description:
           "Tus versiones no se borraron: la próxima edición será la siguiente, no la 1.",
-        autoCloseMs: 4000,
       });
     } catch (error) {
+      closeModal();
       showAlert({
         tone: "error",
-        title: errorMessage(error, "No se pudo restablecer"),
+        title: "No se pudo restablecer",
+        description: errorMessage(error),
       });
     } finally {
       setSaving(false);
     }
   };
+
+  // §9.4: una decisión que bloquea es `showModal`, como el resto del panel.
+  const confirmReset = () =>
+    showModal({
+      title: "Volver al modelo de Axi",
+      description: `Tu ${type.label.toLowerCase()} deja de usarse y vuelve el texto de fábrica. ${
+        current.version === 1
+          ? "La versión que escribiste no se borra"
+          : `Las ${String(current.version)} versiones que escribiste no se borran`
+      }: los documentos que ya salieron con ellas siguen igual, y si vuelves a editar empiezas en la versión ${String(current.version + 1)}.`,
+      actions: [
+        {
+          label: "Cancelar",
+          variant: "outline",
+          id: "document-template-reset-cancel",
+        },
+        {
+          label: "Restablecer",
+          variant: "destructive",
+          keepOpen: true,
+          onClick: () => void reset(),
+          id: "document-template-reset-confirm",
+        },
+      ],
+      className: "sm:max-w-md",
+    });
 
   return (
     <div className="flex flex-col gap-5">
@@ -208,7 +224,7 @@ export function DocumentTemplateEditor({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setResetOpen(true)}
+            onClick={confirmReset}
             disabled={saving}
           >
             <RotateCcw aria-hidden="true" className="size-3.5" />
@@ -312,45 +328,6 @@ export function DocumentTemplateEditor({
           onRetry={preview.retry}
         />
       </div>
-
-      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Volver al modelo de Axi</DialogTitle>
-            <DialogDescription>
-              Tu {type.label.toLowerCase()} deja de usarse y vuelve el texto de
-              fábrica.{" "}
-              <strong className="font-medium text-foreground">
-                Las {String(current.version)}{" "}
-                {current.version === 1
-                  ? "versión que escribiste no se borra"
-                  : "versiones que escribiste no se borran"}
-              </strong>
-              : los documentos que ya salieron con ellas siguen igual, y si
-              vuelves a editar empiezas en la versión{" "}
-              {String(current.version + 1)}.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setResetOpen(false)}
-              disabled={saving}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void reset()}
-              disabled={saving}
-            >
-              Restablecer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

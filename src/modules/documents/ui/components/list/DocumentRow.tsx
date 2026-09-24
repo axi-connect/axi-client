@@ -345,11 +345,13 @@ function DeliveryLineRow({
   const Icon = line.channel === "whatsapp" ? MessageCircle : Mail;
   return (
     <p
+      // §10: el ámbar como texto no llega a 4,5:1; el tono va en el glifo y el
+      // hecho se lee en `foreground`. El rojo (4,8:1) sí puede quedarse en el texto.
       className={cn(
         "col-start-2 col-end-4 mt-0.5 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground tabular-nums",
         line.tone === "busy" && "text-info",
         line.tone === "bad" && "text-destructive",
-        line.tone === "warn" && "text-warning",
+        line.tone === "warn" && "text-foreground",
       )}
       data-delivery={`${line.channel}:${line.tone}`}
     >

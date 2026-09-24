@@ -66,24 +66,22 @@ export function IssueDocumentMenu({
       if (result.deduplicated) {
         showAlert({
           tone: "info",
-          title: `${label} ya existe: ${result.document.number}`,
-          description:
-            "Es uno por entidad. Si cambió algo, regenéralo desde su fila.",
-          autoCloseMs: 4000,
+          title: `${label} ya emitido`,
+          description: `Es el ${result.document.number}, uno por entidad. Si cambió algo, regenéralo desde su fila.`,
         });
       } else {
         showAlert({
           tone: "success",
-          title: `${label} ${result.document.number} en camino`,
-          description: "El PDF tarda unos segundos; la fila avisa cuando está.",
-          autoCloseMs: 3000,
+          title: `${label} en preparación`,
+          description: `${result.document.number}: el PDF tarda unos segundos y la fila avisa cuando está.`,
         });
       }
       onIssued(result.document);
     } catch (error) {
       showAlert({
         tone: "error",
-        title: errorMessage(error, `No se pudo emitir ${label.toLowerCase()}`),
+        title: "No se pudo emitir",
+        description: `${label}: ${errorMessage(error)}`,
       });
     } finally {
       setIssuing(null);

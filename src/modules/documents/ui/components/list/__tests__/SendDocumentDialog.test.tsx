@@ -22,6 +22,7 @@ jest.mock("@/core/providers/alert-provider", () => ({
   useAlert: () => ({ showAlert }),
 }));
 
+import { expectAlertContract } from "@/core/notifications/testing";
 import { SendDocumentDialog } from "@/modules/documents/ui/components/list/SendDocumentDialog";
 
 const NOW = new Date("2026-09-17T18:00:00.000Z");
@@ -251,9 +252,11 @@ describe("SendDocumentDialog: dice lo mismo que hará el motor", () => {
     expect(showAlert).toHaveBeenCalledWith(
       expect.objectContaining({
         tone: "success",
-        title: "Contrato CTR-2026-0120 en camino por correo",
+        title: "Contrato en camino",
+        description: "CTR-2026-0120 por correo. Te avisamos aquí si no sale.",
       }),
     );
+    expectAlertContract(showAlert.mock.calls[0]?.[0]);
   });
 
   it("6 · el 422 «sin correo» queda inline y el diálogo abierto; el 409 «ya va en camino» avisa como info, cierra y pide releer", async () => {
@@ -288,6 +291,7 @@ describe("SendDocumentDialog: dice lo mismo que hará el motor", () => {
     expect(showAlert).toHaveBeenCalledWith(
       expect.objectContaining({ tone: "info", title: "Ya va en camino" }),
     );
+    expectAlertContract(showAlert.mock.calls[0]?.[0]);
   });
 
   it("7 · si el preflight falla, las dos tarjetas quedan activas sin aviso: el servidor revalida al enviar", async () => {
@@ -317,6 +321,72 @@ describe("SendDocumentDialog: dice lo mismo que hará el motor", () => {
     await screen.findByRole("radio", { name: "WhatsApp" });
     expect(screen.getByText(/el PDF le llega al chat/)).toBeInTheDocument();
     expect(screen.queryByText(/plantilla/)).not.toBeInTheDocument();
+  });
+
+  it("§9.4 · con el peor caso real («Cuenta de cobro», JX-2026-000100, WhatsApp) el título cabe y el dato va al cuerpo; el error del servidor nunca es título", async () => {
+    mockSendOptions.mockResolvedValue(options());
+    mockSend.mockResolvedValueOnce({ delivery: {}, document: doc() });
+    const { onSent } = open({
+      intent: {
+        document: doc({
+          type_label: "Cuenta de cobro",
+          number: "JX-2026-000100",
+        }),
+        channel: "whatsapp",
+      },
+    });
+    await screen.findByRole("radio", { name: "WhatsApp" });
+    fireEvent.click(
+      screen.getByRole("button", { name: /Enviar por WhatsApp/ }),
+    );
+    await waitFor(() => expect(onSent).toHaveBeenCalled());
+    const success = showAlert.mock.calls[0]?.[0] as {
+      title: string;
+      description: string;
+    };
+    expect(success.title).toBe("Cuenta de cobro en camino");
+    expect(success.description).toMatch(/^JX-2026-000100 por WhatsApp\./);
+    expectAlertContract(success);
+    // Y la versión larga de antes NO pasaría el contrato: el test se sostiene por sí mismo
+    expect(() =>
+      expectAlertContract({
+        tone: "success",
+        title: "Cuenta de cobro JX-2026-000100 en camino por WhatsApp",
+      }),
+    ).toThrow(/título de/);
+
+    // Error del servidor: título fijo, mensaje en el cuerpo
+    mockSend.mockRejectedValueOnce(
+      new HttpError({
+        status: 502,
+        code: "documents/qa_probe",
+        message: "Se cayó el proveedor",
+        problem: {
+          type: "about:blank",
+          title: "Proveedor",
+          status: 502,
+          code: "documents/qa_probe",
+          detail: "Se cayó el proveedor",
+        },
+      }),
+    );
+    open({ intent: { document: doc(), channel: "whatsapp" } });
+    await waitFor(() =>
+      expect(screen.getAllByRole("radio", { name: "WhatsApp" })).toHaveLength(
+        2,
+      ),
+    );
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /Enviar por WhatsApp/ })[1],
+    );
+    await waitFor(() => expect(showAlert).toHaveBeenCalledTimes(2));
+    const failure = showAlert.mock.calls[1]?.[0] as {
+      title: string;
+      description: string;
+    };
+    expect(failure.title).toBe("No se pudo enviar");
+    expect(failure.description).toBe("Se cayó el proveedor");
+    expectAlertContract(failure, { serverMessage: "Se cayó el proveedor" });
   });
 
   it("9 · cerrado (`intent` null) no pinta nada ni pide el preflight", () => {

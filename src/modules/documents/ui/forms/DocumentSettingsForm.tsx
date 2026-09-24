@@ -86,13 +86,13 @@ export function DocumentSettingsForm({
               title: "Ajustes de documentos guardados",
               description:
                 "Se aplican a los documentos que se emitan desde ahora; lo ya emitido no se reenvía solo.",
-              autoCloseMs: 3000,
             });
           } catch (error) {
             if (!applyServerValidation(error, form)) {
               showAlert({
                 tone: "error",
-                title: errorMessage(error, "No se pudo guardar"),
+                title: "No se pudo guardar",
+                description: errorMessage(error),
               });
             }
           }

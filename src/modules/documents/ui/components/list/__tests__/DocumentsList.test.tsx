@@ -47,6 +47,7 @@ jest.mock("@/core/realtime/use-socket", () => ({
   useSocketEvent: () => undefined,
 }));
 
+import { expectAlertContract } from "@/core/notifications/testing";
 import { DocumentsList } from "@/modules/documents/ui/components/list/DocumentsList";
 import { resetDocumentTypesCache } from "@/modules/documents/infrastructure/hooks/use-document-types";
 
@@ -281,9 +282,11 @@ describe("DocumentsList", () => {
     expect(showAlert).toHaveBeenCalledWith(
       expect.objectContaining({
         tone: "success",
-        title: "Contrato CTR-2026-0120 en camino por WhatsApp",
+        title: "Contrato en camino",
+        description: "CTR-2026-0120 por WhatsApp. Te avisamos aquí si no sale.",
       }),
     );
+    expectAlertContract(showAlert.mock.calls[0]?.[0]);
   });
 
   it("F9 líneas de entrega: enviado con hora, salió el aviso, no salió con razón, no se pudo con Reintentar que preselecciona el canal", async () => {
@@ -557,8 +560,13 @@ describe("DocumentsList", () => {
     );
     expect(await screen.findByText("CC-2026-0001")).toBeInTheDocument();
     expect(showAlert).toHaveBeenCalledWith(
-      expect.objectContaining({ tone: "success" }),
+      expect.objectContaining({
+        tone: "success",
+        title: "Cuenta de cobro en preparación",
+        description: expect.stringMatching(/^CC-2026-0001: /),
+      }),
     );
+    expectAlertContract(showAlert.mock.calls[0]?.[0]);
   });
 
   it("emitir un tipo que ya existe no llama al servidor; deduplicado desde el servidor se dice como info", async () => {
