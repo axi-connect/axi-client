@@ -24,7 +24,13 @@ export interface KeyResultRowProps {
   status?: PaceStatus | null;
 }
 
-const ROW = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-px px-4 py-3";
+/**
+ * En estrecho (< sm) la fila es de UNA columna y el indicador baja al final,
+ * alineado a la izquierda, como el mockup a 375 px: con la regla, el badge y
+ * el chevron a la derecha, el texto quedaba en ~62 px y se partía palabra por
+ * palabra (Q9).
+ */
+const ROW = "grid grid-cols-[minmax(0,1fr)] items-center gap-x-4 gap-y-px px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto]";
 
 /**
  * Una fila de la lista de resultados clave, con la forma de la ficha de
@@ -40,11 +46,14 @@ export function KeyResultRow({ href, label, value, secondary, extra, pct, status
   const body = (
     <>
       <span className="text-[12px] text-muted-foreground">{label}</span>
-      <span className="row-span-3 flex items-center gap-3 self-center">
+      <span
+        data-slot="kr-indicator"
+        className="order-last flex flex-wrap items-center gap-3 pt-1.5 sm:order-none sm:col-start-2 sm:row-span-3 sm:row-start-1 sm:self-center sm:pt-0"
+      >
         {badge !== null ? <StatusBadge status={badge} map={PACE_BADGES} appearance="dot" /> : null}
         <Rule pct={pct} />
         {href !== undefined ? (
-          <ChevronRight aria-hidden className="hover-reveal size-4 text-muted-foreground" />
+          <ChevronRight aria-hidden className="hover-reveal hidden size-4 text-muted-foreground sm:block" />
         ) : null}
       </span>
       <span className="text-[15px] font-medium text-foreground tabular-nums">{value}</span>

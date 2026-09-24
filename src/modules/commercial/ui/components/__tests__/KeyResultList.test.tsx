@@ -31,6 +31,17 @@ describe("KeyResultList", () => {
     expect(within(calls).getByText("Contestadas 79 de 120")).toBeInTheDocument();
   });
 
+  it("en estrecho la fila es de una columna y el indicador baja al final (Q9)", () => {
+    const { container } = render(<KeyResultList pace={pace} plan={plan} detailHref={(key) => `/x/${key}`} />);
+    const row = screen.getAllByRole("link")[0];
+    // Base: una sola columna; dos columnas solo desde `sm`.
+    expect(row.className).toMatch(/(^|\s)grid-cols-\[minmax\(0,1fr\)\](\s|$)/);
+    expect(row.className).toMatch(/sm:grid-cols-\[minmax\(0,1fr\)_auto\]/);
+    const indicator = container.querySelector('[data-slot="kr-indicator"]') as HTMLElement;
+    expect(indicator).toHaveClass("order-last", "sm:order-none", "sm:col-start-2", "sm:row-span-3");
+    expect(indicator.className).not.toMatch(/(^|\s)row-span-3/);
+  });
+
   it("las cifras son camino recorrido, y el mix va bajo «Ventas»", () => {
     render(<KeyResultList pace={pace} plan={plan} />);
     expect(screen.getByText("27 de 43 · faltan 16")).toBeInTheDocument();
