@@ -35,7 +35,13 @@ export const WHEN_PATH_LABELS: Record<WhenPath, string> = {
   "issuer.logo": "el negocio tiene logo",
 };
 
-const VARIABLE_PATTERN = /\{\{\s*([a-z_]+)\s*\}\}/g;
+/**
+ * TODO lo que va entre `{{ }}`, calce o no el formato de una variable (QA
+ * real de F7): «{{Cliente}}», «{{cliente.mascota}}» o «{{ }}» no son
+ * variables, pero quien las escribió creyó que sí, y si no se le dice antes
+ * de guardar salen tal cual en la hoja. El servidor juzga con el mismo patrón.
+ */
+const VARIABLE_HOLE_PATTERN = /\{\{([^{}]*)\}\}/g;
 
 /** Los textos con variables que lleva un bloque, en orden. */
 export function blockTexts(block: TemplateBlock): string[] {
@@ -67,9 +73,9 @@ export function blockTexts(block: TemplateBlock): string[] {
 
 export function extractVariableNames(text: string): string[] {
   const names: string[] = [];
-  for (const match of text.matchAll(VARIABLE_PATTERN)) {
-    const name = match[1];
-    if (name !== undefined && !names.includes(name)) names.push(name);
+  for (const match of text.matchAll(VARIABLE_HOLE_PATTERN)) {
+    const name = (match[1] ?? "").trim();
+    if (!names.includes(name)) names.push(name);
   }
   return names;
 }
@@ -87,7 +93,8 @@ export function unknownTemplateVariables(
   for (const block of template.blocks) {
     for (const text of blockTexts(block)) {
       for (const name of extractVariableNames(text)) {
-        if (!known.has(name) && !unknown.includes(name)) unknown.push(name);
+        const shown = name === "" ? "{{ }}" : name;
+        if (!known.has(name) && !unknown.includes(shown)) unknown.push(shown);
       }
     }
   }

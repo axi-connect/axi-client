@@ -166,3 +166,30 @@ describe("operaciones del editor (puras)", () => {
     ).toBe("2 cláusulas · Objeto, Sin título");
   });
 });
+
+describe("QA F7: todo hueco «{{ }}» se juzga, calce o no el formato", () => {
+  it("una variable conocida pasa; mayúsculas, puntos, espacios y el hueco vacío se marcan", () => {
+    const available = [
+      { name: "document_number" },
+      { name: "customer_name" },
+    ] as unknown as Parameters<typeof unknownTemplateVariables>[1];
+    const template = {
+      blocks: [
+        {
+          id: "h",
+          type: "heading",
+          text: "Hola {{customer_name}} y {{Cliente}} con {{cliente.mascota}}, {{fecha de salida}} {{ }}",
+        },
+      ],
+    } as unknown as Parameters<typeof unknownTemplateVariables>[0];
+    expect(unknownTemplateVariables(template, available)).toEqual([
+      "Cliente",
+      "cliente.mascota",
+      "fecha de salida",
+      "{{ }}",
+    ]);
+    expect(
+      extractVariableNames("{{ document_number }} y {{document_number}}"),
+    ).toEqual(["document_number"]);
+  });
+});
