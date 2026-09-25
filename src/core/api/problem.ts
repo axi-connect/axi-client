@@ -37,6 +37,14 @@ export const API_ERROR_CODES = {
   companySuspended: "auth/company_suspended",
   trialExpired: "auth/trial_expired",
   paymentOverdue: "auth/payment_overdue",
+  /**
+   * Enlace de contraseña (invitación o restablecimiento) vencido, ya usado o
+   * revocado: el servidor responde 410 con un solo código a propósito. Si trae
+   * `details.reason`, la UI ajusta el copy; si no, asume «vencido».
+   */
+  passwordTokenInvalid: "auth/password_token_invalid",
+  /** «Cambiar contraseña»: la actual no coincide. Es 422 y no 401 para que el BFF no borre la sesión. */
+  currentPasswordInvalid: "auth/current_password_invalid",
   permissionDenied: "rbac/permission_denied",
   /** El rol lo permite pero el PLAN no lo incluye; `details.upgrade_hint.path` lleva a ampliarlo. */
   capabilityNotGranted: "entitlements/capability_not_granted",
