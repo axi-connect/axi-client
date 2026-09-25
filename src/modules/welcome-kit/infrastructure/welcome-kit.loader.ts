@@ -56,21 +56,32 @@ export function welcomeKitFromWire(dto: WelcomeKitDataWire): WelcomeKitData {
  * Nunca lanza. 400, 404 y 410 son el kit vencido o inexistente (el servidor no
  * distingue a propósito); cualquier otra cosa es «no disponible ahora».
  *
+ * Un 429 es el throttle del endpoint público: pasa solo, así que la pantalla
+ * pide recargar en vez de decir «no disponible».
+ *
+ * `clientHeaders` son la IP del visitante (`X-Forwarded-For`/`X-Real-IP`, ver
+ * `clientIpHeaders`): la petición sale del servidor de Next y, sin ellas, el
+ * throttle por IP del backend contaría a todos los visitantes juntos.
+ *
  * El token NO va a los logs: solo el estado y el código del error.
  */
-export async function loadWelcomeKit(token: string): Promise<WelcomeKitResult> {
+export async function loadWelcomeKit(
+  token: string,
+  clientHeaders: Record<string, string> = {},
+): Promise<WelcomeKitResult> {
   if (!/^[A-Za-z0-9_-]{16,256}$/.test(token)) return { status: "gone" };
   try {
     const dto = await new HttpClient().get<WelcomeKitDataWire>(
       `/public/welcome/${encodeURIComponent(token)}`,
       undefined,
-      { authenticate: false },
+      { authenticate: false, headers: clientHeaders },
     );
     return { status: "ok", data: welcomeKitFromWire(dto) };
   } catch (error) {
     if (error instanceof HttpError && [400, 404, 410].includes(error.status)) {
       return { status: "gone" };
     }
+    if (error instanceof HttpError && error.status === 429) return { status: "busy" };
     const detail =
       error instanceof HttpError
         ? { status: error.status, code: error.code }

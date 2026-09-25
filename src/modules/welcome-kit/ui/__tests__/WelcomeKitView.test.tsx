@@ -51,4 +51,11 @@ describe("KitGoneView", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Tu kit ya cumplió su semana")
     expect(screen.getByRole("link", { name: /Entrar a mi panel/ })).toHaveAttribute("href", "/auth/login")
   })
+
+  it("el throttle pide recargar, no manda al panel", () => {
+    render(<KitGoneView reason="busy" reloadHref="/bienvenida/tok" />)
+    expect(screen.getByText("Estamos con mucho tráfico; recarga en unos segundos.")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Recargar/ })).toHaveAttribute("href", "/bienvenida/tok")
+    expect(screen.queryByRole("link", { name: /Entrar a mi panel/ })).not.toBeInTheDocument()
+  })
 })

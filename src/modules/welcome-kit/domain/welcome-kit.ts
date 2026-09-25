@@ -55,8 +55,14 @@ export type WelcomeKitData = {
   };
 };
 
-/** Resultado de abrir el kit: vigente, o ya no disponible (vencido o inexistente). */
+/**
+ * Resultado de abrir el kit: vigente; ya no disponible (vencido o inexistente);
+ * frenado por el throttle (429, pasa solo); o el servidor no respondió.
+ */
 export type WelcomeKitResult =
   | { status: "ok"; data: WelcomeKitData }
   | { status: "gone" }
+  | { status: "busy" }
   | { status: "unavailable" };
+
+export type WelcomeKitUnavailableReason = Exclude<WelcomeKitResult["status"], "ok">;

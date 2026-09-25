@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 
 import { noindexMetadata } from "@/core/seo/metadata"
+import { clientIpHeaders } from "@/shared/auth/bff-response"
 import { buildKitView, type KitView } from "@/modules/welcome-kit/domain/kit-view"
 import { loadWelcomeKit } from "@/modules/welcome-kit/infrastructure/welcome-kit.loader"
 import { KitGoneView } from "@/modules/welcome-kit/ui/KitGoneView"
@@ -23,8 +25,11 @@ export const metadata: Metadata = {
 
 export default async function WelcomeKitPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
-  const result = await loadWelcomeKit(token)
-  if (result.status !== "ok") return <KitGoneView reason={result.status} />
+  // La IP del visitante viaja al backend: su throttle es por IP.
+  const result = await loadWelcomeKit(token, clientIpHeaders(await headers()))
+  if (result.status !== "ok") {
+    return <KitGoneView reason={result.status} reloadHref={`/bienvenida/${encodeURIComponent(token)}`} />
+  }
 
   let view: KitView
   try {
