@@ -196,54 +196,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/tenants/{id}/support-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformSupportSessionsController_list_v1"];
-        put?: never;
-        post: operations["PlatformSupportSessionsController_issue_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/tenants/{id}/support-sessions/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformSupportSessionsController_exportCsv_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/support-sessions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["PlatformSupportSessionsController_revoke_v1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/rbac/permissions": {
         parameters: {
             query?: never;
@@ -607,6 +559,54 @@ export interface paths {
         put?: never;
         post: operations["UsersController_resendInvitation_v1"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/support-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformSupportSessionsController_list_v1"];
+        put?: never;
+        post: operations["PlatformSupportSessionsController_issue_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/support-sessions/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformSupportSessionsController_exportCsv_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/support-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformSupportSessionsController_revoke_v1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -7550,47 +7550,6 @@ export interface components {
             session_id: string;
             already_ended: boolean;
         };
-        IssueSupportSessionDto: {
-            reason: string;
-            ticket_ref?: string;
-            minutes: number;
-            password: string;
-        };
-        IssuedSupportSessionDto: {
-            /** Format: uuid */
-            session_id: string;
-            handoff_code: string;
-            expires_in: number;
-        };
-        SupportSessionListDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                platform_user: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    email: string;
-                } | null;
-                reason: string;
-                ticket_ref: string | null;
-                /** @enum {string} */
-                status: "pending" | "active" | "ended" | "revoked" | "expired";
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                redeemed_at: string | null;
-                /** Format: date-time */
-                expires_at: string;
-                /** Format: date-time */
-                ended_at: string | null;
-                /** @enum {string|null} */
-                end_reason: "ended" | "revoked" | "expired" | null;
-                duration_s: number | null;
-                request_count: number;
-                changes_count: number;
-            }[];
-        };
         PermissionListDto: {
             data: {
                 /** Format: uuid */
@@ -8015,6 +7974,47 @@ export interface components {
             /** @enum {string} */
             status?: "active" | "disabled";
             password?: string;
+        };
+        IssueSupportSessionDto: {
+            reason: string;
+            ticket_ref?: string;
+            minutes: number;
+            password: string;
+        };
+        IssuedSupportSessionDto: {
+            /** Format: uuid */
+            session_id: string;
+            handoff_code: string;
+            expires_in: number;
+        };
+        SupportSessionListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                platform_user: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    email: string;
+                } | null;
+                reason: string;
+                ticket_ref: string | null;
+                /** @enum {string} */
+                status: "pending" | "active" | "ended" | "revoked" | "expired";
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                redeemed_at: string | null;
+                /** Format: date-time */
+                expires_at: string;
+                /** Format: date-time */
+                ended_at: string | null;
+                /** @enum {string|null} */
+                end_reason: "ended" | "revoked" | "expired" | null;
+                duration_s: number | null;
+                request_count: number;
+                changes_count: number;
+            }[];
         };
         PlatformChannelHealthListDto: {
             data: {
@@ -19130,7 +19130,7 @@ export interface components {
             } | null;
             blockers: {
                 /** @enum {string} */
-                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many";
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many" | "already_paying" | "trial_shortens" | "trial_required";
                 message: string;
             }[];
         };
@@ -19145,6 +19145,8 @@ export interface components {
             };
             /** @default true */
             restart_trial: boolean;
+            /** @default false */
+            confirm_trial_shortening: boolean;
             /** Format: date */
             session_date: string;
             /** Format: date-time */
@@ -19165,7 +19167,7 @@ export interface components {
         DeliveryPreviewDto: {
             blockers: {
                 /** @enum {string} */
-                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many";
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many" | "already_paying" | "trial_shortens" | "trial_required";
                 message: string;
             }[];
             warnings: {
@@ -19283,6 +19285,8 @@ export interface components {
             };
             /** @default true */
             restart_trial: boolean;
+            /** @default false */
+            confirm_trial_shortening: boolean;
             /** Format: date */
             session_date: string;
             /** Format: date-time */
@@ -19912,95 +19916,6 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EndedSupportSessionDto"];
-                };
-            };
-        };
-    };
-    PlatformSupportSessionsController_list_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupportSessionListDto"];
-                };
-            };
-        };
-    };
-    PlatformSupportSessionsController_issue_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IssueSupportSessionDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IssuedSupportSessionDto"];
-                };
-            };
-        };
-    };
-    PlatformSupportSessionsController_exportCsv_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description CSV del registro de sesiones de soporte */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/csv": string;
-                };
-            };
-        };
-    };
-    PlatformSupportSessionsController_revoke_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
             cookie?: never;
         };
         requestBody?: never;
@@ -20651,6 +20566,95 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlatformSupportSessionsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportSessionListDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_issue_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueSupportSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedSupportSessionDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_exportCsv_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV del registro de sesiones de soporte */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_revoke_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndedSupportSessionDto"];
+                };
             };
         };
     };
