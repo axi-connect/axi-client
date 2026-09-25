@@ -1,14 +1,43 @@
 "use client"
 
+import * as React from "react";
 import { cn } from "@/core/lib/utils";
 import { XIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
+/**
+ * Si el diálogo está abierto. Radix no lo expone, y `DialogContent` lo necesita
+ * para montar su contenido con `forceMount` DENTRO de `AnimatePresence`: así la
+ * salida se anima antes de desmontar (QA H3-2). `null` = fuera de `Dialog`.
+ */
+const DialogOpenContext = React.createContext<boolean | null>(null)
+
+/**
+ * Raíz del diálogo. Siempre controla el `open` de Radix (el suyo o uno propio
+ * si el llamador no lo pasa) para que el contenido sepa cuándo animar la salida.
+ */
 function Dialog({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  const [innerOpen, setInnerOpen] = React.useState(defaultOpen)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!controlled) setInnerOpen(next)
+      onOpenChange?.(next)
+    },
+    [controlled, onOpenChange],
+  )
+  return (
+    <DialogOpenContext.Provider value={open}>
+      <DialogPrimitive.Root data-slot="dialog" open={open} onOpenChange={handleOpenChange} {...props} />
+    </DialogOpenContext.Provider>
+  )
 }
 
 function DialogTrigger({
@@ -33,21 +62,20 @@ function DialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  // El `motion.div` es el hijo DIRECTO del `asChild`: el Slot le pasa sus props.
   return (
     <DialogPrimitive.Overlay asChild {...props}>
-      <AnimatePresence>
-        <motion.div
-          data-slot="dialog-overlay"
-          className={cn(
-            "fixed inset-0 z-50 backdrop-blur-sm sm:backdrop-blur-md bg-background/40 dark:bg-background/30",
-            className
-          )}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        />
-      </AnimatePresence>
+      <motion.div
+        data-slot="dialog-overlay"
+        className={cn(
+          "fixed inset-0 z-50 backdrop-blur-sm sm:backdrop-blur-md bg-background/40 dark:bg-background/30",
+          className
+        )}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+      />
     </DialogPrimitive.Overlay>
   )
 }
@@ -56,27 +84,49 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
-  return (
-    <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        asChild
-        onInteractOutside={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        {...props}
-      >
-        {/*
-          El hijo DIRECTO de `Content asChild` tiene que ser el elemento del DOM:
-          el `Slot` de Radix le pasa `role="dialog"`, `aria-modal`, `aria-labelledby`
-          y la ref del foco. Envuelto en `AnimatePresence` (que no pinta nada) esos
-          atributos se perdían y ningún diálogo era un diálogo para el lector de
-          pantalla (QA H2-11). La salida animada tampoco corría: Radix desmonta el
-          contenido al cerrar, con `AnimatePresence` dentro.
-        */}
+  const open = React.useContext(DialogOpenContext)
+  /*
+    Al cerrar, el foco vuelve a quien lo tenía al abrir (QA H3-2). Radix solo lo
+    devuelve a un `DialogTrigger`, y casi todos los diálogos del panel se abren
+    controlados (desde un menú, un botón con estado): sin esto, el foco caía en
+    <body>. Se guarda en un layout effect, antes de que el FocusScope lo mueva.
+  */
+  const returnFocusRef = React.useRef<HTMLElement | null>(null)
+  React.useLayoutEffect(() => {
+    if (open !== false && typeof document !== "undefined") {
+      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    }
+  }, [open])
+
+  const handleCloseAutoFocus = (event: Event) => {
+    onCloseAutoFocus?.(event)
+    if (event.defaultPrevented) return
+    const target = returnFocusRef.current
+    if (target && target.isConnected && target !== document.body) {
+      event.preventDefault()
+      target.focus()
+    }
+  }
+
+  const content = (
+    <DialogPrimitive.Content
+      asChild
+      forceMount={open === null ? undefined : true}
+      onInteractOutside={(e) => e.preventDefault()}
+      onPointerDownOutside={(e) => e.preventDefault()}
+      onCloseAutoFocus={handleCloseAutoFocus}
+      {...props}
+    >
+      {/*
+        El hijo DIRECTO de `Content asChild` tiene que ser el elemento del DOM:
+        el `Slot` de Radix le pasa `role="dialog"`, `aria-labelledby` y la ref del
+        foco (QA H2-11).
+      */}
           <motion.div
             data-slot="dialog-content"
             aria-modal="true"
@@ -87,8 +137,8 @@ function DialogContent({
             onWheelCapture={(e: React.WheelEvent<HTMLDivElement>) => e.stopPropagation()}
             onTouchMoveCapture={(e: React.TouchEvent<HTMLDivElement>) => e.stopPropagation()}
             initial={{ y: 250, scale: 0.94 }}
-            animate={{ y: 0, scale: 1, transition: { type: "spring", stiffness: 380, damping: 28, mass: 0.9 } }}
-            exit={{ y: 30, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
+            animate={{ y: 0, scale: 1, opacity: 1, transition: { type: "spring", stiffness: 380, damping: 28, mass: 0.9 } }}
+            exit={{ y: 30, scale: 0.98, opacity: 0, transition: { duration: 0.18, ease: "easeInOut" } }}
           >
             {children}
             {showCloseButton && (
@@ -101,7 +151,31 @@ function DialogContent({
               </DialogPrimitive.Close>
             )}
           </motion.div>
-      </DialogPrimitive.Content>
+    </DialogPrimitive.Content>
+  )
+
+  // Fuera de `Dialog` (sin estado conocido) no hay salida animada.
+  if (open === null) {
+    return (
+      <DialogPortal data-slot="dialog-portal">
+        <DialogOverlay />
+        {content}
+      </DialogPortal>
+    )
+  }
+
+  // `AnimatePresence` FUERA del Content y `forceMount`: Radix no desmonta al
+  // cerrar, lo hace `AnimatePresence` cuando termina la salida (QA H3-2).
+  return (
+    <DialogPortal data-slot="dialog-portal" forceMount>
+      <AnimatePresence>
+        {open ? (
+          <React.Fragment key="dialog">
+            <DialogOverlay forceMount />
+            {content}
+          </React.Fragment>
+        ) : null}
+      </AnimatePresence>
     </DialogPortal>
   )
 }
