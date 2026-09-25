@@ -26,6 +26,10 @@ const buttonVariants = cva(
         // superficie como fondo. Blanco sobre tinta, tinta sobre cristal blanco.
         contrast:
           "bg-foreground text-background shadow-xs hover:bg-foreground/90",
+        // El botón líquido (§9.5.1): cristal con canto cónico. Para la acción
+        // secundaria DENTRO de una isla, junto a un `contrast`. Su aspecto
+        // vive en `.glass-control` (globals.css, bloque ISLAS).
+        glass: "glass-control rounded-full",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

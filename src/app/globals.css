@@ -2328,6 +2328,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
    pedir. Y como `.theme-dark-island`, re-deriva los dos tokens de capa 2 que el
    CSS propio (`.glass`, `.grouped-list`) lee como variable: `@theme inline` los
    dejó resueltos en :root. Las utilidades de Tailwind no lo necesitan. */
+/* Los ángulos del canto líquido se registran para poder transicionarlos: una
+   variable sin tipo salta de golpe. `inherits: false` los deja en su elemento. */
+@property --island-rim-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -75deg;
+}
+@property --glass-control-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -75deg;
+}
+
 .surface-light,
 .surface-dark {
   --color-background: var(--background);
@@ -2371,36 +2384,55 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   /* ---- Cristal: cuerpo translúcido, canto de luz, reflejo y halo. ---- */
   .island-glass {
     /* Tono claro (cristal blanco). El oscuro redefine estos mismos tokens abajo. */
-    --glass-from: color-mix(in oklab, var(--background) 82%, transparent);
-    --glass-to: color-mix(in oklab, color-mix(in oklab, var(--axi-violet) 5%, var(--background)) 62%, transparent);
-    --glass-blur: 28px;
-    --glass-saturate: 180%;
-    --glass-rim: linear-gradient(135deg, rgb(255 255 255 / 1) 0%, rgb(255 255 255 / 0.6) 25%, rgb(255 255 255 / 0.2) 50%, color-mix(in oklab, var(--foreground) 10%, transparent) 80%, color-mix(in oklab, var(--foreground) 18%, transparent) 100%);
-    --glass-sheen: rgb(255 255 255 / 0.9);
-    --glass-edge: inset 0 1px 0 rgb(255 255 255 / 1), inset 0 -1px 0 color-mix(in oklab, var(--foreground) 6%, transparent), inset 0 0 18px 2px rgb(255 255 255 / 0.65);
-    --glass-halo: 0 1px 2px rgb(16 16 24 / 0.06), 0 30px 70px -34px rgb(16 16 24 / 0.35), 0 30px 80px -40px color-mix(in oklab, var(--axi-violet) 35%, transparent);
+    --isl-from: color-mix(in oklab, var(--background) 82%, transparent);
+    --isl-to: color-mix(in oklab, color-mix(in oklab, var(--axi-violet) 5%, var(--background)) 62%, transparent);
+    --isl-blur: 28px;
+    --isl-saturate: 180%;
+    /* El canto líquido: dos brillos en esquinas opuestas (cónico desde el centro)
+       sobre un filo tenue. El brillo es del color del texto: tinta en el blanco. */
+    --isl-rim-hi: color-mix(in oklab, var(--foreground) 32%, transparent);
+    --isl-rim-base: rgb(255 255 255 / 0.85);
+    --isl-sheen: rgb(255 255 255 / 0.9);
+    --isl-band: rgb(255 255 255 / 0.55);
+    --isl-edge:
+      inset 0 0.125rem 0.125rem color-mix(in oklab, var(--foreground) 5%, transparent),
+      inset 0 -0.125rem 0.125rem color-mix(in oklab, var(--background) 50%, transparent),
+      inset 0 0 0.1rem 0.25rem color-mix(in oklab, var(--background) 20%, transparent),
+      inset 0 0 18px 2px rgb(255 255 255 / 0.55);
+    --isl-halo:
+      0 0.25rem 0.125rem -0.125rem color-mix(in oklab, var(--foreground) 14%, transparent),
+      0 30px 70px -34px rgb(16 16 24 / 0.35),
+      0 30px 80px -40px color-mix(in oklab, var(--axi-violet) 35%, transparent);
     --island-glow-mix: 16%;
 
-    background: var(--island-glow), linear-gradient(160deg, var(--glass-from), var(--glass-to));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    box-shadow: var(--glass-edge), var(--glass-halo);
+    background: var(--island-glow), linear-gradient(160deg, var(--isl-from), var(--isl-to));
+    -webkit-backdrop-filter: blur(var(--isl-blur)) saturate(var(--isl-saturate));
+    backdrop-filter: blur(var(--isl-blur)) saturate(var(--isl-saturate));
+    box-shadow: var(--isl-edge), var(--isl-halo);
   }
 
   /* Cristal negro, y el blanco cuando el tema es oscuro (su esquema ya es oscuro). */
   .island-glass.surface-dark,
   .dark .island-glass {
-    --glass-from: color-mix(in oklab, color-mix(in oklab, var(--foreground) 14%, var(--background)) 90%, transparent);
-    --glass-to: color-mix(in oklab, color-mix(in oklab, var(--axi-violet) 10%, var(--background)) 92%, transparent);
-    --glass-saturate: 170%;
-    --glass-rim: linear-gradient(135deg, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0.22) 18%, rgb(255 255 255 / 0.04) 42%, rgb(255 255 255 / 0.12) 68%, rgb(255 255 255 / 0.7) 100%);
-    --glass-sheen: rgb(255 255 255 / 0.14);
-    --glass-edge: inset 0 1px 0 rgb(255 255 255 / 0.32), inset 0 -1px 0 rgb(255 255 255 / 0.1), inset 0 0 14px 1px rgb(255 255 255 / 0.1);
-    --glass-halo: 0 40px 90px -36px color-mix(in oklab, var(--axi-violet) 55%, transparent), 0 18px 50px -24px color-mix(in oklab, var(--axi-brand) 45%, transparent);
+    --isl-from: color-mix(in oklab, color-mix(in oklab, var(--foreground) 14%, var(--background)) 90%, transparent);
+    --isl-to: color-mix(in oklab, color-mix(in oklab, var(--axi-violet) 10%, var(--background)) 92%, transparent);
+    --isl-saturate: 170%;
+    --isl-rim-hi: rgb(255 255 255 / 0.7);
+    --isl-rim-base: rgb(255 255 255 / 0.12);
+    --isl-sheen: rgb(255 255 255 / 0.14);
+    --isl-band: rgb(255 255 255 / 0.10);
+    --isl-edge:
+      inset 0 0.125rem 0.125rem rgb(255 255 255 / 0.10),
+      inset 0 -0.125rem 0.125rem rgb(0 0 0 / 0.35),
+      inset 0 0 0.1rem 0.25rem rgb(255 255 255 / 0.04),
+      inset 0 0 14px 1px rgb(255 255 255 / 0.08);
+    --isl-halo: 0 40px 90px -36px color-mix(in oklab, var(--axi-violet) 55%, transparent), 0 18px 50px -24px color-mix(in oklab, var(--axi-brand) 45%, transparent);
     --island-glow-mix: 26%;
   }
 
-  /* El canto: un borde en degradado recortado con máscara (luz arriba a la izquierda). */
+  /* El canto líquido: un cónico con dos brillos opuestos sobre un filo tenue,
+     recortado con máscara al borde. Al pasar el ratón gira un poco (solo se
+     repinta el pseudo-elemento; nada de layout). */
   .island-glass::before {
     content: "";
     position: absolute;
@@ -2408,22 +2440,92 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     z-index: 1;
     padding: 1.5px;
     border-radius: inherit;
-    background: var(--glass-rim);
+    background:
+      conic-gradient(from var(--island-rim-angle) at 50% 50%, var(--isl-rim-hi) 0%, transparent 6% 40%, var(--isl-rim-hi) 50%, transparent 56% 94%, var(--isl-rim-hi) 100%),
+      linear-gradient(var(--isl-rim-base), var(--isl-rim-base));
     pointer-events: none;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    transition: --island-rim-angle 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .island-glass:hover::before {
+    --island-rim-angle: -110deg;
   }
 
-  /* El reflejo de arriba, detrás del contenido. */
+  /* La luz: un reflejo suave arriba y una franja diagonal, detrás del contenido. */
   .island-glass::after {
     content: "";
     position: absolute;
-    inset: -40% -10% auto;
+    inset: 0;
     z-index: -1;
-    height: 70%;
-    background: radial-gradient(60% 45% at 30% 50%, var(--glass-sheen), transparent 70%);
+    background:
+      linear-gradient(-45deg, transparent 0%, var(--isl-band) 40% 46%, transparent 54%) 0% 0% / 200% 200%,
+      radial-gradient(60% 45% at 30% 0%, var(--isl-sheen), transparent 70%);
     pointer-events: none;
+    transition: background-position 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .island-glass:hover::after {
+    background-position: 25% 25%, 0 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .island-glass::before,
+    .island-glass::after,
+    .glass-control,
+    .glass-control::after {
+      transition: none;
+    }
+  }
+
+  /* ---- Control de cristal: el botón líquido (Button variant="glass"). Toma la
+     superficie en la que vive: tinta en la isla blanca, blanco en la negra. ---- */
+  .glass-control {
+    position: relative;
+    isolation: isolate;
+    border-radius: 9999px;
+    color: color-mix(in oklab, var(--foreground) 92%, transparent);
+    background: linear-gradient(-75deg, color-mix(in oklab, var(--background) 8%, transparent), color-mix(in oklab, var(--background) 28%, transparent), color-mix(in oklab, var(--background) 8%, transparent));
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    box-shadow:
+      inset 0 0.125em 0.125em color-mix(in oklab, var(--foreground) 5%, transparent),
+      inset 0 -0.125em 0.125em color-mix(in oklab, var(--background) 50%, transparent),
+      0 0.25em 0.125em -0.125em color-mix(in oklab, var(--foreground) 20%, transparent),
+      inset 0 0 0.1em 0.25em color-mix(in oklab, var(--background) 20%, transparent);
+    text-shadow: 0 0.2em 0.05em color-mix(in oklab, var(--foreground) 10%, transparent);
+    transition: box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .glass-control:hover {
+    box-shadow:
+      inset 0 0.125em 0.125em color-mix(in oklab, var(--foreground) 5%, transparent),
+      inset 0 -0.125em 0.125em color-mix(in oklab, var(--background) 50%, transparent),
+      0 0.15em 0.05em -0.1em color-mix(in oklab, var(--foreground) 25%, transparent),
+      inset 0 0 0.05em 0.1em color-mix(in oklab, var(--background) 50%, transparent);
+  }
+  .glass-control::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    background:
+      conic-gradient(from var(--glass-control-angle) at 50% 50%, color-mix(in oklab, var(--foreground) 50%, transparent) 0%, transparent 5% 40%, color-mix(in oklab, var(--foreground) 50%, transparent) 50%, transparent 60% 95%, color-mix(in oklab, var(--foreground) 50%, transparent) 100%),
+      linear-gradient(color-mix(in oklab, var(--background) 50%, transparent), color-mix(in oklab, var(--background) 50%, transparent));
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    transition: --glass-control-angle 0.5s ease;
+  }
+  .glass-control:hover::after {
+    --glass-control-angle: -125deg;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .glass-control:hover::after {
+      --glass-control-angle: -75deg;
+    }
   }
 
   /* Sin desenfoque (o si el usuario pide menos transparencia): cuerpo casi opaco, igual de legible. */
@@ -2431,16 +2533,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     .island-glass,
     .island-glass.surface-dark,
     .dark .island-glass {
-      --glass-from: color-mix(in oklab, var(--background) 97%, transparent);
-      --glass-to: color-mix(in oklab, var(--background) 95%, transparent);
+      --isl-from: color-mix(in oklab, var(--background) 97%, transparent);
+      --isl-to: color-mix(in oklab, var(--background) 95%, transparent);
     }
   }
   @media (prefers-reduced-transparency: reduce) {
     .island-glass,
     .island-glass.surface-dark,
     .dark .island-glass {
-      --glass-from: var(--background);
-      --glass-to: var(--background);
+      --isl-from: var(--background);
+      --isl-to: var(--background);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }

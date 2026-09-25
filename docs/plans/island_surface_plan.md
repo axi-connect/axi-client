@@ -24,7 +24,7 @@ Aprobado por el dueño el 2026-09-25, sobre el canvas del upgrade de Comercial
    - `.island`: la forma y la base.
    - `.island-ink`: tinta plana.
    - `.island-glass`: cuerpo translúcido con `backdrop-filter`, canto de luz (máscara sobre `::before`), reflejo
-     (`::after`) y halo. Sus valores son variables `--glass-*`, que cambian con el tono.
+     (`::after`) y halo. Sus valores son variables `--isl-*`, que cambian con el tono.
    - Brillo: `--island-glow` es una capa más del `background` (`.island-glow-brand` o `.island-glow-ai`), no un
      nodo.
    - Degradación: sin `backdrop-filter`, o con `prefers-reduced-transparency`, el cuerpo pasa a casi opaco.

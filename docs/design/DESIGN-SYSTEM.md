@@ -681,7 +681,7 @@ es un **material** del sistema.
 
 - **Aspecto**: bloque ISLAS de `globals.css`. `.island`, `.island-ink` y `.island-glass`, más los brillos
   `.island-glow-brand` y `.island-glow-ai`, todos en `@layer components`, para que una utilidad de la vista (`p-5`,
-  `rounded-none`, `sm:rounded-full`) pueda ajustarlos. Los valores del cristal son variables `--glass-*` (cuerpo,
+  `rounded-none`, `sm:rounded-full`) pueda ajustarlos. Los valores del cristal son variables `--isl-*` (cuerpo,
   desenfoque, canto, reflejo, halo) y el tono oscuro las redefine.
 - **Quién usa qué**: `ISLAND_DEFAULTS` en `shared/components/features/island/Island.tsx`. Cambiar
   `material: "glass"` por `"ink"` devuelve todas las islas a tinta; las que piden su material en la llamada (las
@@ -696,12 +696,25 @@ es un **material** del sistema.
   - En tema oscuro la superficie clara toma el esquema oscuro (una isla blanca sobre negro grita).
   - Una superficie oscura en tema claro conserva la **marca**: el CTA coral, con texto blanco.
 
+**El canto líquido y el botón de cristal** (tomado de un liquid glass de referencia que aportó el dueño, reescrito
+sin `<style>` por render y con `color-mix` en lugar de `oklch(from …)`):
+
+- El canto del cristal es un **cónico con dos brillos en esquinas opuestas** sobre un filo tenue.
+  - Su ángulo es una propiedad registrada (`@property --island-rim-angle`), así que al pasar el ratón gira con
+    transición.
+  - El cuerpo lleva sombras internas de grosor (oscura arriba, clara abajo) y la luz es una franja diagonal que se
+    desplaza. Todo se desactiva con `prefers-reduced-motion`.
+- `Button variant="glass"` (`.glass-control`) es el **botón líquido**, con la misma receta a escala de control.
+  - Es la acción secundaria dentro de una isla, junto a un `contrast` («Ver el detalle» junto a «Aprobar»).
+  - Toma la superficie en la que vive. En táctil el canto no gira.
+
 **API.**
 
 ```tsx
 <InkIsland label="Lo próximo">…</InkIsland>                              // el aspecto por defecto
 <InkIsland label="Axi propone" glow="ai">…</InkIsland>                    // violeta: lo propone la IA
 <Island as="footer" material="ink" glow="none" className="sticky bottom-3 sm:rounded-full">…</Island>
+<Button variant="glass">Ver el detalle</Button> <Button variant="contrast">Aprobar</Button>   // dentro de la isla
 <form className={cn(islandClassName({ tone: "dark" }), "p-6")}>…</form>  // un elemento que ya existe
 ```
 
