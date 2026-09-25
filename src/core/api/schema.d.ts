@@ -100,6 +100,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_forgot_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/token/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_inspectPasswordToken_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_setPassword_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthController_changePassword_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/support/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthSupportController_redeem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/support/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthSupportController_end_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/support-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformSupportSessionsController_list_v1"];
+        put?: never;
+        post: operations["PlatformSupportSessionsController_issue_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/support-sessions/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformSupportSessionsController_exportCsv_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/support-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformSupportSessionsController_revoke_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rbac/permissions": {
         parameters: {
             query?: never;
@@ -450,6 +594,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["UsersController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/users/{id}/invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UsersController_resendInvitation_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/platform/channels/health": {
@@ -1028,6 +1188,22 @@ export interface paths {
         patch: operations["QualityScenariosController_update_v1"];
         trace?: never;
     };
+    "/api/v1/platform/quality/scenarios/draft-from-conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityScenariosController_draft_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/quality/scenarios/{id}/clone": {
         parameters: {
             query?: never;
@@ -1124,6 +1300,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/platform/quality/runs/{id}/probe-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityRunsController_probeResults_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/platform/quality/runs/{id}/cases/{caseId}": {
         parameters: {
             query?: never;
@@ -1166,6 +1358,246 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["QualityRunsController_purgeRun_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySessionsController_list_v1"];
+        put?: never;
+        post: operations["QualitySessionsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySessionsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualitySessionsController_trace_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_send_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_sendMedia_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/sessions/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualitySessionsController_end_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_list_v1"];
+        put?: never;
+        post: operations["QualityDatasetsController_create_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_byId_v1"];
+        put?: never;
+        post?: never;
+        delete: operations["QualityDatasetsController_remove_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityDatasetsController_update_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QualityDatasetsController_startImport_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_items_v1"];
+        put?: never;
+        post: operations["QualityDatasetsController_addItem_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["QualityDatasetsController_removeItem_v1"];
+        options?: never;
+        head?: never;
+        patch: operations["QualityDatasetsController_labelItem_v1"];
+        trace?: never;
+    };
+    "/api/v1/platform/quality/datasets/{id}/items/{itemId}/image-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityDatasetsController_imageUrl_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/tenants/{companyId}/catalog/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityTenantLookupController_catalogSearch_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/tenants/{companyId}/intentions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityTenantLookupController_intentions_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/quality/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["QualityCapabilitiesController_get_v1"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1455,6 +1887,22 @@ export interface paths {
         put: operations["PlatformTenantVoiceController_setCredential_v1"];
         post?: never;
         delete: operations["PlatformTenantVoiceController_removeCredential_v1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantAgentsController_list_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4180,86 +4628,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/fx/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FxController_settings_v1"];
-        put: operations["FxController_update_v1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/fx/rates/latest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FxController_latest_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/fx/rates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PlatformFxController_rates_v1"];
-        put?: never;
-        post: operations["PlatformFxController_setManual_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/fx/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PlatformFxController_refresh_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/geo/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["GeoController_search_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -4492,6 +4860,86 @@ export interface paths {
             cookie?: never;
         };
         get: operations["ContactReachabilityController_reachabilityOf_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fx/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_settings_v1"];
+        put: operations["FxController_update_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fx/rates/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FxController_latest_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformFxController_rates_v1"];
+        put?: never;
+        post: operations["PlatformFxController_setManual_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/fx/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlatformFxController_refresh_v1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/geo/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GeoController_search_v1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6868,55 +7316,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/quality/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualitySessionsController_list_v1"];
-        put?: never;
-        post: operations["QualitySessionsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualitySessionsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}/trace": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualitySessionsController_trace_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/sessions/{id}/messages": {
+    "/api/v1/platform/tenants/{id}/offer/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -6925,14 +7325,62 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["QualitySessionsController_send_v1"];
+        post: operations["PlatformTenantOfferController_preview_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/quality/sessions/{id}/end": {
+    "/api/v1/platform/tenants/{id}/offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantOfferController_current_v1"];
+        put: operations["PlatformTenantOfferController_save_v1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/offer-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformOfferCatalogController_catalog_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantDeliveryController_context_v1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/tenants/{id}/delivery/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -6941,30 +7389,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["QualitySessionsController_end_v1"];
+        post: operations["PlatformTenantDeliveryController_preview_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/tenants/{id}/agents": {
+    "/api/v1/platform/tenants/{id}/delivery": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["PlatformTenantAgentsController_list_v1"];
+        get: operations["PlatformTenantDeliveryController_latest_v1"];
         put?: never;
-        post?: never;
+        post: operations["PlatformTenantDeliveryController_create_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/quality/sessions/{id}/media": {
+    "/api/v1/platform/tenants/{id}/delivery/{deliveryId}/resend": {
         parameters: {
             query?: never;
             header?: never;
@@ -6973,21 +7421,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["QualitySessionsController_sendMedia_v1"];
+        post: operations["PlatformTenantDeliveryController_resend_v1"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/quality/runs/{id}/probe-results": {
+    "/api/v1/public/welcome/{token}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["QualityRunsController_probeResults_v1"];
+        get: operations["PublicWelcomeController_view_v1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6996,158 +7444,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/platform/quality/datasets": {
+    "/api/v1/public/welcome/{token}/calls/{file}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["QualityDatasetsController_list_v1"];
-        put?: never;
-        post: operations["QualityDatasetsController_create_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_byId_v1"];
-        put?: never;
-        post?: never;
-        delete: operations["QualityDatasetsController_remove_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["QualityDatasetsController_update_v1"];
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/imports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualityDatasetsController_startImport_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_items_v1"];
-        put?: never;
-        post: operations["QualityDatasetsController_addItem_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/items/{itemId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["QualityDatasetsController_removeItem_v1"];
-        options?: never;
-        head?: never;
-        patch: operations["QualityDatasetsController_labelItem_v1"];
-        trace?: never;
-    };
-    "/api/v1/platform/quality/datasets/{id}/items/{itemId}/image-url": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityDatasetsController_imageUrl_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/tenants/{companyId}/catalog/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityTenantLookupController_catalogSearch_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/tenants/{companyId}/intentions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityTenantLookupController_intentions_v1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/scenarios/draft-from-conversation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["QualityScenariosController_draft_v1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/platform/quality/capabilities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["QualityCapabilitiesController_get_v1"];
+        get: operations["PublicWelcomeController_calendar_v1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7199,6 +7503,93 @@ export interface components {
                 name: string;
             };
             permissions: string[];
+            support_session?: {
+                /** Format: date-time */
+                expires_at: string;
+                tenant_name: string;
+            };
+        };
+        ForgotPasswordDto: {
+            /** Format: email */
+            email: string;
+        };
+        InspectPasswordTokenDto: {
+            token: string;
+        };
+        PasswordTokenInfoDto: {
+            /** @enum {string} */
+            purpose: "invite" | "reset";
+            email_masked: string;
+            business_name: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        SetPasswordDto: {
+            token: string;
+            new_password: string;
+        };
+        ChangePasswordDto: {
+            current_password: string;
+            new_password: string;
+        };
+        RedeemSupportSessionDto: {
+            code: string;
+        };
+        SupportAccessTokensDto: {
+            access_token: string;
+            /** @enum {string} */
+            token_type: "Bearer";
+            expires_in: number;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: uuid */
+            session_id: string;
+        };
+        EndedSupportSessionDto: {
+            /** Format: uuid */
+            session_id: string;
+            already_ended: boolean;
+        };
+        IssueSupportSessionDto: {
+            reason: string;
+            ticket_ref?: string;
+            minutes: number;
+            password: string;
+        };
+        IssuedSupportSessionDto: {
+            /** Format: uuid */
+            session_id: string;
+            handoff_code: string;
+            expires_in: number;
+        };
+        SupportSessionListDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                platform_user: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    email: string;
+                } | null;
+                reason: string;
+                ticket_ref: string | null;
+                /** @enum {string} */
+                status: "pending" | "active" | "ended" | "revoked" | "expired";
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                redeemed_at: string | null;
+                /** Format: date-time */
+                expires_at: string;
+                /** Format: date-time */
+                ended_at: string | null;
+                /** @enum {string|null} */
+                end_reason: "ended" | "revoked" | "expired" | null;
+                duration_s: number | null;
+                request_count: number;
+                changes_count: number;
+            }[];
         };
         PermissionListDto: {
             data: {
@@ -7732,7 +8123,7 @@ export interface components {
                 name: string;
                 /** Format: email */
                 email: string;
-                password: string;
+                password?: string;
             };
             plan_code?: string;
         };
@@ -7741,6 +8132,8 @@ export interface components {
             id: string;
             /** Format: uuid */
             owner_user_id: string;
+            owner_invited: boolean;
+            invitation_pending: boolean;
         };
         UpdateTenantDto: {
             name?: string;
@@ -7763,10 +8156,20 @@ export interface components {
         StartTrialDto: {
             /** @default 7 */
             days: number;
+            /**
+             * @default extend
+             * @enum {string}
+             */
+            mode: "extend" | "restart";
         };
         TrialStartedDto: {
             /** Format: date-time */
             trial_ends_at: string;
+            /** Format: date-time */
+            trial_starts_at: string;
+            timezone: string;
+            /** @enum {string} */
+            mode: "extend" | "restart";
         };
         UpdateTenantIntegrationsDto: {
             /** @enum {string|null} */
@@ -8612,6 +9015,35 @@ export interface components {
                 when: "first_turn" | "sim_decides";
             }[];
         };
+        DraftQualityScenarioDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** Format: uuid */
+            conversation_id: string;
+        };
+        QualityScenarioDraftDto: {
+            code: string;
+            name: string;
+            persona: string;
+            goal: string;
+            max_turns: number;
+            tags: string[];
+            success_criteria: {
+                [key: string]: unknown;
+            }[];
+            dropped: {
+                criterion: unknown;
+                reason: string;
+            }[];
+            source: {
+                /** Format: uuid */
+                company_id: string;
+                /** Format: uuid */
+                conversation_id: string;
+                messages: number;
+                outcome: string | null;
+            };
+        };
         CloneScenarioDto: {
             code: string;
             name?: string;
@@ -8958,6 +9390,34 @@ export interface components {
                 finished_at: string | null;
             }[];
         };
+        QualityProbeResultsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                dataset_item_id: string;
+                input: {
+                    [key: string]: unknown;
+                };
+                image_url: string | null;
+                hit: boolean;
+                rank: number | null;
+                returned: unknown;
+                expected: unknown;
+                confidence: string | null;
+                top_score: number | null;
+                margin: number | null;
+                degraded: boolean | null;
+                method: string | null;
+                latency_ms: number;
+                error: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
         CaseDetailDto: {
             /** Format: uuid */
             id: string;
@@ -9034,6 +9494,461 @@ export interface components {
             turns_per_conversation?: number;
             mock_latency_ms?: number;
             spend_cap_usd?: number;
+        };
+        QualitySessionsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                agent: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    model: string;
+                    provider: string;
+                } | null;
+                /** @enum {string} */
+                status: "active" | "ended";
+                /** @enum {string|null} */
+                ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
+                purged: boolean;
+                persona_note: string | null;
+                spend: {
+                    spent_usd: number | null;
+                    cap_usd: number;
+                };
+                operator_turns: number;
+                created_by: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                last_activity_at: string;
+                /** Format: date-time */
+                finished_at: string | null;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QualitySessionDetailDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            agent: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                model: string;
+                provider: string;
+            } | null;
+            /** @enum {string} */
+            status: "active" | "ended";
+            /** @enum {string|null} */
+            ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
+            purged: boolean;
+            persona_note: string | null;
+            spend: {
+                spent_usd: number | null;
+                cap_usd: number;
+                daily_spent_usd: number | null;
+                daily_cap_usd: number;
+            };
+            operator_turns: number;
+            created_by: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            last_activity_at: string;
+            /** Format: date-time */
+            finished_at: string | null;
+            /** Format: uuid */
+            conversation_id: string | null;
+            external_id: string;
+            limits: {
+                idle_timeout_min: number;
+                max_age_min: number;
+            };
+            /** @enum {string} */
+            agent_state: "idle" | "thinking" | "escalated" | "closed";
+            conversation: {
+                mode: string;
+                status: string;
+                closed_reason: string | null;
+                intention: {
+                    code: string;
+                    confidence: number | null;
+                } | null;
+            } | null;
+            /** Format: uuid */
+            agent_of_last_turn: string | null;
+            agent_changed: boolean;
+            agents: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            /** @enum {string} */
+            transcript_mode: "full" | "delta";
+            transcript: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                direction: "inbound" | "outbound";
+                /** @enum {string} */
+                sender_type: "contact" | "ai_agent" | "user" | "system";
+                /** Format: uuid */
+                agent_id: string | null;
+                content_type: string;
+                body: string | null;
+                provider_message_id: string | null;
+                status: string;
+                /** Format: date-time */
+                created_at: string;
+                interactive: {
+                    body: string;
+                    options: {
+                        id: string;
+                        title: string;
+                        description?: string;
+                    }[];
+                } | null;
+                interactive_reply: {
+                    id: string;
+                    title: string;
+                    source: string;
+                } | null;
+                location: {
+                    latitude: number;
+                    longitude: number;
+                    name?: string;
+                    address?: string;
+                } | null;
+                recognition: {
+                    /** @enum {string} */
+                    status: "done" | "failed" | "skipped";
+                    skip_reason: string | null;
+                    error_reason: string | null;
+                    kind: string | null;
+                    description: string | null;
+                    top_score: number | null;
+                    margin: number | null;
+                    degraded: boolean;
+                    latency_ms: number | null;
+                    candidates: {
+                        sku: string;
+                        name: string;
+                        score: number;
+                        confidence: string;
+                    }[];
+                } | null;
+                transcription: {
+                    /** @enum {string} */
+                    status: "done" | "failed";
+                    text: string | null;
+                    error_reason: string | null;
+                    audio_seconds: number | null;
+                    latency_ms: number | null;
+                } | null;
+                attachments: {
+                    /** Format: uuid */
+                    id: string;
+                    filename: string;
+                    mime_type: string;
+                    size_bytes: number;
+                    url: string | null;
+                }[];
+            }[];
+        };
+        QualitySessionTraceDto: {
+            /** @enum {string} */
+            source: "redis" | "none";
+            turns: ({
+                /** @enum {string} */
+                kind: "agent_turn";
+                ts: string;
+                agent_id: string | null;
+                model: string | null;
+                provider: string | null;
+                intention: {
+                    code: string;
+                    confidence: number | null;
+                } | null;
+                duration_ms: number | null;
+                context_ms: number | null;
+                iterations: {
+                    finish_reason: string;
+                    assistant_text: string | null;
+                    tools: {
+                        name: string;
+                        args: string | null;
+                        ok: boolean | null;
+                        productive: boolean | null;
+                        unproductive_reason: string | null;
+                        duration_ms: number | null;
+                    }[];
+                    latency_ms: number | null;
+                    tokens: {
+                        input: number;
+                        output: number;
+                        cached: number | null;
+                    } | null;
+                    nudge_reason: string | null;
+                    unverified_prices: string[];
+                    final_no_tools: boolean;
+                }[];
+                replies: string[];
+                action: string;
+                escalate_reason: string | null;
+                close_reason: string | null;
+                bot_phrases: string[];
+                tokens_total: {
+                    input: number;
+                    output: number;
+                    cached: number;
+                };
+                error: string | null;
+                failed: boolean;
+            } | {
+                /** @enum {string} */
+                kind: "intent_classification";
+                ts: string;
+                result: {
+                    code: string;
+                    confidence: number;
+                } | null;
+                previous: {
+                    code: string | null;
+                    confidence: number | null;
+                };
+                applied: string;
+                duration_ms: number | null;
+            })[];
+        };
+        CreateQualitySessionDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** Format: uuid */
+            agent_id: string;
+            persona_note?: string;
+            spend_cap_usd?: number;
+        };
+        SendQualitySessionMessageDto: {
+            /** @enum {string} */
+            kind: "text" | "tap" | "location";
+            body?: string;
+            option_id?: string;
+            title?: string;
+            /** @enum {string} */
+            source?: "button" | "list";
+            location?: {
+                latitude: number;
+                longitude: number;
+                name?: string;
+                address?: string;
+            };
+        };
+        QualitySessionMessageAcceptedDto: {
+            provider_message_id: string;
+        };
+        QualityDatasetsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                company_id: string;
+                company_name: string;
+                /** @enum {string} */
+                kind: "catalog_search" | "recognition" | "intent";
+                name: string;
+                description: string | null;
+                /** @enum {string} */
+                status: "active" | "archived";
+                items_count: number;
+                labeled_count: number;
+                last_import: {
+                    scanned: number;
+                    imported: number;
+                    duplicated: number;
+                    discarded: number;
+                    /** Format: date-time */
+                    finished_at: string;
+                } | null;
+                last_run: {
+                    /** Format: uuid */
+                    run_id: string;
+                    /** Format: date-time */
+                    finished_at: string | null;
+                    metrics: unknown;
+                } | null;
+                created_by: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        QualityDatasetDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            /** @enum {string} */
+            kind: "catalog_search" | "recognition" | "intent";
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            status: "active" | "archived";
+            items_count: number;
+            labeled_count: number;
+            last_import: {
+                scanned: number;
+                imported: number;
+                duplicated: number;
+                discarded: number;
+                /** Format: date-time */
+                finished_at: string;
+            } | null;
+            last_run: {
+                /** Format: uuid */
+                run_id: string;
+                /** Format: date-time */
+                finished_at: string | null;
+                metrics: unknown;
+            } | null;
+            created_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        CreateQualityDatasetDto: {
+            /** Format: uuid */
+            company_id: string;
+            /** @enum {string} */
+            kind: "catalog_search" | "recognition" | "intent";
+            name: string;
+            description?: string | null;
+        };
+        UpdateQualityDatasetDto: {
+            name?: string;
+            description?: string | null;
+            /** @enum {string} */
+            status?: "active" | "archived";
+        };
+        ImportQualityDatasetDto: {
+            /** @default 30 */
+            days: number;
+            /** @default 200 */
+            limit: number;
+        };
+        QualityDatasetItemsPageDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                source: "trace" | "turn_metric" | "manual" | "ai";
+                input: {
+                    [key: string]: unknown;
+                };
+                suggested: {
+                    [key: string]: unknown;
+                } | null;
+                expected: {
+                    [key: string]: unknown;
+                } | null;
+                /** @enum {string} */
+                label_status: "unlabeled" | "labeled" | "disputed" | "skipped";
+                labeled_by: string | null;
+                /** Format: date-time */
+                labeled_at: string | null;
+                source_ref: {
+                    [key: string]: unknown;
+                } | null;
+                image_url: string | null;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+            meta: {
+                total: number;
+                page: number;
+                page_size: number;
+            };
+        };
+        AddQualityDatasetItemDto: {
+            input: {
+                [key: string]: unknown;
+            };
+            expected?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        LabelQualityDatasetItemDto: {
+            /** @enum {string} */
+            status: "unlabeled" | "labeled" | "disputed" | "skipped";
+            expected?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        QualityDatasetImageUrlDto: {
+            url: string | null;
+        };
+        QualityTenantCatalogSearchDto: {
+            data: {
+                /** Format: uuid */
+                product_id: string;
+                sku: string;
+                name: string;
+                category_path: string | null;
+                price_cents: number;
+                currency: string;
+                has_image: boolean;
+                available: boolean;
+            }[];
+        };
+        QualityTenantIntentionsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                description: string;
+                type: string;
+                is_system: boolean;
+            }[];
+        };
+        QualityCapabilitiesDto: {
+            /** Format: uuid */
+            company_id: string;
+            company_name: string;
+            window_days: number;
+            runs_considered: number;
+            capabilities: {
+                code: string;
+                label: string;
+                description: string;
+                /** @enum {string} */
+                status: "untested" | "pass" | "warn" | "fail";
+                metric_label: string | null;
+                metric_value: number | null;
+                sample_size: number;
+                /** @enum {string|null} */
+                source: "probe" | "checks" | "cases" | null;
+                /** Format: uuid */
+                run_id: string | null;
+                /** Format: date-time */
+                evaluated_at: string | null;
+            }[];
         };
         DebugContactsDto: {
             data: {
@@ -9476,6 +10391,22 @@ export interface components {
         };
         SetTtsCredentialDto: {
             api_key: string;
+        };
+        PlatformTenantAgentsDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                status: "active" | "paused" | "draft";
+                provider: string;
+                model: string;
+                is_default: boolean;
+                intentions: {
+                    code: string;
+                    type: string;
+                }[];
+            }[];
         };
         IntentionListDto: {
             data: {
@@ -13977,90 +14908,6 @@ export interface components {
             stale: boolean;
             computed_at: string;
         };
-        FxSettingsDto: {
-            settlement_currency: string;
-            spread_bps: number;
-            manual_rate: {
-                rate: number;
-                /** Format: date */
-                valid_until: string;
-            } | null;
-            show_indicative_quotes: boolean;
-        };
-        LatestFxRateDto: {
-            official: {
-                base: string;
-                quote: string;
-                rate: number;
-                /** Format: date */
-                valid_from: string;
-                /** Format: date */
-                valid_to: string | null;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual";
-                /** Format: date-time */
-                fetched_at: string;
-            } | null;
-            effective: {
-                base: string;
-                quote: string;
-                rate: number;
-                official_rate: number | null;
-                spread_bps: number;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual" | "tenant_override";
-                /** Format: date */
-                valid_from: string;
-                stale: boolean;
-            } | null;
-        };
-        FxRatesListDto: {
-            data: {
-                base: string;
-                quote: string;
-                rate: number;
-                /** Format: date */
-                valid_from: string;
-                /** Format: date */
-                valid_to: string | null;
-                /** @enum {string} */
-                source: "superfinanciera" | "manual";
-                /** Format: date-time */
-                fetched_at: string;
-            }[];
-        };
-        SetManualRateDto: {
-            base: string;
-            quote: string;
-            rate: number;
-            /** Format: date */
-            valid_from: string;
-            note?: string;
-        };
-        FxRateDto: {
-            base: string;
-            quote: string;
-            rate: number;
-            /** Format: date */
-            valid_from: string;
-            /** Format: date */
-            valid_to: string | null;
-            /** @enum {string} */
-            source: "superfinanciera" | "manual";
-            /** Format: date-time */
-            fetched_at: string;
-        };
-        GeoSearchResultsDto: {
-            items: {
-                id: string;
-                name: string;
-                detail: string;
-                locality: string | null;
-                lat: number;
-                lng: number;
-                kind: string;
-            }[];
-        };
         ConversationsListDto: {
             data: {
                 /** Format: uuid */
@@ -14377,6 +15224,90 @@ export interface components {
             last_inbound_at: string | null;
             window_hours: number | null;
             supports_templates: boolean;
+        };
+        FxSettingsDto: {
+            settlement_currency: string;
+            spread_bps: number;
+            manual_rate: {
+                rate: number;
+                /** Format: date */
+                valid_until: string;
+            } | null;
+            show_indicative_quotes: boolean;
+        };
+        LatestFxRateDto: {
+            official: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            } | null;
+            effective: {
+                base: string;
+                quote: string;
+                rate: number;
+                official_rate: number | null;
+                spread_bps: number;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual" | "tenant_override";
+                /** Format: date */
+                valid_from: string;
+                stale: boolean;
+            } | null;
+        };
+        FxRatesListDto: {
+            data: {
+                base: string;
+                quote: string;
+                rate: number;
+                /** Format: date */
+                valid_from: string;
+                /** Format: date */
+                valid_to: string | null;
+                /** @enum {string} */
+                source: "superfinanciera" | "manual";
+                /** Format: date-time */
+                fetched_at: string;
+            }[];
+        };
+        SetManualRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            note?: string;
+        };
+        FxRateDto: {
+            base: string;
+            quote: string;
+            rate: number;
+            /** Format: date */
+            valid_from: string;
+            /** Format: date */
+            valid_to: string | null;
+            /** @enum {string} */
+            source: "superfinanciera" | "manual";
+            /** Format: date-time */
+            fetched_at: string;
+        };
+        GeoSearchResultsDto: {
+            items: {
+                id: string;
+                name: string;
+                detail: string;
+                locality: string | null;
+                lat: number;
+                lng: number;
+                kind: string;
+            }[];
         };
         CopilotSummaryDto: {
             summary: string;
@@ -18019,536 +18950,516 @@ export interface components {
                 where: string;
             }[];
         };
-    
-        QualitySessionsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                company_id: string;
-                company_name: string;
-                agent: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    model: string;
-                    provider: string;
-                } | null;
-                /** @enum {string} */
-                status: "active" | "ended";
-                /** @enum {string|null} */
-                ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
-                purged: boolean;
-                persona_note: string | null;
-                spend: {
-                    spent_usd: number | null;
-                    cap_usd: number;
-                };
-                operator_turns: number;
-                created_by: string;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                last_activity_at: string;
-                /** Format: date-time */
-                finished_at: string | null;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
+        OfferSelectionDto: {
+            package_code?: string;
+            module_codes?: string[];
+            volume_tier_code?: string;
+            promotion_code?: string;
+            /** @enum {string} */
+            billing_period: "monthly" | "annual";
         };
-        QualitySessionDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            company_id: string;
-            company_name: string;
-            agent: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                model: string;
-                provider: string;
+        OfferQuoteDto: {
+            plan_name: string;
+            volume_tier_label: string | null;
+            list_amount_cents: number;
+            amount_cents: number;
+            promotion_name: string | null;
+            currency: string;
+            /** Format: date-time */
+            valid_until: string;
+        };
+        TenantOfferResponseDto: {
+            offer: {
+                plan_name: string;
+                volume_tier_label: string | null;
+                list_amount_cents: number;
+                amount_cents: number;
+                promotion_name: string | null;
+                currency: string;
+                /** Format: date-time */
+                valid_until: string;
+                /** @enum {string} */
+                kind: "package" | "module";
+                plan_codes: string[];
+                volume_tier_code: string | null;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+                promotion_code: string | null;
+                /** Format: date-time */
+                quoted_at: string | null;
             } | null;
-            /** @enum {string} */
-            status: "active" | "ended";
-            /** @enum {string|null} */
-            ended_reason: "operator" | "idle_timeout" | "max_age" | "spend_cap" | "daily_spend_cap" | "closed_by_agent" | "failed" | null;
-            purged: boolean;
-            persona_note: string | null;
-            spend: {
-                spent_usd: number | null;
-                cap_usd: number;
-                daily_spent_usd: number | null;
-                daily_cap_usd: number;
-            };
-            operator_turns: number;
-            created_by: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            last_activity_at: string;
-            /** Format: date-time */
-            finished_at: string | null;
-            /** Format: uuid */
-            conversation_id: string | null;
-            external_id: string;
-            limits: {
-                idle_timeout_min: number;
-                max_age_min: number;
-            };
-            /** @enum {string} */
-            agent_state: "idle" | "thinking" | "escalated" | "closed";
-            conversation: {
-                mode: string;
-                status: string;
-                closed_reason: string | null;
-                intention: {
-                    code: string;
-                    confidence: number | null;
-                } | null;
-            } | null;
-            /** Format: uuid */
-            agent_of_last_turn: string | null;
-            agent_changed: boolean;
-            agents: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            }[];
-            /** @enum {string} */
-            transcript_mode: "full" | "delta";
-            transcript: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                direction: "inbound" | "outbound";
-                /** @enum {string} */
-                sender_type: "contact" | "ai_agent" | "user" | "system";
-                /** Format: uuid */
-                agent_id: string | null;
-                content_type: string;
-                body: string | null;
-                provider_message_id: string | null;
-                status: string;
-                /** Format: date-time */
-                created_at: string;
-                interactive: {
-                    body: string;
-                    options: {
-                        id: string;
-                        title: string;
-                        description?: string;
-                    }[];
-                } | null;
-                interactive_reply: {
-                    id: string;
-                    title: string;
-                    source: string;
-                } | null;
-                location: {
-                    latitude: number;
-                    longitude: number;
-                    name?: string;
-                    address?: string;
-                } | null;
-                recognition: {
-                    /** @enum {string} */
-                    status: "done" | "failed" | "skipped";
-                    skip_reason: string | null;
-                    error_reason: string | null;
-                    kind: string | null;
-                    description: string | null;
-                    top_score: number | null;
-                    margin: number | null;
-                    degraded: boolean;
-                    latency_ms: number | null;
-                    candidates: {
-                        sku: string;
-                        name: string;
-                        score: number;
-                        confidence: string;
-                    }[];
-                } | null;
-                transcription: {
-                    /** @enum {string} */
-                    status: "done" | "failed";
-                    text: string | null;
-                    error_reason: string | null;
-                    audio_seconds: number | null;
-                    latency_ms: number | null;
-                } | null;
-                attachments: {
-                    /** Format: uuid */
-                    id: string;
-                    filename: string;
-                    mime_type: string;
-                    size_bytes: number;
-                    url: string | null;
-                }[];
-            }[];
         };
-        QualitySessionTraceDto: {
-            /** @enum {string} */
-            source: "redis" | "none";
-            turns: ({
-                /** @enum {string} */
-                kind: "agent_turn";
-                ts: string;
-                agent_id: string | null;
-                model: string | null;
-                provider: string | null;
-                intention: {
-                    code: string;
-                    confidence: number | null;
-                } | null;
-                duration_ms: number | null;
-                context_ms: number | null;
-                iterations: {
-                    finish_reason: string;
-                    assistant_text: string | null;
-                    tools: {
-                        name: string;
-                        args: string | null;
-                        ok: boolean | null;
-                        productive: boolean | null;
-                        unproductive_reason: string | null;
-                        duration_ms: number | null;
-                    }[];
-                    latency_ms: number | null;
-                    tokens: {
-                        input: number;
-                        output: number;
-                        cached: number | null;
-                    } | null;
-                    nudge_reason: string | null;
-                    unverified_prices: string[];
-                    final_no_tools: boolean;
-                }[];
-                replies: string[];
-                action: string;
-                escalate_reason: string | null;
-                close_reason: string | null;
-                bot_phrases: string[];
-                tokens_total: {
-                    input: number;
-                    output: number;
-                    cached: number;
-                };
-                error: string | null;
-                failed: boolean;
-            } | {
-                /** @enum {string} */
-                kind: "intent_classification";
-                ts: string;
-                result: {
-                    code: string;
-                    confidence: number;
-                } | null;
-                previous: {
-                    code: string | null;
-                    confidence: number | null;
-                };
-                applied: string;
-                duration_ms: number | null;
-            })[];
-        };
-        CreateQualitySessionDto: {
-            /** Format: uuid */
-            company_id: string;
-            /** Format: uuid */
-            agent_id: string;
-            persona_note?: string;
-            spend_cap_usd?: number;
-        };
-        SendQualitySessionMessageDto: {
-            /** @enum {string} */
-            kind: "text" | "tap" | "location";
-            body?: string;
-            option_id?: string;
-            title?: string;
-            /** @enum {string} */
-            source?: "button" | "list";
-            location?: {
-                latitude: number;
-                longitude: number;
-                name?: string;
-                address?: string;
-            };
-        };
-        QualitySessionMessageAcceptedDto: {
-            provider_message_id: string;
-        };
-        PlatformTenantAgentsDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                /** @enum {string} */
-                status: "active" | "paused" | "draft";
-                provider: string;
-                model: string;
-                is_default: boolean;
-                intentions: {
-                    code: string;
-                    type: string;
-                }[];
-            }[];
-        };
-    
-        QualityProbeResultsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                dataset_item_id: string;
-                input: {
-                    [key: string]: unknown;
-                };
-                image_url: string | null;
-                hit: boolean;
-                rank: number | null;
-                returned: unknown;
-                expected: unknown;
-                confidence: string | null;
-                top_score: number | null;
-                margin: number | null;
-                degraded: boolean | null;
-                method: string | null;
-                latency_ms: number;
-                error: string | null;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        QualityDatasetsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                company_id: string;
-                company_name: string;
-                /** @enum {string} */
-                kind: "catalog_search" | "recognition" | "intent";
+        OfferCatalogDto: {
+            currency: string;
+            default_tier: string | null;
+            packages: {
+                code: string;
                 name: string;
                 description: string | null;
-                /** @enum {string} */
-                status: "active" | "archived";
-                items_count: number;
-                labeled_count: number;
-                last_import: {
-                    scanned: number;
-                    imported: number;
-                    duplicated: number;
-                    discarded: number;
-                    /** Format: date-time */
-                    finished_at: string;
-                } | null;
-                last_run: {
-                    /** Format: uuid */
-                    run_id: string;
-                    /** Format: date-time */
-                    finished_at: string | null;
-                    metrics: unknown;
-                } | null;
-                created_by: string | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
             }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        QualityDatasetDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            company_id: string;
-            company_name: string;
-            /** @enum {string} */
-            kind: "catalog_search" | "recognition" | "intent";
-            name: string;
-            description: string | null;
-            /** @enum {string} */
-            status: "active" | "archived";
-            items_count: number;
-            labeled_count: number;
-            last_import: {
-                scanned: number;
-                imported: number;
-                duplicated: number;
-                discarded: number;
-                /** Format: date-time */
-                finished_at: string;
-            } | null;
-            last_run: {
-                /** Format: uuid */
-                run_id: string;
-                /** Format: date-time */
-                finished_at: string | null;
-                metrics: unknown;
-            } | null;
-            created_by: string | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        CreateQualityDatasetDto: {
-            /** Format: uuid */
-            company_id: string;
-            /** @enum {string} */
-            kind: "catalog_search" | "recognition" | "intent";
-            name: string;
-            description?: string | null;
-        };
-        UpdateQualityDatasetDto: {
-            name?: string;
-            description?: string | null;
-            /** @enum {string} */
-            status?: "active" | "archived";
-        };
-        ImportQualityDatasetDto: {
-            /** @default 30 */
-            days: number;
-            /** @default 200 */
-            limit: number;
-        };
-        QualityDatasetItemsPageDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                source: "trace" | "turn_metric" | "manual" | "ai";
-                input: {
-                    [key: string]: unknown;
-                };
-                suggested: {
-                    [key: string]: unknown;
-                } | null;
-                expected: {
-                    [key: string]: unknown;
-                } | null;
-                /** @enum {string} */
-                label_status: "unlabeled" | "labeled" | "disputed" | "skipped";
-                labeled_by: string | null;
-                /** Format: date-time */
-                labeled_at: string | null;
-                source_ref: {
-                    [key: string]: unknown;
-                } | null;
-                image_url: string | null;
-                /** Format: date-time */
-                created_at: string;
-            }[];
-            meta: {
-                total: number;
-                page: number;
-                page_size: number;
-            };
-        };
-        AddQualityDatasetItemDto: {
-            input: {
-                [key: string]: unknown;
-            };
-            expected?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        LabelQualityDatasetItemDto: {
-            /** @enum {string} */
-            status: "unlabeled" | "labeled" | "disputed" | "skipped";
-            expected?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        QualityDatasetImageUrlDto: {
-            url: string | null;
-        };
-        QualityTenantCatalogSearchDto: {
-            data: {
-                /** Format: uuid */
-                product_id: string;
-                sku: string;
-                name: string;
-                category_path: string | null;
-                price_cents: number;
-                currency: string;
-                has_image: boolean;
-                available: boolean;
-            }[];
-        };
-        QualityTenantIntentionsDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
+            modules: {
                 code: string;
-                description: string;
-                type: string;
-                is_system: boolean;
+                name: string;
+                description: string | null;
             }[];
-        };
-    
-        DraftQualityScenarioDto: {
-            /** Format: uuid */
-            company_id: string;
-            /** Format: uuid */
-            conversation_id: string;
-        };
-        QualityScenarioDraftDto: {
-            code: string;
-            name: string;
-            persona: string;
-            goal: string;
-            max_turns: number;
-            tags: string[];
-            success_criteria: {
-                [key: string]: unknown;
-            }[];
-            dropped: {
-                criterion: unknown;
-                reason: string;
-            }[];
-            source: {
-                /** Format: uuid */
-                company_id: string;
-                /** Format: uuid */
-                conversation_id: string;
-                messages: number;
-                outcome: string | null;
-            };
-        };
-        QualityCapabilitiesDto: {
-            /** Format: uuid */
-            company_id: string;
-            company_name: string;
-            window_days: number;
-            runs_considered: number;
-            capabilities: {
+            tiers: {
                 code: string;
                 label: string;
-                description: string;
-                /** @enum {string} */
-                status: "untested" | "pass" | "warn" | "fail";
-                metric_label: string | null;
-                metric_value: number | null;
-                sample_size: number;
-                /** @enum {string|null} */
-                source: "probe" | "checks" | "cases" | null;
-                /** Format: uuid */
-                run_id: string | null;
-                /** Format: date-time */
-                evaluated_at: string | null;
+                conversations: number;
             }[];
+            promotion: {
+                code: string;
+                name: string;
+                percent_bps: number;
+                /** Format: date-time */
+                ends_at: string | null;
+            } | null;
+        };
+        DeliveryContextDto: {
+            tenant: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                timezone: string;
+                /** @enum {string} */
+                status: "active" | "trial" | "suspended";
+                /** Format: date-time */
+                trial_ends_at: string | null;
+            };
+            owner: {
+                /** Format: uuid */
+                user_id: string;
+                name: string;
+                email: string;
+                status: string;
+            } | null;
+            agent: {
+                name: string;
+                tone: string | null;
+            } | null;
+            offer: {
+                plan_name: string;
+                volume_tier_label: string | null;
+                list_amount_cents: number;
+                amount_cents: number;
+                promotion_name: string | null;
+                currency: string;
+                /** Format: date-time */
+                valid_until: string;
+                /** @enum {string} */
+                kind: "package" | "module";
+                plan_codes: string[];
+                volume_tier_code: string | null;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+                promotion_code: string | null;
+                /** Format: date-time */
+                quoted_at: string | null;
+            } | null;
+            trial: {
+                /** @enum {string} */
+                status: "active" | "trial" | "suspended";
+                /** Format: date-time */
+                trial_ends_at: string | null;
+                restart_preview: {
+                    /** Format: date-time */
+                    starts_at: string;
+                    /** Format: date-time */
+                    ends_at: string;
+                    timezone: string;
+                };
+            };
+            suggested: {
+                /** Format: date */
+                session_date: string;
+                call_day2: {
+                    /** Format: date-time */
+                    at: string;
+                    warning: string | null;
+                };
+                call_day5: {
+                    /** Format: date-time */
+                    at: string;
+                    warning: string | null;
+                };
+                digest_time: string;
+            };
+            advisor_suggestion: {
+                name: string;
+                whatsapp_e164: string;
+                email: string;
+            } | null;
+            latest_delivery: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+                idempotency_key: string;
+                /** Format: date-time */
+                created_at: string;
+                sent_by: string;
+                /** Format: date-time */
+                trial_starts_at: string | null;
+                /** Format: date-time */
+                trial_ends_at: string | null;
+                trial_tz: string;
+                /** Format: date */
+                session_date: string;
+                /** Format: date-time */
+                call_day2_at: string;
+                /** Format: date-time */
+                call_day5_at: string;
+                digest_time: string;
+                advisor: {
+                    name: string;
+                    whatsapp_e164: string;
+                    email: string;
+                };
+                cc: string[];
+                /** Format: date-time */
+                kit_expires_at: string | null;
+                /** Format: date-time */
+                password_set_at: string | null;
+                steps: {
+                    offer: boolean;
+                    trial: boolean;
+                    invite: boolean;
+                    kit: boolean;
+                    committed: boolean;
+                };
+            } | null;
+            blockers: {
+                /** @enum {string} */
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many";
+                message: string;
+            }[];
+        };
+        DeliveryDraftDto: {
+            offer: {
+                package_code?: string;
+                module_codes?: string[];
+                volume_tier_code?: string;
+                promotion_code?: string;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+            };
+            /** @default true */
+            restart_trial: boolean;
+            /** Format: date */
+            session_date: string;
+            /** Format: date-time */
+            call_day2_at: string;
+            /** Format: date-time */
+            call_day5_at: string;
+            /** @default 07:30 */
+            digest_time: string;
+            advisor: {
+                name: string;
+                whatsapp_e164: string;
+                /** Format: email */
+                email: string;
+            };
+            /** @default [] */
+            cc: string[];
+        };
+        DeliveryPreviewDto: {
+            blockers: {
+                /** @enum {string} */
+                code: "owner_missing" | "agent_missing" | "agent_name_too_long" | "business_name_too_long" | "payment_methods_missing" | "calls_missing" | "calls_out_of_trial" | "offer_not_quoted" | "enterprise" | "suspended_other" | "cc_includes_owner" | "cc_too_many";
+                message: string;
+            }[];
+            warnings: {
+                /** @enum {string} */
+                code: "call_on_weekend";
+                /** @enum {string} */
+                field: "call_day2_at" | "call_day5_at";
+                message: string;
+            }[];
+            kit_data: {
+                kit_version: number;
+                business_name: string;
+                owner_first_name: string;
+                login_email: string;
+                panel_url: string;
+                password_reset_url: string;
+                agent: {
+                    name: string | null;
+                    tone: string | null;
+                    tone_label: string | null;
+                };
+                team_hours: string | null;
+                payment_methods: {
+                    kind: string;
+                    label: string;
+                }[];
+                payment_methods_joined: string;
+                catalog: {
+                    product_count: number;
+                };
+                trial: {
+                    /** Format: date-time */
+                    starts_at: string;
+                    /** Format: date-time */
+                    ends_at: string;
+                    timezone: string;
+                    /** Format: date */
+                    start_date: string;
+                    /** Format: date */
+                    day7_date: string;
+                    range_label: string;
+                    day7_label: string;
+                    conversations: number | null;
+                };
+                session: {
+                    /** Format: date */
+                    date: string;
+                    date_label: string;
+                };
+                calls: {
+                    day2: {
+                        /** @enum {string} */
+                        day: "day2" | "day5";
+                        /** Format: date-time */
+                        at: string;
+                        date_label: string;
+                        time_label: string;
+                        duration_min: number;
+                        /** @enum {string} */
+                        kind: "llamada" | "reunión";
+                        title: string;
+                    };
+                    day5: {
+                        /** @enum {string} */
+                        day: "day2" | "day5";
+                        /** Format: date-time */
+                        at: string;
+                        date_label: string;
+                        time_label: string;
+                        duration_min: number;
+                        /** @enum {string} */
+                        kind: "llamada" | "reunión";
+                        title: string;
+                    };
+                };
+                digest: {
+                    time: string;
+                    time_label: string;
+                };
+                advisor: {
+                    name: string;
+                    first_name: string;
+                    whatsapp_e164: string;
+                    whatsapp_display: string;
+                    whatsapp_url: string;
+                };
+                plan: {
+                    name: string;
+                    volume_tier_label: string | null;
+                    /** @enum {string} */
+                    interval: "monthly" | "annual";
+                    amount_cents: number;
+                    list_amount_cents: number;
+                    currency: string;
+                    price_label: string;
+                    list_price_label: string;
+                    promotion_name: string | null;
+                    /** Format: date-time */
+                    valid_until: string | null;
+                } | null;
+                pays_with: string[];
+            };
+            email_html_owner: string;
+            email_html_team: string;
+            subject: string;
+        };
+        CreateDeliveryDto: {
+            offer: {
+                package_code?: string;
+                module_codes?: string[];
+                volume_tier_code?: string;
+                promotion_code?: string;
+                /** @enum {string} */
+                billing_period: "monthly" | "annual";
+            };
+            /** @default true */
+            restart_trial: boolean;
+            /** Format: date */
+            session_date: string;
+            /** Format: date-time */
+            call_day2_at: string;
+            /** Format: date-time */
+            call_day5_at: string;
+            /** @default 07:30 */
+            digest_time: string;
+            advisor: {
+                name: string;
+                whatsapp_e164: string;
+                /** Format: email */
+                email: string;
+            };
+            /** @default [] */
+            cc: string[];
+            idempotency_key: string;
+        };
+        DeliveryAcceptedDto: {
+            /** Format: uuid */
+            delivery_id: string;
+            /** @enum {string} */
+            status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+        };
+        DeliveryResentDto: {
+            /** Format: uuid */
+            delivery_id: string;
+            /** @enum {string} */
+            status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+            attempt: number;
+        };
+        DeliveryResponseDto: {
+            delivery: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "draft" | "committed" | "mail_queued" | "sent" | "failed";
+                idempotency_key: string;
+                /** Format: date-time */
+                created_at: string;
+                sent_by: string;
+                /** Format: date-time */
+                trial_starts_at: string | null;
+                /** Format: date-time */
+                trial_ends_at: string | null;
+                trial_tz: string;
+                /** Format: date */
+                session_date: string;
+                /** Format: date-time */
+                call_day2_at: string;
+                /** Format: date-time */
+                call_day5_at: string;
+                digest_time: string;
+                advisor: {
+                    name: string;
+                    whatsapp_e164: string;
+                    email: string;
+                };
+                cc: string[];
+                /** Format: date-time */
+                kit_expires_at: string | null;
+                /** Format: date-time */
+                password_set_at: string | null;
+                steps: {
+                    offer: boolean;
+                    trial: boolean;
+                    invite: boolean;
+                    kit: boolean;
+                    committed: boolean;
+                };
+                attempts: {
+                    attempt: number;
+                    /** @enum {string} */
+                    audience: "owner" | "team";
+                    /** @enum {string} */
+                    status: "pending" | "sent" | "failed" | "skipped";
+                    provider_message_id: string | null;
+                    error: string | null;
+                    /** Format: date-time */
+                    sent_at: string | null;
+                }[];
+            } | null;
+        };
+        WelcomeKitDataDto: {
+            kit_version: number;
+            business_name: string;
+            owner_first_name: string;
+            login_email: string;
+            panel_url: string;
+            password_reset_url: string;
+            agent: {
+                name: string | null;
+                tone: string | null;
+                tone_label: string | null;
+            };
+            team_hours: string | null;
+            payment_methods: {
+                kind: string;
+                label: string;
+            }[];
+            payment_methods_joined: string;
+            catalog: {
+                product_count: number;
+            };
+            trial: {
+                /** Format: date-time */
+                starts_at: string;
+                /** Format: date-time */
+                ends_at: string;
+                timezone: string;
+                /** Format: date */
+                start_date: string;
+                /** Format: date */
+                day7_date: string;
+                range_label: string;
+                day7_label: string;
+                conversations: number | null;
+            };
+            session: {
+                /** Format: date */
+                date: string;
+                date_label: string;
+            };
+            calls: {
+                day2: {
+                    /** @enum {string} */
+                    day: "day2" | "day5";
+                    /** Format: date-time */
+                    at: string;
+                    date_label: string;
+                    time_label: string;
+                    duration_min: number;
+                    /** @enum {string} */
+                    kind: "llamada" | "reunión";
+                    title: string;
+                };
+                day5: {
+                    /** @enum {string} */
+                    day: "day2" | "day5";
+                    /** Format: date-time */
+                    at: string;
+                    date_label: string;
+                    time_label: string;
+                    duration_min: number;
+                    /** @enum {string} */
+                    kind: "llamada" | "reunión";
+                    title: string;
+                };
+            };
+            digest: {
+                time: string;
+                time_label: string;
+            };
+            advisor: {
+                name: string;
+                first_name: string;
+                whatsapp_e164: string;
+                whatsapp_display: string;
+                whatsapp_url: string;
+            };
+            plan: {
+                name: string;
+                volume_tier_label: string | null;
+                /** @enum {string} */
+                interval: "monthly" | "annual";
+                amount_cents: number;
+                list_amount_cents: number;
+                currency: string;
+                price_label: string;
+                list_price_label: string;
+                promotion_name: string | null;
+                /** Format: date-time */
+                valid_until: string | null;
+            } | null;
+            pays_with: string[];
+            /** Format: date-time */
+            kit_expires_at: string;
         };
     };
     responses: never;
@@ -18877,6 +19788,229 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeDto"];
+                };
+            };
+        };
+    };
+    AuthController_forgot_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordDto"];
+            };
+        };
+        responses: {
+            /** @description Solicitud recibida (no revela si la cuenta existe) */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_inspectPasswordToken_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InspectPasswordTokenDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordTokenInfoDto"];
+                };
+            };
+        };
+    };
+    AuthController_setPassword_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPasswordDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_changePassword_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthTokensDto"];
+                };
+            };
+        };
+    };
+    AuthSupportController_redeem_v1: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Token de plataforma */
+                "X-Platform-Token": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemSupportSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportAccessTokensDto"];
+                };
+            };
+        };
+    };
+    AuthSupportController_end_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndedSupportSessionDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_list_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportSessionListDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_issue_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueSupportSessionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedSupportSessionDto"];
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_exportCsv_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV del registro de sesiones de soporte */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+        };
+    };
+    PlatformSupportSessionsController_revoke_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndedSupportSessionDto"];
                 };
             };
         };
@@ -19493,6 +20627,26 @@ export interface operations {
         };
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_resendInvitation_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitación encolada */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -20575,6 +21729,29 @@ export interface operations {
             };
         };
     };
+    QualityScenariosController_draft_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftQualityScenarioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityScenarioDraftDto"];
+                };
+            };
+        };
+    };
     QualityScenariosController_clone_v1: {
         parameters: {
             query?: never;
@@ -20783,6 +21960,31 @@ export interface operations {
             };
         };
     };
+    QualityRunsController_probeResults_v1: {
+        parameters: {
+            query?: {
+                only_misses?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityProbeResultsPageDto"];
+                };
+            };
+        };
+    };
     QualityRunsController_caseDetail_v1: {
         parameters: {
             query?: never;
@@ -20840,6 +22042,489 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    QualitySessionsController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                status?: "active" | "ended";
+                mine?: "true" | "false";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionsPageDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQualitySessionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_byId_v1: {
+        parameters: {
+            query?: {
+                after?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionDetailDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_trace_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionTraceDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_send_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendQualitySessionMessageDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_sendMedia_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    caption?: string;
+                    /** @default false */
+                    voice_note?: boolean;
+                };
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                };
+            };
+        };
+    };
+    QualitySessionsController_end_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_list_v1: {
+        parameters: {
+            query?: {
+                company_id?: string;
+                kind?: "catalog_search" | "recognition" | "intent";
+                status?: "active" | "archived";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQualityDatasetDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_byId_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_remove_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQualityDatasetDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_startImport_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportQualityDatasetDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_items_v1: {
+        parameters: {
+            query?: {
+                label_status?: "unlabeled" | "labeled" | "disputed" | "skipped";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetItemsPageDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_addItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddQualityDatasetItemDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedIdDto"];
+                };
+            };
+        };
+    };
+    QualityDatasetsController_removeItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_labelItem_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelQualityDatasetItemDto"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QualityDatasetsController_imageUrl_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityDatasetImageUrlDto"];
+                };
+            };
+        };
+    };
+    QualityTenantLookupController_catalogSearch_v1: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityTenantCatalogSearchDto"];
+                };
+            };
+        };
+    };
+    QualityTenantLookupController_intentions_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityTenantIntentionsDto"];
+                };
+            };
+        };
+    };
+    QualityCapabilitiesController_get_v1: {
+        parameters: {
+            query: {
+                company_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualityCapabilitiesDto"];
+                };
             };
         };
     };
@@ -21357,6 +23042,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PlatformTenantAgentsController_list_v1: {
+        parameters: {
+            query?: {
+                status?: "active" | "paused" | "draft";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformTenantAgentsDto"];
+                };
             };
         };
     };
@@ -26963,156 +28671,6 @@ export interface operations {
             };
         };
     };
-    FxController_settings_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxSettingsDto"];
-                };
-            };
-        };
-    };
-    FxController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FxSettingsDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxSettingsDto"];
-                };
-            };
-        };
-    };
-    FxController_latest_v1: {
-        parameters: {
-            query?: {
-                base?: string;
-                quote?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LatestFxRateDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_rates_v1: {
-        parameters: {
-            query?: {
-                base?: string;
-                quote?: string;
-                from?: string;
-                to?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxRatesListDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_setManual_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetManualRateDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FxRateDto"];
-                };
-            };
-        };
-    };
-    PlatformFxController_refresh_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GeoController_search_v1: {
-        parameters: {
-            query: {
-                q: string;
-                country?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GeoSearchResultsDto"];
-                };
-            };
-        };
-    };
     ConversationsController_list_v1: {
         parameters: {
             query?: {
@@ -27487,6 +29045,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContactReachabilityDto"];
+                };
+            };
+        };
+    };
+    FxController_settings_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_update_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FxSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxSettingsDto"];
+                };
+            };
+        };
+    };
+    FxController_latest_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatestFxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_rates_v1: {
+        parameters: {
+            query?: {
+                base?: string;
+                quote?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRatesListDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_setManual_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetManualRateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FxRateDto"];
+                };
+            };
+        };
+    };
+    PlatformFxController_refresh_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GeoController_search_v1: {
+        parameters: {
+            query: {
+                q: string;
+                country?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeoSearchResultsDto"];
                 };
             };
         };
@@ -31409,15 +33117,80 @@ export interface operations {
             };
         };
     };
-    QualitySessionsController_list_v1: {
+    PlatformTenantOfferController_preview_v1: {
         parameters: {
-            query?: {
-                company_id?: string;
-                status?: "active" | "ended";
-                mine?: "true" | "false";
-                page?: number;
-                page_size?: number;
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
             };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferSelectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferQuoteDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantOfferController_current_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantOfferResponseDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantOfferController_save_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferSelectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferQuoteDto"];
+                };
+            };
+        };
+    };
+    PlatformOfferCatalogController_catalog_v1: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -31429,58 +33202,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QualitySessionsPageDto"];
+                    "application/json": components["schemas"]["OfferCatalogDto"];
                 };
             };
         };
     };
-    QualitySessionsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateQualitySessionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedIdDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_byId_v1: {
-        parameters: {
-            query?: {
-                after?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualitySessionDetailDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_trace_v1: {
+    PlatformTenantDeliveryController_context_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -31496,12 +33223,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QualitySessionTraceDto"];
+                    "application/json": components["schemas"]["DeliveryContextDto"];
                 };
             };
         };
     };
-    QualitySessionsController_send_v1: {
+    PlatformTenantDeliveryController_preview_v1: {
         parameters: {
             query?: never;
             header?: never;
@@ -31512,7 +33239,53 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SendQualitySessionMessageDto"];
+                "application/json": components["schemas"]["DeliveryDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryPreviewDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_latest_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryResponseDto"];
+                };
+            };
+        };
+    };
+    PlatformTenantDeliveryController_create_v1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDeliveryDto"];
             };
         };
         responses: {
@@ -31521,94 +33294,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                    "application/json": components["schemas"]["DeliveryAcceptedDto"];
                 };
             };
         };
     };
-    QualitySessionsController_end_v1: {
+    PlatformTenantDeliveryController_resend_v1: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
+                deliveryId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PlatformTenantAgentsController_list_v1: {
-        parameters: {
-            query?: {
-                status?: "active" | "paused" | "draft";
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlatformTenantAgentsDto"];
-                };
-            };
-        };
-    };
-    QualitySessionsController_sendMedia_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** Format: binary */
-                    file: string;
-                    caption?: string;
-                    /** @default false */
-                    voice_note?: boolean;
-                };
-            };
-        };
         responses: {
             202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QualitySessionMessageAcceptedDto"];
+                    "application/json": components["schemas"]["DeliveryResentDto"];
                 };
             };
         };
     };
-    QualityRunsController_probeResults_v1: {
+    PublicWelcomeController_view_v1: {
         parameters: {
-            query?: {
-                only_misses?: "true" | "false";
-                page?: number;
-                page_size?: number;
-            };
+            query?: never;
             header?: never;
             path: {
-                id: string;
+                token: string;
             };
             cookie?: never;
         };
@@ -31619,346 +33337,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QualityProbeResultsPageDto"];
+                    "application/json": components["schemas"]["WelcomeKitDataDto"];
                 };
             };
         };
     };
-    QualityDatasetsController_list_v1: {
+    PublicWelcomeController_calendar_v1: {
         parameters: {
-            query?: {
-                company_id?: string;
-                kind?: "catalog_search" | "recognition" | "intent";
-                status?: "active" | "archived";
-                page?: number;
-                page_size?: number;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                token: string;
+                file: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Calendario iCalendar (RFC 5545) de la cita */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["QualityDatasetsPageDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_create_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateQualityDatasetDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedIdDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_byId_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_update_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateQualityDatasetDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_remove_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_startImport_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImportQualityDatasetDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_items_v1: {
-        parameters: {
-            query?: {
-                label_status?: "unlabeled" | "labeled" | "disputed" | "skipped";
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetItemsPageDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_addItem_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddQualityDatasetItemDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreatedIdDto"];
-                };
-            };
-        };
-    };
-    QualityDatasetsController_labelItem_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                itemId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LabelQualityDatasetItemDto"];
-            };
-        };
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_removeItem_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                itemId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    QualityDatasetsController_imageUrl_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                itemId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityDatasetImageUrlDto"];
-                };
-            };
-        };
-    };
-    QualityTenantLookupController_catalogSearch_v1: {
-        parameters: {
-            query: {
-                q: string;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                companyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityTenantCatalogSearchDto"];
-                };
-            };
-        };
-    };
-    QualityTenantLookupController_intentions_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                companyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityTenantIntentionsDto"];
-                };
-            };
-        };
-    };
-    QualityScenariosController_draft_v1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftQualityScenarioDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityScenarioDraftDto"];
-                };
-            };
-        };
-    };
-    QualityCapabilitiesController_get_v1: {
-        parameters: {
-            query: {
-                company_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QualityCapabilitiesDto"];
+                    "text/calendar": string;
                 };
             };
         };
