@@ -20,6 +20,8 @@ export const platformKeys = {
       [...platformKeys.tenants.all, id, "agents", status ?? "all"] as const,
     voice: (id: string) => [...platformKeys.tenants.all, id, "voice"] as const,
     migrations: (id: string) => [...platformKeys.tenants.all, id, "migrations"] as const,
+    /** Registro de sesiones de soporte del tenant (entrega F3). */
+    supportSessions: (id: string) => [...platformKeys.tenants.all, id, "support-sessions"] as const,
   },
 
   // «Preparar entrega» (entrega_bienvenida_plan.md, F4). Cuelga del tenant:
