@@ -12,7 +12,6 @@ import { useAlert } from "@/core/providers/alert-provider"
 import { DynamicForm } from "@/shared/components/features/dynamic-form"
 import { Button } from "@/shared/components/ui/button"
 import {
-  PASSWORD_MIN_LENGTH,
   TOKEN_LIFETIME_LABEL,
   expiresSentence,
   formatExpiresAt,
@@ -28,7 +27,9 @@ import {
   inspectPasswordToken,
   setPasswordWithToken,
 } from "../infrastructure/services/password-service.adapter"
+import { PasswordChecklist } from "./components/PasswordChecklist"
 import { PasswordShell } from "./components/PasswordShell"
+import { BrandLockup } from "@/shared/components/ui/brand-lockup"
 import {
   buildSetPasswordFields,
   defaultSetPasswordValues,
@@ -141,21 +142,44 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
           text: info?.business_name
             ? `Es la llave de tu panel de ${info.business_name}. Solo tú la vas a conocer.`
             : "Es la llave de tu panel. Solo tú la vas a conocer.",
-          help: `Mínimo ${PASSWORD_MIN_LENGTH} caracteres. Mejor una frase que recuerdes que una palabra con símbolos.`,
           submit: "Guardar y entrar a mi panel",
         }
       : {
           title: "Crea una contraseña nueva",
           // El producto no guarda el historial de contraseñas: variante de copy-v2 §4.3.
           text: "Elige una contraseña que solo tú conozcas.",
-          help: `Mínimo ${PASSWORD_MIN_LENGTH} caracteres.`,
           submit: "Guardar contraseña nueva",
         }
+
+  const business = info?.business_name ?? null
+  const aside = (
+    <div className="flex h-full flex-col gap-8">
+      <BrandLockup size="sm" className="hidden lg:flex" />
+      <div className="space-y-3 lg:my-auto">
+        <p className="text-[11px] font-semibold tracking-[0.2em] uppercase opacity-80">
+          {purpose === "invite" ? "Día 0 · Hoy empieza" : "Tu cuenta"}
+        </p>
+        <p className="font-heading text-3xl leading-[1.05] font-bold tracking-tight text-balance sm:text-4xl">
+          {purpose === "invite"
+            ? business
+              ? `Tu panel de ${business} está listo.`
+              : "Tu panel está listo."
+            : "Vuelve a entrar a tu panel."}
+        </p>
+        <p className="hidden max-w-sm text-sm text-pretty opacity-80 sm:block">
+          {purpose === "invite"
+            ? "Con tu contraseña ves cada conversación, cada pedido y el resumen de la mañana."
+            : "El enlace sirve una sola vez. Elige una contraseña que solo tú conozcas."}
+        </p>
+      </div>
+    </div>
+  )
 
   return (
     <PasswordShell
       title={copy.title}
       description={copy.text}
+      aside={aside}
       footer={
         expiresAt ? (
           <p className="tabular-nums">{expiresSentence(expiresAt)}</p>
@@ -171,13 +195,19 @@ export function SetPasswordFlow({ purpose }: { purpose: PasswordPurpose }) {
         <DynamicForm<SetPasswordValues>
           schema={setPasswordSchema}
           defaultValues={defaultSetPasswordValues}
-          fields={buildSetPasswordFields(copy.help)}
+          fields={buildSetPasswordFields()}
           columns={1}
           mode="onTouched"
           onSubmit={onSubmit}
+          renderFieldsWrapper={(grid) => (
+            <>
+              {grid}
+              <PasswordChecklist />
+            </>
+          )}
           actions={{
             render: ({ submitting }) => (
-              <Button type="submit" className="w-full" disabled={submitting}>
+              <Button type="submit" size="lg" className="w-full rounded-full" disabled={submitting}>
                 {submitting ? <LoaderCircle aria-hidden="true" className="animate-spin motion-reduce:animate-none" /> : null}
                 {submitting ? "Guardando…" : copy.submit}
               </Button>

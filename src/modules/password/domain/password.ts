@@ -76,3 +76,23 @@ export function formatExpiresAt(iso: string): string {
 export function expiresSentence(expiresAt: string): string {
   return endSentence(`Este enlace sirve una vez y vence el ${expiresAt}`)
 }
+
+// ---------------------------------------------------------------------------
+// Fuerza (guía visual, no validación: la regla dura es el largo mínimo)
+// ---------------------------------------------------------------------------
+
+export type PasswordStrength = {
+  /** 0 vacía · 1 corta · 2 cumple el largo · 3 larga y en frase. */
+  level: 0 | 1 | 2 | 3
+  /** Tres palabras o más: la sugerencia de copy-v2 («mejor una frase»). */
+  phrase: boolean
+  label: string
+}
+
+export function passwordStrength(password: string): PasswordStrength {
+  const phrase = password.trim().split(/\s+/).filter(Boolean).length >= 3
+  if (password.length === 0) return { level: 0, phrase: false, label: "vacía" }
+  if (password.length < PASSWORD_MIN_LENGTH) return { level: 1, phrase, label: "corta" }
+  if (password.length >= 16 && phrase) return { level: 3, phrase, label: "muy buena" }
+  return { level: 2, phrase, label: "buena" }
+}

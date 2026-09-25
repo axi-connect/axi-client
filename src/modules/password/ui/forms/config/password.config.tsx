@@ -34,13 +34,13 @@ export type SetPasswordValues = z.infer<typeof setPasswordSchema>
 
 export const defaultSetPasswordValues: SetPasswordValues = { new_password: "", confirm_password: "" }
 
-export function buildSetPasswordFields(help: string): ReadonlyArray<FieldConfig<SetPasswordValues>> {
+export function buildSetPasswordFields(help?: string): ReadonlyArray<FieldConfig<SetPasswordValues>> {
   return [
     createInputField<SetPasswordValues>("new_password", {
       label: "Contraseña nueva",
       inputKind: "password",
       autoComplete: "new-password",
-      description: help,
+      ...(help ? { description: help } : {}),
       inputProps: { autoFocus: true, maxLength: PASSWORD_MAX_LENGTH },
     }),
     createInputField<SetPasswordValues>("confirm_password", {

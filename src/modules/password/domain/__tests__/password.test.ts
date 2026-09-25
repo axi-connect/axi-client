@@ -1,4 +1,4 @@
-import { formatExpiresAt, invalidLinkReason, readTokenFromHash } from "../password"
+import { formatExpiresAt, invalidLinkReason, passwordStrength, readTokenFromHash } from "../password"
 
 describe("readTokenFromHash", () => {
   it("lee el token del fragmento, con o sin #", () => {
@@ -41,5 +41,17 @@ describe("formatExpiresAt", () => {
 
   it("no inventa una fecha si no la entiende", () => {
     expect(formatExpiresAt("mañana")).toBe("")
+  })
+})
+
+describe("passwordStrength", () => {
+  it("vacía, corta, buena y muy buena", () => {
+    expect(passwordStrength("")).toMatchObject({ level: 0, phrase: false })
+    expect(passwordStrength("corta")).toMatchObject({ level: 1 })
+    expect(passwordStrength("docecaracter")).toMatchObject({ level: 2, phrase: false })
+    expect(passwordStrength("pan caliente cada mañana")).toMatchObject({ level: 3, phrase: true, label: "muy buena" })
+  })
+  it("una frase corta no pasa del tramo 1: el largo manda", () => {
+    expect(passwordStrength("a b c")).toMatchObject({ level: 1, phrase: true })
   })
 })
