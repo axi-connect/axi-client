@@ -11,6 +11,8 @@
  * prueba y la puesta en marcha).
  */
 import { useEffect, useMemo, useState } from "react";
+import { BentoLink, BentoTile } from "@/shared/components/features/bento";
+import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { isDispatchedDelivery } from "../../../../domain/delivery";
 import { nextMilestone, trialJourney, type TrialJourneyInput } from "../../../../domain/trial-journey";
@@ -49,6 +51,42 @@ function useNow(tickMs: number): Date {
   return now;
 }
 
+function DeliveryUnavailable({
+  forbidden,
+  billingHref,
+  onRetry,
+}: {
+  forbidden: boolean;
+  billingHref: string;
+  onRetry: () => void;
+}) {
+  return (
+    <BentoTile label="Entrega y prueba" className="max-w-2xl">
+      {forbidden ? (
+        <>
+          <p className="text-sm font-medium">La entrega la gestiona soporte</p>
+          <p className="text-sm text-pretty text-muted-foreground">
+            Tu rol no ve la entrega, la prueba ni sus citas. La facturación del negocio está en su pestaña.
+          </p>
+          <BentoLink href={billingHref} className="mt-1">
+            Ver facturación
+          </BentoLink>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-medium">No pudimos leer la entrega</p>
+          <p className="text-sm text-pretty text-muted-foreground">Recarga en un momento o reintenta ahora.</p>
+          <div>
+            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+              Reintentar
+            </Button>
+          </div>
+        </>
+      )}
+    </BentoTile>
+  );
+}
+
 function SummarySkeleton() {
   return (
     <div className="space-y-4" role="status" aria-label="Cargando resumen">
@@ -67,12 +105,12 @@ function SummarySkeleton() {
 
 export function TenantSummary({ tenantId }: { tenantId: string }) {
   const { data: tenant, isPending } = useTenantQuery(tenantId);
-  const latest = useLatestDelivery(tenantId);
-  const context = useDeliveryContext(tenantId);
-  // El uso de la prueba vive en el slice delivery (super_admin y support):
-  // billing_ops no lo ve, así que sus dos fichas no se piden ni se pintan.
+  // Todo /delivery/* es de super_admin y support: billing_ops recibe 403, así
+  // que no se pide nada de la entrega ni se pintan sus fichas (auditoría B1).
   const role = usePlatformRole();
   const progressAllowed = role !== "billing_ops";
+  const latest = useLatestDelivery(tenantId, { enabled: progressAllowed });
+  const context = useDeliveryContext(tenantId, { enabled: progressAllowed });
   const progress = useTrialProgress(tenantId, { enabled: progressAllowed });
   const progressForbidden = isHttpError(progress.error) && progress.error.status === 403;
   const showProgress = progressAllowed && !progressForbidden;
@@ -90,10 +128,23 @@ export function TenantSummary({ tenantId }: { tenantId: string }) {
     };
   }, [delivery]);
 
-  if (isPending || latest.isPending) return <SummarySkeleton />;
+  if (isPending || (progressAllowed && latest.isPending)) return <SummarySkeleton />;
 
   // El estado "no encontrado"/error lo cubre el header del layout.
   if (!tenant) return null;
+
+  // Sin acceso a la entrega (rol) o sin poder leerla (403/500): se dice, en vez
+  // de pintar «Aún sin entregar» sobre un dato que no se leyó (B1).
+  if (!progressAllowed || latest.isError) {
+    const forbidden = !progressAllowed || (isHttpError(latest.error) && latest.error.status === 403);
+    return (
+      <DeliveryUnavailable
+        forbidden={forbidden}
+        billingHref={`/platform/tenants/${tenant.id}/billing`}
+        onRetry={() => void latest.refetch()}
+      />
+    );
+  }
 
   const journey = journeyInput ? trialJourney(journeyInput, now) : null;
   const milestone = journeyInput ? nextMilestone(journeyInput, now) : null;

@@ -106,8 +106,10 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
   const pathname = usePathname();
   const deliveryHref = `/platform/tenants/${tenantId}/entrega`;
   const onDeliveryPage = pathname === deliveryHref;
-  const latest = useLatestDelivery(tenantId);
-  const canEnterSupport = usePlatformRole() !== "billing_ops";
+  const role = usePlatformRole();
+  const canEnterSupport = role !== "billing_ops";
+  // billing_ops no lee /delivery/* (403): ni se pide ni decide la acción (B1).
+  const latest = useLatestDelivery(tenantId, { enabled: canEnterSupport });
   const [supportOpen, setSupportOpen] = useState(false);
   const { copied, copy } = useCopy();
   // La ficha mostraba la contraseña del dueño que dejaba el alta: si queda
@@ -154,7 +156,9 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
   // La acción principal depende de la entrega: mientras carga no se pinta nada
   // (un hueco del mismo alto), para no mostrar «Preparar entrega» y cambiarlo (A9).
   let mainAction: React.ReactNode = null;
-  if (!onDeliveryPage) {
+  // Sin rol de entrega o sin poder leerla, no hay acción principal: «Preparar
+  // entrega» llevaría a una página con 403 o a pisar una entrega ya enviada (B1).
+  if (!onDeliveryPage && canEnterSupport && !latest.isError) {
     if (latest.isPending) {
       mainAction = <Skeleton aria-hidden="true" className="h-9 w-44 rounded-md" />;
     } else if (dispatched) {

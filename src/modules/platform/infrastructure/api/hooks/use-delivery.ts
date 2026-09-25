@@ -54,9 +54,10 @@ export function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced.value;
 }
 
-export function useDeliveryContext(tenantId: string) {
+export function useDeliveryContext(tenantId: string, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: platformKeys.delivery.context(tenantId),
+    enabled,
     queryFn: ({ signal }) => deliveryApi.context(tenantId, signal),
     staleTime: 30_000,
     // Al volver de la pestaña de soporte (H2-5), los bloqueos resueltos se van.
@@ -82,9 +83,10 @@ export function latestDeliveryPollMs(payload: DeliveryResponseWire | undefined):
 }
 
 /** La última entrega con sus intentos (la tarjeta de la ficha y el estado «enviado»). */
-export function useLatestDelivery(tenantId: string) {
+export function useLatestDelivery(tenantId: string, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: platformKeys.delivery.latest(tenantId),
+    enabled,
     queryFn: ({ signal }) => deliveryApi.latest(tenantId, signal),
     staleTime: 15_000,
     refetchInterval: (query) => latestDeliveryPollMs(query.state.data),

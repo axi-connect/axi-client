@@ -12,7 +12,7 @@ const tenant = {
   users_count: 1,
   created_at: "2026-09-25T04:00:00Z",
 };
-let latest: { isPending: boolean; data?: { delivery: { status: string } | null } } = { isPending: true };
+let latest: { isPending: boolean; isError?: boolean; data?: { delivery: { status: string } | null } } = { isPending: true };
 let role: string | null = "super_admin";
 
 jest.mock("next/navigation", () => ({ usePathname: () => `/platform/tenants/${tenant.id}` }));
@@ -48,6 +48,22 @@ describe("TenantHeader: la acción principal según la entrega y el rol", () => 
     render(<TenantHeader tenantId={tenant.id} />);
     expect(screen.getByRole("button", { name: /Entrar como soporte/ })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Preparar entrega/ })).not.toBeInTheDocument();
+  });
+
+  it("billing_ops sin entregar: tampoco «Preparar entrega» (la página le da 403, B1)", () => {
+    latest = { isPending: false, isError: true, data: undefined };
+    role = "billing_ops";
+    render(<TenantHeader tenantId={tenant.id} />);
+    expect(screen.queryByRole("link", { name: /Preparar entrega/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Entrar como soporte/ })).not.toBeInTheDocument();
+  });
+
+  it("si la entrega no se pudo leer, sin acción principal (B1)", () => {
+    latest = { isPending: false, isError: true, data: undefined };
+    role = "super_admin";
+    render(<TenantHeader tenantId={tenant.id} />);
+    expect(screen.queryByRole("link", { name: /Preparar entrega/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Entrar como soporte/ })).not.toBeInTheDocument();
   });
 
   it("entregada y rol billing_ops: sin acción de soporte", () => {
