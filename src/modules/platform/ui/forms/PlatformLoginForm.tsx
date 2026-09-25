@@ -18,6 +18,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/shared/components/ui/form";
 import { usePlatformAuth } from "../../infrastructure/auth/platform-auth.context";
+import { safeInternalNext } from "@/core/lib/safe-next";
 
 const platformLoginSchema = z.object({
   email: z.string().email("Correo inválido"),
@@ -26,10 +27,13 @@ const platformLoginSchema = z.object({
 
 type PlatformLoginValues = z.infer<typeof platformLoginSchema>;
 
-/** Solo se acepta un `next` interno del panel (nunca el login mismo). */
-function safeNext(raw: string | null): string {
-  if (raw && raw.startsWith("/platform") && !raw.startsWith("/platform/login")) return raw;
-  return "/platform";
+/** Solo se acepta un `next` interno de la consola (nunca el login mismo). */
+export function safeNext(raw: string | null): string {
+  return safeInternalNext(raw, {
+    fallback: "/platform",
+    allowedPrefixes: ["/platform"],
+    blockedPrefixes: ["/platform/login"],
+  });
 }
 
 /** Segundos restantes del cooldown de throttle (0 = sin cooldown). */

@@ -1,5 +1,6 @@
 import { isPublicPath } from "@/core/config/routes"
 import { NextResponse, type NextRequest } from "next/server"
+import { safeInternalNext } from "@/core/lib/safe-next"
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -11,7 +12,8 @@ export function middleware(req: NextRequest) {
   if (!access && !refresh) {
     const url = req.nextUrl.clone()
     url.pathname = "/auth/login"
-    url.searchParams.set("next", pathname)
+    // Saneado: `https://app//evil.com` llega con pathname `//evil.com` (QA H3-1).
+    url.searchParams.set("next", safeInternalNext(pathname + req.nextUrl.search, { origin: req.nextUrl.origin, blockedPrefixes: ["/auth"] }))
     return NextResponse.redirect(url)
   }
 

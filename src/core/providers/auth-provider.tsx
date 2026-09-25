@@ -4,6 +4,7 @@ import { isPublicPath } from "@/core/config/routes"
 import { socketManager } from "@/core/realtime/socket-manager"
 import { API_ERROR_CODES, COMPANY_SUSPENDED_EVENT, isSuspensionCode } from "@/core/api/problem"
 import { CompanySuspendedScreen } from "@/core/providers/company-suspended-screen"
+import { safeInternalNext } from "@/core/lib/safe-next"
 import type { AuthUser, LoginPayload, SessionResponse, SignupPayload, SignupResult } from "@/shared/auth/auth.types"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
@@ -70,7 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setStatus("unauthenticated")
     if (isPublicPath(pathname)) return
-    window.location.href = "/auth/login?next=" + encodeURIComponent(pathname + search)
+    // El destino de vuelta, saneado: una URL como `https://app//evil.com`
+    // tiene pathname `//evil.com` y el login lo seguiría (QA H3-1).
+    const next = safeInternalNext(pathname + search, { fallback: "/dashboard", blockedPrefixes: ["/auth"] })
+    window.location.href = "/auth/login?next=" + encodeURIComponent(next)
   }, [])
 
   /**
