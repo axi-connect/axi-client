@@ -102,3 +102,18 @@ describe("registro de sesiones", () => {
     expect(supportTabUrl("abc_-123")).toBe("/auth/soporte#code=abc_-123")
   })
 })
+
+describe("sessionsToCloseBeforeIssue (QA H3-5)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { sessionsToCloseBeforeIssue } = require("../support-sessions") as typeof import("../support-sessions")
+  const s = (id: string, status: SupportSession["status"], adminId: string | null) => ({
+    id,
+    status,
+    platform_user: adminId ? { id: adminId, name: "x", email: "x@y.co" } : null,
+  })
+  it("solo las abiertas del mismo admin; sin admin conocido, ninguna", () => {
+    const sessions = [s("a", "active", "adm-1"), s("b", "revoked", "adm-1"), s("c", "active", "adm-2"), s("d", "pending", "adm-1")]
+    expect(sessionsToCloseBeforeIssue(sessions, "adm-1")).toEqual(["a", "d"])
+    expect(sessionsToCloseBeforeIssue(sessions, null)).toEqual([])
+  })
+})

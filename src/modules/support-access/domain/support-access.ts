@@ -1,3 +1,5 @@
+import { safeInternalNext } from "@/core/lib/safe-next"
+
 /**
  * Acceso de soporte (entrega F3), lado de la pestaña de soporte. TypeScript
  * puro: el código de traspaso, el tiempo que queda y el copy de cada desenlace.
@@ -37,20 +39,12 @@ export const SUPPORT_DEFAULT_NEXT = "/dashboard"
  * siga en el MISMO origen; y que su ruta esté en la lista blanca.
  */
 export function safeSupportNext(next: string | null | undefined, origin: string): string {
-  if (typeof next !== "string" || next === "") return SUPPORT_DEFAULT_NEXT
-  if (!next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return SUPPORT_DEFAULT_NEXT
-  if (/[\\\u0000-\u001f]/.test(next)) return SUPPORT_DEFAULT_NEXT
-  let url: URL
-  try {
-    url = new URL(next, origin)
-  } catch {
-    return SUPPORT_DEFAULT_NEXT
-  }
-  if (url.origin !== new URL(origin).origin) return SUPPORT_DEFAULT_NEXT
-  const allowed = SUPPORT_NEXT_PREFIXES.some(
-    (prefix) => url.pathname === prefix || url.pathname.startsWith(`${prefix}/`),
-  )
-  return allowed ? `${url.pathname}${url.search}` : SUPPORT_DEFAULT_NEXT
+  // La misma defensa del login (core/lib/safe-next), más la lista blanca.
+  return safeInternalNext(next, {
+    origin,
+    fallback: SUPPORT_DEFAULT_NEXT,
+    allowedPrefixes: SUPPORT_NEXT_PREFIXES,
+  })
 }
 
 /** El `next` que viene junto al código en el `#`. */

@@ -293,3 +293,21 @@ describe("bloqueos que se resuelven como soporte (QA H2-5)", () => {
     )
   })
 })
+
+describe("destinatarios con el correo completo (QA H3-3)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { deliveryRecipients } = require("../delivery") as typeof import("../delivery")
+  it("muestra recipient; el enmascarado solo si falta", () => {
+    const recipients = deliveryRecipients(
+      {
+        cc: ["camila@axi-connect.co"],
+        attempts: [
+          { attempt: 1, audience: "owner", recipient: "hola@laespiga.co", recipient_masked: "ho***@laespiga.co", status: "sent", error: null },
+          { attempt: 1, audience: "team", recipient: "", recipient_masked: "ca***@axi-connect.co", status: "sent", error: null },
+        ],
+      },
+      null,
+    )
+    expect(recipients.map((r) => r.email)).toEqual(["hola@laespiga.co", "ca***@axi-connect.co"])
+  })
+})

@@ -16,6 +16,19 @@ function decodeSegment(segment: string): unknown {
   return JSON.parse(decodeURIComponent(utf8));
 }
 
+/** El `sub` del token (id del admin de plataforma), o null. */
+export function platformUserIdFromToken(token: string | null): string | null {
+  if (!token) return null;
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const sub = (decodeSegment(payload) as { sub?: unknown }).sub;
+    return typeof sub === "string" && sub !== "" ? sub : null;
+  } catch {
+    return null;
+  }
+}
+
 /** null si no hay token, está mal formado o no trae un rol conocido. */
 export function platformRoleFromToken(token: string | null): PlatformRole | null {
   if (!token) return null;

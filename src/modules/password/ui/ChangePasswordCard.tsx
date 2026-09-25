@@ -46,6 +46,11 @@ export function ChangePasswordCard() {
         showAlert({ tone: "warning", title: TOO_MANY_ATTEMPTS })
         return
       }
+      if (isHttpError(error) && error.is(API_ERROR_CODES.supportActionForbidden)) {
+        // Bajo soporte (QA H3-4): el título dice por qué, no «No pudimos…».
+        showAlert({ tone: "warning", title: "No disponible en soporte", description: errorMessage(error) })
+        return
+      }
       if (applyServerValidation(error, form)) return
       showAlert({ tone: "error", title: "No pudimos cambiar tu contraseña", description: errorMessage(error) })
     }

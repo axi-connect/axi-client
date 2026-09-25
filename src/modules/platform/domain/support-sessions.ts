@@ -25,6 +25,21 @@ export function supportTabUrl(handoffCode: string, next?: string): string {
   return `/auth/soporte#${params.toString()}`;
 }
 
+/**
+ * Antes de emitir una sesión nueva, las abiertas del MISMO admin en este tenant
+ * se cierran (QA H3-5: «Configurar como soporte» dejaba cinco abiertas). El
+ * servidor no deja reusarlas. Sin id de admin conocido no se cierra nada.
+ */
+export function sessionsToCloseBeforeIssue(
+  sessions: readonly Pick<SupportSession, "id" | "status" | "platform_user">[],
+  adminId: string | null,
+): string[] {
+  if (adminId === null) return [];
+  return sessions
+    .filter((session) => isOpenSupportSession(session) && session.platform_user?.id === adminId)
+    .map((session) => session.id);
+}
+
 export const SUPPORT_STATUS_LABELS: Record<SupportSession["status"], string> = {
   pending: "Sin abrir",
   active: "Activa",

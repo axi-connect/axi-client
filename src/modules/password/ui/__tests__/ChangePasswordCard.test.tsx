@@ -41,4 +41,14 @@ describe("ChangePasswordCard", () => {
     expect(await screen.findByText("La contraseña actual no coincide")).toBeInTheDocument()
     expect(showAlert).not.toHaveBeenCalled()
   })
+
+  it("bajo soporte el título dice «No disponible en soporte» (QA H3-4)", async () => {
+    change.mockRejectedValue(new HttpError({ status: 403, code: "auth/support_action_forbidden", message: "No disponible en soporte" }))
+    render(<ChangePasswordCard />)
+    fill()
+    await waitFor(() =>
+      expect(showAlert).toHaveBeenCalledWith(expect.objectContaining({ tone: "warning", title: "No disponible en soporte" })),
+    )
+    expect(showAlert).not.toHaveBeenCalledWith(expect.objectContaining({ title: "No pudimos cambiar tu contraseña" }))
+  })
 })

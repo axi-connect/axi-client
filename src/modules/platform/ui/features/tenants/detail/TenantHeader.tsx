@@ -48,13 +48,17 @@ function InlineNameEditor({ tenantId, name }: { tenantId: string; name: string }
 
   if (!editing) {
     return (
-      <span className="flex items-center gap-2">
-        <h1 className="truncate text-3xl font-semibold tracking-tight">{name}</h1>
+      // `min-w-0` en cada nivel: sin él, el truncate no tiene ancho del que
+      // recortar y en el celular el nombre se cortaba sin «…» (QA H3-6).
+      <span className="flex min-w-0 max-w-full items-center gap-2">
+        <h1 className="min-w-0 truncate text-2xl font-semibold tracking-tight sm:text-3xl" title={name}>
+          {name}
+        </h1>
         <button
           type="button"
           aria-label={`Renombrar ${name}`}
           onClick={() => { setValue(name); setEditing(true); }}
-          className="text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className="shrink-0 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
         >
           <PencilLine aria-hidden="true" className="size-4" />
         </button>
@@ -132,8 +136,8 @@ export function TenantHeader({ tenantId }: { tenantId: string }) {
 
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0 space-y-1">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="min-w-0 max-w-full space-y-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <InlineNameEditor tenantId={tenant.id} name={tenant.name} />
           <StatusBadge status={tenant.status} />
         </div>

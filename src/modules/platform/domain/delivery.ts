@@ -471,7 +471,7 @@ export type RecipientStatus = "pending" | "sent" | "failed" | "skipped";
 
 export type DeliveryRecipient = {
   role: "owner" | "cc";
-  /** Enmascarado por el servidor («ca***@axi-connect.co»). */
+  /** El correo completo (H3-3); el enmascarado solo si el servidor no lo trae. */
   email: string;
   status: RecipientStatus;
   error: string | null;
@@ -480,6 +480,8 @@ export type DeliveryRecipient = {
 type RecipientAttempt = {
   attempt: number;
   audience: "owner" | "team";
+  /** El correo completo: la consola es de super_admin (H3-3). */
+  recipient?: string | null;
   recipient_masked: string;
   status: RecipientStatus;
   error: string | null;
@@ -505,14 +507,14 @@ export function deliveryRecipients(
   const out: DeliveryRecipient[] = [];
   if (owner.length > 0) {
     for (const row of owner) {
-      out.push({ role: "owner", email: row.recipient_masked, status: row.status, error: row.error });
+      out.push({ role: "owner", email: row.recipient || row.recipient_masked, status: row.status, error: row.error });
     }
   } else {
     out.push({ role: "owner", email: ownerEmail ?? "El dueño de la cuenta", status: "pending", error: null });
   }
   if (team.length > 0) {
     for (const row of team) {
-      out.push({ role: "cc", email: row.recipient_masked, status: row.status, error: row.error });
+      out.push({ role: "cc", email: row.recipient || row.recipient_masked, status: row.status, error: row.error });
     }
   } else {
     for (const email of delivery.cc) out.push({ role: "cc", email, status: "pending", error: null });

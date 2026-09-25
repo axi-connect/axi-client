@@ -5,7 +5,9 @@
  * registro del tenant, cerrarla y exportarlo en CSV.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { IssueSupportSessionDTO } from "../../../domain/support-sessions";
+import { platformUserIdFromToken } from "../../../domain/platform-role";
+import { sessionsToCloseBeforeIssue, type IssueSupportSessionDTO } from "../../../domain/support-sessions";
+import { getPlatformToken } from "../../auth/token-storage";
 import { platformClient } from "../platform-client";
 import { platformKeys } from "../query-keys";
 
@@ -25,11 +27,26 @@ export function useSupportSessionsQuery(tenantId: string) {
   });
 }
 
-/** Emite la sesión: devuelve el código de traspaso (60 s, un solo uso). */
+/**
+ * Emite la sesión: devuelve el código de traspaso (60 s, un solo uso). Antes
+ * cierra las sesiones abiertas del mismo admin en este tenant (QA H3-5).
+ */
 export function useIssueSupportSession(tenantId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (body: IssueSupportSessionDTO) => {
+      const listed = await platformClient.GET("/api/v1/platform/tenants/{id}/support-sessions", {
+        params: { path: { id: tenantId } },
+      });
+      const toClose = sessionsToCloseBeforeIssue(
+        listed.data?.data ?? [],
+        platformUserIdFromToken(getPlatformToken()),
+      );
+      for (const sessionId of toClose) {
+        await platformClient.DELETE("/api/v1/platform/support-sessions/{id}", {
+          params: { path: { id: sessionId } },
+        });
+      }
       const { data } = await platformClient.POST("/api/v1/platform/tenants/{id}/support-sessions", {
         params: { path: { id: tenantId } },
         body,
