@@ -7,28 +7,20 @@
  * `…/auth/restablecer#token=…`. El token va en el `#` para que el navegador no
  * lo mande nunca al servidor ni en el `Referer`.
  */
+import type { Schemas } from "@/core/api/types"
 
 /** Política D4: de 12 a 128 caracteres (el copy decía 8; manda la decisión). */
 export const PASSWORD_MIN_LENGTH = 12
 export const PASSWORD_MAX_LENGTH = 128
 
-export type PasswordPurpose = "invite" | "reset"
+/** Lo que dice `POST /auth/password/token/inspect` de un enlace vigente. */
+export type PasswordTokenInfo = Schemas["PasswordTokenInfoDto"]
+
+export type PasswordPurpose = PasswordTokenInfo["purpose"]
 
 /**
- * TEMPORAL hasta schema.d.ts — sustituir por el DTO de
- * `POST /auth/password/token/inspect` (contrato confirmado por el servidor:
- * `{ purpose, email_masked, expires_at, business_name }`).
- */
-export type PasswordTokenInfo = {
-  purpose: PasswordPurpose
-  email_masked: string
-  expires_at: string
-  business_name: string
-}
-
-/**
- * TEMPORAL hasta schema.d.ts — `details.reason` del 410
- * `auth/password_token_invalid`.
+ * `details.reason` del 410 `auth/password_token_invalid`. No está en
+ * `schema.d.ts`: los `details` de un problem RFC 7807 no se tipan en OpenAPI.
  */
 export type PasswordTokenInvalidReason = "expired" | "consumed" | "revoked"
 

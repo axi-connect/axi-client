@@ -2,51 +2,9 @@ import "server-only";
 
 import { HttpError } from "@/core/api/problem";
 import { HttpClient } from "@/core/services/http";
-import {
-  PAYMENT_METHOD_CODES,
-  type PaymentMethodCode,
-  type WelcomeKitData,
-  type WelcomeKitResult,
-} from "../domain/welcome-kit";
+import type { WelcomeKitResult } from "../domain/welcome-kit";
 import type { WelcomeKitDataWire } from "./welcome-kit.dto";
-
-/** Hora del resumen de la mañana si el servidor no la manda (la del paquete de diseño). */
-const DEFAULT_DIGEST_TIME = "07:30";
-
-function isPaymentMethod(code: string): code is PaymentMethodCode {
-  return (PAYMENT_METHOD_CODES as readonly string[]).includes(code);
-}
-
-export function welcomeKitFromWire(dto: WelcomeKitDataWire): WelcomeKitData {
-  return {
-    businessName: dto.businessName,
-    ownerFirstName: dto.ownerFirstName,
-    agentName: dto.agentName,
-    agentTone: dto.agentTone ?? null,
-    teamHours: dto.teamHours ?? null,
-    loginEmail: dto.loginEmail,
-    panelUrl: dto.panelUrl,
-    // Un código que el kit no sabe pintar se descarta en vez de romper la página.
-    paymentMethods: (dto.paymentMethods ?? []).filter(isPaymentMethod),
-    catalog: {
-      fileName: dto.catalog?.fileName ?? null,
-      fileSizeBytes: dto.catalog?.fileSizeBytes ?? null,
-      productCount: dto.catalog?.productCount ?? 0,
-    },
-    advisor: {
-      fullName: dto.advisor.fullName,
-      whatsappE164: dto.advisor.whatsappE164,
-      digestTime: dto.advisor.digestTime || DEFAULT_DIGEST_TIME,
-    },
-    trial: { startDate: dto.trial.startDate, conversations: dto.trial.conversations },
-    plan: {
-      name: dto.plan.name,
-      monthlyPriceCop: dto.plan.monthlyPriceCop,
-      listPriceCop: dto.plan.listPriceCop,
-      conversationsPerMonth: dto.plan.conversationsPerMonth,
-    },
-  };
-}
+import { welcomeKitFromWire } from "./welcome-kit.mapper";
 
 /**
  * Carga el kit en el servidor (RSC), sin sesión: lo autoriza el token de la
