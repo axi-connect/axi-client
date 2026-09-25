@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Entrar como soporte</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#F5F5F7}
+a{color:#B8363A}a:hover{color:#8F2A2D}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.btn{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 20px;border-radius:999px;font:500 14px Poppins,sans-serif;border:0;cursor:pointer}
+.btn-p{background:#D13F42;color:#FFFFFF;box-shadow:0 10px 24px -10px rgba(209,63,66,.55)}
+.btn-g{background:transparent;color:#0B0B0E}
+.fld{display:flex;flex-direction:column;gap:7px}
+.fld label,.fl{font-size:12.5px;font-weight:500;color:#3A3A40}
+.inp{height:44px;border-radius:12px;border:1px solid rgba(0,0,0,.10);background:#FFFFFF;padding:0 14px;font:14px Poppins,sans-serif;color:#0B0B0E;box-sizing:border-box;width:100%}
+.chip{height:32px;padding:0 14px;border-radius:999px;border:1px solid rgba(0,0,0,.10);background:#FFFFFF;font:500 12.5px Poppins,sans-serif;color:#3A3A40;cursor:pointer}
+.chip-on{background:#0B0B0E;color:#FFFFFF;border-color:#0B0B0E}
+.seg{display:flex;gap:2px;padding:3px;border-radius:14px;background:#EDEDF0}
+.seg button{flex-grow:1;height:38px;border-radius:11px;border:0;background:transparent;font:500 13px Poppins,sans-serif;color:#3A3A40;cursor:pointer}
+.seg .on{background:#FFFFFF;color:#0B0B0E;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.li{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.45;color:#3A3A40}
+.ghost{background:#FFFFFF;border-radius:24px;border:1px solid rgba(0,0,0,.05)}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;position:relative;overflow:hidden;background:#F5F5F7">
+  <div aria-hidden="true" style="position:absolute;inset:0;display:flex;filter:blur(6px);opacity:.7">
+    <div style="width:248px;background:rgba(255,255,255,.6);border-right:1px solid rgba(0,0,0,.06)"></div>
+    <div style="flex-grow:1;padding:80px 40px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;gap:18px;align-items:center"><div style="width:64px;height:64px;border-radius:20px;background:#0B0B0E"></div><div style="width:280px;height:34px;border-radius:10px;background:#DADADF"></div></div>
+      <div style="width:720px;height:48px;border-radius:999px;background:#FFFFFF"></div>
+      <div class="ghost" style="height:96px"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 300px;gap:16px;flex-grow:1"><div class="ghost"></div><div class="ghost"></div><div class="ghost"></div><div style="border-radius:28px;background:#0B0B0E"></div></div>
+    </div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(11,11,14,.28)"></div>
+
+  <div role="dialog" aria-modal="true" aria-labelledby="t" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:620px;border-radius:28px;background:#FFFFFF;box-shadow:0 40px 90px -30px rgba(0,0,0,.5);padding:30px 32px 26px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div style="width:48px;height:48px;border-radius:16px;background:#0B0B0E;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.5"></circle><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"></path></svg></div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex-grow:1">
+        <h2 id="t" class="d" style="margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em">Entrar como soporte a Axi Demo</h2>
+        <span style="font-size:13px;color:#6B6B73;line-height:1.5">Sin conocer la contraseña de nadie. El cliente no ve ningún aviso; tu nombre y cada pantalla quedan en la auditoría.</span>
+      </div>
+      <button aria-label="Cerrar" style="width:36px;height:36px;border-radius:999px;border:0;background:#F0F0F2;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B0B0E" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+    </div>
+
+    <div class="fld">
+      <label for="motivo">¿Qué vas a revisar?</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="chip chip-on">Catálogo</button><button class="chip">Agente</button><button class="chip">Pagos</button><button class="chip">WhatsApp</button><button class="chip">Otro</button></div>
+      <textarea id="motivo" class="inp" style="height:72px;padding:12px 14px;resize:none;line-height:1.45">El agente no cotiza los combos desde ayer; reviso el catálogo.</textarea>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+      <div class="fld"><span class="fl" id="dur">Duración</span><div class="seg" role="radiogroup" aria-labelledby="dur"><button role="radio" aria-checked="false">15 min</button><button role="radio" aria-checked="true" class="on">30 min</button><button role="radio" aria-checked="false">60 min</button></div></div>
+      <div class="fld"><label for="tk">Ticket <span style="font-weight:400;color:#6B6B73">· opcional</span></label><input id="tk" class="inp" placeholder="SUP-1234"></div>
+    </div>
+
+    <div class="fld">
+      <label for="pw">Confirma con tu contraseña</label>
+      <input id="pw" type="password" class="inp" value="••••••••••••">
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:16px;border-radius:18px;background:#F7F7F8">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#1F6B45;font-weight:600">Puedes</span>
+        <span class="li"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F9D5B" stroke-width="2.4" style="margin-top:2px;flex-shrink:0"><path d="m5 12 5 5 9-10"></path></svg>Ver todo el panel</span>
+        <span class="li"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F9D5B" stroke-width="2.4" style="margin-top:2px;flex-shrink:0"><path d="m5 12 5 5 9-10"></path></svg>Configurar agente y catálogo</span>
+        <span class="li"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F9D5B" stroke-width="2.4" style="margin-top:2px;flex-shrink:0"><path d="m5 12 5 5 9-10"></path></svg>Crear el primer medio de pago</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#9A3412;font-weight:600">No puedes</span>
+        <span class="li"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.2" style="margin-top:2px;flex-shrink:0"><path d="M6 6l12 12M18 6 6 18"></path></svg>Tocar usuarios ni contraseñas</span>
+        <span class="li"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.2" style="margin-top:2px;flex-shrink:0"><path d="M6 6l12 12M18 6 6 18"></path></svg>Editar o borrar medios de pago</span>
+        <span class="li"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.2" style="margin-top:2px;flex-shrink:0"><path d="M6 6l12 12M18 6 6 18"></path></svg>Exportar datos o borrar la cuenta</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn btn-g">Cancelar</button>
+      <button class="btn btn-p"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14 4h6v6M20 4l-9 9"></path><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"></path></svg>Abrir en una pestaña nueva</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

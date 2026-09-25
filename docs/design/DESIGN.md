@@ -144,9 +144,20 @@ Receta exacta (blur, saturación, borde interior, fallback sin `backdrop-filter`
 Lenguaje de formas iOS: radios amplios y continuos.
 
 - Superficies flotantes (modales, sheets, cards): **16–20px**.
+- Fichas de un resumen en bento, superficies de sección e islas de tinta: **24px** (DESIGN-SYSTEM §9.5).
 - Controles (botones, inputs, selects): **10–12px**.
 - Badges y pills: radio completo (`9999px`).
 - Nunca esquinas rectas salvo elementos full-bleed (tablas dentro de su card contenedora).
+
+### 5.2.1 El resumen premium: bento de fichas y una isla de tinta
+
+Las vistas «de un vistazo» (el Resumen de un tenant en `/platform`) se construyen como un
+tablero de iOS: fichas blancas de un solo tema —una etiqueta pequeña, una cifra grande en
+Nexa con su unidad, una línea que dice qué significa— y **una** isla de tinta con lo más
+accionable («Lo próximo»), con un brillo coral detrás. Nada de tiles de vanidad: cada ficha
+dice qué sigue o de dónde sale su cifra. Receta técnica, rejilla y trampas en DESIGN-SYSTEM
+§9.5–§9.8; verificación visual obligatoria en §12. Mockup aprobado:
+`docs/design/mockups/entrega-bienvenida-premium/` (2026-09-25).
 
 ### 5.3 Elevación
 
@@ -210,7 +221,7 @@ Reglas que nacen con el módulo Comercial y valen para todo texto que hable de m
 
 ---
 
-## 8. Los diez mandamientos visuales
+## 8. Los once mandamientos visuales
 
 1. El coral es el único color de acción; violeta y ámbar son acentos, nunca ambos en la misma vista.
 2. Ningún hex fuera de `globals.css`.
@@ -221,4 +232,5 @@ Reglas que nacen con el módulo Comercial y valen para todo texto que hable de m
 7. El movimiento es spring, sutil, y respeta `prefers-reduced-motion`.
 8. Destructivo ≠ coral: eliminar siempre usa el rojo semántico.
 9. Espacio en blanco generoso: ante la duda, quita, no agregues.
-10. Contraste AA mínimo en cada par color/fondo, en ambos temas.
+10. Contraste AA mínimo en cada par color/fondo, en ambos temas — el color de un estado va en su punto o su icono, no en el texto.
+11. Una vista se da por terminada cuando se renderizó y se midió (390 → 1440, claro y oscuro, datos largos), no cuando compila.

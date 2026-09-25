@@ -45,11 +45,29 @@ function resolve(tone: AlertTone, message: PromiseMessage, duration: number): No
   return { ...splitTitle(tone, title, description), duration }
 }
 
+/**
+ * Un mismo error puede avisarse dos veces a la vez: la página muestra el suyo y
+ * una señal global el mismo (la barra de soporte ante `support_action_forbidden`,
+ * QA H2-1). Un aviso con el MISMO texto dentro de esta ventana no se repite.
+ */
+export const DEDUPE_WINDOW_MS = 3_000
+const recent = new Map<string, { id: string; at: number }>()
+
+function dedupeKey(alert: AppAlert): string {
+  return (alert.description ?? alert.title).trim()
+}
+
 export const notify = {
-  /** Lo que hace `showAlert`: traduce el aviso y lo pinta. */
-  fromAlert(alert: AppAlert): string {
+  /** Lo que hace `showAlert`: traduce el aviso y lo pinta (sin repetir el mismo texto en 3 s). */
+  fromAlert(alert: AppAlert, now: number = Date.now()): string {
+    const key = dedupeKey(alert)
+    const seen = recent.get(key)
+    if (seen && now - seen.at < DEDUPE_WINDOW_MS) return seen.id
+    for (const [k, v] of recent) if (now - v.at >= DEDUPE_WINDOW_MS) recent.delete(k)
     const opts = toSileoOptions(alert, nextId)
-    return SHOW[alert.tone](alert.tone === "info" ? { ...opts, icon: INFO_ICON } : opts)
+    const id = SHOW[alert.tone](alert.tone === "info" ? { ...opts, icon: INFO_ICON } : opts)
+    recent.set(key, { id, at: now })
+    return id
   },
 
   /**

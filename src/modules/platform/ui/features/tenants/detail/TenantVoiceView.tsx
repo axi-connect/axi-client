@@ -33,6 +33,7 @@ import {
 } from "../../../../infrastructure/api/hooks/use-tenant-voice";
 import { ConfirmTyped } from "../../../components/ConfirmTyped";
 import { ProblemAlert } from "../../../components/ProblemAlert";
+import { formatInstantDate } from "@/modules/welcome-kit/domain/formatters";
 
 /** Mismo mínimo que `SetTtsCredentialDto` en el servidor: menos es 400 seguro. */
 const KEY_MIN = 16;
@@ -70,7 +71,7 @@ function Row({
 function UsageBar({ usage }: { usage: NonNullable<TenantVoiceDTO["usage"]> }) {
   const tone = voiceUsageTone(usage);
   const pct = usage.pct_used ?? 0;
-  const periodEnd = new Date(usage.period_end).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+  const periodEnd = formatInstantDate(usage.period_end, undefined, false);
   return (
     <>
       <div className="h-2 max-w-[420px] overflow-hidden rounded-full border border-border/60 bg-secondary">

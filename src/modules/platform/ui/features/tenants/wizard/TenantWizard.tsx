@@ -8,12 +8,12 @@
  * Errores del POST: `identities/nit_taken` → paso 1 con error inline en NIT;
  * el resto se muestra en la revisión (`ProblemAlert`).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/core/providers/alert-provider";
 import { isHttpError } from "@/core/api/problem";
 import type { CreateTenantDTO } from "../../../../domain/tenant";
-import { PENDING_CREDENTIALS_KEY, type PendingOwnerCredentials } from "../../../../domain/tenant";
+import { clearLegacyOwnerCredentials } from "../../../../domain/tenant";
 import { useCreateTenant } from "../../../../infrastructure/api/hooks/use-tenants";
 import { usePlansQuery } from "../../../../infrastructure/api/hooks/use-plans";
 import { StepIndicator } from "@/shared/components/ui/step-indicator";
@@ -22,7 +22,7 @@ import { OwnerStep } from "./steps/OwnerStep";
 import { PlanStep } from "./steps/PlanStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { defaultCompanyStepValues, type CompanyStepValues } from "./steps/company-step.config";
-import { defaultOwnerStepValues, type OwnerStepValues } from "./steps/owner-step.config";
+import { defaultOwnerStepValues, toOwnerPayload, type OwnerStepValues } from "./steps/owner-step.config";
 
 const STEPS = ["Empresa", "Propietario", "Plan", "Revisión"] as const;
 
@@ -38,6 +38,9 @@ export function TenantWizard() {
   const [planCode, setPlanCode] = useState<string | null>(null);
   const [nitError, setNitError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<unknown>(null);
+
+  // Lo que dejó la versión vieja del alta (la contraseña del dueño) se borra.
+  useEffect(() => clearLegacyOwnerCredentials(), []);
 
   const planName = useMemo(
     () => plansData?.data.find((plan) => plan.code === planCode)?.name ?? null,
@@ -58,26 +61,22 @@ export function TenantWizard() {
         ...(company.industry ? { industry: company.industry } : {}),
         ...(company.timezone ? { timezone: company.timezone } : {}),
       },
-      owner: { name: owner.name, email: owner.email, password: owner.password },
+      // Sin contraseña: el dueño la crea con el enlace de la bienvenida (E1).
+      owner: toOwnerPayload(owner),
       ...(planCode ? { plan_code: planCode } : {}),
     };
 
     try {
       const created = await createTenant.mutateAsync(body);
-      // Credenciales efímeras para el banner del detalle (se leen UNA vez).
-      const credentials: PendingOwnerCredentials = {
-        tenant_id: created.id,
-        email: owner.email,
-        password: owner.password,
-      };
-      window.sessionStorage.setItem(PENDING_CREDENTIALS_KEY, JSON.stringify(credentials));
+      const detail = `/platform/tenants/${created.id}`;
       showAlert({
         tone: "success",
-        title: "Tenant creado",
-        description: `${company.name} ya está en la plataforma.`,
-        autoCloseMs: 5000,
+        title: "Cuenta creada",
+        description: "El dueño recibe su acceso al cierre de la sesión, con la bienvenida.",
+        actions: [{ label: "Preparar entrega", onClick: () => router.push(`${detail}/entrega`) }],
+        autoCloseMs: 10_000,
       });
-      router.replace(`/platform/tenants/${created.id}`);
+      router.replace(detail);
     } catch (error) {
       if (isHttpError(error) && error.is("identities/nit_taken")) {
         setNitError("Este NIT ya está registrado en la plataforma.");

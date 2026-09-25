@@ -1,5 +1,11 @@
 import { API_BASE_URL, API_PREFIX } from "@/core/config/env";
-import { COMPANY_SUSPENDED_EVENT, isSuspensionCode, parseHttpError } from "@/core/api/problem";
+import {
+  API_ERROR_CODES,
+  COMPANY_SUSPENDED_EVENT,
+  isSuspensionCode,
+  parseHttpError,
+  SUPPORT_SESSION_EVENT,
+} from "@/core/api/problem";
 
 /**
  * Cliente HTTP del proyecto — patrón dual browser/server.
@@ -94,6 +100,15 @@ export class HttpClient {
         // (suspensión genérica vs prueba finalizada)
         window.dispatchEvent(new CustomEvent(COMPANY_SUSPENDED_EVENT, { detail: error.code }));
       }
+      // Acceso de soporte: la barra de soporte avisa «No disponible en
+      // soporte» o manda la pestaña al cierre. Fuera de soporte no llegan.
+      if (
+        typeof window !== "undefined" &&
+        (error.code === API_ERROR_CODES.supportActionForbidden ||
+          error.code === API_ERROR_CODES.supportSessionEnded)
+      ) {
+        window.dispatchEvent(new CustomEvent(SUPPORT_SESSION_EVENT, { detail: error.code }));
+      }
       throw error;
     }
 
@@ -132,7 +147,9 @@ export class HttpClient {
     if (typeof window === "undefined") {
       try {
         const mod = await import("next/headers");
-        const token = (await mod.cookies()).get("accessToken")?.value;
+        const jar = await mod.cookies();
+        // Acceso de soporte: su cookie manda sobre la del cliente (support-session.ts).
+        const token = jar.get("supportAccessToken")?.value || jar.get("accessToken")?.value;
         if (token) return { Authorization: `Bearer ${token}` };
       } catch {
         // Fuera del request scope de Next (tests, scripts) — sin token.

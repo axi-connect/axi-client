@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+#c{height:720px;background:#0B0B0E;padding:44px 44px 0}
+h2{font:800 42px/1 Nexa;letter-spacing:-.035em;color:#F4F4F5}
+h2 span{color:#FB7185}
+.list{margin-top:30px;display:grid;gap:14px}
+.r{height:180px;border-radius:20px;background:#141418;border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden;display:flex;align-items:center}
+.r::before{content:"";position:absolute;right:-60px;top:-60px;width:300px;height:300px;border-radius:50%;background:var(--g);opacity:.10;filter:blur(40px)}
+.txt{position:relative;padding:0 0 0 28px;width:270px}
+.n{font:600 11px/1 Poppins;letter-spacing:.22em;color:var(--a)}
+.txt b{display:block;margin-top:10px;font:800 30px/1 Nexa;letter-spacing:-.025em;color:#F4F4F5}
+.txt p{margin-top:10px;font:400 15px/1.45 Poppins;color:#A1A1AA}
+.ill{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:230px}
+.ill text{font-family:Hand,cursive}
+</style></head><body><div id="c">
+<h2>Así trabaja <span>tu agente.</span></h2>
+<div class="list">
+ <div class="r" style="--g:#A78BFA;--a:#A78BFA"><div class="txt"><span class="n">01</span><b>Cotiza</b><p>Con los precios que tú cargaste. Nunca inventa descuentos.</p></div><svg class="ill" xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 252 182"><defs>
+      <filter id="rough-quote" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="glow-quote" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="1.1" result="b"></feGaussianBlur>
+        <feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <marker id="ahC" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahV" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahA" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+    </defs>
+          <g filter="url(#glow-quote)">
+            <g filter="url(#rough-quote)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="14" y="30" width="124" height="126" rx="10" stroke="#A78BFA"></rect>
+              <path d="M28 56 H88 M28 80 H80 M28 128 H84" stroke="#A78BFA" opacity=".7"></path>
+              <path d="M104 56 H124 M104 80 H124 M104 128 H124" stroke="#FBBF24"></path>
+              <rect x="6" y="92" width="140" height="24" rx="6" fill="#FB7185" fill-opacity=".5" stroke="#FB7185"></rect>
+              <path d="M22 104 H86 M104 104 H126" stroke="#FFE4E6"></path>
+              <path d="M150 102 C 172 102, 180 90, 190 80" stroke="#FB7185" marker-end="url(#ahC)"></path>
+              <rect x="160" y="38" width="76" height="36" rx="12" fill="#FB7185" fill-opacity=".5" stroke="#FB7185"></rect>
+            </g>
+            <text x="198" y="62" text-anchor="middle" fill="#FFF1F2" font-family="Shadows Into Light" font-size="18">$ 12.000</text>
+            <text x="14" y="20" fill="#A78BFA" font-family="Shadows Into Light" font-size="18">TU CATÁLOGO</text>
+          </g>
+        </svg></div>
+ <div class="r" style="--g:#FB7185;--a:#FB7185"><div class="txt"><span class="n">02</span><b>Arma el pedido</b><p>Listo para que tu equipo lo despache.</p></div><svg class="ill" xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 252 182"><defs>
+      <filter id="rough-order" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="glow-order" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="1.1" result="b"></feGaussianBlur>
+        <feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <marker id="ahC" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahV" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahA" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+    </defs>
+          <g filter="url(#glow-order)">
+            <g filter="url(#rough-order)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M40 10 H170 V132 L159 142 L148 132 L137 142 L126 132 L115 142 L104 132 L93 142 L82 132 L71 142 L60 132 L49 142 L40 132 Z" stroke="#A78BFA"></path>
+              <rect x="54" y="30" width="12" height="12" rx="2" stroke="#FBBF24"></rect><path d="M56 36 L60 40 L65 32" stroke="#FBBF24"></path><path d="M76 36 H150" stroke="#A78BFA" opacity=".7"></path>
+              <rect x="54" y="54" width="12" height="12" rx="2" stroke="#FBBF24"></rect><path d="M56 60 L60 64 L65 56" stroke="#FBBF24"></path><path d="M76 60 H140" stroke="#A78BFA" opacity=".7"></path>
+              <rect x="54" y="78" width="12" height="12" rx="2" stroke="#FBBF24"></rect><path d="M56 84 L60 88 L65 80" stroke="#FBBF24"></path><path d="M76 84 H146" stroke="#A78BFA" opacity=".7"></path>
+              <rect x="30" y="98" width="152" height="24" rx="6" fill="#FB7185" fill-opacity=".5" stroke="#FB7185"></rect>
+              <path d="M46 110 H96 M134 110 H166" stroke="#FFE4E6"></path>
+              <path d="M180 114 L194 148 L199 135 L212 131 Z" fill="#A78BFA" stroke="#A78BFA"></path>
+            </g>
+            <text x="110" y="166" text-anchor="middle" fill="#FBBF24" font-family="Shadows Into Light" font-size="18">LISTO PARA DESPACHAR</text>
+          </g>
+        </svg></div>
+ <div class="r" style="--g:#FBBF24;--a:#FBBF24"><div class="txt"><span class="n">03</span><b>Comparte tus pagos</b><p>Nequi, PSE o tarjeta, justo al cerrar cada pedido.</p></div><svg class="ill" xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 252 182"><defs>
+      <filter id="rough-pay" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="n"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+      <filter id="glow-pay" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="1.1" result="b"></feGaussianBlur>
+        <feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+      </filter>
+      <marker id="ahC" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FB7185" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahV" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+      <marker id="ahA" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1 1 L10 6 L1 11" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></marker>
+    </defs>
+          <g filter="url(#glow-pay)">
+            <g filter="url(#rough-pay)" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="14" y="22" width="84" height="30" rx="15" stroke="#A78BFA"></rect>
+              <rect x="14" y="66" width="84" height="30" rx="15" fill="#FB7185" fill-opacity=".5" stroke="#FB7185"></rect>
+              <rect x="14" y="110" width="84" height="30" rx="15" stroke="#A78BFA"></rect>
+              <path d="M104 81 C 128 81, 138 76, 156 76" stroke="#FB7185" marker-end="url(#ahC)"></path>
+              <circle cx="190" cy="76" r="26" stroke="#FBBF24"></circle>
+              <path d="M178 76 L187 86 L204 66" stroke="#FBBF24" stroke-width="3"></path>
+            </g>
+            <text x="56" y="43" text-anchor="middle" fill="#A78BFA" font-family="Shadows Into Light" font-size="17">NEQUI</text>
+            <text x="56" y="87" text-anchor="middle" fill="#FFF1F2" font-family="Shadows Into Light" font-size="17">PSE</text>
+            <text x="56" y="131" text-anchor="middle" fill="#A78BFA" font-family="Shadows Into Light" font-size="17">TARJETA</text>
+            <text x="190" y="128" text-anchor="middle" fill="#FBBF24" font-family="Shadows Into Light" font-size="18">TU EQUIPO</text>
+            <text x="190" y="148" text-anchor="middle" fill="#FBBF24" font-family="Shadows Into Light" font-size="18">CONFIRMA</text>
+          </g>
+        </svg></div>
+</div>
+</div></body></html>

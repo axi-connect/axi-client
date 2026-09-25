@@ -55,3 +55,15 @@ describe("AuditLogRow", () => {
     expect(screen.getByText(/"nota"/)).toBeInTheDocument();
   });
 });
+
+describe("AuditLogRow — D2", () => {
+  it("con actorLabel, el badge dice «Soporte Axi · nombre» y no el actor_type crudo", () => {
+    render(
+      <ul>
+        <AuditLogRow log={log({})} actorLabel="Soporte Axi · Camila Restrepo" showTenant={false} />
+      </ul>,
+    );
+    expect(screen.getByText("Soporte Axi · Camila Restrepo")).toBeInTheDocument();
+    expect(screen.queryByText("platform_admin")).not.toBeInTheDocument();
+  });
+});

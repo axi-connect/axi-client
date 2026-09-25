@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Layers, PencilLine, TriangleAlert } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
-import { formatShortDate } from "@/core/lib/format";
+import { formatShortDate } from "../../../../domain/dates";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";

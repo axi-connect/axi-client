@@ -100,6 +100,11 @@ export type RefreshResult =
  * (el cliente debe forzar re-login).
  */
 export async function refreshSession(store: CookieStore): Promise<RefreshResult> {
+  // Acceso de soporte: su token NUNCA se refresca (no tiene refresh) y este
+  // camino tampoco toca las cookies del cliente que pudiera haber al lado.
+  if (store.get(COOKIE_NAMES.supportAccessToken)?.value) {
+    return { ok: false, status: 401, code: API_ERROR_CODES.supportSessionEnded };
+  }
   const currentRefresh = store.get(COOKIE_NAMES.refreshToken)?.value;
   if (!currentRefresh) {
     return { ok: false, status: 401, code: API_ERROR_CODES.invalidRefresh };

@@ -26,12 +26,15 @@ import {
   AUDIT_LIMITS,
   DEFAULT_AUDIT_LIMIT,
 } from "../../../domain/audit";
+import { adminNamesFrom, auditActorLabel, groupSupportActivity } from "../../../domain/support-sessions";
 import { useAuditLogsQuery } from "../../../infrastructure/api/hooks/use-audit";
+import { useSupportSessionsQuery } from "../../../infrastructure/api/hooks/use-support-sessions";
 import { useTenantsQuery } from "../../../infrastructure/api/hooks/use-tenants";
 import { EmptyState } from "../../components/EmptyState";
 import { ProblemAlert } from "../../components/ProblemAlert";
 import { ALL_TENANTS, TenantSelect } from "../../components/TenantSelect";
 import { AuditLogRow } from "./AuditLogRow";
+import { SupportActivityRow } from "./SupportActivityRow";
 
 const ALL = ALL_TENANTS;
 const CUSTOM = "custom";
@@ -66,7 +69,17 @@ export function AuditView({ companyId, lockTenant = false }: AuditViewProps) {
     return map;
   }, [tenantsQuery.data]);
 
-  const logs = data?.data ?? [];
+  // D2: los nombres de los admins de soporte salen del registro de sesiones
+  // del tenant (el log solo trae su id). En la vista global no hay tenant fijo.
+  const supportQuery = useSupportSessionsQuery(lockTenant && companyId ? companyId : "");
+  const adminNames = useMemo(
+    () => (lockTenant ? adminNamesFrom(supportQuery.data?.data ?? []) : new Map<string, string>()),
+    [lockTenant, supportQuery.data],
+  );
+
+  const logs = useMemo(() => data?.data ?? [], [data]);
+  // O11: la actividad de soporte (una fila por request) en una fila por sesión.
+  const items = useMemo(() => groupSupportActivity(logs), [logs]);
   const hasFilters = (!lockTenant && tenantFilter !== ALL) || actionChoice !== ALL || limit !== DEFAULT_AUDIT_LIMIT;
 
   function commitCustomAction() {
@@ -175,14 +188,27 @@ export function AuditView({ companyId, lockTenant = false }: AuditViewProps) {
           )}
           aria-busy={isPlaceholderData}
         >
-          {logs.map((log) => (
-            <AuditLogRow
-              key={log.id}
-              log={log}
-              showTenant={!lockTenant}
-              tenantName={log.company_id ? tenantNames.get(log.company_id) ?? null : null}
-            />
-          ))}
+          {items.map((item) =>
+            item.kind === "support" ? (
+              <SupportActivityRow
+                key={`support-${item.sessionId}`}
+                logs={item.logs}
+                screens={item.screens}
+                changes={item.changes}
+                failed={item.failed}
+                occurredAt={item.occurredAt}
+                actorLabel={auditActorLabel({ actor_type: "platform_admin", actor_user_id: item.actorUserId }, adminNames)}
+              />
+            ) : (
+              <AuditLogRow
+                key={item.log.id}
+                log={item.log}
+                showTenant={!lockTenant}
+                actorLabel={auditActorLabel(item.log, adminNames)}
+                tenantName={item.log.company_id ? tenantNames.get(item.log.company_id) ?? null : null}
+              />
+            ),
+          )}
         </ul>
       )}
     </div>

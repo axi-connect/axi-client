@@ -37,6 +37,10 @@ export const PUBLIC_PATHS = [
   // tenant SUSPENDIDO por mora, que es justo el caso de uso— así que el guard no
   // puede interceptarlos. El prefijo cubre `/pay/return` y `/pay/:id/:token`.
   "/pay",
+  // Kit de bienvenida (entrega_bienvenida_plan.md, F4): llega en el correo de
+  // bienvenida y el dueño lo abre sin sesión —aún no ha creado su contraseña—.
+  // Lo autoriza el token de la ruta. El prefijo cubre `/bienvenida/:token`.
+  "/bienvenida",
   // Infraestructura y estáticos
   "/api",
   "/_next",

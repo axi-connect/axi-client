@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { bffProblem } from "@/shared/auth/bff-response";
 import { NextResponse } from "next/server";
 import { refreshSession } from "@/shared/auth/auth.handlers";
 
@@ -10,5 +11,5 @@ import { refreshSession } from "@/shared/auth/auth.handlers";
 export async function POST() {
   const result = await refreshSession(await cookies());
   if (result.ok) return NextResponse.json({ success: true });
-  return NextResponse.json({ success: false, code: result.code }, { status: result.status });
+  return bffProblem(result.status, result.code, "Tu sesión expiró. Vuelve a iniciar sesión");
 }

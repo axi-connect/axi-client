@@ -1,0 +1,15 @@
+@font-face{font-family:Nexa;src:url(fonts/Nexa-Heavy.ttf);font-weight:800}
+@font-face{font-family:NexaLight;src:url(fonts/Nexa-ExtraLight.ttf);font-weight:200}
+@font-face{font-family:Poppins;src:url(fonts/poppins-300.woff2);font-weight:300}
+@font-face{font-family:Poppins;src:url(fonts/poppins-400.woff2);font-weight:400}
+@font-face{font-family:Poppins;src:url(fonts/poppins-500.woff2);font-weight:500}
+@font-face{font-family:Poppins;src:url(fonts/poppins-600.woff2);font-weight:600}
+@font-face{font-family:Poppins;src:url(fonts/poppins-700.woff2);font-weight:700}
+@font-face{font-family:Hand;src:url(fonts/shadows.woff2)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:transparent}
+body{font-family:Poppins,sans-serif;color:#FAFAFA;-webkit-font-smoothing:antialiased}
+#c{width:600px;position:relative;overflow:hidden;background:#07061A}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.3px);background-size:22px 22px}
+.hand{font-family:Hand,cursive}
+.nexa{font-family:Nexa,sans-serif;font-weight:800}

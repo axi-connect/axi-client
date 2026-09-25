@@ -15,7 +15,8 @@ export const metadata: Metadata = noindexMetadata("Inicia sesión")
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="bg-background flex min-h-screen w-full flex-col items-center justify-center sm:px-4">
-      <div className="w-full sm:max-w-md">
+      {/* Las páginas de dos paneles (crear contraseña) marcan `data-auth-wide`. */}
+      <div className="w-full sm:max-w-md has-[[data-auth-wide]]:sm:max-w-5xl">
         {children}
       </div>
     </main>

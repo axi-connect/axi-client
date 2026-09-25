@@ -7,7 +7,8 @@
  * promoción y su contador salen como deben.
  */
 import { useMemo, useState } from "react";
-import { formatMoney, formatShortDate } from "@/core/lib/format";
+import { formatMoney } from "@/core/lib/format";
+import { formatShortDate } from "../../../domain/dates";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";

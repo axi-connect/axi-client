@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { http } from "@/core/services/http";
 import { clearSessionCookies } from "@/shared/auth/auth.handlers";
 import { COOKIE_NAMES } from "@/shared/auth/auth.types";
+import { clearSupportCookie, readSupportToken } from "@/shared/auth/support-session";
 
 /**
  * POST /api/auth/logout — revoca la sesión en el backend (denylist del jti +
@@ -11,6 +12,18 @@ import { COOKIE_NAMES } from "@/shared/auth/auth.types";
  */
 export async function POST() {
   const store = await cookies();
+
+  // Bajo soporte, «Cerrar sesión» cierra la sesión de soporte y nada más.
+  const supportToken = readSupportToken(store);
+  if (supportToken) {
+    try {
+      await http.post("/auth/support/end", undefined, { headers: { Authorization: `Bearer ${supportToken}` } });
+    } catch {
+      // Best-effort: el token de soporte vence solo en el servidor.
+    }
+    clearSupportCookie(store);
+    return NextResponse.json({ success: true });
+  }
   const refreshToken = store.get(COOKIE_NAMES.refreshToken)?.value;
 
   if (refreshToken) {

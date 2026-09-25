@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Crea tu contraseña</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Poppins,system-ui,sans-serif;color:#0B0B0E;background:#FFFFFF}
+a{color:#B8363A}a:hover{color:#8F2A2D}
+.d{font-family:Urbanist,Poppins,sans-serif}
+.fld{display:flex;flex-direction:column;gap:7px}
+.fld label{font-size:13px;font-weight:500;color:#3A3A40}
+.box{height:52px;border-radius:14px;border:1px solid rgba(0,0,0,.12);background:#FFFFFF;display:flex;align-items:center;padding:0 6px 0 16px;box-sizing:border-box}
+.box input{border:0;outline:0;flex-grow:1;font:15px Poppins,sans-serif;background:transparent;color:#0B0B0E}
+.eye{width:40px;height:40px;border-radius:10px;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#3A3A40}
+.ck{display:flex;align-items:center;gap:8px;font-size:12.5px}
+</style>
+</helmet>
+<div style="width:1440px;height:900px;display:flex;overflow:hidden;background:#FFFFFF">
+  <section style="width:620px;flex-shrink:0;background:#0B0B0E;color:#F4F4F5;position:relative;overflow:hidden;padding:56px 64px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between">
+    <div style="position:absolute;left:-160px;bottom:-220px;width:620px;height:620px;border-radius:999px;background:radial-gradient(circle,rgba(209,63,66,.45),rgba(209,63,66,0) 68%)"></div>
+    <div style="position:relative;display:flex;align-items:center;gap:10px">
+      <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="15" r="7.5" fill="none" stroke="#E65759" stroke-width="4"></circle><path d="M16 5 L25 24" stroke="#F2A93B" stroke-width="4" stroke-linecap="round"></path><path d="M25 5 L17 20" stroke="#8B70F5" stroke-width="4" stroke-linecap="round"></path></svg>
+      <span class="d" style="font-size:18px;font-weight:700">axi connect</span>
+    </div>
+    <div style="position:relative;display:flex;flex-direction:column;gap:20px">
+      <span style="font-size:12px;letter-spacing:.22em;color:#F08A8C;font-weight:600">DÍA 0 · HOY EMPIEZA</span>
+      <span class="d" style="font-size:52px;font-weight:800;line-height:1.02;letter-spacing:-.03em">Tu panel de Panadería La Espiga está listo.</span>
+      <span style="font-size:15px;line-height:1.6;color:#D4D4D8;max-width:420px">Luna ya atiende tu WhatsApp. Con tu contraseña ves cada conversación, pedido y resumen de la mañana.</span>
+    </div>
+    <div style="position:relative;display:flex;gap:28px;font-size:13px;color:#C4C4CC">
+      <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;letter-spacing:.14em;color:#A1A1AA">TU PRUEBA</span><span style="color:#F4F4F5;font-weight:500">25 sep → 2 oct</span></div>
+      <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:10.5px;letter-spacing:.14em;color:#A1A1AA">TE ACOMPAÑA</span><span style="color:#F4F4F5;font-weight:500">Asesora QA</span></div>
+    </div>
+  </section>
+
+  <section style="flex-grow:1;display:flex;align-items:center;justify-content:center">
+    <form style="width:420px;display:flex;flex-direction:column;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h1 class="d" style="margin:0;font-size:36px;font-weight:700;letter-spacing:-.02em">Crea tu contraseña</h1>
+        <span style="font-size:14px;color:#6B6B73">Para <strong style="color:#0B0B0E;font-weight:500">an***@la***.co</strong> · solo tú la vas a conocer</span>
+      </div>
+      <div class="fld">
+        <label for="p1">Contraseña nueva</label>
+        <div class="box" style="border-color:#0B0B0E;box-shadow:0 0 0 4px rgba(11,11,14,.07)">
+          <input id="p1" type="{{kind}}" value="{{pw}}" onChange="{{setPw}}" autocomplete="new-password" aria-describedby="reglas">
+          <button type="button" class="eye" onClick="{{toggle}}" aria-label="{{eyeLabel}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px" aria-hidden="true">
+          <span style="flex-grow:1;height:5px;border-radius:9px;background:{{bar1}}"></span><span style="flex-grow:1;height:5px;border-radius:9px;background:{{bar2}}"></span><span style="flex-grow:1;height:5px;border-radius:9px;background:{{bar3}}"></span>
+        </div>
+        <div id="reglas" style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+          <span class="ck" style="color:{{c1}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"></path></svg>12 caracteres o más · van {{len}}</span>
+          <span class="ck" style="color:{{c2}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"></path></svg>Una frase que recuerdes vale más que símbolos</span>
+        </div>
+      </div>
+      <div class="fld">
+        <label for="p2">Repítela</label>
+        <div class="box"><input id="p2" type="{{kind}}" value="{{pw2}}" onChange="{{setPw2}}" autocomplete="new-password"><span style="padding-right:12px;font-size:12.5px;color:{{matchColor}}">{{matchText}}</span></div>
+      </div>
+      <button type="button" aria-disabled="{{notReady}}" style="height:54px;border-radius:999px;border:0;background:{{ctaBg}};color:{{ctaFg}};font:600 15px Poppins,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">Guardar y entrar a mi panel <span aria-hidden="true">→</span></button>
+      <span style="font-size:12.5px;color:#6B6B73;text-align:center">Este enlace sirve una vez y vence el lun 28 sep · 2:58 a. m.</span>
+    </form>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { pw: 'pan caliente cada mañana', pw2: '', show: false }; }
+  renderVals() {
+    const { pw, pw2, show } = this.state;
+    const len = pw.length;
+    const phrase = pw.trim().split(/\s+/).length >= 3;
+    const level = len >= 16 && phrase ? 3 : len >= 12 ? 2 : len > 0 ? 1 : 0;
+    const on = '#0B0B0E', off = '#E4E4E7';
+    const match = pw2.length > 0 && pw2 === pw;
+    const ready = len >= 12 && match;
+    return {
+      pw, pw2, len,
+      kind: show ? 'text' : 'password',
+      eyeLabel: show ? 'Ocultar contraseña' : 'Mostrar contraseña',
+      toggle: () => this.setState({ show: !show }),
+      setPw: (e) => this.setState({ pw: e.target.value }),
+      setPw2: (e) => this.setState({ pw2: e.target.value }),
+      bar1: level >= 1 ? (level === 1 ? '#D13F42' : on) : off,
+      bar2: level >= 2 ? on : off,
+      bar3: level >= 3 ? '#1F9D5B' : off,
+      c1: len >= 12 ? '#1F6B45' : '#6B6B73',
+      c2: phrase ? '#1F6B45' : '#6B6B73',
+      matchText: pw2.length === 0 ? '' : match ? 'Coinciden' : 'Aún no coinciden',
+      matchColor: match ? '#1F6B45' : '#6B6B73',
+      notReady: ready ? 'false' : 'true',
+      ctaBg: ready ? '#D13F42' : '#EDEDF0',
+      ctaFg: ready ? '#FFFFFF' : '#5E5E66'
+    };
+  }
+}
+</script>
+</body>
+</html>

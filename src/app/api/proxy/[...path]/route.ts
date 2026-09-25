@@ -6,6 +6,8 @@ import {
   refreshSession,
 } from "@/shared/auth/auth.handlers";
 import { COOKIE_NAMES } from "@/shared/auth/auth.types";
+import { bffProblem, forwardedForHeaders } from "@/shared/auth/bff-response";
+import { clearSupportCookie, readSupportToken } from "@/shared/auth/support-session";
 import { API_ERROR_CODES, isSuspensionCode } from "@/core/api/problem";
 
 export const runtime = "nodejs";
@@ -16,6 +18,10 @@ export const runtime = "nodejs";
  * - Inyecta `Authorization: Bearer` desde la cookie HttpOnly (el browser nunca ve el token).
  * - Refresh proactivo si el access expira en ≤60s, y retry-once reactivo ante un 401
  *   del backend (token revocado por `token_version`, denylist, etc.).
+ * - Acceso de soporte: si hay `supportAccessToken`, ESE es el Bearer, sin
+ *   refresh jamás; un 401 borra solo esa cookie y responde
+ *   `auth/support_session_ended` (la pestaña va a `/auth/soporte?fin=1`).
+ * - Reenvía `X-Forwarded-For`/`X-Real-IP` del visitante (throttle por IP del backend).
  * - Devuelve status y body del backend verbatim, preservando `content-type`
  *   (incluido `application/problem+json`) y `Retry-After`.
  */
@@ -47,6 +53,11 @@ function buildForwardHeaders(req: NextRequest, token: string | null): Headers {
     const value = req.headers.get(name);
     if (value) headers.set(name, value);
   }
+  // La IP del visitante: sin ella, el throttle por IP del backend ve la del
+  // servidor de Next y cuenta a todos los usuarios como uno solo.
+  for (const [name, value] of Object.entries(forwardedForHeaders(req))) {
+    headers.set(name, value);
+  }
   if (token) headers.set("authorization", `Bearer ${token}`);
   return headers;
 }
@@ -69,11 +80,39 @@ function suspensionMessage(code: string | undefined): string {
     : "La empresa está suspendida";
 }
 
+/** Sesión de soporte: un solo intento con su token, sin refresh (regla de `support-session.ts`). */
+async function proxySupport(
+  req: NextRequest,
+  store: Awaited<ReturnType<typeof cookies>>,
+  token: string,
+  targetUrl: string,
+  requestBody: ArrayBuffer | undefined,
+): Promise<NextResponse> {
+  try {
+    const backendRes = await fetch(targetUrl, {
+      method: req.method,
+      headers: buildForwardHeaders(req, token),
+      body: requestBody,
+      cache: "no-store",
+    });
+    if (backendRes.status === 401) {
+      clearSupportCookie(store);
+      return bffProblem(401, API_ERROR_CODES.supportSessionEnded, "La sesión de soporte terminó");
+    }
+    return buildResponse(backendRes, await backendRes.arrayBuffer());
+  } catch {
+    return bffProblem(502, "client/network", "No fue posible contactar al backend");
+  }
+}
+
 async function proxy(req: NextRequest): Promise<NextResponse> {
   const store = await cookies();
   const targetUrl = buildTargetUrl(req);
   // El body solo puede leerse una vez: se retiene para el posible reintento.
   const requestBody = ["GET", "HEAD"].includes(req.method) ? undefined : await req.arrayBuffer();
+
+  const supportToken = readSupportToken(store);
+  if (supportToken) return proxySupport(req, store, supportToken, targetUrl, requestBody);
 
   let token = store.get(COOKIE_NAMES.accessToken)?.value ?? null;
 
@@ -85,15 +124,9 @@ async function proxy(req: NextRequest): Promise<NextResponse> {
       token = refreshed.tokens.access_token;
     } else if (isSuspensionCode(refreshed.code)) {
       // F15: el interceptor del cliente distingue este 403 del 401 de sesión.
-      return NextResponse.json(
-        { code: refreshed.code, message: suspensionMessage(refreshed.code) },
-        { status: 403 },
-      );
+      return bffProblem(403, refreshed.code, suspensionMessage(refreshed.code));
     } else if (!token) {
-      return NextResponse.json(
-        { code: refreshed.code, message: "Sesión no válida" },
-        { status: 401 },
-      );
+      return bffProblem(401, refreshed.code, "Sesión no válida");
     }
   }
 
@@ -116,19 +149,13 @@ async function proxy(req: NextRequest): Promise<NextResponse> {
       } else if (isSuspensionCode(refreshed.code)) {
         // F15: el 401 vino del bump de token_version por suspensión; el
         // refresh revela la causa real — propagar el 403 propio, no el 401.
-        return NextResponse.json(
-          { code: refreshed.code, message: suspensionMessage(refreshed.code) },
-          { status: 403 },
-        );
+        return bffProblem(403, refreshed.code, suspensionMessage(refreshed.code));
       }
     }
 
     return buildResponse(backendRes, await backendRes.arrayBuffer());
   } catch {
-    return NextResponse.json(
-      { code: "client/network", message: "No fue posible contactar al backend" },
-      { status: 502 },
-    );
+    return bffProblem(502, "client/network", "No fue posible contactar al backend");
   }
 }
 

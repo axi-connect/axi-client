@@ -2243,3 +2243,46 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     opacity: 0.7;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Kit de bienvenida (`/bienvenida/[token]`, módulo welcome-kit).
+ *
+ * Pieza de marca FIJA en oscuro, recreada del paquete de diseño
+ * (welcome-kit-handoff/reference/kit.html): no sigue el tema claro/oscuro del
+ * panel, así que no usa los tokens semánticos sino esta paleta propia, con
+ * alcance de clase. Los estilos de composición viven en
+ * `modules/welcome-kit/ui/welcome-kit.module.css` y las ilustraciones SVG usan
+ * estas mismas variables. Las transparencias se derivan con `color-mix`.
+ * ------------------------------------------------------------------------- */
+.welcome-kit {
+  --kit-bg: #0a0a0a;
+  --kit-black: #000000;
+  --kit-white: #ffffff;
+  --kit-cover: #07061a;
+  --kit-cover-mid: #0c0a22;
+  --kit-cover-top: #1b1540;
+  --kit-text: #fafafa;
+  --kit-soft: #e4e4e7;
+  --kit-body: #d4d4d8;
+  --kit-muted: #a1a1aa;
+  --kit-subtle: #71717a;
+  --kit-coral: #fb7185;
+  --kit-coral-hover: #fda4af;
+  --kit-coral-pale: #ffe4e6;
+  --kit-coral-mist: #fff1f2;
+  --kit-coral-ink: #e65759;
+  --kit-violet: #a78bfa;
+  --kit-violet-soft: #c4b5fd;
+  --kit-violet-strong: #8b6cf0;
+  --kit-violet-deep: #6d4ed6;
+  --kit-violet-night: #5b3db8;
+  --kit-violet-mist: #ede9fe;
+  --kit-amber: #fbbf24;
+  --kit-track-off: #27272a;
+  --kit-window: #0f0e17;
+  --kit-field: #17151f;
+  --kit-card: #141220;
+  --kit-pill: #f4f4f5;
+  --kit-pill-ink: #09090b;
+  --kit-rule: color-mix(in srgb, var(--kit-white) 12%, transparent);
+}

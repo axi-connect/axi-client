@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { http } from "@/core/services/http";
-import { isHttpError, isSuspensionCode } from "@/core/api/problem";
+import { API_ERROR_CODES, isHttpError, isSuspensionCode } from "@/core/api/problem";
 import { clearSessionCookies, refreshSession } from "@/shared/auth/auth.handlers";
+import { clearSupportCookie } from "@/shared/auth/support-session";
 import type { AuthUser, SessionResponse } from "@/shared/auth/auth.types";
 
 /**
@@ -36,6 +37,12 @@ export async function GET() {
 
     const result = await refreshSession(store);
     if (!result.ok) {
+      // Acceso de soporte: sin refresh posible. Se borra SOLO su cookie y la
+      // pestaña va a «La sesión de soporte terminó».
+      if (result.code === API_ERROR_CODES.supportSessionEnded) {
+        clearSupportCookie(store);
+        return NextResponse.json<SessionResponse>({ isAuthenticated: false, code: result.code });
+      }
       if (isSuspensionCode(result.code)) return suspendedResponse(store, result.code);
       return NextResponse.json<SessionResponse>({ isAuthenticated: false });
     }
