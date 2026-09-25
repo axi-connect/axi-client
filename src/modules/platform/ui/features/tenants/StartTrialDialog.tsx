@@ -49,7 +49,9 @@ export function StartTrialDialog({ open, onOpenChange, tenant }: StartTrialDialo
     if (!validDays) return;
     setSubmitError(null);
     try {
-      const result = await startTrial.mutateAsync({ id: tenant.id, body: { days } });
+      // `extend` explícito: este diálogo suma días al vencimiento vigente. El
+      // reinicio desde hoy (`restart`) es de «Preparar entrega».
+      const result = await startTrial.mutateAsync({ id: tenant.id, body: { days, mode: "extend" } });
       showAlert({
         tone: "success",
         title: extending ? "Prueba extendida" : "Prueba iniciada",

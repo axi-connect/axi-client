@@ -81,7 +81,7 @@ describe("hooks de tenants", () => {
     const { result } = renderHook(() => useStartTrial(), { wrapper });
 
     await waitFor(async () => {
-      const started = await result.current.mutateAsync({ id: "t-2", body: { days: 7 } });
+      const started = await result.current.mutateAsync({ id: "t-2", body: { days: 7, mode: "extend" } });
       expect(started.trial_ends_at).toBe("2026-08-10T15:00:00Z");
     });
 
