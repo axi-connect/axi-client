@@ -125,6 +125,17 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],
       },
+      // Páginas con un token de un solo uso (entrega_bienvenida_plan.md, F4): el
+      // kit lo lleva en el path y las de contraseña en el `#`. `no-referrer`
+      // impide que un clic hacia fuera (el WhatsApp del asesor, una fuente, el
+      // panel) lo arrastre en el `Referer`. Van DESPUÉS de la regla general a
+      // propósito: cuando dos reglas fijan la misma cabecera, gana la última.
+      ...["/bienvenida/:path*", "/auth/crear-contrasena", "/auth/restablecer", "/auth/olvide-contrasena"].map(
+        (source) => ({
+          source,
+          headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+        }),
+      ),
     ];
   },
 
