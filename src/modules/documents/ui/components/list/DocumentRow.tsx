@@ -211,10 +211,10 @@ export function DocumentRow({
                   <span>
                     <span className="block text-sm font-medium">Regenerar</span>
                     <span className="block text-xs text-muted-foreground">
-                      {/* Dueño 2026-09-24: regenerar relee el pedido y el plan */}
+                      {/* Dueño 2026-09-24 + QA R4-04: regenerar = emitirlo de nuevo hoy */}
                       {document.tracks_subject_changes === false
                         ? "Mismos datos, número nuevo"
-                        : "Con los datos de hoy, número nuevo"}
+                        : "Datos y plantilla de hoy, número nuevo"}
                     </span>
                   </span>
                 </DropdownMenuItem>
@@ -286,7 +286,10 @@ export function DocumentRow({
             {regenerable ? (
               <>
                 Regenerar lo emite de nuevo con{" "}
-                <b className="font-medium text-foreground">los datos de hoy</b>.
+                <b className="font-medium text-foreground">
+                  los datos y la plantilla de hoy
+                </b>
+                .
               </>
             ) : null}
           </span>
