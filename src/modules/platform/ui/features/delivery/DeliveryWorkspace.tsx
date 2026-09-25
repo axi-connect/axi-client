@@ -10,10 +10,10 @@
  * pierde al cambiar de pestaña. Lo que decide si se puede enviar son los
  * bloqueos del servidor; la validación local solo cuida los formatos.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFormContext, useFormState, useWatch, type UseFormReturn } from "react-hook-form";
-import { AlertTriangle, Check, CircleAlert, History, Info, LoaderCircle, Lock, Save, Send } from "lucide-react";
+import { AlertTriangle, Check, History, Info, LoaderCircle, Lock, Save, Send } from "lucide-react";
 import { isHttpError } from "@/core/api/problem";
 import { applyServerValidation, errorMessage } from "@/core/lib/error-messages";
 import { formatMoney } from "@/core/lib/format";
@@ -21,12 +21,12 @@ import { formatDayTime } from "../../../domain/dates";
 import { cn } from "@/core/lib/utils";
 import { useAlert } from "@/core/providers/alert-provider";
 import { DynamicForm } from "@/shared/components/features/dynamic-form";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Callout } from "@/shared/components/ui/callout";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import {
   blockedSteps,
   createAttemptKeyHolder,
@@ -35,7 +35,6 @@ import {
   deliveryIssues,
   formatTrialRange,
   formatZonedDay,
-  isDeliveryStep,
   needsConfirmation,
   NO_RESTART_BLOCKERS,
   restartShortensTrial,
@@ -50,7 +49,7 @@ import {
 } from "../../../domain/delivery";
 import { canSendDelivery } from "../../../domain/platform-role";
 import { usePlatformRole } from "../../../infrastructure/auth/use-platform-role";
-import { calendarDaysUntil, formatClockTime, formatInstant } from "@/modules/welcome-kit/domain/formatters";
+import { calendarDaysUntil, formatClockTime, formatInstant, formatInstantTime } from "@/modules/welcome-kit/domain/formatters";
 import { kitDataFromPreview } from "../../../infrastructure/api/delivery-kit.mapper";
 import type {
   DeliveryContextWire,
@@ -80,6 +79,9 @@ import {
 } from "./delivery-form.config";
 
 const FORM_ID = "delivery-form";
+
+/** Pausa tras el último cambio antes de guardar el borrador en este navegador. */
+const DRAFT_AUTOSAVE_MS = 800;
 
 /**
  * El valor de un `datetime-local` escrito en es-CO («lun 28 sep · 10:00 a. m.»):
@@ -244,20 +246,86 @@ function ReadonlyField({ id, label, value, hint }: { id: string; label: string; 
   );
 }
 
-function ReviewRow({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+/**
+ * Un resumen en piezas separadas por «·»: cada pieza no se parte, así la línea
+ * se corta entre piezas y nunca a mitad de una fecha o un monto.
+ */
+function SummaryParts({ parts }: { parts: readonly React.ReactNode[] }) {
+  const shown = parts.filter((part) => part !== null && part !== undefined && part !== "");
   return (
-    <li className="flex items-start gap-2 py-2 text-sm">
-      {ok ? (
-        <Check aria-label="Listo" className="mt-0.5 size-4 shrink-0 text-success" />
-      ) : (
-        <CircleAlert aria-label="Por resolver" className="mt-0.5 size-4 shrink-0 text-warning" />
-      )}
-      <span className="min-w-0">{children}</span>
-    </li>
+    <>
+      {shown.map((part, index) => (
+        <Fragment key={index}>
+          {index > 0 ? "\u00a0· " : null}
+          <span className="whitespace-nowrap">{part}</span>
+        </Fragment>
+      ))}
+    </>
   );
 }
 
-function IssueList({
+/**
+ * Un paso de la entrega como tarjeta plegable: cerrado muestra su resumen y
+ * «Editar»; abierto, sus campos. Toda la cabecera es el botón (aria-expanded).
+ */
+function StepCard({
+  index,
+  title,
+  summary,
+  state,
+  open,
+  onToggle,
+  children,
+}: {
+  index: number;
+  title: string;
+  summary: React.ReactNode;
+  state: "done" | "blocked" | "pending";
+  open: boolean;
+  onToggle: () => void;
+  children?: React.ReactNode;
+}) {
+  const panelId = `delivery-step-${index}`;
+  return (
+    <section className={cn("rounded-3xl border bg-card transition-shadow", open ? "border-foreground/15 shadow-[var(--shadow-float)]" : "border-border")}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+            state === "done" && !open && "bg-foreground text-background",
+            state === "blocked" && "border-2 border-warning text-foreground",
+            (state === "pending" || (state === "done" && open)) && "border-2 border-brand text-foreground",
+          )}
+        >
+          {state === "done" && !open ? <Check className="size-4" strokeWidth={2.5} /> : state === "blocked" ? "!" : index}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">
+            {title}
+            {state === "blocked" ? <span className="sr-only"> (por resolver)</span> : null}
+          </span>
+          {open ? null : <span className="mt-0.5 block text-sm text-pretty text-muted-foreground">{summary}</span>}
+        </span>
+        <span className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium">{open ? "Listo" : "Editar"}</span>
+      </button>
+      {open ? (
+        <div id={panelId} className="space-y-5 px-5 pb-5 sm:pl-[4.25rem]">
+          {children}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/** «Antes de enviar»: lo que bloquea, con su acción, o la confirmación de que todo está listo. */
+function BeforeSendCard({
   issues,
   onGo,
   onSupport,
@@ -268,42 +336,52 @@ function IssueList({
   onSupport?: (issue: DeliveryIssue) => void;
 }) {
   const blockers = issues.filter((issue) => issue.kind === "blocker");
-  if (blockers.length === 0) return null;
   return (
-    <div className="space-y-2 rounded-xl border border-warning/35 bg-warning/5 p-3">
-      <p className="text-sm font-medium">Si falta algo, el envío se bloquea</p>
-      <ul className="space-y-1.5">
-        {blockers.map((issue) => (
-          <li key={issue.code} className="flex items-start gap-2 text-sm">
-            <AlertTriangle aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-warning" />
-            <span className="min-w-0">
-              {issue.message}.{" "}
+    <section aria-labelledby="before-send-title" className="space-y-4 rounded-3xl border border-border bg-card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 id="before-send-title" className="font-sans text-sm font-semibold">
+          Antes de enviar
+        </h3>
+        <span className="text-xs text-muted-foreground">
+          {blockers.length === 0 ? "Nada bloquea el envío" : blockers.length === 1 ? "Falta 1 cosa" : `Faltan ${blockers.length} cosas`}
+        </span>
+      </div>
+      {blockers.length > 0 ? (
+        <ul className="divide-y divide-warning/25 overflow-hidden rounded-2xl border border-warning/40 bg-warning/8 dark:bg-warning/10">
+          {blockers.map((issue) => (
+            <li key={issue.code} className="flex gap-3 px-4 py-3.5">
+              <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-warning" />
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-2.5">
+              <span className="text-sm text-pretty">{issue.message}</span>
               {issue.support && onSupport ? (
-                <button
-                  type="button"
-                  onClick={() => onSupport(issue)}
-                  className="font-medium underline underline-offset-2"
-                >
+                <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => onSupport(issue)}>
                   Configurar como soporte
-                </button>
+                </Button>
               ) : issue.fix ? (
-                <Link href={issue.fix.href} className="font-medium underline underline-offset-2">
-                  {issue.fix.label}
-                </Link>
+                <Button asChild variant="outline" size="sm" className="shrink-0">
+                  <Link href={issue.fix.href}>{issue.fix.label}</Link>
+                </Button>
               ) : issue.step !== "review" ? (
-                <button
-                  type="button"
-                  onClick={() => onGo(issue.step)}
-                  className="font-medium underline underline-offset-2"
-                >
+                <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => onGo(issue.step)}>
                   Ir al paso
-                </button>
+                </Button>
               ) : null}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Alert variant="success">
+          <Check aria-hidden="true" />
+          <AlertDescription>Oferta, prueba, citas, correo y datos del kit listos para enviar.</AlertDescription>
+        </Alert>
+      )}
+      <p className="text-xs text-pretty text-muted-foreground">
+        Al enviar se guarda la oferta, se reinicia la prueba, se emite el enlace de un solo uso, se crea el kit y salen
+        dos correos: uno al dueño y una copia sin enlace al equipo. Si algo falla, reintentar completa lo que faltó y
+        nunca manda dos invitaciones.
+      </p>
+    </section>
   );
 }
 
@@ -331,7 +409,10 @@ export function DeliveryWorkspace({
     () => stored?.values ?? formValuesFromContext(context, catalog),
   );
   const [values, setValues] = useState<DeliveryFormValues>(defaults);
-  const [step, setStep] = useState<DeliveryStepId>("offer");
+  // Todo llega precargado del contexto: los pasos arrancan plegados en su
+  // resumen y se abre el que haga falta (un bloqueo, un error al enviar).
+  const [step, setStep] = useState<DeliveryStepId>("review");
+  const [savedAt, setSavedAt] = useState<string | null>(stored?.saved_at ?? null);
 
   // Una clave por intento, estable al reintentar; la de la entrega a medias si la hay.
   const [attemptKey] = useState(() => createAttemptKeyHolder());
@@ -506,20 +587,28 @@ export function DeliveryWorkspace({
     });
   }
 
-  function saveDraft() {
-    if (writeStoredDraft(storageKey, values)) {
-      setStored({ saved_at: new Date().toISOString(), values });
-      showAlert({ tone: "success", title: "Borrador guardado", description: "Queda en este navegador para este tenant.", autoCloseMs: 4000 });
-    } else {
-      showAlert({ tone: "error", title: "No pudimos guardar el borrador", description: "Este navegador no permite guardar datos del sitio." });
-    }
-  }
+  // El borrador se guarda solo, en este navegador, una pausa después de cada
+  // cambio (antes era un botón). Lo que llega del contexto no cuenta como cambio.
+  const savedJson = useRef(JSON.stringify(defaults));
+  useEffect(() => {
+    const json = JSON.stringify(values);
+    if (json === savedJson.current) return;
+    const timer = setTimeout(() => {
+      if (writeStoredDraft(storageKey, values)) {
+        savedJson.current = json;
+        setSavedAt(new Date().toISOString());
+      }
+    }, DRAFT_AUTOSAVE_MS);
+    return () => clearTimeout(timer);
+  }, [values, storageKey]);
 
   function discardDraft() {
     clearStoredDraft(storageKey);
     setStored(null);
+    setSavedAt(null);
     const fresh = formValuesFromContext(context, catalog);
     lastValuesJson.current = JSON.stringify(fresh);
+    savedJson.current = JSON.stringify(fresh);
     setDefaults(fresh);
     setValues(fresh);
   }
@@ -582,172 +671,172 @@ export function DeliveryWorkspace({
     ),
   };
 
-  const review = (
-    <div className="space-y-4">
-      <ul className="divide-y divide-border">
-        <ReviewRow ok={checks.find((c) => c.id === "offer")?.state !== "blocked"}>
-          Oferta:{" "}
-          {quoteData
-            ? `${quoteData.plan_name}${quoteData.volume_tier_label ? ` · ${quoteData.volume_tier_label}` : ""} · ${formatMoney(quoteData.amount_cents, quoteData.currency)}${quoteData.promotion_name ? ` ${quoteData.promotion_name.toLowerCase()}` : ""}`
-            : "sin cotizar"}
-        </ReviewRow>
-        <ReviewRow ok={checks.find((c) => c.id === "trial")?.state !== "blocked"}>
-          Prueba:{" "}
-          {values.restart_trial
-            ? `${formatZonedDay(restart.starts_at, tz)} → ${formatZonedDay(restart.ends_at, tz)}`
-            : "sin reinicio"}
-          {conversations !== null ? ` · ${conversations.toLocaleString("es-CO")} conversaciones` : ""}
-        </ReviewRow>
-        <ReviewRow ok={checks.find((c) => c.id === "kit")?.state !== "blocked"}>
-          {preview.data
-            ? `Agente «${preview.data.kit_data.agent.name ?? "sin nombre"}» · ${preview.data.kit_data.catalog.product_count} productos · ${preview.data.kit_data.payment_methods.length} medios de pago · ${preview.data.kit_data.team_hours ? `horario ${preview.data.kit_data.team_hours}` : "sin horario"}`
-            : context.agent
-              ? `Agente «${context.agent.name}»`
-              : "Sin agente"}
-        </ReviewRow>
-        <ReviewRow ok={checks.find((c) => c.id === "calls")?.state === "ok"}>
-          Citas:{" "}
-          {preview.data
-            ? `${preview.data.kit_data.calls.day2.date_label} y ${preview.data.kit_data.calls.day5.date_label}`
-            : "por definir"}
-        </ReviewRow>
-        <ReviewRow ok={checks.find((c) => c.id === "mail")?.state !== "blocked"}>
-          Para {owner?.email ?? "—"} · firma {values.advisor.name.trim().split(/\s+/)[0] || "—"}
-          <br />
-          {/* Las direcciones, no un número: lo que se envía se ve (QA H2-3). */}
-          Copia: {values.cc.length > 0 ? values.cc.join(", ") : "sin copia al equipo"}
-        </ReviewRow>
-      </ul>
-      <IssueList issues={issues} onGo={setStep} onSupport={canEnterSupport ? setSupportIssue : undefined} />
-      <p className="text-sm text-muted-foreground">
-        Al enviar: se guarda la oferta, se reinicia la prueba, se emite el enlace de un solo uso, se crea el kit y se
-        encolan dos correos, uno al dueño y una copia sin enlace al equipo. Si algo falla, reintentar completa lo que
-        faltó y nunca manda dos invitaciones.
-      </p>
-    </div>
-  );
+  // ------------------------------------------------ resúmenes de los pasos plegados
+  const stepState = (id: DeliveryStepId): "done" | "blocked" | "pending" =>
+    blocked.has(id) ? "blocked" : previewReady ? "done" : "pending";
+  const firstName = values.advisor.name.trim().split(/\s+/)[0] ?? "";
+  const calls = [
+    localEcho(values.call_day2_at, tz) ? `Día 2: ${localEcho(values.call_day2_at, tz)}` : null,
+    localEcho(values.call_day5_at, tz) ? `Día 5: ${localEcho(values.call_day5_at, tz)}` : null,
+  ].filter((part): part is string => part !== null);
+  const summaries: Record<"offer" | "trial" | "mail", React.ReactNode> = {
+    offer: quoteData ? (
+      <SummaryParts
+        parts={[
+          quoteData.plan_name,
+          quoteData.volume_tier_label,
+          values.offer.billing_period === "annual" ? "anual" : "mensual",
+          <strong key="price" className="font-medium text-foreground tabular-nums">
+            {formatMoney(quoteData.amount_cents, quoteData.currency)}
+          </strong>,
+          quoteData.promotion_name,
+        ]}
+      />
+    ) : quote.isFetching ? (
+      "Calculando el precio…"
+    ) : (
+      "Sin cotizar"
+    ),
+    trial: (
+      <>
+        <SummaryParts
+          parts={[
+            values.restart_trial ? "Reinicia hoy" : "Sin reinicio",
+            values.restart_trial ? `${formatZonedDay(restart.starts_at, tz)} → ${formatZonedDay(restart.ends_at, tz)}` : null,
+            conversations !== null ? `${conversations.toLocaleString("es-CO")} conversaciones` : null,
+          ]}
+        />
+        <span className="block">{calls.length > 0 ? <SummaryParts parts={calls} /> : "Faltan las citas"}</span>
+      </>
+    ),
+    mail: (
+      <SummaryParts
+        parts={[
+          `Para ${owner ? owner.name : "—"}`,
+          values.cc.length === 0 ? "sin copia al equipo" : values.cc.length === 1 ? "1 copia al equipo" : `${values.cc.length} copias al equipo`,
+          firstName ? `firma ${firstName}` : "sin firma",
+        ]}
+      />
+    ),
+  };
 
-  const checkList = (
-    <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs" aria-label="Qué falta">
-        {checks.map((check) => (
-          <li key={check.id}>
-            <button
-              type="button"
-              onClick={() => setStep(check.step)}
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full font-medium focus-visible:outline-2 focus-visible:outline-ring",
-                check.state === "ok" ? "text-success" : check.state === "warn" ? "text-warning" : "text-destructive",
-              )}
-            >
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
-              {check.label}
-              <span className="sr-only">
-                {check.state === "ok" ? ": listo" : check.state === "warn" ? ": con un aviso" : ": por resolver"}
-              </span>
-            </button>
-          </li>
-        ))}
-        {blockerCount > 0 ? (
-          <li>
-            <button
-              type="button"
-              onClick={() => setStep("review")}
-              className="font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              Revisa el paso 4
-            </button>
-          </li>
-        ) : null}
-      </ul>
-  );
+  // ------------------------------------------------ la barra de envío
+  const readyGroups = checks.filter((check) => check.state !== "blocked").length;
+  const missing = checks.filter((check) => check.state === "blocked").map((check) => check.label.toLowerCase());
+  const dockTitle = canSend
+    ? "Lista para enviar"
+    : !roleAllowed
+      ? "Solo lectura"
+      : !previewReady
+        ? "Revisando la entrega…"
+        : "Casi lista";
+  const dockDetail = canSend
+    ? "Todo en orden. Revisa la vista previa y envía."
+    : !roleAllowed
+      ? "Tu rol puede revisar la entrega, pero no enviarla."
+      : !previewReady
+        ? "Esperando la vista previa del correo."
+        : `Falta: ${missing.join(", ")}`;
 
   // ------------------------------------------------ render
   const currentTrialEnds = context.trial.trial_ends_at;
   // Días de calendario en la zona del tenant (QA-8), no bloques de 24 h.
   const daysLeft = currentTrialEnds ? Math.max(0, calendarDaysUntil(currentTrialEnds, tz) ?? 0) : null;
+  const toggle = (id: DeliveryStepId) => setStep((current) => (current === id ? "review" : id));
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Preparar entrega</h2>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold tracking-tight">Preparar entrega</h2>
           <p className="text-sm text-muted-foreground">
-            Salta a cualquier paso: la barra de abajo dice qué falta.
+            Cada paso llega precargado. Abre el que quieras cambiar; la vista previa se actualiza sola.
           </p>
         </div>
-        {daysLeft !== null && context.trial.status === "trial" ? (
-          <Badge variant="outline" className="tabular-nums">
-            Prueba actual: {daysLeft === 0 ? "termina hoy" : `vence en ${daysLeft === 1 ? "1 día" : `${daysLeft} días`}`}
-          </Badge>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5" aria-live="polite">
+            {savedAt ? (
+              <>
+                <Check aria-hidden="true" className="size-3.5 text-success" />
+                Borrador guardado · {formatInstantTime(savedAt, tz)}
+              </>
+            ) : (
+              <>
+                <Save aria-hidden="true" className="size-3.5" />
+                El borrador se guarda solo en este navegador
+              </>
+            )}
+          </span>
+          {daysLeft !== null && context.trial.status === "trial" ? (
+            <span className="tabular-nums">
+              Prueba actual: {daysLeft === 0 ? "termina hoy" : `vence en ${daysLeft === 1 ? "1 día" : `${daysLeft} días`}`}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {resumable ? (
-        <Callout tone="warn" icon={History}>
-          Hay una entrega a medias del {formatDayTime(resumable.created_at, tz)}. Al enviar se retoma con la misma
-          clave: completa lo que faltó y nunca manda dos invitaciones.
-        </Callout>
+        <Alert variant="warning">
+          <History aria-hidden="true" />
+          <AlertDescription>
+            Hay una entrega a medias del {formatDayTime(resumable.created_at, tz)}. Al enviar se retoma con la misma
+            clave: completa lo que faltó y nunca manda dos invitaciones.
+          </AlertDescription>
+        </Alert>
       ) : null}
       {stored ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <Callout tone="neutral" icon={Save} className="flex-1">
-            Retomaste tu borrador del {formatDayTime(stored.saved_at, tz)}.
-          </Callout>
-          <Button type="button" variant="ghost" size="sm" onClick={discardDraft}>
-            Descartar borrador
-          </Button>
-        </div>
+        <Alert>
+          <Save aria-hidden="true" />
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+            <span>Retomaste tu borrador del {formatDayTime(stored.saved_at, tz)}.</span>
+            <Button type="button" variant="ghost" size="sm" onClick={discardDraft}>
+              Descartar borrador
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <section aria-label="Pasos de la entrega" className="min-w-0 rounded-2xl border bg-card p-4 sm:p-5">
-          <Tabs value={step} onValueChange={(next) => isDeliveryStep(next) && setStep(next)} className="gap-5">
-            {/* `boxed` y no `pill`: la pastilla animada solo se mueve en horizontal y
-                la fila de pasos tiene que poder partirse en dos (a 1440 px se cortaba
-                «Revisar y enviar», QA H2-8). */}
-            <TabsList aria-label="Pasos" variant="boxed" className="h-auto w-full flex-wrap gap-1">
-              {DELIVERY_STEPS.map((item, index) => {
-                const isBlocked = blocked.has(item.id);
-                const done = !isBlocked && item.id !== "review" && previewReady;
+      <div className="grid items-start gap-6 lg:grid-cols-2 [&>*]:min-w-0">
+        <DynamicForm<DeliveryFormValues>
+          id={FORM_ID}
+          schema={deliveryFormSchema}
+          defaultValues={defaults}
+          fields={fields}
+          mode="onBlur"
+          columns={{ base: 1, md: 2 }}
+          renderFieldsWrapper={(grid) => (
+            <div aria-label="Pasos de la entrega" role="group" className="min-w-0 space-y-3">
+              {DELIVERY_STEPS.filter((item) => item.id !== "review").map((item, index) => {
+                const id = item.id as "offer" | "trial" | "mail";
+                const open = step === id;
                 return (
-                  <TabsTrigger key={item.id} value={item.id} className="h-8 min-w-fit">
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        "inline-flex size-5 items-center justify-center rounded-full text-[11px] font-semibold",
-                        isBlocked ? "bg-warning/15 text-warning" : done ? "bg-success/15 text-success" : "bg-muted",
-                      )}
-                    >
-                      {isBlocked ? "!" : done ? <Check className="size-3" /> : index + 1}
-                    </span>
-                    {item.label}
-                    {isBlocked ? <span className="sr-only"> (por resolver)</span> : null}
-                  </TabsTrigger>
+                  <StepCard
+                    key={id}
+                    index={index + 1}
+                    title={item.label}
+                    summary={summaries[id]}
+                    state={stepState(id)}
+                    open={open}
+                    onToggle={() => toggle(id)}
+                  >
+                    {open ? (
+                      <>
+                        {stepExtras.before}
+                        {grid}
+                        {stepExtras.after}
+                      </>
+                    ) : null}
+                  </StepCard>
                 );
               })}
-            </TabsList>
+              <BeforeSendCard issues={issues} onGo={setStep} onSupport={canEnterSupport ? setSupportIssue : undefined} />
+              <FormObserver onValues={onValues} onInvalidSubmit={onInvalidSubmit} />
+            </div>
+          )}
+          onSubmit={onSubmit}
+        />
 
-            <DynamicForm<DeliveryFormValues>
-              id={FORM_ID}
-              schema={deliveryFormSchema}
-              defaultValues={defaults}
-              fields={fields}
-              mode="onBlur"
-              columns={{ base: 1, md: 2 }}
-              renderFieldsWrapper={(grid) => (
-                <TabsContent value={step} className="space-y-5">
-                  {stepExtras.before}
-                  {step === "review" ? review : grid}
-                  {stepExtras.after}
-                  <FormObserver onValues={onValues} onInvalidSubmit={onInvalidSubmit} />
-                </TabsContent>
-              )}
-              onSubmit={onSubmit}
-            />
-          </Tabs>
-        </section>
-
-        <div className="min-w-0 lg:sticky lg:top-4">
+        <div className="min-w-0 lg:sticky lg:top-20">
           <DeliveryPreviewPanel
             ownerHtml={preview.data?.email_html_owner ?? null}
             teamHtml={preview.data?.email_html_team ?? null}
@@ -761,57 +850,75 @@ export function DeliveryWorkspace({
       </div>
 
       {!roleAllowed ? (
-        <Callout tone="neutral" icon={Lock}>
-          Con tu rol (soporte) puedes revisar la entrega y su vista previa. Enviar la bienvenida, reenviarla y guardar la
-          oferta es de super_admin.
-        </Callout>
+        <Alert>
+          <Lock aria-hidden="true" />
+          <AlertDescription>
+            Con tu rol (soporte) puedes revisar la entrega y su vista previa. Enviar la bienvenida, reenviarla y guardar
+            la oferta es de super_admin.
+          </AlertDescription>
+        </Alert>
       ) : null}
 
+      {/* La barra de envío: isla de tinta pegada abajo, con el progreso por tramos
+          (uno por grupo de la revisión, cada uno lleva a su paso) y «Enviar». */}
       <footer
         aria-label="Estado del envío"
-        className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-2 rounded-2xl border bg-background/95 px-3 py-2 shadow-[var(--shadow-float)] backdrop-blur sm:gap-3 sm:px-4 sm:py-3"
+        className="sticky bottom-3 z-10 mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-4 gap-y-3 rounded-3xl bg-foreground p-3 pl-5 text-background shadow-[var(--shadow-overlay)] sm:flex-nowrap sm:rounded-full dark:border dark:border-border dark:bg-card dark:text-foreground"
       >
-        {/* Escritorio: la fila de puntos. Celular: un resumen plegable, para que la
-            barra fija no se coma la pantalla (QA H2-8). */}
-        <div className="hidden min-w-0 flex-1 sm:block">{checkList}</div>
-        <details className="min-w-0 flex-1 text-xs sm:hidden">
-          <summary className="cursor-pointer font-medium">
-            {blockerCount === 0 ? "Todo listo" : blockerCount === 1 ? "1 cosa por resolver" : `${blockerCount} cosas por resolver`}
-          </summary>
-          <div className="mt-2 space-y-2">
-            {checkList}
-            <Button type="button" variant="ghost" size="sm" onClick={saveDraft}>
-              <Save aria-hidden="true" />
-              Guardar borrador
-            </Button>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-semibold whitespace-nowrap">{dockTitle}</span>
+            <span className="text-xs tabular-nums opacity-70">
+              {readyGroups}/{checks.length}
+            </span>
           </div>
-        </details>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="ghost" onClick={saveDraft} className="hidden sm:inline-flex">
-            <Save aria-hidden="true" />
-            Guardar borrador
-          </Button>
-          <Button
-            type="submit"
-            form={FORM_ID}
-            disabled={create.isPending || !roleAllowed}
-            aria-disabled={!canSend}
-            aria-describedby="delivery-send-state"
-            className={cn(!canSend && !create.isPending && "opacity-60")}
-          >
-            {create.isPending ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Send aria-hidden="true" />}
-            {create.isPending ? "Enviando…" : "Enviar bienvenida"}
-          </Button>
-          <span id="delivery-send-state" className="sr-only" aria-live="polite">
-            {canSend
-              ? "Todo listo para enviar."
-              : !roleAllowed
-                ? "Tu rol puede revisar la entrega, pero no enviarla."
-                : !previewReady
+          <ul className="flex gap-1" aria-label="Qué falta">
+            {checks.map((check) => (
+              <li key={check.id} className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => setStep(check.step)}
+                  title={check.label}
+                  className="block h-1.5 w-full rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "block h-full rounded-full",
+                      check.state === "ok" ? "bg-current" : check.state === "warn" ? "bg-warning" : "bg-current/20",
+                    )}
+                  />
+                  <span className="sr-only">
+                    {check.label}
+                    {check.state === "ok" ? ": listo" : check.state === "warn" ? ": con un aviso" : ": por resolver"}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="truncate text-xs opacity-70">{dockDetail}</p>
+        </div>
+        <Button
+          type="submit"
+          form={FORM_ID}
+          size="lg"
+          disabled={create.isPending || !roleAllowed}
+          aria-disabled={!canSend}
+          aria-describedby="delivery-send-state"
+          className={cn("w-full shrink-0 rounded-full sm:w-auto", !canSend && !create.isPending && "opacity-60")}
+        >
+          {create.isPending ? <LoaderCircle aria-hidden="true" className="animate-spin" /> : <Send aria-hidden="true" />}
+          {create.isPending ? "Enviando…" : "Enviar bienvenida"}
+        </Button>
+        <span id="delivery-send-state" className="sr-only" aria-live="polite">
+          {canSend
+            ? "Todo listo para enviar."
+            : !roleAllowed
+              ? "Tu rol puede revisar la entrega, pero no enviarla."
+              : !previewReady
                 ? "Esperando la vista previa."
                 : `${blockerCount === 1 ? "Falta 1 cosa" : `Faltan ${blockerCount} cosas`} por resolver.`}
-          </span>
-        </div>
+        </span>
       </footer>
 
       {supportIssue ? (
