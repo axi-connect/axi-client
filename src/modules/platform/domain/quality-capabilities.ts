@@ -35,6 +35,47 @@ export function sortCapabilities<T extends Pick<Capability, "status" | "label">>
   );
 }
 
+/**
+ * Familias del tablero (quality_premium_plan F3). Los códigos son los del
+ * `CAPABILITY_CATALOG` del servidor; uno nuevo que aún no esté aquí cae en
+ * «Otras» en vez de desaparecer.
+ */
+export const CAPABILITY_FAMILIES: readonly { key: string; label: string; codes: readonly string[] }[] = [
+  { key: "sell", label: "Vender", codes: ["advising", "quote_order", "closing", "negotiation", "payments", "delivery", "promotions"] },
+  { key: "understand", label: "Entender y encontrar", codes: ["intent", "catalog_search", "recognition", "media"] },
+  { key: "follow", label: "Datos y seguimiento", codes: ["contact_capture", "crm_journey", "scheduling", "escalation"] },
+  { key: "care", label: "Cuidado", codes: ["security", "style", "performance"] },
+];
+
+export type CapabilityGroup<T> = { key: string; label: string; items: T[] };
+
+/** Agrupa por familia (orden del catálogo de familias) y ordena cada grupo con `sortCapabilities`. */
+export function groupCapabilities<T extends Pick<Capability, "code" | "status" | "label">>(capabilities: readonly T[]): CapabilityGroup<T>[] {
+  const known = new Set(CAPABILITY_FAMILIES.flatMap((family) => family.codes));
+  const groups = CAPABILITY_FAMILIES.map((family) => ({
+    key: family.key,
+    label: family.label,
+    items: sortCapabilities(capabilities.filter((capability) => family.codes.includes(capability.code))),
+  }));
+  const rest = sortCapabilities(capabilities.filter((capability) => !known.has(capability.code)));
+  if (rest.length > 0) groups.push({ key: "other", label: "Otras", items: rest });
+  return groups.filter((group) => group.items.length > 0);
+}
+
+/**
+ * La capacidad que más urge (isla del tablero): la fallida con peor cifra; si
+ * no hay, la de alerta con peor cifra; si todo pasa o nada se probó, null.
+ */
+export function mostUrgentCapability<T extends Pick<Capability, "status" | "metric_value" | "label">>(capabilities: readonly T[]): T | null {
+  for (const status of ["fail", "warn"] as const) {
+    const candidates = capabilities
+      .filter((capability) => capability.status === status)
+      .sort((a, b) => (a.metric_value ?? 1) - (b.metric_value ?? 1) || a.label.localeCompare(b.label, "es"));
+    if (candidates.length > 0) return candidates[0];
+  }
+  return null;
+}
+
 /** «0,91 · Recall@k (probe)», «96 % · Checks aprobados» o «—». */
 export function capabilityMetricText(capability: Pick<Capability, "metric_label" | "metric_value" | "source">): string {
   if (capability.metric_value === null) return "—";

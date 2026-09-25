@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { cn } from "@/core/lib/utils";
 import { Button } from "@/shared/components/ui/button";
+import { SegmentedControl } from "@/shared/components/ui/segmented";
 import { TableSkeleton } from "@/shared/components/features/loading";
 import BasicPagination from "@/shared/components/ui/pagination";
 import {
@@ -25,6 +26,7 @@ import { useRunsQuery } from "../../../../infrastructure/api/hooks/use-quality-r
 import { EmptyState } from "../../../components/EmptyState";
 import { ProblemAlert } from "../../../components/ProblemAlert";
 import { ALL_TENANTS, TenantSelect } from "../../../components/TenantSelect";
+import { RunsOverview } from "./RunsOverview";
 import { RunsTable } from "./RunsTable";
 
 const PAGE_SIZE = 25;
@@ -60,8 +62,8 @@ export function RunsView() {
   const hasFilters = tenantFilter !== ALL_TENANTS || kindFilter !== ALL || statusFilter !== ALL;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <TenantSelect
             value={tenantFilter}
@@ -73,23 +75,20 @@ export function RunsView() {
             ariaLabel="Filtrar por tenant"
           />
 
-          <Select
+          <SegmentedControl<string>
+            label="Filtrar por tipo"
             value={kindFilter}
             onValueChange={(value) => {
               setKindFilter(value);
               setPage(1);
             }}
-          >
-            <SelectTrigger className="w-32" aria-label="Filtrar por tipo">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>Todo tipo</SelectItem>
-              <SelectItem value="qa">QA</SelectItem>
-              <SelectItem value="stress">Estrés</SelectItem>
-              <SelectItem value="probe">Probe</SelectItem>
-            </SelectContent>
-          </Select>
+            items={[
+              { value: ALL, label: "Todas" },
+              { value: "qa", label: "QA" },
+              { value: "stress", label: "Estrés" },
+              { value: "probe", label: "Probe" },
+            ]}
+          />
 
           <Select
             value={statusFilter}
@@ -156,7 +155,8 @@ export function RunsView() {
           }
         />
       ) : (
-        <div className={cn("space-y-3 transition-opacity", isPlaceholderData && "opacity-60")} aria-busy={isPlaceholderData}>
+        <div className={cn("space-y-4 transition-opacity", isPlaceholderData && "opacity-60")} aria-busy={isPlaceholderData}>
+          <RunsOverview runs={runs} total={total} />
           <RunsTable runs={runs} />
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground tabular-nums">

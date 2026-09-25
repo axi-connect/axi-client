@@ -15,21 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { Badge } from "@/shared/components/ui/badge";
 import { RelativeDate } from "@/shared/components/ui/relative-date";
 import type { RunListItem } from "../../../../domain/quality-runs";
 import { scoreTone } from "../../../../domain/thresholds";
 import { formatScore } from "../../analytics/analytics-format";
 import { MetricCell } from "../../analytics/MetricCell";
-import { QualityStatus } from "../shared/premium";
+import { Meter, QualityStatus, ToneDot } from "../shared/premium";
+import { RunKindChip } from "./RunKindChip";
 import { RunRowActions } from "./RunRowActions";
-import { aiModeLabel, formatSpendUsd, runKindBadgeClass, runKindLabel, runScopeLabel } from "./runs-format";
+import { aiModeLabel, formatSpendUsd, runScopeLabel } from "./runs-format";
 
 export function RunsTable({ runs }: { runs: RunListItem[] }) {
   const router = useRouter();
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-background">
+    <div className="overflow-x-auto rounded-3xl border border-border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -38,7 +38,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
             <TableHead>Agente</TableHead>
             <TableHead>Alcance</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Resultado</TableHead>
+            <TableHead>Resultado</TableHead>
             <TableHead className="text-right">Score juez</TableHead>
             <TableHead className="text-right">Gasto</TableHead>
             <TableHead>Creada</TableHead>
@@ -58,9 +58,7 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
               >
                 <TableCell>
                   <span className="flex items-center gap-1.5">
-                    <Badge variant="outline" className={runKindBadgeClass(run.kind)}>
-                      {runKindLabel(run.kind)}
-                    </Badge>
+                    <RunKindChip kind={run.kind} />
                     {mode && <span className="text-xs text-muted-foreground">{mode}</span>}
                   </span>
                 </TableCell>
@@ -81,19 +79,29 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
                 <TableCell>
                   <QualityStatus status={run.status} />
                 </TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="min-w-36 tabular-nums">
                   {settled === 0 && run.cases_total === 0 ? (
                     <span className="text-muted-foreground">—</span>
                   ) : (
-                    <span className="whitespace-nowrap">
-                      <span className="text-success">{run.cases_passed}✓</span>{" "}
-                      <span className={run.cases_failed > 0 ? "text-destructive" : "text-muted-foreground"}>
-                        {run.cases_failed}✗
+                    <span className="flex flex-col gap-1.5">
+                      <span className="whitespace-nowrap">
+                        <span className="font-medium">{run.cases_passed}</span> de {run.cases_total} aprobados
+                        {run.cases_failed > 0 && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            {" "}
+                            · <ToneDot tone="destructive" />
+                            {run.cases_failed}
+                          </span>
+                        )}
+                        {run.cases_blocked > 0 && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            {" "}
+                            · <ToneDot tone="warning" />
+                            {run.cases_blocked}
+                          </span>
+                        )}
                       </span>
-                      {run.cases_blocked > 0 && (
-                        <span className="text-warning"> {run.cases_blocked}⊘</span>
-                      )}
-                      <span className="text-muted-foreground"> / {run.cases_total}</span>
+                      <Meter value={run.cases_total === 0 ? 0 : run.cases_passed / run.cases_total} />
                     </span>
                   )}
                 </TableCell>

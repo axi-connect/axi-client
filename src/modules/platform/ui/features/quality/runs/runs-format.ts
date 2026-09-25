@@ -45,13 +45,6 @@ export function runKindLabel(kind: RunListItem["kind"]): string {
   return "QA";
 }
 
-/** Clases del badge de tipo (QA neutro, estrés ámbar, probe violeta). */
-export function runKindBadgeClass(kind: RunListItem["kind"]): string {
-  if (kind === "stress") return "border-accent-amber/40 bg-accent-amber/10 text-accent-amber";
-  if (kind === "probe") return "border-accent-violet/40 bg-accent-violet/10 text-accent-violet";
-  return "border-border text-muted-foreground";
-}
-
 export function aiModeLabel(aiMode: RunListItem["ai_mode"]): string | null {
   if (aiMode === "mock") return "Mock";
   if (aiMode === "real") return "Real";

@@ -12,7 +12,6 @@ import Link from "next/link";
 import { ArrowLeft, CircleAlert, CircleSlash, Trash2 } from "lucide-react";
 import { errorMessage } from "@/core/lib/error-messages";
 import { useAlert } from "@/core/providers/alert-provider";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Modal } from "@/shared/components/ui/modal";
 import { DataTable } from "@/shared/components/features/data-table";
@@ -31,7 +30,8 @@ import { ConfirmTyped } from "../../../../components/ConfirmTyped";
 import { EmptyState } from "../../../../components/EmptyState";
 import { ProblemAlert } from "../../../../components/ProblemAlert";
 import { QualityStatus } from "../../shared/premium";
-import { aiModeLabel, runKindBadgeClass, runKindLabel, runScopeLabel } from "../runs-format";
+import { RunKindChip } from "../RunKindChip";
+import { aiModeLabel, runScopeLabel } from "../runs-format";
 import { DATASET_KIND_LABELS, type DatasetKind } from "../../../../../domain/quality-datasets";
 import { ProbeResultsPanel } from "./ProbeResultsPanel";
 import { ProbeSummaryCards } from "./ProbeSummaryCards";
@@ -106,11 +106,9 @@ export function RunDetailView({ runId }: { runId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className={runKindBadgeClass(run.kind)}>
-                {runKindLabel(run.kind)}
-              </Badge>
+              <RunKindChip kind={run.kind} />
               {mode && <span className="text-xs text-muted-foreground">{mode}</span>}
-              <h2 className="text-xl font-semibold tracking-tight">{run.company_name}</h2>
+              <h2 className="text-2xl font-bold tracking-tight">{run.company_name}</h2>
               <QualityStatus status={run.status} />
             </div>
             <p className="text-sm text-muted-foreground">
